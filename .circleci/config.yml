@@ -19,8 +19,8 @@ jobs:
         #  command: |
         #    echo -e "@weeb.vip:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_acToken=${NPM_TOKEN}" > .npmrc
       - run:
-        name: remove .npmrc
-        command: rm .npmrc
+          name: remove .npmrc
+          command: rm .npmrc
       - restore_cache:
           keys:
             - v1-deps-{{ checksum "yarn.lock" }}
@@ -67,8 +67,8 @@ jobs:
       #    command: |
       #      echo -e "@weeb-vip:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" > .npmrc
       - run:
-        name: remove .npmrc
-        command: rm .npmrc
+          name: remove .npmrc
+          command: rm .npmrc
       - restore_cache:
           keys:
             - v1-deps-{{ checksum "yarn.lock" }}
