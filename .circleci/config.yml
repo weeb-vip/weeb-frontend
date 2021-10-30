@@ -65,6 +65,7 @@ jobs:
       APP_CONFIG: staging
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: create npmrc
           command: |
