@@ -38,6 +38,9 @@ jobs:
     <<: *node
     steps:
       - checkout
+      - run:
+          name: remove .npmrc
+          command: rm .npmrc
       - restore_cache:
           keys:
             - v1-deps-{{ checksum "yarn.lock" }}
