@@ -107,7 +107,6 @@ workflows:
             tags:
               only: /^([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$/
       - deploy:
-          context: deploy
           filters:
             branches:
               only: main
