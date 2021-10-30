@@ -11,7 +11,7 @@ export default function App() {
     <Router>
       <Switch>
         <Route exact path="/">
-          <h1>Welcome Updated</h1>
+          <h1>Welcome</h1>
         </Route>
       </Switch>
     </Router>
