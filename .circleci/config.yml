@@ -83,7 +83,6 @@ jobs:
       - run:
           name: Login to Container Registry
           command: |
-            apt install openssl -y
             docker login -u $REPOSITORY_USER -p $REPOSITORY_PASSWORD $REPOSITORY_ADDRESS
       - run:
           name: push image
