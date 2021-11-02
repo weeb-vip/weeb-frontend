@@ -1,15 +1,14 @@
 ARG NODE_VERSION=14.18.0
-ARG NPM_TOKEN
-
 FROM node:${NODE_VERSION}-alpine3.14 as build
 
-ENV NPM_TOKEN=$NPM_TOKEN
+ARG NPM_TOKEN
+ARG APP_CONFIG=staging
 WORKDIR /app
 COPY --chown=node:node . ${WORKDIR}
 
 COPY ./package.json /app/package.json
 COPY ./yarn.lock /app/yarn.lock
-
+RUN echo -e "@weeb-vip:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" > .npmrc
 RUN yarn install
 COPY . .
 RUN yarn build
