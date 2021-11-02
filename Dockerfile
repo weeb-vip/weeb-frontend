@@ -3,6 +3,7 @@ FROM node:${NODE_VERSION}-alpine3.14 as build
 
 ARG NPM_TOKEN
 ARG APP_CONFIG=staging
+ARG SERVICE_VERSION=0.0.0
 WORKDIR /app
 COPY --chown=node:node . ${WORKDIR}
 
@@ -12,7 +13,7 @@ RUN echo -e "@weeb-vip:registry=https://npm.pkg.github.com\n//npm.pkg.github.com
 RUN yarn install
 COPY . .
 RUN yarn build
-
+RUN echo $SERVICE_VERSION > /app/dist/version.txt
 
 FROM nginx:1.20.0
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
