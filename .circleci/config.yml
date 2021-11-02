@@ -2,7 +2,7 @@ version: 2.1
 references:
   node: &node
     docker:
-      - image: cimg/node:14.15.4
+      - image: cimg/node:14.18.0
     environment:
       NODE_ENV: staging
       APP_CONFIG: staging
@@ -14,13 +14,10 @@ jobs:
     <<: *node
     steps:
       - checkout
-        #- run:
-        #  name: create npmrc
-        #  command: |
-        #    echo -e "@weeb.vip:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_acToken=${NPM_TOKEN}" > .npmrc
       - run:
-          name: remove .npmrc
-          command: rm .npmrc
+          name: create npmrc
+          command: |
+            echo -e "@weeb-vip:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" > .npmrc
       - restore_cache:
           keys:
             - v1-deps-{{ checksum "yarn.lock" }}
@@ -38,9 +35,6 @@ jobs:
     <<: *node
     steps:
       - checkout
-      - run:
-          name: remove .npmrc
-          command: rm .npmrc
       - restore_cache:
           keys:
             - v1-deps-{{ checksum "yarn.lock" }}
@@ -57,9 +51,9 @@ jobs:
           name: build
   deploy:
     docker:
-      - image: cimg/node:14.15.4
+      - image: cimg/node:14.18.0
     environment:
-      NODE_ENV: staging
+      NODE_ENV: production
       REPOSITORY_USER: admin
       REPOSITORY_ADDRESS: https://harbor.floret.dev
       APP_CONFIG: staging
