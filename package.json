@@ -67,7 +67,7 @@
   },
   "name": "mma-admin",
   "description": "## scripts",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "webpack.config.js",
   "scripts": {
     "test": "jest",
