@@ -53,7 +53,7 @@ jobs:
     docker:
       - image: cimg/node:14.18.0
     environment:
-      NODE_ENV: production
+      NODE_ENV: staging
       REPOSITORY_USER: admin
       REPOSITORY_ADDRESS: https://harbor.floret.dev
       APP_CONFIG: staging
