@@ -2,7 +2,7 @@ version: 2.1
 references:
   node: &node
     docker:
-      - image: cimg/node:14.15.4
+      - image: cimg/node:14.18.0
     environment:
       NODE_ENV: production
       APP_CONFIG: staging
@@ -51,7 +51,7 @@ jobs:
           name: build
   deploy:
     docker:
-      - image: cimg/node:14.15.4
+      - image: cimg/node:14.18.0
     environment:
       NODE_ENV: production
       REPOSITORY_USER: admin
