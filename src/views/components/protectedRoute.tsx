@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Redirect, useHistory } from 'react-router-dom'
-import styled from 'styled-components'
+import {redirect, useLocation} from 'react-router-dom'
 import api from '../../services/api'
 
 const ProtectedAuth = () => {
   const [loggedIn, setLoggedIn]: [ boolean| null, any] = useState(null)
-  const history = useHistory()
+  const location = useLocation()
   // @ts-ignore
   useEffect(async () => {
     try {
@@ -16,17 +15,15 @@ const ProtectedAuth = () => {
     }
   }, [])
 
-  if (loggedIn && history.location.pathname !== 'dashboard') {
-    return (<Redirect to="/dashboard/dashboard" />)
+  if (loggedIn && location.pathname !== 'dashboard') {
+    return redirect("/dashboard/dashboard")
   }
   if (loggedIn === false) {
-    return <Redirect to="/auth/signin" />
+    return redirect("/auth/signin")
   }
-  return (<Hiddenspan>&nbsp;</Hiddenspan>)
+  return (<span style={{display: 'none'}}>&nbsp;</span>)
 }
 
 export default ProtectedAuth
 
-const Hiddenspan = styled.span`
-display: none
-`
+
