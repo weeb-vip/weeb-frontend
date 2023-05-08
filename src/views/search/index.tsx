@@ -45,7 +45,7 @@ function Index() {
                 year={result.year || "?"}
                 image={`${(global as any).config.api_host}/show/anime/${result.id.split('-')[0].toLowerCase()}/${result.id.replace(/[^0-9.]/gm, '')}/poster`}
                 onClick={() => {
-                  navigate(`/show/${result.id.split('-')[0].toLowerCase()}/${result.id.replace(/[^0-9.]/gm, '')}`)
+                  navigate(`/show/${result.type}/${result.anidbid}`)
                 }}
               />
             ))}

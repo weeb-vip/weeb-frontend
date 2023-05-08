@@ -27,7 +27,7 @@ function Header() {
               (selectItem) => (item: searchResult) => (
                 <div onClick={() => {
                   selectItem(item)
-                  navigate(`/show/${item.id.split('-')[0].toLowerCase()}/${item.id.replace(/[^0-9.]/gm, '')}`)
+                  navigate(`/show/${item.type}/${item.anidbid}`)
                 }}
                      className="flex flex-row items-center space-x-2 p-2"
                 >
