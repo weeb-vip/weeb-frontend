@@ -45,14 +45,14 @@ function Carousel({data}: {data: CarouselData[]}) {
         icon={<FontAwesomeIcon size="1x" color="#333" icon={faChevronCircleLeft} className={"w-6 h-6"}/>}
       />
       <div
-        className={'w-full flex flex-row space-x-4 m-auto cursor-pointer overflow-y-auto'}
+        className={'w-full flex flex-row space-x-4 m-auto cursor-pointer overflow-visible'}
         ref={containerRef}
       >
         {/* button to scroll left */}
 
         {/* anime cards */}
         {data?.map((result: CarouselData) => (
-          <div ref={cardRef}>
+          <div ref={cardRef} >
             <AnimeCard
               style={AnimeCardStyle.DETAIL}
               title={result.title}
