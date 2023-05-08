@@ -18,3 +18,4 @@ export const fetchSearchAdvancedResults = (query: string, year?: number, searchl
   queryFn: () => api.search.searchAdvanced(query, year, searchlimit),
   select: (data: searchResults) => limit ? data.slice(0, limit) : data,
 })
+
