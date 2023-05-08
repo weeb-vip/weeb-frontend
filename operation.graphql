@@ -1,0 +1,11 @@
+query getTopAnime($limit: Int) {
+    topAnime(limit: $limit) {
+        titleEn
+        imageUrl
+        duration
+        tags
+        episodes
+        animeStatus
+        rating
+    }
+}

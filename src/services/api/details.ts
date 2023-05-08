@@ -479,7 +479,7 @@ export interface Trailer {
 
 export default {
   details: async (thetvdbod: string, type: string): Promise<SeriesDetails> => {
-    const { data } = await instance.get(`/show/${type}/${thetvdbod}/details`);
+    const { data } = await instance.get(`/show/anidb/${type}/${thetvdbod}/details`);
     return data;
   }
 }

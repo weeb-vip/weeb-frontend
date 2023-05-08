@@ -43,7 +43,7 @@ function Index() {
           <div className="relative flex flex-col lg:flex-row p-10 text-white overflow-hidden">
             <div className={"absolute top-0 left-0 bottom-0 right-0"} style={{
               // @ts-ignore
-              backgroundImage: `url(${global.config.api_host}/show/anime/${type}/${id}/fanart)`,
+              backgroundImage: `url(${global.config.api_host}/show/anime/anidb/${type}/${id}/fanart)`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               filter: 'blur(8px)',
@@ -51,11 +51,10 @@ function Index() {
               transform: 'scale(1.1)',
               backgroundColor: 'rgba(0,0,0,0.5)',
               backgroundBlendMode: 'darken'
-
             }}/>
             <div className="flex flex-col px-4 m-auto lg:mr-16">
               {/* @ts-ignore */}
-              <img src={`${global.config.api_host}/show/anime/${type}/${id}/poster`}
+              <img src={`${global.config.api_host}/show/anime/anidb/${type}/${id}/poster`}
                    alt={show?.translations?.name}
                    className={"max-w-none"}
                    style={{height: '322px', width: '225px'}}

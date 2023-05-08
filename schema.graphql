@@ -1,0 +1,69 @@
+"RFC3339 formatted Date"
+scalar Date
+"RFC3339 formatted DateTime"
+scalar Time
+type Anime {
+  id: ID!
+  anidbid: String
+  titleEn: String
+  titleJp: String
+  titleRomaji: String
+  titleKanji: String
+  titleSynonyms: [String!]
+  description: String
+  imageUrl: String
+  tags: [String!]
+  studios: [String!]
+  animeStatus: String
+  episodes: Int
+  duration: String
+  rating: String
+  createdAt: String!
+  updatedAt: String!
+  startDate: Time
+  endDate: Time
+  broadcast: String
+  source: String
+  licensors: [String!]
+  ranking: Int
+}
+type AnimeApi {
+  "Version of event publish service"
+  version: String!
+}
+type ApiInfo {
+  animeApi: AnimeApi!
+  name: String!
+}
+type Query {
+  dbSearch(searchQuery: AnimeSearchInput!): [Anime!]
+  apiInfo: ApiInfo!
+  anime(id: ID!): Anime!
+  newestAnime(limit: Int): [Anime!]
+  topRatedAnime(limit: Int): [Anime!]
+  mostPopularAnime(limit: Int): [Anime!]
+}
+input AnimeSearchInput {
+  "Search query"
+  query: String!
+  "Page number"
+  page: Int!
+  "Items per page"
+  perPage: Int!
+  "Sort by"
+  sortBy: String
+  "Sort direction"
+  sortDirection: String
+  "Tags"
+  tags: [String!]
+  "Studios"
+  studios: [String!]
+  "Anime statuses"
+  animeStatuses: [String!]
+}
+"Exposes a URL that specifies the behavior of this scalar."
+directive @specifiedBy(
+    "The URL that specifies the behavior of this scalar."
+    url: String!
+  ) on SCALAR
+
