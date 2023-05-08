@@ -23,6 +23,10 @@ function Artworks({artworks}: { artworks: Artwork[] }) {
               alt={artwork.id.toString()}
               className={""}
               style={{width: "100%"}}
+              onError={({ currentTarget }) => {
+                currentTarget.onerror = null; // prevents looping
+                currentTarget.src="/assets/not found.jpg";
+              }}
             />
           </div>
         ))}
@@ -41,6 +45,10 @@ function Artworks({artworks}: { artworks: Artwork[] }) {
             alt={selectedArtwork?.id.toString()}
             className={"max-w-none"}
             style={{maxHeight: '100%', maxWidth: '100%'}}
+            onError={({ currentTarget }) => {
+              currentTarget.onerror = null; // prevents looping
+              currentTarget.src="/assets/not found.jpg";
+            }}
           />
         </div>
       </Modal>

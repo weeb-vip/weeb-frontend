@@ -58,6 +58,10 @@ function Index() {
                    alt={show?.translations?.name}
                    className={"max-w-none"}
                    style={{height: '322px', width: '225px'}}
+                   onError={({ currentTarget }) => {
+                     currentTarget.onerror = null; // prevents looping
+                     currentTarget.src="/assets/not found.jpg";
+                   }}
               />
             </div>
             <div className="flex flex-col space-y-2 p-2">
