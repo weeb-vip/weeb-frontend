@@ -24,6 +24,10 @@ function Characters({characters}: { characters: Character[] }) {
               alt={character.id.toString()}
               className={"max-w-none"}
               style={{height: '322px', width: '225px'}}
+              onError={({ currentTarget }) => {
+                currentTarget.onerror = null; // prevents looping
+                currentTarget.src="/assets/not found.jpg";
+              }}
             />
             <span>{character.name}</span>
           </div>
@@ -43,6 +47,10 @@ function Characters({characters}: { characters: Character[] }) {
             alt={selectedCharacter?.id.toString()}
             className={"max-w-none"}
             style={{height: '322px', width: '225px'}}
+            onError={({ currentTarget }) => {
+              currentTarget.onerror = null; // prevents looping
+              currentTarget.src="/assets/not found.jpg";
+            }}
           />
           <span>{selectedCharacter?.name}</span>
 

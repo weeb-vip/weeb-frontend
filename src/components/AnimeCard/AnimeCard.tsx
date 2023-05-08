@@ -40,7 +40,12 @@ function AnimeCard({style, title, description, episodes, episodeLength, year, im
   return (
     <Card className={`flex flex-col flex-none bg-white ${cardStyles[style]} drop-shadow-md`}
           style={{width: '200px'}} onClick={onClick}>
-      <img src={image} alt={title} className={`aspect-2/3`} style={{width: '200px'}}/>
+      <img src={image} alt={title} className={`aspect-2/3`} style={{width: '200px'}}
+           onError={({ currentTarget }) => {
+             currentTarget.onerror = null; // prevents looping
+             currentTarget.src="/assets/not found.jpg";
+           }}
+      />
       <div className={`flex flex-col items-center justify-center p-4 w-full space-y-4 `}>
         <span className={`w-full text-md font-normal text-center truncate overflow-hidden`}>{title}</span>
         <div className={`flex flex-row w-full justify-between`}>
