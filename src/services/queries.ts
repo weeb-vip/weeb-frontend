@@ -1,5 +1,10 @@
 import api from "./api";
 import {searchResults} from "./api/search";
+import request from "graphql-request";
+import {GetHomePageDataQuery} from "../gql/graphql";
+import {getHomePageData} from "./api/graphql/queries";
+import {getConfig} from "../config";
+import configApi from "./api/config";
 
 export const fetchSearchResults = (query: string) => ({
   queryKey: ["search"],
@@ -19,3 +24,13 @@ export const fetchSearchAdvancedResults = (query: string, year?: number, searchl
   select: (data: searchResults) => limit ? data.slice(0, limit) : data,
 })
 
+export const fetchHomePageData = () => ({
+  queryKey: ['homedata', {limit: 20}],
+  queryFn: async () => {
+    // @ts-ignore
+    const config = await configApi.fetch()
+    return request<GetHomePageDataQuery>(config.graphql_host, getHomePageData, {
+      limit: 20 // variables are typed too!
+    })
+  },
+})
