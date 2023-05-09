@@ -56,7 +56,8 @@ function Index() {
   } = useQuery<GetHomePageDataQuery>({
       queryKey: ['homedata', {limit: 20}],
       queryFn: async () =>
-        request<GetHomePageDataQuery>('https://gateway.staging.weeb.vip/graphql', getHomePageData, {
+        // @ts-ignore
+        request<GetHomePageDataQuery>(global.config.graphql_host, getHomePageData, {
           limit: 20 // variables are typed too!
         }),
     }

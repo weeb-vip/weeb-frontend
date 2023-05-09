@@ -25,7 +25,7 @@ function Carousel({data}: {data: CarouselData[]}) {
   const navigate = useNavigate()
   return (
     <div
-      className={'w-full flex flex-row space-x-4 m-auto py-8 cursor-pointer overflow-y-auto justify-center items-center'}>
+      className={'w-full flex flex-row space-x-4 m-auto py-8 cursor-pointer overflow-visible justify-center items-center'}>
 
       {/* button to scroll left */}
       <Button
@@ -45,7 +45,7 @@ function Carousel({data}: {data: CarouselData[]}) {
         icon={<FontAwesomeIcon size="1x" color="#333" icon={faChevronCircleLeft} className={"w-6 h-6"}/>}
       />
       <div
-        className={'w-full flex flex-row space-x-4 m-auto cursor-pointer overflow-visible'}
+        className={'w-full flex flex-row space-x-4 m-auto cursor-pointer overflow-x-scroll overflow-y-visible py-4'}
         ref={containerRef}
       >
         {/* button to scroll left */}
