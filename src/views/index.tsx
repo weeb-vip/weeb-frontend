@@ -6,62 +6,18 @@ import request from "graphql-request";
 import {GetHomePageDataQuery} from "../gql/graphql";
 import {format} from "date-fns";
 import Carousel from "./components/carousel/carousel";
+import config, {getConfig} from "../config";
+import {getHomePageData} from "../services/api/graphql/queries";
+import {fetchHomePageData} from "../services/queries";
 
-const getHomePageData = graphql(/* GraphQL */`
-    query getHomePageData($limit: Int) {
-        topRatedAnime(limit: $limit) {
-            anidbid
-            titleEn
-            imageUrl
-            duration
-            tags
-            episodes
-            animeStatus
-            imageUrl
-            rating
-            startDate
-        }
-        mostPopularAnime(limit: $limit) {
-            anidbid
-            titleEn
-            imageUrl
-            duration
-            tags
-            episodes
-            animeStatus
-            imageUrl
-            rating
-            startDate
-        }
-        newestAnime(limit:100) {
-            anidbid
-            titleEn
-            imageUrl
-            duration
-            tags
-            episodes
-            animeStatus
-            imageUrl
-            rating
-            startDate
-        }
-    }
-`)
 
 
 function Index() {
   const {
     data: homeData,
     isLoading: homeDataIsLoading,
-  } = useQuery<GetHomePageDataQuery>({
-      queryKey: ['homedata', {limit: 20}],
-      queryFn: async () =>
-        // @ts-ignore
-        request<GetHomePageDataQuery>(global.config.graphql_host, getHomePageData, {
-          limit: 20 // variables are typed too!
-        }),
-    }
-  )
+  } = useQuery<GetHomePageDataQuery>(fetchHomePageData())
+
 
   return (
     <div className={"flex flex-col w-full"}>
