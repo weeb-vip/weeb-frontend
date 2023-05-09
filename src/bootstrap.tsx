@@ -7,7 +7,6 @@ const Bootstrap = () => {
   useEffect(() => {
     configApi.fetch().then((conf) => {
       // @ts-ignore
-      console.log("CONFIG", conf)
       global.config = conf
       setLoaded(true)
     })
