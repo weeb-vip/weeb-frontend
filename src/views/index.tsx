@@ -32,7 +32,7 @@ function Index() {
             episodeLength: item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?",
             year: item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?",
             image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
-            navigate: `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid}`,
+            navigate: item.anidbid ? `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid}` : `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`,
           })) || []}
           />
 
@@ -48,7 +48,7 @@ function Index() {
             episodeLength: item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?",
             year: item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?",
             image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
-            navigate: `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid}`,
+            navigate: item.anidbid ? `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid}` : `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`,
           })) || []}
           />
 
@@ -64,7 +64,7 @@ function Index() {
             episodeLength: item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?",
             year: item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?",
             image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
-            navigate: `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid}`,
+            navigate: item.anidbid ? `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid}` : `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`,
           })) || []}
           />
 

@@ -1,8 +1,8 @@
 import api from "./api";
 import {searchResults} from "./api/search";
 import request from "graphql-request";
-import {GetHomePageDataQuery} from "../gql/graphql";
-import {getHomePageData} from "./api/graphql/queries";
+import {GetAnimeDetailsByIdQuery, GetHomePageDataQuery} from "../gql/graphql";
+import {getAnimeDetailsByID, getHomePageData} from "./api/graphql/queries";
 import {getConfig} from "../config";
 import configApi from "./api/config";
 
@@ -28,9 +28,16 @@ export const fetchHomePageData = () => ({
   queryKey: ['homedata', {limit: 20}],
   queryFn: async () => {
     // @ts-ignore
-    const config = await configApi.fetch()
-    return request<GetHomePageDataQuery>(config.graphql_host, getHomePageData, {
+    return request<GetHomePageDataQuery>(global.config.graphql_host, getHomePageData, {
       limit: 20 // variables are typed too!
     })
   },
+})
+
+export const fetchDetailsCustom = (id: string) => ({
+  queryKey: ["detailsCustom", id],
+  // @ts-ignore
+  queryFn: async () => request<GetAnimeDetailsByIdQuery>(global.config.graphql_host, getAnimeDetailsByID, {
+    id: id // variables are typed too!
+  })
 })
