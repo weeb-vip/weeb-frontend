@@ -32,9 +32,9 @@ function Button ({color, showLabel, label, onClick, icon, type, disabled, classN
   }
 
   const disabledClasses = {
-    blue: `bg-blue-300 hover:bg-blue-300`,
-    red: `bg-red-300 hover:bg-red-300`,
-    transparent: `bg-gray-300 hover:bg-gray-300`,
+    blue: `bg-blue-400 hover:bg-blue-400`,
+    red: `bg-red-400 hover:bg-red-400`,
+    transparent: `bg-gray-400 hover:bg-gray-400`,
     none: ``
   }
   return (
@@ -42,7 +42,7 @@ function Button ({color, showLabel, label, onClick, icon, type, disabled, classN
       onClick={onClick}
       type={type}
       disabled={disabled}
-      className={`flex items-center justify-center px-6 py-1 border border-transparent text-sm font-medium rounded-full  ${disabled ? `cursor-not-allowed ${disabledClasses[color]}` : 'cursor-pointer'} ${colorClasses[color]} ${textColor[color]} ${className || ''}`}
+      className={`flex items-center justify-center px-6 py-1 border border-transparent text-sm font-medium rounded-full ${colorClasses[color]} ${textColor[color]} ${className || ''} ${disabled ? `cursor-not-allowed ${disabledClasses[color]}` : 'cursor-pointer'} `}
     >
       {icon}
       {showLabel && <span>{label}</span>}

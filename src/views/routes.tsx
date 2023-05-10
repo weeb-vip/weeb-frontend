@@ -20,6 +20,7 @@ export default function App() {
           <Route path="/" element={<DefaultLayout><Home/></DefaultLayout>}/>
           <Route path="/search" element={<DefaultLayout><Search/></DefaultLayout>}/>
           <Route path="/show/:type/:id" element={<FullWidthLayout><Show /></FullWidthLayout>}/>
+          <Route path="/show/:type/:id/custom" element={<FullWidthLayout><Show /></FullWidthLayout>}/>
           <Route path="*" element={<div>Not found</div>}/>
         </Routes>
       </main>

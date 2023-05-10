@@ -1,8 +1,9 @@
 import {graphql} from "../../../gql";
 
-const getHomePageData = graphql(/* GraphQL */`
+export const getHomePageData = graphql(/* GraphQL */`
     query getHomePageData($limit: Int) {
         topRatedAnime(limit: $limit) {
+            id
             anidbid
             titleEn
             imageUrl
@@ -13,8 +14,10 @@ const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             rating
             startDate
+            ranking
         }
         mostPopularAnime(limit: $limit) {
+            id
             anidbid
             titleEn
             imageUrl
@@ -25,8 +28,10 @@ const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             rating
             startDate
+            ranking
         }
         newestAnime(limit:100) {
+            id
             anidbid
             titleEn
             imageUrl
@@ -37,8 +42,37 @@ const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             rating
             startDate
+            ranking
         }
     }
 `)
 
-export { getHomePageData }
+
+
+export const getAnimeDetailsByID = graphql(/* GraphQL */`
+    query getAnimeDetailsByID($id: ID!) {
+    	anime(id: $id) {
+        id
+        anidbid
+        titleEn
+        titleJp
+        titleKanji
+        titleRomaji
+        titleSynonyms
+        description
+        imageUrl
+        duration
+        tags
+        studios
+        episodes
+        animeStatus
+        rating
+        createdAt
+        updatedAt
+        startDate
+        endDate
+        broadcast
+        ranking
+        }
+    }
+`)
