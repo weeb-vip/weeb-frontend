@@ -52,7 +52,7 @@ function Carousel({data}: {data: CarouselData[]}) {
 
         {/* anime cards */}
         {data?.map((result: CarouselData) => (
-          <div ref={cardRef} >
+          <div ref={cardRef} className={`flex flex-grow`}>
             <AnimeCard
               style={AnimeCardStyle.DETAIL}
               title={result.title}
