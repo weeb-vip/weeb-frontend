@@ -14,6 +14,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             rating
             startDate
+            ranking
         }
         mostPopularAnime(limit: $limit) {
             id
@@ -27,6 +28,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             rating
             startDate
+            ranking
         }
         newestAnime(limit:100) {
             id
@@ -40,6 +42,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             rating
             startDate
+            ranking
         }
     }
 `)
