@@ -79,13 +79,13 @@ function Index() {
                   <div className="flex flex-col space-y-2 p-2">
                     <h1
                       className="text-3xl font-bold"
-                    >{showCustom.anime.titleEn}</h1>
+                    >{showCustom?.anime.titleEn}</h1>
                     <div className={"flex flex-row flex-wrap space-x-4 space-y-4 space-x-reverse pb-4"}>
                       <div className={"hidden -ml-4"}></div>
                       <span>{`${formatUpdatedAt(show?.lastUpdated)}`}</span>
                       <span>{show?.status.recordType || "unknown"}</span>
                       {/*<Tag tag={show.score.toString()}/>*/}
-                      <span>{showCustom.anime.endDate ? "finished" : "ongoing"}</span>
+                      <span>{showCustom?.anime.endDate ? "finished" : "ongoing"}</span>
                       { /* network */}
                       {showCustom?.anime.broadcast && (
                         <span>{showCustom?.anime.broadcast || "unknown"}</span>
