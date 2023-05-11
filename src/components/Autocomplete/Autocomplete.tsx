@@ -135,6 +135,10 @@ export function Autocomplete() {
                           alt={item.name}
                           style={{height: '50px'}}
                           className={"aspect-2/3 m-2"}
+                          onError={({ currentTarget }) => {
+                            currentTarget.onerror = null; // prevents looping
+                            currentTarget.src="/assets/not found.jpg";
+                          }}
                         />
                         <div className={"flex flex-col flex-shrink"}>
                           <span>{item.title_en}</span>
