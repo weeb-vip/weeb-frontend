@@ -27,8 +27,9 @@ function Search<T>({searchFunction, mapFunction, parseSearchResult, className}: 
       <Combobox value={selectedItem} onChange={setSelectedItem}>
         <div className="relative mt-1">
           <div
-            className="relative w-full cursor-default overflow-hidden rounded-full bg-white text-left  sm:text-sm relative ">
-            <FontAwesomeIcon size="1x" color="#333" icon={faSearch} className={"absolute top-0 bottom-0 left-4 m-auto"}/>
+            className="relative w-full cursor-default overflow-hidden rounded-full bg-white text-left  sm:text-sm relative">
+            <FontAwesomeIcon size="1x" color="#333" icon={faSearch}
+                             className={"absolute top-0 bottom-0 left-4 m-auto"}/>
             <Combobox.Input onChange={(event) => setQuery(event.target.value)}
                             displayValue={parseSearchResult}
                             className="w-full rounded-full py-2 px-3 pl-10 text-sm leading-5 text-gray-900 outline-none border border-gray-200 focus:border-gray-400 active:border-gray-400"
