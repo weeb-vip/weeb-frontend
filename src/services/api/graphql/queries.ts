@@ -9,7 +9,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             duration
             tags
-            episodes
+            episodeCount
             animeStatus
             imageUrl
             rating
@@ -23,7 +23,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             duration
             tags
-            episodes
+            episodeCount
             animeStatus
             imageUrl
             rating
@@ -37,7 +37,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             duration
             tags
-            episodes
+            episodeCount
             animeStatus
             imageUrl
             rating
@@ -64,7 +64,7 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
         duration
         tags
         studios
-        episodes
+        episodeCount
         animeStatus
         rating
         createdAt
