@@ -16,7 +16,7 @@ jobs:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: install yarn
-        run: npm install -g yarn
+        run: corepack enable && yarn set version stable
 
       - name: install deps
         run: yarn install
