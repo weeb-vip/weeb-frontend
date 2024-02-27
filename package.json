@@ -91,5 +91,6 @@
       "@semantic-release/github",
       "@semantic-release/git"
     ]
-  }
+  },
+  "packageManager": "yarn@4.1.0"
 }

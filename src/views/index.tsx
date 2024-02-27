@@ -37,7 +37,8 @@ function Index() {
             episodes: item.episodeCount ? item.episodeCount : 0,
             episodeLength: item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?",
             year: item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?",
-            image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
+              image: `http://backup.floretos.com:9000/weeb/${item.id}`,
+            //image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
             navigate: item.anidbid ? `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid}` : `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`,
           })) || []}
           />
@@ -53,7 +54,8 @@ function Index() {
             episodes: item.episodeCount ? item.episodeCount : 0,
             episodeLength: item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?",
             year: item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?",
-            image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
+              image: `http://backup.floretos.com:9000/weeb/${item.id}`,
+            //image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
             navigate: item.anidbid ? `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid}` : `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`,
           })) || []}
           />
@@ -69,7 +71,8 @@ function Index() {
             episodes: item.episodeCount ? item.episodeCount : 0,
             episodeLength: item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?",
             year: item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?",
-            image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
+              image: `http://backup.floretos.com:9000/weeb/${item.id}`,
+            //image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
             navigate: item.anidbid ? `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid}` : `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`,
           })) || []}
           />
@@ -85,7 +88,8 @@ function Index() {
             episodes: item.episodeCount ? item.episodeCount : 0,
             episodeLength: item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?",
             year: item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?",
-            image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
+              image: `http://backup.floretos.com:9000/weeb/${item.id}`,
+            //image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
             navigate: item.anidbid ? `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid}` : `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`,
           })) || []}
           />
