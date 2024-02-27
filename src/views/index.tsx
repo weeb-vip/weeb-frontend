@@ -25,7 +25,7 @@ function Index() {
         <h1 className={"text-4xl font-bold"}>Most Popular New Anime</h1>
         { /* ignore movies */}
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <Carousel data={homeData?.newestAnime?.filter((item) => item.episodeCount && item.episodeCount > 3 && item.anidbid ).sort((a, b) => {
+          <Carousel data={homeData?.newestAnime?.filter((item) => item.episodeCount item.anidbid ).sort((a, b) => {
             // sort by rank
             if (a.ranking && b.ranking) {
               return a.ranking - b.ranking
@@ -82,7 +82,7 @@ function Index() {
         <h1 className={"text-4xl font-bold"}>Newest Anime</h1>
         { /* ignore movies */}
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <Carousel data={homeData?.newestAnime?.filter(item => item.episodeCount && item.episodeCount > 3)?.map(item => ({
+          <Carousel data={homeData?.newestAnime?.filter(item => item.episodeCount)?.map(item => ({
             title: item.titleEn || "Unknown",
             description: "",
             episodes: item.episodeCount ? item.episodeCount : 0,
