@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: set tag
         run: |
-          export TAG=$RELEASE_VERSION
+          export TAG=$(echo $RELEASE_VERSION | sed 's/v//')
           echo "tag=$TAG" >> $GITHUB_ENV
       - name: Build and push
         uses: docker/build-push-action@v2
