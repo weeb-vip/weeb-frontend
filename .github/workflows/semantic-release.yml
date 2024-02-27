@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: set tag
         run: |
-          export TAG=$(node -p "require('./package.json').version" | tr -d \'\n\')
+          export TAG=RELEASE_VERSION
           echo "tag=$TAG" >> $GITHUB_ENV
       - name: Build and push
         uses: docker/build-push-action@v2
