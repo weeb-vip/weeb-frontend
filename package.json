@@ -92,5 +92,8 @@
       "@semantic-release/git"
     ]
   },
-  "packageManager": "yarn@4.1.0"
+  "packageManager": "yarn@4.1.0",
+  "resolutions": {
+    "npm/chalk": "^4.1.2"
+  }
 }
