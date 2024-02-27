@@ -48,7 +48,6 @@
     "@graphql-codegen/client-preset": "^3.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^9.2.6",
-    "@semantic-release/npm": "^11.0.2",
     "@semantic-release/release-notes-generator": "^12.1.0",
     "@types/node": "^18.15.11",
     "@types/qs": "^6.9.7",
@@ -82,12 +81,6 @@
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
-      [
-        "@semantic-release/npm",
-        {
-          "npmPublish": false
-        }
-      ],
       "@semantic-release/github",
       "@semantic-release/git"
     ]
