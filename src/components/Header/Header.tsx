@@ -26,12 +26,11 @@ function Header() {
   // @ts-ignore
   return (
     <>
-      <div className="flex flex-row items-center justify-between p-4 bg-white-800 border-b border-gray-200">
+      <div className="flex flex-row items-center justify-between p-2 bg-white-800 border-b border-gray-200">
         <div className="flex flex-row items-center space-x-4">
           <Link to={"/"}>
-            <div className="flex flex-row items-center justify-center bg-gray-200"
-                 style={{width: '112px', height: '40px'}}>
-              <img src="" alt="logo" style={{width: '112', height: '40px'}}/>
+            <div className="flex flex-row items-center justify-center">
+              <img src="https://cdn.weeb.vip/images/logo6-rev-sm.png" alt="logo" style={{width: '60px', height: '60px'}}/>
             </div>
           </Link>
           <span className="text-xl font-normal">Anime</span>
