@@ -30,7 +30,7 @@ function Header() {
         <div className="flex flex-row items-center space-x-4">
           <Link to={"/"}>
             <div className="flex flex-row items-center justify-center">
-              <img src="https://cdn.weeb.vip/images/logo6-rev-sm.png" alt="logo" style={{width: '60px', height: '60px'}}/>
+              <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" style={{width: '60px', height: '60px'}}/>
             </div>
           </Link>
           <span className="text-xl font-normal">Anime</span>
