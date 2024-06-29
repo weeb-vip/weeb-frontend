@@ -48,31 +48,44 @@ export const getHomePageData = graphql(/* GraphQL */`
 `)
 
 
-
 export const getAnimeDetailsByID = graphql(/* GraphQL */`
     query getAnimeDetailsByID($id: ID!) {
     	anime(id: $id) {
-        id
-        anidbid
-        titleEn
-        titleJp
-        titleKanji
-        titleRomaji
-        titleSynonyms
-        description
-        imageUrl
-        duration
-        tags
-        studios
-        episodeCount
-        animeStatus
-        rating
-        createdAt
-        updatedAt
-        startDate
-        endDate
-        broadcast
-        ranking
-        }
+            id
+            anidbid
+            titleEn
+            titleJp
+            titleRomaji
+            titleKanji
+            titleSynonyms
+            description
+            imageUrl
+            tags
+            studios
+            animeStatus
+            episodeCount
+            episodes {
+              id
+              animeId
+              episodeNumber
+              titleEn
+              titleJp
+              synopsis
+              airDate
+              createdAt
+              updatedAt
+            }
+            duration
+            rating
+            startDate
+            endDate
+            broadcast
+            source
+            licensors
+            ranking
+            createdAt
+            updatedAt
+          }
     }
 `)
+

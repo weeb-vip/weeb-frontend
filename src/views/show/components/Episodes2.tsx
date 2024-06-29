@@ -1,12 +1,18 @@
-import React from "react";
+Episodes.tsximport React from "react";
 
-import {format, isDate, parse, parseISO} from "date-fns";
+import {format, isDate, parse} from "date-fns";
 import {faBookmark, faCircleChevronDown, faCircleChevronUp} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {Transition} from "@headlessui/react";
 import Button, {ButtonColor} from "../../../components/Button";
-import {Episode} from "../../../gql/graphql";
-// import {Episode} from "../../../services/api/details";
+import {Episode} from "../../../services/api/details";
+
+interface EpisodeWtihStatus extends Episode {
+  status: string
+
+  progress: number
+
+}
 
 function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episode[] }) {
   const [collapsed, setCollapsed] = React.useState<boolean>(false)
@@ -51,7 +57,7 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
           </thead>
           <tbody>
           {episodes.map((episode) => {
-            const airdate = episode.airDate ? parseISO(episode.airDate) : null
+            const airdate =episode.aired ? parse(episode.aired, 'yyyy-MM-dd', new Date()) : null
             const formattedAirdate = airdate && isDate(airdate) ? format(airdate, 'dd MMM yyyy') : "TBA"
 
             return (
@@ -59,12 +65,12 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
                 <td className="px-5 py-5 text-sm bg-white border-b border-gray-200">
                   {/*<RouterLink to={`/anime/${type}/${id}/${episode.id}`}>*/}
                   {/*{`Episode ${index+1}`}*/}
-                  {episode.episodeNumber}
+                  {episode.number}
                   {/*</RouterLink>*/}
                 </td>
                 <td className="px-5 py-5 text-sm bg-white border-b border-gray-200">
                   {/*<RouterLink to={`/anime/${type}/${id}/${episode.id}`}>*/}
-                  {episode.titleEn || "TBA"}
+                  {episode.name || "TBA"}
                   {/*</RouterLink>*/}
                 </td>
                 <td className="px-5 py-5 text-sm bg-white border-b border-gray-200">
@@ -86,13 +92,19 @@ function Tables({
                 }: { episodes: Episode[] }) {
 
 
-
+  const episodesBySeason = episodes.reduce((acc: Record<string, Episode[]>, episode: Episode) => {
+    if (!acc[episode.seasonNumber]) {
+      acc[episode.seasonNumber] = [];
+    }
+    acc[episode.seasonNumber].push(episode);
+    return acc;
+  }, {});
   return (
     <div className="flex flex-col flex-grow space-y-16">
       <div className={"hidden"}/>
-
-        <Table key={1} seasonNumber={1} episodes={episodes.sort((a, b) => a.episodeNumber - b.episodeNumber)}/>
-
+      {Object.entries(episodesBySeason).map(([seasonNumber, episodes]: [string, Episode[]]) => (
+        <Table key={seasonNumber} seasonNumber={parseInt(seasonNumber, 10)} episodes={episodes}/>
+      ))}
     </div>
   );
 }
