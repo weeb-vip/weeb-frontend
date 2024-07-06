@@ -127,11 +127,11 @@ export function Autocomplete() {
                         onClick={() => {
                           autocomplete.setIsOpen(false)
                           autocomplete.setQuery('')
-                          navigate(item.anidbid ? `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid}` : `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`)
+                          navigate(`/show/${item.id ? encodeURIComponent(item.id) : ''}`)
                         }}
                       >
                         <img
-                          src={`${(global as any).config.api_host}/show/anime/anidb/${item.episodes == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`}
+                          src={`https://cdn.weeb.vip/weeb/${item.id}`}
                           alt={item.name}
                           style={{height: '50px'}}
                           className={"aspect-2/3 m-2"}
