@@ -90,8 +90,8 @@ function Tables({
   return (
     <div className="flex flex-col flex-grow space-y-16">
       <div className={"hidden"}/>
-
-        <Table key={1} seasonNumber={1} episodes={episodes.sort((a, b) => a.episodeNumber - b.episodeNumber)}/>
+        { /* @ts-ignore */}
+        <Table seasonNumber={1} episodes={episodes.sort((a: Episode, b: Episode) => a.episodeNumber - b.episodeNumber)}/>
 
     </div>
   );

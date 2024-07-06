@@ -1,6 +1,6 @@
 import {useLocation, useParams} from "react-router-dom";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
-import {fetchDetails, fetchDetailsCustom} from "../../services/queries";
+import {fetchDetails} from "../../services/queries";
 import Loader from "../../components/Loader";
 import {SeriesDetails} from "../../services/api/details";
 import Tables from "./components/Episodes";
