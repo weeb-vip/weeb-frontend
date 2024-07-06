@@ -127,7 +127,7 @@ export function Autocomplete() {
                         onClick={() => {
                           autocomplete.setIsOpen(false)
                           autocomplete.setQuery('')
-                          navigate(item.anidbid ? `/show/${item.id}` : `/show/${item.episodes == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`)
+                          navigate(`/show/${item.id ? encodeURIComponent(item.id) : ''}`)
                         }}
                       >
                         <img
