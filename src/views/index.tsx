@@ -38,7 +38,7 @@ function Index() {
           })?.map(item => ({
             title: item.titleEn || "Unknown",
             description: "",
-            episodes: item.episodes.length,
+            episodes: item.episodes? item.episodes.length : 0,
             episodeLength: item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?",
             year: item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?",
             image: `https://cdn.weeb.vip/weeb/${item.id}`,

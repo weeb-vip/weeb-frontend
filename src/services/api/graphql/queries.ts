@@ -99,6 +99,7 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
       startDate
       imageUrl
       duration
+      ranking
       episodes {
         airDate
         titleEn
