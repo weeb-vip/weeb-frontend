@@ -14,7 +14,7 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
     <div className="inline-block min-w-full overflow-hidden rounded-lg shadow m-auto">
       <div className={"flex flex-row flex-grow flex-nowrap p-5 space-x-5 items-center bg-white"}>
         <FontAwesomeIcon size="2xl" color="#666" icon={faBookmark}/>
-        <h1 className={"text-left text-2xl font-normal"}>Season {seasonNumber == 0 ? "Specials" : seasonNumber}</h1>
+        <h1 className={"text-left text-2xl font-normal"}>Episodes</h1>
         {/*transition arrow direction*/}
         <Button
           color={ButtonColor.none}

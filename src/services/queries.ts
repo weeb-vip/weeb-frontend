@@ -1,8 +1,8 @@
 import api from "./api";
 import {searchResults} from "./api/search";
 import request from "graphql-request";
-import {GetAnimeDetailsByIdQuery, GetHomePageDataQuery} from "../gql/graphql";
-import {getAnimeDetailsByID, getHomePageData} from "./api/graphql/queries";
+import {CurrentlyAiringQuery, GetAnimeDetailsByIdQuery, GetHomePageDataQuery} from "../gql/graphql";
+import {getAnimeDetailsByID, getCurrentlyAiring, getHomePageData} from "./api/graphql/queries";
 import {getConfig} from "../config";
 import configApi from "./api/config";
 
@@ -35,4 +35,12 @@ export const fetchDetails = (id: string) => ({
     queryFn: async () => request<GetAnimeDetailsByIdQuery>(global.config.graphql_host, getAnimeDetailsByID, {
         id: id // variables are typed too!
     })
+})
+
+export const fetchCurrentlyAiring = () => ({
+    queryKey: ["currentlyAiring"],
+    queryFn: async () => {
+        // @ts-ignore
+        return request<CurrentlyAiringQuery>(global.config.graphql_host, getCurrentlyAiring)
+    },
 })

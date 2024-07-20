@@ -89,3 +89,21 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
     }
 `)
 
+export const getCurrentlyAiring = graphql(/* GraphQL */`
+  query currentlyAiring {
+    currentlyAiring {
+      id
+      titleEn
+      titleJp
+      endDate
+      startDate
+      imageUrl
+      duration
+      ranking
+      episodes {
+        airDate
+        titleEn
+      }
+    }
+  }
+`)
