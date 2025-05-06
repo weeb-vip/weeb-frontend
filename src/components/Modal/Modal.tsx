@@ -3,7 +3,7 @@ import {Fragment} from "react";
 import {Dialog, Transition} from "@headlessui/react";
 import Button, {ButtonColor} from "../Button";
 
-interface ModalProps {
+export interface ModalProps {
   title: string
   children: React.ReactNode
   isOpen: boolean
@@ -37,7 +37,7 @@ export default function Modal({children, title, isOpen, closeFn, options, classN
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Dialog.Panel
               className="w-full transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <Dialog.Title>{<title></title>}</Dialog.Title>
+              <Dialog.Title>{title}</Dialog.Title>
               <div className="flex justify-between flex-col flex-no-wrap">
                 <div className="mt-2">
                   {children}

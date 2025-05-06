@@ -16,13 +16,16 @@ import {
   Highlight, connectSearchBox, Snippet,
 } from 'react-instantsearch-dom';
 import algoliasearch from "algoliasearch/lite";
-import React, { useState} from "react";
+import React, {useState} from "react";
 import Autocomplete from "../Autocomplete";
+import {useLoggedInStore, useLoginModalStore} from "../../services/globalstore";
 
 function Header() {
-
+  const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
   const flags = useFlags(['algolia_search']);
   const navigate = useNavigate()
+  // @ts-ignore
+  const openModal = useLoginModalStore((state) => state.open);
   // @ts-ignore
   return (
     <>
@@ -30,59 +33,39 @@ function Header() {
         <div className="flex flex-row items-center space-x-4">
           <Link to={"/"}>
             <div className="flex flex-row items-center justify-center">
-              <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" style={{width: '60px', height: '60px'}}/>
+              <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo"
+                   style={{width: '60px', height: '60px'}}/>
             </div>
           </Link>
           <span className="text-xl font-normal">Anime</span>
         </div>
         <div className="flex flex-row items-center space-x-4">
-          {!flags.algolia_search.enabled ? (
-            <Search<searchResult>
-              searchFunction={api.search.search}
-              className="relative w-72 z-10"
-              parseSearchResult={(item: searchResult) => item.name}
-              mapFunction={
-                (selectItem) => (item: searchResult) => (
-                  <div onClick={() => {
-                    selectItem(item)
-                    navigate(`/show/${item.type}/${item.anidbid}`)
-                  }}
-                       className="flex flex-row items-center space-x-2 p-2"
-                  >
-                    <img
-                      src={`${(global as any).config.api_host}/show/anime/${item.id.split('-')[0].toLowerCase()}/${item.id.replace(/[^0-9.]/gm, '')}/poster`}
-                      alt={item.name}
-                      style={{height: '50px'}}
-                      className={"aspect-2/3 m-2"}
-                    />
-                    <div className={"flex flex-col flex-shrink"}>
-                      <span>{item.name}</span>
-                      <span>{item.year}</span>
-                    </div>
-                  </div>
-                )
-              }/>
-          ) : (
-            <div className={'relative'}>
-              <Autocomplete
 
-              />
-            </div>
+          <div className={'relative'}>
+            <Autocomplete
 
+            />
+          </div>
 
-            //   <InstantSearch searchClient={searchClient} indexName="instant_search">
-            //   <SearchBox
-            //     className="searchbox"
-            //     translations={{
-            //       placeholder: '',
-            //     }}
-            //   />
-            // </InstantSearch>
-          )}
+          {!loggedIn ? (<>
           <Button color={ButtonColor.blue} showLabel={true} label={"Login"} onClick={() => {
+            openModal()
           }} icon={null}/>
           <Button color={ButtonColor.transparent} showLabel={true} label={"Register"} onClick={() => {
           }} icon={null}/>
+          </>) : (<>
+            <Link to={"/profile"}>
+              <Button color={ButtonColor.blue} showLabel={true} label={"Profile"} onClick={() => {
+              }} icon={null}/>
+            </Link>
+            <Button color={ButtonColor.transparent} showLabel={true} label={"Logout"} onClick={() => {
+              localStorage.removeItem("authToken");
+              localStorage.removeItem("refreshToken");
+              // @ts-ignore
+              useLoggedInStore.getState().logout();
+              navigate("/")
+            }} icon={null}/>
+          </>)}
         </div>
       </div>
     </>

@@ -55,7 +55,7 @@ function AnimeCard({style, title, description, episodes, episodeLength, year, im
         <div className={`flex flex-row w-full justify-between`}>
           <span className={`flex-grow text-md font-normal space-x-4`}><FontAwesomeIcon size="1x" color="#333" icon={faCalendar}/><span>{year}</span></span>
         </div>
-        <Button color={ButtonColor.blue} label={'Add to list'} showLabel={true} onClick={() => {}} disabled/>
+        <Button color={ButtonColor.blue} label={'Add to list'} showLabel={true} onClick={() => {}}/>
       </div>
     </Card>
   )
