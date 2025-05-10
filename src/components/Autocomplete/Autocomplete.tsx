@@ -162,7 +162,7 @@ export function Autocomplete() {
       >
         <FontAwesomeIcon
           icon={faSearch}
-          className="absolute top-0 bottom-0 left-6 m-auto text-gray-500"
+          className="absolute top-0 bottom-0 left-4 m-auto text-gray-500"
         />
         {/* @ts-ignore */}
         <input
