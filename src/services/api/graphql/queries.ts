@@ -50,7 +50,7 @@ export const getHomePageData = graphql(/* GraphQL */`
 
 export const getAnimeDetailsByID = graphql(/* GraphQL */`
     query getAnimeDetailsByID($id: ID!) {
-    	anime(id: $id) {
+        anime(id: $id) {
             id
             anidbid
             titleEn
@@ -65,15 +65,15 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
             animeStatus
             episodeCount
             episodes {
-              id
-              animeId
-              episodeNumber
-              titleEn
-              titleJp
-              synopsis
-              airDate
-              createdAt
-              updatedAt
+                id
+                animeId
+                episodeNumber
+                titleEn
+                titleJp
+                synopsis
+                airDate
+                createdAt
+                updatedAt
             }
             duration
             rating
@@ -85,27 +85,34 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
             ranking
             createdAt
             updatedAt
-          }
+        }
     }
 `)
 
 export const getCurrentlyAiring = graphql(/* GraphQL */`
-  query currentlyAiring {
-    currentlyAiring {
-      id
-      titleEn
-      titleJp
-      endDate
-      startDate
-      imageUrl
-      duration
-      ranking
-      episodes {
-        airDate
+    query currentlyAiring {
+      currentlyAiring {
+        id
         titleEn
+        titleJp
+        endDate
+        startDate
+        imageUrl
+        duration
+        ranking
+        nextEpisode {
+          id
+          animeId
+          episodeNumber
+          titleEn
+          titleJp
+          synopsis
+          airDate
+          createdAt
+          updatedAt
+        }
       }
     }
-  }
 `)
 
 export const mutationRefreshToken = graphql(`
@@ -165,14 +172,14 @@ export const queryUserDetails = graphql(`
 )
 
 export const mutateUpdateUserDetails = graphql(`
-  mutation UpdateUserDetails($input: UpdateUserInput!) {
-    UpdateUserDetails(input: $input) {
-      id
-      firstname
-      lastname
-      username
-      language
-      email
+    mutation UpdateUserDetails($input: UpdateUserInput!) {
+        UpdateUserDetails(input: $input) {
+            id
+            firstname
+            lastname
+            username
+            language
+            email
+        }
     }
-  }
 `)

@@ -23,6 +23,7 @@ function Index() {
   useEffect(() => {
     refetchSearchResults()
   }, [searchParams])
+  // @ts-ignore
   return (
     <div className={"flex flex-col w-full"}>
       { /* Search box no dropdown */}
@@ -40,7 +41,7 @@ function Index() {
                 style={AnimeCardStyle.DETAIL}
                 title={result.name}
                 description={""}
-                episodes={"?"}
+                episodes={0}
                 episodeLength={"?"}
                 year={result.year || "?"}
                 image={`${(global as any).config.api_host}/show/anime/${result.id.split('-')[0].toLowerCase()}/${result.id.replace(/[^0-9.]/gm, '')}/poster`}

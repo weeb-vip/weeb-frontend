@@ -3,7 +3,7 @@ interface CardProps {
   className?: string
   onClick?: () => void
 
-  style: React.CSSProperties | undefined
+  style?: React.CSSProperties | undefined
 }
 
 function Card({children, className, style, onClick}: CardProps) {

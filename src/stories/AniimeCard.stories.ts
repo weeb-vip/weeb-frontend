@@ -23,7 +23,7 @@ export const Primary: { args: AnimeCardProps } = {
     style: AnimeCardStyle.DETAIL,
     title: 'Spice and Wolf',
     description: 'Anime Description',
-    episodes: '12',
+    episodes: 12,
     episodeLength: '24 min',
     year: '2021',
     image: 'https://cdn.weeb.vip/weeb/164a90ec-074e-4855-b086-ce2c98012791',

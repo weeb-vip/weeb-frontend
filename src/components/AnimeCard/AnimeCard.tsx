@@ -11,6 +11,7 @@ enum AnimeCardStyle {
   TRANSPARENT = 'transparent',
   LONG = 'long',
   DETAIL = 'detail',
+  EPISODE = 'episode',
 
 }
 
@@ -18,13 +19,27 @@ interface AnimeCardProps {
   style: AnimeCardStyle
   title: string
   description: string
+  episodes: number
+  episodeLength: string
+  year: string
+  image: string
+  onClick: () => void
+  className?: string
+}
+
+interface AnimeEpisodeCardProps {
+  style: AnimeCardStyle
+  title: string
+  description: string
   episodes: string
   episodeLength: string
   year: string
-
+  airdate: string
+  episodeTitle: string
+  episodeNumber: string
   image: string
   onClick: () => void
-
+  className?: string
 }
 
 const cardStyles = {
@@ -33,30 +48,77 @@ const cardStyles = {
   hover: `w-48 h-72 hover:bg-gray-100 hover:shadow-lg`,
   transparent: `w-48 h-72 bg-transparent`,
   long: `w-96 h-96`,
-  detail: ``
+  detail: ``,
+  episode: ``,
 }
 
-function AnimeCard({style, title, description, episodes, episodeLength, year, image, onClick}: AnimeCardProps) {
+function AnimeCard(props: AnimeCardProps|AnimeEpisodeCardProps) {
   return (
-    <Card className={`flex flex-col flex-none bg-white ${cardStyles[style]} drop-shadow-md flex-grow`}
-          style={{width: '200px'}} onClick={onClick}>
-      <img src={image} alt={title} className={`aspect-2/3`} style={{width: '200px'}}
-           onError={({ currentTarget }) => {
+    <Card
+      className={`flex sm:flex-row md:flex-col flex-none bg-white ${cardStyles[props.style]} drop-shadow-md flex-grow ${props.className || ''}`}
+      onClick={props.onClick}>
+      <img src={props.image} alt={props.title} className={`aspect-2/3 w-32 lg:w-48`}
+           onError={({currentTarget}) => {
              currentTarget.onerror = null; // prevents looping
-             currentTarget.src="/assets/not found.jpg";
+             currentTarget.src = "/assets/not found.jpg";
            }}
       />
-      <div className={`flex flex-col items-center justify-center p-4 w-full space-y-4 h-full`}>
-        <span className={`w-full text-md font-normal text-center flex-grow align-center justify-center flex flex-col`}>{title}</span>
-        <div className={`flex flex-row w-full justify-between`}>
-          <span className={`flex-grow text-md font-normal space-x-4`}><FontAwesomeIcon size="1x" color="#333" icon={faClapperboard}/><span>{episodes}</span></span>
-          <span className={`flex-shrink text-md font-normal space-x-4 `}><FontAwesomeIcon size="1x" color="#333" icon={faClock}/><span>{episodeLength}</span></span>
+      {props.style === AnimeCardStyle.DETAIL && (
+        <div
+          className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
+          <div className="group w-full">
+            {/* Default (visible) */}
+            <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
+    {props.title}
+  </span>
+
+            {/* On hover (revealed) */}
+            <span
+              className="hidden group-hover:block whitespace-nowrap w-max text-md font-bold group-hover:animate-marquee">
+    {props.title}
+  </span>
+          </div>
+          <div className={`flex flex-row w-full justify-between`}>
+            <span className={`flex-grow text-md font-normal space-x-4`}><FontAwesomeIcon size="1x" color="#333"
+                                                                                         icon={faClapperboard}/><span>{props.episodes}</span></span>
+            <span className={`flex-shrink text-md font-normal space-x-4 `}><FontAwesomeIcon size="1x" color="#333"
+                                                                                            icon={faClock}/><span>{props.episodeLength}</span></span>
+          </div>
+          <div className={`flex flex-row w-full justify-between`}>
+            <span className={`flex-grow text-md font-normal space-x-4`}><FontAwesomeIcon size="1x" color="#333"
+                                                                                         icon={faCalendar}/><span>{props.year}</span></span>
+          </div>
+          <Button color={ButtonColor.blue} label={'Add to list'} showLabel={true} onClick={() => {
+          }}/>
         </div>
-        <div className={`flex flex-row w-full justify-between`}>
-          <span className={`flex-grow text-md font-normal space-x-4`}><FontAwesomeIcon size="1x" color="#333" icon={faCalendar}/><span>{year}</span></span>
+      )}
+      {props.style === AnimeCardStyle.EPISODE && (
+        <div
+          className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 sm:w-full lg:w-48 space-y-2 h-full relative w-full overflow-hidden group`}>
+
+          <div className="group w-full">
+            {/* Default (visible) */}
+            <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
+    {props.title}
+  </span>
+
+            {/* On hover (revealed) */}
+            <span className="hidden group-hover:block whitespace-nowrap text-md font-bold group-hover:animate-marquee">
+    {props.title}
+  </span>
+          </div>
+
+          <div className={`flex flex-col w-full justify-between space-y-2`}>
+            <span
+              className={`w-full text-md font-normal flex-grow flex flex-col`}>{(props as AnimeEpisodeCardProps).episodeTitle}</span>
+            <span className={`flex-grow text-md text-sm space-x-4 text-gray-600`}><span>{`episode ${(props as AnimeEpisodeCardProps).episodeNumber}`}</span></span>
+            {/* show airdate*/}
+            <span className={`flex-grow text-md text-sm space-x-4 text-gray-600`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
+          </div>
+          <Button color={ButtonColor.blue} label={'Add to list'} showLabel={true} onClick={() => {
+          }}/>
         </div>
-        <Button color={ButtonColor.blue} label={'Add to list'} showLabel={true} onClick={() => {}}/>
-      </div>
+      )}
     </Card>
   )
 }

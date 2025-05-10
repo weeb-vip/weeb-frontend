@@ -17,6 +17,7 @@ export default function App() {
   return (
     <Router>
       <Header/>
+      {/* align main to center */}
       <main>
         <AuthHandler/>
         <Routes>
