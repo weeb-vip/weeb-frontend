@@ -16,7 +16,7 @@ function Header() {
   const openModalRegister = useLoginModalStore((state) => state.openRegister);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 p-2">
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 p-2">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
         {/* Logo + Title */}
         <div className="flex items-center space-x-2 sm:space-x-4">

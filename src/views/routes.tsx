@@ -16,10 +16,12 @@ export default function App() {
 
   return (
     <Router>
+      <AuthHandler/>
       <Header/>
       {/* align main to center */}
+
       <main>
-        <AuthHandler/>
+
         <Routes>
           <Route path="/" element={<DefaultLayout><Home/></DefaultLayout>}/>
           <Route path="/search" element={<DefaultLayout><Search/></DefaultLayout>}/>
