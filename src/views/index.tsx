@@ -5,7 +5,7 @@ import {format} from "date-fns";
 import {fetchCurrentlyAiring, fetchHomePageData} from "../services/queries";
 import {useState} from "react";
 import AnimeCard, {AnimeCardStyle} from "../components/AnimeCard";
-import {useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 
 
 function Index() {
@@ -40,7 +40,7 @@ function Index() {
           ))}
         </div>
         {currentAiringIsLoading && !currentAiringData ? <Loader/> : (
-          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
+          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
             {currentAiringData?.currentlyAiring?.sort((a, b) => {
               // sort by rank
               if (a.nextEpisode?.airDate && b.nextEpisode?.airDate) {
@@ -50,7 +50,7 @@ function Index() {
                 return aDate.getTime() - bDate.getTime();
               }
               return 0
-            })?.slice(0, 6).map((item => (
+            })?.slice(0, 8).map((item => (
               <AnimeCard style={AnimeCardStyle.EPISODE}
                          title={item.titleEn || item.titleJp || "Unknown"}
                          episodeTitle={item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown"}
@@ -69,22 +69,18 @@ function Index() {
 
 
         )}
-        {/*
-         title: item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown",
-            description: "",
-            episodeLength: item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?",
-            year: item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?",
-            image: `https://cdn.weeb.vip/weeb/${item.id}`,
-            //image: `${(global as any).config.api_host}/show/anime/anidb/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid?.replace(/[^0-9.]/gm, '')}/poster`,
-            // navigate: item.anidbid ? `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.anidbid}` : `/show/${item.episodeCount == 1 ? 'movie' : 'series'}/${item.id ? encodeURIComponent(item.id) : ''}/custom`,
-            navigate: `/show/${item.id}`,
-            */}
+        <div className="w-full flex justify-end pt-2">
+          <Link to="/airing" className="text-blue-600 hover:underline">
+            See all currently airing anime
+          </Link>
+        </div>
       </div>
       <div className={"w-full flex flex-col"}>
         <h1 className={"text-2xl font-bold"}>Most Popular Anime</h1>
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
-            {homeData?.mostPopularAnime?.slice(0, 6).map(item => (
+          <div
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            {homeData?.mostPopularAnime?.slice(0, 8).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
                          description={""}
@@ -120,8 +116,9 @@ function Index() {
       <div className={"w-full flex flex-col"}>
         <h1 className={"text-2xl font-bold"}>Top Rated Anime</h1>
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
-            {homeData?.topRatedAnime?.slice(0, 6).map(item => (
+          <div
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            {homeData?.topRatedAnime?.slice(0, 8).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
                          description={""}
@@ -141,8 +138,9 @@ function Index() {
         <h1 className={"text-2xl font-bold"}>Newest Anime</h1>
         { /* ignore movies */}
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
-            {homeData?.newestAnime?.slice(0, 6).map(item => (
+          <div
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            {homeData?.newestAnime?.slice(0, 8).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
                          description={""}
