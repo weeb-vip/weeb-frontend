@@ -143,7 +143,7 @@ export function Autocomplete() {
           />
           {/* @ts-ignore */}
           <input
-            className="w-full rounded-full py-2 px-3 pl-10 text-sm leading-5 text-gray-900 outline-none border border-gray-200 focus:border-gray-400"
+            className="w-full rounded-full py-2 px-3 pl-10 text-base leading-5 text-gray-900 outline-none border border-gray-200 focus:border-gray-400"
             {...inputProps}
             ref={mobileInputRef}
           />
@@ -174,7 +174,7 @@ export function Autocomplete() {
         {/* @ts-ignore */}
         <input
           ref={desktopInputRef}
-          className="w-full rounded-full py-2 px-4 pl-10 text-sm border border-gray-200 outline-none focus:border-gray-400"
+          className="w-full rounded-full py-2 px-4 pl-10 text-base border border-gray-200 outline-none focus:border-gray-400"
           {...inputProps}
         />
         <div className="absolute top-50 left-0 right-0 mt-10">

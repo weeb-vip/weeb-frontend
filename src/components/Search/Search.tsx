@@ -27,12 +27,12 @@ function Search<T>({searchFunction, mapFunction, parseSearchResult, className}: 
       <Combobox value={selectedItem} onChange={setSelectedItem}>
         <div className="relative mt-1">
           <div
-            className="relative w-full cursor-default overflow-hidden rounded-full bg-white text-left  sm:text-sm relative">
+            className="relative w-full cursor-default overflow-hidden rounded-full bg-white text-left  sm:text-base relative">
             <FontAwesomeIcon size="1x" color="#333" icon={faSearch}
                              className={"absolute top-0 bottom-0 left-4 m-auto"}/>
             <Combobox.Input onChange={(event) => setQuery(event.target.value)}
                             displayValue={parseSearchResult}
-                            className="w-full rounded-full py-2 px-3 pl-10 text-sm leading-5 text-gray-900 outline-none border border-gray-200 focus:border-gray-400 active:border-gray-400"
+                            className="w-full rounded-full py-2 px-3 pl-10 text-base leading-5 text-gray-900 outline-none border border-gray-200 focus:border-gray-400 active:border-gray-400"
                             onKeyUp={(e) => {
                               if (e.key === 'Enter') {
                                 navigate(`/search?query=${query}`)
@@ -48,7 +48,7 @@ function Search<T>({searchFunction, mapFunction, parseSearchResult, className}: 
             afterLeave={() => setQuery('')}
           >
             <Combobox.Options
-              className="absolute mt-1 rounded-md max-h-60 w-full overflow-auto bg-white py-1 text-base ring-opacity-5 focus:outline-none sm:text-sm ">
+              className="absolute mt-1 rounded-md max-h-60 w-full overflow-auto bg-white py-1 text-base ring-opacity-5 focus:outline-none sm:text-base ">
               {items?.map((item: T, index: number) => (
                 <Combobox.Option
                   key={index}

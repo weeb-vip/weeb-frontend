@@ -93,7 +93,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
 
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Email</label>
+          <label className="block text-base font-medium mb-1">Email</label>
           <input
             name="username"
             type="text"
@@ -105,7 +105,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Password</label>
+          <label className="block text-base font-medium mb-1">Password</label>
           <input
             name="password"
             type="password"
@@ -118,7 +118,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
 
         {isRegisterState && (
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label className="block text-base font-medium mb-1">Password</label>
             <input
               name="confirmPassword"
               type="password"
@@ -153,7 +153,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
       </button>
       */}
 
-      <div className="mt-6 text-center text-sm text-gray-600">
+      <div className="mt-6 text-center text-base text-gray-600">
         {!isRegisterState ? "Don't have an account?" : "Already have an account?"}{' '}
         <button
           type="button"

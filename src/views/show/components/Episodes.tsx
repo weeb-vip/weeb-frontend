@@ -37,15 +37,15 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
           <thead>
           <tr>
             <th scope="col"
-                className="px-5 py-3 text-sm font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200"
+                className="px-5 py-3 text-base font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200"
             >
               #
             </th>
             <th scope="col"
-                className="px-5 py-3 text-sm font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200">Name
+                className="px-5 py-3 text-base font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200">Name
             </th>
             <th scope="col"
-                className="px-5 py-3 text-sm font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200">Aired
+                className="px-5 py-3 text-base font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200">Aired
             </th>
           </tr>
           </thead>
@@ -56,18 +56,18 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
 
             return (
               <tr key={episode.id}>
-                <td className="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                <td className="px-5 py-5 text-base bg-white border-b border-gray-200">
                   {/*<RouterLink to={`/anime/${type}/${id}/${episode.id}`}>*/}
                   {/*{`Episode ${index+1}`}*/}
                   {episode.episodeNumber}
                   {/*</RouterLink>*/}
                 </td>
-                <td className="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                <td className="px-5 py-5 text-base bg-white border-b border-gray-200">
                   {/*<RouterLink to={`/anime/${type}/${id}/${episode.id}`}>*/}
                   {episode.titleEn || "TBA"}
                   {/*</RouterLink>*/}
                 </td>
-                <td className="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                <td className="px-5 py-5 text-base bg-white border-b border-gray-200">
                   {formattedAirdate}
                 </td>
 

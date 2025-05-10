@@ -144,10 +144,10 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
           <div className={`flex flex-col w-full justify-between space-y-2`}>
 
             <span
-              className={`flex-grow text-md text-sm space-x-4 text-gray-600`}><span>{`episode ${(props as AnimeEpisodeCardProps).episodeNumber}`}</span></span>
+              className={`flex-grow text-md text-base space-x-4 text-gray-600`}><span>{`episode ${(props as AnimeEpisodeCardProps).episodeNumber}`}</span></span>
             {/* show airdate*/}
             <span
-              className={`flex-grow text-md text-sm space-x-4 text-gray-600`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
+              className={`flex-grow text-md text-base space-x-4 text-gray-600`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
           </div>
           <Button
             color={ButtonColor.blue}

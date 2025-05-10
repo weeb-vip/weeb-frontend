@@ -42,7 +42,7 @@ function Button ({color, showLabel, label, onClick, icon, type, disabled, classN
       onClick={onClick}
       type={type}
       disabled={disabled}
-      className={`flex items-center justify-center px-6 py-1 border border-transparent text-sm font-medium rounded-full ${colorClasses[color]} ${textColor[color]} ${className || ''} ${disabled ? `cursor-not-allowed ${disabledClasses[color]}` : 'cursor-pointer'} `}
+      className={`flex items-center justify-center px-6 py-1 border border-transparent text-base font-medium rounded-full ${colorClasses[color]} ${textColor[color]} ${className || ''} ${disabled ? `cursor-not-allowed ${disabledClasses[color]}` : 'cursor-pointer'} `}
     >
       {icon}
       {showLabel && <span>{label}</span>}
