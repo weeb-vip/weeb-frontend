@@ -19,16 +19,15 @@ interface AnimeCardProps {
   style: AnimeCardStyle
   title: string
   description: string
-  episodes: string
+  episodes: number
   episodeLength: string
   year: string
   image: string
-  navigate: string
   onClick: () => void
   className?: string
 }
 
-interface AnimeEspisodeCardProps {
+interface AnimeEpisodeCardProps {
   style: AnimeCardStyle
   title: string
   description: string
@@ -39,7 +38,6 @@ interface AnimeEspisodeCardProps {
   episodeTitle: string
   episodeNumber: string
   image: string
-  navigate: string
   onClick: () => void
   className?: string
 }
@@ -54,7 +52,7 @@ const cardStyles = {
   episode: ``,
 }
 
-function AnimeCard(props: AnimeCardProps | AnimeEspisodeCardProps) {
+function AnimeCard(props: AnimeCardProps|AnimeEpisodeCardProps) {
   return (
     <Card
       className={`flex sm:flex-row md:flex-col flex-none bg-white ${cardStyles[props.style]} drop-shadow-md flex-grow ${props.className || ''}`}
@@ -112,10 +110,10 @@ function AnimeCard(props: AnimeCardProps | AnimeEspisodeCardProps) {
 
           <div className={`flex flex-col w-full justify-between space-y-2`}>
             <span
-              className={`w-full text-md font-normal flex-grow flex flex-col`}>{props.episodeTitle}</span>
-            <span className={`flex-grow text-md text-sm space-x-4 text-gray-600`}><span>{`episode ${props.episodeNumber}`}</span></span>
+              className={`w-full text-md font-normal flex-grow flex flex-col`}>{(props as AnimeEpisodeCardProps).episodeTitle}</span>
+            <span className={`flex-grow text-md text-sm space-x-4 text-gray-600`}><span>{`episode ${(props as AnimeEpisodeCardProps).episodeNumber}`}</span></span>
             {/* show airdate*/}
-            <span className={`flex-grow text-md text-sm space-x-4 text-gray-600`}><span>{props.airdate}</span></span>
+            <span className={`flex-grow text-md text-sm space-x-4 text-gray-600`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
           </div>
           <Button color={ButtonColor.blue} label={'Add to list'} showLabel={true} onClick={() => {
           }}/>

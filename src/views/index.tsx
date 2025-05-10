@@ -1,13 +1,7 @@
 import {useQuery} from "@tanstack/react-query";
 import Loader from "../components/Loader";
-
-import {graphql} from '../gql'
-import request from "graphql-request";
-import {CurrentlyAiringDocument, CurrentlyAiringQuery, GetHomePageDataQuery} from "../gql/graphql";
+import { CurrentlyAiringQuery, GetHomePageDataQuery} from "../gql/graphql";
 import {format} from "date-fns";
-import Carousel from "./components/carousel/carousel";
-import config, {getConfig} from "../config";
-import {getCurrentlyAiring, getHomePageData} from "../services/api/graphql/queries";
 import {fetchCurrentlyAiring, fetchHomePageData} from "../services/queries";
 import {useState} from "react";
 import AnimeCard, {AnimeCardStyle} from "../components/AnimeCard";
@@ -69,7 +63,7 @@ function Index() {
                          airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do") : "Unknown"}
                          onClick={function (): void {
                            navigate(`/show/${item.id}`)
-                         }}/>
+                         }} episodes={0} />
             ))) || (<></>)}
           </div>
 
@@ -92,7 +86,7 @@ function Index() {
           <div className="w-fit grid sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
             {homeData?.mostPopularAnime?.slice(0, 6).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
-                         title={item.titleEn || item.titleJp || "Unknown"}
+                         title={item.titleEn || "Unknown"}
                          description={""}
                          episodes={item.episodeCount ? item.episodeCount : 0}
                          episodeLength={item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?"}
@@ -129,7 +123,7 @@ function Index() {
           <div className="w-fit grid sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
             {homeData?.topRatedAnime?.slice(0, 6).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
-                         title={item.titleEn || item.titleJp || "Unknown"}
+                         title={item.titleEn || "Unknown"}
                          description={""}
                          episodes={item.episodeCount ? item.episodeCount : 0}
                          episodeLength={item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?"}
@@ -150,7 +144,7 @@ function Index() {
           <div className="w-fit grid sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
             {homeData?.newestAnime?.slice(0, 6).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
-                         title={item.titleEn || item.titleJp || "Unknown"}
+                         title={item.titleEn || "Unknown"}
                          description={""}
                          episodes={item.episodeCount ? item.episodeCount : 0}
                          episodeLength={item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?"}
