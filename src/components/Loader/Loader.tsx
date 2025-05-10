@@ -1,7 +1,7 @@
 export default function Loader() {
   // circular progress
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center">
       {/*<div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>*/}
       <svg aria-hidden="true" className="w-8 h-8 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
            viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
