@@ -22,9 +22,9 @@ function Index() {
   const [selectedFilter, setSelectedFilter] = useState("Airing");
 
   return (
-    <div className={"flex flex-col w-full space-y-5"} style={{width: "1440px", margin: "0 auto"}}>
+    <div className={"flex flex-col  space-y-5 max-w-screen-2xl"} style={{margin: "0 auto"}}>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-4xl font-bold"}>Currently Airing Anime</h1>
+        <h1 className={"text-2xl font-bold"}>Currently Airing Anime</h1>
         { /* ignore movies */}
         <div className="flex gap-2 py-4">
           {["Airing", "Season", "Newest"].map(label => (
@@ -40,7 +40,7 @@ function Index() {
           ))}
         </div>
         {currentAiringIsLoading && !currentAiringData ? <Loader/> : (
-          <div className="w-fit grid sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-6 pl-4">
+          <div className="w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4 sm:w-full ">
             {currentAiringData?.currentlyAiring?.sort((a, b) => {
               // sort by rank
               if (a.nextEpisode?.airDate && b.nextEpisode?.airDate) {
@@ -63,7 +63,7 @@ function Index() {
                          airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do") : "Unknown"}
                          onClick={function (): void {
                            navigate(`/show/${item.id}`)
-                         }} episodes={0} />
+                         }} episodes={0}/>
             ))) || (<></>)}
           </div>
 
@@ -81,9 +81,9 @@ function Index() {
             */}
       </div>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-4xl font-bold"}>Most Popular Anime</h1>
+        <h1 className={"text-2xl font-bold"}>Most Popular Anime</h1>
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <div className="w-fit grid sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
+          <div className="w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4 sm:w-full ">
             {homeData?.mostPopularAnime?.slice(0, 6).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
@@ -118,9 +118,9 @@ function Index() {
           */}
       </div>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-4xl font-bold"}>Top Rated Anime</h1>
+        <h1 className={"text-2xl font-bold"}>Top Rated Anime</h1>
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <div className="w-fit grid sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
+          <div className="w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4 sm:w-full ">
             {homeData?.topRatedAnime?.slice(0, 6).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
@@ -138,10 +138,10 @@ function Index() {
         )}
       </div>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-4xl font-bold"}>Newest Anime</h1>
+        <h1 className={"text-2xl font-bold"}>Newest Anime</h1>
         { /* ignore movies */}
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <div className="w-fit grid sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
+          <div className="w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4 sm:w-full ">
             {homeData?.newestAnime?.slice(0, 6).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}

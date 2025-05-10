@@ -5,7 +5,7 @@ interface PropsWithChildren<T = {}> {
 
 function DefaultLayout({ children }: PropsWithChildren<{}>) {
   return (
-    <div className={"w-full py-8 px-16"}>
+    <div className={"w-full py-8 px-4 lg:px-16"}>
       {children}
     </div>
   );
