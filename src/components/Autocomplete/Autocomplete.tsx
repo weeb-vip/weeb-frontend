@@ -117,8 +117,21 @@ export function Autocomplete() {
 
   return (
     <>
+
+        <div
+          className={`
+        fixed inset-0 z-40 bg-white/30 backdrop-blur-md
+    transition-opacity duration-300 ease-in-out
+      ${autocompleteState.isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}
+    `}
+          onClick={() => {
+            desktopInputRef.current?.blur();
+            mobileInputRef.current?.blur();
+          }}
+        />
+
       {/* Mobile: inline search bar */}
-      <div className="relative w-full sm:hidden">
+      <div className="relative w-full sm:hidden z-50 focus-within:shadow-xl rounded-full transition-all duration-300 ease-in-out">
         <div
           className="w-full relative"
           {...autocomplete.getRootProps({})}
@@ -131,9 +144,7 @@ export function Autocomplete() {
           {/* @ts-ignore */}
           <input
             className="w-full rounded-full py-2 px-3 pl-10 text-sm leading-5 text-gray-900 outline-none border border-gray-200 focus:border-gray-400"
-            {...autocomplete.getInputProps({
-              inputElement: mobileInputRef.current,
-            })}
+            {...inputProps}
             ref={mobileInputRef}
           />
           {renderPanel(mobilePanelRef, mobileInputRef)}
@@ -141,15 +152,11 @@ export function Autocomplete() {
       </div>
 
       {/* Desktop: floating, always-visible search */}
-      {autocompleteState.isOpen && (
-        <div
-          className="hidden sm:block fixed inset-0 z-40 bg-white/30 backdrop-blur-md transition-opacity duration-300"
-          onClick={() => desktopInputRef.current?.blur()}
-        />
-      )}
+
       <div
         className={`
           hidden sm:flex z-50 left-1/2 -translate-x-1/2 w-full max-w-xl
+          top-0
           focus-within:top-16
           bg-white/70 backdrop-blur-md rounded-full
           transition-all duration-300 ease-in-out
