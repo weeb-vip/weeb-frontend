@@ -53,12 +53,10 @@ const cardStyles = {
   episode: ``,
 }
 
-function AnimeCard(props: AnimeCardProps|AnimeEpisodeCardProps) {
+function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
   return (
     <Card
       className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white rounded-md shadow-sm w-full overflow-hidden ${props.className || ''}`}
-
-
 
 
       onClick={props.onClick}>
@@ -74,10 +72,11 @@ function AnimeCard(props: AnimeCardProps|AnimeEpisodeCardProps) {
         }}
       />
       {props.style === AnimeCardStyle.DETAIL && (
-        <div className={`flex flex-col  sm:justify-start sm:align-left p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
+        <div
+          className={`flex flex-col  sm:justify-start sm:align-left p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
 
-        <div className="group w-full">
-          {/* Default (visible) */}
+          <div className="group w-full">
+            {/* Default (visible) */}
             <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
     {props.title}
   </span>
@@ -107,7 +106,8 @@ function AnimeCard(props: AnimeCardProps|AnimeEpisodeCardProps) {
             color={ButtonColor.blue}
             label={'Add to list'}
             showLabel={true}
-            className="w-fit self-start"
+
+            className="w-fit"
             onClick={() => {
             }}
           />
@@ -129,10 +129,20 @@ function AnimeCard(props: AnimeCardProps|AnimeEpisodeCardProps) {
     {props.title}
   </span>
           </div>
+          <div className="group w-full">
+            {/* Default (visible) */}
+            <span className="block whitespace-nowrap text-md font-noraml w-full truncate group-hover:hidden">
+    {(props as AnimeEpisodeCardProps).episodeTitle}
+  </span>
 
-          <div className={`flex flex-col w-full justify-between space-y-2`}>
+            {/* On hover (revealed) */}
             <span
-              className={`w-full text-md font-normal flex-grow flex flex-col`}>{(props as AnimeEpisodeCardProps).episodeTitle}</span>
+              className="hidden group-hover:block whitespace-nowrap text-md font-normal group-hover:animate-marquee">
+    {(props as AnimeEpisodeCardProps).episodeTitle}
+  </span>
+          </div>
+          <div className={`flex flex-col w-full justify-between space-y-2`}>
+
             <span
               className={`flex-grow text-md text-sm space-x-4 text-gray-600`}><span>{`episode ${(props as AnimeEpisodeCardProps).episodeNumber}`}</span></span>
             {/* show airdate*/}
@@ -143,8 +153,9 @@ function AnimeCard(props: AnimeCardProps|AnimeEpisodeCardProps) {
             color={ButtonColor.blue}
             label={'Add to list'}
             showLabel={true}
-            className="w-fit self-start"
-            onClick={() => {}}
+            className="w-fit"
+            onClick={() => {
+            }}
           />
         </div>
       )}
