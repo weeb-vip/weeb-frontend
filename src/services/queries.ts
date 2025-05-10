@@ -6,12 +6,12 @@ import {
     GetAnimeDetailsByIdQuery,
     GetHomePageDataQuery, LoginInput,
     RegisterInput,
-    RegisterResult, SigninResult, User
+    RegisterResult, SigninResult, UpdateUserInput, User
 } from "../gql/graphql";
 import {
     getAnimeDetailsByID,
     getCurrentlyAiring,
-    getHomePageData,
+    getHomePageData, mutateUpdateUserDetails,
     mutationCreateSession, mutationRefreshToken,
     mutationRegister, queryUserDetails
 } from "./api/graphql/queries";
@@ -108,3 +108,12 @@ export const refreshTokenSimple = async (): Promise<SigninResult> => {
     const response = await AuthenticatedClient().request(mutationRefreshToken, input);
     return response.RefreshToken
 }
+
+export const updateUserDetails = async () => ({
+  queryFn: async (user: UpdateUserInput) => {
+    const response = await AuthenticatedClient().request(mutateUpdateUserDetails, {
+      input: user
+    });
+    return response.UpdateUserDetails;
+  }
+})

@@ -20,6 +20,7 @@ export default function Modal({children, title, isOpen, closeFn, options, classN
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
+
       <Dialog as="div" className="fixed z-10" onClose={closeFn}>
         <Transition.Child
           as={Fragment}
@@ -36,7 +37,7 @@ export default function Modal({children, title, isOpen, closeFn, options, classN
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Dialog.Panel
-              className="w-full transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              className="transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
               <Dialog.Title>{title}</Dialog.Title>
               <div className="flex justify-between flex-col flex-no-wrap">
                 <div className="mt-2">

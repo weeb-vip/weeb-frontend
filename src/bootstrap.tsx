@@ -10,31 +10,6 @@ import {refreshTokenSimple} from "./services/queries";
 
 const Bootstrap = () => {
   const [loaded, setLoaded] = useState(false)
-  // @ts-ignore
-  const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
-  // @ts-ignore
-  const setLoggedIn = useLoggedInStore((state) => state.setLoggedIn);
-  // @ts-ignore
-  const setLogout = useLoggedInStore((state) => state.logout);
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("refreshToken");
-    setLogout();
-
-  }
-  // check localstorage for login token
-  useEffect(() => {
-    const authToken = localStorage.getItem("authToken");
-    console.log(authToken);
-    if (authToken) {
-      setLoggedIn(true);
-      // @ts-ignore
-      TokenRefresher.getInstance(refreshTokenSimple).start(authToken); // Start token refresh process
-    }
-
-  }, []);
-
-
 
   useEffect(() => {
     configApi.fetch().then((conf) => {

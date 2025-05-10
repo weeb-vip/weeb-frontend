@@ -21,11 +21,14 @@ import Autocomplete from "../Autocomplete";
 import {useLoggedInStore, useLoginModalStore} from "../../services/globalstore";
 
 function Header() {
+  // @ts-ignore
   const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
   const flags = useFlags(['algolia_search']);
   const navigate = useNavigate()
   // @ts-ignore
-  const openModal = useLoginModalStore((state) => state.open);
+  const openModalLogin = useLoginModalStore((state) => state.openLogin);
+  // @ts-ignore
+  const openModalRegister = useLoginModalStore((state) => state.openRegister);
   // @ts-ignore
   return (
     <>
@@ -49,9 +52,10 @@ function Header() {
 
           {!loggedIn ? (<>
           <Button color={ButtonColor.blue} showLabel={true} label={"Login"} onClick={() => {
-            openModal()
+            openModalLogin()
           }} icon={null}/>
           <Button color={ButtonColor.transparent} showLabel={true} label={"Register"} onClick={() => {
+            openModalRegister()
           }} icon={null}/>
           </>) : (<>
             <Link to={"/profile"}>

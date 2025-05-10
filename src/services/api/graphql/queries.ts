@@ -163,3 +163,16 @@ export const queryUserDetails = graphql(`
         }
     }`
 )
+
+export const mutateUpdateUserDetails = graphql(`
+  mutation UpdateUserDetails($input: UpdateUserInput!) {
+    UpdateUserDetails(input: $input) {
+      id
+      firstname
+      lastname
+      username
+      language
+      email
+    }
+  }
+`)
