@@ -1,133 +1,179 @@
-import React from "react";
+import React, {useRef, useMemo, useEffect, useState} from "react";
 import algoliasearch from "algoliasearch/lite";
-import {createAutocomplete} from '@algolia/autocomplete-core';
-import {getAlgoliaResults} from '@algolia/autocomplete-preset-algolia';
+import {createAutocomplete, AutocompleteOptions} from "@algolia/autocomplete-core";
+import {getAlgoliaResults} from "@algolia/autocomplete-preset-algolia";
 import {faSearch} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useNavigate} from "react-router-dom";
-import {format, isValid} from "date-fns";
-import {AutocompleteApi} from "@algolia/autocomplete-js";
+import {isValid} from "date-fns";
 import Item from "./item";
-import {auto} from "@popperjs/core";
 
-
-const searchClient = algoliasearch(
-  'A2HF2P5C6X',
-  '45216ed5ac3f9e0a478d3c354d353d58'
-);
+const searchClient = algoliasearch("A2HF2P5C6X", "45216ed5ac3f9e0a478d3c354d353d58");
 
 export function Autocomplete() {
   const navigate = useNavigate();
 
-  // (1) Create a React state.
-  const [autocompleteState, setAutocompleteState] = React.useState({});
-  const inputRef = React.useRef(null);
-  const formRef = React.useRef(null);
-  const panelRef = React.useRef(null);
+  const [autocompleteState, setAutocompleteState] = useState<any>({});
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+  const mobileFormRef = useRef<HTMLDivElement>(null);
+  const mobilePanelRef = useRef<HTMLDivElement>(null);
 
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const desktopFormRef = useRef<HTMLDivElement>(null);
+  const desktopPanelRef = useRef<HTMLDivElement>(null);
 
-  const autocomplete = React.useMemo(
-    () =>
-      createAutocomplete({
-        onStateChange({state}) {
-          // (2) Synchronize the Autocomplete state with the React state.
-          setAutocompleteState(state);
-        },
-        // @ts-ignore
-        getSources() {
-          return [
-            // (3) Use an Algolia index source.
-            {
-              sourceId: 'data',
-              getItemInputValue({item}) {
-                return item.title_en;
-              },
-              getItems({query}) {
-                return getAlgoliaResults({
-                  searchClient,
-                  queries: [
-                    {
-                      indexName: 'anime',
-                      query,
-                      params: {
-                        hitsPerPage: 20,
-                        highlightPreTag: '<mark>',
-                        highlightPostTag: '</mark>',
-                      },
-                    },
-                  ],
-                });
-              },
-              getItemUrl({item}) {
-                return item;
-              },
+  const autocomplete = useMemo(() => {
+    return createAutocomplete({
+      onStateChange({state}) {
+        setAutocompleteState(state);
+      },
+      getSources() {
+        return [
+          {
+            sourceId: "data",
+            getItemInputValue({item}) {
+              return item.title_en;
             },
-          ];
-        },
-      }),
-    []
-  );
+            getItems({query}) {
+              return getAlgoliaResults({
+                searchClient,
+                queries: [
+                  {
+                    indexName: "anime",
+                    query,
+                    params: {
+                      hitsPerPage: 20,
+                    },
+                  },
+                ],
+              });
+            },
+          },
+        ];
+      },
+    } as AutocompleteOptions<any>);
+  }, []);
+
+  const inputProps = autocomplete.getInputProps({
+    inputElement: desktopInputRef.current,
+    onFocus: () => {
+      autocomplete.setIsOpen(true);
+    },
+    onBlur: () => {
+      autocomplete.setIsOpen(false);
+    },
+  });
 
   const {getEnvironmentProps} = autocomplete;
-  React.useEffect(() => {
-    if (!(formRef.current && panelRef.current && inputRef.current)) {
-      return;
-    }
+
+  useEffect(() => {
+    if (!mobileFormRef.current || !mobileInputRef.current || !mobilePanelRef.current) return;
 
     const {onTouchStart, onTouchMove, onMouseDown} = getEnvironmentProps({
-      formElement: formRef.current,
-      panelElement: panelRef.current,
-      inputElement: inputRef.current,
+      formElement: mobileFormRef.current,
+      inputElement: mobileInputRef.current,
+      panelElement: mobilePanelRef.current,
     });
 
-    window.addEventListener('touchstart', onTouchStart);
-    window.addEventListener('touchmove', onTouchMove);
-    window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener("touchstart", onTouchStart);
+    window.addEventListener("touchmove", onTouchMove);
+    window.addEventListener("mousedown", onMouseDown);
 
     return () => {
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("mousedown", onMouseDown);
     };
-    // @ts-ignore
-  }, [getEnvironmentProps, autocompleteState.isOpen]);
+  }, [getEnvironmentProps]);
+
+  const renderPanel = (panelRef: React.RefObject<HTMLDivElement>, inputRef: React.RefObject<HTMLInputElement>) =>
+    autocompleteState.isOpen && (
+      <>
+        {/* @ts-ignore */}
+        <div
+          className="absolute z-50 bg-white w-full left-0 right-0 max-h-60 overflow-auto shadow-md mt-1 rounded-md"
+          {...autocomplete.getPanelProps({})}
+          ref={panelRef}
+        >
+          {autocompleteState.collections.map((collection: any, index: number) => (
+            <ul key={index} {...autocomplete.getListProps()}>
+              {collection.items
+                .filter((item: any) => isValid(new Date(item.start_date)))
+                .map((item: any) => (
+                  <Item
+                    key={item.objectID}
+                    item={item}
+                    source={collection.source}
+                    navigate={navigate}
+                    autocomplete={autocomplete}
+                    inputRef={inputRef}
+                  />
+                ))}
+            </ul>
+          ))}
+        </div>
+      </>
+    );
 
   return (
-    <div
-      className="relative cursor-default rounded-full bg-white text-left  sm:text-sm relative" {...autocomplete.getRootProps({})}
-      ref={formRef}
-    >
-      <FontAwesomeIcon size="1x" color="#333" icon={faSearch}
-                       className={"absolute top-0 bottom-0 left-4 m-auto"}/>
-      {/* @ts-ignore */}
-      <input
-        className="rounded-full w-64 py-2 px-3 pl-10 text-sm leading-5 text-gray-900 outline-none border border-gray-200 focus:border-gray-400 active:border-gray-400"
-        // @ts-ignore
-        {...autocomplete.getInputProps({})}
-        ref={inputRef}/>
-      {/* @ts-ignore */}
-      <div className="aa-Panel absolute z-10 bg-white w-full mx-4 left-0 right-0 max-h-60 overflow-auto"
-           {...autocomplete.getPanelProps({})}>
-        {/* @ts-ignore */}
-        {autocompleteState.isOpen && autocompleteState.collections.map((collection: any, index: number) => {
-          const {source, items} = collection;
-
-          return (
-            <div key={`source-${index}`} className="aa-Source" ref={panelRef}>
-              {items.length > 0 && (
-                <ul className="aa-List" {...autocomplete.getListProps()}>
-                  {/* @ts-ignore */}
-                  {items.filter((item) => isValid(new Date(item.start_date))).map((item: any) => (
-                    <Item key={item.objectID} item={item} source={source} navigate={navigate}  autocomplete={autocomplete}/>
-                  ))}
-                </ul>
-              )}
-            </div>
-          );
-        })}
+    <>
+      {/* Mobile: inline search bar */}
+      <div className="relative w-full sm:hidden">
+        <div
+          className="w-full relative"
+          {...autocomplete.getRootProps({})}
+          ref={mobileFormRef}
+        >
+          <FontAwesomeIcon
+            icon={faSearch}
+            className="absolute top-0 bottom-0 left-4 m-auto text-gray-500"
+          />
+          {/* @ts-ignore */}
+          <input
+            className="w-full rounded-full py-2 px-3 pl-10 text-sm leading-5 text-gray-900 outline-none border border-gray-200 focus:border-gray-400"
+            {...autocomplete.getInputProps({
+              inputElement: mobileInputRef.current,
+            })}
+            ref={mobileInputRef}
+          />
+          {renderPanel(mobilePanelRef, mobileInputRef)}
+        </div>
       </div>
-    </div>
+
+      {/* Desktop: floating, always-visible search */}
+      {autocompleteState.isOpen && (
+        <div
+          className="hidden sm:block fixed inset-0 z-40 bg-white/30 backdrop-blur-md transition-opacity duration-300"
+          onClick={() => desktopInputRef.current?.blur()}
+        />
+      )}
+      <div
+        className={`
+          hidden sm:flex z-50 left-1/2 -translate-x-1/2 w-full max-w-xl
+          focus-within:top-16
+          bg-white/70 backdrop-blur-md rounded-full
+          transition-all duration-300 ease-in-out
+          shadow-sm focus-within:shadow-xl
+          scale-100 focus-within:scale-105
+          relative
+        `}
+        {...autocomplete.getRootProps({})}
+        ref={desktopFormRef}
+      >
+        <FontAwesomeIcon
+          icon={faSearch}
+          className="absolute top-0 bottom-0 left-6 m-auto text-gray-500"
+        />
+        {/* @ts-ignore */}
+        <input
+          ref={desktopInputRef}
+          className="w-full rounded-full py-2 px-4 pl-10 text-sm border border-gray-200 outline-none focus:border-gray-400"
+          {...inputProps}
+        />
+        <div className="absolute top-50 left-0 right-0 mt-10">
+          {renderPanel(desktopPanelRef, desktopInputRef)}
+        </div>
+      </div>
+    </>
   );
-
-
 }

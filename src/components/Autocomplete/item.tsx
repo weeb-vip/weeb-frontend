@@ -7,9 +7,10 @@ export interface IItem {
   item: any
   source: any
   navigate: any
+  inputRef?: React.RefObject<HTMLInputElement>
 }
 
-export default function Item({autocomplete, item, source, navigate}: IItem) {
+export default function Item({autocomplete, item, source, navigate, inputRef}: IItem) {
   return (
     <li
       key={item.objectID}
@@ -22,6 +23,9 @@ export default function Item({autocomplete, item, source, navigate}: IItem) {
         autocomplete.setIsOpen(false)
         autocomplete.setQuery('')
         navigate(`/show/${item.id ? encodeURIComponent(item.id) : ''}`)
+        if (inputRef && inputRef.current) {
+          (inputRef.current as HTMLInputElement).blur()
+        }
       }}
     >
       <img
