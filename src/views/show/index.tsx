@@ -99,14 +99,12 @@ function Index() {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-col flex-grow bg-slate-300 px-16 py-8">
+                        <div className="flex flex-col flex-grow bg-slate-300 px-4 sm:px-8 lg:px-16 py-4 sm:py-6 lg:py-8">
                             <Tabs tabs={["Episodes", "Characters", "Trailers", "Artworks"]} defaultTab={"Episodes"}>
-                                <div className="flex flex-row space-x-2 p-10 bg-slate-300 flex-grow">
-                                  <>
+                                <div className="w-full p-4 sm:p-6 lg:p-10">
                                     {show?.anime.episodes && (
                                       <Tables episodes={show?.anime?.episodes}/>
                                     )}
-                                  </>
                                 </div>
                                 {/* table of characters */}
                                 <div></div>
