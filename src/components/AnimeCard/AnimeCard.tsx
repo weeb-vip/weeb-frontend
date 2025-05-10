@@ -65,7 +65,7 @@ function AnimeCard(props: AnimeCardProps|AnimeEpisodeCardProps) {
       />
       {props.style === AnimeCardStyle.DETAIL && (
         <div
-          className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
+          className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
           <div className="group w-full">
             {/* Default (visible) */}
             <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
@@ -94,7 +94,7 @@ function AnimeCard(props: AnimeCardProps|AnimeEpisodeCardProps) {
       )}
       {props.style === AnimeCardStyle.EPISODE && (
         <div
-          className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 w-full lg:w-48 space-y-2 h-full relative w-full overflow-hidden group`}>
+          className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 sm:w-full lg:w-48 space-y-2 h-full relative w-full overflow-hidden group`}>
 
           <div className="group w-full">
             {/* Default (visible) */}

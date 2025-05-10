@@ -40,7 +40,7 @@ function Index() {
           ))}
         </div>
         {currentAiringIsLoading && !currentAiringData ? <Loader/> : (
-          <div className="w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4 sm:w-full ">
+          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
             {currentAiringData?.currentlyAiring?.sort((a, b) => {
               // sort by rank
               if (a.nextEpisode?.airDate && b.nextEpisode?.airDate) {
@@ -83,7 +83,7 @@ function Index() {
       <div className={"w-full flex flex-col"}>
         <h1 className={"text-2xl font-bold"}>Most Popular Anime</h1>
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <div className="w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4 sm:w-full ">
+          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
             {homeData?.mostPopularAnime?.slice(0, 6).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
@@ -120,7 +120,7 @@ function Index() {
       <div className={"w-full flex flex-col"}>
         <h1 className={"text-2xl font-bold"}>Top Rated Anime</h1>
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <div className="w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4 sm:w-full ">
+          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
             {homeData?.topRatedAnime?.slice(0, 6).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
@@ -141,7 +141,7 @@ function Index() {
         <h1 className={"text-2xl font-bold"}>Newest Anime</h1>
         { /* ignore movies */}
         {homeDataIsLoading && !homeData ? <Loader/> : (
-          <div className="w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4 sm:w-full ">
+          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-6 pl-4 py-4">
             {homeData?.newestAnime?.slice(0, 6).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
