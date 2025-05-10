@@ -4,8 +4,7 @@ import {login, refreshTokenSimple, register} from "../../services/queries";
 import { TokenRefresher } from "../../services/token_refresher";
 import { useMutation } from "@tanstack/react-query";
 import {useLoggedInStore, useLoginModalStore} from "../../services/globalstore";
-import FoxgirlLoader from "../Loader/FoxgirlLoader";
-import {mutationRegister} from "../../services/api/graphql/queries";
+import Loader from "../Loader";
 
 export interface LoginRegisterModalProps {
   closeFn?: () => void;
@@ -132,7 +131,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
         )}
 
         {isLoading && (
-          <FoxgirlLoader/>)
+          <Loader/>)
         }
         <button
           type="submit"
