@@ -6,7 +6,7 @@ import {useNavigate} from "react-router-dom";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faSearch} from "@fortawesome/free-solid-svg-icons";
 
-interface ISearch<T> {
+export interface ISearch<T> {
   searchFunction: (query: string) => Promise<T[]>
   mapFunction: (selectItem: (item: T) => void) => (item: T) => JSX.Element
   parseSearchResult: (result: T) => string

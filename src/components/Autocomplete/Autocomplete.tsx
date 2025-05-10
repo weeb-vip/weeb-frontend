@@ -6,6 +6,9 @@ import {faSearch} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useNavigate} from "react-router-dom";
 import {format, isValid} from "date-fns";
+import {AutocompleteApi} from "@algolia/autocomplete-js";
+import Item from "./item";
+import {auto} from "@popperjs/core";
 
 
 const searchClient = algoliasearch(
@@ -115,37 +118,7 @@ export function Autocomplete() {
                 <ul className="aa-List" {...autocomplete.getListProps()}>
                   {/* @ts-ignore */}
                   {items.filter((item) => isValid(new Date(item.start_date))).map((item: any) => (
-                    <>
-                      {/* @ts-ignore */}
-                      <li
-                        key={item.objectID}
-                        className="aa-Item p-2 flex flex-row"
-                        {...autocomplete.getItemProps({
-                          item,
-                          source,
-                        })}
-                        onClick={() => {
-                          autocomplete.setIsOpen(false)
-                          autocomplete.setQuery('')
-                          navigate(`/show/${item.id ? encodeURIComponent(item.id) : ''}`)
-                        }}
-                      >
-                        <img
-                          src={`https://cdn.weeb.vip/weeb/${item.id}`}
-                          alt={item.name}
-                          style={{height: '50px'}}
-                          className={"aspect-2/3 m-2"}
-                          onError={({ currentTarget }) => {
-                            currentTarget.onerror = null; // prevents looping
-                            currentTarget.src="/assets/not found.jpg";
-                          }}
-                        />
-                        <div className={"flex flex-col flex-shrink"}>
-                          <span>{item.title_en}</span>
-                          <span>{isValid(new Date(item.start_date)) ? format(new Date(item.start_date), "yyyy") : ''}</span>
-                        </div>
-                      </li>
-                    </>
+                    <Item key={item.objectID} item={item} source={source} navigate={navigate}  autocomplete={autocomplete}/>
                   ))}
                 </ul>
               )}

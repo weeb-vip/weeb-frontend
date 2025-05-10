@@ -1,3 +1,4 @@
-import Search from './Search'
+import Search, {ISearch} from './Search'
 
-export default Search
+export type {ISearch}
+export {Search as default}

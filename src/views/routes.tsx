@@ -6,16 +6,19 @@ import {
 import Header from "../components/Header";
 import DefaultLayout from "../layouts/default";
 import FullWidthLayout from "../layouts/fullWidth";
+import AuthHandler from "../auth";
 // import ProtectedAuth from './components/protectedRoute'
 
 export default function App() {
   const Home = React.lazy(() => import('./index'))
   const Search = React.lazy(() => import('./search'))
   const Show = React.lazy(() => import('./show'))
+
   return (
     <Router>
       <Header/>
       <main>
+        <AuthHandler/>
         <Routes>
           <Route path="/" element={<DefaultLayout><Home/></DefaultLayout>}/>
           <Route path="/search" element={<DefaultLayout><Search/></DefaultLayout>}/>

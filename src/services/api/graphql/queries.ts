@@ -107,3 +107,72 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
     }
   }
 `)
+
+export const mutationRefreshToken = graphql(`
+    mutation RefreshToken($token: String!) {
+        RefreshToken(token: $token) {
+            id
+            Credentials {
+                refresh_token
+                token
+            }
+        }
+    }
+`)
+
+export const mutationRegister = graphql(
+    `
+        mutation Register($input: RegisterInput!) {
+            Register(input: $input) {
+                id
+            }
+        }
+  `
+)
+
+export const mutationCreateSession = graphql(
+    `
+        mutation CreateSession($input: LoginInput!) {
+            CreateSession(input: $input) {
+                id
+                Credentials {
+                    refresh_token
+                    token
+                }
+            }
+        }
+  `
+)
+
+export const queryUserDetails = graphql(`
+    query getUserDetails {
+        UserDetails {
+            id
+            firstname
+            lastname
+            username
+            language
+            email
+            active_sessions {
+                id
+                ip_address
+                token
+                user_agent
+                user_id
+            }
+        }
+    }`
+)
+
+export const mutateUpdateUserDetails = graphql(`
+  mutation UpdateUserDetails($input: UpdateUserInput!) {
+    UpdateUserDetails(input: $input) {
+      id
+      firstname
+      lastname
+      username
+      language
+      email
+    }
+  }
+`)
