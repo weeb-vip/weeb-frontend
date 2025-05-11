@@ -14,7 +14,9 @@ export default defineConfig({
     },
 
 
-
+    build: {
+        target: ['es2018', 'safari11'], // or 'es2015' for broadest support
+    },
     plugins: [
         viteStaticCopy({
             targets: [
