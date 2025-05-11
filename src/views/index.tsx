@@ -41,14 +41,14 @@ function Index() {
         </div>
         {currentAiringIsLoading ? (
           <div
-            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {Array(8).fill({id: 1}).map((anime, index) => (
               <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
             ))}
           </div>
         ) : (
           <div
-            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {currentAiringData?.currentlyAiring?.sort((a, b) => {
               // sort by rank
               if (a.nextEpisode?.airDate && b.nextEpisode?.airDate) {
@@ -87,14 +87,14 @@ function Index() {
         <h1 className={"text-2xl font-bold"}>Most Popular Anime</h1>
         {homeDataIsLoading ? (
           <div
-            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {Array(8).fill({id: 1}).map((anime, index) => (
               <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
             ))}
           </div>
-          ) : (
+        ) : (
           <div
-            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {homeData?.mostPopularAnime?.slice(0, 8).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
@@ -132,14 +132,14 @@ function Index() {
         <h1 className={"text-2xl font-bold"}>Top Rated Anime</h1>
         {homeDataIsLoading ? (
           <div
-            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {Array(8).fill({id: 1}).map((anime, index) => (
               <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
             ))}
           </div>
-          ) : (
+        ) : (
           <div
-            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {homeData?.topRatedAnime?.slice(0, 8).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}
@@ -161,14 +161,14 @@ function Index() {
         { /* ignore movies */}
         {homeDataIsLoading ? (
           <div
-            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {Array(8).fill({id: 1}).map((anime, index) => (
               <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
             ))}
           </div>
-          ) : (
+        ) : (
           <div
-            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {homeData?.newestAnime?.slice(0, 8).map(item => (
               <AnimeCard style={AnimeCardStyle.DETAIL}
                          title={item.titleEn || "Unknown"}

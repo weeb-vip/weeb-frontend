@@ -57,7 +57,7 @@ const cardStyles = {
 function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
   return (
     <Card
-      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white rounded-md shadow-sm w-full overflow-hidden ${props.className || ''}`}
+      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white rounded-md shadow-sm w-full overflow-hidden  justify-center ${props.className || ''}`}
 
 
       onClick={props.onClick}>
