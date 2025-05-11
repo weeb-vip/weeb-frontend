@@ -27,6 +27,7 @@ interface AnimeCardProps {
   image: string
   onClick: () => void
   className?: string
+  options: React.ReactNode[]
 }
 
 interface AnimeEpisodeCardProps {
@@ -57,11 +58,12 @@ const cardStyles = {
 function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
   return (
     <Card
-      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white rounded-md shadow-sm w-full overflow-hidden justify-center ${props.className || ''}`}
-
-
+      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white rounded-md shadow-sm w-full justify-center ${props.className || ''}`}
     >
-      <img
+
+
+
+    <img
         src={props.image}
         alt={props.title}
         className={`aspect-2/3 object-cover ${
@@ -75,10 +77,12 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
       />
       {props.style === AnimeCardStyle.DETAIL && (
         <div
-          className={`flex flex-col  sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full overflow-hidden group`}>
+          className={`flex flex-col sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full overflow-x-hidden overflow-y-visible group`}
+        >
+
 
           <div onClick={props.onClick} className={"flex flex-col w-full"}>
-            <div className="group w-full" >
+            <div className="group w-full">
               {/* Default (visible) */}
               <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
     {props.title}
@@ -107,21 +111,21 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
           </div>
           <div
             className={`flex options w-full ${(props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'}`}>
-            <Button
-              color={ButtonColor.blue}
-              label={'Add to list'}
-              showLabel={true}
-              className="w-fit"
-              onClick={() => {
-              }}
-            />
+            {(props as AnimeCardProps).options && (props as AnimeCardProps).options.length > 0 && (
+              (props as AnimeCardProps).options.map((option, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  {option}
+                </div>
+              ))
+            )}
           </div>
 
         </div>
       )}
       {props.style === AnimeCardStyle.EPISODE && (
         <div
-          className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full overflow-hidden group`}>
+          className={`flex flex-col sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full overflow-x-hidden overflow-y-visible group`}
+        >
 
           <div onClick={props.onClick} className={"flex flex-col w-full"}>
             <div className="group w-full">
@@ -159,14 +163,14 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
           </div>
           {/* if list align left */}
           <div className={`flex options w-full ${(props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'}`}>
-            <Button
-              color={ButtonColor.blue}
-              label={'Add to list'}
-              showLabel={true}
-              className="w-fit"
-              onClick={() => {
-              }}
-            />
+            {(props as AnimeCardProps).options && (props as AnimeCardProps).options.length > 0 && (
+              (props as AnimeCardProps).options.map((option, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  {option}
+                </div>
+              ))
+            )}
+
           </div>
         </div>
       )}

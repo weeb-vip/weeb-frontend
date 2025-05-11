@@ -1,12 +1,14 @@
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import Loader from "../components/Loader";
-import { CurrentlyAiringQuery, GetHomePageDataQuery} from "../gql/graphql";
+import { CurrentlyAiringQuery, GetHomePageDataQuery, Status} from "../gql/graphql";
 import {format} from "date-fns";
-import {fetchCurrentlyAiring, fetchHomePageData} from "../services/queries";
+import {fetchCurrentlyAiring, fetchHomePageData, upsertAnime} from "../services/queries";
 import {useState} from "react";
 import AnimeCard, {AnimeCardSkeleton, AnimeCardStyle} from "../components/AnimeCard";
 import {Link, useNavigate} from "react-router-dom";
 import {utc} from "@date-fns/utc/utc";
+import Button, {ButtonColor} from "../components/Button";
+import {mutate} from "swr";
 
 
 function Index() {
@@ -21,6 +23,27 @@ function Index() {
   const navigate = useNavigate()
 
   const [selectedFilter, setSelectedFilter] = useState("Airing");
+
+  const {
+    mutate: mutateAddAnime
+  } = useMutation({
+    ...upsertAnime(),
+    onSuccess: (data) => {
+      console.log("Added anime", data)
+    },
+    onError: (error) => {
+      console.log("Error adding anime", error)
+    }
+  })
+
+  const addAnime = (id: string) => {
+    mutateAddAnime({
+      input: {
+        animeID: id,
+        status: Status.Plantowatch,
+      }
+    })
+  }
 
   return (
     <div className={"flex flex-col  space-y-5 max-w-screen-2xl"} style={{margin: "0 auto"}}>
@@ -63,7 +86,19 @@ function Index() {
                          airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do", {in: utc}) : "Unknown"}
                          onClick={function (): void {
                            navigate(`/show/${item.id}`)
-                         }} episodes={0}/>
+                         }} episodes={0}
+                        options={[(
+                          <Button
+                            color={ButtonColor.blue}
+                            label={'Add to list'}
+                            showLabel={true}
+                            className="w-fit"
+                            onClick={() => {
+                              addAnime(item.id)
+                            }}
+                          />
+                        )]}
+              />
             ))) || (<></>)}
           </div>
 
@@ -99,6 +134,17 @@ function Index() {
                          onClick={function (): void {
                            navigate(`/show/${item.id}`)
                          }}
+                         options={[(
+                           <Button
+                             color={ButtonColor.blue}
+                             label={'Add to list'}
+                             showLabel={true}
+                             className="w-fit"
+                             onClick={() => {
+                               addAnime(item.id)
+                             }}
+                           />
+                         )]}
               />
             )) || (<></>)}
           </div>
@@ -143,7 +189,19 @@ function Index() {
                          className={"hover:cursor-pointer"}
                          onClick={function (): void {
                            navigate(`/show/${item.id}`)
-                         }}/>
+                         }}
+                         options={[(
+                           <Button
+                             color={ButtonColor.blue}
+                             label={'Add to list'}
+                             showLabel={true}
+                             className="w-fit"
+                             onClick={() => {
+                               addAnime(item.id)
+                             }}
+                           />
+                         )]}
+              />
             )) || (<></>)}
           </div>
         )}
@@ -172,7 +230,19 @@ function Index() {
                          className={"hover:cursor-pointer"}
                          onClick={function (): void {
                            navigate(`/show/${item.id}`)
-                         }}/>
+                         }}
+                         options={[(
+                           <Button
+                             color={ButtonColor.blue}
+                             label={'Add to list'}
+                             showLabel={true}
+                             className="w-fit"
+                             onClick={() => {
+                               addAnime(item.id)
+                             }}
+                           />
+                         )]}
+              />
             )) || (<></>)}
           </div>
 

@@ -28,6 +28,7 @@ export const Primary: { args: AnimeCardProps } = {
     year: '2021',
     image: 'https://cdn.weeb.vip/weeb/164a90ec-074e-4855-b086-ce2c98012791',
     onClick: fn(),
+    options:[]
   },
 
 };

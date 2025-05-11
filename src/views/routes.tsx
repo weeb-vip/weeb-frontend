@@ -16,8 +16,9 @@ import ScrollRestoration from "../scrollrestoration";
 
 
 const Home = React.lazy(() => import('./index'));
-const Search = React.lazy(() => import('./search'));
 const Show = React.lazy(() => import('./show'));
+const Anime = React.lazy(() => import('./profile/anime'));
+const Profile = React.lazy(() => import('./profile'));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -32,14 +33,6 @@ function AnimatedRoutes() {
           element={
             <DefaultLayout>
               <PageWrapper><Home /></PageWrapper>
-            </DefaultLayout>
-          }
-        />
-        <Route
-          path="/search"
-          element={
-            <DefaultLayout>
-              <PageWrapper><Search /></PageWrapper>
             </DefaultLayout>
           }
         />
@@ -62,7 +55,25 @@ function AnimatedRoutes() {
         <Route
           path="/airing"
           element={
+          <DefaultLayout>
             <PageWrapper><CurrentlyAiringPage /></PageWrapper>
+          </DefaultLayout>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <DefaultLayout>
+              <PageWrapper><Profile /></PageWrapper>
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/profile/anime"
+          element={
+            <DefaultLayout>
+            <PageWrapper><Anime /></PageWrapper>
+            </DefaultLayout>
           }
         />
         <Route path="*" element={<PageWrapper><div>Not found</div></PageWrapper>} />

@@ -11,6 +11,8 @@ export class TokenRefresher {
   private constructor(refreshFunction: RefreshTokenFunction<never>, refreshWindow: number = 60 * 1000) {
     this.refreshFunction = refreshFunction;
     this.refreshWindow = refreshWindow; // Default refresh window is 1 minute
+    // lets try to refresh
+    this.refreshToken();
   }
 
   /**
