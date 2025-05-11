@@ -2,6 +2,7 @@ import Card from "../Card";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCalendar, faClapperboard, faClock} from "@fortawesome/free-solid-svg-icons";
 import Button, {ButtonColor} from "../Button";
+import {Skeleton} from "../Skeleton/Skeleton";
 
 enum AnimeCardStyle {
   DEFAULT = 'default',
@@ -166,3 +167,49 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
 export {AnimeCard as default, AnimeCardStyle}
 
 export type {AnimeCardProps}
+
+
+interface SkeletonProps {
+  style: AnimeCardStyle;
+  forceListLayout?: boolean;
+}
+export function AnimeCardSkeleton({ style, forceListLayout = false }: SkeletonProps) {
+  const isEpisode = style === AnimeCardStyle.EPISODE;
+
+  return (
+    <div
+      className={`flex ${forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} 
+        bg-white rounded-md shadow-sm w-full 
+        ${isEpisode ? "w-24 sm:w-28 md:w-32" : "w-32 sm:w-40 md:w-44"} 
+        overflow-hidden animate-pulse`}
+    >
+
+      <div
+        className={`aspect-2/3 bg-gray-200 ${
+          forceListLayout ? "w-24 sm:w-28 md:w-32" : "w-32 sm:w-40 md:w-44"
+        }`}
+      />
+      <div className="flex flex-col justify-between px-4 py-3 w-full h-full">
+        <div className="space-y-2">
+          <div className="w-full h-4 bg-gray-200 rounded" />
+          {isEpisode ? (
+            <>
+              <div className="w-2/3 h-3 bg-gray-200 rounded" />
+              <div className="w-1/2 h-3 bg-gray-200 rounded" />
+              <div className="w-2/3 h-3 bg-gray-200 rounded" />
+            </>
+          ) : (
+            <>
+              <div className="w-2/3 h-3 bg-gray-200 rounded" />
+              <div className="w-1/3 h-3 bg-gray-200 rounded" />
+              <div className="w-1/4 h-3 bg-gray-200 rounded" />
+            </>
+          )}
+        </div>
+        <div className="pt-3">
+          <div className="w-24 h-8 bg-gray-300 rounded-full mx-auto" />
+        </div>
+      </div>
+    </div>
+  );
+}

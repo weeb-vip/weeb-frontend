@@ -4,7 +4,7 @@ import { CurrentlyAiringQuery, GetHomePageDataQuery} from "../gql/graphql";
 import {format} from "date-fns";
 import {fetchCurrentlyAiring, fetchHomePageData} from "../services/queries";
 import {useState} from "react";
-import AnimeCard, {AnimeCardStyle} from "../components/AnimeCard";
+import AnimeCard, {AnimeCardSkeleton, AnimeCardStyle} from "../components/AnimeCard";
 import {Link, useNavigate} from "react-router-dom";
 
 
@@ -39,8 +39,16 @@ function Index() {
             </button>
           ))}
         </div>
-        {currentAiringIsLoading && !currentAiringData ? <Loader/> : (
-          <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+        {currentAiringIsLoading ? (
+          <div
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            {Array(8).fill({id: 1}).map((anime, index) => (
+              <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
             {currentAiringData?.currentlyAiring?.sort((a, b) => {
               // sort by rank
               if (a.nextEpisode?.airDate && b.nextEpisode?.airDate) {
@@ -77,7 +85,14 @@ function Index() {
       </div>
       <div className={"w-full flex flex-col"}>
         <h1 className={"text-2xl font-bold"}>Most Popular Anime</h1>
-        {homeDataIsLoading && !homeData ? <Loader/> : (
+        {homeDataIsLoading ? (
+          <div
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            {Array(8).fill({id: 1}).map((anime, index) => (
+              <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
+            ))}
+          </div>
+          ) : (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
             {homeData?.mostPopularAnime?.slice(0, 8).map(item => (
@@ -115,7 +130,14 @@ function Index() {
       </div>
       <div className={"w-full flex flex-col"}>
         <h1 className={"text-2xl font-bold"}>Top Rated Anime</h1>
-        {homeDataIsLoading && !homeData ? <Loader/> : (
+        {homeDataIsLoading ? (
+          <div
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            {Array(8).fill({id: 1}).map((anime, index) => (
+              <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
+            ))}
+          </div>
+          ) : (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
             {homeData?.topRatedAnime?.slice(0, 8).map(item => (
@@ -137,7 +159,14 @@ function Index() {
       <div className={"w-full flex flex-col"}>
         <h1 className={"text-2xl font-bold"}>Newest Anime</h1>
         { /* ignore movies */}
-        {homeDataIsLoading && !homeData ? <Loader/> : (
+        {homeDataIsLoading ? (
+          <div
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
+            {Array(8).fill({id: 1}).map((anime, index) => (
+              <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
+            ))}
+          </div>
+          ) : (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 pl-4 py-4">
             {homeData?.newestAnime?.slice(0, 8).map(item => (

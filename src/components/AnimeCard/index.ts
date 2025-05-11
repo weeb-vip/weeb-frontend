@@ -1,4 +1,4 @@
-import AnimeCard, { AnimeCardProps, AnimeCardStyle } from './AnimeCard';
+import AnimeCard, {AnimeCardProps, AnimeCardStyle, AnimeCardSkeleton} from './AnimeCard';
 
-export { AnimeCard as default, AnimeCardStyle };
-export type { AnimeCardProps };
+export {AnimeCard as default, AnimeCardStyle, AnimeCardSkeleton};
+export type {AnimeCardProps};
