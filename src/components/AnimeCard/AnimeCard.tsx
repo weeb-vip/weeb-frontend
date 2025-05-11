@@ -77,7 +77,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
         <div
           className={`flex flex-col  sm:justify-start sm:align-left p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
 
-          <div onClick={props.onClick}>
+          <div onClick={props.onClick} className={"flex flex-col w-full"}>
             <div className="group w-full" >
               {/* Default (visible) */}
               <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
@@ -122,7 +122,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
         <div
           className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
 
-          <div onClick={props.onClick}>
+          <div onClick={props.onClick} className={"flex flex-col w-full"}>
             <div className="group w-full">
               {/* Default (visible) */}
               <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
