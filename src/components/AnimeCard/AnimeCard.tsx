@@ -57,7 +57,7 @@ const cardStyles = {
 function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
   return (
     <Card
-      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white rounded-md shadow-sm w-full overflow-hidden  justify-center ${props.className || ''}`}
+      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white rounded-md shadow-sm w-full overflow-hidden justify-center ${props.className || ''}`}
 
 
     >
@@ -75,7 +75,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
       />
       {props.style === AnimeCardStyle.DETAIL && (
         <div
-          className={`flex flex-col  sm:justify-start sm:align-left p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
+          className={`flex flex-col  sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full overflow-hidden group`}>
 
           <div onClick={props.onClick} className={"flex flex-col w-full"}>
             <div className="group w-full" >
@@ -105,7 +105,8 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
               </div>
             </div>
           </div>
-          <div className={"options"}>
+          <div
+            className={`flex options w-full ${(props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'}`}>
             <Button
               color={ButtonColor.blue}
               label={'Add to list'}
@@ -120,7 +121,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
       )}
       {props.style === AnimeCardStyle.EPISODE && (
         <div
-          className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
+          className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full overflow-hidden group`}>
 
           <div onClick={props.onClick} className={"flex flex-col w-full"}>
             <div className="group w-full">
@@ -156,7 +157,8 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
                 className={`flex-grow text-md text-base space-x-4 text-gray-600`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
             </div>
           </div>
-          <div className={"options"}>
+          {/* if list align left */}
+          <div className={`flex options w-full ${(props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'}`}>
             <Button
               color={ButtonColor.blue}
               label={'Add to list'}
