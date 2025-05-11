@@ -5,6 +5,7 @@ import Loader from "../../components/Loader";
 import AnimeCard, {AnimeCardStyle} from "../../components/AnimeCard";
 import {format} from "date-fns";
 import {useNavigate} from "react-router-dom";
+import {utc} from "@date-fns/utc/utc";
 
 export default function CurrentlyAiringPage() {
   const { data, isLoading } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring());
@@ -39,7 +40,7 @@ export default function CurrentlyAiringPage() {
             image={`https://cdn.weeb.vip/weeb/${item.id}`}
             airdate={
               item.nextEpisode?.airDate
-                ? format(new Date(item.nextEpisode.airDate), "EEE MMM do")
+                ? format(new Date(item.nextEpisode.airDate), "EEE MMM do", { in: utc})
                 : "Unknown"
             }
             onClick={() => navigate(`/show/${item.id}`)}
