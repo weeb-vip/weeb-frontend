@@ -10,7 +10,7 @@ import DefaultLayout from "../layouts/default";
 import FullWidthLayout from "../layouts/fullWidth";
 import AuthHandler from "../auth";
 import CurrentlyAiringPage from "./CurrentlyAiring";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "motion/react";
 import PageWrapper from './components/PageWrapper';
 
 
