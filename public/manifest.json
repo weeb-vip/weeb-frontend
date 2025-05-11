@@ -1,0 +1,13 @@
+{
+  "name": "WeebVIP",
+  "short_name": "WeebVIP",
+  "icons": [
+    {
+      "src": "/assets/favicon/favicon-32x32.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone"
+}
