@@ -6,6 +6,7 @@ import {fetchCurrentlyAiring, fetchHomePageData} from "../services/queries";
 import {useState} from "react";
 import AnimeCard, {AnimeCardSkeleton, AnimeCardStyle} from "../components/AnimeCard";
 import {Link, useNavigate} from "react-router-dom";
+import {utc} from "@date-fns/utc/utc";
 
 
 function Index() {
@@ -49,16 +50,7 @@ function Index() {
         ) : (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
-            {currentAiringData?.currentlyAiring?.sort((a, b) => {
-              // sort by rank
-              if (a.nextEpisode?.airDate && b.nextEpisode?.airDate) {
-                // convert airDate to date
-                const aDate = new Date(a.nextEpisode?.airDate);
-                const bDate = new Date(b.nextEpisode?.airDate);
-                return aDate.getTime() - bDate.getTime();
-              }
-              return 0
-            })?.slice(0, 8).map((item => (
+            {currentAiringData?.currentlyAiring?.slice(0, 8).map((item => (
               <AnimeCard style={AnimeCardStyle.EPISODE}
                          title={item.titleEn || item.titleJp || "Unknown"}
                          episodeTitle={item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown"}
@@ -68,7 +60,7 @@ function Index() {
                          className={"hover:cursor-pointer"}
                          year={""}
                          image={`https://cdn.weeb.vip/weeb/${item.id}`}
-                         airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do") : "Unknown"}
+                         airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do", {in: utc}) : "Unknown"}
                          onClick={function (): void {
                            navigate(`/show/${item.id}`)
                          }} episodes={0}/>

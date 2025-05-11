@@ -6,6 +6,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {Transition} from "@headlessui/react";
 import Button, {ButtonColor} from "../../../components/Button";
 import {Episode} from "../../../gql/graphql";
+import {utc} from "@date-fns/utc/utc";
 // import {Episode} from "../../../services/api/details";
 
 function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episode[] }) {
@@ -52,7 +53,7 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
           <tbody>
           {episodes.map((episode) => {
             const airdate = episode.airDate ? parseISO(episode.airDate) : null
-            const formattedAirdate = airdate && isDate(airdate) ? format(airdate, 'dd MMM yyyy') : "TBA"
+            const formattedAirdate = airdate && isDate(airdate) ? format(airdate, 'dd MMM yyyy', { in: utc}) : "TBA"
 
             return (
               <tr key={episode.id}>
