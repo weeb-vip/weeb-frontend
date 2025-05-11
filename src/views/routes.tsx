@@ -12,6 +12,7 @@ import AuthHandler from "../auth";
 import CurrentlyAiringPage from "./CurrentlyAiring";
 import { AnimatePresence } from "motion/react";
 import PageWrapper from './components/PageWrapper';
+import ScrollRestoration from "../scrollrestoration";
 
 
 const Home = React.lazy(() => import('./index'));
@@ -23,7 +24,9 @@ function AnimatedRoutes() {
 
   return (
     <AnimatePresence mode="wait" initial={false}>
+
       <Routes location={location} key={location.pathname}>
+
         <Route
           path="/"
           element={
@@ -74,6 +77,7 @@ export default function App() {
       <AuthHandler />
       <Header />
       <main>
+        <ScrollRestoration />
         <AnimatedRoutes />
       </main>
     </Router>
