@@ -120,8 +120,8 @@ export const mutationRefreshToken = graphql(`
         RefreshToken(token: $token) {
             id
             Credentials {
-                refresh_token
                 token
+                refresh_token
             }
         }
     }

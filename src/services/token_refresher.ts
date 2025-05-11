@@ -48,6 +48,7 @@ export class TokenRefresher {
 
       //throw new Error('Token is already expired or too close to expiration.');
       console.log('Token is already expired or too close to expiration.');
+      // attempt to refresh token
       return;
     }
 

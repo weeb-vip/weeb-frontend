@@ -5,7 +5,7 @@ import {
   AddAnimeMutationVariables,
   CurrentlyAiringQuery,
   GetAnimeDetailsByIdQuery,
-  GetHomePageDataQuery, LoginInput, MutationDeleteAnimeArgs,
+  GetHomePageDataQuery, LoginInput, MutationDeleteAnimeArgs, RefreshTokenMutation, RefreshTokenMutationVariables,
   RegisterInput,
   RegisterResult, SigninResult, UpdateUserInput, User, UserAnimeInput, UserAnimesQuery
 } from "../gql/graphql";
@@ -95,20 +95,29 @@ export const getUser = () => ({
 })
 
 export const refreshTokenSimple = async (): Promise<SigninResult> => {
-  // get token from local storage
   const authtoken = localStorage.getItem("authToken");
-  // extract token from authtoken jwt
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  const payload = JSON.parse(atob(authtoken.split('.')[1]));
-  // extract refresh_token from payload
-  const refreshToken = payload.refresh_token;
+  if (!authtoken) throw new Error("Missing auth token in localStorage");
+
+  let payload: any;
+  try {
+    payload = JSON.parse(atob(authtoken.split('.')[1]));
+  } catch (e) {
+    throw new Error("Failed to decode JWT payload");
+  }
+
+  const refreshToken = payload?.refresh_token;
+  if (!refreshToken) throw new Error("No refresh_token found in JWT");
+
   console.log("Refreshing token...", refreshToken);
 
-  const input = {token: refreshToken};
-  const response = await AuthenticatedClient().request(mutationRefreshToken, input);
-  return response.RefreshToken
-}
+  const response = await request<RefreshTokenMutation>(
+    global.config.graphql_host,
+    mutationRefreshToken,
+    { token: refreshToken }
+  );
+
+  return response.RefreshToken;
+};
 
 export const updateUserDetails = async () => ({
   queryFn: async (user: UpdateUserInput) => {

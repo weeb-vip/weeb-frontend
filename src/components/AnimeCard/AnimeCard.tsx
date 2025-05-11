@@ -62,11 +62,11 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
     >
 
 
-
-    <img
+      <img
         src={props.image}
         alt={props.title}
-        className={`aspect-2/3 object-cover ${
+        className={`aspect-2/3 object-cover flex-none relative
+        ${
           (props as AnimeCardProps).forceListLayout ? "w-24 sm:w-28 md:w-32" : "w-32 sm:w-40 md:w-48"
         }`}
         onError={({currentTarget}) => {
@@ -77,11 +77,11 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
       />
       {props.style === AnimeCardStyle.DETAIL && (
         <div
-          className={`flex flex-col sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full overflow-x-hidden overflow-y-visible group`}
+          className={`flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group`}
         >
 
 
-          <div onClick={props.onClick} className={"flex flex-col w-full"}>
+          <div onClick={props.onClick} className={"flex overflow-hidden flex-col w-full"}>
             <div className="group w-full">
               {/* Default (visible) */}
               <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
@@ -124,10 +124,10 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
       )}
       {props.style === AnimeCardStyle.EPISODE && (
         <div
-          className={`flex flex-col sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full overflow-x-hidden overflow-y-visible group`}
+          className={`flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full  group`}
         >
 
-          <div onClick={props.onClick} className={"flex flex-col w-full"}>
+          <div onClick={props.onClick} className={"flex flex-col overflow-hidden w-full"}>
             <div className="group w-full">
               {/* Default (visible) */}
               <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
@@ -162,7 +162,8 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
             </div>
           </div>
           {/* if list align left */}
-          <div className={`flex options w-full ${(props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'}`}>
+          <div
+            className={`flex options w-full ${(props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'}`}>
             {(props as AnimeCardProps).options && (props as AnimeCardProps).options.length > 0 && (
               (props as AnimeCardProps).options.map((option, index) => (
                 <div key={index} className="flex items-center gap-2">

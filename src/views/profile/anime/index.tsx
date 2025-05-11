@@ -105,7 +105,7 @@ function UserAnimeListPage() {
                     color={ButtonColor.red}
                     showLabel={true}
                   />
-
+                  <div className="relative w-full">
                   <Menu as="div" className="relative inline-block text-left w-full">
                     <div>
                       <Menu.Button
@@ -145,6 +145,7 @@ function UserAnimeListPage() {
                       </Menu.Items>
                     </Transition>
                   </Menu>
+                  </div>
                 </div>
               ]}
             />
