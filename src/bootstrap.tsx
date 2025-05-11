@@ -2,11 +2,20 @@ import React, {useState, Suspense, useEffect} from 'react'
 import configApi from './services/api/config'
 import flagsmith from "flagsmith";
 import {FlagsmithProvider} from "flagsmith/react";
-import {useMutation} from "@tanstack/react-query";
-import {SigninResult} from "./gql/graphql";
-import {useLoggedInStore} from "./services/globalstore";
-import {TokenRefresher} from "./services/token_refresher";
-import {refreshTokenSimple} from "./services/queries";
+
+
+export function useIsMobile(breakpoint = 640): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < breakpoint);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [breakpoint]);
+
+  return isMobile;
+}
 
 const Bootstrap = () => {
   const [loaded, setLoaded] = useState(false)
