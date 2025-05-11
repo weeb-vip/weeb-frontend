@@ -60,7 +60,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
       className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white rounded-md shadow-sm w-full overflow-hidden  justify-center ${props.className || ''}`}
 
 
-      onClick={props.onClick}>
+    >
       <img
         src={props.image}
         alt={props.title}
@@ -71,93 +71,101 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
           currentTarget.onerror = null; // prevents looping
           currentTarget.src = "/assets/not found.jpg";
         }}
+        onClick={props.onClick}
       />
       {props.style === AnimeCardStyle.DETAIL && (
         <div
           className={`flex flex-col  sm:justify-start sm:align-left p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
 
-          <div className="group w-full">
-            {/* Default (visible) */}
-            <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
+          <div onClick={props.onClick}>
+            <div className="group w-full" >
+              {/* Default (visible) */}
+              <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
     {props.title}
   </span>
 
-            {/* On hover (revealed) */}
-            <span
-              className="hidden group-hover:block whitespace-nowrap w-max text-md font-bold group-hover:animate-marquee">
+              {/* On hover (revealed) */}
+              <span
+                className="hidden group-hover:block whitespace-nowrap w-max text-md font-bold group-hover:animate-marquee">
     {props.title}
   </span>
+            </div>
+            <div className="flex flex-col space-y-2 text-md font-normal mt-2 items-start">
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faClapperboard}/>
+                <span>{props.episodes}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faClock}/>
+                <span>{props.episodeLength}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faCalendar}/>
+                <span>{props.year}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col space-y-2 text-md font-normal mt-2 items-start">
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faClapperboard}/>
-              <span>{props.episodes}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faClock}/>
-              <span>{props.episodeLength}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faCalendar}/>
-              <span>{props.year}</span>
-            </div>
+          <div className={"options"}>
+            <Button
+              color={ButtonColor.blue}
+              label={'Add to list'}
+              showLabel={true}
+              className="w-fit"
+              onClick={() => {
+              }}
+            />
           </div>
 
-          <Button
-            color={ButtonColor.blue}
-            label={'Add to list'}
-            showLabel={true}
-
-            className="w-fit"
-            onClick={() => {
-            }}
-          />
         </div>
       )}
       {props.style === AnimeCardStyle.EPISODE && (
         <div
           className={`flex flex-col items-center sm:justify-start sm:align-left md:justify-center p-4 sm:w-full lg:w-48 space-y-4 h-full relative w-full overflow-hidden group`}>
 
-
-          <div className="group w-full">
-            {/* Default (visible) */}
-            <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
+          <div onClick={props.onClick}>
+            <div className="group w-full">
+              {/* Default (visible) */}
+              <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
     {props.title}
   </span>
 
-            {/* On hover (revealed) */}
-            <span className="hidden group-hover:block whitespace-nowrap text-md font-bold group-hover:animate-marquee">
+              {/* On hover (revealed) */}
+              <span
+                className="hidden group-hover:block whitespace-nowrap text-md font-bold group-hover:animate-marquee">
     {props.title}
   </span>
-          </div>
-          <div className="group w-full">
-            {/* Default (visible) */}
-            <span className="block whitespace-nowrap text-md font-noraml w-full truncate group-hover:hidden">
+            </div>
+            <div className="group w-full">
+              {/* Default (visible) */}
+              <span className="block whitespace-nowrap text-md font-noraml w-full truncate group-hover:hidden">
     {(props as AnimeEpisodeCardProps).episodeTitle}
   </span>
 
-            {/* On hover (revealed) */}
-            <span
-              className="hidden group-hover:block whitespace-nowrap text-md font-normal group-hover:animate-marquee">
+              {/* On hover (revealed) */}
+              <span
+                className="hidden group-hover:block whitespace-nowrap text-md font-normal group-hover:animate-marquee">
     {(props as AnimeEpisodeCardProps).episodeTitle}
   </span>
-          </div>
-          <div className={`flex flex-col w-full justify-between space-y-2`}>
+            </div>
+            <div className={`flex flex-col w-full justify-between space-y-2`}>
 
             <span
               className={`flex-grow text-md text-base space-x-4 text-gray-600`}><span>{`episode ${(props as AnimeEpisodeCardProps).episodeNumber}`}</span></span>
-            {/* show airdate*/}
-            <span
-              className={`flex-grow text-md text-base space-x-4 text-gray-600`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
+              {/* show airdate*/}
+              <span
+                className={`flex-grow text-md text-base space-x-4 text-gray-600`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
+            </div>
           </div>
-          <Button
-            color={ButtonColor.blue}
-            label={'Add to list'}
-            showLabel={true}
-            className="w-fit"
-            onClick={() => {
-            }}
-          />
+          <div className={"options"}>
+            <Button
+              color={ButtonColor.blue}
+              label={'Add to list'}
+              showLabel={true}
+              className="w-fit"
+              onClick={() => {
+              }}
+            />
+          </div>
         </div>
       )}
     </Card>
@@ -173,7 +181,8 @@ interface SkeletonProps {
   style: AnimeCardStyle;
   forceListLayout?: boolean;
 }
-export function AnimeCardSkeleton({ style, forceListLayout = false }: SkeletonProps) {
+
+export function AnimeCardSkeleton({style, forceListLayout = false}: SkeletonProps) {
   const isEpisode = style === AnimeCardStyle.EPISODE;
 
   return (
@@ -191,23 +200,23 @@ export function AnimeCardSkeleton({ style, forceListLayout = false }: SkeletonPr
       />
       <div className="flex flex-col justify-between px-4 py-3 w-full h-full">
         <div className="space-y-2">
-          <div className="w-full h-4 bg-gray-200 rounded" />
+          <div className="w-full h-4 bg-gray-200 rounded"/>
           {isEpisode ? (
             <>
-              <div className="w-2/3 h-3 bg-gray-200 rounded" />
-              <div className="w-1/2 h-3 bg-gray-200 rounded" />
-              <div className="w-2/3 h-3 bg-gray-200 rounded" />
+              <div className="w-2/3 h-3 bg-gray-200 rounded"/>
+              <div className="w-1/2 h-3 bg-gray-200 rounded"/>
+              <div className="w-2/3 h-3 bg-gray-200 rounded"/>
             </>
           ) : (
             <>
-              <div className="w-2/3 h-3 bg-gray-200 rounded" />
-              <div className="w-1/3 h-3 bg-gray-200 rounded" />
-              <div className="w-1/4 h-3 bg-gray-200 rounded" />
+              <div className="w-2/3 h-3 bg-gray-200 rounded"/>
+              <div className="w-1/3 h-3 bg-gray-200 rounded"/>
+              <div className="w-1/4 h-3 bg-gray-200 rounded"/>
             </>
           )}
         </div>
         <div className="pt-3">
-          <div className="w-24 h-8 bg-gray-300 rounded-full mx-auto" />
+          <div className="w-24 h-8 bg-gray-300 rounded-full mx-auto"/>
         </div>
       </div>
     </div>
