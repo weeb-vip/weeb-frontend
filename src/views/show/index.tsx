@@ -1,4 +1,4 @@
-import {useLocation, useParams} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchDetails} from "../../services/queries";
 import Loader from "../../components/Loader";
@@ -11,6 +11,7 @@ import Artworks from "./components/Artworks";
 import Characters from "./components/Characters";
 import Trailers from "./components/Trailers";
 import {GetAnimeDetailsByIdQuery} from "../../gql/graphql";
+import {useEffect} from "react";
 
 function formatUpdatedAt(date?: string): string {
     if (!date) {
@@ -23,6 +24,7 @@ function formatUpdatedAt(date?: string): string {
 
 function Index() {
     const location = useLocation()
+    const navigate = useNavigate(); // ← add this
 
     // const queryClient = useQueryClient()
     const {id} = useParams()
@@ -37,17 +39,22 @@ function Index() {
         enabled: id !== undefined
     })
 
+    useEffect(() => {
+        if (!show && !showIsLoading) {
+            navigate("/404", { replace: true });
+        }
+    }, [show, showIsLoading, navigate]);
 
     return (
         <div className="flex flex-col min-h-screen">
 
             <>
-                {showIsLoading && !show ? <Loader/> : (
+                {showIsLoading || !show ? <Loader/> : (
                     <>
                         <div className="relative flex flex-col lg:flex-row p-10 text-white overflow-hidden">
                             <div className={"absolute top-0 left-0 bottom-0 right-0"} style={{
                                 // @ts-ignore
-                                backgroundImage: `url(${global.config.api_host}/show/anime/anidb/series/${show.anime.anidbid}/fanart)`,
+                                backgroundImage: `url(${global.config.api_host}/show/anime/anidb/series/${show?.anime?.anidbid}/fanart)`,
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center',
                                 filter: 'blur(8px)',

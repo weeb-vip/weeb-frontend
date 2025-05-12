@@ -10,9 +10,11 @@ import DefaultLayout from "../layouts/default";
 import FullWidthLayout from "../layouts/fullWidth";
 import AuthHandler from "../auth";
 import CurrentlyAiringPage from "./CurrentlyAiring";
-import { AnimatePresence } from "motion/react";
+import {AnimatePresence} from "motion/react";
 import PageWrapper from './components/PageWrapper';
 import ScrollRestoration from "../scrollrestoration";
+import NotFoundPage from "./404";
+import ErrorBoundary from "./ErrorBoundry";
 
 
 const Home = React.lazy(() => import('./index'));
@@ -32,7 +34,7 @@ function AnimatedRoutes() {
           path="/"
           element={
             <DefaultLayout>
-              <PageWrapper><Home /></PageWrapper>
+              <PageWrapper><Home/></PageWrapper>
             </DefaultLayout>
           }
         />
@@ -40,7 +42,7 @@ function AnimatedRoutes() {
           path="/show/:id"
           element={
             <FullWidthLayout>
-              <PageWrapper><Show /></PageWrapper>
+              <PageWrapper><Show/></PageWrapper>
             </FullWidthLayout>
           }
         />
@@ -48,23 +50,23 @@ function AnimatedRoutes() {
           path="/show/:id/custom"
           element={
             <FullWidthLayout>
-              <PageWrapper><Show /></PageWrapper>
+              <PageWrapper><Show/></PageWrapper>
             </FullWidthLayout>
           }
         />
         <Route
           path="/airing"
           element={
-          <DefaultLayout>
-            <PageWrapper><CurrentlyAiringPage /></PageWrapper>
-          </DefaultLayout>
+            <DefaultLayout>
+              <PageWrapper><CurrentlyAiringPage/></PageWrapper>
+            </DefaultLayout>
           }
         />
         <Route
           path="/profile"
           element={
             <DefaultLayout>
-              <PageWrapper><Profile /></PageWrapper>
+              <PageWrapper><Profile/></PageWrapper>
             </DefaultLayout>
           }
         />
@@ -72,11 +74,19 @@ function AnimatedRoutes() {
           path="/profile/anime"
           element={
             <DefaultLayout>
-            <PageWrapper><Anime /></PageWrapper>
+              <PageWrapper><Anime/></PageWrapper>
             </DefaultLayout>
           }
         />
-        <Route path="*" element={<PageWrapper><div>Not found</div></PageWrapper>} />
+
+        <Route
+          path="*"
+          element={
+            <DefaultLayout>
+              <PageWrapper><NotFoundPage/></PageWrapper>
+            </DefaultLayout>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );
@@ -85,11 +95,13 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <Router>
-      <AuthHandler />
-      <Header />
+      <AuthHandler/>
+      <Header/>
       <main>
-        <ScrollRestoration />
-        <AnimatedRoutes />
+        <ScrollRestoration/>
+        <ErrorBoundary>
+          <AnimatedRoutes/>
+        </ErrorBoundary>
       </main>
     </Router>
   );
