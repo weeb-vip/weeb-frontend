@@ -1,6 +1,6 @@
 import {useLocation, useNavigate, useParams} from "react-router-dom";
-import {useQuery, useQueryClient} from "@tanstack/react-query";
-import {fetchDetails} from "../../services/queries";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import {fetchDetails, upsertAnime} from "../../services/queries";
 import Loader from "../../components/Loader";
 import {SeriesDetails} from "../../services/api/details";
 import Tables from "./components/Episodes";
@@ -10,8 +10,10 @@ import Tabs from "../../components/Tabs";
 import Artworks from "./components/Artworks";
 import Characters from "./components/Characters";
 import Trailers from "./components/Trailers";
-import {GetAnimeDetailsByIdQuery} from "../../gql/graphql";
-import {useEffect} from "react";
+import {GetAnimeDetailsByIdQuery, Status} from "../../gql/graphql";
+import {useEffect, useState} from "react";
+import Button, {ButtonColor} from "../../components/Button";
+import {StatusType} from "../../components/Button/Button";
 
 function formatUpdatedAt(date?: string): string {
     if (!date) {
@@ -44,6 +46,33 @@ function Index() {
             navigate("/404", { replace: true });
         }
     }, [show, showIsLoading, navigate]);
+    const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
+
+    const mutateAddAnime = useMutation({
+        ...upsertAnime(),
+        onSuccess: (data) => {
+            console.log("Added anime", data)
+        },
+        onError: (error) => {
+            console.log("Error adding anime", error)
+        }
+    })
+
+    const addAnime = async (id: string, animeId: string) => {
+        setAnimeStatuses((prev) => ({...prev, [id]: "loading"}));
+        try {
+            await mutateAddAnime.mutateAsync({
+                input: {
+                    animeID: animeId,
+                    status: Status.Plantowatch,
+                }
+            });
+            console.log("Added anime", id, animeId)
+            setAnimeStatuses((prev) => ({...prev, [id]: "success"}));
+        } catch {
+            setAnimeStatuses((prev) => ({...prev, [id]: "error"}));
+        }
+    };
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -74,6 +103,7 @@ function Index() {
                                          currentTarget.src = "/assets/not found.jpg";
                                      }}
                                 />
+
                             </div>
                             <div className="flex flex-col space-y-2 p-2">
                                 <h1
@@ -104,7 +134,18 @@ function Index() {
                                         <Tag tag={`${tag}`}/>
                                     ))}
                                 </div>
+                                <Button
+                                  color={ButtonColor.blue}
+                                  label={'Add to list'}
+                                  showLabel={true}
+                                  status={animeStatuses[show.anime.id] ?? "idle"}
+                                  className="w-fit relative -left-5"
+                                  onClick={() => {
+                                      addAnime(show.anime.id, show.anime.id)
+                                  }}
+                                />
                             </div>
+
                         </div>
                         <div className="flex flex-col flex-grow bg-slate-300 px-4 sm:px-8 lg:px-16 py-4 sm:py-6 lg:py-8">
                             <Tabs tabs={["Episodes", "Characters", "Trailers", "Artworks"]} defaultTab={"Episodes"}>
