@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {Suspense} from 'react'
 import {
   BrowserRouter as Router,
   Route,
@@ -15,6 +15,7 @@ import PageWrapper from './components/PageWrapper';
 import ScrollRestoration from "../scrollrestoration";
 import NotFoundPage from "./404";
 import ErrorBoundary from "./ErrorBoundry";
+import Loader from "../components/Loader";
 
 
 const Home = React.lazy(() => import('./index'));
@@ -100,7 +101,9 @@ export default function App() {
       <main>
         <ScrollRestoration/>
         <ErrorBoundary>
-          <AnimatedRoutes/>
+          <Suspense fallback={<Loader/>}>
+            <AnimatedRoutes/>
+          </Suspense>
         </ErrorBoundary>
       </main>
     </Router>
