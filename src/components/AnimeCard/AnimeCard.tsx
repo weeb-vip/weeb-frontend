@@ -110,15 +110,18 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
             </div>
           </div>
           <div
-            className={`flex options w-full ${(props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'}`}>
-            {(props as AnimeCardProps).options && (props as AnimeCardProps).options.length > 0 && (
+            className={`flex flex-wrap gap-2 options w-full ${
+              (props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'
+            }`}
+          >
+            {(props as AnimeCardProps).options?.length > 0 &&
               (props as AnimeCardProps).options.map((option, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div key={index} className="flex items-center">
                   {option}
                 </div>
-              ))
-            )}
+              ))}
           </div>
+
 
         </div>
       )}
@@ -163,16 +166,18 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
           </div>
           {/* if list align left */}
           <div
-            className={`flex options w-full ${(props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'}`}>
-            {(props as AnimeCardProps).options && (props as AnimeCardProps).options.length > 0 && (
+            className={`flex flex-wrap gap-2 options w-full ${
+              (props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'
+            }`}
+          >
+            {(props as AnimeCardProps).options?.length > 0 &&
               (props as AnimeCardProps).options.map((option, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div key={index} className="flex items-center">
                   {option}
                 </div>
-              ))
-            )}
-
+              ))}
           </div>
+
         </div>
       )}
     </Card>
