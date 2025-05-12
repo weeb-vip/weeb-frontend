@@ -7,6 +7,8 @@ import {format} from "date-fns";
 import {useNavigate} from "react-router-dom";
 import {utc} from "@date-fns/utc/utc";
 import Button, {ButtonColor} from "../../components/Button";
+import {useState} from "react";
+import {StatusType} from "../../components/Button/Button";
 
 export default function CurrentlyAiringPage() {
   const { data, isLoading } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring());
@@ -20,9 +22,8 @@ export default function CurrentlyAiringPage() {
     const bDate = new Date(b.nextEpisode?.airDate || "");
     return aDate.getTime() - bDate.getTime();
   });
-  const {
-    mutate: mutateAddAnime
-  } = useMutation({
+  const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
+  const mutateAddAnime = useMutation({
     ...upsertAnime(),
     onSuccess: (data) => {
       console.log("Added anime", data)
@@ -32,14 +33,20 @@ export default function CurrentlyAiringPage() {
     }
   })
 
-  const addAnime = (id: string) => {
-    mutateAddAnime({
-      input: {
-        animeID: id,
-        status: Status.Plantowatch,
-      }
-    })
-  }
+  const addAnime = async (id: string) => {
+    setAnimeStatuses((prev) => ({...prev, [id]: "loading"}));
+    try {
+      await mutateAddAnime.mutateAsync({
+        input: {
+          animeID: id,
+          status: Status.Plantowatch,
+        }
+      });
+      setAnimeStatuses((prev) => ({...prev, [id]: "success"}));
+    } catch {
+      setAnimeStatuses((prev) => ({...prev, [id]: "error"}));
+    }
+  };
   return (
     <div className="flex flex-col space-y-6 max-w-screen-2xl w-full px-4 mx-auto">
 
@@ -70,6 +77,8 @@ export default function CurrentlyAiringPage() {
                 color={ButtonColor.blue}
                 label={'Add to list'}
                 showLabel={true}
+
+                status={animeStatuses[item.id] || "idle"}
                 className="w-fit"
                 onClick={() => {
                   addAnime(item.id)

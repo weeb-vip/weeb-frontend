@@ -138,7 +138,6 @@ export const fetchUserAnimes = () => ({
 
 export const upsertAnime = () => ({
   mutationFn: async (input: { input: UserAnimeInput }) => {
-    console.log("Sending input to AddAnime:", input); // ✅ Debug
     const response = await AuthenticatedClient().request(mutateAddAnime, input);
     return response.AddAnime;
   }
