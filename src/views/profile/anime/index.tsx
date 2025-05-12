@@ -93,7 +93,7 @@ function UserAnimeListPage() {
               episodeLength={entry.anime?.duration ? entry.anime?.duration?.replace(/per.+?$|per/gm, '') : "?"}
               image={`https://cdn.weeb.vip/weeb/${entry.anime?.id}`}
               className="hover:cursor-pointer"
-              onClick={() => navigate(`/show/${entry.id}`)}
+              onClick={() => navigate(`/show/${entry.anime?.id}`)}
               year={entry.anime?.startDate ? new Date(entry.anime?.startDate).getFullYear().toString() : "Unknown"}
               options={[
                 <div key={`user-anime-${entry.id}-actions`} className="flex flex-wrap gap-2 relative z-20 items-center justify-center">
