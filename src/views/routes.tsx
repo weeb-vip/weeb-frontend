@@ -9,7 +9,7 @@ import Header from "../components/Header";
 import DefaultLayout from "../layouts/default";
 import FullWidthLayout from "../layouts/fullWidth";
 import AuthHandler from "../auth";
-import CurrentlyAiringPage from "./CurrentlyAiring";
+
 import {AnimatePresence} from "motion/react";
 import PageWrapper from './components/PageWrapper';
 import ScrollRestoration from "../scrollrestoration";
@@ -22,6 +22,8 @@ const Home = React.lazy(() => import('./index'));
 const Show = React.lazy(() => import('./show'));
 const Anime = React.lazy(() => import('./profile/anime'));
 const Profile = React.lazy(() => import('./profile'));
+const CurrentlyAiringPage = React.lazy(() => import('./CurrentlyAiring'));
+const CurrentlyAiringCalendarPage = React.lazy(() => import('./CurrentlyAiring/Calendar'));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -60,6 +62,14 @@ function AnimatedRoutes() {
           element={
             <DefaultLayout>
               <PageWrapper><CurrentlyAiringPage/></PageWrapper>
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/airing/calendar"
+          element={
+            <DefaultLayout>
+              <PageWrapper><CurrentlyAiringCalendarPage/></PageWrapper>
             </DefaultLayout>
           }
         />

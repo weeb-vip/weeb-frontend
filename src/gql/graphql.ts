@@ -127,6 +127,15 @@ export type Credentials = {
   token: Scalars['String'];
 };
 
+export type CurrentlyAiringInput = {
+  /** days in the future */
+  daysInFuture?: InputMaybe<Scalars['Int']>;
+  /** end date */
+  endDate?: InputMaybe<Scalars['Time']>;
+  /** start date */
+  startDate: Scalars['Time'];
+};
+
 export type Episode = {
   __typename?: 'Episode';
   /** Episode air date */
@@ -303,6 +312,11 @@ export type QueryAnimeArgs = {
 
 export type QueryAvailabilityByUsernameArgs = {
   username: Scalars['String'];
+};
+
+
+export type QueryCurrentlyAiringArgs = {
+  input?: InputMaybe<CurrentlyAiringInput>;
 };
 
 
