@@ -54,7 +54,17 @@ export default function CurrentlyAiringPage() {
 
   return (
     <div className="flex flex-col space-y-6 max-w-screen-2xl w-full px-4 mx-auto">
-      <h1 className="text-2xl font-bold">All Currently Airing Anime</h1>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-2xl font-bold">All Currently Airing Anime</h1>
+        <Button
+          color={ButtonColor.blue}
+          label="View Calendar"
+          showLabel
+          status="idle"
+          className="w-fit"
+          onClick={() => navigate("/airing/calendar")}
+        />
+      </div>
       <div className="flex flex-col space-y-4">
         {sorted.map((item) => (
           <AnimeCard
