@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCurrentlyAiringWithDates } from "../../../services/queries";
-import { CurrentlyAiringQuery } from "../../../gql/graphql";
+import {CurrentlyAiringQuery, CurrentlyAiringWithDateQuery} from "../../../gql/graphql";
 import Loader from "../../../components/Loader";
 import {
   format,
@@ -25,7 +25,7 @@ export default function AiringCalendarPage() {
   const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start, end });
 
-  const { data, isLoading } = useQuery<CurrentlyAiringQuery>(
+  const { data, isLoading } = useQuery<CurrentlyAiringWithDateQuery>(
     ["currentlyAiring", start.toISOString(), end.toISOString()],
     () => fetchCurrentlyAiringWithDates(start, end).queryFn()
   );
@@ -41,7 +41,7 @@ export default function AiringCalendarPage() {
       const key = format(parseISO(airDate, { in: utc }), "yyyy-MM-dd", { in: utc });
       if (!animeByDate[key]) animeByDate[key] = [];
 
-      animeByDate[key].push({
+      (animeByDate[key] || []).push({
         ...anime,
         nextEpisode: episode, // attach episode context for AnimePopover
       });
@@ -100,8 +100,8 @@ export default function AiringCalendarPage() {
                 {format(day, "d", { in: utc })}
               </div>
               <div className="flex flex-col gap-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pr-1">
-                {entries.map((anime) => (
-                  <AnimePopover anime={anime} key={`${anime.id}-${anime.nextEpisode?.episode}`} />
+                {entries.map((anime, index) => (
+                  <AnimePopover anime={anime} key={`${anime.id}-${index}`}/>
                 ))}
               </div>
             </div>
