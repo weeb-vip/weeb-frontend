@@ -25,13 +25,13 @@ type ViewMode = "month" | "week";
 export default function AiringCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
-
   const queryClient = useQueryClient();
 
   const start =
     viewMode === "month"
       ? startOfWeek(startOfMonth(currentDate), { weekStartsOn: 0 })
       : startOfWeek(currentDate, { weekStartsOn: 0 });
+
   const end =
     viewMode === "month"
       ? endOfWeek(endOfMonth(currentDate), { weekStartsOn: 0 })
@@ -44,7 +44,7 @@ export default function AiringCalendarPage() {
     () => fetchCurrentlyAiringWithDates(start, end).queryFn()
   );
 
-  // Prefetch next & previous ranges
+  // Prefetch next & previous date ranges
   useEffect(() => {
     const ranges = [
       {
@@ -143,16 +143,18 @@ export default function AiringCalendarPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-300 rounded-lg overflow-hidden text-sm relative z-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-px bg-gray-200 border border-gray-300 rounded-lg overflow-hidden text-sm relative z-0">
+        {/* Day headers for desktop only */}
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div
             key={day}
-            className="bg-gray-50 py-3 text-center font-medium text-gray-700 border-b border-gray-200"
+            className="hidden lg:block bg-gray-50 py-2 px-2 text-center font-medium text-gray-700 border-b border-gray-200"
           >
             {day}
           </div>
         ))}
 
+        {/* Calendar days */}
         {days.map((day) => {
           const dateKey = format(day, "yyyy-MM-dd", { in: utc });
           const entries = animeByDate[dateKey] || [];
@@ -162,13 +164,16 @@ export default function AiringCalendarPage() {
             <div
               key={dateKey}
               className={`bg-white p-2 ${
-                viewMode === "month" ? "h-[140px]" : ""
+                viewMode === "month" ? "min-h-[140px]" : ""
               } flex flex-col justify-start border border-gray-100 ${
                 isToday ? "bg-blue-50 ring-2 ring-blue-400" : ""
               }`}
             >
-              <div className="text-xs font-semibold text-gray-800 mb-1">
-                {format(day, "d", { in: utc })}
+              <div className="text-xs font-semibold text-gray-800 mb-1 flex items-center gap-1">
+                <span>{format(day, "d", { in: utc })}</span>
+                <span className="text-gray-500 text-xs block lg:hidden">
+                  ({format(day, "EEE")})
+                </span>
               </div>
               <div
                 className={`flex flex-col gap-1 pr-1 ${
