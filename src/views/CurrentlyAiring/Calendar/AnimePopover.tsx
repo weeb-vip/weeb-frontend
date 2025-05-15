@@ -1,16 +1,19 @@
-import { Popover } from "@headlessui/react";
-import { useRef, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { CurrentlyAiringQuery } from "../../../gql/graphql";
+import {Popover} from "@headlessui/react";
+import {useRef, useState} from "react";
+import {createPortal} from "react-dom";
+import {CurrentlyAiringQuery} from "../../../gql/graphql";
+import AnimeCard, {AnimeCardStyle} from "../../../components/AnimeCard";
+import {format} from "date-fns";
+import {utc} from "@date-fns/utc/utc";
 
 interface AnimePopoverProps {
   // @ts-ignore
   anime: CurrentlyAiringQuery["currentlyAiring"][number];
 }
 
-export function AnimePopover({ anime }: AnimePopoverProps) {
+export function AnimePopover({anime}: AnimePopoverProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState({top: 0, left: 0});
 
   const updatePosition = () => {
     if (buttonRef.current) {
@@ -24,7 +27,7 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
 
   return (
     <Popover className="relative">
-      {({ open }) => (
+      {({open}) => (
         <>
           <Popover.Button
             ref={buttonRef}
@@ -39,28 +42,31 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
             createPortal(
               <Popover.Panel
                 static={false}
-                className="z-50 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 absolute"
+                className="z-50 w-[420px] bg-white border border-gray-200 rounded-lg shadow-lg p-3 absolute"
                 style={{
                   top: position.top,
                   left: position.left,
                 }}
               >
-                {anime.imageUrl && (
-                  <img
-                    src={anime.imageUrl}
-                    alt="cover"
-                    className="w-full h-32 object-cover rounded mb-2"
-                  />
-                )}
-                <div className="font-semibold text-sm truncate">
-                  {anime.titleEn || anime.titleJp}
-                </div>
-                <div className="text-xs text-gray-500">
-                  Episode {anime.nextEpisode?.episodeNumber || "?"}
-                </div>
-                <div className="text-xs text-gray-600 mt-1 line-clamp-3">
-                  {anime.synopsis || "No synopsis available."}
-                </div>
+                <AnimeCard style={AnimeCardStyle.EPISODE}
+                           forceListLayout={true}
+                           title={anime.titleEn || anime.titleJp || "Unknown"}
+                           description={anime.description || ""}
+                           episodes={anime.episodeCount || 0}
+                           episodeLength={anime.duration ? anime.duration.replace(/per.+?$/, "") : "?"}
+                           image={`https://cdn.weeb.vip/weeb/${anime.id}`}
+                           className="hover:cursor-pointer"
+                           onClick={() => window.location.href = `/show/${anime.id}`}
+                           year={anime.startDate ? new Date(anime.startDate).getFullYear().toString() : "Unknown"}
+                           airdate={
+                             anime.nextEpisode?.airDate
+                               ? format(new Date(anime.nextEpisode.airDate), "EEE MMM do", { in: utc })
+                               : "Unknown"
+                           }
+                           episodeTitle={anime.nextEpisode?.titleEn || anime.nextEpisode?.titleJp || "Unknown"}
+                           episodeNumber={anime.nextEpisode?.episodeNumber?.toString() || "Unknown"}
+                           options={[]}
+                />
               </Popover.Panel>,
               document.body
             )}

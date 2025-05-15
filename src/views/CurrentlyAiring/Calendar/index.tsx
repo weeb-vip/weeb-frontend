@@ -39,7 +39,7 @@ export default function AiringCalendarPage() {
   for (const anime of data.currentlyAiring || []) {
     const airDate = anime.nextEpisode?.airDate;
     if (!airDate) continue;
-    const key = format(parseISO(airDate, {in: utc}), "yyyy-MM-dd");
+    const key = format(parseISO(airDate, {in: utc}), "yyyy-MM-dd", {in: utc});
     if (!animeByDate[key]) animeByDate[key] = [];
     animeByDate[key]?.push(anime);
   }
@@ -82,7 +82,7 @@ export default function AiringCalendarPage() {
 
         {/* Calendar days */}
         {days.map((day) => {
-          const dateKey = format(day, "yyyy-MM-dd");
+          const dateKey = format(day, "yyyy-MM-dd", {in: utc});
           const entries = animeByDate[dateKey] || [];
           const isToday = isTodayVisible(day);
 
@@ -94,7 +94,7 @@ export default function AiringCalendarPage() {
               }`}
             >
               <div className="text-xs font-semibold text-gray-800 mb-1">
-                {format(day, "d")}
+                {format(day, "d", {in: utc})}
               </div>
               <div
                 className="flex flex-col gap-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pr-1">
