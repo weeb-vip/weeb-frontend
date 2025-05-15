@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchCurrentlyAiring } from "../../../services/queries";
-import { CurrentlyAiringQuery } from "../../../gql/graphql";
+import React, {useState, useMemo} from "react";
+import {useQuery} from "@tanstack/react-query";
+import {fetchCurrentlyAiring, fetchCurrentlyAiringWithDates} from "../../../services/queries";
+import {CurrentlyAiringQuery} from "../../../gql/graphql";
 import Loader from "../../../components/Loader";
 import {
   format,
@@ -15,24 +15,31 @@ import {
   addMonths,
   subMonths,
 } from "date-fns";
-import { utc } from "@date-fns/utc/utc";
-import { AnimePopover } from "./AnimePopover";
+import {utc} from "@date-fns/utc/utc";
+import {AnimePopover} from "./AnimePopover";
 
 export default function AiringCalendarPage() {
-  const { data, isLoading } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring());
+
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  if (isLoading || !data) return <Loader />;
 
-  const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 0 });
-  const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 0 });
-  const days = useMemo(() => eachDayOfInterval({ start, end }), [start, end]);
+  const start = startOfWeek(startOfMonth(currentMonth), {weekStartsOn: 0});
+  const end = endOfWeek(endOfMonth(currentMonth), {weekStartsOn: 0});
+  const days = eachDayOfInterval({start, end});
+  console.log("START", start);
+  console.log("END", end);
+  const { data, isLoading } = useQuery<CurrentlyAiringQuery>(
+    ["currentlyAiring", start.toISOString(), end.toISOString()], // ← key includes dates
+    () => fetchCurrentlyAiringWithDates(start, end).queryFn()
+  );
+  if (isLoading || !data) return <Loader/>;
+
 
   const animeByDate: Record<string, typeof data.currentlyAiring> = {};
   for (const anime of data.currentlyAiring || []) {
     const airDate = anime.nextEpisode?.airDate;
     if (!airDate) continue;
-    const key = format(parseISO(airDate, { in: utc }), "yyyy-MM-dd");
+    const key = format(parseISO(airDate, {in: utc}), "yyyy-MM-dd");
     if (!animeByDate[key]) animeByDate[key] = [];
     animeByDate[key]?.push(anime);
   }
@@ -61,7 +68,8 @@ export default function AiringCalendarPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-300 rounded-lg overflow-hidden text-sm relative z-0">
+      <div
+        className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-300 rounded-lg overflow-hidden text-sm relative z-0">
         {/* Day headers */}
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div
@@ -88,10 +96,11 @@ export default function AiringCalendarPage() {
               <div className="text-xs font-semibold text-gray-800 mb-1">
                 {format(day, "d")}
               </div>
-              <div className="flex flex-col gap-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pr-1">
-                {entries.map((anime) => (
-                  <AnimePopover anime={anime} key={anime.id} />
-                ))}
+              <div
+                className="flex flex-col gap-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pr-1">
+                {entries.map((anime) => {
+                  return <AnimePopover anime={anime} key={anime.id}/>
+                })}
               </div>
             </div>
           );

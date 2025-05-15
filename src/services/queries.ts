@@ -11,7 +11,7 @@ import {
 } from "../gql/graphql";
 import {
   getAnimeDetailsByID,
-  getCurrentlyAiring,
+  getCurrentlyAiring, getCurrentlyAiringWithDates,
   getHomePageData, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
   mutationCreateSession, mutationRefreshToken,
   mutationRegister, queryUserAnimes, queryUserDetails
@@ -69,6 +69,25 @@ export const fetchCurrentlyAiring = () => ({
   },
 })
 
+export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | null, days?: number) => ({
+  queryKey: ["currentlyAiring"],
+  queryFn: async () => {
+    // @ts-ignore
+    return request<CurrentlyAiringQuery>(global.config.graphql_host, getCurrentlyAiringWithDates, endDate ? {
+      input: {
+        startDate,
+        endDate,
+      }
+    } : {
+      input: {
+        startDate,
+        daysInFuture: days,
+      }
+
+    })
+  },
+})
+
 
 export const register = () => ({
   mutationFn: async (input: { input: RegisterInput }): Promise<RegisterResult> => {
@@ -113,7 +132,7 @@ export const refreshTokenSimple = async (): Promise<SigninResult> => {
   const response = await request<RefreshTokenMutation>(
     global.config.graphql_host,
     mutationRefreshToken,
-    { token: refreshToken }
+    {token: refreshToken}
   );
 
   return response.RefreshToken;

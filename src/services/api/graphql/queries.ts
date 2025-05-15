@@ -91,27 +91,53 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
 
 export const getCurrentlyAiring = graphql(/* GraphQL */`
     query currentlyAiring {
-      currentlyAiring {
-        id
-        titleEn
-        titleJp
-        endDate
-        startDate
-        imageUrl
-        duration
-        ranking
-        nextEpisode {
-          id
-          animeId
-          episodeNumber
-          titleEn
-          titleJp
-          synopsis
-          airDate
-          createdAt
-          updatedAt
+        currentlyAiring {
+            id
+            titleEn
+            titleJp
+            endDate
+            startDate
+            imageUrl
+            duration
+            ranking
+            nextEpisode {
+                id
+                animeId
+                episodeNumber
+                titleEn
+                titleJp
+                synopsis
+                airDate
+                createdAt
+                updatedAt
+            }
         }
-      }
+    }
+`)
+
+export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
+    query currentlyAiringWithDate($input: CurrentlyAiringInput) {
+        currentlyAiring(input: $input) {
+            id
+            titleEn
+            titleJp
+            endDate
+            startDate
+            imageUrl
+            duration
+            ranking
+            nextEpisode {
+                id
+                animeId
+                episodeNumber
+                titleEn
+                titleJp
+                synopsis
+                airDate
+                createdAt
+                updatedAt
+            }
+        }
     }
 `)
 
@@ -186,42 +212,42 @@ export const mutateUpdateUserDetails = graphql(`
 
 export const queryUserAnimes = graphql(`
     query UserAnimes {
-      UserAnimes {
-        id
-        userID
-        animeID
-        status
-        score
-        episodes
-        rewatching
-        rewatchingEpisodes
-        tags
-        listID
-        createdAt
-        updatedAt
-        deletedAt
-        anime {
-          id
-          titleEn
-          titleJp
-          titleRomaji
-          titleKanji
-          imageUrl
-          startDate
-          description
-          episodeCount
-          duration
+        UserAnimes {
+            id
+            userID
+            animeID
+            status
+            score
+            episodes
+            rewatching
+            rewatchingEpisodes
+            tags
+            listID
+            createdAt
+            updatedAt
+            deletedAt
+            anime {
+                id
+                titleEn
+                titleJp
+                titleRomaji
+                titleKanji
+                imageUrl
+                startDate
+                description
+                episodeCount
+                duration
+            }
         }
-      }
     }
 `)
 
 export const mutateAddAnime = graphql(`
-  mutation AddAnime($input: UserAnimeInput!) {
-    AddAnime(input: $input) {
-      id
-    } 
-  }
+    mutation AddAnime($input: UserAnimeInput!) {
+        AddAnime(input: $input) {
+            id
+        }
+    }
 `)
 
 export const mutateDeleteAnime = graphql(`
