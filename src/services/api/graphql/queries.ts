@@ -126,6 +126,17 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
             imageUrl
             duration
             ranking
+            episodes {
+                id
+                animeId
+                episodeNumber
+                titleEn
+                titleJp
+                synopsis
+                airDate
+                createdAt
+                updatedAt
+            }
             nextEpisode {
                 id
                 animeId
