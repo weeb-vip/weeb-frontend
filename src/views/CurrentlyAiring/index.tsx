@@ -9,6 +9,7 @@ import { StatusType } from "../../components/Button/Button";
 import { format } from "date-fns";
 import { utc } from "@date-fns/utc/utc";
 import { useNavigate } from "react-router-dom";
+import {GetImageFromAnime} from "../../services/utils";
 
 export default function CurrentlyAiringPage() {
   const { data, isLoading } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring());
@@ -78,7 +79,7 @@ export default function CurrentlyAiringPage() {
             episodeNumber={item.nextEpisode?.episodeNumber?.toString() || "Unknown"}
             className="hover:cursor-pointer"
             year=""
-            image={`https://cdn.weeb.vip/weeb/${item.id}`}
+            image={GetImageFromAnime(item)}
             airdate={
               item.nextEpisode?.airDate
                 ? format(new Date(item.nextEpisode.airDate), "EEE MMM do", { in: utc })

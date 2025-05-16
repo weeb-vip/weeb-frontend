@@ -14,6 +14,8 @@ import {GetAnimeDetailsByIdQuery, Status} from "../../gql/graphql";
 import {useEffect, useState} from "react";
 import Button, {ButtonColor} from "../../components/Button";
 import {StatusType} from "../../components/Button/Button";
+import {GetImageFromAnime} from "../../services/utils";
+import {SafeImage} from "../../components/SafeImage/SafeImage";
 
 function formatUpdatedAt(date?: string): string {
     if (!date) {
@@ -94,7 +96,8 @@ function Index() {
                             }}/>
                             <div className="flex flex-col px-4 m-y-auto lg:mr-16">
                                 {/* @ts-ignore */}
-                                <img src={`https://cdn.weeb.vip/weeb/${id}`}
+                                <SafeImage src={`${GetImageFromAnime(show?.anime)}`}
+                                     data-original-src={GetImageFromAnime(show?.anime) || ''}
                                      alt={show?.anime?.titleEn || ''}
                                      className={"max-w-none"}
                                      style={{height: '322px', width: '225px'}}

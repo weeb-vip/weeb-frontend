@@ -1,6 +1,8 @@
 import {format, isValid} from "date-fns";
 import React from "react";
 import {AutocompleteApi} from "@algolia/autocomplete-js";
+import {SafeImage} from "../SafeImage/SafeImage";
+import {GetImageFromAnime} from "../../services/utils";
 
 export interface IItem {
   autocomplete: any
@@ -28,8 +30,8 @@ export default function Item({autocomplete, item, source, navigate, inputRef}: I
         }
       }}
     >
-      <img
-        src={`https://cdn.weeb.vip/weeb/${item.id}`}
+      <SafeImage
+        src={GetImageFromAnime(item)}
         alt={item.name}
         style={{height: '50px'}}
         className={"aspect-2/3 m-2"}

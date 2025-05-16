@@ -5,6 +5,7 @@ import { CurrentlyAiringQuery } from "../../../gql/graphql";
 import AnimeCard, { AnimeCardStyle } from "../../../components/AnimeCard";
 import { format } from "date-fns";
 import { utc } from "@date-fns/utc/utc";
+import {GetImageFromAnime} from "../../../services/utils";
 
 interface AnimePopoverProps {
   // @ts-ignore
@@ -87,7 +88,7 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
                   episodeLength={
                     anime.duration ? anime.duration.replace(/per.+?$/, "") : "?"
                   }
-                  image={`https://cdn.weeb.vip/weeb/${anime.id}`}
+                  image={GetImageFromAnime(anime)}
                   className="hover:cursor-pointer"
                   onClick={() => (window.location.href = `/show/${anime.id}`)}
                   year={

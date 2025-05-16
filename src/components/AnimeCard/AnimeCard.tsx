@@ -3,6 +3,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCalendar, faClapperboard, faClock} from "@fortawesome/free-solid-svg-icons";
 import Button, {ButtonColor} from "../Button";
 import {Skeleton} from "../Skeleton/Skeleton";
+import {SafeImage} from "../SafeImage/SafeImage";
 
 enum AnimeCardStyle {
   DEFAULT = 'default',
@@ -62,9 +63,10 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
     >
 
 
-      <img
+      <SafeImage
         src={props.image}
         alt={props.title}
+        data-original-src={props.image}
         className={`aspect-2/3 object-cover flex-none relative
         ${
           (props as AnimeCardProps).forceListLayout ? "w-24 sm:w-28 md:w-32" : "w-32 sm:w-40 md:w-48"

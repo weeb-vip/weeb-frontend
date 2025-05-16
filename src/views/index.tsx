@@ -10,6 +10,7 @@ import {utc} from "@date-fns/utc/utc";
 import Button, {ButtonColor} from "../components/Button";
 import {mutate} from "swr";
 import {StatusType} from "../components/Button/Button";
+import {GetImageFromAnime} from "../services/utils";
 
 
 function Index() {
@@ -91,7 +92,7 @@ function Index() {
                            episodeNumber={item.nextEpisode?.episodeNumber?.toString() || "Unknown"}
                            className={"hover:cursor-pointer"}
                            year={""}
-                           image={`https://cdn.weeb.vip/weeb/${item.id}`}
+                           image={GetImageFromAnime(item)}
                            airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do", {in: utc}) : "Unknown"}
                            onClick={function (): void {
                              navigate(`/show/${item.id}`)
@@ -143,7 +144,7 @@ function Index() {
                            episodeLength={item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?"}
                            year={item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?"}
                            className={"hover:cursor-pointer"}
-                           image={`https://cdn.weeb.vip/weeb/${item.id}`}
+                           image={GetImageFromAnime(item)}
                            onClick={function (): void {
                              navigate(`/show/${item.id}`)
                            }}
@@ -188,7 +189,7 @@ function Index() {
                            episodes={item.episodeCount ? item.episodeCount : 0}
                            episodeLength={item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?"}
                            year={item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?"}
-                           image={`https://cdn.weeb.vip/weeb/${item.id}`}
+                           image={GetImageFromAnime(item)}
                            className={"hover:cursor-pointer"}
                            onClick={function (): void {
                              navigate(`/show/${item.id}`)
@@ -233,7 +234,7 @@ function Index() {
                            episodes={item.episodeCount ? item.episodeCount : 0}
                            episodeLength={item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?"}
                            year={item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?"}
-                           image={`https://cdn.weeb.vip/weeb/${item.id}`}
+                           image={GetImageFromAnime(item)}
                            className={"hover:cursor-pointer"}
                            onClick={function (): void {
                              navigate(`/show/${item.id}`)

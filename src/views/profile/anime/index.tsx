@@ -10,6 +10,7 @@ import {faChevronDown, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {Menu, Transition} from "@headlessui/react";
 import {Fragment} from "react";
+import {GetImageFromAnime} from "../../../services/utils";
 
 const statusLabels: Record<Status, string> = {
   [Status.Completed]: "Completed",
@@ -91,7 +92,7 @@ function UserAnimeListPage() {
               description={entry.anime?.description || ""}
               episodes={entry.anime?.episodeCount || 0}
               episodeLength={entry.anime?.duration ? entry.anime?.duration?.replace(/per.+?$|per/gm, '') : "?"}
-              image={`https://cdn.weeb.vip/weeb/${entry.anime?.id}`}
+              image={GetImageFromAnime(entry.anime)}
               className="hover:cursor-pointer"
               onClick={() => navigate(`/show/${entry.anime?.id}`)}
               year={entry.anime?.startDate ? new Date(entry.anime?.startDate).getFullYear().toString() : "Unknown"}
