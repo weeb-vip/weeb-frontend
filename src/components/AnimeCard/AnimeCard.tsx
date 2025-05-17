@@ -65,7 +65,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
     >
 
       <Link to={`/show/${(props as AnimeCardProps).id}`}
-            className={`flex flex-col flex-none bg-white ${cardStyles[props.style]} drop-shadow-md flex-grow`}>
+            className={`flex flex-col flex-none bg-white ${cardStyles[props.style]} flex-grow`}>
         <SafeImage
           src={props.image}
           alt={props.title}
