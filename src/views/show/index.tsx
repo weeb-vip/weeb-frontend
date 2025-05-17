@@ -97,18 +97,20 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-white relative">
       <div
-        className="relative bg-cover bg-center h-[420px] transition-opacity duration-1000"
+        className="relative bg-cover bg-center bg-white h-[420px] transition-opacity duration-1000"
         style={{
           backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
-          opacity: bgLoaded ? 1 : 0,
+
         }}
       >
+        <div className={`absolute block inset-0 bg-white w-full h-full`}/>
+
       {bgUrl && (
         <img
           src={bgUrl}
           alt="bg preload"
-          style={{display: !bgLoaded ? "none" : "block"}}
-          className="absolute inset-0 w-full h-full object-cover"
+          style={{opacity: bgLoaded ? 1 : 0,}}
+          className="absolute inset-0 w-full h-full object-cover bg-white transition-opacity duration-1000"
           onLoad={() => setBgLoaded(true)}
           onError={() => {
             setBgUrl("/assets/not found.jpg");
