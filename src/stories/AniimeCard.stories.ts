@@ -20,6 +20,7 @@ type Story = StoryObj<typeof meta>;
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const Primary: { args: AnimeCardProps } = {
   args: {
+    id: "1",
     style: AnimeCardStyle.DETAIL,
     title: 'Spice and Wolf',
     description: 'Anime Description',

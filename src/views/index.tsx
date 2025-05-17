@@ -85,6 +85,7 @@ function Index() {
               const id = `currently-airing-${item.id}`;
               return (
                 <AnimeCard style={AnimeCardStyle.EPISODE}
+                           id={item.id}
                            title={item.titleEn || item.titleJp || "Unknown"}
                            episodeTitle={item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown"}
                            description={""}
@@ -138,6 +139,7 @@ function Index() {
               const id = `most-popular-${item.id}`;
               return (
                 <AnimeCard style={AnimeCardStyle.DETAIL}
+                           id={item.id}
                            title={item.titleEn || "Unknown"}
                            description={""}
                            episodes={item.episodeCount ? item.episodeCount : 0}
@@ -184,6 +186,7 @@ function Index() {
               const id = `top-rated-${item.id}`;
               return (
                 <AnimeCard style={AnimeCardStyle.DETAIL}
+                           id={item.id}
                            title={item.titleEn || "Unknown"}
                            description={""}
                            episodes={item.episodeCount ? item.episodeCount : 0}
@@ -229,6 +232,7 @@ function Index() {
               const id = `newest-anime-${item.id}`;
               return (
                 <AnimeCard style={AnimeCardStyle.DETAIL}
+                           id={item.id}
                            title={item.titleEn || "Unknown"}
                            description={""}
                            episodes={item.episodeCount ? item.episodeCount : 0}

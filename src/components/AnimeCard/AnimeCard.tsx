@@ -4,6 +4,7 @@ import {faCalendar, faClapperboard, faClock} from "@fortawesome/free-solid-svg-i
 import Button, {ButtonColor} from "../Button";
 import {Skeleton} from "../Skeleton/Skeleton";
 import {SafeImage} from "../SafeImage/SafeImage";
+import {Link} from "react-router-dom";
 
 enum AnimeCardStyle {
   DEFAULT = 'default',
@@ -29,6 +30,7 @@ interface AnimeCardProps {
   onClick: () => void
   className?: string
   options: React.ReactNode[]
+  id: string | null | undefined
 }
 
 interface AnimeEpisodeCardProps {
@@ -62,28 +64,29 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
       className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white rounded-md shadow-sm w-full justify-center ${props.className || ''}`}
     >
 
-
-      <SafeImage
-        src={props.image}
-        alt={props.title}
-        data-original-src={props.image}
-        className={`aspect-2/3 object-cover flex-none relative
+      <Link to={`/show/${(props as AnimeCardProps).id}`}
+            className={`flex flex-col flex-none bg-white ${cardStyles[props.style]} drop-shadow-md flex-grow`}>
+        <SafeImage
+          src={props.image}
+          alt={props.title}
+          data-original-src={props.image}
+          className={`aspect-2/3 object-cover flex-none relative
         ${
-          (props as AnimeCardProps).forceListLayout ? "w-24 sm:w-28 md:w-32" : "w-32 sm:w-40 md:w-48"
-        }`}
-        onError={({currentTarget}) => {
-          currentTarget.onerror = null; // prevents looping
-          currentTarget.src = "/assets/not found.jpg";
-        }}
-        onClick={props.onClick}
-      />
+            (props as AnimeCardProps).forceListLayout ? "w-24 sm:w-28 md:w-32" : "w-32 sm:w-40 md:w-48"
+          }`}
+          onError={({currentTarget}) => {
+            currentTarget.onerror = null; // prevents looping
+            currentTarget.src = "/assets/not found.jpg";
+          }}
+        />
+      </Link>
       {props.style === AnimeCardStyle.DETAIL && (
         <div
           className={`flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group`}
         >
 
 
-          <div onClick={props.onClick} className={"flex overflow-hidden flex-col w-full"}>
+          <Link to={`/show/${(props as AnimeCardProps).id}`} className={"flex overflow-hidden flex-col w-full"}>
             <div className="group w-full">
               {/* Default (visible) */}
               <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
@@ -110,7 +113,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
                 <span>{props.year}</span>
               </div>
             </div>
-          </div>
+          </Link>
           <div
             className={`flex flex-wrap gap-2 options w-full ${
               (props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'
@@ -132,7 +135,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
           className={`flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full  group`}
         >
 
-          <div onClick={props.onClick} className={"flex flex-col overflow-hidden w-full"}>
+          <Link to={`/show/${(props as AnimeCardProps).id}`} className={"flex flex-col overflow-hidden w-full"}>
             <div className="group w-full">
               {/* Default (visible) */}
               <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden">
@@ -165,7 +168,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
               <span
                 className={`flex-grow text-md text-base space-x-4 text-gray-600`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
             </div>
-          </div>
+          </Link>
           {/* if list align left */}
           <div
             className={`flex flex-wrap gap-2 options w-full ${

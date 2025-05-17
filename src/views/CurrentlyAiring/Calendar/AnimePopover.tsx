@@ -82,6 +82,7 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
                 <AnimeCard
                   style={AnimeCardStyle.EPISODE}
                   forceListLayout={true}
+                  id={anime.id}
                   title={anime.titleEn || anime.titleJp || "Unknown"}
                   description={anime.description || ""}
                   episodes={anime.episodeCount || 0}

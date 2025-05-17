@@ -88,6 +88,7 @@ function UserAnimeListPage() {
             <AnimeCard
               style={AnimeCardStyle.DETAIL}
               key={`user-anime-${entry.id}`}
+              id={entry.anime?.id}
               title={entry.anime?.titleEn || entry.anime?.titleJp || "Unknown"}
               description={entry.anime?.description || ""}
               episodes={entry.anime?.episodeCount || 0}

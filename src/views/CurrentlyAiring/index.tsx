@@ -71,6 +71,7 @@ export default function CurrentlyAiringPage() {
           <AnimeCard
             forceListLayout
             key={item.id}
+            id={item.id}
             style={AnimeCardStyle.EPISODE}
             title={item.titleEn || item.titleJp || "Unknown"}
             episodeTitle={item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown"}
