@@ -39,6 +39,9 @@ const renderField = (label: string, value: string | string[] | null | undefined)
 
 
 export default function Index() {
+  const [bgUrl, setBgUrl] = useState<string | null>(null);
+  const [bgLoaded, setBgLoaded] = useState(false);
+
 
   const {id} = useParams();
   const navigate = useNavigate();
@@ -46,7 +49,14 @@ export default function Index() {
     ...fetchDetails(id || ""),
     enabled: !!id,
   });
+  useEffect(() => {
 
+
+    const url = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${show?.anime.anidbid}/fanart`;
+    setBgLoaded(false); // reset until it loads
+    setBgUrl(url);
+
+  }, [show?.anime?.anidbid]);
 
   useEffect(() => {
     if (!show && !isLoading) navigate("/404", {replace: true});
@@ -87,25 +97,33 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-white relative">
       <div
-        className="relative bg-cover bg-center h-[420px]"
-
-      >
-      <img
-        src={"https://weeb-api.staging.weeb.vip/show/anime/anidb/series/" + show?.anime?.anidbid + "/fanart"}
-        alt="Background"
-        className="absolute inset-0 w-full h-full object-cover"
-        onError={({currentTarget}) => {
-          currentTarget.onerror = null;
-          currentTarget.src = "/assets/not found.jpg";
+        className="relative bg-cover bg-center h-[420px] transition-opacity duration-1000"
+        style={{
+          backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
+          opacity: bgLoaded ? 1 : 0,
         }}
-      />
+      >
+      {bgUrl && (
+        <img
+          src={bgUrl}
+          alt="bg preload"
+          style={{display: !bgLoaded ? "none" : "block"}}
+          className="absolute inset-0 w-full h-full object-cover"
+          onLoad={() => setBgLoaded(true)}
+          onError={() => {
+            setBgUrl("/assets/not found.jpg");
+            setBgLoaded(true);
+          }}
+        />
+      )}
 
-      </div>
 
-      <div className="bg-gray-100 -mt-[200px]">
-        <div className="relative z-10 flex justify-center pt-6">
-          <div
-            className="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
+    </div>
+
+  <div className="bg-gray-100 -mt-[200px]">
+    <div className="relative z-10 flex justify-center pt-6">
+      <div
+        className="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
             <SafeImage
               src={GetImageFromAnime(anime)}
               alt={anime?.titleEn || ""}
