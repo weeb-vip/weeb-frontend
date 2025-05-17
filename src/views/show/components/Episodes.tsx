@@ -10,30 +10,14 @@ import {utc} from "@date-fns/utc/utc";
 // import {Episode} from "../../../services/api/details";
 
 function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episode[] }) {
-  const [collapsed, setCollapsed] = React.useState<boolean>(false)
   return (
     <div className="inline-block min-w-full overflow-hidden rounded-lg shadow m-auto">
       <div className={"flex flex-row flex-grow flex-nowrap p-5 space-x-5 items-center bg-white"}>
         <FontAwesomeIcon size="2xl" color="#666" icon={faBookmark}/>
         <h1 className={"text-left text-2xl font-normal"}>Episodes</h1>
         {/*transition arrow direction*/}
-        <Button
-          color={ButtonColor.none}
-          showLabel={false}
-          label={'collapse'}
-          onClick={() => setCollapsed(!collapsed)}
-          icon={<FontAwesomeIcon size="2xl" color="#666"
-                                 icon={!collapsed ? faCircleChevronDown : faCircleChevronUp}/>}/>
       </div>
-      <Transition
-        show={!collapsed}
-        enter="transition-opacity duration-75"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="transition-opacity duration-150"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-      >
+
         <table className="table-auto leading-normal w-full">
           <thead>
           <tr>
@@ -77,7 +61,6 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
           })}
           </tbody>
         </table>
-      </Transition>
     </div>
   )
 }
@@ -89,7 +72,7 @@ function Tables({
 
 
   return (
-    <div className="flex flex-col flex-grow space-y-16">
+    <div className="flex flex-col flex-grow">
       <div className={"hidden"}/>
         { /* @ts-ignore */}
         <Table seasonNumber={1} episodes={episodes.sort((a: Episode, b: Episode) => a.episodeNumber - b.episodeNumber)}/>

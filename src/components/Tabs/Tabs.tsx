@@ -23,7 +23,7 @@ function Tabs({tabs, defaultTab, children}: TabsProps) {
           )
         })}
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col py-8">
         { /* @ts-ignore */}
         {[...children][tabs.indexOf(activeTab)]}
       </div>

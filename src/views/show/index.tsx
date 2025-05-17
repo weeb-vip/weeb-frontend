@@ -1,181 +1,211 @@
-import {useLocation, useNavigate, useParams} from "react-router-dom";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import { useNavigate, useParams} from "react-router-dom";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import {fetchDetails, upsertAnime} from "../../services/queries";
 import Loader from "../../components/Loader";
-import {SeriesDetails} from "../../services/api/details";
-import Tables from "./components/Episodes";
-import Tag from "./components/tag";
-import {format, isDate, parse} from "date-fns";
+import {format } from "date-fns";
 import Tabs from "../../components/Tabs";
-import Artworks from "./components/Artworks";
-import Characters from "./components/Characters";
-import Trailers from "./components/Trailers";
-import {GetAnimeDetailsByIdQuery, Status} from "../../gql/graphql";
 import {useEffect, useState} from "react";
 import Button, {ButtonColor} from "../../components/Button";
 import {StatusType} from "../../components/Button/Button";
+import {GetAnimeDetailsByIdQuery, Status} from "../../gql/graphql";
 import {GetImageFromAnime} from "../../services/utils";
 import {SafeImage} from "../../components/SafeImage/SafeImage";
+import Tag from "./components/tag";
+import Tables from "./components/Episodes";
 
-function formatUpdatedAt(date?: string): string {
-    if (!date) {
-        return "TBA"
-    }
-    const airdate = parse(date, 'yyyy-MM-dd HH:mm:ss', new Date())
-    const formattedAirdate = isDate(airdate) ? format(airdate, 'dd MMM yyyy') : "TBA"
-    return `Updated ${formattedAirdate}`
-}
-
-function Index() {
-    const location = useLocation()
-    const navigate = useNavigate(); // ← add this
-
-    // const queryClient = useQueryClient()
-    const {id} = useParams()
-    // const [mediaID, setMediaID] = useState<string | undefined>(undefined)
-
-    const {
-        data: show,
-        isLoading: showIsLoading,
-
-    } = useQuery<GetAnimeDetailsByIdQuery>({
-        ...(fetchDetails(id || "")),
-        enabled: id !== undefined
-    })
-
-    useEffect(() => {
-        if (!show && !showIsLoading) {
-            navigate("/404", { replace: true });
-        }
-    }, [show, showIsLoading, navigate]);
-    const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
-
-    const mutateAddAnime = useMutation({
-        ...upsertAnime(),
-        onSuccess: (data) => {
-            console.log("Added anime", data)
-        },
-        onError: (error) => {
-            console.log("Error adding anime", error)
-        }
-    })
-
-    const addAnime = async (id: string, animeId: string) => {
-        setAnimeStatuses((prev) => ({...prev, [id]: "loading"}));
-        try {
-            await mutateAddAnime.mutateAsync({
-                input: {
-                    animeID: animeId,
-                    status: Status.Plantowatch,
-                }
-            });
-            console.log("Added anime", id, animeId)
-            setAnimeStatuses((prev) => ({...prev, [id]: "success"}));
-        } catch {
-            setAnimeStatuses((prev) => ({...prev, [id]: "error"}));
-        }
-    };
-
+const renderField = (label: string, value: string | string[] | null | undefined) => {
+  if (!value) return null;
+  // if its an array, join it, show like a list
+  if (Array.isArray(value)) {
     return (
-        <div className="flex flex-col min-h-screen">
+      <div>
+        <h3 className="font-semibold text-gray-900 mb-1">{label}</h3>
+        <ul className="list-disc pl-5">
+          {value.map((item, idx) => (
+            <li key={idx} className="text-gray-700">{item}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  } else {
+    return (
+      <div>
+        <h3 className="font-semibold text-gray-900 mb-1">{label}</h3>
+        <p>{value}</p>
+      </div>
+    );
+  }
+};
 
-            <>
-                {showIsLoading || !show ? <Loader/> : (
-                    <>
-                        <div className="relative flex flex-col lg:flex-row p-10 text-white overflow-hidden">
-                            <div className={"absolute top-0 left-0 bottom-0 right-0"} style={{
-                                // @ts-ignore
-                                backgroundImage: `url(${global.config.api_host}/show/anime/anidb/series/${show?.anime?.anidbid}/fanart)`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                filter: 'blur(8px)',
-                                zIndex: -1,
-                                transform: 'scale(1.1)',
-                                backgroundColor: 'rgba(0,0,0,0.5)',
-                                backgroundBlendMode: 'darken'
-                            }}/>
-                            <div className="flex flex-col px-4 m-y-auto lg:mr-16">
-                                {/* @ts-ignore */}
-                                <SafeImage src={`${GetImageFromAnime(show?.anime)}`}
-                                     data-original-src={GetImageFromAnime(show?.anime) || ''}
-                                     alt={show?.anime?.titleEn || ''}
-                                     className={"max-w-none"}
-                                     style={{height: '322px', width: '225px'}}
-                                     onError={({currentTarget}) => {
-                                         currentTarget.onerror = null; // prevents looping
-                                         currentTarget.src = "/assets/not found.jpg";
-                                     }}
-                                />
 
-                            </div>
-                            <div className="flex flex-col space-y-2 p-2">
-                                <h1
-                                    className="text-3xl font-bold"
-                                >{show?.anime.titleEn}</h1>
-                                <div className={"flex flex-row flex-wrap space-x-4 space-y-4 space-x-reverse pb-4"}>
-                                    <div className={"hidden -ml-4"}></div>
-                                    <span>{`${formatUpdatedAt(show?.anime.updatedAt)}`}</span>
-                                    <span>{show?.anime.broadcast || "unknown"}</span>
-                                    {/*<Tag tag={show.score.toString()}/>*/}
-                                    <span>{show?.anime.endDate ? "finished" : "ongoing"}</span>
-                                    { /* network */}
-                                    {show?.anime.broadcast && (
-                                        <span>{show?.anime.broadcast || "unknown"}</span>
-                                    )
-                                    }
-                                    {/*{show..map((network) => (*/}
-                                    {/*  <Tag tag={network.name}/>*/}
-                                    {/*))}*/}
-                                </div>
-                                <p>{show?.anime.description}</p>
-                                {/*<Options show={show} type={type} id={id}/>*/}
+export default function Index() {
 
-                                <h2 className="text-xl font-bold pt-4">Tags</h2>
-                                <div className={"flex flex-row flex-wrap space-x-4 space-y-4 space-x-reverse"}>
-                                    <div className={"hidden -ml-4"}></div>
-                                    {show?.anime.tags?.map((tag) => (
-                                        <Tag tag={`${tag}`}/>
-                                    ))}
-                                </div>
-                                <Button
-                                  color={ButtonColor.blue}
-                                  label={'Add to list'}
-                                  showLabel={true}
-                                  status={animeStatuses[show.anime.id] ?? "idle"}
-                                  className="w-fit relative -left-5"
-                                  onClick={() => {
-                                      addAnime(show.anime.id, show.anime.id)
-                                  }}
-                                />
-                            </div>
+  const {id} = useParams();
+  const navigate = useNavigate();
+  const {data: show, isLoading} = useQuery<GetAnimeDetailsByIdQuery>({
+    ...fetchDetails(id || ""),
+    enabled: !!id,
+  });
 
-                        </div>
-                        <div className="flex flex-col flex-grow bg-slate-300 px-4 sm:px-8 lg:px-16 py-4 sm:py-6 lg:py-8">
-                            <Tabs tabs={["Episodes", "Characters", "Trailers", "Artworks"]} defaultTab={"Episodes"}>
-                                <div className="w-full p-4 sm:p-6 lg:p-10">
-                                    {show?.anime.episodes && (
-                                      <Tables episodes={show?.anime?.episodes}/>
-                                    )}
-                                </div>
-                                {/* table of characters */}
-                                <div></div>
 
-                                {/*<Characters characters={show?.characters || []}/>*/}
-                                {/* grid of trailers */}
-                                <div></div>
-                                {/*<Trailers trailers={show?.trailers || []}/>*/}
-                                { /* grid of artworks */}
-                                <div></div>
-                                {/*<Artworks artworks={show?.artworks || []}/>*/}
-                            </Tabs>
-                        </div>
-                    </>
-                )}
-            </>
+  useEffect(() => {
+    if (!show && !isLoading) navigate("/404", {replace: true});
+  }, [show, isLoading, navigate]);
+
+  const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
+  const mutateAddAnime = useMutation({
+    ...upsertAnime(),
+    onSuccess: () => {
+    },
+    onError: () => {
+    },
+  });
+
+  const addAnime = async (animeId: string) => {
+    setAnimeStatuses((prev) => ({...prev, [animeId]: "loading"}));
+    try {
+      await mutateAddAnime.mutateAsync({
+        input: {animeID: animeId, status: Status.Plantowatch},
+      });
+      setAnimeStatuses((prev) => ({...prev, [animeId]: "success"}));
+    } catch {
+      setAnimeStatuses((prev) => ({...prev, [animeId]: "error"}));
+    }
+  };
+
+  if (isLoading || !show) return <Loader/>;
+
+  const anime = show.anime;
+
+  const nextEpisode = anime?.episodes?.find((ep) => {
+    if (!ep.airDate) return false;
+    const airDate = new Date(ep.airDate);
+    return airDate > new Date();
+  });
+
+
+  return (
+    <div className="min-h-screen bg-white relative">
+      <div
+        className="relative bg-cover bg-center h-[420px]"
+
+      >
+      <img
+        src={"https://weeb-api.staging.weeb.vip/show/anime/anidb/series/" + show?.anime?.anidbid + "/fanart"}
+        alt="Background"
+        className="absolute inset-0 w-full h-full object-cover"
+        onError={({currentTarget}) => {
+          currentTarget.onerror = null;
+          currentTarget.src = "/assets/not found.jpg";
+        }}
+      />
+
+      </div>
+
+      <div className="bg-gray-100 -mt-[200px]">
+        <div className="relative z-10 flex justify-center pt-6">
+          <div
+            className="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
+            <SafeImage
+              src={GetImageFromAnime(anime)}
+              alt={anime?.titleEn || ""}
+              className="h-[322px] w-[225px] object-cover rounded-md shadow-md"
+              onError={({currentTarget}) => {
+                currentTarget.onerror = null;
+                currentTarget.src = "/assets/not found.jpg";
+              }}
+            />
+            <div className="lg:ml-10 mt-4 lg:mt-0 space-y-4 w-full">
+              <h1 className="text-3xl font-bold">{anime?.titleEn}</h1>
+              <p className="text-sm leading-relaxed text-neutral-200">{anime?.description}</p>
+              <div className="flex flex-wrap gap-4 text-sm text-neutral-300">
+                <span>{anime?.startDate ? format(anime.startDate, "yyyy") : ""}</span>
+                <span>{anime?.broadcast || "unknown"}</span>
+                <span>{anime?.endDate ? "Finished" : "Ongoing"}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {anime?.tags?.map((tag, idx) => (
+                  <Tag key={idx} tag={tag}/>
+                ))}
+              </div>
+              <Button
+                color={ButtonColor.blue}
+                label={"Add to list"}
+                status={animeStatuses[anime.id] ?? "idle"}
+                onClick={() => addAnime(anime.id)}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="bg-gray-100 py-8 px-4 sm:px-8 lg:px-16">
+          <div className="max-w-screen-2xl mx-auto flex flex-col gap-8">
+            {nextEpisode && (
+              <div className="mb-4 p-4 bg-white rounded shadow text-sm">
+                <h3 className="font-semibold mb-1 text-gray-800">Next Episode</h3>
+                <p><strong>Episode {nextEpisode.episodeNumber}:</strong> {nextEpisode.titleEn || "TBA"}</p>
+                <p className="text-gray-600">Airing on {format(new Date(nextEpisode.airDate), "dd MMM yyyy")}</p>
+              </div>
+            )}
+            <div className=" flex flex-col lg:flex-row gap-8">
+              {/* Details Panel */}
+              <div className="bg-white p-4 rounded-md shadow-md text-sm text-gray-800 space-y-6 w-full lg:max-w-xs">
+                <div className="space-y-3">
+                  <h2 className="font-bold text-gray-700 border-b pb-1">Titles</h2>
+                  {renderField("Japanese", anime?.titleJp)}
+                  {renderField("Romaji", anime?.titleRomaji)}
+                  {renderField("Kanji", anime?.titleKanji)}
+                  {(anime?.titleSynonyms ? anime.titleSynonyms : []).length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Synonyms</h3>
+                      <p>{(anime?.titleSynonyms || []).join(", ")}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <h2 className="font-bold text-gray-700 border-b pb-1">Production</h2>
+                  {renderField("Studios", anime?.studios)}
+                  {renderField("Source", anime?.source)}
+                  {renderField("Licensors", anime?.licensors)}
+                </div>
+                <div className="space-y-3">
+                  <h2 className="font-bold text-gray-700 border-b pb-1">Other Info</h2>
+                  {renderField("Rating", anime?.rating)}
+                  {renderField("Ranking", anime?.ranking?.toString())}
+                </div>
+                {/* show aired dates, startDate, endDate */}
+                <div className="space-y-3">
+                  <h2 className="font-bold text-gray-700 border-b pb-1">Aired</h2>
+                  {renderField("Start Date", anime?.startDate ? format(anime.startDate, "dd MMM yyyy") : "Unknown")}
+                  {renderField("End Date", anime?.endDate ? format(anime.endDate, "dd MMM yyyy") : "Ongoing")}
+                </div>
+              </div>
+
+              {/* Tabs Section */}
+              <div className=" w-full">
+                <Tabs tabs={["Episodes", "Characters", "Trailers", "Artworks"]} defaultTab="Episodes">
+                  <div>
+
+                    {anime?.episodes && <Tables episodes={anime.episodes}/>}
+                  </div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </Tabs>
+              </div>
+            </div>
+            {/* make a small footer with the last updated date, make it right aligned*/}
+            <div className="flex justify-end mt-8">
+              <p className="text-sm text-gray-500">
+                Last updated: {anime?.updatedAt ? format(new Date(anime.updatedAt), "dd MMM yyyy") : "Unknown"}
+              </p>
+            </div>
+          </div>
 
 
         </div>
-    )
-}
 
-export default Index
+
+      </div>
+    </div>
+  );
+}

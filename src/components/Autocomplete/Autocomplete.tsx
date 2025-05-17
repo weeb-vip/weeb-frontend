@@ -91,7 +91,7 @@ export function Autocomplete() {
       <>
         {/* @ts-ignore */}
         <div
-          className="absolute z-50 bg-white w-full left-0 right-0 max-h-60 overflow-auto shadow-md mt-1 rounded-md"
+          className="absolute  z-50 bg-white w-full left-0 right-0 max-h-60 overflow-auto shadow-md mt-1 rounded-md"
           {...autocomplete.getPanelProps({})}
           ref={panelRef}
         >
