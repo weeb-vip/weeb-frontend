@@ -127,7 +127,7 @@ export default function Index() {
             <SafeImage
               src={GetImageFromAnime(anime)}
               alt={anime?.titleEn || ""}
-              className="h-[322px] w-[225px] object-cover rounded-md shadow-md"
+              className="h-48 w-32 lg:h-64 lg:w-48 object-cover rounded-md"
               onError={({currentTarget}) => {
                 currentTarget.onerror = null;
                 currentTarget.src = "/assets/not found.jpg";
