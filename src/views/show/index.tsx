@@ -120,7 +120,7 @@ export default function Index() {
 
     </div>
 
-  <div className="bg-gray-100 -mt-[200px]">
+  <div className="bg-gray-100 lg:-mt-[200px] sm:-mt-[350px] mt-0">
     <div className="relative z-10 flex justify-center pt-6">
       <div
         className="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
