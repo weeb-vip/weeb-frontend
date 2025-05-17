@@ -19,6 +19,7 @@ import {
 } from "date-fns";
 import { utc } from "@date-fns/utc/utc";
 import { AnimePopover } from "./AnimePopover";
+import StatusButton, {ButtonColor} from "../../../components/Button";
 
 type ViewMode = "month" | "week";
 
@@ -114,18 +115,19 @@ export default function AiringCalendarPage() {
     <div className="max-w-screen-xl mx-auto px-4 py-6 relative">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <div className="flex gap-2">
-          <button
+          <StatusButton
+            label="Month"
+            color={viewMode === "month" ? ButtonColor.blue : ButtonColor.transparent}
             onClick={() => setViewMode("month")}
-            className={`px-3 py-1 rounded ${viewMode === "month" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-          >
-            Month
-          </button>
-          <button
+            className="px-3 py-1 rounded"
+          />
+
+          <StatusButton
+            label="Week"
+            color={viewMode === "week" ? ButtonColor.blue : ButtonColor.transparent}
             onClick={() => setViewMode("week")}
-            className={`px-3 py-1 rounded ${viewMode === "week" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-          >
-            Week
-          </button>
+            className="px-3 py-1 rounded ml-2"
+          />
         </div>
 
         <div className="flex items-center gap-4">
