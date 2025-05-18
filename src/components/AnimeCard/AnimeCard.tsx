@@ -71,9 +71,9 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
           alt={props.title}
           data-original-src={props.image}
           className={`aspect-2/3 object-cover flex-none relative
-          rounded-t-md
+          
         ${
-            (props as AnimeCardProps).forceListLayout ? "w-24 sm:w-28 md:w-32" : "w-32 sm:w-40 md:w-48"
+            (props as AnimeCardProps).forceListLayout ? "w-24 sm:w-28 md:w-32 rounded-l-md" : "w-32 sm:w-40 md:w-48 rounded-t-md"
           }`}
           onError={({currentTarget}) => {
             currentTarget.onerror = null; // prevents looping
