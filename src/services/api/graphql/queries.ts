@@ -222,32 +222,37 @@ export const mutateUpdateUserDetails = graphql(`
 `)
 
 export const queryUserAnimes = graphql(`
-    query UserAnimes {
-        UserAnimes {
-            id
-            userID
-            animeID
-            status
-            score
-            episodes
-            rewatching
-            rewatchingEpisodes
-            tags
-            listID
-            createdAt
-            updatedAt
-            deletedAt
-            anime {
+    query UserAnimes($input: UserAnimesInput!) {
+        UserAnimes(input: $input) {
+            page
+            limit
+            total
+            animes {
                 id
-                titleEn
-                titleJp
-                titleRomaji
-                titleKanji
-                imageUrl
-                startDate
-                description
-                episodeCount
-                duration
+                userID
+                animeID
+                status
+                score
+                episodes
+                rewatching
+                rewatchingEpisodes
+                tags
+                listID
+                createdAt
+                updatedAt
+                deletedAt
+                anime {
+                    id
+                    titleEn
+                    titleJp
+                    titleRomaji
+                    titleKanji
+                    imageUrl
+                    startDate
+                    description
+                    episodeCount
+                    duration
+                }
             }
         }
     }

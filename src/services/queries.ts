@@ -5,9 +5,20 @@ import {
   AddAnimeMutationVariables,
   CurrentlyAiringQuery,
   GetAnimeDetailsByIdQuery,
-  GetHomePageDataQuery, LoginInput, MutationDeleteAnimeArgs, RefreshTokenMutation, RefreshTokenMutationVariables,
+  GetHomePageDataQuery,
+  LoginInput,
+  MutationDeleteAnimeArgs,
+  RefreshTokenMutation,
+  RefreshTokenMutationVariables,
   RegisterInput,
-  RegisterResult, SigninResult, UpdateUserInput, User, UserAnimeInput, UserAnimesQuery
+  RegisterResult,
+  SigninResult,
+  UpdateUserInput,
+  User,
+  UserAnimeInput,
+  UserAnimePaginated,
+  UserAnimesQuery,
+  UserAnimesQueryVariables
 } from "../gql/graphql";
 import {
   getAnimeDetailsByID,
@@ -147,13 +158,14 @@ export const updateUserDetails = async () => ({
   }
 })
 
-export const fetchUserAnimes = () => ({
-  queryKey: ["user-animes"],
+export const fetchUserAnimes = (variables: UserAnimesQueryVariables) => ({
+  queryKey: ["user-animes", variables],
   queryFn: async (): Promise<UserAnimesQuery["UserAnimes"]> => {
-    const response = await AuthenticatedClient().request(queryUserAnimes);
+    const response = await AuthenticatedClient().request(queryUserAnimes, variables);
     return response.UserAnimes;
   },
 });
+
 
 export const upsertAnime = () => ({
   mutationFn: async (input: { input: UserAnimeInput }) => {
