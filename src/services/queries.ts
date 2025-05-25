@@ -25,7 +25,7 @@ import {
   getCurrentlyAiring, getCurrentlyAiringWithDates,
   getHomePageData, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
   mutationCreateSession, mutationRefreshToken,
-  mutationRegister, queryUserAnimes, queryUserDetails
+  mutationRegister, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserDetails
 } from "./api/graphql/queries";
 
 ;
@@ -180,5 +180,16 @@ export const deleteAnime = () => ({
     const client = AuthenticatedClient(); // ensure token read at call-time
     const response = await client.request(mutateDeleteAnime, {input});
     return response.DeleteAnime;
+  }
+})
+
+export const getCharactersAndStaffByAnimeID = (id: string) => ({
+  queryKey: ["charactersAndStaff", id],
+  queryFn: async () => {
+    // @ts-ignore
+    const data = await request(global.config.graphql_host, queryCharactersAndStaffByAnimeID, {
+      animeId: id
+    })
+    return data.charactersAndStaffByAnimeId;
   }
 })

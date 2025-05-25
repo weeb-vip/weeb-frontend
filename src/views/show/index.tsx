@@ -12,6 +12,7 @@ import {GetImageFromAnime} from "../../services/utils";
 import {SafeImage} from "../../components/SafeImage/SafeImage";
 import Tag from "./components/tag";
 import Tables from "./components/Episodes";
+import CharactersWithStaff from "./components/Characters";
 
 const renderField = (label: string, value: string | string[] | null | undefined) => {
   if (!value) return null;
@@ -207,7 +208,9 @@ export default function Index() {
 
                     {anime?.episodes && <Tables episodes={anime.episodes}/>}
                   </div>
-                  <div></div>
+                  <div>
+                    <CharactersWithStaff animeId={anime.id} />
+                  </div>
                   <div></div>
                   <div></div>
                 </Tabs>

@@ -4,6 +4,7 @@ import axios from "axios";
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string; // unencoded raw slug (e.g. "Makina-san's_a_Love_Bot?!")
   fallbackSrc?: string;
+  path?: string
 }
 
 export const SafeImage: React.FC<SafeImageProps> = ({
@@ -13,12 +14,14 @@ export const SafeImage: React.FC<SafeImageProps> = ({
                                                       ...imgProps
                                                     }) => {
   const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
-
+ const path = imgProps.path ? imgProps.path+"/" : "";
+ // replace src %20 with +
+  const encodedSrc = src.replace(/%20/g, "+");
   return (
     <img
       {...imgProps}
-      src={`https://cdn.weeb.vip/weeb/${encodeURIComponent(src)}`}
-      data-original-src={`https://cdn.weeb.vip/weeb/${encodeURIComponent(src)}`}
+      src={`https://cdn.weeb.vip/weeb/${path}${encodeURIComponent(encodedSrc)}`}
+      data-original-src={`https://cdn.weeb.vip/weeb/${path}${encodeURIComponent(encodedSrc)}`}
       onError={(e) => {
         e.currentTarget.onerror = null;
         e.currentTarget.src = fallbackSrc;

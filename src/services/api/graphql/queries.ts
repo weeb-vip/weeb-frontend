@@ -271,3 +271,44 @@ export const mutateDeleteAnime = graphql(`
         DeleteAnime(id: $input)
     }
 `)
+
+
+export const queryCharactersAndStaffByAnimeID = graphql(`
+    query CharactersAndStaffByAnimeId($animeId: ID!) {
+        charactersAndStaffByAnimeId(animeId: $animeId) {
+            character {
+                id
+                animeId
+                name
+                role
+                birthday
+                zodiac
+                gender
+                race
+                height
+                weight
+                title
+                martialStatus
+                summary
+                image
+                createdAt
+                updatedAt
+
+            }
+            staff {
+                id
+                language
+                givenName
+                familyName
+                image
+                birthday
+                birthPlace
+                bloodType
+                hobbies
+                summary
+                createdAt
+                updatedAt
+            }
+        }
+    }
+`)

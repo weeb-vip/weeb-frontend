@@ -146,7 +146,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
               {/* On hover (revealed) */}
               <span
                 className="hidden group-hover:block whitespace-nowrap text-md font-bold group-hover:animate-marquee">
-    {props.title}
+    {props.title}09
   </span>
             </div>
             <div className="group w-full">

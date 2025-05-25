@@ -1,74 +1,73 @@
-import {Character} from "../../../services/api/details";
-import Modal from "../../../components/Modal";
-import {useState} from "react";
+import { useQuery } from "@tanstack/react-query";
+import {CharactersAndStaffByAnimeIdQuery, CharacterWithStaff} from "../../../gql/graphql";
+import { getCharactersAndStaffByAnimeID } from "../../../services/queries";
+import Loader from "../../../components/Loader";
+import { SafeImage } from "../../../components/SafeImage/SafeImage";
 
-function Characters({characters}: { characters: Character[] }) {
-  const [showModal, setShowModal] = useState(false)
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null)
+type Props = {
+  animeId: string;
+};
+
+export default function CharactersWithStaff({ animeId }: Props) {
+  const { data, isLoading } = useQuery(getCharactersAndStaffByAnimeID(animeId));
+
+  if (isLoading || !data) return <Loader />;
 
 
   return (
-    <div className="flex flex-row space-x-2 p-10 bg-slate-300 flex-grow">
-
-      <div
-        className={'w-full grid xs:grid-cols-[repeat(auto-fit,50%)] sm:grid-cols-[repeat(auto-fit,_33.333333%)] lg:grid-cols-[repeat(auto-fit,_25%)] xl:grid-cols-[repeat(auto-fit,_16.66666%)] 2xl:grid-cols-[repeat(auto-fit,_12.5%)] m-auto p-24 justify-center gap-16 cursor-pointer'}>
-        {characters.map((character) => (
-          <div className={'flex flex-col space-y-2'}
-               onClick={() => {
-                 setSelectedCharacter(character)
-                 setShowModal(true)
-               }}
-          >
-            { /* @ts-ignore */}
-            <img src={`${global.config.api_host}/character/${character.id}/artwork`}
-              alt={character.id.toString()}
-              className={"max-w-none"}
-              style={{height: '322px', width: '225px'}}
-              onError={({ currentTarget }) => {
-                currentTarget.onerror = null; // prevents looping
-                currentTarget.src="/assets/not found.jpg";
-              }}
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {data.map((entry, idx) => (
+        <div key={idx} className="bg-white rounded-md shadow p-4 flex flex-col gap-4">
+          {/* Character Info */}
+          <div className="flex gap-4">
+            <SafeImage
+              src={encodeURIComponent(`${entry.character.name}_${animeId}`)}
+              path={"characters"}
+              alt={`characters/${entry.character.name}_${animeId}`}
+              className="h-24 w-16 object-cover rounded"
             />
-            <span>{character.name}</span>
-          </div>
-        ))}
-      </div>
-      <Modal title={"Character"} isOpen={showModal} closeFn={() => setShowModal(false)}
-             options={[
-               {
-                 label: "Close",
-                 onClick: () => setShowModal(false)
-               }
-             ]}
-      >
-        <div className="flex flex-col space-y-2">
-          { /* @ts-ignore */}
-          <img src={`${global.config.api_host}/character/${selectedCharacter?.id}/artwork`}
-            alt={selectedCharacter?.id.toString()}
-            className={"max-w-none"}
-            style={{height: '322px', width: '225px'}}
-            onError={({ currentTarget }) => {
-              currentTarget.onerror = null; // prevents looping
-              currentTarget.src="/assets/not found.jpg";
-            }}
-          />
-          <span>{selectedCharacter?.name}</span>
-
-          <div className="flex flex-row space-x-2">
-            <div className="flex flex-col space-y-2">
-              <span className="font-bold">Name</span>
-              <span>{selectedCharacter?.name}</span>
-
-              <span className="font-bold">Actor</span>
-              <span>{selectedCharacter?.personName}</span>
-
-
+            <div>
+              <h3 className="font-bold text-lg text-gray-800">{entry.character.name}</h3>
+              <p className="text-sm text-gray-500">{entry.character.role}</p>
+              {entry.character.title && (
+                <p className="text-sm text-gray-400 italic">{entry.character.title}</p>
+              )}
             </div>
           </div>
-        </div>
-      </Modal>
-    </div>
-  )
-}
 
-export default Characters
+          {/* Multiple Staff Info */}
+          <div className="flex flex-col gap-4 border-t pt-4">
+            {/* @ts-ignore */}
+            {entry.staff.map((staffMember, staffIdx) => (
+              <div key={staffIdx} className="flex gap-4">
+                <SafeImage
+                  src={encodeURIComponent(`${staffMember.givenName}_${staffMember.familyName}`)}
+                  path={"staff"}
+                  alt={`${staffMember.givenName} ${staffMember.familyName}`}
+                  className="h-24 w-16 object-cover rounded"
+                />
+                <div>
+                  <h4 className="font-semibold text-gray-700">
+                    {staffMember.givenName} {staffMember.familyName}
+                  </h4>
+                  {staffMember.language && (
+                    <p className="text-xs text-gray-500">Language: {staffMember.language}</p>
+                  )}
+                  {staffMember.birthPlace && (
+                    <p className="text-xs text-gray-500">{staffMember.birthPlace}</p>
+                  )}
+                  {staffMember.birthday && (
+                    <p className="text-xs text-gray-400">Born: {staffMember.birthday}</p>
+                  )}
+                  {staffMember.bloodType && (
+                    <p className="text-xs text-gray-500">Blood Type: {staffMember.bloodType}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
