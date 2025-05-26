@@ -15,6 +15,11 @@ export const getHomePageData = graphql(/* GraphQL */`
             rating
             startDate
             ranking
+            userAnime {
+                id
+                status
+                score
+            }
         }
         mostPopularAnime(limit: $limit) {
             id
@@ -29,6 +34,11 @@ export const getHomePageData = graphql(/* GraphQL */`
             rating
             startDate
             ranking
+            userAnime {
+                id
+                status
+                score
+            }
         }
         newestAnime(limit:100) {
             id
@@ -43,6 +53,11 @@ export const getHomePageData = graphql(/* GraphQL */`
             rating
             startDate
             ranking
+            userAnime {
+                id
+                status
+                score
+            }
         }
     }
 `)
@@ -85,6 +100,11 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
             ranking
             createdAt
             updatedAt
+            userAnime {
+                id
+                status
+                score
+            }
         }
     }
 `)
@@ -110,6 +130,11 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
                 airDate
                 createdAt
                 updatedAt
+            }
+            userAnime {
+                id
+                status
+                score
             }
         }
     }

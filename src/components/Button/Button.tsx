@@ -38,15 +38,9 @@ export default function StatusButton({
                                        onResetStatus,
                                      }: StatusButtonProps) {
   const [internalStatus, setInternalStatus] = useState<StatusType>("idle");
-  const [buttonSize, setButtonSize] = useState<{ width: number; height: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  useLayoutEffect(() => {
-    if (buttonRef.current && !buttonSize) {
-      const { width, height } = buttonRef.current.getBoundingClientRect();
-      setButtonSize({ width, height });
-    }
-  }, [buttonRef, buttonSize]);
+
 
   useEffect(() => {
     if (!status) return;
@@ -82,41 +76,27 @@ export default function StatusButton({
       disabled={internalStatus === "loading"}
       className={`
       px-4 py-1
-        relative rounded-full font-medium transition flex items-center justify-center whitespace-nowrap
+        relative rounded-full font-medium transition flex items-center justify-center whitespace-nowrap w-fit
         ${colorClasses[color]} ${className || ""} ${
         internalStatus === "loading" ? "cursor-not-allowed" : "cursor-pointer"
       }`}
-      style={
-        buttonSize
-          ? { width: `${buttonSize.width}px`, height: `${buttonSize.height}px` }
-          : undefined
-      }
+
     >
       <AnimatePresence mode="wait" initial={false}>
-        {internalStatus === "idle" ? (
-          <motion.div
-            key="button"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            className="flex items-center"
-          >
-            {icon ? icon : showLabel && label && <span>{label}</span>}
-          </motion.div>
-        ) : (
-          <motion.div
-            key={internalStatus}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            className="flex items-center"
-          >
-            {iconMap[internalStatus]}
-          </motion.div>
-        )}
+        <motion.div
+          key={internalStatus}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.2 }}
+          className="flex items-center justify-center"
+        >
+          {internalStatus === "idle"
+            ? icon || (showLabel && label && <span>{label}</span>)
+            : iconMap[internalStatus]}
+        </motion.div>
       </AnimatePresence>
+
     </button>
   );
 }

@@ -57,26 +57,33 @@ export const fetchSearchAdvancedResults = (query: string, year?: number, searchl
 export const fetchHomePageData = () => ({
   queryKey: ['homedata', {limit: 20}],
   queryFn: async () => {
+    const client = AuthenticatedClient();
     // @ts-ignore
-    return request<GetHomePageDataQuery>(global.config.graphql_host, getHomePageData, {
+    return client.request<GetHomePageDataQuery>(getHomePageData, {
       limit: 20 // variables are typed too!
     })
   },
 })
 
 export const fetchDetails = (id: string) => ({
-  queryKey: ["detailsCustom", id],
+  queryKey: ["anime-details", id],
   // @ts-ignore
-  queryFn: async () => request<GetAnimeDetailsByIdQuery>(global.config.graphql_host, getAnimeDetailsByID, {
-    id: id // variables are typed too!
-  })
+  queryFn: async () => {
+    if (!id) throw new Error("ID is required to fetch anime details");
+    const client = AuthenticatedClient();
+    // @ts-ignore
+   return client.request<GetAnimeDetailsByIdQuery>(getAnimeDetailsByID, {
+      id: id // variables are typed too!
+    })
+  }
 })
 
 export const fetchCurrentlyAiring = () => ({
-  queryKey: ["currentlyAiring"],
+  queryKey: ["currently-airing"],
   queryFn: async () => {
+    const client = AuthenticatedClient();
     // @ts-ignore
-    return request<CurrentlyAiringQuery>(global.config.graphql_host, getCurrentlyAiring)
+    return client.request<CurrentlyAiringQuery>(getCurrentlyAiring)
   },
 })
 

@@ -1,8 +1,8 @@
-import { useNavigate, useParams} from "react-router-dom";
-import {useMutation, useQuery} from "@tanstack/react-query";
+import {useNavigate, useParams} from "react-router-dom";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchDetails, upsertAnime} from "../../services/queries";
 import Loader from "../../components/Loader";
-import {format } from "date-fns";
+import {format} from "date-fns";
 import Tabs from "../../components/Tabs";
 import {useEffect, useState} from "react";
 import Button, {ButtonColor} from "../../components/Button";
@@ -13,6 +13,7 @@ import {SafeImage} from "../../components/SafeImage/SafeImage";
 import Tag from "./components/tag";
 import Tables from "./components/Episodes";
 import CharactersWithStaff from "./components/Characters";
+import {AnimeStatusDropdown} from "../../components/AnimeStatusDropdown/AnimeStatusDropdown";
 
 const renderField = (label: string, value: string | string[] | null | undefined) => {
   if (!value) return null;
@@ -40,6 +41,7 @@ const renderField = (label: string, value: string | string[] | null | undefined)
 
 
 export default function Index() {
+  const queryClient = useQueryClient();
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [bgLoaded, setBgLoaded] = useState(false);
 
@@ -67,6 +69,9 @@ export default function Index() {
   const mutateAddAnime = useMutation({
     ...upsertAnime(),
     onSuccess: () => {
+      queryClient.invalidateQueries(["homedata"]);
+      queryClient.invalidateQueries(["currently-airing"]);
+      queryClient.invalidateQueries(["anime-details", id || ""]);
     },
     onError: () => {
     },
@@ -82,6 +87,7 @@ export default function Index() {
     } catch {
       setAnimeStatuses((prev) => ({...prev, [animeId]: "error"}));
     }
+
   };
 
   if (isLoading || !show) return <Loader/>;
@@ -106,27 +112,27 @@ export default function Index() {
       >
         <div className={`absolute block inset-0 bg-white w-full h-full`}/>
 
-      {bgUrl && (
-        <img
-          src={bgUrl}
-          alt="bg preload"
-          style={{opacity: bgLoaded ? 1 : 0,}}
-          className="absolute inset-0 w-full h-full object-cover bg-white transition-opacity duration-1000"
-          onLoad={() => setBgLoaded(true)}
-          onError={() => {
-            setBgUrl("/assets/not found.jpg");
-            setBgLoaded(true);
-          }}
-        />
-      )}
+        {bgUrl && (
+          <img
+            src={bgUrl}
+            alt="bg preload"
+            style={{opacity: bgLoaded ? 1 : 0,}}
+            className="absolute inset-0 w-full h-full object-cover bg-white transition-opacity duration-1000"
+            onLoad={() => setBgLoaded(true)}
+            onError={() => {
+              setBgUrl("/assets/not found.jpg");
+              setBgLoaded(true);
+            }}
+          />
+        )}
 
 
-    </div>
+      </div>
 
-  <div className="bg-gray-100 -mt-[350px] lg:-mt-[200px]">
-    <div className="relative z-10 flex justify-center pt-6">
-      <div
-        className="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
+      <div className="bg-gray-100 -mt-[350px] lg:-mt-[200px]">
+        <div className="relative z-10 flex justify-center pt-6">
+          <div
+            className="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
             <SafeImage
               src={GetImageFromAnime(anime)}
               alt={anime?.titleEn || ""}
@@ -149,12 +155,21 @@ export default function Index() {
                   <Tag key={idx} tag={tag}/>
                 ))}
               </div>
-              <Button
-                color={ButtonColor.blue}
-                label={"Add to list"}
-                status={animeStatuses[anime.id] ?? "idle"}
-                onClick={() => addAnime(anime.id)}
-              />
+              <div data-type="options" className={"flex flex-wrap gap-2 mt-4"}>
+              {!anime.userAnime ? (
+                <Button
+                  color={ButtonColor.blue}
+                  label={"Add to list"}
+                  status={animeStatuses[anime.id] ?? "idle"}
+                  onClick={() => addAnime(anime.id)}
+                />
+              ) : (
+                <>
+                  {/* @ts-ignore */}
+                  <AnimeStatusDropdown entry={{...anime.userAnime, anime: anime}}/>
+                </>
+              )}
+              </div>
             </div>
           </div>
         </div>
@@ -209,7 +224,7 @@ export default function Index() {
                     {anime?.episodes && <Tables episodes={anime.episodes}/>}
                   </div>
                   <div>
-                    <CharactersWithStaff animeId={anime.id} />
+                    <CharactersWithStaff animeId={anime.id}/>
                   </div>
                   <div></div>
                   <div></div>

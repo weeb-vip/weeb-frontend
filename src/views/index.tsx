@@ -11,6 +11,7 @@ import Button, {ButtonColor} from "../components/Button";
 import {mutate} from "swr";
 import {StatusType} from "../components/Button/Button";
 import {GetImageFromAnime} from "../services/utils";
+import {AnimeStatusDropdown} from "../components/AnimeStatusDropdown/AnimeStatusDropdown";
 
 
 function Index() {
@@ -93,12 +94,15 @@ function Index() {
                            episodeNumber={item.nextEpisode?.episodeNumber?.toString() || "Unknown"}
                            className={"hover:cursor-pointer"}
                            year={""}
+
                            image={GetImageFromAnime(item)}
                            airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do", {in: utc}) : "Unknown"}
                            onClick={function (): void {
                              navigate(`/show/${item.id}`)
                            }} episodes={0}
-                           options={[(
+                           options={
+                  !item.userAnime ?
+                  [(
                              <Button
                                color={ButtonColor.blue}
                                label={'Add to list'}
@@ -109,7 +113,10 @@ function Index() {
                                  addAnime(id, item.id)
                                }}
                              />
-                           )]}
+                           )] : [<>
+                      {/* @ts-ignore */}
+                    <AnimeStatusDropdown entry={{...item.userAnime, anime: item}} key={`dropdown-${item.id}`} />
+                    </>]}
                 />
               )
             })) || (<></>)}
@@ -150,18 +157,23 @@ function Index() {
                            onClick={function (): void {
                              navigate(`/show/${item.id}`)
                            }}
-                           options={[(
-                             <Button
-                               color={ButtonColor.blue}
-                               label={'Add to list'}
-                               showLabel={true}
-                               status={animeStatuses[id] ?? "idle"}
-                               className="w-fit"
-                               onClick={() => {
-                                 addAnime(id, item.id)
-                               }}
-                             />
-                           )]}
+                           options={
+                             !item.userAnime ?
+                               [(
+                                 <Button
+                                   color={ButtonColor.blue}
+                                   label={'Add to list'}
+                                   showLabel={true}
+                                   status={animeStatuses[id] ?? "idle"}
+                                   className="w-fit"
+                                   onClick={() => {
+                                     addAnime(id, item.id)
+                                   }}
+                                 />
+                               )] : [<>
+                                 {/* @ts-ignore */}
+                                 <AnimeStatusDropdown entry={{...item.userAnime, anime: item}} key={`dropdown-${item.id}`} />
+                               </>]}
                 />
               )
             }) || (<></>)}
