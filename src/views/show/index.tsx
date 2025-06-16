@@ -14,6 +14,7 @@ import Tag from "./components/tag";
 import Tables from "./components/Episodes";
 import CharactersWithStaff from "./components/Characters";
 import {AnimeStatusDropdown} from "../../components/AnimeStatusDropdown/AnimeStatusDropdown";
+import {utc} from "@date-fns/utc/utc";
 
 const renderField = (label: string, value: string | string[] | null | undefined) => {
   if (!value) return null;
@@ -179,7 +180,7 @@ export default function Index() {
               <div className="mb-4 p-4 bg-white rounded shadow text-sm">
                 <h3 className="font-semibold mb-1 text-gray-800">Next Episode</h3>
                 <p><strong>Episode {nextEpisode.episodeNumber}:</strong> {nextEpisode.titleEn || "TBA"}</p>
-                <p className="text-gray-600">Airing on {format(new Date(nextEpisode.airDate), "dd MMM yyyy")}</p>
+                <p className="text-gray-600">Airing on {format(new Date(nextEpisode.airDate), "dd MMM yyyy", { in: utc })}</p>
               </div>
             )}
             <div className=" flex flex-col lg:flex-row gap-8">
