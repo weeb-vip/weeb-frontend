@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { utc } from "@date-fns/utc/utc";
 import { useNavigate } from "react-router-dom";
 import {GetImageFromAnime} from "../../services/utils";
+import debug from "../../utils/debug";
 
 export default function CurrentlyAiringPage() {
   const { data, isLoading } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring());
@@ -20,10 +21,10 @@ export default function CurrentlyAiringPage() {
   const mutateAddAnime = useMutation({
     ...upsertAnime(),
     onSuccess: (data) => {
-      console.log("Added anime", data);
+      debug.anime("Added anime", data);
     },
     onError: (error) => {
-      console.log("Error adding anime", error);
+      debug.error("Error adding anime", error);
     },
   });
 

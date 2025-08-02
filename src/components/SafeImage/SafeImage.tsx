@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
+import debug from "../../utils/debug";
 
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string; // unencoded raw slug (e.g. "Makina-san's_a_Love_Bot?!")
@@ -17,6 +17,7 @@ export const SafeImage: React.FC<SafeImageProps> = ({
  const path = imgProps.path ? imgProps.path+"/" : "";
  // replace src %20 with +
   const encodedSrc = src.replace(/%20/g, "+");
+  //debug.info("image url passed:", encodedSrc);
   return (
     <img
       {...imgProps}

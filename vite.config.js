@@ -35,10 +35,10 @@ export default defineConfig({
     ],
     server: {
         host: '0.0.0.0',
-        port: 8080,
+        port: 8083,
         proxy: {
             "/config.json": {
-                target: "http://localhost:8080",
+                target: "http://localhost:8083",
                 changeOrigin: true,
                 rewrite: (path) => `src/config/static/${configName}/index.json`,
             },

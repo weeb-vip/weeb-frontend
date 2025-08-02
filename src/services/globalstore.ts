@@ -1,16 +1,29 @@
 import {create} from 'zustand'
 
-export const useLoggedInStore = create((set) => ({
+interface LoggedInState {
+  isLoggedIn: boolean
+  setLoggedIn: () => void
+  logout: () => void
+}
+
+interface LoginModalState {
+  isOpen: boolean
+  register: boolean
+  openLogin: () => void
+  openRegister: () => void
+  close: () => void
+}
+
+export const useLoggedInStore = create<LoggedInState>((set) => ({
   isLoggedIn: false,
   setLoggedIn: () => set(() => ({isLoggedIn: true})),
   logout: () => set({isLoggedIn: false}),
 }))
 
-
-export const useLoginModalStore = create((set) => ({
+export const useLoginModalStore = create<LoginModalState>((set) => ({
   isOpen: false,
-  openLogin: () => set(() => ({isOpen: true, register: false})),
-  close: () => set(() => ({isOpen: false, register: false})),
   register: false,
+  openLogin: () => set(() => ({isOpen: true, register: false})),
   openRegister: () => set(() => ({isOpen: true, register: true})),
+  close: () => set(() => ({isOpen: false, register: false})),
 }))

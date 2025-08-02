@@ -1,6 +1,7 @@
 // components/ErrorBoundary.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import debug from "../utils/debug";
 
 type Props = {
   children: React.ReactNode;
@@ -18,7 +19,7 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    debug.error("Uncaught error:", error, errorInfo);
   }
 
   render() {

@@ -1,4 +1,4 @@
-import {Anime} from "../gql/graphql";
+import debug from "../utils/debug";
 
 interface AnimePart {
   titleEn?: string;
@@ -16,6 +16,14 @@ export function GetImageFromAnime(anime: AnimePart | any): string {
   if (anime.title_jp) {
     anime.titleJp = anime.title_jp;
   }
-  return `${encodeURIComponent((anime.titleEn ? anime.titleEn.toLowerCase().replace(/ /g, "_") : anime.titleJp?.toLowerCase().replace(/ /g, "_")) || "")}`;
+  debug.info("image url passed:", `${escapeUri((anime.titleEn ? anime.titleEn.toLowerCase().replace(/ /g, "_") : anime.titleJp?.toLowerCase().replace(/ /g, "_")) || "")}`);
+  return `${escapeUri((anime.titleEn ? anime.titleEn.toLowerCase().replace(/ /g, "_") : anime.titleJp?.toLowerCase().replace(/ /g, "_")) || "")}`;
 }
 
+
+function escapeUri(str) {
+  return encodeURIComponent(str)
+    .replace(/[!'()*]/g, char =>
+      '%' + char.charCodeAt(0).toString(16).toUpperCase()
+    );
+}

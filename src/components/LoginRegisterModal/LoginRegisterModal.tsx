@@ -5,15 +5,14 @@ import { TokenRefresher } from "../../services/token_refresher";
 import { useMutation } from "@tanstack/react-query";
 import {useLoggedInStore, useLoginModalStore} from "../../services/globalstore";
 import Loader from "../Loader";
+import debug from "../../utils/debug";
 
 export interface LoginRegisterModalProps {
   closeFn?: () => void;
 }
 
 export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps) {
-  // @ts-ignore
   const registerState = useLoginModalStore((state) => state.register);
-  // @ts-ignore
   const [isRegisterState, setIsRegisterState] = useState(registerState);
   const [formData, setFormData] = useState({
     username: "",
@@ -21,7 +20,6 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
     confirmPassword: "", // for registration validation
   });
 
-  // @ts-ignore
   const setLoggedIn = useLoggedInStore((state) => state.setLoggedIn);
 
 
@@ -31,22 +29,21 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
     onSuccess: (response: SigninResult, _variables: LoginInput) => {
       localStorage.setItem("authToken", response.Credentials.token);
       localStorage.setItem("refreshToken", response.Credentials.refresh_token);
-      setLoggedIn(true);
-      // @ts-ignore
+      setLoggedIn();
       TokenRefresher.getInstance(refreshTokenSimple).start(response.Credentials.token);
       if (closeFn) {
         closeFn();
       }
     },
     onError: () => {
-      console.log("Login failed. Please check your credentials.");
+      debug.warn("Login failed. Please check your credentials.");
     },
   });
 
   const { mutate: mutateRegister } = useMutation({
     ...register(),
     onSuccess: (response) => {
-      console.log("Registration successful", response);
+      debug.success("Registration successful!", response);
       // @ts-ignore
       mutateLogin({
         input: {
@@ -56,7 +53,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
       });
     },
     onError: () => {
-      console.log("Registration failed");
+      debug.warn("Registration failed");
     },
   });
 
@@ -74,11 +71,11 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
       mutateLogin({input: data});
     } else {
       if (formData.password !== formData.confirmPassword) {
-        console.log("Passwords do not match");
+        debug.warn("Passwords do not match");
         return;
       }
       // Handle registration logic here
-      console.log("Registering user:", formData);
+      debug.info("Registering user:", formData.username);
       const data: LoginInput = {username: formData.username, password: formData.password};
       // @ts-ignore
       mutateRegister({input: data});

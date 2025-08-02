@@ -4,17 +4,13 @@ import {TokenRefresher} from "./services/token_refresher";
 import {refreshTokenSimple} from "./services/queries";
 import LoginRegisterModal from "./components/LoginRegisterModal";
 import Modal from "./components/Modal";
+import debug from "./utils/debug";
 
 const AuthHandler = () => {
-  // @ts-ignore
   const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
-  // @ts-ignore
   const setLoggedIn = useLoggedInStore((state) => state.setLoggedIn);
-  // @ts-ignore
   const setLogout = useLoggedInStore((state) => state.logout);
-  // @ts-ignore
   const modalOpen = useLoginModalStore((state) => state.isOpen);
-  // @ts-ignore
   const close = useLoginModalStore((state) => state.close);
   const logout = () => {
     localStorage.removeItem("authToken");
@@ -25,10 +21,9 @@ const AuthHandler = () => {
   // check localstorage for login token
   useEffect(() => {
     const authToken = localStorage.getItem("authToken");
-    console.log(authToken);
+    debug.auth("Checking stored auth token:", authToken ? "Token found" : "No token");
     if (authToken) {
-      setLoggedIn(true);
-      // @ts-ignore
+      setLoggedIn();
       TokenRefresher.getInstance(refreshTokenSimple).start(authToken); // Start token refresh process
     }
 

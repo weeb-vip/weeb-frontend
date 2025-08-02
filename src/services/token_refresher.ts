@@ -1,4 +1,5 @@
 import {SigninResult} from "../gql/graphql";
+import debug from "../utils/debug";
 
 type RefreshTokenFunction<T> = () => Promise<T>;
 
@@ -8,9 +9,26 @@ export class TokenRefresher {
   private refreshFunction: RefreshTokenFunction<SigninResult>;
   private refreshWindow: number;
 
-  private constructor(refreshFunction: RefreshTokenFunction<never>, refreshWindow: number = 60 * 1000) {
+  private constructor(refreshFunction: RefreshTokenFunction<SigninResult>, refreshWindow: number = 60 * 1000) {
     this.refreshFunction = refreshFunction;
     this.refreshWindow = refreshWindow; // Default refresh window is 1 minute
+    
+    // Log current token expiry if available
+    const currentToken = localStorage.getItem("authToken");
+    if (currentToken) {
+      const currentExpiry = this.getTokenExpiry(currentToken);
+      if (currentExpiry) {
+        debug.auth('TokenRefresher started with current token expiry:', new Date(currentExpiry).toLocaleString());
+        const timeUntilExpiry = currentExpiry - Date.now();
+        const minutesUntilExpiry = Math.round(timeUntilExpiry / (1000 * 60));
+        debug.auth(`Current token expires in ${minutesUntilExpiry} minutes`);
+      } else {
+        debug.warn('TokenRefresher started but current token has invalid expiry');
+      }
+    } else {
+      debug.auth('TokenRefresher started but no current token found');
+    }
+    
     // lets try to refresh
     this.refreshToken();
   }
@@ -20,7 +38,7 @@ export class TokenRefresher {
    * @param refreshFunction - The function to refresh the token.
    * @param refreshWindow - The window (in milliseconds) before token expiry to refresh.
    */
-  public static getInstance(refreshFunction: RefreshTokenFunction<never>, refreshWindow: number = 60 * 1000): TokenRefresher {
+  public static getInstance(refreshFunction: RefreshTokenFunction<SigninResult>, refreshWindow: number = 60 * 1000): TokenRefresher {
     if (!TokenRefresher.instance) {
       TokenRefresher.instance = new TokenRefresher(refreshFunction, refreshWindow);
     }
@@ -39,7 +57,7 @@ export class TokenRefresher {
       throw new Error('Invalid token: Unable to determine expiry time.');
     }
 
-    console.log('Token expiry time:', new Date(expiryTime).toLocaleString());
+    debug.auth('Token expiry time:', new Date(expiryTime).toLocaleString());
 
     const now = Date.now();
     const refreshTime = expiryTime - now - this.refreshWindow;
@@ -47,7 +65,7 @@ export class TokenRefresher {
     if (refreshTime <= 0) {
 
       //throw new Error('Token is already expired or too close to expiration.');
-      console.log('Token is already expired or too close to expiration.');
+      debug.auth('Token is already expired or too close to expiration.');
       // attempt to refresh token
       return;
     }
@@ -77,7 +95,7 @@ export class TokenRefresher {
         return payload.exp * 1000;
       }
     } catch (error) {
-      console.error('Failed to parse token:', error);
+      debug.error('Failed to parse token:', error);
     }
     return null;
   }
@@ -90,15 +108,15 @@ export class TokenRefresher {
       if (!this.refreshFunction) {
         throw new Error('No refresh function provided.');
       }
-      console.log('Refreshing token...');
+      debug.auth('Refreshing token...');
       const newTokenResponse = await this.refreshFunction();
-      console.log('Token refreshed successfully.');
+      debug.success('Token refreshed successfully!');
       const newToken = newTokenResponse.Credentials.token
 
       this.storeAuthToken(newToken);
       this.start(newToken); // Restart the process with the new token
     } catch (error) {
-      console.error('Failed to refresh token:', error);
+      debug.error('Failed to refresh token:', error);
       // Optionally, you can implement retry logic here
     }
   }
@@ -109,11 +127,11 @@ export class TokenRefresher {
    */
   private storeAuthToken(token: string): void {
     try {
-      console.log('Storing auth token:', token);
+      debug.auth('Storing auth token');
       localStorage.setItem('authToken', token);
 
     } catch (error) {
-      console.error('Failed to store auth token:', error);
+      debug.error('Failed to store auth token:', error);
     }
   }
 }

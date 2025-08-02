@@ -1,6 +1,7 @@
 import api from "./api";
 import {searchResults} from "./api/search";
 import request, {GraphQLClient} from "graphql-request";
+import debug from "../utils/debug";
 import {
   AddAnimeMutationVariables,
   CurrentlyAiringQuery,
@@ -145,7 +146,7 @@ export const refreshTokenSimple = async (): Promise<SigninResult> => {
   const refreshToken = payload?.refresh_token;
   if (!refreshToken) throw new Error("No refresh_token found in JWT");
 
-  console.log("Refreshing token...", refreshToken);
+  debug.auth("Refreshing token...", refreshToken);
 
   const response = await request<RefreshTokenMutation>(
     global.config.graphql_host,
@@ -183,7 +184,7 @@ export const upsertAnime = () => ({
 
 export const deleteAnime = () => ({
   mutationFn: async (input: string) => {
-    console.log("Sending input to DeleteAnime:", input); // ✅ Debug
+    debug.anime("Sending input to DeleteAnime:", input);
     const client = AuthenticatedClient(); // ensure token read at call-time
     const response = await client.request(mutateDeleteAnime, {input});
     return response.DeleteAnime;

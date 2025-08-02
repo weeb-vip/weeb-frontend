@@ -12,6 +12,7 @@ import {mutate} from "swr";
 import {StatusType} from "../components/Button/Button";
 import {GetImageFromAnime} from "../services/utils";
 import {AnimeStatusDropdown} from "../components/AnimeStatusDropdown/AnimeStatusDropdown";
+import debug from "../utils/debug";
 
 
 function Index() {
@@ -31,10 +32,10 @@ function Index() {
   const mutateAddAnime = useMutation({
     ...upsertAnime(),
     onSuccess: (data) => {
-      console.log("Added anime", data)
+      debug.anime("Added anime", data)
     },
     onError: (error) => {
-      console.log("Error adding anime", error)
+      debug.error("Error adding anime", error)
     }
   })
 
@@ -47,7 +48,7 @@ function Index() {
           status: Status.Plantowatch,
         }
       });
-      console.log("Added anime", id, animeId)
+      debug.anime("Added anime", id, animeId)
       setAnimeStatuses((prev) => ({...prev, [id]: "success"}));
     } catch {
       setAnimeStatuses((prev) => ({...prev, [id]: "error"}));

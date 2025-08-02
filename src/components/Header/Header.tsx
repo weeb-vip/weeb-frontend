@@ -9,13 +9,10 @@ import Autocomplete from "../Autocomplete";
 import Button, { ButtonColor } from "../Button";
 
 function Header() {
-  // @ts-ignore
   const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
   const flags = useFlags(["algolia_search"]);
   const navigate = useNavigate();
-  // @ts-ignore
   const openModalLogin = useLoginModalStore((state) => state.openLogin);
-  // @ts-ignore
   const openModalRegister = useLoginModalStore((state) => state.openRegister);
 
   return (
@@ -115,7 +112,6 @@ function Header() {
                         onClick={() => {
                           localStorage.removeItem("authToken");
                           localStorage.removeItem("refreshToken");
-                          // @ts-ignore
                           useLoggedInStore.getState().logout();
                           navigate("/");
                         }}
@@ -176,7 +172,6 @@ function Header() {
                 onClick={() => {
                   localStorage.removeItem("authToken");
                   localStorage.removeItem("refreshToken");
-                  // @ts-ignore
                   useLoggedInStore.getState().logout();
                   navigate("/");
                 }}
