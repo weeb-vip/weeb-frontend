@@ -34,6 +34,22 @@ export const useLoginModalStore = create<LoginModalState>((set) => ({
   close: () => set(() => ({isOpen: false, register: false})),
 }))
 
+const updateThemeColor = (isDark: boolean) => {
+  if (typeof window !== 'undefined') {
+    // Update theme-color meta tag for PWA status bar
+    const existingTag = document.querySelector('meta[name="theme-color"]:not([media])')
+    if (existingTag) {
+      existingTag.setAttribute('content', isDark ? '#111827' : '#ffffff')
+    } else {
+      // Create the meta tag if it doesn't exist
+      const metaTag = document.createElement('meta')
+      metaTag.name = 'theme-color'
+      metaTag.content = isDark ? '#111827' : '#ffffff'
+      document.head.appendChild(metaTag)
+    }
+  }
+}
+
 export const useDarkModeStore = create<DarkModeState>((set, get) => ({
   isDarkMode: typeof window !== 'undefined' ? localStorage.getItem('darkMode') === 'true' : false,
   toggleDarkMode: () => {
@@ -46,6 +62,7 @@ export const useDarkModeStore = create<DarkModeState>((set, get) => ({
       } else {
         document.documentElement.classList.remove('dark')
       }
+      updateThemeColor(newDarkMode)
     }
   },
   setDarkMode: (dark: boolean) => {
@@ -57,6 +74,7 @@ export const useDarkModeStore = create<DarkModeState>((set, get) => ({
       } else {
         document.documentElement.classList.remove('dark')
       }
+      updateThemeColor(dark)
     }
   },
 }))

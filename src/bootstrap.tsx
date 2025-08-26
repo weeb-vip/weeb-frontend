@@ -27,6 +27,7 @@ const Bootstrap = () => {
     if (savedDarkMode) {
       document.documentElement.classList.add('dark')
     }
+    // Set both dark mode state and theme color
     useDarkModeStore.getState().setDarkMode(savedDarkMode)
 
     configApi.fetch().then((conf) => {
