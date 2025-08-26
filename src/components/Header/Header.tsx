@@ -7,6 +7,7 @@ import { useFlags } from "flagsmith/react";
 import { useLoggedInStore, useLoginModalStore } from "../../services/globalstore";
 import Autocomplete from "../Autocomplete";
 import Button, { ButtonColor } from "../Button";
+import DarkModeToggle from "../DarkModeToggle";
 
 function Header() {
   const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
@@ -16,7 +17,7 @@ function Header() {
   const openModalRegister = useLoginModalStore((state) => state.openRegister);
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 p-2">
+    <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-2 transition-colors duration-300">
       {/* Mobile Layout */}
       <div className="flex sm:hidden w-full items-center space-x-2">
         {/* Logo */}
@@ -33,10 +34,13 @@ function Header() {
           <Autocomplete />
         </div>
 
+        {/* Dark Mode Toggle */}
+        <DarkModeToggle />
+
         {/* Hamburger Menu */}
         <Menu as="div" className="relative">
           <Menu.Button className="p-2">
-            <FontAwesomeIcon icon={faBars} className="text-gray-700 text-xl" />
+            <FontAwesomeIcon icon={faBars} className="text-gray-700 dark:text-gray-300 text-xl" />
           </Menu.Button>
 
           <Transition
@@ -48,12 +52,12 @@ function Header() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Menu.Items className="fixed inset-0 z-50 bg-white p-6 flex flex-col justify-start space-y-4">
+            <Menu.Items className="fixed inset-0 z-50 bg-white dark:bg-gray-900 p-6 flex flex-col justify-start space-y-4 transition-colors duration-300">
               {/* Close Button */}
               <Menu.Item>
                 {() => (
                   <button
-                    className="self-end text-2xl font-bold"
+                    className="self-end text-2xl font-bold text-gray-700 dark:text-gray-300"
                     onClick={() =>
                       document.activeElement &&
                       (document.activeElement as HTMLElement).blur()
@@ -71,8 +75,8 @@ function Header() {
                     {({ active }) => (
                       <button
                         onClick={openModalLogin}
-                        className={`w-full text-left px-4 py-2 rounded text-lg ${
-                          active ? "bg-gray-100" : ""
+                        className={`w-full text-left px-4 py-2 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                          active ? "bg-gray-100 dark:bg-gray-700" : ""
                         }`}
                       >
                         Login
@@ -83,8 +87,8 @@ function Header() {
                     {({ active }) => (
                       <button
                         onClick={openModalRegister}
-                        className={`w-full text-left px-4 py-2 rounded text-lg ${
-                          active ? "bg-gray-100" : ""
+                        className={`w-full text-left px-4 py-2 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                          active ? "bg-gray-100 dark:bg-gray-700" : ""
                         }`}
                       >
                         Register
@@ -98,8 +102,8 @@ function Header() {
                     {({ active }) => (
                       <Link
                         to="/profile"
-                        className={`block w-full text-left px-4 py-2 rounded text-lg ${
-                          active ? "bg-gray-100" : ""
+                        className={`block w-full text-left px-4 py-2 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                          active ? "bg-gray-100 dark:bg-gray-700" : ""
                         }`}
                       >
                         Profile
@@ -115,8 +119,8 @@ function Header() {
                           useLoggedInStore.getState().logout();
                           navigate("/");
                         }}
-                        className={`w-full text-left px-4 py-2 rounded text-lg ${
-                          active ? "bg-gray-100" : ""
+                        className={`w-full text-left px-4 py-2 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                          active ? "bg-gray-100 dark:bg-gray-700" : ""
                         }`}
                       >
                         Logout
@@ -141,7 +145,7 @@ function Header() {
               className="w-14 h-14"
             />
           </Link>
-          <span className="text-xl font-normal">Anime</span>
+          <span className="text-xl font-normal text-gray-900 dark:text-gray-100">Anime</span>
         </div>
 
         {/* Middle: Search */}
@@ -149,8 +153,9 @@ function Header() {
           <Autocomplete />
         </div>
 
-        {/* Right: Auth Buttons */}
+        {/* Right: Dark Mode Toggle + Auth Buttons */}
         <div className="flex items-center space-x-4">
+          <DarkModeToggle />
           {!loggedIn ? (
             <>
               <Button color={ButtonColor.blue} label="Login" onClick={openModalLogin} showLabel />

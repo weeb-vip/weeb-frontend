@@ -131,26 +131,26 @@ export default function AiringCalendarPage() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button onClick={goPrev} className="text-sm text-blue-600 hover:underline">
+          <button onClick={goPrev} className="text-sm text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-300">
             ← Previous
           </button>
-          <h1 className="text-xl font-bold">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {viewMode === "month"
               ? format(currentDate, "MMMM yyyy")
               : `Week of ${format(start, "MMM d")}`}
           </h1>
-          <button onClick={goNext} className="text-sm text-blue-600 hover:underline">
+          <button onClick={goNext} className="text-sm text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-300">
             Next →
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-px bg-gray-200 border border-gray-300 rounded-lg overflow-hidden text-sm relative z-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-px bg-gray-200 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden text-sm relative z-0 transition-colors duration-300">
         {/* Day headers for desktop only */}
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div
             key={day}
-            className="hidden lg:block bg-gray-50 py-2 px-2 text-center font-medium text-gray-700 border-b border-gray-200"
+            className="hidden lg:block bg-gray-50 dark:bg-gray-700 py-2 px-2 text-center font-medium text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 transition-colors duration-300"
           >
             {day}
           </div>
@@ -165,22 +165,22 @@ export default function AiringCalendarPage() {
           return (
             <div
               key={dateKey}
-              className={`bg-white p-2 ${
+              className={`bg-white dark:bg-gray-800 p-2 transition-colors duration-300 ${
                 viewMode === "month" ? "min-h-[140px]" : ""
-              } flex flex-col justify-start border border-gray-100 ${
-                isToday ? "bg-blue-50 ring-2 ring-blue-400" : ""
+              } flex flex-col justify-start border border-gray-100 dark:border-gray-600 ${
+                isToday ? "bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-400 dark:ring-blue-500" : ""
               }`}
             >
-              <div className="text-xs font-semibold text-gray-800 mb-1 flex items-center gap-1">
+              <div className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-1">
                 <span>{format(day, "d", { in: utc })}</span>
-                <span className="text-gray-500 text-xs block lg:hidden">
+                <span className="text-gray-500 dark:text-gray-400 text-xs block lg:hidden">
                   ({format(day, "EEE")})
                 </span>
               </div>
               <div
                 className={`flex flex-col gap-1 pr-1 ${
                   viewMode === "month"
-                    ? "overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+                    ? "overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-500 scrollbar-track-transparent"
                     : ""
                 }`}
               >

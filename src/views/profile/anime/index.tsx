@@ -51,10 +51,10 @@ function UserAnimeListPage() {
               setSelectedStatus(status);
               setPage(0);
             }}
-            className={`px-3 py-1 rounded-full text-sm border transition
+            className={`px-3 py-1 rounded-full text-sm border transition-colors duration-300
               ${selectedStatus === status
               ? "bg-blue-600 text-white border-blue-600"
-              : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"}`}
+              : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"}`}
           >
             {statusLabels[status]}
           </button>
@@ -62,7 +62,7 @@ function UserAnimeListPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold capitalize mb-4">{statusLabels[selectedStatus]}</h2>
+        <h2 className="text-xl font-semibold capitalize mb-4 text-gray-900 dark:text-gray-100">{statusLabels[selectedStatus]}</h2>
         <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
           {/* @ts-ignore */}
           {userAnimes.map((entry: UserAnime) => (
@@ -93,19 +93,19 @@ function UserAnimeListPage() {
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 0))}
               disabled={page === 0}
-              className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-300"
             >
               Previous
             </button>
 
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
               Page {page + 1} of {totalPages}
             </span>
 
             <button
               onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
               disabled={page + 1 >= totalPages}
-              className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-300"
             >
               Next
             </button>

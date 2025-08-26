@@ -58,21 +58,21 @@ function Index() {
   return (
     <div className={"flex flex-col  space-y-5 max-w-screen-2xl"} style={{margin: "0 auto"}}>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-2xl font-bold"}>Currently Airing Anime</h1>
+        <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>Currently Airing Anime</h1>
         { /* ignore movies */}
-        <div className="flex gap-2 py-4">
-          {["Airing", "Season", "Newest"].map(label => (
-            <button
-              key={label}
-              className={`px-4 py-2 rounded-full ${
-                selectedFilter === label ? "bg-blue-600 text-white" : "bg-gray-200"
-              }`}
-              onClick={() => setSelectedFilter(label)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        {/*<div className="flex gap-2 py-4">*/}
+        {/*  {["Airing", "Season", "Newest"].map(label => (*/}
+        {/*    <button*/}
+        {/*      key={label}*/}
+        {/*      className={`px-4 py-2 rounded-full ${*/}
+        {/*        selectedFilter === label ? "bg-blue-600 text-white" : "bg-gray-200"*/}
+        {/*      }`}*/}
+        {/*      onClick={() => setSelectedFilter(label)}*/}
+        {/*    >*/}
+        {/*      {label}*/}
+        {/*    </button>*/}
+        {/*  ))}*/}
+        {/*</div>*/}
         {currentAiringIsLoading ? (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
@@ -126,13 +126,13 @@ function Index() {
 
         )}
         <div className="w-full flex justify-end pt-2">
-          <Link to="/airing" className="text-blue-600 hover:underline">
+          <Link to="/airing" className="text-blue-600 dark:text-blue-400 hover:underline">
             See all currently airing anime
           </Link>
         </div>
       </div>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-2xl font-bold"}>Most Popular Anime</h1>
+        <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>Most Popular Anime</h1>
         {homeDataIsLoading ? (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
@@ -184,7 +184,7 @@ function Index() {
         )}
       </div>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-2xl font-bold"}>Top Rated Anime</h1>
+        <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>Top Rated Anime</h1>
         {homeDataIsLoading ? (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
@@ -229,7 +229,7 @@ function Index() {
         )}
       </div>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-2xl font-bold"}>Newest Anime</h1>
+        <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>Newest Anime</h1>
         { /* ignore movies */}
         {homeDataIsLoading ? (
           <div

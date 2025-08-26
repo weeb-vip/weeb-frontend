@@ -64,7 +64,7 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
               setPosition({ top, left });
             }}
             title={`${anime.titleEn || anime.titleJp || "Unknown"} (Ep ${anime.nextEpisode?.episodeNumber || "?"})`}
-            className="text-xs text-blue-700 text-left truncate hover:bg-blue-100 bg-blue-50 px-2 py-1 rounded transition w-full"
+            className="text-xs text-blue-700 dark:text-blue-300 text-left truncate hover:bg-blue-100 dark:hover:bg-blue-800/50 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded transition-colors duration-300 w-full"
           >
             {anime.titleEn || anime.titleJp || "Unknown"} (Ep {anime.nextEpisode?.episodeNumber || "?"})
           </Popover.Button>
@@ -73,7 +73,7 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
             createPortal(
               <Popover.Panel
                 static={false}
-                className="z-50 w-[420px] max-w-[95vw] bg-white border border-gray-200 rounded-lg shadow-lg p-3 absolute"
+                className="z-50 w-[420px] max-w-[95vw] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 absolute transition-colors duration-300"
                 style={{
                   top: position.top,
                   left: position.left,

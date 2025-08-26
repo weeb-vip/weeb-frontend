@@ -16,7 +16,7 @@ export default function Item({autocomplete, item, source, navigate, inputRef}: I
   return (
     <li
       key={item.objectID}
-      className="aa-Item p-2 flex flex-row"
+      className="aa-Item p-2 flex flex-row hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300 cursor-pointer"
       {...autocomplete.getItemProps({
         item,
         source,
@@ -41,8 +41,8 @@ export default function Item({autocomplete, item, source, navigate, inputRef}: I
         }}
       />
       <div className={"flex flex-col flex-shrink"}>
-        <span>{item.title_en}</span>
-        <span>{isValid(new Date(item.start_date)) ? format(new Date(item.start_date), "yyyy") : ''}</span>
+        <span className="text-gray-900 dark:text-gray-100 font-medium">{item.title_en}</span>
+        <span className="text-gray-600 dark:text-gray-400 text-sm">{isValid(new Date(item.start_date)) ? format(new Date(item.start_date), "yyyy") : ''}</span>
       </div>
     </li>
   )

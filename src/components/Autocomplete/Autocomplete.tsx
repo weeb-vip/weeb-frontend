@@ -91,7 +91,7 @@ export function Autocomplete() {
       <>
         {/* @ts-ignore */}
         <div
-          className="absolute  z-50 bg-white w-full left-0 right-0 max-h-60 overflow-auto shadow-md mt-1 rounded-md"
+          className="absolute z-50 bg-white dark:bg-gray-800 w-full left-0 right-0 max-h-60 overflow-auto shadow-md mt-1 rounded-md transition-colors duration-300"
           {...autocomplete.getPanelProps({})}
           ref={panelRef}
         >
@@ -120,7 +120,7 @@ export function Autocomplete() {
 
         <div
           className={`
-        fixed inset-0 z-40 bg-white/30 backdrop-blur-md
+        fixed inset-0 z-40 bg-white/30 dark:bg-gray-900/30 backdrop-blur-md
     transition-opacity duration-300 ease-in-out
       ${autocompleteState.isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}
     `}
@@ -139,11 +139,11 @@ export function Autocomplete() {
         >
           <FontAwesomeIcon
             icon={faSearch}
-            className="absolute top-0 bottom-0 left-4 m-auto text-gray-500"
+            className="absolute top-0 bottom-0 left-4 m-auto text-gray-500 dark:text-gray-400"
           />
           {/* @ts-ignore */}
           <input
-            className="w-full rounded-full py-2 px-3 pl-10 text-base leading-5 text-gray-900 outline-none border border-gray-200 focus:border-gray-400"
+            className="w-full rounded-full py-2 px-3 pl-10 text-base leading-5 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 outline-none border border-gray-200 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 transition-colors duration-300"
             {...inputProps}
             ref={mobileInputRef}
           />
@@ -158,7 +158,7 @@ export function Autocomplete() {
           hidden sm:flex z-50 left-1/2 -translate-x-1/2 w-full max-w-xl
           top-0
           focus-within:top-16
-          bg-white/70 backdrop-blur-md rounded-full
+          bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-full
           transition-all duration-300 ease-in-out
           shadow-sm focus-within:shadow-xl
           scale-100 focus-within:scale-105
@@ -174,7 +174,7 @@ export function Autocomplete() {
         {/* @ts-ignore */}
         <input
           ref={desktopInputRef}
-          className="w-full rounded-full py-2 px-4 pl-10 text-base border border-gray-200 outline-none focus:border-gray-400"
+          className="w-full rounded-full py-2 px-4 pl-10 text-base border border-gray-200 dark:border-gray-600 outline-none focus:border-gray-400 dark:focus:border-gray-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 transition-colors duration-300"
           {...inputProps}
         />
         <div className="absolute top-50 left-0 right-0 mt-10">

@@ -2,6 +2,7 @@ import React, {useState, Suspense, useEffect} from 'react'
 import configApi from './services/api/config'
 import flagsmith from "flagsmith";
 import {FlagsmithProvider} from "flagsmith/react";
+import { useDarkModeStore } from './services/globalstore';
 
 
 export function useIsMobile(breakpoint = 640): boolean {
@@ -21,6 +22,13 @@ const Bootstrap = () => {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
+    // Initialize dark mode on app startup
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true'
+    if (savedDarkMode) {
+      document.documentElement.classList.add('dark')
+    }
+    useDarkModeStore.getState().setDarkMode(savedDarkMode)
+
     configApi.fetch().then((conf) => {
       // @ts-ignore
       global.config = conf

@@ -58,7 +58,7 @@ export default function StatusButton({
     blue: "bg-blue-600 hover:bg-blue-700 text-white",
     red: "bg-red-600 hover:bg-red-700 text-white",
     transparent:
-      "bg-transparent hover:bg-gray-100 text-gray-700 border border-gray-300",
+      "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600",
     none: "",
   };
 
@@ -76,7 +76,7 @@ export default function StatusButton({
       disabled={internalStatus === "loading"}
       className={`
       px-4 py-1
-        relative rounded-full font-medium transition flex items-center justify-center whitespace-nowrap w-fit
+        relative rounded-full font-medium transition-colors duration-300 flex items-center justify-center whitespace-nowrap w-fit
         ${colorClasses[color]} ${className || ""} ${
         internalStatus === "loading" ? "cursor-not-allowed" : "cursor-pointer"
       }`}
