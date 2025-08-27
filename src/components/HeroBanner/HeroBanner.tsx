@@ -31,6 +31,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const [bgLoaded, setBgLoaded] = useState(false);
   const [useFallback, setUseFallback] = useState(false);
   const [countdown, setCountdown] = useState<string>("");
+  const [showJstPopover, setShowJstPopover] = useState(false);
 
   useEffect(() => {
     setUseFallback(false);
@@ -239,9 +240,31 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             <div className="flex items-center gap-2">
               <p className="text-lg text-gray-300">Airing {getAirDateTime()}</p>
               {anime.broadcast && (
-                <span className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-xs font-medium">
-                  JST Broadcast
-                </span>
+                <div className="relative">
+                  <span 
+                    className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-xs font-medium cursor-help"
+                    onMouseEnter={() => setShowJstPopover(true)}
+                    onMouseLeave={() => setShowJstPopover(false)}
+                  >
+                    JST Broadcast
+                  </span>
+                  <div 
+                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 transition-all duration-200 ease-out pointer-events-none"
+                    style={{
+                      opacity: showJstPopover ? 1 : 0,
+                      transform: showJstPopover ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(8px)',
+                    }}
+                  >
+                    <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm rounded-lg p-3 w-80" style={{ boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)' }}>
+                      <div className="text-center">
+                        <p className="text-gray-700 dark:text-gray-200">
+                          Japanese TV broadcast time. Streaming services usually release around the same time.
+                        </p>
+                      </div>
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-white dark:border-t-gray-900"></div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
