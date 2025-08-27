@@ -14,6 +14,7 @@ import {GetImageFromAnime} from "../services/utils";
 import {AnimeStatusDropdown} from "../components/AnimeStatusDropdown/AnimeStatusDropdown";
 import HeroBanner from "../components/HeroBanner";
 import debug from "../utils/debug";
+import {parseAirTime, getAirTimeDisplay} from "../services/airTimeUtils";
 
 
 function Index() {
@@ -31,94 +32,61 @@ function Index() {
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
   const [hoveredAnime, setHoveredAnime] = useState<any>(null);
 
-  // Parse broadcast time and create accurate air time (same logic as HeroBanner)
-  const parseAirTime = (anime: any) => {
-    if (!anime.nextEpisode?.airDate || !anime.broadcast) return null;
-
-    const airDate = new Date(anime.nextEpisode.airDate);
-
-    // Parse broadcast time (e.g., "Wednesdays at 01:29 (JST)")
-    const timeMatch = anime.broadcast.match(/(\d{1,2}):(\d{2})/);
-    const timezoneMatch = anime.broadcast.match(/\(([A-Z]{3,4})\)/);
-
-    if (!timeMatch) return airDate;
-
-    const [, hours, minutes] = timeMatch;
-    const timezone = timezoneMatch ? timezoneMatch[1] : 'JST';
-
-    // Create a new date with the broadcast time in JST, then convert to UTC
-    const broadcastDate = new Date(airDate);
-    
-    if (timezone === 'JST') {
-      // JST is UTC+9, so to convert JST time to UTC, we subtract 9 hours
-      broadcastDate.setUTCHours(parseInt(hours) - 9, parseInt(minutes), 0, 0);
-      
-      // Handle negative hours (previous day)
-      if (parseInt(hours) - 9 < 0) {
-        broadcastDate.setUTCDate(broadcastDate.getUTCDate() - 1);
-        broadcastDate.setUTCHours(parseInt(hours) - 9 + 24, parseInt(minutes), 0, 0);
-      }
-    } else {
-      broadcastDate.setUTCHours(parseInt(hours), parseInt(minutes), 0, 0);
-    }
-
-    return broadcastDate;
-  };
 
   // Sort currently airing anime by next air time
   const sortedCurrentlyAiring = useMemo(() => {
     if (!currentAiringData?.currentlyAiring) return [];
-    
+
     const now = new Date();
     const allAnime = [...currentAiringData.currentlyAiring];
-    
+
     // Count how many shows have already aired
     const alreadyAiredCount = allAnime.filter((anime) => {
-      const airTime = parseAirTime(anime);
+      const airTime = parseAirTime(anime.nextEpisode?.airDate, anime.broadcast);
       if (!airTime) return false;
       return airTime.getTime() - now.getTime() <= 0;
     }).length;
-    
+
     // If more than 2 shows have already aired, filter them out
     const shouldFilterAired = alreadyAiredCount > 2;
-    
-    const filteredAnime = shouldFilterAired 
+
+    const filteredAnime = shouldFilterAired
       ? allAnime.filter((anime) => {
-          const airTime = parseAirTime(anime);
+          const airTime = parseAirTime(anime.nextEpisode?.airDate, anime.broadcast);
           if (!airTime) return true; // Keep anime without proper air time
           return airTime.getTime() - now.getTime() > 0; // Only future episodes
         })
       : allAnime;
-    
+
     return filteredAnime.sort((a, b) => {
-      const aAirTime = parseAirTime(a);
-      const bAirTime = parseAirTime(b);
-      
+      const aAirTime = parseAirTime(a.nextEpisode?.airDate, a.broadcast);
+      const bAirTime = parseAirTime(b.nextEpisode?.airDate, b.broadcast);
+
       if (!aAirTime && !bAirTime) return 0;
       if (!aAirTime) return 1; // Put anime without air time at end
       if (!bAirTime) return -1;
-      
+
       const aTimeDiff = aAirTime.getTime() - now.getTime();
       const bTimeDiff = bAirTime.getTime() - now.getTime();
-      
+
       // If filtering is active, all should be future episodes
       if (shouldFilterAired) {
         return aTimeDiff - bTimeDiff; // Sort by closest first
       }
-      
+
       // Original sorting logic when not filtering
       if (aTimeDiff <= 0 && bTimeDiff <= 0) {
         return bTimeDiff - aTimeDiff; // Past episodes by most recent first
       }
-      
+
       if (aTimeDiff > 0 && bTimeDiff > 0) {
         return aTimeDiff - bTimeDiff; // Future episodes by closest first
       }
-      
+
       // Past episodes come before future episodes
       if (aTimeDiff <= 0) return -1;
       if (bTimeDiff <= 0) return 1;
-      
+
       return 0;
     });
   }, [currentAiringData]);
@@ -167,7 +135,7 @@ function Index() {
       });
       return updated;
     });
-    
+
     // Invalidate queries to refresh banner data when anime is deleted
     queryClient.invalidateQueries(["currently-airing"]);
     queryClient.invalidateQueries(["homedata"]);
@@ -177,7 +145,7 @@ function Index() {
   return (
     <div className={"flex flex-col space-y-6 max-w-screen-2xl"} style={{margin: "0 auto"}}>
       {/* Hero Banner */}
-      <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[500px] md:h-[600px]  mb-8 -mt-[2rem] -mx-2 md:mt-0 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
+      <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[500px] md:h-[600px] mb-24 md:mb-8 -mt-[2rem] -mx-2 md:mt-0 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
         {bannerAnime && !currentAiringIsLoading ? (
           <HeroBanner
             key={`hero-${bannerAnime.id}`}
@@ -198,20 +166,7 @@ function Index() {
             See all →
           </Link>
         </div>
-        { /* ignore movies */}
-        {/*<div className="flex gap-2 py-4">*/}
-        {/*  {["Airing", "Season", "Newest"].map(label => (*/}
-        {/*    <button*/}
-        {/*      key={label}*/}
-        {/*      className={`px-4 py-2 rounded-full ${*/}
-        {/*        selectedFilter === label ? "bg-blue-600 text-white" : "bg-gray-200"*/}
-        {/*      }`}*/}
-        {/*      onClick={() => setSelectedFilter(label)}*/}
-        {/*    >*/}
-        {/*      {label}*/}
-        {/*    </button>*/}
-        {/*  ))}*/}
-        {/*</div>*/}
+
         {currentAiringIsLoading ? (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
@@ -225,6 +180,9 @@ function Index() {
           >
             {sortedCurrentlyAiring?.slice(0, 8).map((item => {
               const id = `currently-airing-${item.id}`;
+              // Calculate air time display for each anime
+              const airTimeDisplay = getAirTimeDisplay(item.nextEpisode?.airDate, item.broadcast) || undefined;
+              
               return (
                 <div
                   key={item.id}
@@ -239,9 +197,10 @@ function Index() {
                              episodeNumber={item.nextEpisode?.episodeNumber?.toString() || "Unknown"}
                              className={"hover:cursor-pointer"}
                              year={""}
-
                              image={GetImageFromAnime(item)}
                              airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do") : "Unknown"}
+                             // Add air time display - will override the default airdate display
+                             airTime={airTimeDisplay}
                              onClick={function (): void {
                                navigate(`/show/${item.id}`)
                              }} episodes={0}

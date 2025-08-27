@@ -5,6 +5,7 @@ import Button, {ButtonColor} from "../Button";
 import {Skeleton} from "../Skeleton/Skeleton";
 import {SafeImage} from "../SafeImage/SafeImage";
 import {Link} from "react-router-dom";
+import {getAirTimeDisplay} from "../../services/airTimeUtils";
 
 enum AnimeCardStyle {
   DEFAULT = 'default',
@@ -31,6 +32,17 @@ interface AnimeCardProps {
   className?: string
   options: React.ReactNode[]
   id: string | null | undefined
+  airTime?: {
+    show: boolean
+    text: string
+    variant?: 'countdown' | 'scheduled' | 'aired'
+    icon?: React.ReactNode
+  }
+  // For automatic air time calculation
+  nextEpisode?: {
+    airDate?: string | null
+  } | null
+  broadcast?: string | null
 }
 
 interface AnimeEpisodeCardProps {
@@ -46,6 +58,12 @@ interface AnimeEpisodeCardProps {
   image: string
   onClick: () => void
   className?: string
+  airTime?: {
+    show: boolean
+    text: string
+    variant?: 'countdown' | 'scheduled' | 'aired'
+    icon?: React.ReactNode
+  }
 }
 
 const cardStyles = {
@@ -59,6 +77,14 @@ const cardStyles = {
 }
 
 function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
+  // Calculate air time automatically if not provided manually
+  const automaticAirTime = (props as AnimeCardProps).nextEpisode?.airDate && (props as AnimeCardProps).broadcast 
+    ? getAirTimeDisplay((props as AnimeCardProps).nextEpisode?.airDate, (props as AnimeCardProps).broadcast)
+    : null;
+  
+  // Use manual airTime if provided, otherwise use automatic calculation
+  const displayAirTime = (props as AnimeCardProps).airTime || automaticAirTime;
+
   return (
     <Card
       className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white dark:bg-gray-800 rounded-md shadow-sm w-full justify-center transition-colors duration-300 ${props.className || ''}`}
@@ -113,6 +139,16 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
                 <FontAwesomeIcon icon={faCalendar}/>
                 <span>{props.year}</span>
               </div>
+              {displayAirTime?.show && (
+                <div className={`flex items-center gap-2 ${
+                  displayAirTime?.variant === 'countdown' ? 'text-red-600 dark:text-red-400' :
+                  displayAirTime?.variant === 'aired' ? 'text-green-600 dark:text-green-400' :
+                  'text-blue-600 dark:text-blue-400'
+                }`}>
+                  {displayAirTime?.icon || <FontAwesomeIcon icon={faCalendar}/>}
+                  <span className="text-xs font-medium">{displayAirTime?.text}</span>
+                </div>
+              )}
             </div>
           </Link>
           <div
@@ -162,12 +198,23 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
   </span>
             </div>
             <div className={`flex flex-col w-full justify-between space-y-2`}>
-
-            <span
-              className={`flex-grow text-md text-base space-x-4 text-gray-600 dark:text-gray-400`}><span>{`episode ${(props as AnimeEpisodeCardProps).episodeNumber}`}</span></span>
-              {/* show airdate*/}
               <span
-                className={`flex-grow text-md text-base space-x-4 text-gray-600 dark:text-gray-400`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
+                className={`flex-grow text-md text-base space-x-4 text-gray-600 dark:text-gray-400`}><span>{`episode ${(props as AnimeEpisodeCardProps).episodeNumber}`}</span></span>
+              
+              {/* Configurable air time display or fallback to airdate */}
+              {(props as AnimeEpisodeCardProps).airTime?.show ? (
+                <div className={`flex items-center gap-2 ${
+                  (props as AnimeEpisodeCardProps).airTime?.variant === 'countdown' ? 'text-red-600 dark:text-red-400' :
+                  (props as AnimeEpisodeCardProps).airTime?.variant === 'aired' ? 'text-green-600 dark:text-green-400' :
+                  'text-blue-600 dark:text-blue-400'
+                }`}>
+                  {(props as AnimeEpisodeCardProps).airTime?.icon || <FontAwesomeIcon icon={faCalendar}/>}
+                  <span className="text-xs font-medium">{(props as AnimeEpisodeCardProps).airTime?.text}</span>
+                </div>
+              ) : (
+                <span
+                  className={`flex-grow text-md text-base space-x-4 text-gray-600 dark:text-gray-400`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
+              )}
             </div>
           </Link>
           {/* if list align left */}

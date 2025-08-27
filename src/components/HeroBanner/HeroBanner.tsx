@@ -1,9 +1,9 @@
 import React, {useState, useEffect} from 'react';
 import {Link} from 'react-router-dom';
-import {format} from 'date-fns';
 import Button, {ButtonColor} from '../Button';
 import {StatusType} from '../Button/Button';
 import {AnimeStatusDropdown} from '../AnimeStatusDropdown/AnimeStatusDropdown';
+import {getAirDateTime, isAiringToday, hasAlreadyAired, calculateCountdown} from '../../services/airTimeUtils';
 
 interface HeroBannerProps {
   anime: {
@@ -51,123 +51,28 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const episodeTitle = anime.nextEpisode?.titleEn || anime.nextEpisode?.titleJp || "Unknown";
   const episodeNumber = anime.nextEpisode?.episodeNumber || "Unknown";
 
-  // Parse broadcast time and create accurate air time
-  const parseAirTime = () => {
-    if (!anime.nextEpisode?.airDate || !anime.broadcast) return null;
-
-    const airDate = new Date(anime.nextEpisode.airDate);
-
-    // Parse broadcast time (e.g., "Wednesdays at 01:29 (JST)")
-    const timeMatch = anime.broadcast.match(/(\d{1,2}):(\d{2})/);
-    const timezoneMatch = anime.broadcast.match(/\(([A-Z]{3,4})\)/);
-
-    if (!timeMatch) return airDate;
-
-    const [, hours, minutes] = timeMatch;
-    const timezone = timezoneMatch ? timezoneMatch[1] : 'JST';
-
-    // Create a new date with the broadcast time in JST, then convert to UTC
-    const broadcastDate = new Date(airDate);
-
-    if (timezone === 'JST') {
-      // JST is UTC+9, so to convert JST time to UTC, we subtract 9 hours
-      broadcastDate.setUTCHours(parseInt(hours) - 9, parseInt(minutes), 0, 0);
-
-      // Handle negative hours (previous day)
-      if (parseInt(hours) - 9 < 0) {
-        broadcastDate.setUTCDate(broadcastDate.getUTCDate() - 1);
-        broadcastDate.setUTCHours(parseInt(hours) - 9 + 24, parseInt(minutes), 0, 0);
-      }
-    } else {
-      broadcastDate.setUTCHours(parseInt(hours), parseInt(minutes), 0, 0);
-    }
-
-    return broadcastDate;
-  };
-
-  // Format air date with time in local timezone
-  const getAirDateTime = () => {
-    if (!anime.nextEpisode?.airDate) return "Unknown";
-
-    const airTime = parseAirTime();
-    if (airTime) {
-      // Use the parsed air time for both date and time (properly converted from JST to local)
-      const localDate = format(airTime, "EEE MMM do");
-      const localTime = format(airTime, "h:mm a");
-      return `${localDate} at ${localTime}`;
-    }
-
-    // Fallback to just the original air date
-    return format(new Date(anime.nextEpisode.airDate), "EEE MMM do");
-  };
-
-  // Check if the anime is airing today or within 24 hours (more flexible)
-  const isAiringToday = (() => {
-    if (!anime.nextEpisode?.airDate) return false;
-
-    const airTime = parseAirTime();
-    if (!airTime) return false;
-
-    const now = new Date();
-    const diffMs = airTime.getTime() - now.getTime();
-
-    // Show countdown if airing within next 24 hours
-    return diffMs > 0 && diffMs <= (24 * 60 * 60 * 1000);
-  })();
-
-  // Check if the anime has already aired
-  const hasAlreadyAired = (() => {
-    if (!anime.nextEpisode?.airDate) return false;
-
-    const airTime = parseAirTime();
-    if (!airTime) return false;
-
-    const now = new Date();
-    const diffMs = airTime.getTime() - now.getTime();
-
-    // Show "already aired" if it aired within the last 7 days
-    return diffMs <= 0 && Math.abs(diffMs) <= (7 * 24 * 60 * 60 * 1000);
-  })();
+  // Use the service functions for air time calculations
+  const airDateTime = getAirDateTime(anime.nextEpisode?.airDate, anime.broadcast);
+  const airingToday = isAiringToday(anime.nextEpisode?.airDate, anime.broadcast);
+  const alreadyAired = hasAlreadyAired(anime.nextEpisode?.airDate, anime.broadcast);
 
   // Countdown logic
   useEffect(() => {
-    if (!anime.nextEpisode?.airDate || !isAiringToday) {
+    if (!anime.nextEpisode?.airDate || !airingToday) {
       setCountdown("");
       return;
     }
 
-    const calculateCountdown = () => {
-      const now = new Date();
-      const airTime = parseAirTime();
-      if (!airTime) return;
-
-      const diffMs = airTime.getTime() - now.getTime();
-
-      if (diffMs <= 0) {
-        setCountdown("AIRING NOW");
-        return;
-      }
-
-      const diffMinutes = Math.floor(diffMs / (1000 * 60));
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      if (diffMinutes < 60) {
-        setCountdown(`${diffMinutes}m`);
-      } else if (diffHours < 24) {
-        setCountdown(`${diffHours}h`);
-      } else if (diffDays < 30) {
-        setCountdown(`${diffDays}d`);
-      } else {
-        setCountdown("");
-      }
+    const updateCountdown = () => {
+      const newCountdown = calculateCountdown(anime.nextEpisode?.airDate, anime.broadcast);
+      setCountdown(newCountdown);
     };
 
-    calculateCountdown();
-    const interval = setInterval(calculateCountdown, 60000); // Update every minute
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [anime.nextEpisode?.airDate, anime.broadcast, isAiringToday]);
+  }, [anime.nextEpisode?.airDate, anime.broadcast, airingToday]);
 
   return (
     <div className="relative w-full h-[600px] rounded-lg">
@@ -212,7 +117,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
       {/* Foreground content (not clipped) */}
       <div className="relative z-10 h-full flex items-end px-4 sm:px-8 lg:px-16">
         <div className="max-w-3xl text-white py-12">
-          {isAiringToday && (
+          {airingToday && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-red-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
               AIRING SOON
@@ -224,7 +129,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             </div>
           )}
 
-          {hasAlreadyAired && !isAiringToday && (
+          {alreadyAired && !airingToday && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2"></span>
               RECENTLY AIRED
@@ -238,7 +143,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
               Episode {episodeNumber}: {episodeTitle}
             </p>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <p className="text-base sm:text-lg text-gray-300">Airing {getAirDateTime()}</p>
+              <p className="text-base sm:text-lg text-gray-300">Airing {airDateTime}</p>
               {anime.broadcast && (
                 <div className="relative">
                   <span 

@@ -11,6 +11,7 @@ import { utc } from "@date-fns/utc/utc";
 import { useNavigate } from "react-router-dom";
 import {GetImageFromAnime} from "../../services/utils";
 import debug from "../../utils/debug";
+import { getAirTimeDisplay, parseAirTime } from "../../services/airTimeUtils";
 
 export default function CurrentlyAiringPage() {
   const { data, isLoading } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring());
@@ -46,9 +47,16 @@ export default function CurrentlyAiringPage() {
   const sorted = useMemo(() => {
     if (!data?.currentlyAiring) return [];
     return [...data.currentlyAiring].sort((a, b) => {
-      const aDate = new Date(a.nextEpisode?.airDate || "");
-      const bDate = new Date(b.nextEpisode?.airDate || "");
-      return aDate.getTime() - bDate.getTime();
+      // Use parseAirTime to properly handle JST broadcast times
+      const aAirTime = parseAirTime(a.nextEpisode?.airDate, a.broadcast);
+      const bAirTime = parseAirTime(b.nextEpisode?.airDate, b.broadcast);
+      
+      // Handle cases where parsing fails or dates are missing
+      if (!aAirTime && !bAirTime) return 0;
+      if (!aAirTime) return 1; // Put anime without proper air time at end
+      if (!bAirTime) return -1;
+      
+      return aAirTime.getTime() - bAirTime.getTime();
     });
   }, [data]);
 
@@ -68,40 +76,47 @@ export default function CurrentlyAiringPage() {
         />
       </div>
       <div className="flex flex-col space-y-4">
-        {sorted.map((item) => (
-          <AnimeCard
-            forceListLayout
-            key={item.id}
-            id={item.id}
-            style={AnimeCardStyle.EPISODE}
-            title={item.titleEn || item.titleJp || "Unknown"}
-            episodeTitle={item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown"}
-            description=""
-            episodeLength=""
-            episodeNumber={item.nextEpisode?.episodeNumber?.toString() || "Unknown"}
-            className="hover:cursor-pointer"
-            year=""
-            image={GetImageFromAnime(item)}
-            airdate={
-              item.nextEpisode?.airDate
-                ? format(new Date(item.nextEpisode.airDate), "EEE MMM do", { in: utc })
-                : "Unknown"
-            }
-            onClick={() => navigate(`/show/${item.id}`)}
-            episodes={0}
-            options={[
-              <Button
-                key="add"
-                color={ButtonColor.blue}
-                label="Add to list"
-                showLabel
-                status={animeStatuses[item.id] || "idle"}
-                className="w-fit px-2 py-1 text-xs"
-                onClick={() => addAnime(item.id)}
-              />,
-            ]}
-          />
-        ))}
+        {sorted.map((item) => {
+          // Calculate air time display for each anime
+          const airTimeDisplay = getAirTimeDisplay(item.nextEpisode?.airDate, item.broadcast);
+          
+          return (
+            <AnimeCard
+              forceListLayout
+              key={item.id}
+              id={item.id}
+              style={AnimeCardStyle.EPISODE}
+              title={item.titleEn || item.titleJp || "Unknown"}
+              episodeTitle={item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown"}
+              description=""
+              episodeLength=""
+              episodeNumber={item.nextEpisode?.episodeNumber?.toString() || "Unknown"}
+              className="hover:cursor-pointer"
+              year=""
+              image={GetImageFromAnime(item)}
+              airdate={
+                item.nextEpisode?.airDate
+                  ? format(new Date(item.nextEpisode.airDate), "EEE MMM do", { in: utc })
+                  : "Unknown"
+              }
+              // Add air time display - will override the default airdate display
+              airTime={airTimeDisplay}
+              onClick={() => navigate(`/show/${item.id}`)}
+              episodes={0}
+              options={[
+                <Button
+                  key="add"
+                  color={ButtonColor.blue}
+                  label="Add to list"
+                  showLabel
+                  status={animeStatuses[item.id] || "idle"}
+                  className="w-fit px-2 py-1 text-xs"
+                  onClick={() => addAnime(item.id)}
+                />,
+              ]}
+            />
+          );
+        })}
       </div>
     </div>
   );
