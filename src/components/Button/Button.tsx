@@ -20,7 +20,7 @@ interface StatusButtonProps {
   color: ButtonColor;
   label?: string;
   icon?: React.ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
   showLabel?: boolean;
   className?: string;
   status?: StatusType;
