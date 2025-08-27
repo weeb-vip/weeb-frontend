@@ -100,7 +100,7 @@ export default function CurrentlyAiringPage() {
                   : "Unknown"
               }
               // Add air time display - will override the default airdate display
-              airTime={airTimeDisplay}
+              airTime={airTimeDisplay || undefined}
               onClick={() => navigate(`/show/${item.id}`)}
               episodes={0}
               options={[

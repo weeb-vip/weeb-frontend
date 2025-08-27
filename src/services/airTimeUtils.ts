@@ -1,3 +1,4 @@
+import React from 'react';
 import {format} from 'date-fns';
 
 export interface AirTimeInfo {
@@ -148,7 +149,12 @@ export function getAirTimeInfo(airDate?: string | null, broadcast?: string | nul
 /**
  * Get air time display configuration for AnimeCard component
  */
-export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | null) {
+export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | null): {
+  show: boolean;
+  text: string;
+  variant?: 'countdown' | 'scheduled' | 'aired';
+  icon?: React.ReactNode;
+} | null {
   const airInfo = getAirTimeInfo(airDate, broadcast);
   if (!airInfo) return null;
 

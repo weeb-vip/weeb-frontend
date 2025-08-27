@@ -138,7 +138,7 @@ export default function Index() {
               transform: 'scale(1.1)', // Prevent blur edges
             }}
           />
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-white/90 dark:bg-black/60 backdrop-blur-sm" />
           <div className="max-w-screen-2xl mx-auto relative z-10">
             <div className="flex items-center gap-4">
               <SafeImage
@@ -151,10 +151,10 @@ export default function Index() {
                 }}
               />
               <div className="min-w-0 flex-1 pr-16">
-                <h1 className="text-xl font-bold text-white truncate">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">
                   {anime?.titleEn}
                 </h1>
-                <p className="text-sm text-gray-200 truncate">
+                <p className="text-sm text-gray-600 dark:text-gray-200 truncate">
                   {anime?.startDate ? format(anime.startDate, "yyyy") : ""} • {anime?.endDate ? "Finished" : "Ongoing"}
                 </p>
               </div>
