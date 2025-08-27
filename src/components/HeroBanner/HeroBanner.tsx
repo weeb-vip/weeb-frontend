@@ -126,7 +126,7 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
               <AnimeStatusDropdown
                 entry={{ ...anime.userAnime, anime }}
                 variant="hero"
-                buttonClassName="px-4 py-2 text-base font-semibold flex-grow min-w-[100px]"
+                buttonClassName="px-4 py-2 text-base font-semibold min-w-[80px] sm:min-w-[120px] w-fit"
                 deleteButtonClassName="px-2 py-2 min-w-[36px] h-[36px] text-base"
                 onDelete={onDeleteAnime}
               />
