@@ -70,7 +70,27 @@ function Index() {
     if (!currentAiringData?.currentlyAiring) return [];
     
     const now = new Date();
-    return [...currentAiringData.currentlyAiring].sort((a, b) => {
+    const allAnime = [...currentAiringData.currentlyAiring];
+    
+    // Count how many shows have already aired
+    const alreadyAiredCount = allAnime.filter((anime) => {
+      const airTime = parseAirTime(anime);
+      if (!airTime) return false;
+      return airTime.getTime() - now.getTime() <= 0;
+    }).length;
+    
+    // If more than 2 shows have already aired, filter them out
+    const shouldFilterAired = alreadyAiredCount > 2;
+    
+    const filteredAnime = shouldFilterAired 
+      ? allAnime.filter((anime) => {
+          const airTime = parseAirTime(anime);
+          if (!airTime) return true; // Keep anime without proper air time
+          return airTime.getTime() - now.getTime() > 0; // Only future episodes
+        })
+      : allAnime;
+    
+    return filteredAnime.sort((a, b) => {
       const aAirTime = parseAirTime(a);
       const bAirTime = parseAirTime(b);
       
@@ -81,14 +101,18 @@ function Index() {
       const aTimeDiff = aAirTime.getTime() - now.getTime();
       const bTimeDiff = bAirTime.getTime() - now.getTime();
       
-      // If both are in the past, sort by most recent first (already aired shows at front)
-      if (aTimeDiff <= 0 && bTimeDiff <= 0) {
-        return bTimeDiff - aTimeDiff;
+      // If filtering is active, all should be future episodes
+      if (shouldFilterAired) {
+        return aTimeDiff - bTimeDiff; // Sort by closest first
       }
       
-      // If both are in the future, sort by closest first
+      // Original sorting logic when not filtering
+      if (aTimeDiff <= 0 && bTimeDiff <= 0) {
+        return bTimeDiff - aTimeDiff; // Past episodes by most recent first
+      }
+      
       if (aTimeDiff > 0 && bTimeDiff > 0) {
-        return aTimeDiff - bTimeDiff;
+        return aTimeDiff - bTimeDiff; // Future episodes by closest first
       }
       
       // Past episodes come before future episodes
