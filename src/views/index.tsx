@@ -81,19 +81,19 @@ function Index() {
       const aTimeDiff = aAirTime.getTime() - now.getTime();
       const bTimeDiff = bAirTime.getTime() - now.getTime();
       
+      // If both are in the past, sort by most recent first (already aired shows at front)
+      if (aTimeDiff <= 0 && bTimeDiff <= 0) {
+        return bTimeDiff - aTimeDiff;
+      }
+      
       // If both are in the future, sort by closest first
       if (aTimeDiff > 0 && bTimeDiff > 0) {
         return aTimeDiff - bTimeDiff;
       }
       
-      // If both are in the past, sort by most recent first (but they'll be at the end)
-      if (aTimeDiff <= 0 && bTimeDiff <= 0) {
-        return bTimeDiff - aTimeDiff;
-      }
-      
-      // Future episodes come before past episodes
-      if (aTimeDiff > 0) return -1;
-      if (bTimeDiff > 0) return 1;
+      // Past episodes come before future episodes
+      if (aTimeDiff <= 0) return -1;
+      if (bTimeDiff <= 0) return 1;
       
       return 0;
     });

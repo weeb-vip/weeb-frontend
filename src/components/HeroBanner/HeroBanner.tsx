@@ -107,6 +107,20 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
     return diffMs > 0 && diffMs <= (24 * 60 * 60 * 1000);
   })();
 
+  // Check if the anime has already aired
+  const hasAlreadyAired = (() => {
+    if (!anime.nextEpisode?.airDate) return false;
+
+    const airTime = parseAirTime();
+    if (!airTime) return false;
+
+    const now = new Date();
+    const diffMs = airTime.getTime() - now.getTime();
+
+    // Show "already aired" if it aired within the last 7 days
+    return diffMs <= 0 && Math.abs(diffMs) <= (7 * 24 * 60 * 60 * 1000);
+  })();
+
   // Countdown logic
   useEffect(() => {
     if (!anime.nextEpisode?.airDate || !isAiringToday) {
@@ -182,6 +196,13 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
                   in {countdown}
                 </span>
               )}
+            </div>
+          )}
+
+          {hasAlreadyAired && !isAiringToday && (
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-600 text-sm font-semibold mb-4">
+              <span className="w-2 h-2 bg-white rounded-full mr-2"></span>
+              RECENTLY AIRED
             </div>
           )}
 
