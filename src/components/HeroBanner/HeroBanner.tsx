@@ -35,7 +35,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   useEffect(() => {
     setUseFallback(false);
     setBgLoaded(false);
-    
+
     if (anime.anidbid) {
       const fanartUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
       setBgUrl(fanartUrl);
@@ -173,7 +173,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
       {/* Background layer */}
       <div className="absolute inset-0 overflow-hidden bg-white dark:bg-gray-900 md:rounded-lg xs:rounded-none">
         {bgUrl && (
-          <div 
+          <div
             className="absolute inset-0 w-full h-full"
             style={{
               opacity: bgLoaded ? 1 : 0,
@@ -214,7 +214,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
           {isAiringToday && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-red-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-              AIRING TODAY
+              AIRING SOON
               {countdown && (
                 <span className="ml-2 px-2 py-1 bg-white/20 rounded text-xs">
                   in {countdown}
