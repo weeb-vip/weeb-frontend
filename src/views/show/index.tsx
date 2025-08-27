@@ -135,27 +135,27 @@ export default function Index() {
           }}
         />
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        <div className="max-w-screen-2xl mx-auto flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-4">
+        <div className="max-w-screen-2xl mx-auto flex items-center gap-4 relative z-10">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
             <SafeImage
               src={GetImageFromAnime(anime)}
               alt={anime?.titleEn || ""}
-              className="w-8 h-12 object-cover rounded"
+              className="w-8 h-12 object-cover rounded flex-shrink-0"
               onError={({currentTarget}) => {
                 currentTarget.onerror = null;
                 currentTarget.src = "/assets/not found.jpg";
               }}
             />
-            <div>
-              <h1 className="text-xl font-bold text-white truncate max-w-[300px] sm:max-w-none">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl font-bold text-white truncate">
                 {anime?.titleEn}
               </h1>
-              <p className="text-sm text-gray-200">
+              <p className="text-sm text-gray-200 truncate">
                 {anime?.startDate ? format(anime.startDate, "yyyy") : ""} • {anime?.endDate ? "Finished" : "Ongoing"}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 h-8">
+          <div className="flex items-center gap-2 h-8 flex-shrink-0">
             {!anime.userAnime ? (
               <Button
                 color={ButtonColor.blue}
