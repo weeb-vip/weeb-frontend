@@ -45,6 +45,7 @@ export default function Index() {
   const queryClient = useQueryClient();
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [bgLoaded, setBgLoaded] = useState(false);
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
 
 
   const {id} = useParams();
@@ -65,6 +66,16 @@ export default function Index() {
   useEffect(() => {
     if (!show && !isLoading) navigate("/404", {replace: true});
   }, [show, isLoading, navigate]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollThreshold = 400; // Show sticky header after scrolling 400px
+      setShowStickyHeader(window.scrollY > scrollThreshold);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
   const mutateAddAnime = useMutation({
@@ -104,6 +115,61 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
+      {/* Sticky Header */}
+      <div className={`fixed top-22 left-0 right-0 z-30 border-b border-gray-200 dark:border-gray-700 px-4 py-4 shadow-md transition-all duration-300 overflow-hidden ${
+        showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+      }`}>
+        {/* Background with blur */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
+            filter: 'blur(8px)',
+            transform: 'scale(1.1)', // Prevent blur edges
+          }}
+        />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-4">
+            <SafeImage
+              src={GetImageFromAnime(anime)}
+              alt={anime?.titleEn || ""}
+              className="w-8 h-12 object-cover rounded"
+              onError={({currentTarget}) => {
+                currentTarget.onerror = null;
+                currentTarget.src = "/assets/not found.jpg";
+              }}
+            />
+            <div>
+              <h1 className="text-xl font-bold text-white truncate max-w-[300px] sm:max-w-none">
+                {anime?.titleEn}
+              </h1>
+              <p className="text-sm text-gray-200">
+                {anime?.startDate ? format(anime.startDate, "yyyy") : ""} • {anime?.endDate ? "Finished" : "Ongoing"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 h-8">
+            {!anime.userAnime ? (
+              <Button
+                color={ButtonColor.blue}
+                label="Add to list"
+                showLabel
+                status={animeStatuses[anime.id] ?? "idle"}
+                onClick={() => addAnime(anime.id)}
+                className="px-2 py-1 text-xs h-8"
+              />
+            ) : (
+              <div className="h-8 flex items-center">
+                <AnimeStatusDropdown
+                  entry={{...anime.userAnime, anime: anime}}
+                  variant="compact"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
       <div
         className="relative bg-cover bg-center bg-white dark:bg-gray-900 h-[420px] transition-all duration-300"
         style={{
@@ -180,7 +246,7 @@ export default function Index() {
               <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded shadow text-sm transition-colors duration-300">
                 <h3 className="font-semibold mb-1 text-gray-800 dark:text-gray-200">Next Episode</h3>
                 <p className="text-gray-900 dark:text-gray-100"><strong>Episode {nextEpisode.episodeNumber}:</strong> {nextEpisode.titleEn || "TBA"}</p>
-                <p className="text-gray-600 dark:text-gray-400">Airing on {format(new Date(nextEpisode.airDate), "dd MMM yyyy", { in: utc })}</p>
+                <p className="text-gray-600 dark:text-gray-400">Airing on {format(new Date(nextEpisode.airDate), "dd MMM yyyy")}</p>
               </div>
             )}
             <div className=" flex flex-col lg:flex-row gap-8">

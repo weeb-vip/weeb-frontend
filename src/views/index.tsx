@@ -144,7 +144,7 @@ function Index() {
                              year={""}
 
                              image={GetImageFromAnime(item)}
-                             airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do", {in: utc}) : "Unknown"}
+                             airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do") : "Unknown"}
                              onClick={function (): void {
                                navigate(`/show/${item.id}`)
                              }} episodes={0}

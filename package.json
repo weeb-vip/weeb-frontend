@@ -18,7 +18,7 @@
   "dependencies": {
     "@algolia/autocomplete-js": "^1.9.2",
     "@apollo/client": "^3.7.14",
-    "@date-fns/tz": "^1.2.0",
+    "@date-fns/tz": "^1.4.1",
     "@date-fns/utc": "^2.1.0",
     "@fortawesome/fontawesome-free": "^6.4.0",
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
