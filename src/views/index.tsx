@@ -3,7 +3,7 @@ import Loader from "../components/Loader";
 import {CurrentlyAiringQuery, GetHomePageDataQuery, Status} from "../gql/graphql";
 import {format} from "date-fns";
 import {fetchCurrentlyAiring, fetchHomePageData, upsertAnime} from "../services/queries";
-import {useState} from "react";
+import {useState, useMemo} from "react";
 import AnimeCard, {AnimeCardSkeleton, AnimeCardStyle} from "../components/AnimeCard";
 import {Link, useNavigate} from "react-router-dom";
 import {utc} from "@date-fns/utc/utc";
@@ -31,8 +31,76 @@ function Index() {
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
   const [hoveredAnime, setHoveredAnime] = useState<any>(null);
 
-  // Determine which anime to show in banner
-  const bannerAnime = hoveredAnime || currentAiringData?.currentlyAiring?.[0];
+  // Parse broadcast time and create accurate air time (same logic as HeroBanner)
+  const parseAirTime = (anime: any) => {
+    if (!anime.nextEpisode?.airDate || !anime.broadcast) return null;
+
+    const airDate = new Date(anime.nextEpisode.airDate);
+
+    // Parse broadcast time (e.g., "Wednesdays at 01:29 (JST)")
+    const timeMatch = anime.broadcast.match(/(\d{1,2}):(\d{2})/);
+    const timezoneMatch = anime.broadcast.match(/\(([A-Z]{3,4})\)/);
+
+    if (!timeMatch) return airDate;
+
+    const [, hours, minutes] = timeMatch;
+    const timezone = timezoneMatch ? timezoneMatch[1] : 'JST';
+
+    // Create a new date with the broadcast time in JST, then convert to UTC
+    const broadcastDate = new Date(airDate);
+    
+    if (timezone === 'JST') {
+      // JST is UTC+9, so to convert JST time to UTC, we subtract 9 hours
+      broadcastDate.setUTCHours(parseInt(hours) - 9, parseInt(minutes), 0, 0);
+      
+      // Handle negative hours (previous day)
+      if (parseInt(hours) - 9 < 0) {
+        broadcastDate.setUTCDate(broadcastDate.getUTCDate() - 1);
+        broadcastDate.setUTCHours(parseInt(hours) - 9 + 24, parseInt(minutes), 0, 0);
+      }
+    } else {
+      broadcastDate.setUTCHours(parseInt(hours), parseInt(minutes), 0, 0);
+    }
+
+    return broadcastDate;
+  };
+
+  // Sort currently airing anime by next air time
+  const sortedCurrentlyAiring = useMemo(() => {
+    if (!currentAiringData?.currentlyAiring) return [];
+    
+    const now = new Date();
+    return [...currentAiringData.currentlyAiring].sort((a, b) => {
+      const aAirTime = parseAirTime(a);
+      const bAirTime = parseAirTime(b);
+      
+      if (!aAirTime && !bAirTime) return 0;
+      if (!aAirTime) return 1; // Put anime without air time at end
+      if (!bAirTime) return -1;
+      
+      const aTimeDiff = aAirTime.getTime() - now.getTime();
+      const bTimeDiff = bAirTime.getTime() - now.getTime();
+      
+      // If both are in the future, sort by closest first
+      if (aTimeDiff > 0 && bTimeDiff > 0) {
+        return aTimeDiff - bTimeDiff;
+      }
+      
+      // If both are in the past, sort by most recent first (but they'll be at the end)
+      if (aTimeDiff <= 0 && bTimeDiff <= 0) {
+        return bTimeDiff - aTimeDiff;
+      }
+      
+      // Future episodes come before past episodes
+      if (aTimeDiff > 0) return -1;
+      if (bTimeDiff > 0) return 1;
+      
+      return 0;
+    });
+  }, [currentAiringData]);
+
+  // Determine which anime to show in banner (use sorted data)
+  const bannerAnime = hoveredAnime || sortedCurrentlyAiring[0];
 
   const mutateAddAnime = useMutation({
     ...upsertAnime(),
@@ -126,7 +194,7 @@ function Index() {
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center"
           >
-            {currentAiringData?.currentlyAiring?.slice(0, 8).map((item => {
+            {sortedCurrentlyAiring?.slice(0, 8).map((item => {
               const id = `currently-airing-${item.id}`;
               return (
                 <div

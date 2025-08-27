@@ -60,11 +60,11 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
 
     // Create a new date with the broadcast time in JST, then convert to UTC
     const broadcastDate = new Date(airDate);
-    
+
     if (timezone === 'JST') {
       // JST is UTC+9, so to convert JST time to UTC, we subtract 9 hours
       broadcastDate.setUTCHours(parseInt(hours) - 9, parseInt(minutes), 0, 0);
-      
+
       // Handle negative hours (previous day)
       if (parseInt(hours) - 9 < 0) {
         broadcastDate.setUTCDate(broadcastDate.getUTCDate() - 1);
@@ -99,7 +99,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
 
     const airTime = parseAirTime();
     if (!airTime) return false;
-    
+
     const now = new Date();
     const diffMs = airTime.getTime() - now.getTime();
 
@@ -118,7 +118,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
       const now = new Date();
       const airTime = parseAirTime();
       if (!airTime) return;
-      
+
       const diffMs = airTime.getTime() - now.getTime();
 
       if (diffMs <= 0) {
@@ -179,7 +179,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
               AIRING TODAY
               {countdown && (
                 <span className="ml-2 px-2 py-1 bg-white/20 rounded text-xs">
-                  {countdown}
+                  in {countdown}
                 </span>
               )}
             </div>
@@ -191,7 +191,14 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             <p className="text-2xl font-medium">
               Episode {episodeNumber}: {episodeTitle}
             </p>
-            <p className="text-lg text-gray-300">Airing {getAirDateTime()}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-lg text-gray-300">Airing {getAirDateTime()}</p>
+              {anime.broadcast && (
+                <span className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-xs font-medium">
+                  JST Broadcast
+                </span>
+              )}
+            </div>
           </div>
 
           {anime.description && (
