@@ -231,14 +231,14 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             </div>
           )}
 
-          <h1 className="text-5xl font-bold mb-6 leading-tight">{title}</h1>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight">{title}</h1>
 
-          <div className="mb-8 space-y-4">
-            <p className="text-2xl font-medium">
+          <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
+            <p className="text-lg sm:text-xl lg:text-2xl font-medium">
               Episode {episodeNumber}: {episodeTitle}
             </p>
-            <div className="flex items-center gap-2">
-              <p className="text-lg text-gray-300">Airing {getAirDateTime()}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <p className="text-base sm:text-lg text-gray-300">Airing {getAirDateTime()}</p>
               {anime.broadcast && (
                 <div className="relative">
                   <span 
@@ -255,13 +255,13 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
                       transform: showJstPopover ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(8px)',
                     }}
                   >
-                    <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm rounded-lg p-3 w-80" style={{ boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)' }}>
+                    <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm rounded-lg p-3 w-80 max-w-[calc(100vw-2rem)]" style={{ boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)' }}>
                       <div className="text-center">
                         <p className="text-gray-700 dark:text-gray-200">
                           Japanese TV broadcast time. Streaming services usually release around the same time.
                         </p>
                       </div>
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-white dark:border-t-gray-900"></div>
+                      <div className="absolute top-full left-4 sm:left-1/2 sm:transform sm:-translate-x-1/2 border-8 border-transparent border-t-white dark:border-t-gray-900"></div>
                     </div>
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
           </div>
 
           {anime.description && (
-            <p className="text-gray-200 text-lg mb-8 line-clamp-3">
+            <p className="text-gray-200 text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 line-clamp-3">
               {anime.description.length > 250
                 ? `${anime.description.substring(0, 250)}...`
                 : anime.description}
