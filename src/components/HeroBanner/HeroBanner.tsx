@@ -51,9 +51,9 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
     : false;
 
   return (
-    <div className="relative w-full h-[600px]">
+    <div className="relative w-full h-[600px] rounded-lg">
       {/* Background layer */}
-      <div className="absolute inset-0 overflow-hidden bg-white dark:bg-gray-900">
+      <div className="absolute inset-0 overflow-hidden bg-white dark:bg-gray-900 md:rounded-lg xs:rounded-none">
         {bgUrl && (
           <img
             src={bgUrl}
