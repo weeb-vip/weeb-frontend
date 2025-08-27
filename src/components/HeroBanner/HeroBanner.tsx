@@ -29,15 +29,22 @@ interface HeroBannerProps {
 export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnime}: HeroBannerProps) {
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [bgLoaded, setBgLoaded] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
   const [countdown, setCountdown] = useState<string>("");
 
   useEffect(() => {
+    setUseFallback(false);
+    setBgLoaded(false);
+    
     if (anime.anidbid) {
-      const url = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
-      setBgLoaded(false);
-      setBgUrl(url);
+      const fanartUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
+      setBgUrl(fanartUrl);
+    } else {
+      // No anidbid available, use default fallback
+      setBgUrl("/assets/not found.jpg");
+      setBgLoaded(true);
     }
-  }, [anime.anidbid]);
+  }, [anime.anidbid, anime]);
 
   const title = anime.titleEn || anime.titleJp || "Unknown";
   const episodeTitle = anime.nextEpisode?.titleEn || anime.nextEpisode?.titleJp || "Unknown";
@@ -170,11 +177,21 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             src={bgUrl}
             alt="bg preload"
             style={{opacity: bgLoaded ? 1 : 0}}
-            className="absolute inset-0 w-full h-full object-cover transition-all duration-500"
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
+              useFallback ? 'blur-md scale-110' : ''
+            }`}
             onLoad={() => setBgLoaded(true)}
             onError={() => {
-              setBgUrl("/assets/not found.jpg");
-              setBgLoaded(true);
+              if (!useFallback && anime.anidbid) {
+                // Fanart failed, try poster as fallback
+                setUseFallback(true);
+                const posterUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/poster`;
+                setBgUrl(posterUrl);
+              } else {
+                // Poster also failed, use default
+                setBgUrl("/assets/not found.jpg");
+                setBgLoaded(true);
+              }
             }}
           />
         )}
