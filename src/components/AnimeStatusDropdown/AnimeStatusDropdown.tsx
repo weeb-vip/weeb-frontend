@@ -121,27 +121,39 @@ export function AnimeStatusDropdown({
     if (buttonClassName) {
       return `inline-flex items-center justify-between rounded-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-300 ${buttonClassName}`;
     }
-    const baseClasses = "inline-flex items-center justify-between rounded-full bg-gray-200 dark:bg-gray-600 px-2 py-1 text-xs font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-300";
+    const baseClasses = "inline-flex items-center justify-between rounded-full bg-gray-200 dark:bg-gray-600 px-2 py-2 text-base font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-300";
     switch (variant) {
       case 'compact':
-        return `${baseClasses} flex-1 min-w-0`;
+        return `${baseClasses} flex-1 min-w-0 px-4 py-2 text-xs`;
       case 'hero':
-        return `${baseClasses} flex-grow min-w-[140px] px-3 py-1.5 text-sm`;
+        return `${baseClasses} flex-grow min-w-[140px] px-4 py-2 text-base`;
       default:
-        return `${baseClasses} flex-grow min-w-[120px] px-3 py-1.5 text-sm`;
+        return `${baseClasses} flex-grow min-w-[120px] px-4 py-2 text-base`;
     }
   };
 
   const getDeleteButtonClasses = () => {
     if (deleteButtonClassName) return `flex-shrink-0 ${deleteButtonClassName}`;
-    const baseClasses = "flex-shrink-0 px-1.5 py-1 min-w-[28px] h-[28px] text-xs";
+    const baseClasses = "flex-shrink-0 px-2 py-2 min-w-[32px] h-[32px] text-base";
     switch (variant) {
       case 'compact':
-        return baseClasses;
+        return `${baseClasses} px-1 py-1 min-w-[24px] h-[24px] text-xs`;
       case 'hero':
-        return `${baseClasses} px-2 py-1.5 min-w-[36px] h-[36px] text-sm`;
+        return `${baseClasses} px-4 py-4 min-w-[40px] h-[40px] text-base`;
       default:
-        return `${baseClasses} px-2 py-1.5 min-w-[36px] h-[36px] text-sm`;
+        return `${baseClasses} px-4 py-4 min-w-[40px] h-[40px] text-base`;
+    }
+  };
+
+  const getMenuItemClasses = (active: boolean) => {
+    const baseClasses = `${active ? "bg-blue-100 dark:bg-blue-900/50" : ""} block w-full text-left text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300`;
+    switch (variant) {
+      case 'compact':
+        return `${baseClasses} px-2 py-2 text-xs`;
+      case 'hero':
+        return `${baseClasses} px-4 py-4 text-base`;
+      default:
+        return `${baseClasses} px-4 py-4 text-base`;
     }
   };
 
@@ -172,7 +184,7 @@ export function AnimeStatusDropdown({
               <Menu.Item key={statusOption}>
                 {({ active }) => (
                   <button
-                    className={`${active ? "bg-blue-100 dark:bg-blue-900/50" : ""} block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300`}
+                    className={getMenuItemClasses(active)}
                     onClick={() => onChangeStatus(entry.anime?.id || "", statusOption)}
                   >
                     {statusLabels[statusOption]}

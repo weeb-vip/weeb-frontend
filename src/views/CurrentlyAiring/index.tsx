@@ -96,7 +96,7 @@ export default function CurrentlyAiringPage() {
                 label="Add to list"
                 showLabel
                 status={animeStatuses[item.id] || "idle"}
-                className="w-fit"
+                className="w-fit px-2 py-1 text-xs"
                 onClick={() => addAnime(item.id)}
               />,
             ]}

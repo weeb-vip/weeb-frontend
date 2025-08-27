@@ -77,7 +77,7 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
       <div className="relative z-10 h-full flex items-end px-4 sm:px-8 lg:px-16">
         <div className="max-w-3xl text-white py-12">
           {isAiringToday && (
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-red-600 text-sm font-semibold mb-4">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-red-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
               AIRING TODAY
             </div>
@@ -85,7 +85,7 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
 
           <h1 className="text-5xl font-bold mb-6 leading-tight">{title}</h1>
 
-          <div className="mb-6 space-y-2">
+          <div className="mb-8 space-y-4">
             <p className="text-2xl font-medium">
               Episode {episodeNumber}: {episodeTitle}
             </p>
@@ -106,7 +106,7 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
                 color={ButtonColor.blue}
                 label="More Info"
                 showLabel
-                className="px-5 py-2 text-base font-semibold shadow-md hover:shadow-lg"
+                className="px-4 py-2 text-base font-semibold shadow-md hover:shadow-lg"
               />
             </Link>
 
@@ -117,7 +117,10 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
                 showLabel
                 status={animeStatus}
                 onClick={() => onAddAnime(anime.id)}
-                className="px-4 py-2 text-base border-2 border-white text-white hover:bg-white hover:text-black transition"
+                className="px-4 py-2 text-base font-semibold text-white
+           hover:bg-white hover:text-black
+           focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
+           transition"
               />
             ) : (
               <AnimeStatusDropdown

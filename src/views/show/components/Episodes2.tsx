@@ -18,7 +18,7 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
   const [collapsed, setCollapsed] = React.useState<boolean>(false)
   return (
     <div className="inline-block min-w-full overflow-hidden rounded-lg shadow m-auto">
-      <div className={"flex flex-row flex-grow flex-nowrap p-5 space-x-5 items-center bg-white"}>
+      <div className={"flex flex-row flex-grow flex-nowrap p-6 space-x-6 items-center bg-white"}>
         <FontAwesomeIcon size="2xl" color="#666" icon={faBookmark}/>
         <h1 className={"text-left text-2xl font-normal"}>Season {seasonNumber == 0 ? "Specials" : seasonNumber}</h1>
         {/*transition arrow direction*/}
@@ -43,15 +43,15 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
           <thead>
           <tr>
             <th scope="col"
-                className="px-5 py-3 text-base font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200"
+                className="px-6 py-4 text-base font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200"
             >
               #
             </th>
             <th scope="col"
-                className="px-5 py-3 text-base font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200">Name
+                className="px-6 py-4 text-base font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200">Name
             </th>
             <th scope="col"
-                className="px-5 py-3 text-base font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200">Aired
+                className="px-6 py-4 text-base font-normal text-left text-gray-800 uppercase bg-white border-b border-gray-200">Aired
             </th>
           </tr>
           </thead>
@@ -62,18 +62,18 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
 
             return (
               <tr key={episode.id}>
-                <td className="px-5 py-5 text-base bg-white border-b border-gray-200">
+                <td className="px-6 py-6 text-base bg-white border-b border-gray-200">
                   {/*<RouterLink to={`/anime/${type}/${id}/${episode.id}`}>*/}
                   {/*{`Episode ${index+1}`}*/}
                   {episode.number}
                   {/*</RouterLink>*/}
                 </td>
-                <td className="px-5 py-5 text-base bg-white border-b border-gray-200">
+                <td className="px-6 py-6 text-base bg-white border-b border-gray-200">
                   {/*<RouterLink to={`/anime/${type}/${id}/${episode.id}`}>*/}
                   {episode.name || "TBA"}
                   {/*</RouterLink>*/}
                 </td>
-                <td className="px-5 py-5 text-base bg-white border-b border-gray-200">
+                <td className="px-6 py-6 text-base bg-white border-b border-gray-200">
                   {formattedAirdate}
                 </td>
 

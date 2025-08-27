@@ -12,7 +12,7 @@ import {utc} from "@date-fns/utc/utc";
 function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episode[] }) {
   return (
     <div className="inline-block min-w-full overflow-hidden rounded-lg shadow m-auto">
-      <div className={"flex flex-row flex-grow flex-nowrap p-5 space-x-5 items-center bg-white dark:bg-gray-800 transition-colors duration-300"}>
+      <div className={"flex flex-row flex-grow flex-nowrap p-6 space-x-6 items-center bg-white dark:bg-gray-800 transition-colors duration-300"}>
         <FontAwesomeIcon size="2xl" color="#666" icon={faBookmark}/>
         <h1 className={"text-left text-2xl font-normal text-gray-900 dark:text-gray-100"}>Episodes</h1>
         {/*transition arrow direction*/}

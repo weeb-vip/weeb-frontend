@@ -17,9 +17,9 @@ function Header() {
   const openModalRegister = useLoginModalStore((state) => state.openRegister);
 
   return (
-    <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-2 transition-colors duration-300">
+    <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
       {/* Mobile Layout */}
-      <div className="flex sm:hidden w-full items-center space-x-2">
+      <div className="flex sm:hidden w-full items-center space-x-4">
         {/* Logo */}
         <Link to="/">
           <img
@@ -36,7 +36,7 @@ function Header() {
 
         {/* Hamburger Menu */}
         <Menu as="div" className="relative">
-          <Menu.Button className="p-2">
+          <Menu.Button className="p-4">
             <FontAwesomeIcon icon={faBars} className="text-gray-700 dark:text-gray-300 text-xl" />
           </Menu.Button>
 
@@ -49,7 +49,7 @@ function Header() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Menu.Items className="fixed inset-0 z-50 bg-white dark:bg-gray-900 p-6 flex flex-col justify-start space-y-4 transition-colors duration-300">
+            <Menu.Items className="fixed inset-0 z-50 bg-white dark:bg-gray-900 p-8 flex flex-col justify-start space-y-4 transition-colors duration-300">
               {/* Close Button */}
               <Menu.Item>
                 {() => (
@@ -68,7 +68,7 @@ function Header() {
               {/* Dark Mode Toggle */}
               <Menu.Item>
                 {({ active }) => (
-                  <div className={`flex items-center justify-between px-4 py-2 rounded ${
+                  <div className={`flex items-center justify-between px-4 py-4 rounded ${
                     active ? "bg-gray-100 dark:bg-gray-700" : ""
                   }`}>
                     <span className="text-lg text-gray-900 dark:text-gray-100">Dark Mode</span>
@@ -84,7 +84,7 @@ function Header() {
                     {({ active }) => (
                       <button
                         onClick={openModalLogin}
-                        className={`w-full text-left px-4 py-2 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                        className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
                           active ? "bg-gray-100 dark:bg-gray-700" : ""
                         }`}
                       >
@@ -96,7 +96,7 @@ function Header() {
                     {({ active }) => (
                       <button
                         onClick={openModalRegister}
-                        className={`w-full text-left px-4 py-2 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                        className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
                           active ? "bg-gray-100 dark:bg-gray-700" : ""
                         }`}
                       >
@@ -111,7 +111,7 @@ function Header() {
                     {({ active }) => (
                       <Link
                         to="/profile"
-                        className={`block w-full text-left px-4 py-2 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                        className={`block w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
                           active ? "bg-gray-100 dark:bg-gray-700" : ""
                         }`}
                       >
@@ -128,7 +128,7 @@ function Header() {
                           useLoggedInStore.getState().logout();
                           navigate("/");
                         }}
-                        className={`w-full text-left px-4 py-2 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                        className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
                           active ? "bg-gray-100 dark:bg-gray-700" : ""
                         }`}
                       >
@@ -144,7 +144,7 @@ function Header() {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden sm:flex flex-row items-center justify-between space-x-4 mt-2 sm:mt-0">
+      <div className="hidden sm:flex flex-row items-center justify-between space-x-4 mt-4 sm:mt-0">
         {/* Left: Logo + Title */}
         <div className="flex items-center space-x-4">
           <Link to="/">

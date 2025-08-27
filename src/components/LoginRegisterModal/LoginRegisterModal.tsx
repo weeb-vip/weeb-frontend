@@ -83,46 +83,46 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white">
-      <h2 className="text-3xl font-semibold mb-6">{!isRegisterState ? 'Login' : 'Register'}</h2>
+    <div className="w-full max-w-md mx-auto p-8 bg-white">
+      <h2 className="text-3xl font-semibold mb-8">{!isRegisterState ? 'Login' : 'Register'}</h2>
 
       <form onSubmit={handleSubmit}>
 
 
-        <div className="mb-4">
-          <label className="block text-base font-medium mb-1">Email</label>
+        <div className="mb-6">
+          <label className="block text-base font-medium mb-2">Email</label>
           <input
             name="username"
             type="text"
             value={formData.username}
             onChange={handleChange}
             placeholder={!isRegisterState ? 'Enter your username or email' : 'Enter your weeb username'}
-            className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full px-4 py-4 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-base font-medium mb-1">Password</label>
+        <div className="mb-6">
+          <label className="block text-base font-medium mb-2">Password</label>
           <input
             name="password"
             type="password"
             value={formData.password}
             onChange={handleChange}
             placeholder="Enter your password"
-            className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full px-4 py-4 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
         {isRegisterState && (
-          <div className="mb-4">
-            <label className="block text-base font-medium mb-1">Password</label>
+          <div className="mb-6">
+            <label className="block text-base font-medium mb-2">Password</label>
             <input
               name="confirmPassword"
               type="password"
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Enter your password again"
-              className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-4 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
         )}
@@ -133,7 +133,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-2 mb-6 text-white rounded-full bg-blue-500 hover:bg-blue-600 transition"
+          className="w-full py-4 mb-8 text-white rounded-full bg-blue-500 hover:bg-blue-600 transition"
         >
           {!isRegisterState ? 'Login' : 'Register'}
         </button>
@@ -142,7 +142,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
       {/*
       <hr className="mb-6" />
 
-      <button className="w-full flex items-center justify-center gap-2 py-2 border rounded-full hover:bg-gray-100 transition">
+      <button className="w-full flex items-center justify-center gap-4 py-4 border rounded-full hover:bg-gray-100 transition">
         <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
           <path d="M21.35 11.1H12v2.8h5.35c-.4 2.1-2.25 3.6-4.35 3.6a4.39 4.39 0 0 1-4.39-4.4 4.39 4.39 0 0 1 4.39-4.4c1.2 0 2.28.45 3.12 1.2l2.1-2.1A7.18 7.18 0 0 0 12 5.2c-3.97 0-7.2 3.23-7.2 7.2S8.03 19.6 12 19.6c3.78 0 6.95-2.88 7.35-6.5z"/>
         </svg>
@@ -150,7 +150,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
       </button>
       */}
 
-      <div className="mt-6 text-center text-base text-gray-600">
+      <div className="mt-8 text-center text-base text-gray-600">
         {!isRegisterState ? "Don't have an account?" : "Already have an account?"}{' '}
         <button
           type="button"

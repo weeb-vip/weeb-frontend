@@ -78,7 +78,7 @@ function Index() {
   };
 
   return (
-    <div className={"flex flex-col  space-y-5 max-w-screen-2xl"} style={{margin: "0 auto"}}>
+    <div className={"flex flex-col space-y-6 max-w-screen-2xl"} style={{margin: "0 auto"}}>
       {/* Hero Banner */}
       <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[500px] md:h-[600px]  mb-8 -mt-[2rem] -mx-2 md:mt-0 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
         {bannerAnime && !currentAiringIsLoading ? (
@@ -156,7 +156,7 @@ function Index() {
                                  label={'Add to list'}
                                  showLabel={true}
                                  status={animeStatuses[id] ?? "idle"}
-                                 className="w-fit"
+                                 className="w-fit px-2 py-1 text-xs"
                                  onClick={() => {
                                    addAnime(id, item.id)
                                  }}
@@ -209,7 +209,7 @@ function Index() {
                                    label={'Add to list'}
                                    showLabel={true}
                                    status={animeStatuses[id] ?? "idle"}
-                                   className="w-fit"
+                                   className="w-fit px-2 py-1 text-xs"
                                    onClick={() => {
                                      addAnime(id, item.id)
                                    }}
@@ -259,7 +259,7 @@ function Index() {
                                label={'Add to list'}
                                showLabel={true}
                                status={animeStatuses[id] ?? "idle"}
-                               className="w-fit"
+                               className="w-fit px-2 py-1 text-xs"
                                onClick={() => {
                                  addAnime(id, item.id)
                                }}
@@ -305,7 +305,7 @@ function Index() {
                                label={'Add to list'}
                                showLabel={true}
                                status={animeStatuses[id] ?? "idle"}
-                               className="w-fit"
+                               className="w-fit px-2 py-1 text-xs"
                                onClick={() => {
                                  addAnime(id, item.id)
                                }}

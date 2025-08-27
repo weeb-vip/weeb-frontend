@@ -75,7 +75,7 @@ export default function StatusButton({
       onClick={onClick}
       disabled={internalStatus === "loading"}
       className={`
-      px-4 py-1
+      px-4 py-2
         relative rounded-full font-medium transition-colors duration-300 flex items-center justify-center whitespace-nowrap w-fit
         ${colorClasses[color]} ${className || ""} ${
         internalStatus === "loading" ? "cursor-not-allowed" : "cursor-pointer"

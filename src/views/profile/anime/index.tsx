@@ -42,7 +42,7 @@ function UserAnimeListPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="flex flex-col space-y-5 max-w-screen-2xl" style={{ margin: "0 auto" }}>
+    <div className="flex flex-col space-y-6 max-w-screen-2xl" style={{ margin: "0 auto" }}>
       <div className="flex flex-wrap gap-2 py-4">
         {Object.values(Status).map((status) => (
           <button
@@ -51,7 +51,7 @@ function UserAnimeListPage() {
               setSelectedStatus(status);
               setPage(0);
             }}
-            className={`px-3 py-1 rounded-full text-sm border transition-colors duration-300
+            className={`px-4 py-2 rounded-full text-sm border transition-colors duration-300
               ${selectedStatus === status
               ? "bg-blue-600 text-white border-blue-600"
               : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"}`}
@@ -93,7 +93,7 @@ function UserAnimeListPage() {
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 0))}
               disabled={page === 0}
-              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-300"
+              className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-300"
             >
               Previous
             </button>
@@ -105,7 +105,7 @@ function UserAnimeListPage() {
             <button
               onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
               disabled={page + 1 >= totalPages}
-              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-300"
+              className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-300"
             >
               Next
             </button>
