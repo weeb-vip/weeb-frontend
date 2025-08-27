@@ -168,7 +168,11 @@ export default function Index() {
             ) : (
               <div className="h-8 flex items-center">
                 <AnimeStatusDropdown
-                  entry={{...anime.userAnime, anime: anime}}
+                  entry={{
+                    id: anime.userAnime?.id || '',
+                    anime: anime as any,
+                    status: anime.userAnime?.status || undefined
+                  }}
                   variant="compact"
                 />
               </div>
