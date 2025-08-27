@@ -167,6 +167,11 @@ function Index() {
       });
       return updated;
     });
+    
+    // Invalidate queries to refresh banner data when anime is deleted
+    queryClient.invalidateQueries(["currently-airing"]);
+    queryClient.invalidateQueries(["homedata"]);
+    queryClient.invalidateQueries(["user-animes"]);
   };
 
   return (
