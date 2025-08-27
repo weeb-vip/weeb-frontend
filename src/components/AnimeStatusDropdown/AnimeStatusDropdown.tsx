@@ -2,7 +2,8 @@ import {Menu, Transition} from "@headlessui/react";
 import {Status, Anime} from "../../gql/graphql";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronDown, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {Fragment} from "react";
+import {Fragment, useRef, useState, useEffect} from "react";
+import {createPortal} from "react-dom";
 import Button, {ButtonColor} from "../Button";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {deleteAnime, upsertAnime} from "../../services/queries";
@@ -10,7 +11,7 @@ export const statusLabels: Record<Status, string> = {
   [Status.Completed]: "Completed",
   [Status.Dropped]: "Dropped",
   [Status.Onhold]: "On Hold",
-  [Status.Plantowatch]: "Plan to Watch",
+  [Status.Plantowatch]: "Watchlist",
   [Status.Watching]: "Watching",
 };
 interface AnimeStatusDropdownProps {
@@ -19,10 +20,18 @@ interface AnimeStatusDropdownProps {
     anime?: Anime;
     status?: Status;
   };
+  variant?: 'default' | 'compact' | 'hero';
+  className?: string;
+  buttonClassName?: string;
+  deleteButtonClassName?: string;
+  onDelete?: (animeId: string) => void;
 }
 
-export function AnimeStatusDropdown({entry}: AnimeStatusDropdownProps) {
+export function AnimeStatusDropdown({entry, variant = 'default', className, buttonClassName, deleteButtonClassName, onDelete}: AnimeStatusDropdownProps) {
   const queryClient = useQueryClient();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  
   const { mutate: mutateDeleteAnime } = useMutation({
     ...deleteAnime(),
     onSuccess: () => {
@@ -30,6 +39,10 @@ export function AnimeStatusDropdown({entry}: AnimeStatusDropdownProps) {
       queryClient.invalidateQueries(["anime-details", entry.anime?.id]);
       queryClient.invalidateQueries(["homedata"]);
       queryClient.invalidateQueries(["currently-airing"]);
+      // Call the onDelete callback to clear status state
+      if (onDelete && entry.anime?.id) {
+        onDelete(entry.anime.id);
+      }
     },
   });
 
@@ -43,6 +56,16 @@ export function AnimeStatusDropdown({entry}: AnimeStatusDropdownProps) {
     },
   });
 
+  const updateDropdownPosition = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX
+      });
+    }
+  };
+
   const onClickDeleteAnime = (animeId: string) => {
     mutateDeleteAnime(animeId);
   };
@@ -50,50 +73,107 @@ export function AnimeStatusDropdown({entry}: AnimeStatusDropdownProps) {
   const onChangeStatus = (animeID: string, newStatus: Status) => {
     mutateUpdateAnime({ input: { animeID, status: newStatus } });
   };
+
+  // Variant-specific styling
+  const getContainerClasses = () => {
+    const base = "flex flex-row relative z-20 items-center gap-2 justify-center";
+    switch (variant) {
+      case 'compact':
+        return `${base} w-full`;
+      case 'hero':
+        return base;
+      default:
+        return base;
+    }
+  };
+
+  const getButtonClasses = () => {
+    if (buttonClassName) {
+      return `inline-flex items-center justify-between rounded-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-300 ${buttonClassName}`;
+    }
+    
+    const baseClasses = "inline-flex items-center justify-between rounded-full bg-gray-200 dark:bg-gray-600 px-2 py-1 text-xs font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-300";
+    
+    switch (variant) {
+      case 'compact':
+        return `${baseClasses} flex-1 min-w-0`;
+      case 'hero':
+        return `${baseClasses} flex-grow min-w-[140px] px-3 py-1.5 text-sm`;
+      default:
+        return `${baseClasses} flex-grow min-w-[120px] px-3 py-1.5 text-sm`;
+    }
+  };
+
+  const getDeleteButtonClasses = () => {
+    if (deleteButtonClassName) {
+      return `flex-shrink-0 ${deleteButtonClassName}`;
+    }
+    
+    const baseClasses = "flex-shrink-0 px-1.5 py-1 min-w-[28px] h-[28px] text-xs";
+    
+    switch (variant) {
+      case 'compact':
+        return baseClasses;
+      case 'hero':
+        return `${baseClasses} px-2 py-1.5 min-w-[36px] h-[36px] text-sm`;
+      default:
+        return `${baseClasses} px-2 py-1.5 min-w-[36px] h-[36px] text-sm`;
+    }
+  };
+
   return (
     <div key={`user-anime-${entry.id}-actions`}
-         className="flex flex-col flex-wrap gap-2 relative z-20 justify-center items-center ">
+         className={`${getContainerClasses()} ${className || ''}`}>
       <Menu as="div" className="relative inline-block text-left">
         <div>
           <Menu.Button
-            className="inline-flex items-center justify-between rounded-full bg-gray-200 dark:bg-gray-600 px-2 py-1 text-xs font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-300">
+            ref={buttonRef}
+            className={getButtonClasses()}
+            onClick={updateDropdownPosition}>
             <span>{statusLabels[entry.status ?? Status.Plantowatch]}</span>
             <FontAwesomeIcon icon={faChevronDown} className="w-3 h-3 ml-2 text-gray-500 dark:text-gray-400"/>
           </Menu.Button>
         </div>
-        <Transition
-          as={Fragment}
-          enter="transition ease-out duration-100"
-          enterFrom="transform opacity-0 scale-95"
-          enterTo="transform opacity-100 scale-100"
-          leave="transition ease-in duration-75"
-          leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95"
-        >
-          <Menu.Items
-            className="absolute top-full left-0 mt-1 w-44 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black dark:ring-gray-600 ring-opacity-5 dark:ring-opacity-20 focus:outline-none z-50 transition-colors duration-300">
-            {Object.values(Status).map((statusOption) => (
-              <Menu.Item key={statusOption}>
-                {({active}) => (
-                  <button
-                    className={`${active ? "bg-blue-100 dark:bg-blue-900/50" : ""} block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300`}
-                    onClick={() => onChangeStatus(entry.anime?.id || "", statusOption)}
-                  >
-                    {statusLabels[statusOption]}
-                  </button>
-                )}
-              </Menu.Item>
-            ))}
-          </Menu.Items>
-        </Transition>
+        {typeof window !== 'undefined' && createPortal(
+          <Transition
+            as={Fragment}
+            enter="transition ease-out duration-100"
+            enterFrom="transform opacity-0 scale-95"
+            enterTo="transform opacity-100 scale-100"
+            leave="transition ease-in duration-75"
+            leaveFrom="transform opacity-100 scale-100"
+            leaveTo="transform opacity-0 scale-95"
+          >
+            <Menu.Items
+              className="fixed w-44 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black dark:ring-gray-600 ring-opacity-5 dark:ring-opacity-20 focus:outline-none z-[9999] transition-colors duration-300"
+              style={{
+                top: dropdownPosition.top,
+                left: dropdownPosition.left
+              }}>
+              {Object.values(Status).map((statusOption) => (
+                <Menu.Item key={statusOption}>
+                  {({active}) => (
+                    <button
+                      className={`${active ? "bg-blue-100 dark:bg-blue-900/50" : ""} block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300`}
+                      onClick={() => onChangeStatus(entry.anime?.id || "", statusOption)}
+                    >
+                      {statusLabels[statusOption]}
+                    </button>
+                  )}
+                </Menu.Item>
+              ))}
+            </Menu.Items>
+          </Transition>,
+          document.body
+        )}
       </Menu>
       <Button
-        className="text-xs"
+        className={getDeleteButtonClasses()}
         label=""
         onClick={() => onClickDeleteAnime(entry.anime?.id || "")}
-        icon={<FontAwesomeIcon icon={faTrash} className="text-white"/>}
+        icon={<FontAwesomeIcon icon={faTrash} className="text-white w-3 h-3"/>}
         color={ButtonColor.red}
-        showLabel={true}
+        showLabel={false}
       />
     </div>
   )

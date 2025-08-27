@@ -23,9 +23,10 @@ interface HeroBannerProps {
   };
   onAddAnime: (id: string) => void;
   animeStatus: StatusType;
+  onDeleteAnime?: (animeId: string) => void;
 }
 
-export default function HeroBanner({ anime, onAddAnime, animeStatus }: HeroBannerProps) {
+export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAnime }: HeroBannerProps) {
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [bgLoaded, setBgLoaded] = useState(false);
 
@@ -72,65 +73,71 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus }: HeroBanne
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
       </div>
 
-      {/* Content */}
+      {/* Content Container */}
       <div className="relative z-10 h-full flex items-end">
-        <div className="p-8 md:p-12 text-white max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Now Airing Badge */}
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-red-600 text-sm font-semibold mb-4">
-            <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-            NOW AIRING
-          </div>
+        <div className="w-full md:max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-16">
+          <div className="p-4 sm:p-6 md:p-8 lg:p-12 text-white max-w-full md:max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Now Airing Badge */}
+            <div className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 rounded-full bg-red-600 text-xs sm:text-sm font-semibold mb-2 sm:mb-4">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full mr-1 sm:mr-2 animate-pulse"></span>
+              NOW AIRING
+            </div>
 
-          {/* Title */}
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
-            {title}
-          </h1>
+            {/* Title */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 sm:mb-4 md:mb-6 leading-tight">
+              {title}
+            </h1>
 
-          {/* Episode Info */}
-          <div className="mb-4 space-y-2">
-            <p className="text-xl md:text-2xl font-medium">
-              Episode {episodeNumber}: {episodeTitle}
-            </p>
-            <p className="text-lg text-gray-300">
-              Airing {airDate}
-            </p>
-          </div>
+            {/* Episode Info */}
+            <div className="mb-3 sm:mb-4 md:mb-6 space-y-1 sm:space-y-2">
+              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium">
+                Episode {episodeNumber}: {episodeTitle}
+              </p>
+              <p className="text-base sm:text-lg md:text-xl text-gray-300">
+                Airing {airDate}
+              </p>
+            </div>
 
-          {/* Description */}
-          {anime.description && (
-            <p className="text-gray-200 text-lg mb-6 line-clamp-3 max-w-lg">
-              {anime.description.length > 200
-                ? `${anime.description.substring(0, 200)}...`
-                : anime.description
-              }
-            </p>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-4 items-center">
-            <Link to={`/show/${anime.id}`}>
-              <Button
-                color={ButtonColor.blue}
-                label="More Info"
-                showLabel
-                className="px-8 py-3 text-lg font-semibold"
-              />
-            </Link>
-
-            {!anime.userAnime ? (
-              <Button
-                color={ButtonColor.transparent}
-                label="Add to List"
-                showLabel
-                status={animeStatus}
-                onClick={() => onAddAnime(anime.id)}
-                className="px-6 py-3 text-lg border-2 border-white text-white hover:bg-white hover:text-black transition-colors duration-300"
-              />
-            ) : (
-              <div className="bg-white/20 backdrop-blur rounded-lg p-2">
-                <AnimeStatusDropdown entry={{...anime.userAnime, anime}} />
-              </div>
+            {/* Description - Hidden on small mobile, shown on larger screens */}
+            {anime.description && (
+              <p className="hidden sm:block text-gray-200 text-base sm:text-lg md:text-xl mb-4 sm:mb-6 md:mb-8 line-clamp-2 sm:line-clamp-3 md:line-clamp-4 max-w-full md:max-w-2xl leading-relaxed">
+                {anime.description.length > 250
+                  ? `${anime.description.substring(0, 250)}...`
+                  : anime.description
+                }
+              </p>
             )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6 items-center">
+              <Link to={`/show/${anime.id}`}>
+                <Button
+                  color={ButtonColor.blue}
+                  label="More Info"
+                  showLabel
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2 text-xs sm:text-sm md:text-base font-semibold shadow-md hover:shadow-lg transition-shadow duration-300"
+                />
+              </Link>
+              
+              {!anime.userAnime ? (
+                <Button
+                  color={ButtonColor.transparent}
+                  label="Add to List"
+                  showLabel
+                  status={animeStatus}
+                  onClick={() => onAddAnime(anime.id)}
+                  className="px-2.5 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm md:text-base border-2 border-white text-white hover:bg-white hover:text-black transition-colors duration-300 shadow-md hover:shadow-lg"
+                />
+              ) : (
+                <AnimeStatusDropdown 
+                  entry={{...anime.userAnime, anime}} 
+                  variant="hero"
+                  buttonClassName="px-2.5 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm md:text-base font-semibold flex-grow min-w-[100px]"
+                  deleteButtonClassName="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-2.5 md:py-2 min-w-[32px] sm:min-w-[34px] md:min-w-[36px] h-[32px] sm:h-[34px] md:h-[36px] text-xs sm:text-sm md:text-base"
+                  onDelete={onDeleteAnime}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

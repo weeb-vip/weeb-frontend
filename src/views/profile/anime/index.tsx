@@ -81,7 +81,7 @@ function UserAnimeListPage() {
               options={[
                 <>
                   {/* @ts-ignore */}
-                <AnimeStatusDropdown entry={entry} key={`dropdown-${entry.id}`} />
+                <AnimeStatusDropdown entry={entry} key={`dropdown-${entry.id}`} variant="compact" />
                 </>,
               ]}
             />

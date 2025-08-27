@@ -1,4 +1,4 @@
-import {useMutation, useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import Loader from "../components/Loader";
 import {CurrentlyAiringQuery, GetHomePageDataQuery, Status} from "../gql/graphql";
 import {format} from "date-fns";
@@ -12,12 +12,12 @@ import {mutate} from "swr";
 import {StatusType} from "../components/Button/Button";
 import {GetImageFromAnime} from "../services/utils";
 import {AnimeStatusDropdown} from "../components/AnimeStatusDropdown/AnimeStatusDropdown";
-import HeroBanner, { HeroBannerFullWidth } from "../components/HeroBanner";
-import { useFlags } from "flagsmith/react";
+import HeroBanner from "../components/HeroBanner";
 import debug from "../utils/debug";
 
 
 function Index() {
+  const queryClient = useQueryClient();
   const {
     data: homeData,
     isLoading: homeDataIsLoading,
@@ -27,21 +27,21 @@ function Index() {
     isLoading: currentAiringIsLoading,
   } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring())
   const navigate = useNavigate()
-  const flags = useFlags(["fullwidth_hero_banner", "hover_banner_update"])
 
-  const [selectedFilter, setSelectedFilter] = useState("Airing");
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
   const [hoveredAnime, setHoveredAnime] = useState<any>(null);
 
   // Determine which anime to show in banner
-  const bannerAnime = flags.hover_banner_update?.enabled && hoveredAnime 
-    ? hoveredAnime 
-    : currentAiringData?.currentlyAiring?.[0];
+  const bannerAnime = hoveredAnime || currentAiringData?.currentlyAiring?.[0];
 
   const mutateAddAnime = useMutation({
     ...upsertAnime(),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       debug.anime("Added anime", data)
+      // Invalidate queries to refresh the data
+      await queryClient.invalidateQueries(["homedata"]);
+      await queryClient.invalidateQueries(["currently-airing"]);
+      await queryClient.invalidateQueries(["user-animes"]);
     },
     onError: (error) => {
       debug.error("Error adding anime", error)
@@ -64,38 +64,35 @@ function Index() {
     }
   };
 
+  const clearAnimeStatus = (animeId: string) => {
+    // Clear status for all keys that contain this animeId
+    setAnimeStatuses((prev) => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(key => {
+        if (key.includes(animeId)) {
+          delete updated[key];
+        }
+      });
+      return updated;
+    });
+  };
+
   return (
     <div className={"flex flex-col  space-y-5 max-w-screen-2xl"} style={{margin: "0 auto"}}>
-      {/* Hero Banner Placeholder/Content */}
-      {flags.fullwidth_hero_banner?.enabled && (
-        <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] h-[500px] md:h-[600px] overflow-hidden mb-8 -mt-[2rem] -mx-2 bg-gray-200 dark:bg-gray-800">
-          {bannerAnime && !currentAiringIsLoading ? (
-            <HeroBannerFullWidth
-              key={`hero-fullwidth-${bannerAnime.id}`}
-              anime={bannerAnime}
-              onAddAnime={(animeId) => addAnime(`hero-${animeId}`, animeId)}
-              animeStatus={animeStatuses[`hero-${bannerAnime.id}`] ?? "idle"}
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse" />
-          )}
-        </div>
-      )}
-      
-      {!flags.fullwidth_hero_banner?.enabled && (
-        <div className="relative h-96 md:h-[500px] overflow-hidden rounded-lg shadow-xl mb-8 bg-gray-200 dark:bg-gray-800">
-          {bannerAnime && !currentAiringIsLoading ? (
-            <HeroBanner
-              key={`hero-regular-${bannerAnime.id}`}
-              anime={bannerAnime}
-              onAddAnime={(animeId) => addAnime(`hero-${animeId}`, animeId)}
-              animeStatus={animeStatuses[`hero-${bannerAnime.id}`] ?? "idle"}
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg" />
-          )}
-        </div>
-      )}
+      {/* Hero Banner */}
+      <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[500px] md:h-[600px] overflow-hidden mb-8 -mt-[2rem] -mx-2 md:mt-0 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
+        {bannerAnime && !currentAiringIsLoading ? (
+          <HeroBanner
+            key={`hero-${bannerAnime.id}`}
+            anime={bannerAnime}
+            onAddAnime={(animeId) => addAnime(`hero-${animeId}`, animeId)}
+            animeStatus={animeStatuses[`hero-${bannerAnime.id}`] ?? "idle"}
+            onDeleteAnime={clearAnimeStatus}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse" />
+        )}
+      </div>
 
       <div className={"w-full flex flex-col"}>
         <div className="flex items-center justify-between mb-4">
@@ -134,11 +131,7 @@ function Index() {
               return (
                 <div
                   key={item.id}
-                  onMouseEnter={() => {
-                    if (flags.hover_banner_update?.enabled) {
-                      setHoveredAnime(item);
-                    }
-                  }}
+                  onMouseEnter={() => setHoveredAnime(item)}
                 >
                   <AnimeCard style={AnimeCardStyle.EPISODE}
                              id={item.id}
@@ -170,7 +163,7 @@ function Index() {
                                />
                              )] : [<>
                         {/* @ts-ignore */}
-                      <AnimeStatusDropdown entry={{...item.userAnime, anime: item}} key={`dropdown-${item.id}`} />
+                      <AnimeStatusDropdown entry={{...item.userAnime, anime: item}} key={`dropdown-${item.id}`} variant="compact" onDelete={clearAnimeStatus} />
                       </>]}
                   />
                 </div>
@@ -223,7 +216,7 @@ function Index() {
                                  />
                                )] : [<>
                                  {/* @ts-ignore */}
-                                 <AnimeStatusDropdown entry={{...item.userAnime, anime: item}} key={`dropdown-${item.id}`} />
+                                 <AnimeStatusDropdown entry={{...item.userAnime, anime: item}} key={`dropdown-${item.id}`} variant="compact" onDelete={clearAnimeStatus} />
                                </>]}
                 />
               )

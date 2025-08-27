@@ -167,7 +167,7 @@ export default function Index() {
               ) : (
                 <>
                   {/* @ts-ignore */}
-                  <AnimeStatusDropdown entry={{...anime.userAnime, anime: anime}}/>
+                  <AnimeStatusDropdown entry={{...anime.userAnime, anime: anime}} variant="default" />
                 </>
               )}
               </div>
