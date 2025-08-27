@@ -12,6 +12,8 @@ import {mutate} from "swr";
 import {StatusType} from "../components/Button/Button";
 import {GetImageFromAnime} from "../services/utils";
 import {AnimeStatusDropdown} from "../components/AnimeStatusDropdown/AnimeStatusDropdown";
+import HeroBanner, { HeroBannerFullWidth } from "../components/HeroBanner";
+import { useFlags } from "flagsmith/react";
 import debug from "../utils/debug";
 
 
@@ -25,9 +27,16 @@ function Index() {
     isLoading: currentAiringIsLoading,
   } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring())
   const navigate = useNavigate()
+  const flags = useFlags(["fullwidth_hero_banner", "hover_banner_update"])
 
   const [selectedFilter, setSelectedFilter] = useState("Airing");
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
+  const [hoveredAnime, setHoveredAnime] = useState<any>(null);
+
+  // Determine which anime to show in banner
+  const bannerAnime = flags.hover_banner_update?.enabled && hoveredAnime 
+    ? hoveredAnime 
+    : currentAiringData?.currentlyAiring?.[0];
 
   const mutateAddAnime = useMutation({
     ...upsertAnime(),
@@ -57,8 +66,44 @@ function Index() {
 
   return (
     <div className={"flex flex-col  space-y-5 max-w-screen-2xl"} style={{margin: "0 auto"}}>
+      {/* Hero Banner Placeholder/Content */}
+      {flags.fullwidth_hero_banner?.enabled && (
+        <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] h-[500px] md:h-[600px] overflow-hidden mb-8 -mt-[2rem] -mx-2 bg-gray-200 dark:bg-gray-800">
+          {bannerAnime && !currentAiringIsLoading ? (
+            <HeroBannerFullWidth
+              key={`hero-fullwidth-${bannerAnime.id}`}
+              anime={bannerAnime}
+              onAddAnime={(animeId) => addAnime(`hero-${animeId}`, animeId)}
+              animeStatus={animeStatuses[`hero-${bannerAnime.id}`] ?? "idle"}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse" />
+          )}
+        </div>
+      )}
+      
+      {!flags.fullwidth_hero_banner?.enabled && (
+        <div className="relative h-96 md:h-[500px] overflow-hidden rounded-lg shadow-xl mb-8 bg-gray-200 dark:bg-gray-800">
+          {bannerAnime && !currentAiringIsLoading ? (
+            <HeroBanner
+              key={`hero-regular-${bannerAnime.id}`}
+              anime={bannerAnime}
+              onAddAnime={(animeId) => addAnime(`hero-${animeId}`, animeId)}
+              animeStatus={animeStatuses[`hero-${bannerAnime.id}`] ?? "idle"}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg" />
+          )}
+        </div>
+      )}
+
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>Currently Airing Anime</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>Currently Airing Anime</h1>
+          <Link to="/airing" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">
+            See all →
+          </Link>
+        </div>
         { /* ignore movies */}
         {/*<div className="flex gap-2 py-4">*/}
         {/*  {["Airing", "Season", "Newest"].map(label => (*/}
@@ -82,54 +127,59 @@ function Index() {
           </div>
         ) : (
           <div
-            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
+            className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center"
+          >
             {currentAiringData?.currentlyAiring?.slice(0, 8).map((item => {
               const id = `currently-airing-${item.id}`;
               return (
-                <AnimeCard style={AnimeCardStyle.EPISODE}
-                           id={item.id}
-                           title={item.titleEn || item.titleJp || "Unknown"}
-                           episodeTitle={item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown"}
-                           description={""}
-                           episodeLength={""}
-                           episodeNumber={item.nextEpisode?.episodeNumber?.toString() || "Unknown"}
-                           className={"hover:cursor-pointer"}
-                           year={""}
+                <div
+                  key={item.id}
+                  onMouseEnter={() => {
+                    if (flags.hover_banner_update?.enabled) {
+                      setHoveredAnime(item);
+                    }
+                  }}
+                >
+                  <AnimeCard style={AnimeCardStyle.EPISODE}
+                             id={item.id}
+                             title={item.titleEn || item.titleJp || "Unknown"}
+                             episodeTitle={item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown"}
+                             description={""}
+                             episodeLength={""}
+                             episodeNumber={item.nextEpisode?.episodeNumber?.toString() || "Unknown"}
+                             className={"hover:cursor-pointer"}
+                             year={""}
 
-                           image={GetImageFromAnime(item)}
-                           airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do", {in: utc}) : "Unknown"}
-                           onClick={function (): void {
-                             navigate(`/show/${item.id}`)
-                           }} episodes={0}
-                           options={
-                  !item.userAnime ?
-                  [(
-                             <Button
-                               color={ButtonColor.blue}
-                               label={'Add to list'}
-                               showLabel={true}
-                               status={animeStatuses[id] ?? "idle"}
-                               className="w-fit"
-                               onClick={() => {
-                                 addAnime(id, item.id)
-                               }}
-                             />
-                           )] : [<>
-                      {/* @ts-ignore */}
-                    <AnimeStatusDropdown entry={{...item.userAnime, anime: item}} key={`dropdown-${item.id}`} />
-                    </>]}
-                />
+                             image={GetImageFromAnime(item)}
+                             airdate={item.nextEpisode?.airDate ? format(new Date(item.nextEpisode?.airDate?.toString()), "EEE MMM do", {in: utc}) : "Unknown"}
+                             onClick={function (): void {
+                               navigate(`/show/${item.id}`)
+                             }} episodes={0}
+                             options={
+                    !item.userAnime ?
+                    [(
+                               <Button
+                                 color={ButtonColor.blue}
+                                 label={'Add to list'}
+                                 showLabel={true}
+                                 status={animeStatuses[id] ?? "idle"}
+                                 className="w-fit"
+                                 onClick={() => {
+                                   addAnime(id, item.id)
+                                 }}
+                               />
+                             )] : [<>
+                        {/* @ts-ignore */}
+                      <AnimeStatusDropdown entry={{...item.userAnime, anime: item}} key={`dropdown-${item.id}`} />
+                      </>]}
+                  />
+                </div>
               )
             })) || (<></>)}
           </div>
 
 
         )}
-        <div className="w-full flex justify-end pt-2">
-          <Link to="/airing" className="text-blue-600 dark:text-blue-400 hover:underline">
-            See all currently airing anime
-          </Link>
-        </div>
       </div>
       <div className={"w-full flex flex-col"}>
         <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>Most Popular Anime</h1>

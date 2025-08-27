@@ -115,6 +115,7 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
             id
             titleEn
             titleJp
+            anidbid
             endDate
             startDate
             imageUrl
@@ -146,6 +147,7 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
             id
             titleEn
             titleJp
+            anidbid
             endDate
             startDate
             imageUrl

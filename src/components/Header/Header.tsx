@@ -34,9 +34,6 @@ function Header() {
           <Autocomplete />
         </div>
 
-        {/* Dark Mode Toggle */}
-        <DarkModeToggle />
-
         {/* Hamburger Menu */}
         <Menu as="div" className="relative">
           <Menu.Button className="p-2">
@@ -65,6 +62,18 @@ function Header() {
                   >
                     ✕
                   </button>
+                )}
+              </Menu.Item>
+
+              {/* Dark Mode Toggle */}
+              <Menu.Item>
+                {({ active }) => (
+                  <div className={`flex items-center justify-between px-4 py-2 rounded ${
+                    active ? "bg-gray-100 dark:bg-gray-700" : ""
+                  }`}>
+                    <span className="text-lg text-gray-900 dark:text-gray-100">Dark Mode</span>
+                    <DarkModeToggle />
+                  </div>
                 )}
               </Menu.Item>
 
