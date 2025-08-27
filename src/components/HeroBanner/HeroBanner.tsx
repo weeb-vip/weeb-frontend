@@ -173,27 +173,34 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
       {/* Background layer */}
       <div className="absolute inset-0 overflow-hidden bg-white dark:bg-gray-900 md:rounded-lg xs:rounded-none">
         {bgUrl && (
-          <img
-            src={bgUrl}
-            alt="bg preload"
-            style={{opacity: bgLoaded ? 1 : 0}}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
-              useFallback ? 'blur-md scale-110' : ''
-            }`}
-            onLoad={() => setBgLoaded(true)}
-            onError={() => {
-              if (!useFallback && anime.anidbid) {
-                // Fanart failed, try poster as fallback
-                setUseFallback(true);
-                const posterUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/poster`;
-                setBgUrl(posterUrl);
-              } else {
-                // Poster also failed, use default
-                setBgUrl("/assets/not found.jpg");
-                setBgLoaded(true);
-              }
+          <div 
+            className="absolute inset-0 w-full h-full"
+            style={{
+              opacity: bgLoaded ? 1 : 0,
+              transition: 'opacity 500ms',
             }}
-          />
+          >
+            <img
+              src={bgUrl}
+              alt="bg preload"
+              className={`absolute w-full h-full object-cover ${
+                useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'
+              } transition-all duration-500`}
+              onLoad={() => setBgLoaded(true)}
+              onError={() => {
+                if (!useFallback && anime.anidbid) {
+                  // Fanart failed, try poster as fallback
+                  setUseFallback(true);
+                  const posterUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/poster`;
+                  setBgUrl(posterUrl);
+                } else {
+                  // Poster also failed, use default
+                  setBgUrl("/assets/not found.jpg");
+                  setBgLoaded(true);
+                }
+              }}
+            />
+          </div>
         )}
 
         {/*/!* overlays *!/*/}

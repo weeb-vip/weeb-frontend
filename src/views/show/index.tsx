@@ -45,6 +45,7 @@ export default function Index() {
   const queryClient = useQueryClient();
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [bgLoaded, setBgLoaded] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
 
 
@@ -55,12 +56,17 @@ export default function Index() {
     enabled: !!id,
   });
   useEffect(() => {
-
-
-    const url = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${show?.anime.anidbid}/fanart`;
-    setBgLoaded(false); // reset until it loads
-    setBgUrl(url);
-
+    setUseFallback(false);
+    setBgLoaded(false);
+    
+    if (show?.anime?.anidbid) {
+      const fanartUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${show.anime.anidbid}/fanart`;
+      setBgUrl(fanartUrl);
+    } else {
+      // No anidbid available, use default fallback
+      setBgUrl("/assets/not found.jpg");
+      setBgLoaded(true);
+    }
   }, [show?.anime?.anidbid]);
 
   useEffect(() => {
@@ -171,7 +177,7 @@ export default function Index() {
         </div>
       </div>
       <div
-        className="relative bg-cover bg-center bg-white dark:bg-gray-900 h-[420px] transition-all duration-300"
+        className="relative bg-cover bg-center bg-white dark:bg-gray-900 h-[420px] transition-all duration-300 overflow-hidden"
         style={{
           backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
 
@@ -180,17 +186,34 @@ export default function Index() {
         <div className={`absolute block inset-0 bg-white dark:bg-gray-900 w-full h-full transition-colors duration-300`}/>
 
         {bgUrl && (
-          <img
-            src={bgUrl}
-            alt="bg preload"
-            style={{opacity: bgLoaded ? 1 : 0,}}
-            className="absolute inset-0 w-full h-full object-cover bg-white dark:bg-gray-900 transition-all duration-300"
-            onLoad={() => setBgLoaded(true)}
-            onError={() => {
-              setBgUrl("/assets/not found.jpg");
-              setBgLoaded(true);
+          <div 
+            className="absolute inset-0 w-full h-full"
+            style={{
+              opacity: bgLoaded ? 1 : 0,
+              transition: 'opacity 300ms',
             }}
-          />
+          >
+            <img
+              src={bgUrl}
+              alt="bg preload"
+              className={`absolute w-full h-full object-cover ${
+                useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'
+              } transition-all duration-300`}
+              onLoad={() => setBgLoaded(true)}
+              onError={() => {
+                if (!useFallback && show?.anime?.anidbid) {
+                  // Fanart failed, try poster as fallback
+                  setUseFallback(true);
+                  const posterUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${show.anime.anidbid}/poster`;
+                  setBgUrl(posterUrl);
+                } else {
+                  // Poster also failed, use default
+                  setBgUrl("/assets/not found.jpg");
+                  setBgLoaded(true);
+                }
+              }}
+            />
+          </div>
         )}
 
 
