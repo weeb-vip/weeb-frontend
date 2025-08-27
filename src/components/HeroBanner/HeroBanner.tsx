@@ -45,6 +45,11 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
     : "Unknown";
   const episodeNumber = anime.nextEpisode?.episodeNumber || "Unknown";
 
+  // Check if the anime is airing today (using UTC)
+  const isAiringToday = anime.nextEpisode?.airDate
+    ? format(new Date(anime.nextEpisode.airDate), "yyyy-MM-dd", { in: utc }) === format(new Date(), "yyyy-MM-dd", { in: utc })
+    : false;
+
   return (
     <div className="relative w-full h-[600px]">
       {/* Background layer */}
@@ -71,10 +76,12 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
       {/* Foreground content (not clipped) */}
       <div className="relative z-10 h-full flex items-end px-4 sm:px-8 lg:px-16">
         <div className="max-w-3xl text-white py-12">
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-red-600 text-sm font-semibold mb-4">
-            <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-            NOW AIRING
-          </div>
+          {isAiringToday && (
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-red-600 text-sm font-semibold mb-4">
+              <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
+              AIRING TODAY
+            </div>
+          )}
 
           <h1 className="text-5xl font-bold mb-6 leading-tight">{title}</h1>
 
