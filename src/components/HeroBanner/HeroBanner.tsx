@@ -48,7 +48,7 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
   return (
     <div className="relative w-full h-[600px]">
       {/* Background layer */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden bg-white dark:bg-gray-900">
         {bgUrl && (
           <img
             src={bgUrl}
@@ -62,10 +62,8 @@ export default function HeroBanner({ anime, onAddAnime, animeStatus, onDeleteAni
             }}
           />
         )}
-        {/* fallback if no image */}
-        <div className="absolute inset-0 bg-white dark:bg-gray-900" />
 
-        {/* overlays */}
+        {/*/!* overlays *!/*/}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
       </div>
