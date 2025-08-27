@@ -15,6 +15,8 @@ import Tables from "./components/Episodes";
 import CharactersWithStaff from "./components/Characters";
 import {AnimeStatusDropdown} from "../../components/AnimeStatusDropdown/AnimeStatusDropdown";
 import {utc} from "@date-fns/utc/utc";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faPlus} from "@fortawesome/free-solid-svg-icons";
 
 const renderField = (label: string, value: string | string[] | null | undefined) => {
   if (!value) return null;
@@ -58,7 +60,7 @@ export default function Index() {
   useEffect(() => {
     setUseFallback(false);
     setBgLoaded(false);
-    
+
     if (show?.anime?.anidbid) {
       const fanartUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${show.anime.anidbid}/fanart`;
       setBgUrl(fanartUrl);
@@ -122,62 +124,65 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
       {/* Sticky Header */}
-      <div className={`fixed top-22 left-0 right-0 z-30 border-b border-gray-200 dark:border-gray-700 px-4 py-4 shadow-md transition-all duration-300 overflow-hidden ${
+      <div className={`fixed top-22 left-0 right-0 z-30 transition-all duration-300 ${
         showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
       }`}>
-        {/* Background with blur */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
-            filter: 'blur(8px)',
-            transform: 'scale(1.1)', // Prevent blur edges
-          }}
-        />
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        <div className="max-w-screen-2xl mx-auto flex items-center gap-4 relative z-10">
-          <div className="flex items-center gap-4 min-w-0 flex-1">
-            <SafeImage
-              src={GetImageFromAnime(anime)}
-              alt={anime?.titleEn || ""}
-              className="w-8 h-12 object-cover rounded flex-shrink-0"
-              onError={({currentTarget}) => {
-                currentTarget.onerror = null;
-                currentTarget.src = "/assets/not found.jpg";
-              }}
-            />
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl font-bold text-white truncate">
-                {anime?.titleEn}
-              </h1>
-              <p className="text-sm text-gray-200 truncate">
-                {anime?.startDate ? format(anime.startDate, "yyyy") : ""} • {anime?.endDate ? "Finished" : "Ongoing"}
-              </p>
+        {/* Background container with overflow hidden */}
+        <div className="relative overflow-hidden border-b border-gray-200 dark:border-gray-700 px-4 py-4 shadow-md">
+          {/* Background with blur */}
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
+              filter: 'blur(8px)',
+              transform: 'scale(1.1)', // Prevent blur edges
+            }}
+          />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="max-w-screen-2xl mx-auto relative z-10">
+            <div className="flex items-center gap-4">
+              <SafeImage
+                src={GetImageFromAnime(anime)}
+                alt={anime?.titleEn || ""}
+                className="w-8 h-12 object-cover rounded flex-shrink-0"
+                onError={({currentTarget}) => {
+                  currentTarget.onerror = null;
+                  currentTarget.src = "/assets/not found.jpg";
+                }}
+              />
+              <div className="min-w-0 flex-1 pr-16">
+                <h1 className="text-xl font-bold text-white truncate">
+                  {anime?.titleEn}
+                </h1>
+                <p className="text-sm text-gray-200 truncate">
+                  {anime?.startDate ? format(anime.startDate, "yyyy") : ""} • {anime?.endDate ? "Finished" : "Ongoing"}
+                </p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 h-8 flex-shrink-0">
-            {!anime.userAnime ? (
-              <Button
-                color={ButtonColor.blue}
-                label="Add to list"
-                showLabel
-                status={animeStatuses[anime.id] ?? "idle"}
-                onClick={() => addAnime(anime.id)}
-                className="px-2 py-1 text-xs h-8"
-              />
-            ) : (
-              <div className="h-8 flex items-center">
-                <AnimeStatusDropdown
-                  entry={{
-                    id: anime.userAnime?.id || '',
-                    anime: anime as any,
-                    status: anime.userAnime?.status || undefined
-                  }}
-                  variant="compact"
-                />
-              </div>
-            )}
-          </div>
+        </div>
+
+        {/* Floating button outside the overflow container */}
+        <div className="absolute top-1/2 -translate-y-1/2 right-4 items-center z-20">
+          {!anime.userAnime ? (
+            <Button
+              color={ButtonColor.blue}
+              icon={<FontAwesomeIcon icon={faPlus} className="w-3 h-3" />}
+              showLabel={false}
+              status={animeStatuses[anime.id] ?? "idle"}
+              onClick={() => addAnime(anime.id)}
+              className="w-8 h-8 rounded-full flex items-center justify-center p-0"
+            />
+          ) : (
+            <AnimeStatusDropdown
+              entry={{
+                id: anime.userAnime?.id || '',
+                anime: anime as any,
+                status: anime.userAnime?.status || undefined
+              }}
+              variant="icon-only"
+            />
+          )}
         </div>
       </div>
       <div
@@ -190,7 +195,7 @@ export default function Index() {
         <div className={`absolute block inset-0 bg-white dark:bg-gray-900 w-full h-full transition-colors duration-300`}/>
 
         {bgUrl && (
-          <div 
+          <div
             className="absolute inset-0 w-full h-full"
             style={{
               opacity: bgLoaded ? 1 : 0,
