@@ -18,6 +18,7 @@ import {utc} from "@date-fns/utc/utc";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPlus} from "@fortawesome/free-solid-svg-icons";
 import {parseAirTime, getAirTimeDisplay, parseDurationToMinutes, isCurrentlyAiring} from "../../services/airTimeUtils";
+import debug from "../../utils/debug";
 
 const renderField = (label: string, value: string | string[] | null | undefined) => {
   if (!value) return null;
@@ -214,8 +215,10 @@ export default function Index() {
                 if (!useFallback && show?.anime?.anidbid) {
                   // Fanart failed, try poster as fallback
                   setUseFallback(true);
-                  const posterUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${show.anime.anidbid}/poster`;
+                  const posterUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
                   setBgUrl(posterUrl);
+                  setBgLoaded(true);
+
                 } else {
                   // Poster also failed, use default
                   setBgUrl("/assets/not found.jpg");

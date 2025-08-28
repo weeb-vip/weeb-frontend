@@ -19,6 +19,7 @@ import Loader from "../components/Loader";
 import { useAnimeNotifications } from "../hooks/useAnimeNotifications";
 import { DevNotificationPanel } from "../components/DevNotificationPanel";
 import { ToastProvider } from "../components/Toast";
+import { NavigationDirectionProvider } from "../hooks/useNavigationDirection";
 
 
 const Home = React.lazy(() => import('./index'));
@@ -32,7 +33,7 @@ function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo(0, 0)}>
 
       <Routes location={location} key={location.pathname}>
 
@@ -132,9 +133,11 @@ function AppContent() {
 export default function App() {
   return (
     <Router>
-      <ToastProvider>
-        <AppContent />
-      </ToastProvider>
+      <NavigationDirectionProvider>
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
+      </NavigationDirectionProvider>
     </Router>
   );
 }

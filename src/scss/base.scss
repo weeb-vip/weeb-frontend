@@ -17,3 +17,25 @@ mark {
   background: #F4F4F4;
   font-style: normal;
 }
+
+/* Mobile page transition optimizations */
+@media (max-width: 640px) {
+  /* Prevent flash of unstyled content during transitions */
+  main {
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  /* Improve scroll behavior during transitions */
+  html, body {
+    overscroll-behavior-x: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Hardware acceleration for smoother animations */
+  [data-page-wrapper] {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
+}
