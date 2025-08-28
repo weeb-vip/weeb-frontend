@@ -17,6 +17,7 @@ import {AnimeStatusDropdown} from "../../components/AnimeStatusDropdown/AnimeSta
 import {utc} from "@date-fns/utc/utc";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPlus} from "@fortawesome/free-solid-svg-icons";
+import {parseAirTime, getAirTimeDisplay, parseDurationToMinutes, isCurrentlyAiring} from "../../services/airTimeUtils";
 
 const renderField = (label: string, value: string | string[] | null | undefined) => {
   if (!value) return null;
@@ -276,16 +277,54 @@ export default function Index() {
           <div className="max-w-screen-2xl mx-auto flex flex-col gap-8">
             {nextEpisode && (
               <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded shadow text-sm transition-colors duration-300">
-                <h3 className="font-semibold mb-1 text-gray-800 dark:text-gray-200">Next Episode</h3>
-                <p className="text-gray-900 dark:text-gray-100"><strong>Episode {nextEpisode.episodeNumber}:</strong> {nextEpisode.titleEn || "TBA"}</p>
-                <p className="text-gray-600 dark:text-gray-400">Airing on {format(new Date(nextEpisode.airDate), "dd MMM yyyy")}</p>
+                {(() => {
+                  const airTimeDisplay = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast, parseDurationToMinutes(anime.duration));
+                  const airTime = parseAirTime(nextEpisode.airDate, anime.broadcast);
+                  const isCurrentlyAir = isCurrentlyAiring(nextEpisode.airDate, anime.broadcast, parseDurationToMinutes(anime.duration));
+
+                  let statusColor = 'text-gray-600 dark:text-gray-400';
+                  let statusText = 'Next Episode';
+
+                  if (airTimeDisplay) {
+                    if (airTimeDisplay.variant === 'airing') {
+                      statusColor = 'text-orange-600 dark:text-orange-400';
+                      statusText = 'Currently Airing';
+                    } else if (airTimeDisplay.variant === 'aired') {
+                      statusColor = 'text-green-600 dark:text-green-400';
+                      statusText = 'Recently Aired';
+                    } else if (airTimeDisplay.variant === 'countdown') {
+                      statusColor = 'text-red-600 dark:text-red-400';
+                      statusText = 'Airing Soon';
+                    } else if (airTimeDisplay.variant === 'scheduled') {
+                      statusColor = 'text-blue-600 dark:text-blue-400';
+                      statusText = 'Next Episode';
+                    }
+                  }
+
+                  return (
+                    <>
+                      <h3 className={`font-semibold mb-1 ${statusColor}`}>{statusText}</h3>
+                      <p className="text-gray-900 dark:text-gray-100">
+                        <strong>Episode {nextEpisode.episodeNumber}:</strong> {nextEpisode.titleEn || nextEpisode.titleJp || "TBA"}
+                      </p>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        {airTimeDisplay ? airTimeDisplay.text :
+                          airTime ? `Airing ${format(airTime, "EEE MMM do 'at' h:mm a")}` :
+                          `Airing on ${format(new Date(nextEpisode.airDate), "dd MMM yyyy")}`
+                        }
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
             )}
             <div className=" flex flex-col lg:flex-row gap-8">
               {/* Details Panel */}
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-md shadow-md text-sm text-gray-800 dark:text-gray-200 space-y-6 w-full lg:max-w-xs transition-colors duration-300">
+              <div
+                className="bg-white dark:bg-gray-800 p-4 rounded-md shadow-md text-sm text-gray-800 dark:text-gray-200 space-y-6 w-full lg:max-w-xs transition-colors duration-300">
                 <div className="space-y-3">
-                  <h2 className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Titles</h2>
+                  <h2
+                    className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Titles</h2>
                   {renderField("Japanese", anime?.titleJp)}
                   {renderField("Romaji", anime?.titleRomaji)}
                   {renderField("Kanji", anime?.titleKanji)}
@@ -297,42 +336,51 @@ export default function Index() {
                   )}
                 </div>
                 <div className="space-y-3">
-                  <h2 className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Production</h2>
+                  <h2
+                    className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Production</h2>
                   {renderField("Studios", anime?.studios)}
                   {renderField("Source", anime?.source)}
                   {renderField("Licensors", anime?.licensors)}
                 </div>
                 <div className="space-y-3">
-                  <h2 className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Other Info</h2>
+                  <h2
+                    className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Ranking/Rating</h2>
                   {renderField("Rating", anime?.rating)}
                   {renderField("Ranking", anime?.ranking?.toString())}
                 </div>
-                {/* show aired dates, startDate, endDate */}
                 <div className="space-y-3">
-                  <h2 className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Aired</h2>
-                  {renderField("Start Date", anime?.startDate ? format(anime.startDate, "dd MMM yyyy") : "Unknown")}
-                  {renderField("End Date", anime?.endDate ? format(anime.endDate, "dd MMM yyyy") : "Ongoing")}
+                  <h2
+                    className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Other
+                    Info</h2>
+                  {renderField("Broadcast", anime?.broadcast || "Unknown")}
+                </div>
+                  {/* show aired dates, startDate, endDate */}
+                  <div className="space-y-3">
+                    <h2
+                      className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Aired</h2>
+                    {renderField("Start Date", anime?.startDate ? format(anime.startDate, "dd MMM yyyy") : "Unknown")}
+                    {renderField("End Date", anime?.endDate ? format(anime.endDate, "dd MMM yyyy") : "Ongoing")}
+                  </div>
+                </div>
+
+                {/* Tabs Section */}
+                <div className=" w-full">
+                  <Tabs tabs={["Episodes", "Characters", "Trailers", "Artworks"]} defaultTab="Episodes">
+                    <div>
+
+                      {anime?.episodes && <Tables episodes={anime.episodes}/>}
+                    </div>
+                    <div>
+                      <CharactersWithStaff animeId={anime.id}/>
+                    </div>
+                    <div></div>
+                    <div></div>
+                  </Tabs>
                 </div>
               </div>
-
-              {/* Tabs Section */}
-              <div className=" w-full">
-                <Tabs tabs={["Episodes", "Characters", "Trailers", "Artworks"]} defaultTab="Episodes">
-                  <div>
-
-                    {anime?.episodes && <Tables episodes={anime.episodes}/>}
-                  </div>
-                  <div>
-                    <CharactersWithStaff animeId={anime.id}/>
-                  </div>
-                  <div></div>
-                  <div></div>
-                </Tabs>
-              </div>
-            </div>
-            {/* make a small footer with the last updated date, make it right aligned*/}
-            <div className="flex justify-end mt-8">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              {/* make a small footer with the last updated date, make it right aligned*/}
+              <div className="flex justify-end mt-8">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                 Last updated: {anime?.updatedAt ? format(new Date(anime.updatedAt), "dd MMM yyyy") : "Unknown"}
               </p>
             </div>
