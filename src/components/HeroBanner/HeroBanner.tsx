@@ -3,7 +3,9 @@ import {Link} from 'react-router-dom';
 import Button, {ButtonColor} from '../Button';
 import {StatusType} from '../Button/Button';
 import {AnimeStatusDropdown} from '../AnimeStatusDropdown/AnimeStatusDropdown';
-import {getAirDateTime, isAiringToday, hasAlreadyAired, calculateCountdown} from '../../services/airTimeUtils';
+import {getAirDateTime, isAiringToday, hasAlreadyAired, calculateCountdown, isCurrentlyAiring, parseDurationToMinutes} from '../../services/airTimeUtils';
+import {GetImageFromAnime} from '../../services/utils';
+import debug from "../../utils/debug";
 
 interface HeroBannerProps {
   anime: {
@@ -13,6 +15,7 @@ interface HeroBannerProps {
     description?: string | null;
     anidbid?: string | null;
     broadcast?: string | null;
+    duration?: string | null;
     nextEpisode?: {
       episodeNumber?: number | null;
       titleEn?: string | null;
@@ -41,8 +44,8 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
       const fanartUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
       setBgUrl(fanartUrl);
     } else {
-      // No anidbid available, use default fallback
-      setBgUrl("/assets/not found.jpg");
+      // No anidbid available, use same fallback as anime cards
+      setBgUrl(GetImageFromAnime(anime));
       setBgLoaded(true);
     }
   }, [anime.anidbid, anime]);
@@ -51,20 +54,24 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const episodeTitle = anime.nextEpisode?.titleEn || anime.nextEpisode?.titleJp || "Unknown";
   const episodeNumber = anime.nextEpisode?.episodeNumber || "Unknown";
 
+  // Parse duration for accurate timing
+  const durationMinutes = parseDurationToMinutes(anime.duration);
+
   // Use the service functions for air time calculations
   const airDateTime = getAirDateTime(anime.nextEpisode?.airDate, anime.broadcast);
   const airingToday = isAiringToday(anime.nextEpisode?.airDate, anime.broadcast);
-  const alreadyAired = hasAlreadyAired(anime.nextEpisode?.airDate, anime.broadcast);
+  const currentlyAiring = isCurrentlyAiring(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
+  const alreadyAired = hasAlreadyAired(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
 
   // Countdown logic
   useEffect(() => {
-    if (!anime.nextEpisode?.airDate || !airingToday) {
+    if (!anime.nextEpisode?.airDate || !(airingToday || currentlyAiring)) {
       setCountdown("");
       return;
     }
 
     const updateCountdown = () => {
-      const newCountdown = calculateCountdown(anime.nextEpisode?.airDate, anime.broadcast);
+      const newCountdown = calculateCountdown(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
       setCountdown(newCountdown);
     };
 
@@ -72,7 +79,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
     const interval = setInterval(updateCountdown, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [anime.nextEpisode?.airDate, anime.broadcast, airingToday]);
+  }, [anime.nextEpisode?.airDate, anime.broadcast, durationMinutes, airingToday, currentlyAiring]);
 
   return (
     <div className="relative w-full h-[600px] rounded-lg">
@@ -97,10 +104,9 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
                 if (!useFallback && anime.anidbid) {
                   // Fanart failed, try poster as fallback
                   setUseFallback(true);
-                  const posterUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/poster`;
-                  setBgUrl(posterUrl);
+                  setBgUrl(`https://cdn.weeb.vip/weeb/${GetImageFromAnime(anime)}`);
                 } else {
-                  // Poster also failed, use default
+                  // Poster also failed, use same fallback as anime cards
                   setBgUrl("/assets/not found.jpg");
                   setBgLoaded(true);
                 }
@@ -117,11 +123,23 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
       {/* Foreground content (not clipped) */}
       <div className="relative z-10 h-full flex items-end px-4 sm:px-8 lg:px-16">
         <div className="max-w-3xl text-white py-12">
-          {airingToday && (
+          {currentlyAiring && (
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-600 text-sm font-semibold mb-4">
+              <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
+              CURRENTLY AIRING
+              {countdown && countdown.includes("left") && (
+                <span className="ml-2 px-2 py-1 bg-white/20 rounded text-xs">
+                  {countdown}
+                </span>
+              )}
+            </div>
+          )}
+
+          {airingToday && !currentlyAiring && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-red-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-              AIRING SOON
-              {countdown && (
+              {countdown === "JUST AIRED" ? "JUST AIRED" : "AIRING SOON"}
+              {countdown && !countdown.includes("JUST AIRED") && !countdown.includes("AIRING NOW") && (
                 <span className="ml-2 px-2 py-1 bg-white/20 rounded text-xs">
                   in {countdown}
                 </span>
@@ -129,7 +147,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             </div>
           )}
 
-          {alreadyAired && !airingToday && (
+          {alreadyAired && !airingToday && !currentlyAiring && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2"></span>
               RECENTLY AIRED
@@ -146,14 +164,14 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
               <p className="text-base sm:text-lg text-gray-300">Airing {airDateTime}</p>
               {anime.broadcast && (
                 <div className="relative">
-                  <span 
+                  <span
                     className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-xs font-medium cursor-help"
                     onMouseEnter={() => setShowJstPopover(true)}
                     onMouseLeave={() => setShowJstPopover(false)}
                   >
                     JST Broadcast
                   </span>
-                  <div 
+                  <div
                     className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 transition-all duration-200 ease-out pointer-events-none"
                     style={{
                       opacity: showJstPopover ? 1 : 0,

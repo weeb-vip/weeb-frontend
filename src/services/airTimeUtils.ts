@@ -1,6 +1,20 @@
 import React from 'react';
 import {format} from 'date-fns';
 
+/**
+ * Parse duration string to minutes
+ * Handles formats like "24 min per episode", "24 min", "23 min per ep", etc.
+ */
+export function parseDurationToMinutes(duration?: string | null): number | null {
+  if (!duration) return null;
+  
+  // Extract number from duration string
+  const match = duration.match(/(\d+)/);
+  if (!match) return null;
+  
+  return parseInt(match[1], 10);
+}
+
 export interface AirTimeInfo {
   airDate: Date;
   isAiringToday: boolean;
@@ -82,35 +96,79 @@ export function isAiringToday(airDate?: string | null, broadcast?: string | null
 }
 
 /**
- * Check if the anime has already aired
+ * Check if the anime is currently airing (started but not finished)
  */
-export function hasAlreadyAired(airDate?: string | null, broadcast?: string | null): boolean {
+export function isCurrentlyAiring(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): boolean {
   if (!airDate) return false;
 
   const airTime = parseAirTime(airDate, broadcast);
   if (!airTime) return false;
 
   const now = new Date();
-  const diffMs = airTime.getTime() - now.getTime();
+  const airStartMs = airTime.getTime();
+  const currentMs = now.getTime();
+  
+  // If we don't have duration info, default to 24 minutes (typical anime episode)
+  const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
+  const airEndMs = airStartMs + episodeDurationMs;
 
-  // Show "already aired" if it aired within the last 7 days
-  return diffMs <= 0 && Math.abs(diffMs) <= (7 * 24 * 60 * 60 * 1000);
+  // Currently airing if current time is between start and end time
+  return currentMs >= airStartMs && currentMs <= airEndMs;
 }
 
 /**
- * Calculate countdown string
+ * Check if the anime has already aired
  */
-export function calculateCountdown(airDate?: string | null, broadcast?: string | null): string {
+export function hasAlreadyAired(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): boolean {
+  if (!airDate) return false;
+
+  const airTime = parseAirTime(airDate, broadcast);
+  if (!airTime) return false;
+
+  const now = new Date();
+  const airStartMs = airTime.getTime();
+  const currentMs = now.getTime();
+  
+  // If we don't have duration info, default to 24 minutes
+  const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
+  const airEndMs = airStartMs + episodeDurationMs;
+
+  // Show "already aired" if episode has finished and it's within the last 7 days
+  return currentMs > airEndMs && (currentMs - airEndMs) <= (7 * 24 * 60 * 60 * 1000);
+}
+
+/**
+ * Calculate countdown string or current airing status
+ */
+export function calculateCountdown(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): string {
   if (!airDate || !isAiringToday(airDate, broadcast)) return "";
 
   const now = new Date();
   const airTime = parseAirTime(airDate, broadcast);
   if (!airTime) return "";
 
+  // Check if currently airing first
+  if (isCurrentlyAiring(airDate, broadcast, durationMinutes)) {
+    const airStartMs = airTime.getTime();
+    const currentMs = now.getTime();
+    const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
+    const airEndMs = airStartMs + episodeDurationMs;
+    const remainingMs = airEndMs - currentMs;
+    const remainingMinutes = Math.floor(remainingMs / (1000 * 60));
+    
+    if (remainingMinutes <= 0) {
+      return "ENDING SOON";
+    } else if (remainingMinutes < 60) {
+      return `${remainingMinutes}m left`;
+    } else {
+      return "AIRING NOW";
+    }
+  }
+
   const diffMs = airTime.getTime() - now.getTime();
 
   if (diffMs <= 0) {
-    return "AIRING NOW";
+    return "JUST AIRED";
   }
 
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
@@ -131,7 +189,7 @@ export function calculateCountdown(airDate?: string | null, broadcast?: string |
 /**
  * Get comprehensive air time information for an anime
  */
-export function getAirTimeInfo(airDate?: string | null, broadcast?: string | null): AirTimeInfo | null {
+export function getAirTimeInfo(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): AirTimeInfo | null {
   if (!airDate) return null;
 
   const parsedAirTime = parseAirTime(airDate, broadcast);
@@ -140,8 +198,8 @@ export function getAirTimeInfo(airDate?: string | null, broadcast?: string | nul
   return {
     airDate: parsedAirTime,
     isAiringToday: isAiringToday(airDate, broadcast),
-    hasAlreadyAired: hasAlreadyAired(airDate, broadcast),
-    countdown: calculateCountdown(airDate, broadcast),
+    hasAlreadyAired: hasAlreadyAired(airDate, broadcast, durationMinutes),
+    countdown: calculateCountdown(airDate, broadcast, durationMinutes),
     formattedDateTime: getAirDateTime(airDate, broadcast)
   };
 }
@@ -149,20 +207,30 @@ export function getAirTimeInfo(airDate?: string | null, broadcast?: string | nul
 /**
  * Get air time display configuration for AnimeCard component
  */
-export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | null): {
+export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): {
   show: boolean;
   text: string;
-  variant?: 'countdown' | 'scheduled' | 'aired';
+  variant?: 'countdown' | 'scheduled' | 'aired' | 'airing';
   icon?: React.ReactNode;
 } | null {
-  const airInfo = getAirTimeInfo(airDate, broadcast);
+  const airInfo = getAirTimeInfo(airDate, broadcast, durationMinutes);
   if (!airInfo) return null;
 
-  if (airInfo.isAiringToday && airInfo.countdown) {
+  // Check if currently airing first
+  if (isCurrentlyAiring(airDate, broadcast, durationMinutes)) {
     return {
       show: true,
-      text: airInfo.countdown === "AIRING NOW" ? "Airing now" : `Airing in ${airInfo.countdown}`,
-      variant: 'countdown' as const
+      text: airInfo.countdown.includes("left") ? `Currently airing (${airInfo.countdown})` : "Currently airing",
+      variant: 'airing' as const
+    };
+  }
+
+  if (airInfo.isAiringToday && airInfo.countdown) {
+    const isJustAired = airInfo.countdown === "JUST AIRED";
+    return {
+      show: true,
+      text: isJustAired ? "Just aired" : airInfo.countdown.includes("AIRING NOW") ? "Airing now" : `Airing in ${airInfo.countdown}`,
+      variant: isJustAired ? 'aired' as const : 'countdown' as const
     };
   }
 
@@ -174,9 +242,12 @@ export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | 
     };
   }
 
+  // For scheduled episodes, show shorter format for cards
+  const shortDateTime = airInfo.airDate ? `${format(airInfo.airDate, "EEE")} at ${format(airInfo.airDate, "h:mm a")}` : airInfo.formattedDateTime;
+  
   return {
     show: true,
-    text: `Airing ${airInfo.formattedDateTime}`,
+    text: `Airing ${shortDateTime}`,
     variant: 'scheduled' as const
   };
 }

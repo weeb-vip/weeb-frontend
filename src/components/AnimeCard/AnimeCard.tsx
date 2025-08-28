@@ -35,7 +35,7 @@ interface AnimeCardProps {
   airTime?: {
     show: boolean
     text: string
-    variant?: 'countdown' | 'scheduled' | 'aired'
+    variant?: 'countdown' | 'scheduled' | 'aired' | 'airing'
     icon?: React.ReactNode
   }
   // For automatic air time calculation
@@ -61,7 +61,7 @@ interface AnimeEpisodeCardProps {
   airTime?: {
     show: boolean
     text: string
-    variant?: 'countdown' | 'scheduled' | 'aired'
+    variant?: 'countdown' | 'scheduled' | 'aired' | 'airing'
     icon?: React.ReactNode
   }
 }
@@ -142,6 +142,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
               {displayAirTime?.show && (
                 <div className={`flex items-center gap-2 ${
                   displayAirTime?.variant === 'countdown' ? 'text-red-600 dark:text-red-400' :
+                  displayAirTime?.variant === 'airing' ? 'text-orange-600 dark:text-orange-400' :
                   displayAirTime?.variant === 'aired' ? 'text-green-600 dark:text-green-400' :
                   'text-blue-600 dark:text-blue-400'
                 }`}>
@@ -205,6 +206,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
               {(props as AnimeEpisodeCardProps).airTime?.show ? (
                 <div className={`flex items-center gap-2 ${
                   (props as AnimeEpisodeCardProps).airTime?.variant === 'countdown' ? 'text-red-600 dark:text-red-400' :
+                  (props as AnimeEpisodeCardProps).airTime?.variant === 'airing' ? 'text-orange-600 dark:text-orange-400' :
                   (props as AnimeEpisodeCardProps).airTime?.variant === 'aired' ? 'text-green-600 dark:text-green-400' :
                   'text-blue-600 dark:text-blue-400'
                 }`}>
