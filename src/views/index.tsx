@@ -14,7 +14,7 @@ import {GetImageFromAnime} from "../services/utils";
 import {AnimeStatusDropdown} from "../components/AnimeStatusDropdown/AnimeStatusDropdown";
 import HeroBanner from "../components/HeroBanner";
 import debug from "../utils/debug";
-import {parseAirTime, getAirTimeDisplay} from "../services/airTimeUtils";
+import {parseAirTime, getAirTimeDisplay, parseDurationToMinutes, isCurrentlyAiring} from "../services/airTimeUtils";
 
 
 function Index() {
@@ -40,23 +40,20 @@ function Index() {
     const now = new Date();
     const allAnime = [...currentAiringData.currentlyAiring];
 
-    // Count how many shows have already aired
-    const alreadyAiredCount = allAnime.filter((anime) => {
+    // Filter to show future episodes and currently airing shows
+    const filteredAnime = allAnime.filter((anime) => {
       const airTime = parseAirTime(anime.nextEpisode?.airDate, anime.broadcast);
-      if (!airTime) return false;
-      return airTime.getTime() - now.getTime() <= 0;
-    }).length;
-
-    // If more than 2 shows have already aired, filter them out
-    const shouldFilterAired = alreadyAiredCount > 2;
-
-    const filteredAnime = shouldFilterAired
-      ? allAnime.filter((anime) => {
-          const airTime = parseAirTime(anime.nextEpisode?.airDate, anime.broadcast);
-          if (!airTime) return true; // Keep anime without proper air time
-          return airTime.getTime() - now.getTime() > 0; // Only future episodes
-        })
-      : allAnime;
+      if (!airTime) return true; // Keep anime without proper air time
+      
+      const timeDiff = airTime.getTime() - now.getTime();
+      
+      // Show if it's a future episode
+      if (timeDiff > 0) return true;
+      
+      // Check if currently airing using episode duration
+      const durationMinutes = parseDurationToMinutes(anime.duration);
+      return isCurrentlyAiring(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
+    });
 
     return filteredAnime.sort((a, b) => {
       const aAirTime = parseAirTime(a.nextEpisode?.airDate, a.broadcast);
@@ -69,25 +66,16 @@ function Index() {
       const aTimeDiff = aAirTime.getTime() - now.getTime();
       const bTimeDiff = bAirTime.getTime() - now.getTime();
 
-      // If filtering is active, all should be future episodes
-      if (shouldFilterAired) {
-        return aTimeDiff - bTimeDiff; // Sort by closest first
-      }
+      // Currently airing shows come first, then future episodes by closest first
+      const aIsCurrentlyAiring = aTimeDiff <= 0 && isCurrentlyAiring(a.nextEpisode?.airDate, a.broadcast, parseDurationToMinutes(a.duration));
+      const bIsCurrentlyAiring = bTimeDiff <= 0 && isCurrentlyAiring(b.nextEpisode?.airDate, b.broadcast, parseDurationToMinutes(b.duration));
 
-      // Original sorting logic when not filtering
-      if (aTimeDiff <= 0 && bTimeDiff <= 0) {
-        return bTimeDiff - aTimeDiff; // Past episodes by most recent first
-      }
+      // Currently airing shows first
+      if (aIsCurrentlyAiring && !bIsCurrentlyAiring) return -1;
+      if (!aIsCurrentlyAiring && bIsCurrentlyAiring) return 1;
 
-      if (aTimeDiff > 0 && bTimeDiff > 0) {
-        return aTimeDiff - bTimeDiff; // Future episodes by closest first
-      }
-
-      // Past episodes come before future episodes
-      if (aTimeDiff <= 0) return -1;
-      if (bTimeDiff <= 0) return 1;
-
-      return 0;
+      // If both are currently airing or both are future, sort by closest first
+      return aTimeDiff - bTimeDiff;
     });
   }, [currentAiringData]);
 
