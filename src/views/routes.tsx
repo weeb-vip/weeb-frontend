@@ -33,9 +33,11 @@ function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo(0, 0)}>
-
-      <Routes location={location} key={location.pathname}>
+    <AnimatePresence mode="wait" initial={false} onExitComplete={() => {
+      // Scroll to top after animation completes
+      window.scrollTo(0, 0);
+    }}>
+      <Routes location={location} key={location.pathname + location.search}>
 
         <Route
           path="/"

@@ -7,7 +7,7 @@ export default function PageWrapper({ children }: { children: React.ReactNode })
   const isMobile = useIsMobile();
   const { direction } = useNavigationDirection();
 
-  const getVariants = () => {
+  const variants = React.useMemo(() => {
     if (!isMobile) {
       // Desktop: simple fade animation
       return {
@@ -19,23 +19,21 @@ export default function PageWrapper({ children }: { children: React.ReactNode })
 
     // Mobile: slide animations based on navigation direction
     if (direction === 'backward') {
-      // Coming from left (back navigation)
+      // Coming from left (back navigation)  
       return {
-        initial: { x: "-100%", opacity: 0.8 },
+        initial: { x: "-100%", opacity: 1 },
         animate: { x: 0, opacity: 1 },
-        exit: { x: "100%", opacity: 0.8 },
+        exit: { x: "100%", opacity: 1 },
       };
     } else {
-      // Going forward or replace - slide from right
+      // Going forward - slide from right
       return {
-        initial: { x: "100%", opacity: 0.8 },
+        initial: { x: "100%", opacity: 1 },
         animate: { x: 0, opacity: 1 },
-        exit: { x: "-100%", opacity: 0.8 },
+        exit: { x: "-100%", opacity: 1 },
       };
     }
-  };
-
-  const variants = getVariants();
+  }, [isMobile, direction]);
 
   return (
     <motion.div
@@ -43,18 +41,17 @@ export default function PageWrapper({ children }: { children: React.ReactNode })
       animate="animate"
       exit="exit"
       transition={{ 
-        duration: isMobile ? 0.25 : 0.3, 
-        ease: [0.4, 0, 0.2, 1], // Custom easing for smoother transitions
-        opacity: { duration: isMobile ? 0.15 : 0.2 } // Faster opacity transition to reduce flashing
+        duration: isMobile ? 0.2 : 0.3, 
+        ease: [0.23, 1, 0.32, 1], // More aggressive easing for mobile
+        type: "tween"
       }}
       variants={variants}
       data-page-wrapper
       style={{
-        // Ensure proper stacking and prevent layout shifts
         position: 'relative',
-        zIndex: 1,
-        minHeight: '100%',
         width: '100%',
+        minHeight: '100vh',
+        backgroundColor: 'inherit', // Ensure background color is inherited
       }}
     >
       {children}
