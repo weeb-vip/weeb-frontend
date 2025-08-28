@@ -33,10 +33,7 @@ function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait" initial={false} onExitComplete={() => {
-      // Scroll to top after animation completes
-      window.scrollTo(0, 0);
-    }}>
+    <AnimatePresence mode="wait" initial={false}>
       <Routes location={location} key={location.pathname + location.search}>
 
         <Route
@@ -125,7 +122,7 @@ function AppContent() {
           </Suspense>
         </ErrorBoundary>
       </main>
-      
+
       {/* Dev Tools - Only shows in development */}
       <DevNotificationPanel />
     </>
@@ -135,11 +132,9 @@ function AppContent() {
 export default function App() {
   return (
     <Router>
-      <NavigationDirectionProvider>
         <ToastProvider>
           <AppContent />
         </ToastProvider>
-      </NavigationDirectionProvider>
     </Router>
   );
 }
