@@ -106,18 +106,16 @@ const DevNotificationPanel: React.FC = () => {
               color={ButtonColor.blue}
               label="🕐 5-Minute Warning"
               showLabel
-              onClick={triggerFiveMinuteWarning}
-              className="w-full text-xs px-3 py-2"
-              disabled={!sampleAnime}
+              onClick={sampleAnime ? triggerFiveMinuteWarning : () => {}}
+              className={`w-full text-xs px-3 py-2 ${!sampleAnime ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
             
             <Button
               color={ButtonColor.blue}
               label="▶️ Currently Airing"
               showLabel
-              onClick={triggerCurrentlyAiring}
-              className="w-full text-xs px-3 py-2"
-              disabled={!sampleAnime}
+              onClick={sampleAnime ? triggerCurrentlyAiring : () => {}}
+              className={`w-full text-xs px-3 py-2 ${!sampleAnime ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
             
             <Button
@@ -132,9 +130,8 @@ const DevNotificationPanel: React.FC = () => {
               color={ButtonColor.blue}
               label="🚀 Multiple Notifications"
               showLabel
-              onClick={triggerMultipleNotifications}
-              className="w-full text-xs px-3 py-2"
-              disabled={!sampleAnime}
+              onClick={sampleAnime ? triggerMultipleNotifications : () => {}}
+              className={`w-full text-xs px-3 py-2 ${!sampleAnime ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
           </div>
 
