@@ -16,6 +16,9 @@ import ScrollRestoration from "../scrollrestoration";
 import NotFoundPage from "./404";
 import ErrorBoundary from "./ErrorBoundry";
 import Loader from "../components/Loader";
+import { useAnimeNotifications } from "../hooks/useAnimeNotifications";
+import { DevNotificationPanel } from "../components/DevNotificationPanel";
+import { ToastProvider } from "../components/Toast";
 
 
 const Home = React.lazy(() => import('./index'));
@@ -103,9 +106,12 @@ function AnimatedRoutes() {
   );
 }
 
-export default function App() {
+function AppContent() {
+  // Initialize anime notifications
+  useAnimeNotifications();
+
   return (
-    <Router>
+    <>
       <AuthHandler/>
       <Header/>
       <main>
@@ -116,6 +122,19 @@ export default function App() {
           </Suspense>
         </ErrorBoundary>
       </main>
+      
+      {/* Dev Tools - Only shows in development */}
+      <DevNotificationPanel />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </Router>
   );
 }

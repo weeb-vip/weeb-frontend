@@ -229,7 +229,7 @@ export default function Index() {
       </div>
 
       <div className="bg-gray-100 dark:bg-gray-900 -mt-[350px] lg:-mt-[200px] transition-colors duration-300">
-        <div className="relative z-10 flex justify-center pt-6">
+        <div className="relative z-10 flex justify-center pt-20">
           <div
             className="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
             <SafeImage
