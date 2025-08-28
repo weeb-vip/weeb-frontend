@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import Toast, { ToastProps } from './Toast';
+import MobileToast from './MobileToast';
+import { useIsMobile } from '../../bootstrap';
 
 interface ToastContextType {
   showToast: (toast: Omit<ToastProps, 'id' | 'onClose'>) => void;
@@ -14,6 +16,7 @@ interface ToastProviderProps {
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
+  const isMobile = useIsMobile();
 
   const showToast = useCallback((toastData: Omit<ToastProps, 'id' | 'onClose'>) => {
     const id = Date.now().toString() + Math.random().toString(36);
@@ -23,8 +26,13 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
       onClose: removeToast,
     };
     
-    setToasts(prev => [...prev, newToast]);
-  }, []);
+    // On mobile, only show one toast at a time
+    if (isMobile) {
+      setToasts([newToast]);
+    } else {
+      setToasts(prev => [...prev, newToast]);
+    }
+  }, [isMobile]);
 
   const removeToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
@@ -34,14 +42,21 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     <ToastContext.Provider value={{ showToast, removeToast }}>
       {children}
       
-      {/* Toast Container - Fixed positioning for desktop */}
-      <div className="fixed top-28 right-6 z-30 flex flex-col items-end pointer-events-none">
-        {toasts.map(toast => (
-          <div key={toast.id} className="pointer-events-auto">
-            <Toast {...toast} />
-          </div>
-        ))}
-      </div>
+      {/* Mobile Toast - Sticky header style */}
+      {isMobile && toasts.map(toast => (
+        <MobileToast key={toast.id} {...toast} />
+      ))}
+      
+      {/* Desktop Toast Container - Fixed positioning for desktop */}
+      {!isMobile && (
+        <div className="fixed top-28 right-6 z-30 flex flex-col items-end pointer-events-none">
+          {toasts.map(toast => (
+            <div key={toast.id} className="pointer-events-auto">
+              <Toast {...toast} />
+            </div>
+          ))}
+        </div>
+      )}
     </ToastContext.Provider>
   );
 };
