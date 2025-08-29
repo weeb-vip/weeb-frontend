@@ -38,23 +38,8 @@ class AnimeNotificationService {
     this.countdownCallback = callback;
   }
 
-  private initWorker() {
-    if (this.worker) return;
-
-    try {
-      // Use Vite's worker import syntax with cache busting
-      const url = new URL('../workers/animeNotifications.worker.ts', import.meta.url);
-      
-      // Add timestamp for cache busting to ensure updates are always pulled
-      url.searchParams.set('t', Date.now().toString());
-      
-      this.worker = new Worker(url, { type: 'module' });
-      debug.info('Worker created successfully');
-    } catch (error) {
-      debug.error('Failed to create worker:', error);
-      return;
-    }
-
+  private setupWorkerListeners() {
+    if (!this.worker) return;
 
     this.worker.addEventListener('message', (event) => {
       const message = event.data;
@@ -90,6 +75,24 @@ class AnimeNotificationService {
         error: error.error
       }));
     });
+  }
+
+  private initWorker() {
+    if (this.worker) return;
+
+    try {
+      // Use URL constructor with cache busting for fresh worker updates
+      const url = new URL('../workers/animeNotifications.worker.ts', import.meta.url);
+      url.searchParams.set('t', Date.now().toString());
+      const workerUrl = url.href;
+
+      this.worker = new Worker(workerUrl, { type: 'module' });
+      this.setupWorkerListeners();
+      debug.info('Worker created successfully');
+    } catch (error) {
+      debug.error('Failed to create worker:', error);
+      return;
+    }
   }
 
   startWatching(animeList: AnimeForNotification[]) {
