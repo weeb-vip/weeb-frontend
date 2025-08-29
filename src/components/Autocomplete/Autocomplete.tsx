@@ -14,6 +14,7 @@ export function Autocomplete() {
   const navigate = useNavigate();
 
   const [autocompleteState, setAutocompleteState] = useState<any>({});
+  const [isFocused, setIsFocused] = useState(false);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileFormRef = useRef<HTMLDivElement>(null);
   const mobilePanelRef = useRef<HTMLDivElement>(null);
@@ -57,10 +58,38 @@ export function Autocomplete() {
   const inputProps = autocomplete.getInputProps({
     inputElement: desktopInputRef.current,
     onFocus: () => {
+      setIsFocused(true);
       autocomplete.setIsOpen(true);
     },
     onBlur: () => {
+      setIsFocused(false);
       autocomplete.setIsOpen(false);
+    },
+    onKeyDown: (event) => {
+      if (event.key === 'Escape') {
+        setIsFocused(false);
+        autocomplete.setIsOpen(false);
+        desktopInputRef.current?.blur();
+      }
+    },
+  });
+
+  const mobileInputProps = autocomplete.getInputProps({
+    inputElement: mobileInputRef.current,
+    onFocus: () => {
+      setIsFocused(true);
+      autocomplete.setIsOpen(true);
+    },
+    onBlur: () => {
+      setIsFocused(false);
+      autocomplete.setIsOpen(false);
+    },
+    onKeyDown: (event) => {
+      if (event.key === 'Escape') {
+        setIsFocused(false);
+        autocomplete.setIsOpen(false);
+        mobileInputRef.current?.blur();
+      }
     },
   });
 
@@ -122,7 +151,7 @@ export function Autocomplete() {
           className={`
         fixed inset-0 z-40 bg-white/30 dark:bg-gray-900/30 backdrop-blur-md
     transition-opacity duration-300 ease-in-out
-      ${autocompleteState.isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}
+      ${isFocused ? "opacity-100" : "opacity-0 pointer-events-none"}
     `}
           onClick={() => {
             desktopInputRef.current?.blur();
@@ -144,7 +173,7 @@ export function Autocomplete() {
           {/* @ts-ignore */}
           <input
             className="w-full rounded-full py-2 px-3 pl-10 text-base leading-5 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 outline-none border border-gray-200 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 transition-colors duration-300"
-            {...inputProps}
+            {...mobileInputProps}
             ref={mobileInputRef}
           />
           {renderPanel(mobilePanelRef, mobileInputRef)}
