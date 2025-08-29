@@ -102,7 +102,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
           ? 'airing' as const
           : workerCountdown.hasAired 
             ? 'aired' as const 
-            : 'countdown' as const
+            : 'countdown' as const,
       };
     } else {
       // Fallback to static calculation

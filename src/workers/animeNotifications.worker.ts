@@ -1,5 +1,7 @@
 // Web Worker for anime notifications and countdown calculations
 // This worker runs in a separate thread to provide accurate timing
+// Self-contained with no external dependencies to avoid window references
+
 
 interface AnimeForNotification {
   id: string;
@@ -28,6 +30,7 @@ interface CountdownMessage {
   countdown: string;
   isAiring: boolean;
   hasAired: boolean;
+  progress?: number; // 0-1 for airing episodes
 }
 
 interface StartWatchingMessage {
@@ -39,10 +42,19 @@ interface StopWatchingMessage {
   type: 'stopWatching';
 }
 
-type WorkerMessage = StartWatchingMessage | StopWatchingMessage;
+interface SetTimeOffsetMessage {
+  type: 'setTimeOffset';
+  offsetMs: number;
+}
+
+interface TriggerUpdateMessage {
+  type: 'triggerUpdate';
+}
+
+type WorkerMessage = StartWatchingMessage | StopWatchingMessage | SetTimeOffsetMessage | TriggerUpdateMessage;
 type WorkerResponse = NotificationMessage | CountdownMessage;
 
-// Air time utilities (duplicated from main thread since workers can't import modules)
+// Air time utilities (self-contained, no external imports)
 function parseDurationToMinutes(duration?: string | null): number | null {
   if (!duration) return null;
   const match = duration.match(/(\d+)/);
@@ -61,25 +73,25 @@ function parseAirTime(airDate?: string | null, broadcast?: string | null): Date 
   const [, hours, minutes] = timeMatch;
   const timezone = timezoneMatch ? timezoneMatch[1] : 'JST';
   const parsedAirDate = new Date(airDate);
-  
+
   if (timezone === 'JST') {
     const jstHours = parseInt(hours);
     const jstMinutes = parseInt(minutes);
-    
+
     let utcHours = jstHours - 9;
     let utcDate = new Date(parsedAirDate);
-    
+
     if (utcHours < 0) {
       utcDate.setUTCDate(utcDate.getUTCDate() - 1);
       utcHours += 24;
     }
-    
+
     utcHours -= 1;
     if (utcHours < 0) {
       utcDate.setUTCDate(utcDate.getUTCDate() - 1);
       utcHours += 24;
     }
-    
+
     utcDate.setUTCHours(utcHours, jstMinutes, 0, 0);
     return utcDate;
   } else {
@@ -95,7 +107,7 @@ function isCurrentlyAiring(airDate?: string | null, broadcast?: string | null, d
   const airTime = parseAirTime(airDate, broadcast);
   if (!airTime) return false;
 
-  const now = new Date();
+  const now = getCurrentTime();
   const airStartMs = airTime.getTime();
   const currentMs = now.getTime();
   const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
@@ -107,7 +119,7 @@ function isCurrentlyAiring(airDate?: string | null, broadcast?: string | null, d
 function calculateCountdown(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): string {
   if (!airDate) return "";
 
-  const now = new Date();
+  const now = getCurrentTime();
   const airTime = parseAirTime(airDate, broadcast);
   if (!airTime) return "";
 
@@ -149,12 +161,25 @@ let notificationIntervals: Map<string, ReturnType<typeof setTimeout>> = new Map(
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
 let notifiedAnime: Set<string> = new Set();
 
+// Dev time offset for testing
+let devTimeOffset = 0;
+
+function getCurrentTime(): Date {
+  const now = new Date();
+  
+  if (devTimeOffset !== 0) {
+    return new Date(now.getTime() + devTimeOffset);
+  }
+  
+  return now;
+}
+
 function clearAllIntervals() {
   notificationIntervals.forEach(intervalId => {
     clearTimeout(intervalId);
   });
   notificationIntervals.clear();
-  
+
   if (countdownInterval) {
     clearInterval(countdownInterval);
     countdownInterval = null;
@@ -169,7 +194,7 @@ function setupNotifications(anime: AnimeForNotification) {
   const airTime = parseAirTime(anime.nextEpisode.airDate, anime.broadcast);
   if (!airTime) return;
 
-  const now = new Date();
+  const now = getCurrentTime();
   const timeToAir = airTime.getTime() - now.getTime();
   const durationMinutes = parseDurationToMinutes(anime.duration);
 
@@ -228,41 +253,56 @@ function setupNotifications(anime: AnimeForNotification) {
   }
 }
 
+function updateCountdowns() {
+  console.info('[AnimeWorker] Updating countdowns for', animeList.length, 'anime');
+  animeList.forEach(anime => {
+    if (!anime.nextEpisode?.airDate || !anime.broadcast) return;
+
+    const airTime = parseAirTime(anime.nextEpisode.airDate, anime.broadcast);
+    if (!airTime) return;
+
+    const now = getCurrentTime();
+    const timeToAir = airTime.getTime() - now.getTime();
+
+    // Only send updates for anime airing within 24 hours
+    if (timeToAir > 24 * 60 * 60 * 1000 || timeToAir < -24 * 60 * 60 * 1000) {
+      return;
+    }
+
+    const durationMinutes = parseDurationToMinutes(anime.duration);
+    const countdown = calculateCountdown(anime.nextEpisode.airDate, anime.broadcast, durationMinutes);
+    const isAiring = isCurrentlyAiring(anime.nextEpisode.airDate, anime.broadcast, durationMinutes);
+    const hasAired = timeToAir < 0 && !isAiring;
+
+    // Calculate progress for currently airing episodes
+    let progress: number | undefined = undefined;
+    if (isAiring && airTime) {
+      const airStartMs = airTime.getTime();
+      const currentMs = now.getTime();
+      const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
+      const elapsedMs = currentMs - airStartMs;
+      progress = Math.min(Math.max(elapsedMs / episodeDurationMs, 0), 1);
+      console.log('[AnimeWorker] Progress for', anime.titleEn || anime.titleJp, ':', `${(progress * 100).toFixed(1)}%`);
+    }
+
+    postMessage({
+      type: 'countdown',
+      animeId: anime.id,
+      countdown,
+      isAiring,
+      hasAired,
+      progress
+    } as CountdownMessage);
+  });
+}
+
 function startCountdownUpdates() {
   if (countdownInterval) {
     clearInterval(countdownInterval);
   }
 
-  // Update countdowns every 30 seconds
-  countdownInterval = setInterval(() => {
-    animeList.forEach(anime => {
-      if (!anime.nextEpisode?.airDate || !anime.broadcast) return;
-
-      const airTime = parseAirTime(anime.nextEpisode.airDate, anime.broadcast);
-      if (!airTime) return;
-
-      const now = new Date();
-      const timeToAir = airTime.getTime() - now.getTime();
-
-      // Only send updates for anime airing within 24 hours
-      if (timeToAir > 24 * 60 * 60 * 1000 || timeToAir < -24 * 60 * 60 * 1000) {
-        return;
-      }
-
-      const durationMinutes = parseDurationToMinutes(anime.duration);
-      const countdown = calculateCountdown(anime.nextEpisode.airDate, anime.broadcast, durationMinutes);
-      const isAiring = isCurrentlyAiring(anime.nextEpisode.airDate, anime.broadcast, durationMinutes);
-      const hasAired = timeToAir < 0 && !isAiring;
-
-      postMessage({
-        type: 'countdown',
-        animeId: anime.id,
-        countdown,
-        isAiring,
-        hasAired
-      } as CountdownMessage);
-    });
-  }, 30000);
+  // Update countdowns every 5 seconds
+  countdownInterval = setInterval(updateCountdowns, 5000);
 }
 
 // Listen for messages from main thread
@@ -274,25 +314,35 @@ self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
       animeList = event.data.animeList;
       clearAllIntervals();
       notifiedAnime.clear();
-      
+
       // Set up notifications for each anime
       animeList.forEach(setupNotifications);
-      
+
       // Start countdown updates
       startCountdownUpdates();
-      
-      console.log(`[Worker] Started watching ${animeList.length} anime`);
+
+      console.log(`[AnimeWorker] Started watching ${animeList.length} anime`);
       break;
 
     case 'stopWatching':
       clearAllIntervals();
       animeList = [];
       notifiedAnime.clear();
-      console.log('[Worker] Stopped watching anime');
+      console.log('[AnimeWorker] Stopped watching anime');
+      break;
+
+    case 'setTimeOffset':
+      devTimeOffset = event.data.offsetMs;
+      console.log('[AnimeWorker] Dev time offset set to:', devTimeOffset, 'ms');
+      break;
+
+    case 'triggerUpdate':
+      console.log('[AnimeWorker] Triggering immediate update');
+      updateCountdowns();
       break;
 
     default:
-      console.warn('[Worker] Unknown message type:', type);
+      console.warn('[AnimeWorker] Unknown message type:', type);
   }
 });
 

@@ -20,7 +20,7 @@ export interface NotificationCallback {
 }
 
 export interface CountdownCallback {
-  (animeId: string, countdown: string, isAiring: boolean, hasAired: boolean): void;
+  (animeId: string, countdown: string, isAiring: boolean, hasAired: boolean, progress?: number): void;
 }
 
 class AnimeNotificationService {
@@ -39,35 +39,52 @@ class AnimeNotificationService {
   private initWorker() {
     if (this.worker) return;
 
-    this.worker = new Worker(
-      new URL('../workers/animeNotifications.worker.ts', import.meta.url),
-      { type: 'module' }
-    );
+    try {
+      const url = new URL('../workers/animeNotifications.worker.ts', import.meta.url);
+
+      // add a timestamp only in dev to bust the cache
+
+        url.searchParams.set('t', Date.now().toString());
+
+
+      this.worker = new Worker(url, { type: 'module' });
+      debug.info('Worker created successfully');
+    } catch (error) {
+      debug.error('Failed to create worker:', error);
+      return;
+    }
+
 
     this.worker.addEventListener('message', (event) => {
       const message = event.data;
 
       if (message.type === 'notification') {
         debug.anime(`📺 ${message.notificationType === 'warning' ? '5-minute warning' : 'Now airing'}: ${message.anime.titleEn || message.anime.titleJp}`);
-        
+
         if (this.notificationCallback) {
           this.notificationCallback(message.notificationType, message.anime);
         }
       } else if (message.type === 'countdown') {
         if (this.countdownCallback) {
-          this.countdownCallback(message.animeId, message.countdown, message.isAiring, message.hasAired);
+          this.countdownCallback(message.animeId, message.countdown, message.isAiring, message.hasAired, message.progress);
         }
       }
     });
 
     this.worker.addEventListener('error', (error) => {
-      debug.error('Anime notification worker error:', error);
+      debug.error('Anime notification worker error details:', JSON.stringify({
+        message: error.message,
+        filename: error.filename,
+        lineno: error.lineno,
+        colno: error.colno,
+        error: error.error
+      }));
     });
   }
 
   startWatching(animeList: AnimeForNotification[]) {
     this.initWorker();
-    
+
     debug.info(`🔔 Starting to watch ${animeList.length} anime for notifications`);
 
     if (this.worker) {
@@ -84,9 +101,26 @@ class AnimeNotificationService {
     }
   }
 
+  setDevTimeOffset(offsetMs: number) {
+    if (this.worker) {
+      this.worker.postMessage({
+        type: 'setTimeOffset',
+        offsetMs
+      });
+    }
+  }
+
+  triggerImmediateUpdate() {
+    if (this.worker) {
+      this.worker.postMessage({
+        type: 'triggerUpdate'
+      });
+    }
+  }
+
   stop() {
     this.clearAll();
-    
+
     if (this.worker) {
       this.worker.terminate();
       this.worker = null;

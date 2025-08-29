@@ -1,6 +1,18 @@
 import React from 'react';
 import {format} from 'date-fns';
 
+// Get current time with dev offset applied (for testing)
+function getCurrentTime(): Date {
+  const now = new Date();
+  const devOffset = (window as any).__DEV_TIME_OFFSET__ || 0;
+  
+  if (devOffset !== 0) {
+    return new Date(now.getTime() + devOffset);
+  }
+  
+  return now;
+}
+
 
 
 
@@ -47,25 +59,25 @@ export function parseAirTime(airDate?: string | null, broadcast?: string | null)
 
   // Create a date object from the air date
   const parsedAirDate = new Date(airDate);
-  
+
   if (timezone === 'JST') {
     const jstHours = parseInt(hours);
     const jstMinutes = parseInt(minutes);
-    
+
     // JST is UTC+9, so to get UTC time we subtract 9 hours
     // But the test expects local EDT time (UTC-4 during summer)
     // So JST 00:00 -> UTC 15:00 -> EDT 11:00, but test expects EDT 10:00
     // This suggests we need to account for DST differently
-    
+
     let utcHours = jstHours - 9;
     let utcDate = new Date(parsedAirDate);
-    
+
     if (utcHours < 0) {
       // Previous day case
       utcDate.setUTCDate(utcDate.getUTCDate() - 1);
       utcHours += 24;
     }
-    
+
     // Add 1 hour adjustment to match the expected test result
     // This accounts for the fact that the test expects EDT conversion
     utcHours -= 1;
@@ -73,7 +85,7 @@ export function parseAirTime(airDate?: string | null, broadcast?: string | null)
       utcDate.setUTCDate(utcDate.getUTCDate() - 1);
       utcHours += 24;
     }
-    
+
     utcDate.setUTCHours(utcHours, jstMinutes, 0, 0);
     return utcDate;
   } else {
@@ -111,7 +123,7 @@ export function isAiringToday(airDate?: string | null, broadcast?: string | null
   const airTime = parseAirTime(airDate, broadcast);
   if (!airTime) return false;
 
-  const now = new Date();
+  const now = getCurrentTime();
   const diffMs = airTime.getTime() - now.getTime();
 
   // Show countdown if airing within next 24 hours
@@ -127,7 +139,7 @@ export function isCurrentlyAiring(airDate?: string | null, broadcast?: string | 
   const airTime = parseAirTime(airDate, broadcast);
   if (!airTime) return false;
 
-  const now = new Date();
+  const now = getCurrentTime();
   const airStartMs = airTime.getTime();
   const currentMs = now.getTime();
 
@@ -148,7 +160,7 @@ export function hasAlreadyAired(airDate?: string | null, broadcast?: string | nu
   const airTime = parseAirTime(airDate, broadcast);
   if (!airTime) return false;
 
-  const now = new Date();
+  const now = getCurrentTime();
   const airStartMs = airTime.getTime();
   const currentMs = now.getTime();
 
@@ -166,7 +178,7 @@ export function hasAlreadyAired(airDate?: string | null, broadcast?: string | nu
 export function calculateCountdown(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): string {
   if (!airDate || !isAiringToday(airDate, broadcast)) return "";
 
-  const now = new Date();
+  const now = getCurrentTime();
   const airTime = parseAirTime(airDate, broadcast);
   if (!airTime) return "";
 
@@ -195,8 +207,8 @@ export function calculateCountdown(airDate?: string | null, broadcast?: string |
   }
 
   const diffMinutes = Math.ceil(diffMs / (1000 * 60));
-  const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffMinutes < 60) {
     return `${diffMinutes}m`;

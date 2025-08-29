@@ -5,6 +5,8 @@ import {StatusType} from '../Button/Button';
 import {AnimeStatusDropdown} from '../AnimeStatusDropdown/AnimeStatusDropdown';
 import {getAirDateTime, isAiringToday, hasAlreadyAired, calculateCountdown, isCurrentlyAiring, parseDurationToMinutes} from '../../services/airTimeUtils';
 import {GetImageFromAnime} from '../../services/utils';
+import {useAnimeCountdowns} from '../../hooks/useAnimeCountdowns';
+import {animeNotificationService} from '../../services/animeNotifications';
 import debug from "../../utils/debug";
 
 interface HeroBannerProps {
@@ -35,6 +37,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const [useFallback, setUseFallback] = useState(false);
   const [countdown, setCountdown] = useState<string>("");
   const [showJstPopover, setShowJstPopover] = useState(false);
+  const { getCountdown } = useAnimeCountdowns();
 
   useEffect(() => {
     setUseFallback(false);
@@ -57,11 +60,33 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   // Parse duration for accurate timing
   const durationMinutes = parseDurationToMinutes(anime.duration);
 
-  // Use the service functions for air time calculations
+  // Get worker countdown data for more accurate real-time info
+  const workerCountdown = getCountdown(anime.id);
+
+  // Trigger immediate worker update when component mounts or anime changes
+  useEffect(() => {
+    animeNotificationService.triggerImmediateUpdate();
+  }, [anime.id]);
+
+  // Debug progress values and worker data
+  useEffect(() => {
+    debug.info(`HeroBanner worker data for ${title}:`, JSON.stringify({
+      workerCountdown: workerCountdown,
+      hasProgress: workerCountdown?.progress !== undefined,
+      isAiring: workerCountdown?.isAiring,
+      progress: workerCountdown?.progress
+    }));
+
+    if (workerCountdown?.progress !== undefined) {
+      debug.anime(`Progress for ${title}: ${(workerCountdown.progress * 100).toFixed(1)}% (${workerCountdown.progress.toFixed(3)})`);
+    }
+  }, [workerCountdown, title]);
+
+  // Use the service functions for air time calculations (fallback if worker not available)
   const airDateTime = getAirDateTime(anime.nextEpisode?.airDate, anime.broadcast);
   const airingToday = isAiringToday(anime.nextEpisode?.airDate, anime.broadcast);
-  const currentlyAiring = isCurrentlyAiring(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
-  const alreadyAired = hasAlreadyAired(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
+  const currentlyAiring = workerCountdown?.isAiring || isCurrentlyAiring(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
+  const alreadyAired = workerCountdown?.hasAired || hasAlreadyAired(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
 
   // Countdown logic
   useEffect(() => {
@@ -124,14 +149,17 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
       <div className="relative z-10 h-full flex items-end px-4 sm:px-8 lg:px-16">
         <div className="max-w-3xl text-white py-12">
           {currentlyAiring && (
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-600 text-sm font-semibold mb-4">
-              <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-              CURRENTLY AIRING
-              {countdown && countdown.includes("left") && (
-                <span className="ml-2 px-2 py-1 bg-white/20 rounded text-xs">
-                  {countdown}
-                </span>
+            <div className="relative inline-flex items-center px-4 py-2 rounded-full bg-orange-600 text-sm font-semibold mb-4 overflow-hidden">
+              {/* Progress bar background */}
+              {workerCountdown?.progress !== undefined && (
+                <div
+                  className="absolute inset-0 bg-orange-800/60 transition-all duration-1000 ease-out"
+                  style={{ width: `${(workerCountdown.progress || 0) * 100}%` }}
+                />
               )}
+              {/* Content */}
+              <span className="relative w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
+              <span className="relative">CURRENTLY AIRING</span>
             </div>
           )}
 

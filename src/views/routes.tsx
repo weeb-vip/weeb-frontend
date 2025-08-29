@@ -16,7 +16,7 @@ import ScrollRestoration from "../scrollrestoration";
 import NotFoundPage from "./404";
 import ErrorBoundary from "./ErrorBoundry";
 import { useAnimeNotifications } from "../hooks/useAnimeNotifications";
-import { DevNotificationPanel } from "../components/DevNotificationPanel";
+import DevTestingPanel from "../components/DevTestingPanel";
 import { ToastProvider } from "../components/Toast";
 import {
   HomePageSkeleton,
@@ -159,7 +159,7 @@ function AppContent() {
       </main>
 
       {/* Dev Tools - Only shows in development */}
-      <DevNotificationPanel />
+      <DevTestingPanel />
     </>
   );
 }

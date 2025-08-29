@@ -5,6 +5,7 @@ interface CountdownState {
   countdown: string;
   isAiring: boolean;
   hasAired: boolean;
+  progress?: number; // 0-1 for airing episodes
 }
 
 export const useAnimeCountdowns = () => {
@@ -12,10 +13,10 @@ export const useAnimeCountdowns = () => {
 
   useEffect(() => {
     // Set up countdown callback
-    animeNotificationService.setCountdownCallback((animeId, countdown, isAiring, hasAired) => {
+    animeNotificationService.setCountdownCallback((animeId, countdown, isAiring, hasAired, progress) => {
       setCountdowns(prev => ({
         ...prev,
-        [animeId]: { countdown, isAiring, hasAired }
+        [animeId]: { countdown, isAiring, hasAired, progress }
       }));
     });
 
