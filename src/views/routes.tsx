@@ -18,6 +18,7 @@ import ErrorBoundary from "./ErrorBoundry";
 import { useAnimeNotifications } from "../hooks/useAnimeNotifications";
 import DevTestingPanel from "../components/DevTestingPanel";
 import { ToastProvider } from "../components/Toast";
+import Footer from "../components/Footer";
 import {
   HomePageSkeleton,
   ShowPageSkeleton,
@@ -157,6 +158,9 @@ function AppContent() {
           <AnimatedRoutes/>
         </ErrorBoundary>
       </main>
+      
+      {/* Footer - Shows on all pages */}
+      <Footer />
 
       {/* Dev Tools - Only shows in development */}
       <DevTestingPanel />

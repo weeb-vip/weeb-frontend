@@ -12,6 +12,7 @@ const configName = process.env.APP_CONFIG || process.env.NODE_ENV || 'developmen
 export default defineConfig({
     define: {
         global: 'window',
+        __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || 'dev'),
     },
 
 

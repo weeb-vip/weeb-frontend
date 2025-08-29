@@ -364,6 +364,7 @@ const DevTestingPanel: React.FC = () => {
               />
               
               <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded text-xs">
+                <div>Version: {__APP_VERSION__}</div>
                 <div>Debug Level: {process.env.VITE_LOG_LEVEL || 'info'}</div>
                 <div>Debug Enabled: {process.env.VITE_DEBUG === 'true' ? 'Yes' : 'No'}</div>
                 <div>Sensitive Logs: {process.env.VITE_DEBUG_SENSITIVE === 'true' ? 'Yes' : 'No'}</div>
@@ -375,6 +376,9 @@ const DevTestingPanel: React.FC = () => {
           <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
             <p className="text-xs text-gray-500 dark:text-gray-400">
               💡 Development mode only • Check console for debug output
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              Version: {__APP_VERSION__}
             </p>
           </div>
         </div>

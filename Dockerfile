@@ -4,6 +4,8 @@ FROM node:${NODE_VERSION}-alpine3.16 as build
 
 WORKDIR /app
 ENV APP_CONFIG=staging
+ARG VITE_APP_VERSION=dev
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
 COPY --chown=node:node . ${WORKDIR}
 
 COPY ./package.json /app/package.json
