@@ -193,7 +193,7 @@ function Index() {
                     ? "Currently airing"
                     : workerCountdown.hasAired
                       ? "Recently aired"
-                      : "Airing soon",
+                      : `Airing in ${workerCountdown.countdown}`,
                   variant: workerCountdown.isAiring
                     ? 'airing' as const
                     : workerCountdown.hasAired
