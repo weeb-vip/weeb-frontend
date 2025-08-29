@@ -77,16 +77,13 @@ class AnimeNotificationService {
     });
   }
 
-  private initWorker() {
+  private async initWorker() {
     if (this.worker) return;
 
     try {
-      // Use URL constructor with cache busting for fresh worker updates
-      const url = new URL('../workers/animeNotifications.worker.ts', import.meta.url);
-      url.searchParams.set('t', Date.now().toString());
-      const workerUrl = url.href;
-
-      this.worker = new Worker(workerUrl);
+      // Use Vite's ?worker import to force TypeScript compilation
+      const { default: WorkerConstructor } = await import('../workers/animeNotifications.worker.ts?worker');
+      this.worker = new WorkerConstructor();
       this.setupWorkerListeners();
       debug.info('Worker created successfully');
     } catch (error) {
@@ -95,8 +92,8 @@ class AnimeNotificationService {
     }
   }
 
-  startWatching(animeList: AnimeForNotification[]) {
-    this.initWorker();
+  async startWatching(animeList: AnimeForNotification[]) {
+    await this.initWorker();
 
     debug.info(`🔔 Starting to watch ${animeList.length} anime for notifications`);
 

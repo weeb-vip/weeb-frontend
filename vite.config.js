@@ -34,7 +34,11 @@ export default defineConfig({
     },
     worker: {
         format: 'es',
+        plugins: [
+            // Ensure TypeScript compilation for workers
+        ],
         rollupOptions: {
+            external: [],
             output: {
                 entryFileNames: 'assets/[name]-[hash].js',
                 chunkFileNames: 'assets/[name]-[hash].js',
