@@ -58,7 +58,7 @@ class AnimeNotificationService {
           hasAired: message.hasAired,
           progress: message.progress
         });
-        
+
         // Keep the callback for backwards compatibility
         if (this.countdownCallback) {
           this.countdownCallback(message.animeId, message.countdown, message.isAiring, message.hasAired, message.progress);
@@ -86,7 +86,7 @@ class AnimeNotificationService {
       url.searchParams.set('t', Date.now().toString());
       const workerUrl = url.href;
 
-      this.worker = new Worker(workerUrl, { type: 'module' });
+      this.worker = new Worker(workerUrl);
       this.setupWorkerListeners();
       debug.info('Worker created successfully');
     } catch (error) {
