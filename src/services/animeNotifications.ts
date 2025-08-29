@@ -95,12 +95,8 @@ class AnimeNotificationService {
 
     try {
       // Use Vite's ?worker import to force TypeScript compilation
-      const url = new URL('../workers/animeNotifications.worker.ts?worker', import.meta.url);
-      // only if not production - bust cache
-      if (import.meta.env.DEV) url.searchParams.set('t', Date.now().toString());
-
-
-      this.worker = new Worker(url);
+      const { default: WorkerConstructor } = await import('../workers/animeNotifications.worker.ts?worker');
+      this.worker = new WorkerConstructor();
       this.setupWorkerListeners();
       debug.info('Worker created successfully');
     } catch (error) {
