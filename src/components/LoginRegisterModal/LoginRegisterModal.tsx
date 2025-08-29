@@ -19,11 +19,13 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
     password: "",
     confirmPassword: "", // for registration validation
   });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const setLoggedIn = useLoggedInStore((state) => state.setLoggedIn);
 
 
-  const { mutate: mutateLogin, isLoading, isError, data, error } = useMutation<SigninResult>({
+  const { mutate: mutateLogin, isLoading: loginLoading } = useMutation<SigninResult>({
     ...login(),
     // @ts-ignore
     onSuccess: (response: SigninResult, _variables: LoginInput) => {
@@ -31,19 +33,22 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
       localStorage.setItem("refreshToken", response.Credentials.refresh_token);
       setLoggedIn();
       TokenRefresher.getInstance(refreshTokenSimple).start(response.Credentials.token);
+      setErrorMessage("");
       if (closeFn) {
         closeFn();
       }
     },
-    onError: () => {
+    onError: (error: any) => {
       debug.warn("Login failed. Please check your credentials.");
+      setErrorMessage("Login failed. Please check your credentials and try again.");
     },
   });
 
-  const { mutate: mutateRegister } = useMutation({
+  const { mutate: mutateRegister, isLoading: registerLoading } = useMutation({
     ...register(),
     onSuccess: (response) => {
       debug.success("Registration successful!", response);
+      setErrorMessage("");
       // @ts-ignore
       mutateLogin({
         input: {
@@ -52,29 +57,64 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
         },
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       debug.warn("Registration failed");
+      setErrorMessage("Registration failed. Please try again or choose a different username.");
     },
   });
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.username.trim()) {
+      errors.username = "Username is required";
+    } else if (formData.username.length < 3) {
+      errors.username = "Username must be at least 3 characters";
+    }
+
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+
+    if (isRegisterState) {
+      if (!formData.confirmPassword) {
+        errors.confirmPassword = "Please confirm your password";
+      } else if (formData.password !== formData.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match";
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear validation error when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    // Clear global error message
+    if (errorMessage) {
+      setErrorMessage("");
+    }
   };
-
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     if (!isRegisterState) {
       const data: LoginInput = {username: formData.username, password: formData.password};
       // @ts-ignore
       mutateLogin({input: data});
     } else {
-      if (formData.password !== formData.confirmPassword) {
-        debug.warn("Passwords do not match");
-        return;
-      }
-      // Handle registration logic here
       debug.info("Registering user:", formData.username);
       const data: LoginInput = {username: formData.username, password: formData.password};
       // @ts-ignore
@@ -82,59 +122,101 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
     }
   };
 
+  const isLoading = loginLoading || registerLoading;
+
   return (
-    <div className="w-full max-w-md mx-auto p-8 bg-white">
-      <h2 className="text-3xl font-semibold mb-8">{!isRegisterState ? 'Login' : 'Register'}</h2>
+    <div className="w-[360px] sm:w-[400px] mx-auto p-8 sm:p-10 transition-colors duration-300">
+      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100 text-center">{!isRegisterState ? 'Login' : 'Register'}</h2>
 
-      <form onSubmit={handleSubmit}>
+      <div className="mb-4 flex items-center">
+        {errorMessage && (
+          <div className="w-full p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-full transition-colors duration-300">
+            <p className="text-red-800 dark:text-red-200 text-sm text-center">{errorMessage}</p>
+          </div>
+        )}
+      </div>
 
-
-        <div className="mb-6">
-          <label className="block text-base font-medium mb-2">Email</label>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="username" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+            {!isRegisterState ? 'Username or Email' : 'Username'}
+          </label>
           <input
+            id="username"
             name="username"
             type="text"
             value={formData.username}
             onChange={handleChange}
             placeholder={!isRegisterState ? 'Enter your username or email' : 'Enter your weeb username'}
-            className="w-full px-4 py-4 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 
+              bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${validationErrors.username 
+                ? 'border-red-500 focus:ring-red-400' 
+                : 'border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500'
+              }`}
+            aria-describedby={validationErrors.username ? "username-error" : undefined}
+            required
           />
+          {validationErrors.username && (
+            <p id="username-error" className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.username}</p>
+          )}
         </div>
 
-        <div className="mb-6">
-          <label className="block text-base font-medium mb-2">Password</label>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Password</label>
           <input
+            id="password"
             name="password"
             type="password"
             value={formData.password}
             onChange={handleChange}
             placeholder="Enter your password"
-            className="w-full px-4 py-4 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 
+              bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${validationErrors.password 
+                ? 'border-red-500 focus:ring-red-400' 
+                : 'border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500'
+              }`}
+            aria-describedby={validationErrors.password ? "password-error" : undefined}
+            required
           />
+          {validationErrors.password && (
+            <p id="password-error" className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.password}</p>
+          )}
         </div>
 
         {isRegisterState && (
-          <div className="mb-6">
-            <label className="block text-base font-medium mb-2">Password</label>
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Confirm Password</label>
             <input
+              id="confirmPassword"
               name="confirmPassword"
               type="password"
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Enter your password again"
-              className="w-full px-4 py-4 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 
+                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                ${validationErrors.confirmPassword 
+                  ? 'border-red-500 focus:ring-red-400' 
+                  : 'border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500'
+                }`}
+              aria-describedby={validationErrors.confirmPassword ? "confirm-password-error" : undefined}
+              required
             />
+            {validationErrors.confirmPassword && (
+              <p id="confirm-password-error" className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.confirmPassword}</p>
+            )}
           </div>
         )}
 
-        {isLoading && (
-          <Loader/>)
-        }
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-4 mb-8 text-white rounded-full bg-blue-500 hover:bg-blue-600 transition"
+          className="w-full px-6 py-3 mt-6 text-white rounded-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-300 flex items-center justify-center gap-2 font-medium"
+          aria-label={isLoading ? `${!isRegisterState ? 'Logging in' : 'Registering'}...` : `${!isRegisterState ? 'Login' : 'Register'}`}
         >
+          {isLoading && <Loader />}
           {!isRegisterState ? 'Login' : 'Register'}
         </button>
       </form>
@@ -150,12 +232,16 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
       </button>
       */}
 
-      <div className="mt-8 text-center text-base text-gray-600">
+      <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
         {!isRegisterState ? "Don't have an account?" : "Already have an account?"}{' '}
         <button
           type="button"
-          onClick={() => setIsRegisterState(!isRegisterState)}
-          className="text-blue-500 hover:underline"
+          onClick={() => {
+            setIsRegisterState(!isRegisterState);
+            setErrorMessage("");
+            setValidationErrors({});
+          }}
+          className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors duration-300 focus:outline-none focus:underline"
         >
           {!isRegisterState ? 'Register' : 'Login'}
         </button>

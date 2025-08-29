@@ -18,6 +18,19 @@ export default defineConfig({
 
     build: {
         target: ['es2018', 'safari11'], // or 'es2015' for broadest support
+        rollupOptions: {
+            output: {
+                // Ensure web worker files get .js extension
+                entryFileNames: (chunkInfo) => {
+                    if (chunkInfo.name && chunkInfo.name.includes('worker')) {
+                        return 'assets/[name]-[hash].js';
+                    }
+                    return 'assets/[name]-[hash].js';
+                },
+                chunkFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash].[ext]'
+            }
+        }
     },
     plugins: [
         viteStaticCopy({

@@ -42,13 +42,12 @@ class AnimeNotificationService {
     if (this.worker) return;
 
     try {
+      // Use Vite's worker import syntax with cache busting
       const url = new URL('../workers/animeNotifications.worker.ts', import.meta.url);
-
-      // add a timestamp only in dev to bust the cache
-
-        url.searchParams.set('t', Date.now().toString());
-
-
+      
+      // Add timestamp for cache busting to ensure updates are always pulled
+      url.searchParams.set('t', Date.now().toString());
+      
       this.worker = new Worker(url, { type: 'module' });
       debug.info('Worker created successfully');
     } catch (error) {
