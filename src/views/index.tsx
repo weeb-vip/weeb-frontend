@@ -1,5 +1,4 @@
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import Loader from "../components/Loader";
 import {CurrentlyAiringQuery, GetHomePageDataQuery, Status} from "../gql/graphql";
 import {format} from "date-fns";
 import {fetchCurrentlyAiring, fetchHomePageData, upsertAnime} from "../services/queries";
@@ -44,12 +43,12 @@ function Index() {
     const filteredAnime = allAnime.filter((anime) => {
       const airTime = parseAirTime(anime.nextEpisode?.airDate, anime.broadcast);
       if (!airTime) return true; // Keep anime without proper air time
-      
+
       const timeDiff = airTime.getTime() - now.getTime();
-      
+
       // Show if it's a future episode
       if (timeDiff > 0) return true;
-      
+
       // Check if currently airing using episode duration
       const durationMinutes = parseDurationToMinutes(anime.duration);
       return isCurrentlyAiring(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
@@ -170,7 +169,7 @@ function Index() {
               const id = `currently-airing-${item.id}`;
               // Calculate air time display for each anime
               const airTimeDisplay = getAirTimeDisplay(item.nextEpisode?.airDate, item.broadcast) || undefined;
-              
+
               return (
                 <div
                   key={item.id}

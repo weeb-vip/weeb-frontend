@@ -194,9 +194,9 @@ export function calculateCountdown(airDate?: string | null, broadcast?: string |
     return "JUST AIRED";
   }
 
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffMinutes = Math.ceil(diffMs / (1000 * 60));
+  const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffMinutes < 60) {
     return `${diffMinutes}m`;
