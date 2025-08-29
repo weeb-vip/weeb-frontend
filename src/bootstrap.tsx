@@ -3,6 +3,7 @@ import configApi from './services/api/config'
 import flagsmith from "flagsmith";
 import {FlagsmithProvider} from "flagsmith/react";
 import { useDarkModeStore } from './services/globalstore';
+import { AppLoadingSkeleton } from './components/Skeletons/PageSkeletons';
 
 
 export function useIsMobile(breakpoint = 640): boolean {
@@ -40,7 +41,7 @@ const Bootstrap = () => {
     const App = React.lazy(() => import('./views/routes'))
     const QueryProvider = React.lazy(() => import('./queryProvider'))
     return (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<AppLoadingSkeleton />}>
         <FlagsmithProvider options={{
           // @ts-ignore
           environmentID: global.config.flagsmith_environment_id,

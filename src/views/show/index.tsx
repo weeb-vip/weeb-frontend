@@ -1,7 +1,6 @@
 import {useNavigate, useParams} from "react-router-dom";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchDetails, upsertAnime} from "../../services/queries";
-import Loader from "../../components/Loader";
 import {format} from "date-fns";
 import Tabs from "../../components/Tabs";
 import {useEffect, useState} from "react";
@@ -19,6 +18,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPlus} from "@fortawesome/free-solid-svg-icons";
 import {parseAirTime, getAirTimeDisplay, parseDurationToMinutes, isCurrentlyAiring} from "../../services/airTimeUtils";
 import debug from "../../utils/debug";
+import { ShowPageSkeleton } from "../../components/Skeletons/PageSkeletons";
 
 const renderField = (label: string, value: string | string[] | null | undefined) => {
   if (!value) return null;
@@ -112,7 +112,7 @@ export default function Index() {
 
   };
 
-  if (isLoading || !show) return <Loader/>;
+  if (isLoading || !show) return <ShowPageSkeleton/>;
 
   const anime = show.anime;
 

@@ -15,10 +15,16 @@ import PageWrapper from './components/PageWrapper';
 import ScrollRestoration from "../scrollrestoration";
 import NotFoundPage from "./404";
 import ErrorBoundary from "./ErrorBoundry";
-import Loader from "../components/Loader";
 import { useAnimeNotifications } from "../hooks/useAnimeNotifications";
 import { DevNotificationPanel } from "../components/DevNotificationPanel";
 import { ToastProvider } from "../components/Toast";
+import {
+  HomePageSkeleton,
+  ShowPageSkeleton,
+  ProfilePageSkeleton,
+  CurrentlyAiringPageSkeleton,
+  NotFoundPageSkeleton
+} from "../components/Skeletons/PageSkeletons";
 
 
 const Home = React.lazy(() => import('./index'));
@@ -39,7 +45,11 @@ function AnimatedRoutes() {
           path="/"
           element={
             <DefaultLayout>
-              <PageWrapper><Home/></PageWrapper>
+              <PageWrapper>
+                <Suspense fallback={<HomePageSkeleton/>}>
+                  <Home/>
+                </Suspense>
+              </PageWrapper>
             </DefaultLayout>
           }
         />
@@ -47,7 +57,11 @@ function AnimatedRoutes() {
           path="/show/:id"
           element={
             <FullWidthLayout>
-              <PageWrapper><Show/></PageWrapper>
+              <PageWrapper>
+                <Suspense fallback={<ShowPageSkeleton/>}>
+                  <Show/>
+                </Suspense>
+              </PageWrapper>
             </FullWidthLayout>
           }
         />
@@ -55,7 +69,11 @@ function AnimatedRoutes() {
           path="/show/:id/custom"
           element={
             <FullWidthLayout>
-              <PageWrapper><Show/></PageWrapper>
+              <PageWrapper>
+                <Suspense fallback={<ShowPageSkeleton/>}>
+                  <Show/>
+                </Suspense>
+              </PageWrapper>
             </FullWidthLayout>
           }
         />
@@ -63,7 +81,11 @@ function AnimatedRoutes() {
           path="/airing"
           element={
             <DefaultLayout>
-              <PageWrapper><CurrentlyAiringPage/></PageWrapper>
+              <PageWrapper>
+                <Suspense fallback={<CurrentlyAiringPageSkeleton/>}>
+                  <CurrentlyAiringPage/>
+                </Suspense>
+              </PageWrapper>
             </DefaultLayout>
           }
         />
@@ -71,7 +93,11 @@ function AnimatedRoutes() {
           path="/airing/calendar"
           element={
             <DefaultLayout>
-              <PageWrapper><CurrentlyAiringCalendarPage/></PageWrapper>
+              <PageWrapper>
+                <Suspense fallback={<CurrentlyAiringPageSkeleton/>}>
+                  <CurrentlyAiringCalendarPage/>
+                </Suspense>
+              </PageWrapper>
             </DefaultLayout>
           }
         />
@@ -79,7 +105,11 @@ function AnimatedRoutes() {
           path="/profile"
           element={
             <DefaultLayout>
-              <PageWrapper><Profile/></PageWrapper>
+              <PageWrapper>
+                <Suspense fallback={<ProfilePageSkeleton/>}>
+                  <Profile/>
+                </Suspense>
+              </PageWrapper>
             </DefaultLayout>
           }
         />
@@ -87,7 +117,11 @@ function AnimatedRoutes() {
           path="/profile/anime"
           element={
             <DefaultLayout>
-              <PageWrapper><Anime/></PageWrapper>
+              <PageWrapper>
+                <Suspense fallback={<ProfilePageSkeleton/>}>
+                  <Anime/>
+                </Suspense>
+              </PageWrapper>
             </DefaultLayout>
           }
         />
@@ -96,7 +130,11 @@ function AnimatedRoutes() {
           path="*"
           element={
             <DefaultLayout>
-              <PageWrapper><NotFoundPage/></PageWrapper>
+              <PageWrapper>
+                <Suspense fallback={<NotFoundPageSkeleton/>}>
+                  <NotFoundPage/>
+                </Suspense>
+              </PageWrapper>
             </DefaultLayout>
           }
         />
@@ -116,9 +154,7 @@ function AppContent() {
       <main>
         <ScrollRestoration/>
         <ErrorBoundary>
-          <Suspense fallback={<Loader/>}>
-            <AnimatedRoutes/>
-          </Suspense>
+          <AnimatedRoutes/>
         </ErrorBoundary>
       </main>
 
