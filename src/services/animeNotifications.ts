@@ -1,4 +1,3 @@
-import { parseAirTime, parseDurationToMinutes, isCurrentlyAiring } from './airTimeUtils';
 import debug from '../utils/debug';
 
 export interface AnimeForNotification {
@@ -20,130 +19,79 @@ export interface NotificationCallback {
   (type: 'warning' | 'airing', anime: AnimeForNotification): void;
 }
 
+export interface CountdownCallback {
+  (animeId: string, countdown: string, isAiring: boolean, hasAired: boolean): void;
+}
+
 class AnimeNotificationService {
-  private intervals: Map<string, NodeJS.Timeout> = new Map();
-  private notifiedAnime: Set<string> = new Set();
-  private callback?: NotificationCallback;
+  private worker: Worker | null = null;
+  private notificationCallback?: NotificationCallback;
+  private countdownCallback?: CountdownCallback;
 
   setNotificationCallback(callback: NotificationCallback) {
-    this.callback = callback;
+    this.notificationCallback = callback;
   }
 
-  startWatching(animeList: AnimeForNotification[]) {
-    // Clear existing intervals
-    this.clearAll();
+  setCountdownCallback(callback: CountdownCallback) {
+    this.countdownCallback = callback;
+  }
 
-    debug.info('Starting anime notification watching for', animeList.length, 'anime');
+  private initWorker() {
+    if (this.worker) return;
 
-    animeList.forEach(anime => {
-      if (!anime.nextEpisode?.airDate || !anime.broadcast) {
-        return;
+    this.worker = new Worker(
+      new URL('../workers/animeNotifications.worker.ts', import.meta.url),
+      { type: 'module' }
+    );
+
+    this.worker.addEventListener('message', (event) => {
+      const message = event.data;
+
+      if (message.type === 'notification') {
+        debug.anime(`📺 ${message.notificationType === 'warning' ? '5-minute warning' : 'Now airing'}: ${message.anime.titleEn || message.anime.titleJp}`);
+        
+        if (this.notificationCallback) {
+          this.notificationCallback(message.notificationType, message.anime);
+        }
+      } else if (message.type === 'countdown') {
+        if (this.countdownCallback) {
+          this.countdownCallback(message.animeId, message.countdown, message.isAiring, message.hasAired);
+        }
       }
+    });
 
-      const airTime = parseAirTime(anime.nextEpisode.airDate, anime.broadcast);
-      if (!airTime) return;
-
-      const now = new Date();
-      const timeToAir = airTime.getTime() - now.getTime();
-      const durationMinutes = parseDurationToMinutes(anime.duration);
-
-      // Only watch anime airing within the next 24 hours
-      if (timeToAir > 24 * 60 * 60 * 1000 || timeToAir < -24 * 60 * 60 * 1000) {
-        return;
-      }
-
-      // Check if currently airing
-      if (isCurrentlyAiring(anime.nextEpisode.airDate, anime.broadcast, durationMinutes)) {
-        this.handleCurrentlyAiring(anime);
-        return;
-      }
-
-      // Set up 5-minute warning
-      const fiveMinuteWarning = timeToAir - (5 * 60 * 1000); // 5 minutes before
-      if (fiveMinuteWarning > 0 && fiveMinuteWarning < 24 * 60 * 60 * 1000) {
-        const warningTimeout = setTimeout(() => {
-          this.handleFiveMinuteWarning(anime);
-        }, fiveMinuteWarning);
-
-        this.intervals.set(`${anime.id}-warning`, warningTimeout);
-        debug.info(`Set 5-minute warning for ${anime.titleEn || anime.titleJp} in ${Math.round(fiveMinuteWarning / 1000 / 60)} minutes`);
-      }
-
-      // Set up airing notification
-      if (timeToAir > 0 && timeToAir < 24 * 60 * 60 * 1000) {
-        const airingTimeout = setTimeout(() => {
-          this.handleNowAiring(anime);
-        }, timeToAir);
-
-        this.intervals.set(`${anime.id}-airing`, airingTimeout);
-        debug.info(`Set airing notification for ${anime.titleEn || anime.titleJp} in ${Math.round(timeToAir / 1000 / 60)} minutes`);
-      }
+    this.worker.addEventListener('error', (error) => {
+      debug.error('Anime notification worker error:', error);
     });
   }
 
-  private handleFiveMinuteWarning(anime: AnimeForNotification) {
-    const notificationKey = `${anime.id}-warning`;
+  startWatching(animeList: AnimeForNotification[]) {
+    this.initWorker();
     
-    if (this.notifiedAnime.has(notificationKey)) {
-      return;
-    }
+    debug.info(`🔔 Starting to watch ${animeList.length} anime for notifications`);
 
-    this.notifiedAnime.add(notificationKey);
-    debug.anime('5-minute warning for', anime.titleEn || anime.titleJp);
-
-    if (this.callback) {
-      this.callback('warning', anime);
-    }
-  }
-
-  private handleNowAiring(anime: AnimeForNotification) {
-    const notificationKey = `${anime.id}-airing`;
-    
-    if (this.notifiedAnime.has(notificationKey)) {
-      return;
-    }
-
-    this.notifiedAnime.add(notificationKey);
-    debug.anime('Now airing:', anime.titleEn || anime.titleJp);
-
-    if (this.callback) {
-      this.callback('airing', anime);
-    }
-  }
-
-  private handleCurrentlyAiring(anime: AnimeForNotification) {
-    // For anime that are already airing when we start watching
-    const notificationKey = `${anime.id}-airing`;
-    
-    if (this.notifiedAnime.has(notificationKey)) {
-      return;
-    }
-
-    this.notifiedAnime.add(notificationKey);
-    debug.anime('Currently airing:', anime.titleEn || anime.titleJp);
-
-    if (this.callback) {
-      this.callback('airing', anime);
+    if (this.worker) {
+      this.worker.postMessage({
+        type: 'startWatching',
+        animeList
+      });
     }
   }
 
   clearAll() {
-    this.intervals.forEach(interval => {
-      clearTimeout(interval);
-    });
-    this.intervals.clear();
-    
-    // Keep notification history to avoid duplicates until cleared
-    // this.notifiedAnime.clear(); - Don't clear to avoid duplicate notifications
-  }
-
-  clearNotificationHistory() {
-    this.notifiedAnime.clear();
+    if (this.worker) {
+      this.worker.postMessage({ type: 'stopWatching' });
+    }
   }
 
   stop() {
     this.clearAll();
-    this.clearNotificationHistory();
+    
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = null;
+      debug.info('🔔 Stopped anime notification worker');
+    }
   }
 }
 

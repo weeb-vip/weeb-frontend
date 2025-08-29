@@ -6,6 +6,7 @@ import {Skeleton} from "../Skeleton/Skeleton";
 import {SafeImage} from "../SafeImage/SafeImage";
 import {Link} from "react-router-dom";
 import {getAirTimeDisplay} from "../../services/airTimeUtils";
+import {useAnimeCountdowns} from "../../hooks/useAnimeCountdowns";
 
 enum AnimeCardStyle {
   DEFAULT = 'default',
@@ -77,13 +78,37 @@ const cardStyles = {
 }
 
 function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
-  // Calculate air time automatically if not provided manually
-  const automaticAirTime = (props as AnimeCardProps).nextEpisode?.airDate && (props as AnimeCardProps).broadcast 
-    ? getAirTimeDisplay((props as AnimeCardProps).nextEpisode?.airDate, (props as AnimeCardProps).broadcast)
-    : null;
+  const { getCountdown } = useAnimeCountdowns();
   
-  // Use manual airTime if provided, otherwise use automatic calculation
-  const displayAirTime = (props as AnimeCardProps).airTime || automaticAirTime;
+  // Get real-time countdown from web worker if available
+  const workerCountdown = (props as AnimeCardProps).id ? getCountdown((props as AnimeCardProps).id!) : null;
+  
+  // Calculate air time display
+  let displayAirTime = (props as AnimeCardProps).airTime;
+  
+  if (!displayAirTime && (props as AnimeCardProps).nextEpisode?.airDate && (props as AnimeCardProps).broadcast) {
+    // Use worker countdown if available, otherwise fallback to static calculation
+    if (workerCountdown) {
+      displayAirTime = {
+        show: true,
+        text: workerCountdown.isAiring 
+          ? `Currently airing (${workerCountdown.countdown})` 
+          : workerCountdown.hasAired 
+            ? "Recently aired"
+            : workerCountdown.countdown.includes("m") || workerCountdown.countdown.includes("h")
+              ? `Airing in ${workerCountdown.countdown}`
+              : workerCountdown.countdown,
+        variant: workerCountdown.isAiring 
+          ? 'airing' as const
+          : workerCountdown.hasAired 
+            ? 'aired' as const 
+            : 'countdown' as const
+      };
+    } else {
+      // Fallback to static calculation
+      displayAirTime = getAirTimeDisplay((props as AnimeCardProps).nextEpisode?.airDate, (props as AnimeCardProps).broadcast) || undefined;
+    }
+  }
 
   return (
     <Card

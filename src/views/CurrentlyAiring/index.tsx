@@ -12,10 +12,12 @@ import { useNavigate } from "react-router-dom";
 import {GetImageFromAnime} from "../../services/utils";
 import debug from "../../utils/debug";
 import { getAirTimeDisplay, parseAirTime } from "../../services/airTimeUtils";
+import { useAnimeCountdowns } from "../../hooks/useAnimeCountdowns";
 import HeroBanner from "../../components/HeroBanner";
 
 export default function CurrentlyAiringPage() {
   const { data, isLoading } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring());
+  const { getCountdown } = useAnimeCountdowns();
   const navigate = useNavigate();
 
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});

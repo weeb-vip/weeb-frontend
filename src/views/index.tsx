@@ -14,10 +14,12 @@ import {AnimeStatusDropdown} from "../components/AnimeStatusDropdown/AnimeStatus
 import HeroBanner from "../components/HeroBanner";
 import debug from "../utils/debug";
 import {parseAirTime, getAirTimeDisplay, parseDurationToMinutes, isCurrentlyAiring} from "../services/airTimeUtils";
+import {useAnimeCountdowns} from "../hooks/useAnimeCountdowns";
 
 
 function Index() {
   const queryClient = useQueryClient();
+  const { getCountdown } = useAnimeCountdowns();
   const {
     data: homeData,
     isLoading: homeDataIsLoading,
