@@ -7,9 +7,9 @@ export default function PageWrapper({ children }: { children: React.ReactNode })
   const isMobile = useIsMobile();
 
   const variants = {
-    initial: isMobile ? { x: "100%", opacity: 0 } : { opacity: 0, y: 10 },
-    animate: { x: 0, y: 0, opacity: 1 },
-    exit: isMobile ? { x: "-100%", opacity: 0 } : { opacity: 0, y: -10 },
+    initial: isMobile ? { opacity: 0 } : { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    exit: isMobile ? { opacity: 0 } : { opacity: 0, y: -10 },
   };
 
   return (
@@ -17,7 +17,7 @@ export default function PageWrapper({ children }: { children: React.ReactNode })
       initial="initial"
       animate="animate"
       exit="exit"
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
       variants={variants}
     >
       {children}

@@ -19,7 +19,6 @@ import Loader from "../components/Loader";
 import { useAnimeNotifications } from "../hooks/useAnimeNotifications";
 import { DevNotificationPanel } from "../components/DevNotificationPanel";
 import { ToastProvider } from "../components/Toast";
-import { NavigationDirectionProvider } from "../hooks/useNavigationDirection";
 
 
 const Home = React.lazy(() => import('./index'));
