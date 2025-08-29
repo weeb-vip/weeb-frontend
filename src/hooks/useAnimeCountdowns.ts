@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { animeNotificationService } from '../services/animeNotifications';
+import debug from '../utils/debug';
 
 interface CountdownState {
   countdown: string;
@@ -14,6 +15,7 @@ export const useAnimeCountdowns = () => {
   useEffect(() => {
     // Set up countdown callback
     animeNotificationService.setCountdownCallback((animeId, countdown, isAiring, hasAired, progress) => {
+
       setCountdowns(prev => ({
         ...prev,
         [animeId]: { countdown, isAiring, hasAired, progress }
@@ -27,7 +29,10 @@ export const useAnimeCountdowns = () => {
   }, []);
 
   return {
-    getCountdown: (animeId: string) => countdowns[animeId],
+    getCountdown: (animeId: string) => {
+      const result = countdowns[animeId];
+      return result;
+    },
     getAllCountdowns: () => countdowns
   };
 };

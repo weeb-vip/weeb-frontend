@@ -8,7 +8,7 @@ import debug from '../utils/debug';
 
 export const useAnimeNotifications = () => {
   const { showToast } = useToast();
-  
+
   // Get currently airing anime data
   const { data: currentlyAiringData, isSuccess } = useQuery<CurrentlyAiringQuery>(
     fetchCurrentlyAiring()
@@ -71,6 +71,14 @@ export const useAnimeNotifications = () => {
     // Start watching for notifications
     animeNotificationService.startWatching(animeForNotifications);
     debug.info(`🔔 Started watching ${animeForNotifications.length} anime for notifications`);
+    
+    // Immediately trigger update to get initial data
+    setTimeout(() => {
+      debug.info('🔔 Triggering immediate update after startWatching');
+      animeNotificationService.triggerImmediateUpdate();
+    }, 50); // Small delay to ensure worker processed the anime list
+
+
 
     // Cleanup on unmount or data change
     return () => {

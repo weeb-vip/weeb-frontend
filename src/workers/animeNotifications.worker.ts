@@ -166,11 +166,11 @@ let devTimeOffset = 0;
 
 function getCurrentTime(): Date {
   const now = new Date();
-  
+
   if (devTimeOffset !== 0) {
     return new Date(now.getTime() + devTimeOffset);
   }
-  
+
   return now;
 }
 
@@ -254,7 +254,6 @@ function setupNotifications(anime: AnimeForNotification) {
 }
 
 function updateCountdowns() {
-  console.info('[AnimeWorker] Updating countdowns for', animeList.length, 'anime');
   animeList.forEach(anime => {
     if (!anime.nextEpisode?.airDate || !anime.broadcast) return;
 
@@ -282,7 +281,6 @@ function updateCountdowns() {
       const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
       const elapsedMs = currentMs - airStartMs;
       progress = Math.min(Math.max(elapsedMs / episodeDurationMs, 0), 1);
-      console.log('[AnimeWorker] Progress for', anime.titleEn || anime.titleJp, ':', `${(progress * 100).toFixed(1)}%`);
     }
 
     postMessage({

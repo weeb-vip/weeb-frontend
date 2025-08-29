@@ -5,8 +5,7 @@ import {StatusType} from '../Button/Button';
 import {AnimeStatusDropdown} from '../AnimeStatusDropdown/AnimeStatusDropdown';
 import {getAirDateTime, isAiringToday, hasAlreadyAired, calculateCountdown, isCurrentlyAiring, parseDurationToMinutes} from '../../services/airTimeUtils';
 import {GetImageFromAnime} from '../../services/utils';
-import {useAnimeCountdowns} from '../../hooks/useAnimeCountdowns';
-import {animeNotificationService} from '../../services/animeNotifications';
+import {useAnimeCountdownStore} from '../../stores/animeCountdownStore';
 import debug from "../../utils/debug";
 
 interface HeroBannerProps {
@@ -37,7 +36,8 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const [useFallback, setUseFallback] = useState(false);
   const [countdown, setCountdown] = useState<string>("");
   const [showJstPopover, setShowJstPopover] = useState(false);
-  const { getCountdown } = useAnimeCountdowns();
+  // Get worker countdown data from Zustand store
+  const workerCountdown = useAnimeCountdownStore((state) => state.countdowns[anime.id]);
 
   useEffect(() => {
     setUseFallback(false);
@@ -59,28 +59,6 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
 
   // Parse duration for accurate timing
   const durationMinutes = parseDurationToMinutes(anime.duration);
-
-  // Get worker countdown data for more accurate real-time info
-  const workerCountdown = getCountdown(anime.id);
-
-  // Trigger immediate worker update when component mounts or anime changes
-  useEffect(() => {
-    animeNotificationService.triggerImmediateUpdate();
-  }, [anime.id]);
-
-  // Debug progress values and worker data
-  useEffect(() => {
-    debug.info(`HeroBanner worker data for ${title}:`, JSON.stringify({
-      workerCountdown: workerCountdown,
-      hasProgress: workerCountdown?.progress !== undefined,
-      isAiring: workerCountdown?.isAiring,
-      progress: workerCountdown?.progress
-    }));
-
-    if (workerCountdown?.progress !== undefined) {
-      debug.anime(`Progress for ${title}: ${(workerCountdown.progress * 100).toFixed(1)}% (${workerCountdown.progress.toFixed(3)})`);
-    }
-  }, [workerCountdown, title]);
 
   // Use the service functions for air time calculations (fallback if worker not available)
   const airDateTime = getAirDateTime(anime.nextEpisode?.airDate, anime.broadcast);

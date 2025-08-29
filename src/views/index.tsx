@@ -34,6 +34,7 @@ function Index() {
   const [hoveredAnime, setHoveredAnime] = useState<any>(null);
 
 
+
   // Sort currently airing anime by next air time
   const sortedCurrentlyAiring = useMemo(() => {
     if (!currentAiringData?.currentlyAiring) return [];
@@ -41,7 +42,7 @@ function Index() {
     const now = new Date();
     const allAnime = [...currentAiringData.currentlyAiring];
 
-    // Filter to show future episodes and currently airing shows
+    // Filter to show future episodes, currently airing shows, and recently aired (within 30 minutes)
     const filteredAnime = allAnime.filter((anime) => {
       const airTime = parseAirTime(anime.nextEpisode?.airDate, anime.broadcast);
       if (!airTime) return true; // Keep anime without proper air time
@@ -53,7 +54,16 @@ function Index() {
 
       // Check if currently airing using episode duration
       const durationMinutes = parseDurationToMinutes(anime.duration);
-      return isCurrentlyAiring(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
+      if (isCurrentlyAiring(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes)) {
+        return true;
+      }
+
+      // Show recently aired episodes for 30 minutes after they finish
+      const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
+      const episodeEndTime = airTime.getTime() + episodeDurationMs;
+      const timeSinceEnd = now.getTime() - episodeEndTime;
+      
+      return timeSinceEnd > 0 && timeSinceEnd <= (30 * 60 * 1000); // 30 minutes
     });
 
     return filteredAnime.sort((a, b) => {
@@ -169,8 +179,31 @@ function Index() {
           >
             {sortedCurrentlyAiring?.slice(0, 8).map((item => {
               const id = `currently-airing-${item.id}`;
-              // Calculate air time display for each anime
-              const airTimeDisplay = getAirTimeDisplay(item.nextEpisode?.airDate, item.broadcast) || undefined;
+
+              // Get worker countdown data
+              const workerCountdown = getCountdown(item.id);
+
+
+              // Use worker countdown if available, otherwise fallback to static calculation
+              let airTimeDisplay;
+              if (workerCountdown) {
+                airTimeDisplay = {
+                  show: true,
+                  text: workerCountdown.isAiring
+                    ? "Currently airing"
+                    : workerCountdown.hasAired
+                      ? "Recently aired"
+                      : "Airing soon",
+                  variant: workerCountdown.isAiring
+                    ? 'airing' as const
+                    : workerCountdown.hasAired
+                      ? 'aired' as const
+                      : 'countdown' as const,
+                };
+              } else {
+                // Fallback to static calculation
+                airTimeDisplay = getAirTimeDisplay(item.nextEpisode?.airDate, item.broadcast) || undefined;
+              }
 
               return (
                 <div

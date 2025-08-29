@@ -1,4 +1,5 @@
 import debug from '../utils/debug';
+import { useAnimeCountdownStore } from '../stores/animeCountdownStore';
 
 export interface AnimeForNotification {
   id: string;
@@ -27,6 +28,7 @@ class AnimeNotificationService {
   private worker: Worker | null = null;
   private notificationCallback?: NotificationCallback;
   private countdownCallback?: CountdownCallback;
+  private isWorkerReady: boolean = false;
 
   setNotificationCallback(callback: NotificationCallback) {
     this.notificationCallback = callback;
@@ -65,6 +67,15 @@ class AnimeNotificationService {
           this.notificationCallback(message.notificationType, message.anime);
         }
       } else if (message.type === 'countdown') {
+        // Update Zustand store directly
+        useAnimeCountdownStore.getState().setCountdown(message.animeId, {
+          countdown: message.countdown,
+          isAiring: message.isAiring,
+          hasAired: message.hasAired,
+          progress: message.progress
+        });
+        
+        // Keep the callback for backwards compatibility
         if (this.countdownCallback) {
           this.countdownCallback(message.animeId, message.countdown, message.isAiring, message.hasAired, message.progress);
         }
@@ -92,6 +103,8 @@ class AnimeNotificationService {
         type: 'startWatching',
         animeList
       });
+      this.isWorkerReady = true;
+      debug.info('🔔 Worker is now ready');
     }
   }
 
@@ -111,11 +124,18 @@ class AnimeNotificationService {
   }
 
   triggerImmediateUpdate() {
-    if (this.worker) {
+    if (this.worker && this.isWorkerReady) {
+      debug.info('🔔 Sending triggerUpdate message to worker');
       this.worker.postMessage({
         type: 'triggerUpdate'
       });
+    } else {
+      debug.warn('🔔 Worker not ready for triggerUpdate', { hasWorker: !!this.worker, isReady: this.isWorkerReady });
     }
+  }
+
+  isReady(): boolean {
+    return this.isWorkerReady;
   }
 
   stop() {
