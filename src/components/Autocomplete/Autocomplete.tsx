@@ -7,6 +7,8 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useNavigate} from "react-router-dom";
 import {isValid} from "date-fns";
 import Item from "./item";
+import {versionGate} from "../../services/version_gate";
+
 
 const searchClient = algoliasearch("A2HF2P5C6X", "45216ed5ac3f9e0a478d3c354d353d58");
 
@@ -22,6 +24,10 @@ export function Autocomplete() {
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const desktopFormRef = useRef<HTMLDivElement>(null);
   const desktopPanelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    versionGate(searchClient);
+  }, []);
+
 
   const autocomplete = useMemo(() => {
     return createAutocomplete({
@@ -149,7 +155,7 @@ export function Autocomplete() {
         >
           {/* Subtle separator line */}
           <div className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent mx-4" />
-          
+
           {autocompleteState.collections.map((collection: any, index: number) => (
             <ul key={index} {...autocomplete.getListProps()} className={isMobile ? "py-2" : "py-2"}>
               {collection.items

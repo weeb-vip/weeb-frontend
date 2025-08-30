@@ -88,7 +88,6 @@ function WeebVipWordmark({ size = "md", className = "" }: { size?: "sm" | "md"; 
 
 function Header() {
   const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
-  const flags = useFlags(["algolia_search"]);
   const navigate = useNavigate();
   const openModalLogin = useLoginModalStore((state) => state.openLogin);
   const openModalRegister = useLoginModalStore((state) => state.openRegister);
