@@ -63,10 +63,10 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
 
               setPosition({ top, left });
             }}
-            title={`${anime.titleEn || anime.titleJp || "Unknown"} (Ep ${anime.nextEpisode?.episodeNumber || "?"})`}
+            title={`${anime.titleEn || anime.titleJp || "Unknown"} (Ep ${anime.episodes[0]?.episodeNumber || "?"})`}
             className="text-xs text-blue-700 dark:text-blue-300 text-left truncate hover:bg-blue-100 dark:hover:bg-blue-800/50 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded transition-colors duration-300 w-full"
           >
-            {anime.titleEn || anime.titleJp || "Unknown"} (Ep {anime.nextEpisode?.episodeNumber || "?"})
+            {anime.titleEn || anime.titleJp || "Unknown"} (Ep {anime.episodes[0]?.episodeNumber || "?"})
           </Popover.Button>
 
           {open &&
@@ -98,16 +98,16 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
                       : "Unknown"
                   }
                   airdate={
-                    anime.nextEpisode?.airDate
-                      ? format(new Date(anime.nextEpisode.airDate), "EEE MMM do", { in: utc })
+                    anime.episodes[0]?.airDate
+                      ? format(new Date(anime.episodes[0].airDate), "EEE MMM do", { in: utc })
                       : "Unknown"
                   }
                   episodeTitle={
-                    anime.nextEpisode?.titleEn ||
-                    anime.nextEpisode?.titleJp ||
+                    anime.episodes[0]?.titleEn ||
+                    anime.episodes[0]?.titleJp ||
                     "Unknown"
                   }
-                  episodeNumber={anime.nextEpisode?.episodeNumber?.toString() || "Unknown"}
+                  episodeNumber={anime.episodes[0]?.episodeNumber?.toString() || "Unknown"}
                   options={[]}
                 />
               </Popover.Panel>,

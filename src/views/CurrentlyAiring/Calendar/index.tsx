@@ -20,6 +20,7 @@ import {
 import { utc } from "@date-fns/utc/utc";
 import { AnimePopover } from "./AnimePopover";
 import StatusButton, {ButtonColor} from "../../../components/Button";
+import { parseAirTime } from "../../../services/airTimeUtils";
 
 type ViewMode = "month" | "week";
 
@@ -83,10 +84,10 @@ export default function AiringCalendarPage() {
   const animeByDate: Record<string, typeof data.currentlyAiring> = {};
   for (const anime of data.currentlyAiring || []) {
     for (const episode of anime.episodes || []) {
-      const airDate = episode.airDate;
+      const airDate = parseAirTime(episode.airDate, anime.broadcast);
       if (!airDate) continue;
 
-      const key = format(parseISO(airDate, { in: utc }), "yyyy-MM-dd", { in: utc });
+      const key = format(airDate, "yyyy-MM-dd", { in: utc });
       if (!animeByDate[key]) animeByDate[key] = [];
 
       (animeByDate[key] || []).push({

@@ -270,7 +270,6 @@ export function findNextEpisode(
       const airTime = parseAirTime(episode.airDate, broadcast);
       if (airTime) {
         const now = currentTime || getCurrentTime();
-        console.log(`${airTime} <= ${now} ? ${airTime.getTime() <= now.getTime()}`);
         // or in the last 24 hours
         if (airTime.getTime() > now.getTime() || (now.getTime() - airTime.getTime()) <= (24 * 60 * 60 * 1000)) {
           return { episode, airTime };
