@@ -99,40 +99,25 @@ class AnimeNotificationService {
 
   private async initWorker() {
 
-    if (this.worker) {
-      if (import.meta.hot) {
-        // @ts-ignore
-        import.meta.hot.dispose(() => this.worker.terminate());
-      }
-      return;
-    }
+    if (this.worker) return;
 
     try {
-      debug.info('Loading worker with simplified URL method');
-      // Use direct URL approach to avoid module system issues
-      const workerUrl = new URL('../workers/animeNotifications.worker.ts', import.meta.url);
-      workerUrl.searchParams.set('worker', '');
-      
-      this.worker = new Worker(workerUrl, { type: 'module' });
-      debug.info('Worker loaded successfully');
-
+      // Use Vite's ?worker import to force TypeScript compilation
+      // if dev then use date.now() and append a random number to avoid caching
+      if (!import.meta.env.DEV) {
+        const {default: WorkerConstructor} = await import('../workers/animeNotifications.worker.ts?worker');
+        this.worker = new WorkerConstructor();
+      } else {
+        const cacheBuster = Date.now() + '-' + Math.floor(Math.random() * 100000);
+        const url = new URL('../workers/animeNotifications.worker.ts?worker', import.meta.url);
+        url.searchParams.append('cacheBuster', cacheBuster);
+        this.worker = new Worker(url);
+        debug.info('🐛 Dev mode: Worker loaded with cache buster:', cacheBuster);
+      }
       this.setupWorkerListeners();
-      debug.info('Worker created and listeners setup successfully');
-
-      // Test the worker by posting a simple message
-      setTimeout(() => {
-        if (this.worker) {
-          debug.info('Testing worker communication...');
-          this.worker.postMessage({ type: 'triggerUpdate' });
-        }
-      }, 1000);
-
+      debug.info('Worker created successfully');
     } catch (error) {
-      debug.error('Failed to create worker - detailed error:', {
-        error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'No stack trace'
-      });
+      debug.error('Failed to create worker:', error);
       return;
     }
   }
