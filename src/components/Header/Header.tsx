@@ -154,7 +154,7 @@ function Header() {
               className="w-14 h-14"
             />
           </Link>
-          <span className="text-xl font-normal text-gray-900 dark:text-gray-100">Anime</span>
+          <span className="text-2xl font-thin tracking-wider text-gray-900 dark:text-gray-100">Weeb VIP</span>
         </div>
 
         {/* Middle: Search */}
