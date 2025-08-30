@@ -1,4 +1,3 @@
-/// <reference lib="webworker" />
 // Web Worker for anime notifications and countdown calculations
 // This worker runs in a separate thread to provide accurate timing
 
