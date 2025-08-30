@@ -119,7 +119,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
 
   return (
     <Card
-      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white dark:bg-gray-800 rounded-md shadow-sm w-full justify-center transition-colors duration-300 ${props.className || ''} relative`}
+      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white ring-1 ring-gray-100 dark:ring-gray-800 dark:bg-gray-800 rounded-md shadow-sm w-full justify-center transition-all duration-300 ${props.className || ''} relative`}
     >
       {/* Watchlist indicator */}
       {flags.watchlist_indicators && (props as AnimeCardProps).entry?.status && (
