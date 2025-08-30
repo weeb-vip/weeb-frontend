@@ -17,7 +17,6 @@ import {
   addWeeks,
   subWeeks,
 } from "date-fns";
-import { utc } from "@date-fns/utc/utc";
 import { AnimePopover } from "./AnimePopover";
 import StatusButton, {ButtonColor} from "../../../components/Button";
 import { parseAirTime } from "../../../services/airTimeUtils";
@@ -81,21 +80,43 @@ export default function AiringCalendarPage() {
 
   if (isLoading || !data) return <Loader />;
 
-  const animeByDate: Record<string, typeof data.currentlyAiring> = {};
+  const animeByDate: Record<string, any[]> = {};
+  
   for (const anime of data.currentlyAiring || []) {
     for (const episode of anime.episodes || []) {
-      const airDate = parseAirTime(episode.airDate, anime.broadcast);
-      if (!airDate) continue;
+      // Parse air time for this specific episode
+      const episodeAirTime = parseAirTime(episode.airDate, anime.broadcast);
+      if (!episodeAirTime) continue;
 
-      const key = format(airDate, "yyyy-MM-dd", { in: utc });
-      if (!animeByDate[key]) animeByDate[key] = [];
+      const dateKey = format(episodeAirTime, "yyyy-MM-dd");
+      if (!animeByDate[dateKey]) animeByDate[dateKey] = [];
 
-      (animeByDate[key] || []).push({
+      // Create entry with the episode's specific air time
+      const animeEntry = {
         ...anime,
         episodes: [episode], // Pass single episode as array for HeroBanner
-      });
+        episodeAirTime: episodeAirTime, // Use the episode's air time for sorting
+      };
+
+      animeByDate[dateKey].push(animeEntry);
     }
   }
+
+  // Sort entries by episode air time within each day
+  Object.keys(animeByDate).forEach(dateKey => {
+    animeByDate[dateKey].sort((a, b) => {
+      const aTime = a.episodeAirTime;
+      const bTime = b.episodeAirTime;
+      
+      // Both should have episodeAirTime since we filtered out entries without it above
+      if (aTime && bTime) {
+        return aTime.getTime() - bTime.getTime();
+      }
+      
+      // Fallback (shouldn't happen with the filtering above)
+      return 0;
+    });
+  });
 
   const isTodayVisible = (day: Date) =>
     currentDate.getMonth() === new Date().getMonth() && isSameDay(day, new Date());
@@ -159,7 +180,7 @@ export default function AiringCalendarPage() {
 
         {/* Calendar days */}
         {days.map((day) => {
-          const dateKey = format(day, "yyyy-MM-dd", { in: utc });
+          const dateKey = format(day, "yyyy-MM-dd");
           const entries = animeByDate[dateKey] || [];
           const isToday = isTodayVisible(day);
 
@@ -173,7 +194,7 @@ export default function AiringCalendarPage() {
               }`}
             >
               <div className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-1">
-                <span>{format(day, "d", { in: utc })}</span>
+                <span>{format(day, "d")}</span>
                 <span className="text-gray-500 dark:text-gray-400 text-xs block lg:hidden">
                   ({format(day, "EEE")})
                 </span>

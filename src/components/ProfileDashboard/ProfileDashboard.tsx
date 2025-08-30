@@ -6,12 +6,13 @@ import { GetImageFromAnime } from "../../services/utils";
 import { AnimeStatusDropdown } from "../AnimeStatusDropdown/AnimeStatusDropdown";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
-import { getAirTimeDisplay } from "../../services/airTimeUtils";
+import { getAirTimeDisplay, findNextEpisode } from "../../services/airTimeUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronRight, faPlay, faCalendarDays, faBookmark } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import Loader from "../Loader";
+import { useAnimeCountdownStore } from "../../stores/animeCountdownStore";
 
 interface ProfileDashboardProps {
   className?: string;
@@ -19,6 +20,7 @@ interface ProfileDashboardProps {
 
 export default function ProfileDashboard({ className }: ProfileDashboardProps) {
   const navigate = useNavigate();
+  const { getTimingData } = useAnimeCountdownStore();
 
   // Fetch user's watchlist (Plan to Watch and Watching) - using high limit to get all items
   const { data: watchingData, isLoading: watchingLoading } = useQuery(
@@ -60,60 +62,64 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
     // Create set of watchlist anime IDs for quick lookup
     const watchlistIds = new Set(allWatchlistShows.map(entry => entry.anime?.id).filter(Boolean));
 
-    // Process all currently airing shows for "Airing This Week" section
+    // Process all currently airing shows for "Airing This Week" section using main page logic
     currentlyAiringShows.forEach(airingInfo => {
       if (!airingInfo || !(airingInfo as any).episodes || (airingInfo as any).episodes.length === 0) return;
 
-      // Find the next unaired episode (first episode with airDate >= now)
-      const upcomingEpisodes = (airingInfo as any).episodes
-        .filter((ep: any) => ep.airDate)
-        .map((ep: any) => ({ ...ep, airDate: new Date(ep.airDate!) }))
-        .filter((ep: any) => ep.airDate >= now)
-        .sort((a: any, b: any) => a.airDate.getTime() - b.airDate.getTime());
+      const episodes = (airingInfo as any).episodes;
 
-      if (upcomingEpisodes.length === 0) return; // No upcoming episodes
+      // Use shared function to find the next episode (same as main page)
+      const nextEpisodeResult = findNextEpisode(episodes, airingInfo.broadcast, now);
 
-      const nextEpisode = upcomingEpisodes[0];
-      const nextEpisodeDate = nextEpisode.airDate;
+      // If we found a next episode, add this anime to our list
+      if (nextEpisodeResult) {
+        const { episode: nextEpisode, airTime: nextEpisodeAirTime } = nextEpisodeResult;
 
-      // If next episode is within the next 7 days (from today forward)
-      if (nextEpisodeDate <= sevenDaysFromNow && nextEpisodeDate >= now) {
-        const airTimeInfo = getAirTimeDisplay(nextEpisodeDate.toISOString(), airingInfo.broadcast) || {
-          show: true,
-          text: `Airing ${format(nextEpisodeDate, "EEE")} at ${format(nextEpisodeDate, "h:mm a")}`,
-          variant: 'scheduled' as const
-        };
+        // Only include if episode is within the next 7 days
+        if (nextEpisodeAirTime <= sevenDaysFromNow && nextEpisodeAirTime >= now) {
+          // Generate air time display info (same as main page)
+          const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, airingInfo.broadcast) || {
+            show: true,
+            text: nextEpisodeAirTime <= now
+              ? "Recently aired"
+              : `Airing ${format(nextEpisodeAirTime, "EEE")} at ${format(nextEpisodeAirTime, "h:mm a")}`,
+            variant: nextEpisodeAirTime <= now ? 'aired' as const : 'scheduled' as const
+          };
 
-        // Check if this anime is in user's watchlist
-        const watchlistEntry = allWatchlistShows.find(entry => entry.anime?.id === airingInfo.id);
-        const isInWatchlist = watchlistIds.has(airingInfo.id);
+          // Check if this anime is in user's watchlist
+          const watchlistEntry = allWatchlistShows.find(entry => entry.anime?.id === airingInfo.id);
+          const isInWatchlist = watchlistIds.has(airingInfo.id);
 
-        const enhancedEntry = {
-          // If it's in watchlist, use the watchlist entry structure, otherwise create a minimal structure
-          ...(watchlistEntry || {
-            id: `non-watchlist-${airingInfo.id}`,
-            anime: {
-              id: airingInfo.id,
-              titleEn: airingInfo.titleEn,
-              titleJp: airingInfo.titleJp,
-              description: null,
-              episodeCount: null,
-              duration: airingInfo.duration,
-              startDate: airingInfo.startDate,
-              imageUrl: airingInfo.imageUrl
-            },
-            status: null // Not in watchlist
-          }),
-          airingInfo: {
-            ...airingInfo,
-            airTimeDisplay: airTimeInfo,
-            nextEpisodeDate,
-            nextEpisode, // Use our calculated next episode instead of the potentially stale one
-            isInWatchlist
-          }
-        };
+          const enhancedEntry = {
+            // If it's in watchlist, use the watchlist entry structure, otherwise create a minimal structure
+            ...(watchlistEntry || {
+              id: `non-watchlist-${airingInfo.id}`,
+              anime: {
+                id: airingInfo.id,
+                titleEn: airingInfo.titleEn,
+                titleJp: airingInfo.titleJp,
+                description: null,
+                episodeCount: null,
+                duration: airingInfo.duration,
+                startDate: airingInfo.startDate,
+                imageUrl: airingInfo.imageUrl
+              },
+              status: null // Not in watchlist
+            }),
+            airingInfo: {
+              ...airingInfo,
+              airTimeDisplay: airTimeInfo,
+              nextEpisodeDate: nextEpisodeAirTime,
+              nextEpisode: {
+                ...nextEpisode,
+                airDate: nextEpisodeAirTime
+              },
+              isInWatchlist
+            }
+          };
 
-        airingSoon.push(enhancedEntry);
+          airingSoon.push(enhancedEntry);
+        }
       }
     });
 
@@ -226,58 +232,82 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {airingSoon.map((entry: any) => (
-              <div key={`airing-${entry.id}`} className="relative">
-                <AnimeCard
-                  style={AnimeCardStyle.DETAIL}
-                  forceListLayout={true}
-                  id={entry.anime?.id}
-                  title={entry.anime?.titleEn || entry.anime?.titleJp || "Unknown"}
-                  description={entry.anime?.description || ""}
-                  episodes={entry.airingInfo?.episodeCount || entry.anime?.episodeCount || 0}
-                  episodeLength={entry.airingInfo?.duration?.replace(/per.+?$|per/gm, '') || entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
-                  image={GetImageFromAnime(entry.airingInfo) || GetImageFromAnime(entry.anime)}
-                  onClick={() => navigate(`/show/${entry.anime?.id}`)}
-                  year={entry.airingInfo?.startDate ? new Date(entry.airingInfo.startDate).getFullYear().toString() :
-                        entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : "Unknown"}
-                  airTime={entry.airingInfo?.airTimeDisplay}
-                  nextEpisode={entry.airingInfo?.nextEpisode}
-                  broadcast={entry.airingInfo?.broadcast}
-                  // entry={entry}
-                  options={[
-                    entry.airingInfo?.isInWatchlist ? (
-                      <AnimeStatusDropdown key={`dropdown-${entry.id}`} entry={entry as any} variant="compact" />
-                    ) : (
-                      <button
-                        key={`add-${entry.id}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Add to watchlist logic would go here
-                          navigate(`/show/${entry.anime?.id}`);
-                        }}
-                        className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors"
-                      >
-                        Add to List
-                      </button>
-                    )
-                  ]}
-                />
-                {/* Days until airing indicator */}
-                {/*{(() => {*/}
-                {/*  const daysUntilAiring = Math.ceil((entry.airingInfo?.nextEpisodeDate?.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));*/}
-                {/*  const isToday = daysUntilAiring === 0;*/}
-                {/*  const isTomorrow = daysUntilAiring === 1;*/}
+            {airingSoon.map((entry: any) => {
+              const airingInfo = entry.airingInfo;
+              const anime = entry.anime;
 
-                {/*  return (*/}
-                {/*    <div className={`absolute bottom-2 right-2 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg ${*/}
-                {/*      isToday ? 'bg-red-500' : isTomorrow ? 'bg-orange-500' : 'bg-blue-500'*/}
-                {/*    }`}>*/}
-                {/*      {isToday ? 'Today' : isTomorrow ? 'Tomorrow' : `${daysUntilAiring}d`}*/}
-                {/*    </div>*/}
-                {/*  );*/}
-                {/*})()}*/}
-              </div>
-            ))}
+              // Get worker timing data (same as main page)
+              const timingData = getTimingData(anime.id);
+
+              // Use worker timing data if available, otherwise use the calculated air time display
+              let airTimeDisplay: any;
+              let episodeTitle: string;
+              let episodeNumber: string;
+
+              if (timingData) {
+                // Use worker timing data for more accurate information
+                airTimeDisplay = {
+                  show: true,
+                  text: timingData.isCurrentlyAiring
+                    ? "Currently airing"
+                    : timingData.hasAlreadyAired
+                      ? "Recently aired"
+                      : timingData.countdown ? `Airing in ${timingData.countdown}` : timingData.airDateTime,
+                  variant: timingData.isCurrentlyAiring
+                    ? 'airing' as const
+                    : timingData.hasAlreadyAired
+                      ? 'aired' as const
+                      : 'countdown' as const,
+                };
+
+                // Use episode data from worker
+                episodeTitle = timingData.episode?.titleEn || timingData.episode?.titleJp || airingInfo.nextEpisode?.titleEn || airingInfo.nextEpisode?.titleJp || "Unknown";
+                episodeNumber = timingData.episode?.episodeNumber?.toString() || "Unknown";
+              } else {
+                // Use the air time display from ProfileDashboard logic
+                airTimeDisplay = airingInfo.airTimeDisplay || undefined;
+                episodeTitle = airingInfo.nextEpisode?.titleEn || airingInfo.nextEpisode?.titleJp || "Unknown";
+                episodeNumber = airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown";
+              }
+
+              return (
+                <div key={`airing-${entry.id}`} className="relative">
+                  <AnimeCard
+                    style={AnimeCardStyle.DETAIL}
+                    forceListLayout={true}
+                    id={anime.id}
+                    title={anime.titleEn || anime.titleJp || "Unknown"}
+                    description={anime.description || ""}
+                    episodes={airingInfo.episodeCount || anime.episodeCount || 0}
+                    episodeLength={airingInfo.duration?.replace(/per.+?$|per/gm, '') || anime.duration?.replace(/per.+?$|per/gm, '') || "?"}
+                    image={GetImageFromAnime(airingInfo) || GetImageFromAnime(anime)}
+                    onClick={() => navigate(`/show/${anime.id}`)}
+                    year={airingInfo.startDate ? new Date(airingInfo.startDate).getFullYear().toString() :
+                          anime.startDate ? new Date(anime.startDate).getFullYear().toString() : "Unknown"}
+                    airTime={airTimeDisplay}
+                    nextEpisode={airingInfo.nextEpisode}
+                    broadcast={airingInfo.broadcast}
+                    options={[
+                      airingInfo.isInWatchlist ? (
+                        <AnimeStatusDropdown key={`dropdown-${entry.id}`} entry={entry as any} variant="compact" />
+                      ) : (
+                        <button
+                          key={`add-${entry.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Add to watchlist logic would go here
+                            navigate(`/show/${anime.id}`);
+                          }}
+                          className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors"
+                        >
+                          Add to List
+                        </button>
+                      )
+                    ]}
+                  />
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

@@ -9,12 +9,15 @@ import {GetImageFromAnime} from "../../../services/utils";
 
 interface AnimePopoverProps {
   // @ts-ignore
-  anime: CurrentlyAiringQuery["currentlyAiring"][number];
+  anime: CurrentlyAiringQuery["currentlyAiring"][number] & { episodeAirTime?: Date };
 }
 
 export function AnimePopover({ anime }: AnimePopoverProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  // Format air time display
+  const airTimeText = anime.episodeAirTime ? format(anime.episodeAirTime, "h:mm a") : null;
 
   useLayoutEffect(() => {
     const updatePosition = () => {
@@ -63,10 +66,17 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
 
               setPosition({ top, left });
             }}
-            title={`${anime.titleEn || anime.titleJp || "Unknown"} (Ep ${anime.episodes[0]?.episodeNumber || "?"})`}
-            className="text-xs text-blue-700 dark:text-blue-300 text-left truncate hover:bg-blue-100 dark:hover:bg-blue-800/50 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded transition-colors duration-300 w-full"
+            title={`${anime.titleEn || anime.titleJp || "Unknown"} (Ep ${anime.episodes[0]?.episodeNumber || "?"})${airTimeText ? ` at ${airTimeText}` : ''}`}
+            className="text-xs text-blue-700 dark:text-blue-300 text-left hover:bg-blue-100 dark:hover:bg-blue-800/50 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col"
           >
-            {anime.titleEn || anime.titleJp || "Unknown"} (Ep {anime.episodes[0]?.episodeNumber || "?"})
+            <span className="truncate">
+              {anime.titleEn || anime.titleJp || "Unknown"} (Ep {anime.episodes[0]?.episodeNumber || "?"})
+            </span>
+            {airTimeText && (
+              <span className="text-gray-600 dark:text-gray-400 text-xs font-medium">
+                {airTimeText}
+              </span>
+            )}
           </Popover.Button>
 
           {open &&
@@ -98,7 +108,9 @@ export function AnimePopover({ anime }: AnimePopoverProps) {
                       : "Unknown"
                   }
                   airdate={
-                    anime.episodes[0]?.airDate
+                    anime.episodeAirTime
+                      ? format(anime.episodeAirTime, "EEE MMM do 'at' h:mm a")
+                      : anime.episodes[0]?.airDate
                       ? format(new Date(anime.episodes[0].airDate), "EEE MMM do", { in: utc })
                       : "Unknown"
                   }
