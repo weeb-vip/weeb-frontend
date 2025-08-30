@@ -28,7 +28,7 @@ export  function WeebMorphLogo({
       {/* EN layer */}
       <span
         className={[
-          "col-start-1 row-start-1 font-light text-transparent bg-clip-text",
+          "col-start-1 row-start-1 font-light text-transparent bg-clip-text text-center",
           colorClass,
           wordSize,
           "tracking-[0.18em]",
@@ -44,7 +44,7 @@ export  function WeebMorphLogo({
       <span
         lang="ja"
         className={[
-          "col-start-1 row-start-1 font-light text-transparent bg-clip-text",
+          "col-start-1 row-start-1 font-light text-transparent bg-clip-text text-center",
           colorClass,
           wordSize,
           "tracking-normal",
