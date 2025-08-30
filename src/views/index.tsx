@@ -62,7 +62,7 @@ function Index() {
       const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
       const episodeEndTime = airTime.getTime() + episodeDurationMs;
       const timeSinceEnd = now.getTime() - episodeEndTime;
-      
+
       return timeSinceEnd > 0 && timeSinceEnd <= (30 * 60 * 1000); // 30 minutes
     });
 
@@ -226,6 +226,7 @@ function Index() {
                              onClick={function (): void {
                                navigate(`/show/${item.id}`)
                              }} episodes={0}
+                             entry={item.userAnime}
                              options={
                     !item.userAnime ?
                     [(
@@ -279,6 +280,7 @@ function Index() {
                            onClick={function (): void {
                              navigate(`/show/${item.id}`)
                            }}
+                           entry={item.userAnime}
                            options={
                              !item.userAnime ?
                                [(
@@ -331,6 +333,7 @@ function Index() {
                            onClick={function (): void {
                              navigate(`/show/${item.id}`)
                            }}
+                           entry={item.userAnime}
                            options={[(
                              <Button
                                color={ButtonColor.blue}
@@ -377,6 +380,7 @@ function Index() {
                            onClick={function (): void {
                              navigate(`/show/${item.id}`)
                            }}
+                           entry={item.userAnime}
                            options={[(
                              <Button
                                color={ButtonColor.blue}

@@ -1,12 +1,15 @@
 import Card from "../Card";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCalendar, faClapperboard, faClock} from "@fortawesome/free-solid-svg-icons";
-import Button, {ButtonColor} from "../Button";
-import {Skeleton} from "../Skeleton/Skeleton";
+import {faCalendar, faClapperboard, faClock, faBookmark} from "@fortawesome/free-solid-svg-icons";
 import {SafeImage} from "../SafeImage/SafeImage";
 import {Link} from "react-router-dom";
 import {getAirTimeDisplay} from "../../services/airTimeUtils";
 import {useAnimeCountdowns} from "../../hooks/useAnimeCountdowns";
+import {useFlags} from "flagsmith/react";
+import {UserAnime} from "../../gql/graphql";
+import {statusLabels} from "../AnimeStatusDropdown/AnimeStatusDropdown";
+
+type UserAnimeStatus = Pick<UserAnime, "status">;
 
 enum AnimeCardStyle {
   DEFAULT = 'default',
@@ -44,6 +47,8 @@ interface AnimeCardProps {
     airDate?: string | null
   } | null
   broadcast?: string | null
+  // For watchlist detection - pass the entry object to detect watchlist status from options
+  entry?: UserAnimeStatus | null
 }
 
 interface AnimeEpisodeCardProps {
@@ -64,7 +69,8 @@ interface AnimeEpisodeCardProps {
     text: string
     variant?: 'countdown' | 'scheduled' | 'aired' | 'airing'
     icon?: React.ReactNode
-  }
+  },
+  entry?: UserAnimeStatus | null
 }
 
 const cardStyles = {
@@ -79,29 +85,30 @@ const cardStyles = {
 
 function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
   const { getCountdown } = useAnimeCountdowns();
-  
+  const flags = useFlags(['watchlist_indicators']);
+
   // Get real-time countdown from web worker if available
   const workerCountdown = (props as AnimeCardProps).id ? getCountdown((props as AnimeCardProps).id!) : null;
-  
+
   // Calculate air time display
   let displayAirTime = (props as AnimeCardProps).airTime;
-  
+
   if (!displayAirTime && (props as AnimeCardProps).nextEpisode?.airDate && (props as AnimeCardProps).broadcast) {
     // Use worker countdown if available, otherwise fallback to static calculation
     if (workerCountdown) {
       displayAirTime = {
         show: true,
-        text: workerCountdown.isAiring 
-          ? `Currently airing (${workerCountdown.countdown})` 
-          : workerCountdown.hasAired 
+        text: workerCountdown.isAiring
+          ? `Currently airing (${workerCountdown.countdown})`
+          : workerCountdown.hasAired
             ? "Recently aired"
             : workerCountdown.countdown.includes("m") || workerCountdown.countdown.includes("h")
               ? `Airing in ${workerCountdown.countdown}`
               : workerCountdown.countdown,
-        variant: workerCountdown.isAiring 
+        variant: workerCountdown.isAiring
           ? 'airing' as const
-          : workerCountdown.hasAired 
-            ? 'aired' as const 
+          : workerCountdown.hasAired
+            ? 'aired' as const
             : 'countdown' as const,
       };
     } else {
@@ -112,8 +119,15 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
 
   return (
     <Card
-      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white dark:bg-gray-800 rounded-md shadow-sm w-full justify-center transition-colors duration-300 ${props.className || ''}`}
+      className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} bg-white dark:bg-gray-800 rounded-md shadow-sm w-full justify-center transition-colors duration-300 ${props.className || ''} relative`}
     >
+      {/* Watchlist indicator */}
+      {flags.watchlist_indicators && (props as AnimeCardProps).entry?.status && (
+        <div className="absolute top-2 left-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg z-10">
+          <FontAwesomeIcon icon={faBookmark} className="mr-1" />
+          {(props as AnimeCardProps).entry?.status ? statusLabels[(props as AnimeCardProps).entry?.status as string] : 'Unknown'}
+        </div>
+      )}
 
       <Link to={`/show/${(props as AnimeCardProps).id}`}
             className={`flex flex-col flex-none bg-white dark:bg-gray-800 ${cardStyles[props.style]} flex-grow overflow-hidden transition-colors duration-300 ${(props as AnimeCardProps).forceListLayout ? "rounded-l-md" : "rounded-l-md lg:rounded-bl-none lg:rounded-t-md"} `}>
@@ -226,7 +240,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
             <div className={`flex flex-col w-full justify-between space-y-2`}>
               <span
                 className={`flex-grow text-md text-base space-x-4 text-gray-600 dark:text-gray-400`}><span>{`episode ${(props as AnimeEpisodeCardProps).episodeNumber}`}</span></span>
-              
+
               {/* Configurable air time display or fallback to airdate */}
               {(props as AnimeEpisodeCardProps).airTime?.show ? (
                 <div className={`flex items-center gap-2 ${

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getUser } from "../../services/queries"; // adjust path as needed
+import { getUser } from "../../services/queries";
 import Loader from "../../components/Loader";
+import ProfileDashboard from "../../components/ProfileDashboard";
 
 export default function ProfilePage() {
   const { data: user, isLoading } = useQuery(getUser());
@@ -9,32 +10,37 @@ export default function ProfilePage() {
   if (isLoading || !user) return <Loader />;
 
   return (
-    <div className="max-w-screen-md mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Your Profile</h1>
-
-      <div className="bg-white dark:bg-gray-800 shadow rounded p-4 space-y-2 mb-6 transition-colors duration-300">
-        <p className="text-gray-900 dark:text-gray-100"><strong>Name:</strong> {user.firstname} {user.lastname}</p>
-        <p className="text-gray-900 dark:text-gray-100"><strong>Username:</strong> {user.username}</p>
-        <p className="text-gray-900 dark:text-gray-100"><strong>Email:</strong> {user.email ?? "Not provided"}</p>
-        <p className="text-gray-900 dark:text-gray-100"><strong>Language:</strong> {user.language}</p>
+    <div className="max-w-screen-2xl mx-auto p-6">
+      {/* User Info Section */}
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-8 transition-colors duration-300">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Profile</h2>
+          <Link to="/settings" className="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-300 text-sm">
+            Settings
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <p className="text-gray-600 dark:text-gray-400">Name</p>
+            <p className="text-gray-900 dark:text-gray-100 font-medium">{user.firstname} {user.lastname}</p>
+          </div>
+          <div>
+            <p className="text-gray-600 dark:text-gray-400">Username</p>
+            <p className="text-gray-900 dark:text-gray-100 font-medium">{user.username}</p>
+          </div>
+          <div>
+            <p className="text-gray-600 dark:text-gray-400">Email</p>
+            <p className="text-gray-900 dark:text-gray-100 font-medium">{user.email ?? "Not provided"}</p>
+          </div>
+          <div>
+            <p className="text-gray-600 dark:text-gray-400">Language</p>
+            <p className="text-gray-900 dark:text-gray-100 font-medium">{user.language}</p>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        <p className="text-gray-700 dark:text-gray-300">Use the links below to navigate your lists:</p>
-
-        <ul className="list-disc pl-6 space-y-2">
-          <li>
-            <Link to="/profile/anime" className="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-300">
-              View Your Anime List
-            </Link>
-          </li>
-          <li>
-            <Link to="/settings" className="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-300">
-              Account Settings (coming soon)
-            </Link>
-          </li>
-        </ul>
-      </div>
+      {/* Dashboard Section */}
+      <ProfileDashboard />
     </div>
   );
 }
