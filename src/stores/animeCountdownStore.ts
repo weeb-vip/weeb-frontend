@@ -1,8 +1,6 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';   // ← add this
 import debug from '../utils/debug';
+import {createStore} from "../services/zustand.middleware";
 
-const DEVTOOLS_ON = typeof window !== 'undefined' && (import.meta as any)?.env?.DEV;
 
 interface AnimeTimingData {
   countdown: string;
@@ -26,64 +24,59 @@ interface AnimeTimingStore {
   getCountdown: (animeId: string) => Pick<AnimeTimingData, 'countdown' | 'isAiring' | 'hasAired' | 'progress'> | undefined;
 }
 
-export const useAnimeCountdownStore = create<AnimeTimingStore>()(
-  devtools(
-    (set, get) => ({
-      timingData: {},
-      countdowns: {},
+export const useAnimeCountdownStore = createStore<AnimeTimingStore>(
+  'AnimeTimingStore',
+  (set, get) => ({
+    timingData: {},
+    countdowns: {},
 
-      setTimingData: (animeId, data) => {
-        set((state) => {
-          const newTimingData = { ...state.timingData, [animeId]: data };
-          const newCountdowns = {
-            ...state.countdowns,
-            [animeId]: {
-              countdown: data.countdown,
-              isAiring: data.isAiring,
-              hasAired: data.hasAired,
-              progress: data.progress,
-            },
-          };
-          return { timingData: newTimingData, countdowns: newCountdowns };
-        }, false, { type: 'animeTiming/setTimingData', animeId });
-      },
-
-      getTimingData: (animeId) => {
-        const result = get().timingData[animeId];
-
-        return result;
-      },
-
-      setCountdown: (animeId, data) => {
-        const currentData = get().timingData[animeId];
-        const updatedData: AnimeTimingData = {
-          ...currentData,
-          countdown: data.countdown,
-          isAiring: data.isAiring,
-          hasAired: data.hasAired,
-          progress: data.progress,
-          isAiringToday: currentData?.isAiringToday || false,
-          isCurrentlyAiring: currentData?.isCurrentlyAiring || data.isAiring,
-          hasAlreadyAired: currentData?.hasAlreadyAired || data.hasAired,
-          airDateTime: currentData?.airDateTime || '',
+    setTimingData: (animeId, data) => {
+      set((state) => {
+        const newTimingData = { ...state.timingData, [animeId]: data };
+        const newCountdowns = {
+          ...state.countdowns,
+          [animeId]: {
+            countdown: data.countdown,
+            isAiring: data.isAiring,
+            hasAired: data.hasAired,
+            progress: data.progress,
+          },
         };
-        get().setTimingData(animeId, updatedData);
-      },
+        return { timingData: newTimingData, countdowns: newCountdowns };
+      }, false, { type: 'animeTiming/setTimingData', animeId });
+    },
 
-      getCountdown: (animeId) => {
-        const result = get().countdowns[animeId];
+    getTimingData: (animeId) => {
+      const result = get().timingData[animeId];
 
-        return result;
-      },
+      return result;
+    },
 
-      clearAll: () => {
-        debug.info('🔔 Store: Clearing all timing data');
-        set({ timingData: {}, countdowns: {} }, false, { type: 'animeTiming/clearAll' });
-      },
-    }),
-    {
-      name: 'AnimeTimingStore',
-      enabled: DEVTOOLS_ON, // avoids SSR/worker/test crashes
-    }
-  )
+    setCountdown: (animeId, data) => {
+      const currentData = get().timingData[animeId];
+      const updatedData: AnimeTimingData = {
+        ...currentData,
+        countdown: data.countdown,
+        isAiring: data.isAiring,
+        hasAired: data.hasAired,
+        progress: data.progress,
+        isAiringToday: currentData?.isAiringToday || false,
+        isCurrentlyAiring: currentData?.isCurrentlyAiring || data.isAiring,
+        hasAlreadyAired: currentData?.hasAlreadyAired || data.hasAired,
+        airDateTime: currentData?.airDateTime || '',
+      };
+      get().setTimingData(animeId, updatedData);
+    },
+
+    getCountdown: (animeId) => {
+      const result = get().countdowns[animeId];
+      debug.info(`🔔 Store: Getting countdown for ${animeId}:`, result);
+      return result;
+    },
+
+    clearAll: () => {
+      debug.info('🔔 Store: Clearing all timing data');
+      set({ timingData: {}, countdowns: {} }, false, { type: 'animeTiming/clearAll' });
+    },
+  })
 );

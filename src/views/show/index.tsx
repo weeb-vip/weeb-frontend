@@ -188,7 +188,7 @@ export default function Index() {
         </div>
       </div>
       <div
-        className="relative bg-cover bg-center bg-white dark:bg-gray-900 h-[420px] transition-all duration-300 overflow-hidden"
+        className="relative bg-cover bg-center bg-white dark:bg-gray-900 h-[600px] transition-all duration-300 overflow-hidden"
         style={{
           backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
 
