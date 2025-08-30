@@ -9,6 +9,29 @@ import Autocomplete from "../Autocomplete";
 import Button, { ButtonColor } from "../Button";
 import DarkModeToggle from "../DarkModeToggle";
 
+function WeebVipWordmark({ size = "md", className = "" }: { size?: "sm" | "md"; className?: string }) {
+  const wordSize = size === "sm" ? "text-2xl tracking-[0.25em]" : "text-4xl md:text-4xl tracking-[0.28em]";
+  const vipSize  = size === "sm" ? "text-sm" : "text-normal md:text-normal";
+
+  return (
+    <div className={`inline-flex items-center gap-2 sm:gap-3 ${className}`} role="img" aria-label="WEEB VIP wordmark">
+      {/* WEEB gradient */}
+      <span
+        className={`font-light ${wordSize} text-transparent bg-clip-text dark:bg-gray-300 bg-gray-800 transition-all`}
+      >
+        WEEB
+      </span>
+
+
+      {/* VIP pill */}
+      <span className="inline-flex items-center gap-3 px-3 sm:px-4 py-1.5 rounded-2xl  dark:bg-slate-900/80 ring-1 ring-slate-700 transition-all">
+        <span className={`dark:text-slate-50 font-black font-light  tracking-[0.35em] ${vipSize}`}>VIP</span>
+        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
+      </span>
+    </div>
+  );
+}
+
 function Header() {
   const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
   const flags = useFlags(["algolia_search"]);
@@ -64,10 +87,19 @@ function Header() {
                   </button>
                 )}
               </Menu.Item>
-
+              <Menu.Item>
+                <div className={`flex items-center space-x-4`}>
+                <img
+                  src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
+                  alt="logo"
+                  className="w-10 h-10"
+                />
+                <WeebVipWordmark size="sm"/>
+                </div>
+              </Menu.Item>
               {/* Dark Mode Toggle */}
               <Menu.Item>
-                {({ active }) => (
+                {({active}) => (
                   <div className={`flex items-center justify-between px-4 py-4 rounded ${
                     active ? "bg-gray-100 dark:bg-gray-700" : ""
                   }`}>
@@ -147,14 +179,14 @@ function Header() {
       <div className="hidden sm:flex flex-row items-center justify-between space-x-4 mt-4 sm:mt-0">
         {/* Left: Logo + Title */}
         <div className="flex items-center space-x-4">
-          <Link to="/">
+          <Link to="/" className={"flex flex-row space-x-4"}>
             <img
               src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
               alt="logo"
               className="w-14 h-14"
             />
+            <WeebVipWordmark />
           </Link>
-          <span className="text-2xl font-thin tracking-wider text-gray-900 dark:text-gray-100">Weeb VIP</span>
         </div>
 
         {/* Middle: Search */}
