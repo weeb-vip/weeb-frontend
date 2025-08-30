@@ -20,7 +20,7 @@ interface AnimeForNotification {
 
 interface NotificationMessage {
   type: 'notification';
-  notificationType: 'warning' | 'airing';
+  notificationType: 'warning' | 'airing' | 'airing-soon' | 'finished-airing';
   anime: AnimeForNotification;
 }
 
@@ -31,6 +31,21 @@ interface CountdownMessage {
   isAiring: boolean;
   hasAired: boolean;
   progress?: number; // 0-1 for airing episodes
+}
+
+interface TimingMessage {
+  type: 'timing';
+  animeId: string;
+  timingData: {
+    countdown: string;
+    isAiring: boolean;
+    hasAired: boolean;
+    progress?: number;
+    isAiringToday: boolean;
+    isCurrentlyAiring: boolean;
+    hasAlreadyAired: boolean;
+    airDateTime: string;
+  };
 }
 
 interface StartWatchingMessage {
@@ -52,7 +67,7 @@ interface TriggerUpdateMessage {
 }
 
 type WorkerMessage = StartWatchingMessage | StopWatchingMessage | SetTimeOffsetMessage | TriggerUpdateMessage;
-type WorkerResponse = NotificationMessage | CountdownMessage;
+type WorkerResponse = NotificationMessage | CountdownMessage | TimingMessage;
 
 // Air time utilities (self-contained, no external imports)
 function parseDurationToMinutes(duration?: string | null): number | null {
@@ -155,9 +170,54 @@ function calculateCountdown(airDate?: string | null, broadcast?: string | null, 
   return "";
 }
 
+// Additional timing utility functions
+function isAiringToday(airDate?: string | null, broadcast?: string | null): boolean {
+  if (!airDate) return false;
+
+  const airTime = parseAirTime(airDate, broadcast);
+  if (!airTime) return false;
+
+  const now = getCurrentTime();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const airDay = new Date(airTime.getFullYear(), airTime.getMonth(), airTime.getDate());
+
+  return today.getTime() === airDay.getTime();
+}
+
+function hasAlreadyAired(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): boolean {
+  if (!airDate) return false;
+
+  const airTime = parseAirTime(airDate, broadcast);
+  if (!airTime) return false;
+
+  const now = getCurrentTime();
+  const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
+  const airEndMs = airTime.getTime() + episodeDurationMs;
+
+  return now.getTime() > airEndMs;
+}
+
+function getAirDateTime(airDate?: string | null, broadcast?: string | null): string {
+  if (!airDate) return '';
+
+  const airTime = parseAirTime(airDate, broadcast);
+  if (!airTime) return '';
+
+  // Format similar to the main app
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  };
+
+  return airTime.toLocaleDateString('en-US', options);
+}
+
 // Worker state
 let animeList: AnimeForNotification[] = [];
-let notificationIntervals: Map<string, ReturnType<typeof setTimeout>> = new Map();
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
 let notifiedAnime: Set<string> = new Set();
 
@@ -175,69 +235,31 @@ function getCurrentTime(): Date {
 }
 
 function clearAllIntervals() {
-  notificationIntervals.forEach(intervalId => {
-    clearTimeout(intervalId);
-  });
-  notificationIntervals.clear();
-
   if (countdownInterval) {
     clearInterval(countdownInterval);
     countdownInterval = null;
   }
 }
 
-function setupNotifications(anime: AnimeForNotification) {
-  if (!anime.nextEpisode?.airDate || !anime.broadcast) {
-    return;
-  }
+function checkNotifications() {
+  animeList.forEach(anime => {
+    if (!anime.nextEpisode?.airDate || !anime.broadcast) return;
 
-  const airTime = parseAirTime(anime.nextEpisode.airDate, anime.broadcast);
-  if (!airTime) return;
+    const airTime = parseAirTime(anime.nextEpisode.airDate, anime.broadcast);
+    if (!airTime) return;
 
-  const now = getCurrentTime();
-  const timeToAir = airTime.getTime() - now.getTime();
-  const durationMinutes = parseDurationToMinutes(anime.duration);
+    const now = getCurrentTime();
+    const timeToAir = airTime.getTime() - now.getTime();
+    const durationMinutes = parseDurationToMinutes(anime.duration);
+    const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
 
-  // Only watch anime airing within the next 24 hours
-  if (timeToAir > 24 * 60 * 60 * 1000 || timeToAir < -24 * 60 * 60 * 1000) {
-    return;
-  }
-
-  // Check if currently airing
-  if (isCurrentlyAiring(anime.nextEpisode.airDate, anime.broadcast, durationMinutes)) {
-    const notificationKey = `${anime.id}-airing`;
-    if (!notifiedAnime.has(notificationKey)) {
-      notifiedAnime.add(notificationKey);
-      postMessage({
-        type: 'notification',
-        notificationType: 'airing',
-        anime
-      } as NotificationMessage);
+    // Only watch anime airing within the next 24 hours
+    if (timeToAir > 24 * 60 * 60 * 1000 || timeToAir < -24 * 60 * 60 * 1000) {
+      return;
     }
-    return;
-  }
 
-  // Set up 5-minute warning
-  const fiveMinuteWarning = timeToAir - (5 * 60 * 1000);
-  if (fiveMinuteWarning > 0 && fiveMinuteWarning < 24 * 60 * 60 * 1000) {
-    const warningTimeout = setTimeout(() => {
-      const notificationKey = `${anime.id}-warning`;
-      if (!notifiedAnime.has(notificationKey)) {
-        notifiedAnime.add(notificationKey);
-        postMessage({
-          type: 'notification',
-          notificationType: 'warning',
-          anime
-        } as NotificationMessage);
-      }
-    }, fiveMinuteWarning);
-
-    notificationIntervals.set(`${anime.id}-warning`, warningTimeout);
-  }
-
-  // Set up airing notification
-  if (timeToAir > 0 && timeToAir < 24 * 60 * 60 * 1000) {
-    const airingTimeout = setTimeout(() => {
+    // Check if currently airing
+    if (isCurrentlyAiring(anime.nextEpisode.airDate, anime.broadcast, durationMinutes)) {
       const notificationKey = `${anime.id}-airing`;
       if (!notifiedAnime.has(notificationKey)) {
         notifiedAnime.add(notificationKey);
@@ -247,13 +269,71 @@ function setupNotifications(anime: AnimeForNotification) {
           anime
         } as NotificationMessage);
       }
-    }, timeToAir);
+      return;
+    }
 
-    notificationIntervals.set(`${anime.id}-airing`, airingTimeout);
-  }
+    // Check if finished airing (within the last 30 minutes)
+    const finishedTime = timeToAir + episodeDurationMs;
+    if (finishedTime < 0 && finishedTime > -(30 * 60 * 1000)) {
+      const notificationKey = `${anime.id}-finished`;
+      if (!notifiedAnime.has(notificationKey)) {
+        notifiedAnime.add(notificationKey);
+        postMessage({
+          type: 'notification',
+          notificationType: 'finished-airing',
+          anime
+        } as NotificationMessage);
+      }
+      return;
+    }
+
+    // Check for 30-minute "airing soon" notification (within 5-second window)
+    const airingSoonTime = timeToAir - (30 * 60 * 1000);
+    if (airingSoonTime >= 0 && airingSoonTime < 5000) {
+      const notificationKey = `${anime.id}-airing-soon`;
+      if (!notifiedAnime.has(notificationKey)) {
+        notifiedAnime.add(notificationKey);
+        postMessage({
+          type: 'notification',
+          notificationType: 'airing-soon',
+          anime
+        } as NotificationMessage);
+      }
+    }
+
+    // Check for 5-minute warning (within 5-second window)
+    const fiveMinuteWarning = timeToAir - (5 * 60 * 1000);
+    if (fiveMinuteWarning >= 0 && fiveMinuteWarning < 5000) {
+      const notificationKey = `${anime.id}-warning`;
+      if (!notifiedAnime.has(notificationKey)) {
+        notifiedAnime.add(notificationKey);
+        postMessage({
+          type: 'notification',
+          notificationType: 'warning',
+          anime
+        } as NotificationMessage);
+      }
+    }
+
+    // Check for airing notification (within 5-second window)
+    if (timeToAir >= 0 && timeToAir < 5000) {
+      const notificationKey = `${anime.id}-airing`;
+      if (!notifiedAnime.has(notificationKey)) {
+        notifiedAnime.add(notificationKey);
+        postMessage({
+          type: 'notification',
+          notificationType: 'airing',
+          anime
+        } as NotificationMessage);
+      }
+    }
+  });
 }
 
 function updateCountdowns() {
+  // Check for notifications first
+  checkNotifications();
+
   animeList.forEach(anime => {
     if (!anime.nextEpisode?.airDate || !anime.broadcast) return;
 
@@ -271,7 +351,7 @@ function updateCountdowns() {
     const durationMinutes = parseDurationToMinutes(anime.duration);
     const countdown = calculateCountdown(anime.nextEpisode.airDate, anime.broadcast, durationMinutes);
     const isAiring = isCurrentlyAiring(anime.nextEpisode.airDate, anime.broadcast, durationMinutes);
-    const hasAired = timeToAir < 0 && !isAiring;
+    const hasAired = timeToAir < 0;
 
     // Calculate progress for currently airing episodes
     let progress: number | undefined = undefined;
@@ -283,6 +363,13 @@ function updateCountdowns() {
       progress = Math.min(Math.max(elapsedMs / episodeDurationMs, 0), 1);
     }
 
+    // Calculate all timing states
+    const airingToday = isAiringToday(anime.nextEpisode.airDate, anime.broadcast);
+    const currentlyAiring = isAiring;
+    const alreadyAired = hasAlreadyAired(anime.nextEpisode.airDate, anime.broadcast, durationMinutes);
+    const airDateTime = getAirDateTime(anime.nextEpisode.airDate, anime.broadcast);
+
+    // Send backward compatible countdown message
     postMessage({
       type: 'countdown',
       animeId: anime.id,
@@ -291,6 +378,22 @@ function updateCountdowns() {
       hasAired,
       progress
     } as CountdownMessage);
+
+    // Send comprehensive timing data
+    postMessage({
+      type: 'timing',
+      animeId: anime.id,
+      timingData: {
+        countdown,
+        isAiring,
+        hasAired,
+        progress,
+        isAiringToday: airingToday,
+        isCurrentlyAiring: currentlyAiring,
+        hasAlreadyAired: alreadyAired,
+        airDateTime
+      }
+    } as TimingMessage);
   });
 }
 
@@ -312,9 +415,6 @@ self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
       animeList = event.data.animeList;
       clearAllIntervals();
       notifiedAnime.clear();
-
-      // Set up notifications for each anime
-      animeList.forEach(setupNotifications);
 
       // Start countdown updates
       startCountdownUpdates();

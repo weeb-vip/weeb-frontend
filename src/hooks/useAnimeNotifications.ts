@@ -26,34 +26,57 @@ export const useAnimeNotifications = () => {
       const episodeTitle = anime.nextEpisode?.titleEn || anime.nextEpisode?.titleJp || 'Unknown';
       const animeTitle = anime.titleEn || anime.titleJp || 'Unknown Anime';
 
-      if (type === 'warning') {
-        showToast({
-          type: 'warning',
-          title: 'Anime Airing Soon',
-          message: `Episode ${episodeNumber} starts in 5 minutes`,
-          duration: 8000,
-          anime: {
-            id: anime.id,
-            titleEn: anime.titleEn,
-            titleJp: anime.titleJp,
-            imageUrl: anime.imageUrl
-          }
-        });
-        debug.anime(`📺 5-minute warning: ${animeTitle} Episode ${episodeNumber}`);
-      } else if (type === 'airing') {
-        showToast({
-          type: 'info',
-          title: 'Now Airing',
-          message: `Episode ${episodeNumber}: ${episodeTitle}`,
-          duration: 10000,
-          anime: {
-            id: anime.id,
-            titleEn: anime.titleEn,
-            titleJp: anime.titleJp,
-            imageUrl: anime.imageUrl
-          }
-        });
-        debug.anime(`🔴 Now airing: ${animeTitle} Episode ${episodeNumber}`);
+      const animeInfo = {
+        id: anime.id,
+        titleEn: anime.titleEn,
+        titleJp: anime.titleJp,
+        imageUrl: anime.imageUrl
+      };
+
+      switch (type) {
+        case 'warning':
+          showToast({
+            type: 'warning',
+            title: 'Anime Airing Soon',
+            message: `Episode ${episodeNumber} starts in 5 minutes`,
+            duration: 8000,
+            anime: animeInfo
+          });
+          debug.anime(`📺 5-minute warning: ${animeTitle} Episode ${episodeNumber}`);
+          break;
+
+        case 'airing-soon':
+          showToast({
+            type: 'info',
+            title: 'Anime Airing Soon',
+            message: `Episode ${episodeNumber} starts in 30 minutes`,
+            duration: 6000,
+            anime: animeInfo
+          });
+          debug.anime(`📺 30-minute notice: ${animeTitle} Episode ${episodeNumber}`);
+          break;
+
+        case 'airing':
+          showToast({
+            type: 'info',
+            title: 'Now Airing',
+            message: `Episode ${episodeNumber}: ${episodeTitle}`,
+            duration: 10000,
+            anime: animeInfo
+          });
+          debug.anime(`🔴 Now airing: ${animeTitle} Episode ${episodeNumber}`);
+          break;
+
+        case 'finished-airing':
+          showToast({
+            type: 'success',
+            title: 'Episode Finished',
+            message: `Episode ${episodeNumber} has finished airing`,
+            duration: 8000,
+            anime: animeInfo
+          });
+          debug.anime(`✅ Finished airing: ${animeTitle} Episode ${episodeNumber}`);
+          break;
       }
     });
 

@@ -34,9 +34,12 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [bgLoaded, setBgLoaded] = useState(false);
   const [useFallback, setUseFallback] = useState(false);
-  const [countdown, setCountdown] = useState<string>("");
   const [showJstPopover, setShowJstPopover] = useState(false);
-  // Get worker countdown data from Zustand store
+
+  // Get comprehensive timing data from Zustand store
+  const timingData = useAnimeCountdownStore((state) => state.getTimingData(anime.id));
+
+  // Get worker countdown data from Zustand store (backward compatibility)
   const workerCountdown = useAnimeCountdownStore((state) => state.countdowns[anime.id]);
 
   useEffect(() => {
@@ -57,32 +60,18 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const episodeTitle = anime.nextEpisode?.titleEn || anime.nextEpisode?.titleJp || "Unknown";
   const episodeNumber = anime.nextEpisode?.episodeNumber || "Unknown";
 
-  // Parse duration for accurate timing
+  // Use timing data from worker (with fallbacks for backward compatibility)
   const durationMinutes = parseDurationToMinutes(anime.duration);
 
-  // Use the service functions for air time calculations (fallback if worker not available)
-  const airDateTime = getAirDateTime(anime.nextEpisode?.airDate, anime.broadcast);
-  const airingToday = isAiringToday(anime.nextEpisode?.airDate, anime.broadcast);
-  const currentlyAiring = workerCountdown?.isAiring || isCurrentlyAiring(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
-  const alreadyAired = workerCountdown?.hasAired || hasAlreadyAired(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
+  // Prefer comprehensive timing data, fallback to local calculations if not available
+  const airDateTime = timingData?.airDateTime || getAirDateTime(anime.nextEpisode?.airDate, anime.broadcast);
+  const airingToday = timingData?.isAiringToday || isAiringToday(anime.nextEpisode?.airDate, anime.broadcast);
+  const currentlyAiring = timingData?.isCurrentlyAiring || workerCountdown?.isAiring || isCurrentlyAiring(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
+  const alreadyAired = timingData?.hasAlreadyAired || workerCountdown?.hasAired || hasAlreadyAired(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
 
-  // Countdown logic
-  useEffect(() => {
-    if (!anime.nextEpisode?.airDate || !(airingToday || currentlyAiring)) {
-      setCountdown("");
-      return;
-    }
+  // Use countdown from comprehensive timing data or fall back to worker countdown
+  const countdown = timingData?.countdown || workerCountdown?.countdown || "";
 
-    const updateCountdown = () => {
-      const newCountdown = calculateCountdown(anime.nextEpisode?.airDate, anime.broadcast, durationMinutes);
-      setCountdown(newCountdown);
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, [anime.nextEpisode?.airDate, anime.broadcast, durationMinutes, airingToday, currentlyAiring]);
 
   return (
     <div className="relative w-full h-[600px] rounded-lg">
@@ -129,10 +118,10 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
           {currentlyAiring && (
             <div className="relative inline-flex items-center px-4 py-2 rounded-full bg-orange-600 text-sm font-semibold mb-4 overflow-hidden">
               {/* Progress bar background */}
-              {workerCountdown?.progress !== undefined && (
+              {(timingData?.progress !== undefined || workerCountdown?.progress !== undefined) && (
                 <div
                   className="absolute inset-0 bg-orange-800/60 transition-all duration-1000 ease-out"
-                  style={{ width: `${(workerCountdown.progress || 0) * 100}%` }}
+                  style={{ width: `${((timingData?.progress || workerCountdown?.progress) || 0) * 100}%` }}
                 />
               )}
               {/* Content */}
@@ -141,7 +130,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             </div>
           )}
 
-          {airingToday && !currentlyAiring && (
+          {airingToday && !currentlyAiring && !alreadyAired && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-red-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
               {countdown === "JUST AIRED" ? "JUST AIRED" : "AIRING SOON"}
@@ -153,7 +142,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             </div>
           )}
 
-          {alreadyAired && !airingToday && !currentlyAiring && (
+          {alreadyAired && !currentlyAiring && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2"></span>
               RECENTLY AIRED

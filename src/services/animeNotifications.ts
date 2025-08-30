@@ -17,7 +17,7 @@ export interface AnimeForNotification {
 }
 
 export interface NotificationCallback {
-  (type: 'warning' | 'airing', anime: AnimeForNotification): void;
+  (type: 'warning' | 'airing' | 'airing-soon' | 'finished-airing', anime: AnimeForNotification): void;
 }
 
 export interface CountdownCallback {
@@ -42,16 +42,26 @@ class AnimeNotificationService {
     if (!this.worker) return;
 
     this.worker.addEventListener('message', (event) => {
+
+
       const message = event.data;
 
       if (message.type === 'notification') {
-        debug.anime(`📺 ${message.notificationType === 'warning' ? '5-minute warning' : 'Now airing'}: ${message.anime.titleEn || message.anime.titleJp}`);
+        const notificationTypeLabels = {
+          'warning': '5-minute warning',
+          'airing': 'Now airing',
+          'airing-soon': 'Airing soon (30 minutes)',
+          'finished-airing': 'Finished airing'
+        };
+
+        debug.anime(`📺 ${notificationTypeLabels[message.notificationType] || message.notificationType}: ${message.anime.titleEn || message.anime.titleJp}`);
 
         if (this.notificationCallback) {
           this.notificationCallback(message.notificationType, message.anime);
         }
       } else if (message.type === 'countdown') {
-        // Update Zustand store directly
+
+        // Update Zustand store directly (backward compatibility)
         useAnimeCountdownStore.getState().setCountdown(message.animeId, {
           countdown: message.countdown,
           isAiring: message.isAiring,
@@ -63,6 +73,9 @@ class AnimeNotificationService {
         if (this.countdownCallback) {
           this.countdownCallback(message.animeId, message.countdown, message.isAiring, message.hasAired, message.progress);
         }
+      } else if (message.type === 'timing') {
+        // Update Zustand store with comprehensive timing data
+        useAnimeCountdownStore.getState().setTimingData(message.animeId, message.timingData);
       }
     });
 
@@ -82,8 +95,12 @@ class AnimeNotificationService {
 
     try {
       // Use Vite's ?worker import to force TypeScript compilation
-      const { default: WorkerConstructor } = await import('../workers/animeNotifications.worker.ts?worker');
-      this.worker = new WorkerConstructor();
+      const url = new URL('../workers/animeNotifications.worker.ts?worker', import.meta.url);
+      // only if not production - bust cache
+      if (import.meta.env.DEV) url.searchParams.set('t', Date.now().toString());
+
+
+      this.worker = new Worker(url);
       this.setupWorkerListeners();
       debug.info('Worker created successfully');
     } catch (error) {
