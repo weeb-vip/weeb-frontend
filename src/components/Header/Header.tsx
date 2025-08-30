@@ -126,104 +126,113 @@ function Header() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Menu.Items className="fixed inset-0 z-50 bg-white dark:bg-gray-900 p-8 flex flex-col justify-start space-y-4 transition-colors duration-300">
-              {/* Close Button */}
-              <Menu.Item>
-                {() => (
-                  <button
-                    className="self-end text-2xl font-bold text-gray-700 dark:text-gray-300"
-                    onClick={() =>
-                      document.activeElement &&
-                      (document.activeElement as HTMLElement).blur()
-                    }
-                  >
-                    ✕
-                  </button>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                <div className={`flex items-center space-x-4`}>
-                <img
-                  src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
-                  alt="logo"
-                  className="w-10 h-10"
-                />
-                <WeebVipWordmark size="sm"/>
-                </div>
-              </Menu.Item>
-              {/* Dark Mode Toggle */}
-              <Menu.Item>
-                {({active}) => (
-                  <div className={`flex items-center justify-between px-4 py-4 rounded ${
-                    active ? "bg-gray-100 dark:bg-gray-700" : ""
-                  }`}>
-                    <span className="text-lg text-gray-900 dark:text-gray-100">Dark Mode</span>
-                    <DarkModeToggle />
+            <Menu.Items className="fixed inset-0 z-50 bg-white dark:bg-gray-900 p-8 flex flex-col justify-between transition-colors duration-300">
+              <div className="flex flex-col justify-start space-y-4">
+                {/* Close Button */}
+                <Menu.Item>
+                  {() => (
+                    <button
+                      className="self-end text-2xl font-bold text-gray-700 dark:text-gray-300"
+                      onClick={() =>
+                        document.activeElement &&
+                        (document.activeElement as HTMLElement).blur()
+                      }
+                    >
+                      ✕
+                    </button>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  <div className={`flex items-center space-x-4`}>
+                  <img
+                    src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
+                    alt="logo"
+                    className="w-10 h-10"
+                  />
+                  <WeebVipWordmark size="sm"/>
                   </div>
-                )}
-              </Menu.Item>
+                </Menu.Item>
+                {/* Dark Mode Toggle */}
+                <Menu.Item>
+                  {({active}) => (
+                    <div className={`flex items-center justify-between px-4 py-4 rounded ${
+                      active ? "bg-gray-100 dark:bg-gray-700" : ""
+                    }`}>
+                      <span className="text-lg text-gray-900 dark:text-gray-100">Dark Mode</span>
+                      <DarkModeToggle />
+                    </div>
+                  )}
+                </Menu.Item>
 
-              {/* Auth Items */}
-              {!loggedIn ? (
-                <>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={openModalLogin}
-                        className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
-                          active ? "bg-gray-100 dark:bg-gray-700" : ""
-                        }`}
-                      >
-                        Login
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={openModalRegister}
-                        className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
-                          active ? "bg-gray-100 dark:bg-gray-700" : ""
-                        }`}
-                      >
-                        Register
-                      </button>
-                    )}
-                  </Menu.Item>
-                </>
-              ) : (
-                <>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <Link
-                        to="/profile"
-                        className={`block w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
-                          active ? "bg-gray-100 dark:bg-gray-700" : ""
-                        }`}
-                      >
-                        Profile
-                      </Link>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={() => {
-                          localStorage.removeItem("authToken");
-                          localStorage.removeItem("refreshToken");
-                          useLoggedInStore.getState().logout();
-                          navigate("/");
-                        }}
-                        className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
-                          active ? "bg-gray-100 dark:bg-gray-700" : ""
-                        }`}
-                      >
-                        Logout
-                      </button>
-                    )}
-                  </Menu.Item>
-                </>
-              )}
+                {/* Auth Items */}
+                {!loggedIn ? (
+                  <>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={openModalLogin}
+                          className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                            active ? "bg-gray-100 dark:bg-gray-700" : ""
+                          }`}
+                        >
+                          Login
+                        </button>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={openModalRegister}
+                          className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                            active ? "bg-gray-100 dark:bg-gray-700" : ""
+                          }`}
+                        >
+                          Register
+                        </button>
+                      )}
+                    </Menu.Item>
+                  </>
+                ) : (
+                  <>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <Link
+                          to="/profile"
+                          className={`block w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                            active ? "bg-gray-100 dark:bg-gray-700" : ""
+                          }`}
+                        >
+                          Profile
+                        </Link>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={() => {
+                            localStorage.removeItem("authToken");
+                            localStorage.removeItem("refreshToken");
+                            useLoggedInStore.getState().logout();
+                            navigate("/");
+                          }}
+                          className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
+                            active ? "bg-gray-100 dark:bg-gray-700" : ""
+                          }`}
+                        >
+                          Logout
+                        </button>
+                      )}
+                    </Menu.Item>
+                  </>
+                )}
+              </div>
+
+              {/* Version Footer */}
+              <div className="text-center py-4 border-t border-gray-200 dark:border-gray-700">
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  Version {__APP_VERSION__}
+                </span>
+              </div>
             </Menu.Items>
           </Transition>
         </Menu>
