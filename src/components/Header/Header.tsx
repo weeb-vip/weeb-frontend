@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, {Fragment, useState} from "react";
 import { Menu, Transition } from "@headlessui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
@@ -9,6 +9,56 @@ import Autocomplete from "../Autocomplete";
 import Button, { ButtonColor } from "../Button";
 import DarkModeToggle from "../DarkModeToggle";
 
+export  function WeebMorphLogo({
+                                        wordSize = "text-2xl md:text-3xl",
+                                        colorClass = "bg-gray-800 dark:bg-gray-300",
+                                      }: {
+  wordSize?: string;
+  colorClass?: string; // solid color (no gradient)
+}) {
+  const [on, setOn] = useState(false);
+
+  return (
+    <span
+      className="relative inline-grid group/logo select-none whitespace-nowrap flex-shrink-0"
+      onClick={() => setOn(v => !v)}     // tap to toggle on mobile
+      aria-pressed={on}
+      role="button"
+    >
+      {/* EN layer */}
+      <span
+        className={[
+          "col-start-1 row-start-1 font-light text-transparent bg-clip-text",
+          colorClass,
+          wordSize,
+          "tracking-[0.18em]",
+          "transition-all duration-300 ease-out",
+          on ? "opacity-0 -translate-y-1" : "opacity-100 translate-y-0",
+          "group-hover/logo:opacity-0 group-hover/logo:-translate-y-1",
+        ].join(" ")}
+      >
+        WEEB
+      </span>
+
+      {/* JP layer */}
+      <span
+        lang="ja"
+        className={[
+          "col-start-1 row-start-1 font-light text-transparent bg-clip-text",
+          colorClass,
+          wordSize,
+          "tracking-normal",
+          "transition-all duration-300 ease-out",
+          on ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1",
+          "group-hover/logo:opacity-100 group-hover/logo:translate-y-0",
+        ].join(" ")}
+      >
+        ウィーブ
+      </span>
+    </span>
+  );
+}
+
 function WeebVipWordmark({ size = "md", className = "" }: { size?: "sm" | "md"; className?: string }) {
   const wordSize = size === "sm" ? "text-2xl tracking-[0.25em]" : "text-4xl md:text-4xl tracking-[0.28em]";
   const vipSize  = size === "sm" ? "text-sm" : "text-normal md:text-normal";
@@ -16,11 +66,15 @@ function WeebVipWordmark({ size = "md", className = "" }: { size?: "sm" | "md"; 
   return (
     <div className={`inline-flex items-center gap-2 sm:gap-3 ${className}`} role="img" aria-label="WEEB VIP wordmark">
       {/* WEEB gradient */}
-      <span
-        className={`font-light ${wordSize} text-transparent bg-clip-text dark:bg-gray-300 bg-gray-800 transition-all`}
-      >
-        WEEB
-      </span>
+      <WeebMorphLogo
+        wordSize={wordSize}
+        colorClass="bg-gray-800 dark:bg-gray-300"
+      />
+      {/*<span*/}
+      {/*  className={`font-light ${wordSize} text-transparent bg-clip-text dark:bg-gray-300 bg-gray-800 transition-all`}*/}
+      {/*>*/}
+      {/*  WEEB*/}
+      {/*</span>*/}
 
 
       {/* VIP pill */}
