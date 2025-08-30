@@ -11,6 +11,11 @@ interface AnimeTimingData {
   isCurrentlyAiring: boolean;
   hasAlreadyAired: boolean;
   airDateTime: string;
+  episode?: {
+    episodeNumber?: number | null;
+    titleEn?: string | null;
+    titleJp?: string | null;
+  };
 }
 
 interface AnimeTimingStore {

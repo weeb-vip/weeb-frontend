@@ -1,15 +1,16 @@
 import React from 'react';
 import {format} from 'date-fns';
+import {formatInTimeZone} from 'date-fns-tz';
 
 // Get current time with dev offset applied (for testing)
-function getCurrentTime(): Date {
+export function getCurrentTime(): Date {
   const now = new Date();
   const devOffset = (window as any).__DEV_TIME_OFFSET__ || 0;
-  
+
   if (devOffset !== 0) {
     return new Date(now.getTime() + devOffset);
   }
-  
+
   return now;
 }
 
@@ -78,13 +79,7 @@ export function parseAirTime(airDate?: string | null, broadcast?: string | null)
       utcHours += 24;
     }
 
-    // Add 1 hour adjustment to match the expected test result
-    // This accounts for the fact that the test expects EDT conversion
-    utcHours -= 1;
-    if (utcHours < 0) {
-      utcDate.setUTCDate(utcDate.getUTCDate() - 1);
-      utcHours += 24;
-    }
+
 
     utcDate.setUTCHours(utcHours, jstMinutes, 0, 0);
     return utcDate;
@@ -99,19 +94,21 @@ export function parseAirTime(airDate?: string | null, broadcast?: string | null)
 /**
  * Format air date with time in local timezone
  */
-export function getAirDateTime(airDate?: string | null, broadcast?: string | null): string {
+export function getAirDateTime(
+  airDate?: string | null,
+  broadcast?: string | null,
+  opts?: { timeZone?: string }   // <-- add this
+): string {
   if (!airDate) return "Unknown";
 
-  const airTime = parseAirTime(airDate, broadcast);
-  if (airTime) {
-    // Use the parsed air time for both date and time (properly converted from JST to local)
-    const localDate = format(airTime, "EEE MMM do");
-    const localTime = format(airTime, "h:mm a");
-    return `${localDate} at ${localTime}`;
-  }
+  const tz = opts?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const airTime = parseAirTime(airDate, broadcast); // should return a real UTC instant
 
-  // Fallback to just the original air date
-  return format(new Date(airDate), "EEE MMM do");
+  if (airTime) {
+    return formatInTimeZone(airTime, tz, "EEE MMM do 'at' h:mm a");
+  }
+  // fallback if parseAirTime failed
+  return formatInTimeZone(new Date(airDate), tz, "EEE MMM do");
 }
 
 /**
@@ -175,51 +172,47 @@ export function hasAlreadyAired(airDate?: string | null, broadcast?: string | nu
 /**
  * Calculate countdown string or current airing status
  */
-export function calculateCountdown(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): string {
-  if (!airDate || !isAiringToday(airDate, broadcast)) return "";
+export function calculateCountdown(
+  airDate?: string | null,
+  broadcast?: string | null,
+  durationMinutes?: number | null
+): string {
+  if (!airDate) return "";
 
   const now = getCurrentTime();
   const airTime = parseAirTime(airDate, broadcast);
   if (!airTime) return "";
 
-  // Check if currently airing first
+  // 1) Currently airing?
   if (isCurrentlyAiring(airDate, broadcast, durationMinutes)) {
     const airStartMs = airTime.getTime();
     const currentMs = now.getTime();
     const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
-    const airEndMs = airStartMs + episodeDurationMs;
-    const remainingMs = airEndMs - currentMs;
+    const remainingMs = airStartMs + episodeDurationMs - currentMs;
     const remainingMinutes = Math.floor(remainingMs / (1000 * 60));
-
-    if (remainingMinutes <= 0) {
-      return "ENDING SOON";
-    } else if (remainingMinutes < 60) {
-      return `${remainingMinutes}m left`;
-    } else {
-      return "AIRING NOW";
-    }
+    if (remainingMinutes <= 0) return "ENDING SOON";
+    if (remainingMinutes < 60) return `${remainingMinutes}m left`;
+    return "AIRING NOW";
   }
 
   const diffMs = airTime.getTime() - now.getTime();
 
-  if (diffMs <= 0) {
-    return "JUST AIRED";
-  }
-
-  const diffMinutes = Math.ceil(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMinutes < 60) {
-    return `${diffMinutes}m`;
-  } else if (diffHours < 24) {
+  // 2) Upcoming today (within next 24h)
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  if (diffMs > 0 && diffMs <= DAY_MS) {
+    const diffMinutes = Math.ceil(diffMs / (1000 * 60));
+    if (diffMinutes < 60) return `${diffMinutes}m`;
+    const diffHours = Math.floor(diffMinutes / 60);
     return `${diffHours}h`;
-  } else if (diffDays < 30) {
-    return `${diffDays}d`;
-  } else {
-    return "";
   }
+
+  // 3) Already started (but not currently airing) => just aired
+  if (diffMs <= 0) return "JUST AIRED";
+
+  // 4) Not today (>24h away)
+  return "";
 }
+
 
 /**
  * Get comprehensive air time information for an anime
@@ -240,14 +233,66 @@ export function getAirTimeInfo(airDate?: string | null, broadcast?: string | nul
 }
 
 /**
+ * Episode interface for next episode selection
+ */
+export interface Episode {
+  id: string;
+  episodeNumber?: number | null;
+  titleEn?: string | null;
+  titleJp?: string | null;
+  airDate?: string | null;
+}
+
+/**
+ * Result of finding the next episode
+ */
+export interface NextEpisodeResult {
+  episode: Episode;
+  airTime: Date;
+}
+
+/**
+ * Find the next episode from an episodes array, prioritizing future episodes over recently aired ones
+ * @param episodes - Array of episodes
+ * @param broadcast - Broadcast string for timezone conversion
+ * @param currentTime - Current time (for testing, defaults to now)
+ * @returns The next episode and its calculated air time, or null if none found
+ */
+export function findNextEpisode(
+  episodes?: Episode[] | null,
+  broadcast?: string | null,
+  currentTime?: Date
+): NextEpisodeResult | null {
+  if (!episodes || episodes.length === 0) return null;
+
+  for (const episode of episodes) {
+    if (episode.airDate) {
+      const airTime = parseAirTime(episode.airDate, broadcast);
+      if (airTime) {
+        const now = currentTime || getCurrentTime();
+        console.log(`${airTime} <= ${now} ? ${airTime.getTime() <= now.getTime()}`);
+        // or in the last 24 hours
+        if (airTime.getTime() > now.getTime() || (now.getTime() - airTime.getTime()) <= (24 * 60 * 60 * 1000)) {
+          return { episode, airTime };
+        }
+      }
+    }
+
+  }
+
+  return null;
+}
+
+/**
  * Get air time display configuration for AnimeCard component
  */
-export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null): {
+export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null, now?: Date | null): {
   show: boolean;
   text: string;
   variant?: 'countdown' | 'scheduled' | 'aired' | 'airing';
   icon?: React.ReactNode;
 } | null {
+
   const airInfo = getAirTimeInfo(airDate, broadcast, durationMinutes);
   if (!airInfo) return null;
 

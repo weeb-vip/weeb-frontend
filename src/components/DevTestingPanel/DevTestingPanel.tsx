@@ -91,7 +91,7 @@ const DevTestingPanel: React.FC = () => {
     showToast({
       type: 'warning',
       title: 'Anime Airing Soon',
-      message: `Episode ${sampleAnime.nextEpisode?.episodeNumber || '1'} starts in 5 minutes`,
+      message: `Episode 1 starts in 5 minutes`,
       duration: 8000,
       anime: {
         id: sampleAnime.id,
@@ -105,12 +105,12 @@ const DevTestingPanel: React.FC = () => {
   const triggerCurrentlyAiring = () => {
     if (!sampleAnime) return;
     
-    const episodeTitle = sampleAnime.nextEpisode?.titleEn || sampleAnime.nextEpisode?.titleJp || 'Unknown Episode';
+    const episodeTitle = 'Test Episode';
     
     showToast({
       type: 'info',
       title: 'Now Airing',
-      message: `Episode ${sampleAnime.nextEpisode?.episodeNumber || '1'}: ${episodeTitle}`,
+      message: `Episode 1: ${episodeTitle}`,
       duration: 10000,
       anime: {
         id: sampleAnime.id,

@@ -122,7 +122,7 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
             duration
             ranking
             broadcast
-            nextEpisode {
+            episodes {
                 id
                 animeId
                 episodeNumber
@@ -166,16 +166,10 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
                 createdAt
                 updatedAt
             }
-            nextEpisode {
+            userAnime {
                 id
-                animeId
-                episodeNumber
-                titleEn
-                titleJp
-                synopsis
-                airDate
-                createdAt
-                updatedAt
+                status
+                score
             }
         }
     }

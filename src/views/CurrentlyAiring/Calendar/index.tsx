@@ -91,7 +91,7 @@ export default function AiringCalendarPage() {
 
       (animeByDate[key] || []).push({
         ...anime,
-        nextEpisode: episode,
+        episodes: [episode], // Pass single episode as array for HeroBanner
       });
     }
   }

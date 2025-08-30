@@ -8,16 +8,17 @@ export interface AnimeForNotification {
   imageUrl?: string | null;
   duration?: string | null;
   broadcast?: string | null;
-  nextEpisode?: {
+  episodes?: {
+    id: string;
     episodeNumber?: number | null;
     titleEn?: string | null;
     titleJp?: string | null;
     airDate?: string | null;
-  } | null;
+  }[] | null;
 }
 
 export interface NotificationCallback {
-  (type: 'warning' | 'airing' | 'airing-soon' | 'finished-airing', anime: AnimeForNotification): void;
+  (type: 'warning' | 'airing' | 'airing-soon' | 'finished-airing', anime: AnimeForNotification, episode?: { episodeNumber?: number | null; titleEn?: string | null; titleJp?: string | null }): void;
 }
 
 export interface CountdownCallback {
@@ -57,7 +58,7 @@ class AnimeNotificationService {
         debug.anime(`📺 ${notificationTypeLabels[message.notificationType] || message.notificationType}: ${message.anime.titleEn || message.anime.titleJp}`);
 
         if (this.notificationCallback) {
-          this.notificationCallback(message.notificationType, message.anime);
+          this.notificationCallback(message.notificationType, message.anime, message.episode);
         }
       } else if (message.type === 'countdown') {
 
@@ -80,36 +81,58 @@ class AnimeNotificationService {
     });
 
     this.worker.addEventListener('error', (error) => {
-      debug.error('Anime notification worker error details:', JSON.stringify({
-        message: error.message,
-        filename: error.filename,
-        lineno: error.lineno,
-        colno: error.colno,
-        error: error.error
-      }));
+      debug.error('Anime notification worker error:', JSON.stringify(error, null, 2));
+      debug.error('Error details:', JSON.stringify({
+        message: error.message || 'No message',
+        filename: error.filename || 'No filename',
+        lineno: error.lineno || 'No line number',
+        colno: error.colno || 'No column',
+        type: error.type || 'No type',
+        error: error.error || 'No error object'
+      }, null, 2) );
+    });
+
+    this.worker.addEventListener('messageerror', (error) => {
+      debug.error('Worker message error:', error);
     });
   }
 
   private async initWorker() {
-    if (this.worker) return;
+
+    if (this.worker) {
+      if (import.meta.hot) {
+        // @ts-ignore
+        import.meta.hot.dispose(() => this.worker.terminate());
+      }
+      return;
+    }
 
     try {
-      // Use Vite's ?worker import to force TypeScript compilation
-      // if dev then use date.now() and append a random number to avoid caching
-      if (!import.meta.env.DEV) {
-        const {default: WorkerConstructor} = await import('../workers/animeNotifications.worker.ts?worker');
-        this.worker = new WorkerConstructor();
-      } else {
-        const cacheBuster = Date.now() + '-' + Math.floor(Math.random() * 100000);
-        const url = new URL('../workers/animeNotifications.worker.ts?worker', import.meta.url);
-        url.searchParams.append('cacheBuster', cacheBuster);
-        this.worker = new Worker(url);
-        debug.info('🐛 Dev mode: Worker loaded with cache buster:', cacheBuster);
-      }
+      debug.info('Loading worker with simplified URL method');
+      // Use direct URL approach to avoid module system issues
+      const workerUrl = new URL('../workers/animeNotifications.worker.ts', import.meta.url);
+      workerUrl.searchParams.set('worker', '');
+      
+      this.worker = new Worker(workerUrl, { type: 'module' });
+      debug.info('Worker loaded successfully');
+
       this.setupWorkerListeners();
-      debug.info('Worker created successfully');
+      debug.info('Worker created and listeners setup successfully');
+
+      // Test the worker by posting a simple message
+      setTimeout(() => {
+        if (this.worker) {
+          debug.info('Testing worker communication...');
+          this.worker.postMessage({ type: 'triggerUpdate' });
+        }
+      }, 1000);
+
     } catch (error) {
-      debug.error('Failed to create worker:', error);
+      debug.error('Failed to create worker - detailed error:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
       return;
     }
   }

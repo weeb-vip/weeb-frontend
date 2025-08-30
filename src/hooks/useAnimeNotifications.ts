@@ -21,9 +21,9 @@ export const useAnimeNotifications = () => {
     }
 
     // Set up notification callback
-    animeNotificationService.setNotificationCallback((type, anime) => {
-      const episodeNumber = anime.nextEpisode?.episodeNumber || 'Unknown';
-      const episodeTitle = anime.nextEpisode?.titleEn || anime.nextEpisode?.titleJp || 'Unknown';
+    animeNotificationService.setNotificationCallback((type, anime, episode) => {
+      const episodeNumber = episode?.episodeNumber || 'Unknown';
+      const episodeTitle = episode?.titleEn || episode?.titleJp || 'Unknown';
       const animeTitle = anime.titleEn || anime.titleJp || 'Unknown Anime';
 
       const animeInfo = {
@@ -88,7 +88,7 @@ export const useAnimeNotifications = () => {
       imageUrl: anime.imageUrl,
       duration: anime.duration,
       broadcast: anime.broadcast,
-      nextEpisode: anime.nextEpisode
+      episodes: anime.episodes
     }));
 
     // Start watching for notifications

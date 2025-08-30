@@ -91,8 +91,9 @@ export const fetchCurrentlyAiring = () => ({
 export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | null, days?: number) => ({
   queryKey: ["currentlyAiring"],
   queryFn: async () => {
+    const client = AuthenticatedClient();
     // @ts-ignore
-    return request<CurrentlyAiringQuery>(global.config.graphql_host, getCurrentlyAiringWithDates, endDate ? {
+    return client.request<CurrentlyAiringQuery>(getCurrentlyAiringWithDates, endDate ? {
       input: {
         startDate,
         endDate,

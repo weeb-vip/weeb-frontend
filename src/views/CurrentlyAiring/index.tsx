@@ -11,7 +11,7 @@ import { utc } from "@date-fns/utc/utc";
 import { useNavigate } from "react-router-dom";
 import {GetImageFromAnime} from "../../services/utils";
 import debug from "../../utils/debug";
-import { getAirTimeDisplay, parseAirTime } from "../../services/airTimeUtils";
+import { getAirTimeDisplay, parseAirTime, findNextEpisode } from "../../services/airTimeUtils";
 import { useAnimeCountdowns } from "../../hooks/useAnimeCountdowns";
 import HeroBanner from "../../components/HeroBanner";
 
@@ -60,23 +60,23 @@ export default function CurrentlyAiringPage() {
 
     const now = new Date();
     const sorted = [...data.currentlyAiring].sort((a, b) => {
-      // Use parseAirTime to properly handle JST broadcast times
-      const aAirTime = parseAirTime(a.nextEpisode?.airDate, a.broadcast);
-      const bAirTime = parseAirTime(b.nextEpisode?.airDate, b.broadcast);
+      // Use findNextEpisode to get proper episode timing
+      const aNextEpisode = findNextEpisode(a.episodes, a.broadcast);
+      const bNextEpisode = findNextEpisode(b.episodes, b.broadcast);
 
-      // Handle cases where parsing fails or dates are missing
-      if (!aAirTime && !bAirTime) return 0;
-      if (!aAirTime) return 1; // Put anime without proper air time at end
-      if (!bAirTime) return -1;
+      // Handle cases where no next episode is found
+      if (!aNextEpisode && !bNextEpisode) return 0;
+      if (!aNextEpisode) return 1; // Put anime without episodes at end
+      if (!bNextEpisode) return -1;
 
-      return aAirTime.getTime() - bAirTime.getTime();
+      return aNextEpisode.airTime.getTime() - bNextEpisode.airTime.getTime();
     });
 
     // Find best hero anime (airing soon with good info)
     const heroCandidate = sorted.find(anime => {
-      const airTime = parseAirTime(anime.nextEpisode?.airDate, anime.broadcast);
-      if (!airTime) return false;
-      const diffMs = airTime.getTime() - now.getTime();
+      const nextEpisode = findNextEpisode(anime.episodes, anime.broadcast);
+      if (!nextEpisode) return false;
+      const diffMs = nextEpisode.airTime.getTime() - now.getTime();
       return diffMs > 0 && diffMs <= (24 * 60 * 60 * 1000); // Airing within 24 hours
     }) || sorted[0];
 
@@ -89,13 +89,13 @@ export default function CurrentlyAiringPage() {
     };
 
     sorted.forEach(anime => {
-      const airTime = parseAirTime(anime.nextEpisode?.airDate, anime.broadcast);
-      if (!airTime) {
+      const nextEpisode = findNextEpisode(anime.episodes, anime.broadcast);
+      if (!nextEpisode) {
         categories.comingSoon.push(anime);
         return;
       }
 
-      const diffMs = airTime.getTime() - now.getTime();
+      const diffMs = nextEpisode.airTime.getTime() - now.getTime();
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
       if (diffMs <= 0 && Math.abs(diffMs) <= (7 * 24 * 60 * 60 * 1000)) {
@@ -136,7 +136,8 @@ export default function CurrentlyAiringPage() {
         </h2>
         <div className="flex flex-col space-y-4">
           {animeList.map((item) => {
-            const airTimeDisplay = getAirTimeDisplay(item.nextEpisode?.airDate, item.broadcast);
+            const nextEpisode = findNextEpisode(item.episodes, item.broadcast);
+            const airTimeDisplay = nextEpisode ? getAirTimeDisplay(nextEpisode.episode.airDate, item.broadcast) : null;
 
             return (
               <AnimeCard
@@ -145,16 +146,16 @@ export default function CurrentlyAiringPage() {
                 id={item.id}
                 style={AnimeCardStyle.EPISODE}
                 title={item.titleEn || item.titleJp || "Unknown"}
-                episodeTitle={item.nextEpisode?.titleEn || item.nextEpisode?.titleJp || "Unknown"}
+                episodeTitle={nextEpisode?.episode.titleEn || nextEpisode?.episode.titleJp || "Unknown"}
                 description=""
                 episodeLength=""
-                episodeNumber={item.nextEpisode?.episodeNumber?.toString() || "Unknown"}
+                episodeNumber={nextEpisode?.episode.episodeNumber?.toString() || "Unknown"}
                 className="hover:cursor-pointer"
                 year=""
                 image={GetImageFromAnime(item)}
                 airdate={
-                  item.nextEpisode?.airDate
-                    ? format(new Date(item.nextEpisode.airDate), "EEE MMM do", { in: utc })
+                  nextEpisode?.episode.airDate
+                    ? format(new Date(nextEpisode.episode.airDate), "EEE MMM do", { in: utc })
                     : "Unknown"
                 }
                 airTime={airTimeDisplay || undefined}
