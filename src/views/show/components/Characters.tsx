@@ -16,12 +16,35 @@ type FilterType = 'all' | 'main' | 'supporting' | 'minor';
 export default function CharactersWithStaff({ animeId }: Props) {
   const { data, isLoading } = useQuery(getCharactersAndStaffByAnimeID(animeId));
   const [filter, setFilter] = useState<FilterType>('all');
-  const [expandedCharacters, setExpandedCharacters] = useState<Set<number>>(new Set());
+  const [expandedCharacters, setExpandedCharacters] = useState<Set<string>>(new Set());
 
   const filteredData = useMemo(() => {
-    if (!data || filter === 'all') return data || [];
+    if (!data) return [];
     
-    return data.filter(entry => {
+    // Create a stable sorted copy of the data first
+    const stableData = [...data].sort((a, b) => {
+      // Sort by character importance first (main > supporting > minor)
+      const getRolePriority = (role: string) => {
+        const roleStr = role?.toLowerCase() || '';
+        if (roleStr.includes('main') || roleStr.includes('protagonist')) return 3;
+        if (roleStr.includes('supporting')) return 2;
+        return 1;
+      };
+      
+      const aPriority = getRolePriority(a.character.role || '');
+      const bPriority = getRolePriority(b.character.role || '');
+      
+      if (aPriority !== bPriority) {
+        return bPriority - aPriority; // Higher priority first
+      }
+      
+      // Then sort by name for consistent ordering
+      return (a.character.name || '').localeCompare(b.character.name || '');
+    });
+    
+    if (filter === 'all') return stableData;
+    
+    return stableData.filter(entry => {
       const role = entry.character.role?.toLowerCase() || '';
       switch (filter) {
         case 'main':
@@ -36,13 +59,13 @@ export default function CharactersWithStaff({ animeId }: Props) {
     });
   }, [data, filter]);
 
-  const toggleCharacterExpanded = (index: number) => {
+  const toggleCharacterExpanded = (characterName: string) => {
     setExpandedCharacters(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
+      if (newSet.has(characterName)) {
+        newSet.delete(characterName);
       } else {
-        newSet.add(index);
+        newSet.add(characterName);
       }
       return newSet;
     });
@@ -96,14 +119,15 @@ export default function CharactersWithStaff({ animeId }: Props) {
 
       {/* Character Grid */}
       <div className="grid gap-4">
-        {filteredData.map((entry, idx) => {
+        {filteredData.map((entry) => {
+          const characterName = entry.character.name || `character-${Math.random()}`;
           const cardSize = getCharacterCardSize(entry.character.role || '');
-          const isExpanded = expandedCharacters.has(idx);
+          const isExpanded = expandedCharacters.has(characterName);
           const roleColor = getRoleColor(entry.character.role || '');
           
           return (
             <div
-              key={idx}
+              key={characterName}
               className={`bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg ${
                 cardSize === 'main' 
                   ? 'border-2 border-blue-200 dark:border-blue-800' 
@@ -184,7 +208,7 @@ export default function CharactersWithStaff({ animeId }: Props) {
                       {/* @ts-ignore */}
                       {entry.staff && entry.staff.length > 0 && (
                         <button
-                          onClick={() => toggleCharacterExpanded(idx)}
+                          onClick={() => toggleCharacterExpanded(characterName)}
                           className="flex-shrink-0 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                           aria-label={isExpanded ? 'Show less' : 'Show more'}
                         >
