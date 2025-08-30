@@ -14,6 +14,10 @@ import debug from "../../utils/debug";
 import { getAirTimeDisplay, parseAirTime, findNextEpisode } from "../../services/airTimeUtils";
 import { useAnimeCountdowns } from "../../hooks/useAnimeCountdowns";
 import HeroBanner from "../../components/HeroBanner";
+import {HeroBannerSkeleton} from "../../components/HeroBanner/HeroBanner";
+
+type AiringList = NonNullable<CurrentlyAiringQuery['currentlyAiring']>;
+type AiringItem = AiringList[number];
 
 export default function CurrentlyAiringPage() {
   const { data, isLoading } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring());
@@ -48,14 +52,14 @@ export default function CurrentlyAiringPage() {
   };
 
   const { categorizedAnime, heroAnime } = useMemo(() => {
-    if (!data?.currentlyAiring) return { 
+    if (!data?.currentlyAiring) return {
       categorizedAnime: {
         airingToday: [],
         airingThisWeek: [],
         comingSoon: [],
         recentlyAired: []
-      }, 
-      heroAnime: null 
+      },
+      heroAnime: null
     };
 
     const now = new Date();
@@ -112,7 +116,6 @@ export default function CurrentlyAiringPage() {
     return { categorizedAnime: categories, heroAnime: heroCandidate };
   }, [data]);
 
-  if (isLoading || !data) return <Loader />;
 
   const clearAnimeStatus = (animeId: string) => {
     setAnimeStatuses((prev) => {
@@ -126,7 +129,7 @@ export default function CurrentlyAiringPage() {
     });
   };
 
-  const renderAnimeSection = (title: string, animeList: typeof data.currentlyAiring, showCount = true) => {
+  const renderAnimeSection = (title: string, animeList: ReadonlyArray<AiringItem>, showCount = true) => {
     if (!animeList || animeList.length === 0) return null;
 
     return (
@@ -183,7 +186,7 @@ export default function CurrentlyAiringPage() {
   return (
     <div className="flex flex-col space-y-8 max-w-screen-2xl w-full mx-auto">
       {/* Hero Section */}
-      {heroAnime && (
+      {heroAnime ? (
         <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] md:h-[600px] -mt-[2rem] -mx-2 md:mt-0 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
           <HeroBanner
             key={`hero-${heroAnime.id}`}
@@ -193,6 +196,8 @@ export default function CurrentlyAiringPage() {
             onDeleteAnime={clearAnimeStatus}
           />
         </div>
+      ) : (
+        <HeroBannerSkeleton />
       )}
 
       {/* Header */}

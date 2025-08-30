@@ -122,7 +122,6 @@ export default function Index() {
     return airDate > new Date();
   });
 
-
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
       {/* Sticky Header */}

@@ -197,7 +197,7 @@ function Index() {
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {Array(8).fill({id: 1}).map((anime, index) => (
-              <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
+              <AnimeCardSkeleton key={`currently-airing-${index}`} style={AnimeCardStyle.DETAIL} />
             ))}
           </div>
         ) : (

@@ -288,43 +288,95 @@ interface SkeletonProps {
   forceListLayout?: boolean;
 }
 
-export function AnimeCardSkeleton({style, forceListLayout = false}: SkeletonProps) {
-  const isEpisode = style === AnimeCardStyle.EPISODE;
+function getSkeletonLayout(style: AnimeCardStyle, forceListLayout: boolean) {
+  const bg =
+    style === AnimeCardStyle.TRANSPARENT ? 'bg-transparent' : 'bg-white dark:bg-gray-800';
+
+  const base =
+    `flex ${forceListLayout ? 'flex-row' : 'sm:flex-row md:flex-col'} ` +
+    `${bg} rounded-md shadow-sm w-full transition-colors duration-300 ` +
+    `overflow-hidden animate-pulse`;
+
+  switch (style) {
+    case AnimeCardStyle.LONG:
+      return {
+        container: `${base} w-96 h-40`,
+        image: `${forceListLayout ? 'w-40 sm:w-48' : 'w-64 sm:w-72 md:w-80'} aspect-2/3`,
+        lines: 5,
+        isEpisode: false,
+      };
+    case AnimeCardStyle.DETAIL:
+      return {
+        container: `${base} min-h-[180px]`,
+        image: `${forceListLayout ? 'w-32 sm:w-40' : 'w-40 sm:w-48 md:w-56'} aspect-2/3`,
+        lines: 4,
+        isEpisode: false,
+      };
+    case AnimeCardStyle.EPISODE:
+      return {
+        container: `${base} ${forceListLayout ? 'h-40' : 'h-44'}`,
+        image: `${forceListLayout ? 'w-24 sm:w-28 md:w-32' : 'w-32 sm:w-40 md:w-44'} aspect-2/3`,
+        lines: 4,
+        isEpisode: true,
+      };
+    case AnimeCardStyle.HOVER:
+    case AnimeCardStyle.HOVER_TRANSPARENT:
+    case AnimeCardStyle.DEFAULT:
+    default:
+      return {
+        container: `${base} w-48 h-72`,
+        image: `${forceListLayout ? 'w-28 md:w-32' : 'w-32 sm:w-40 md:w-48'} aspect-2/3`,
+        lines: 3,
+        isEpisode: false,
+      };
+  }
+}
+
+export function AnimeCardSkeleton({ style, forceListLayout = false }: SkeletonProps) {
+  const { container, image, lines, isEpisode } = getSkeletonLayout(style, forceListLayout);
 
   return (
-    <div
-      className={`flex ${forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} 
-        bg-white dark:bg-gray-800 rounded-md shadow-sm w-full transition-colors duration-300 
-        ${isEpisode ? "w-24 sm:w-28 md:w-32" : "w-32 sm:w-40 md:w-44"} 
-        overflow-hidden animate-pulse`}
-    >
-
-      <div
-        className={`aspect-2/3 bg-gray-200 dark:bg-gray-700 ${
-          forceListLayout ? "w-24 sm:w-28 md:w-32" : "w-32 sm:w-40 md:w-44"
-        }`}
-      />
+    <div className={container}>
+      <div className={`${image} bg-gray-200 dark:bg-gray-700`} />
       <div className="flex flex-col justify-between px-4 py-3 w-full h-full">
         <div className="space-y-2">
-          <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded"/>
+          {/* Title line */}
+          <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+
           {isEpisode ? (
             <>
-              <div className="w-2/3 h-3 bg-gray-200 dark:bg-gray-700 rounded"/>
-              <div className="w-1/2 h-3 bg-gray-200 dark:bg-gray-700 rounded"/>
-              <div className="w-2/3 h-3 bg-gray-200 dark:bg-gray-700 rounded"/>
+              <div className="w-2/3 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="w-1/2 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="w-2/3 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
             </>
           ) : (
-            <>
-              <div className="w-2/3 h-3 bg-gray-200 dark:bg-gray-700 rounded"/>
-              <div className="w-1/3 h-3 bg-gray-200 dark:bg-gray-700 rounded"/>
-              <div className="w-1/4 h-3 bg-gray-200 dark:bg-gray-700 rounded"/>
-            </>
+            // Generic lines based on size
+            Array.from({ length: lines - 1 }).map((_, i) => (
+              <div
+                key={i}
+                className={[
+                  'h-3 bg-gray-200 dark:bg-gray-700 rounded',
+                  i === 0 ? 'w-2/3' : i === 1 ? 'w-1/3' : 'w-1/4',
+                ].join(' ')}
+              />
+            ))
           )}
         </div>
+
+        {/* Button / options stub */}
         <div className="pt-3">
-          <div className="w-24 h-8 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto"/>
+          <div
+            className={[
+              'h-8 rounded-full',
+              style === AnimeCardStyle.TRANSPARENT
+                ? 'bg-gray-300/60 dark:bg-gray-600/60'
+                : 'bg-gray-300 dark:bg-gray-600',
+              forceListLayout ? 'mx-0 w-24' : 'mx-auto w-24',
+            ].join(' ')}
+          />
         </div>
       </div>
     </div>
   );
 }
+

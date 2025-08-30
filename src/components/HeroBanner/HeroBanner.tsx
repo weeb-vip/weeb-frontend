@@ -46,7 +46,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
       setBgUrl(GetImageFromAnime(anime));
       setBgLoaded(true);
     }
-  }, [anime.anidbid, anime]);
+  }, [anime.anidbid, anime.id, anime.titleEn, anime.titleJp]);
 
   const title = anime.titleEn || anime.titleJp || "Unknown";
 
@@ -222,6 +222,34 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
                 onDelete={onDeleteAnime}
               />
             )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+export function HeroBannerSkeleton() {
+  return (
+    <div className="relative w-full h-[600px] rounded-lg animate-pulse">
+      {/* Background layer */}
+      <div className="absolute inset-0 overflow-hidden bg-gray-300 dark:bg-gray-700 md:rounded-lg xs:rounded-none">
+        <div className="absolute inset-0 w-full h-full bg-gray-400 dark:bg-gray-600"/>
+      </div>
+
+      {/* Foreground content (not clipped) */}
+      <div className="relative z-10 h-full flex items-end px-4 sm:px-8 lg:px-16">
+        <div className="max-w-3xl text-white py-12 space-y-6 w-full">
+          <div className="h-8 bg-gray-400 dark:bg-gray-600 rounded w-3/4"></div>
+          <div className="space-y-4">
+            <div className="h-6 bg-gray-400 dark:bg-gray-600 rounded w-1/2"></div>
+            <div className="h-5 bg-gray-400 dark:bg-gray-600 rounded w-1/3"></div>
+          </div>
+          <div className="h-20 bg-gray-400 dark:bg-gray-600 rounded w-full"></div>
+          <div className="flex flex-wrap gap-4">
+            <div className="h-10 bg-gray-400 dark:bg-gray-600 rounded w-32"></div>
+            <div className="h-10 bg-gray-400 dark:bg-gray-600 rounded w-32"></div>
           </div>
         </div>
       </div>

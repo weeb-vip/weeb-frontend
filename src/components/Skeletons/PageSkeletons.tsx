@@ -1,14 +1,13 @@
 import { AnimeCardSkeleton, AnimeCardStyle } from "../AnimeCard/AnimeCard";
 import { Skeleton } from "../Skeleton/Skeleton";
+import {HeroBannerSkeleton} from "../HeroBanner/HeroBanner";
 
 // Home page skeleton that matches the actual home page structure exactly
 export function HomePageSkeleton() {
   return (
     <div className={"flex flex-col space-y-6 max-w-screen-2xl"} style={{margin: "0 auto"}}>
       {/* Hero Banner - matches index.tsx:135-148 exactly */}
-      <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[500px] md:h-[600px] mb-24 md:mb-8 -mt-[2rem] -mx-2 md:mt-0 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
-        <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse" />
-      </div>
+      <HeroBannerSkeleton />
 
       {/* Currently Airing Section - matches index.tsx:150-220 exactly */}
       <div className={"w-full flex flex-col"}>
@@ -20,7 +19,7 @@ export function HomePageSkeleton() {
         </div>
         <div className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
           {Array(8).fill({id: 1}).map((anime, index) => (
-            <AnimeCardSkeleton key={`currently-airing-${index}`} {...anime} style={AnimeCardStyle.EPISODE} />
+            <AnimeCardSkeleton key={`currently-airing-${index}`} {...anime} style={AnimeCardStyle.DETAIL} />
           ))}
         </div>
       </div>
@@ -90,7 +89,7 @@ export function ShowPageSkeleton() {
           <div className="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
             {/* Poster skeleton */}
             <div className="h-48 w-32 lg:h-64 lg:w-48 bg-gray-600 rounded-md animate-pulse" />
-            
+
             {/* Content skeleton */}
             <div className="lg:ml-10 mt-4 lg:mt-0 space-y-4 w-full">
               <div className="h-8 bg-gray-600 rounded w-3/4 animate-pulse" />
@@ -205,7 +204,7 @@ export function ProfilePageSkeleton() {
   return (
     <div className="max-w-screen-md mx-auto p-6">
       <Skeleton className="h-9 w-48 mb-4" />
-      
+
       <div className="bg-white dark:bg-gray-800 shadow rounded p-4 space-y-4 mb-6 transition-colors duration-300">
         {Array(4).fill(0).map((_, i) => (
           <div key={i} className="flex gap-2">
@@ -231,9 +230,7 @@ export function CurrentlyAiringPageSkeleton() {
   return (
     <div className="flex flex-col space-y-8 max-w-screen-2xl w-full mx-auto">
       {/* Hero Section - matches index.tsx:182-193 */}
-      <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] md:h-[600px] -mt-[2rem] -mx-2 md:mt-0 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
-        <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse" />
-      </div>
+      <HeroBannerSkeleton />
 
       {/* Header with View Calendar button - matches index.tsx:195-207 */}
       <div className="px-4">
@@ -251,9 +248,9 @@ export function CurrentlyAiringPageSkeleton() {
           </h2>
           <div className="flex flex-col space-y-4">
             {Array(8).fill(0).map((_, index) => (
-              <AnimeCardSkeleton 
-                key={`airing-today-${index}`} 
-                style={AnimeCardStyle.EPISODE} 
+              <AnimeCardSkeleton
+                key={`airing-today-${index}`}
+                style={AnimeCardStyle.LONG}
                 forceListLayout={true}
               />
             ))}
@@ -267,9 +264,9 @@ export function CurrentlyAiringPageSkeleton() {
           </h2>
           <div className="flex flex-col space-y-4">
             {Array(12).fill(0).map((_, index) => (
-              <AnimeCardSkeleton 
-                key={`airing-week-${index}`} 
-                style={AnimeCardStyle.EPISODE} 
+              <AnimeCardSkeleton
+                key={`airing-week-${index}`}
+                style={AnimeCardStyle.EPISODE}
                 forceListLayout={true}
               />
             ))}
@@ -283,9 +280,9 @@ export function CurrentlyAiringPageSkeleton() {
           </h2>
           <div className="flex flex-col space-y-4">
             {Array(6).fill(0).map((_, index) => (
-              <AnimeCardSkeleton 
-                key={`recently-aired-${index}`} 
-                style={AnimeCardStyle.EPISODE} 
+              <AnimeCardSkeleton
+                key={`recently-aired-${index}`}
+                style={AnimeCardStyle.EPISODE}
                 forceListLayout={true}
               />
             ))}
@@ -299,9 +296,9 @@ export function CurrentlyAiringPageSkeleton() {
           </h2>
           <div className="flex flex-col space-y-4">
             {Array(10).fill(0).map((_, index) => (
-              <AnimeCardSkeleton 
-                key={`coming-soon-${index}`} 
-                style={AnimeCardStyle.EPISODE} 
+              <AnimeCardSkeleton
+                key={`coming-soon-${index}`}
+                style={AnimeCardStyle.EPISODE}
                 forceListLayout={true}
               />
             ))}
@@ -326,7 +323,7 @@ export function NotFoundPageSkeleton() {
 // Smart skeleton detector based on current URL
 function getSkeletonForPath() {
   const path = window.location.pathname;
-  
+
   if (path === '/') {
     return <HomePageSkeleton />;
   } else if (path.startsWith('/show/')) {
@@ -343,12 +340,12 @@ function getSkeletonForPath() {
 // Smart skeleton wrapper that detects layout type
 function getLayoutWrapperForPath(skeleton: React.ReactNode) {
   const path = window.location.pathname;
-  
+
   // Show pages use FullWidthLayout (no padding wrapper)
   if (path.startsWith('/show/')) {
     return skeleton;
   }
-  
+
   // All other pages use DefaultLayout (with padding wrapper)
   return (
     <div className={"w-full py-8 px-4 lg:px-16 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300"}>
