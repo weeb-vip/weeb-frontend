@@ -112,7 +112,6 @@ const Login: React.FC = () => {
               label="Email"
               icon={faUser}
               required
-              autoComplete="username"
             />
 
             <FormInput
@@ -128,7 +127,6 @@ const Login: React.FC = () => {
               showPasswordToggle
               onPasswordToggle={() => setShowPassword(!showPassword)}
               isPasswordVisible={showPassword}
-              autoComplete="current-password"
             />
           </div>
 
