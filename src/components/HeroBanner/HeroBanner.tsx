@@ -72,7 +72,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const episode = timingData?.episode;
   const episodeTitle = episode ? (episode.titleEn || episode.titleJp || "Next Episode") : (hasTimingData ? "Next Episode" : "No upcoming episodes");
   const episodeNumber = episode?.episodeNumber ? `${episode.episodeNumber}` : "";
-console.log("ANIME PASED", anime);
+
   const animeNextEpisodeInfo = findNextEpisode(anime.episodes, anime.broadcast)
   const airTimeAndDate = parseAirTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast)
 

@@ -12,6 +12,8 @@ import AuthHandler from "../auth";
 
 import {AnimatePresence} from "motion/react";
 import PageWrapper from './components/PageWrapper';
+import AuthGuard from './components/AuthGuard';
+import RequireAuth from './components/RequireAuth';
 import ScrollRestoration from "../scrollrestoration";
 import NotFoundPage from "./404";
 import ErrorBoundary from "./ErrorBoundry";
@@ -36,6 +38,8 @@ const CurrentlyAiringPage = React.lazy(() => import('./CurrentlyAiring'));
 const CurrentlyAiringCalendarPage = React.lazy(() => import('./CurrentlyAiring/Calendar'));
 const PasswordResetRequest = React.lazy(() => import('./auth/password-reset-request'));
 const PasswordReset = React.lazy(() => import('./auth/password-reset'));
+const EmailVerification = React.lazy(() => import('./auth/verification'));
+const Login = React.lazy(() => import('./auth/login'));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -107,47 +111,81 @@ function AnimatedRoutes() {
         <Route
           path="/profile"
           element={
-            <DefaultLayout>
-              <PageWrapper>
-                <Suspense fallback={<ProfilePageSkeleton/>}>
-                  <Profile/>
-                </Suspense>
-              </PageWrapper>
-            </DefaultLayout>
+            <RequireAuth>
+              <DefaultLayout>
+                <PageWrapper>
+                  <Suspense fallback={<ProfilePageSkeleton/>}>
+                    <Profile/>
+                  </Suspense>
+                </PageWrapper>
+              </DefaultLayout>
+            </RequireAuth>
           }
         />
         <Route
           path="/profile/anime"
           element={
-            <DefaultLayout>
-              <PageWrapper>
-                <Suspense fallback={<ProfilePageSkeleton/>}>
-                  <Anime/>
-                </Suspense>
-              </PageWrapper>
-            </DefaultLayout>
+            <RequireAuth>
+              <DefaultLayout>
+                <PageWrapper>
+                  <Suspense fallback={<ProfilePageSkeleton/>}>
+                    <Anime/>
+                  </Suspense>
+                </PageWrapper>
+              </DefaultLayout>
+            </RequireAuth>
           }
         />
         
         <Route
           path="/auth/password-reset-request"
           element={
-            <PageWrapper>
-              <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
-                <PasswordResetRequest/>
-              </Suspense>
-            </PageWrapper>
+            <AuthGuard>
+              <PageWrapper>
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                  <PasswordResetRequest/>
+                </Suspense>
+              </PageWrapper>
+            </AuthGuard>
           }
         />
         
         <Route
           path="/auth/password-reset"
           element={
-            <PageWrapper>
-              <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
-                <PasswordReset/>
-              </Suspense>
-            </PageWrapper>
+            <AuthGuard>
+              <PageWrapper>
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                  <PasswordReset/>
+                </Suspense>
+              </PageWrapper>
+            </AuthGuard>
+          }
+        />
+        
+        <Route
+          path="/auth/verification"
+          element={
+            <AuthGuard>
+              <PageWrapper>
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                  <EmailVerification/>
+                </Suspense>
+              </PageWrapper>
+            </AuthGuard>
+          }
+        />
+        
+        <Route
+          path="/login"
+          element={
+            <AuthGuard>
+              <PageWrapper>
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                  <Login/>
+                </Suspense>
+              </PageWrapper>
+            </AuthGuard>
           }
         />
 

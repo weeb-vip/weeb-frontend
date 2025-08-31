@@ -1,19 +1,16 @@
 import React from 'react'
-import { render } from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import './scss/base.scss'
 import Bootstrap from './bootstrap'
 import { registerSW } from 'virtual:pwa-register'
-// import {createRoot} from "react-dom/client";
 
-// let createdroot = false
-// const rootNode = document.querySelector('#root')
-// if (rootNode && !createdroot) {
-//   createdroot = true
-//   const root = createRoot(rootNode, {})
-//   root.render(<React.StrictMode><Bootstrap/></React.StrictMode>)
-// }
+const rootElement = document.getElementById('root')
+if (!rootElement) {
+  throw new Error('Root element not found')
+}
 
-render(<React.StrictMode><Bootstrap/></React.StrictMode>, document.getElementById('root'))
+const root = createRoot(rootElement)
+root.render(<React.StrictMode><Bootstrap/></React.StrictMode>)
 
 // Register the service worker with automatic updates
 const updateSW = registerSW({

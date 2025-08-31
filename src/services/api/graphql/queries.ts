@@ -227,6 +227,14 @@ export const mutationResetPassword = graphql(
     `
 )
 
+export const mutationVerifyEmail = graphql(
+    `
+        mutation VerifyEmail {
+            VerifyEmail
+        }
+    `
+)
+
 export const queryUserDetails = graphql(`
     query getUserDetails {
         UserDetails {
