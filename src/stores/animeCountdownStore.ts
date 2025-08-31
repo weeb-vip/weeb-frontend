@@ -15,6 +15,7 @@ interface AnimeTimingData {
     episodeNumber?: number | null;
     titleEn?: string | null;
     titleJp?: string | null;
+    airDate?: string | null;
   };
 }
 
