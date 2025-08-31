@@ -150,7 +150,6 @@ const PasswordResetRequest: React.FC = () => {
                 label="Username"
                 icon={faUser}
                 required
-                autoComplete="username"
               />
 
               <FormInput
@@ -163,7 +162,6 @@ const PasswordResetRequest: React.FC = () => {
                 label="Email address"
                 icon={faEnvelope}
                 required
-                autoComplete="email"
               />
             </div>
 
