@@ -291,6 +291,18 @@ export const queryUserAnimes = graphql(`
                     description
                     episodeCount
                     duration
+                    broadcast
+                    episodes {
+                        id
+                        animeId
+                        episodeNumber
+                        titleEn
+                        titleJp
+                        synopsis
+                        airDate
+                        createdAt
+                        updatedAt
+                    }
                 }
             }
         }

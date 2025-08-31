@@ -75,8 +75,10 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
       if (nextEpisodeResult) {
         const { episode: nextEpisode, airTime: nextEpisodeAirTime } = nextEpisodeResult;
 
-        // Only include if episode is within the next 7 days
-        if (nextEpisodeAirTime <= sevenDaysFromNow && nextEpisodeAirTime >= now) {
+        // Only include if episode is within the next 7 days or recently aired (within episode duration)
+        const episodeDurationMs = airingInfo.duration ? parseInt(airingInfo.duration) * 60 * 1000 : 30 * 60 * 1000; // Default to 30 min
+        const nowMinusEpisodeDuration = new Date(now.getTime() - episodeDurationMs);
+        if (nextEpisodeAirTime <= sevenDaysFromNow && nextEpisodeAirTime >= nowMinusEpisodeDuration) {
           // Generate air time display info (same as main page)
           const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, airingInfo.broadcast) || {
             show: true,
@@ -154,33 +156,37 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
             const mostRecentEpisode = recentEpisodes[0];
             const daysSinceAired = (now.getTime() - mostRecentEpisode.airDate.getTime()) / (1000 * 60 * 60 * 24);
 
-            // Create air time display for recently aired episode showing when it aired
-            const daysSinceAiredText = daysSinceAired < 1 
-              ? 'Today' 
-              : daysSinceAired < 2 
-                ? 'Yesterday' 
-                : `${Math.floor(daysSinceAired)} days ago`;
-            
-            const airTimeText = format(mostRecentEpisode.airDate, 'h:mm a');
-            const airDayText = format(mostRecentEpisode.airDate, 'EEE');
-            
-            const recentAirTimeInfo = {
-              show: true,
-              text: `Aired ${daysSinceAiredText} (${airDayText} at ${airTimeText})`,
-              variant: 'aired' as const
-            };
+            // For now, include all shows with recent episodes (until we can properly determine finished status)
+            // TODO: Add better logic to filter only finished shows
+            if (true) {
+              // Create air time display for recently aired episode showing when it aired
+              const daysSinceAiredText = daysSinceAired < 1
+                ? 'Today'
+                : daysSinceAired < 2
+                  ? 'Yesterday'
+                  : `${Math.floor(daysSinceAired)} days ago`;
 
-            const enhancedEntry = {
-              ...entry,
-              airingInfo: {
-                ...airingInfo,
-                airTimeDisplay: recentAirTimeInfo,
-                recentEpisode: mostRecentEpisode,
-                daysSinceAired: Math.floor(daysSinceAired)
-              }
-            };
+              const airTimeText = format(mostRecentEpisode.airDate, 'h:mm a');
+              const airDayText = format(mostRecentEpisode.airDate, 'EEE');
 
-            recentlyAired.push(enhancedEntry);
+              const recentAirTimeInfo = {
+                show: true,
+                text: `Aired ${daysSinceAiredText} (${airDayText} at ${airTimeText})`,
+                variant: 'aired' as const
+              };
+
+              const enhancedEntry = {
+                ...entry,
+                airingInfo: {
+                  ...airingInfo,
+                  airTimeDisplay: recentAirTimeInfo,
+                  recentEpisode: mostRecentEpisode,
+                  daysSinceAired: Math.floor(daysSinceAired)
+                }
+              };
+
+              recentlyAired.push(enhancedEntry);
+            }
           }
         }
       }
@@ -220,7 +226,16 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
     return <Loader />;
   }
 
-  const { airingSoon, recentlyAired, currentlyWatching } = watchlistAnalysis;
+  const { airingSoon, recentlyAired, currentlyWatching, allWatchlistShows } = watchlistAnalysis;
+
+  // Create airingMap for Currently Watching section
+  const currentlyAiringShows = currentlyAiringData?.currentlyAiring || [];
+  const airingMap = new Map();
+  currentlyAiringShows.forEach(anime => {
+    if (anime) {
+      airingMap.set(anime.id, anime);
+    }
+  });
 
   return (
     <div className={`space-y-8 ${className || ''}`}>
@@ -273,7 +288,9 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
                     ? "Currently airing"
                     : timingData.hasAlreadyAired
                       ? "Recently aired"
-                      : timingData.countdown ? `Airing in ${timingData.countdown}` : timingData.airDateTime,
+                      : timingData.countdown
+                        ? (timingData.countdown === "JUST AIRED" ? timingData.countdown : `Airing in ${timingData.countdown}`)
+                        : timingData.airDateTime,
                   variant: timingData.isCurrentlyAiring
                     ? 'airing' as const
                     : timingData.hasAlreadyAired
@@ -363,7 +380,7 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
               if (timingData) {
                 // Use worker timing data for more accurate information
                 let displayText = timingData.airDateTime;
-                
+
                 if (timingData.isCurrentlyAiring) {
                   displayText = "Currently airing";
                 } else if (timingData.hasAlreadyAired && timingData.episode?.airDate) {
@@ -372,22 +389,47 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
                   if (parsedAirTime) {
                     const currentTime = getCurrentTime();
                     const daysSinceAired = (currentTime.getTime() - parsedAirTime.getTime()) / (1000 * 60 * 60 * 24);
-                    
-                    const daysSinceAiredText = daysSinceAired < 1 
-                      ? 'Today' 
-                      : daysSinceAired < 2 
-                        ? 'Yesterday' 
+
+                    const daysSinceAiredText = daysSinceAired < 1
+                      ? 'Today'
+                      : daysSinceAired < 2
+                        ? 'Yesterday'
                         : `${Math.floor(daysSinceAired)} days ago`;
-                    
+
                     const airTimeText = format(parsedAirTime, 'h:mm a');
                     const airDayText = format(parsedAirTime, 'EEE');
-                    
+
                     displayText = `Aired ${daysSinceAiredText} (${airDayText} at ${airTimeText})`;
                   } else {
                     displayText = "Recently aired";
                   }
                 } else if (timingData.countdown) {
-                  displayText = `Airing in ${timingData.countdown}`;
+                  // Handle special cases like "JUST AIRED" without "Airing in" prefix
+                  if (timingData.countdown === "JUST AIRED") {
+                    if (airingInfo.recentEpisode?.airDate) {
+                      const parsedAirTime = parseAirTime(airingInfo.recentEpisode.airDate, airingInfo.broadcast);
+                      if (parsedAirTime) {
+                        const currentTime = getCurrentTime();
+                        const daysSinceAired = (currentTime.getTime() - parsedAirTime.getTime()) / (1000 * 60 * 60 * 24);
+
+                        const daysSinceAiredText = daysSinceAired < 1
+                          ? 'Today'
+                          : daysSinceAired < 2
+                            ? 'Yesterday'
+                            : `${Math.floor(daysSinceAired)} days ago`;
+
+                        const airTimeText = format(parsedAirTime, 'h:mm a');
+                        const airDayText = format(parsedAirTime, 'EEE');
+                        displayText = `${airDayText} at ${airTimeText} (${daysSinceAiredText})`;
+                      } else {
+                        displayText = "Just aired";
+                      }
+                    } else {
+                      displayText = "Just aired";
+                    }
+                  } else {
+                    displayText = `Airing in ${timingData.countdown}`;
+                  }
                 }
 
                 airTimeDisplay = {
@@ -409,16 +451,16 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
                   if (parsedAirTime) {
                     const currentTime = getCurrentTime();
                     const daysSinceAired = (currentTime.getTime() - parsedAirTime.getTime()) / (1000 * 60 * 60 * 24);
-                    
-                    const daysSinceAiredText = daysSinceAired < 1 
-                      ? 'Today' 
-                      : daysSinceAired < 2 
-                        ? 'Yesterday' 
+
+                    const daysSinceAiredText = daysSinceAired < 1
+                      ? 'Today'
+                      : daysSinceAired < 2
+                        ? 'Yesterday'
                         : `${Math.floor(daysSinceAired)} days ago`;
-                    
+
                     const airTimeText = format(parsedAirTime, 'h:mm a');
                     const airDayText = format(parsedAirTime, 'EEE');
-                    
+
                     airTimeDisplay = {
                       show: true,
                       text: `Aired ${daysSinceAiredText} (${airDayText} at ${airTimeText})`,
@@ -489,25 +531,100 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {currentlyWatching.map((entry) => (
-              <AnimeCard
-                key={`watching-${entry.id}`}
-                style={AnimeCardStyle.DETAIL}
-                forceListLayout={true}
-                id={entry.anime?.id}
-                title={entry.anime?.titleEn || entry.anime?.titleJp || "Unknown"}
-                description={entry.anime?.description || ""}
-                episodes={entry.anime?.episodeCount || 0}
-                episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
-                image={GetImageFromAnime(entry.anime)}
-                onClick={() => navigate(`/show/${entry.anime?.id}`)}
-                year={entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : "Unknown"}
-                // entry={{ airingInfo: { isInWatchlist: true } }}
-                options={[
-                  <AnimeStatusDropdown key={`dropdown-${entry.id}`} entry={entry as any} variant="compact" />
-                ]}
-              />
-            ))}
+            {currentlyWatching.map((entry) => {
+              const anime = entry.anime;
+              if (!anime) return null;
+
+              // Use episode data directly from the anime object (from updated query)
+              let airTimeDisplay: any = undefined;
+              let nextEpisode: any = null;
+
+              if (anime.episodes && anime.episodes.length > 0) {
+                // Calculate timing info using episodes from the watchlist query
+                const episodes = anime.episodes;
+                const now = getCurrentTime();
+
+                // Find next episode
+                const nextEpisodeResult = findNextEpisode(episodes, anime.broadcast, now);
+
+                if (nextEpisodeResult) {
+                  const { episode, airTime } = nextEpisodeResult;
+                  nextEpisode = episode;
+
+                  const daysDiff = Math.ceil((airTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+                  if (airTime <= now) {
+                    airTimeDisplay = {
+                      show: true,
+                      text: "Recently aired",
+                      variant: 'aired' as const
+                    };
+                  } else if (daysDiff <= 7) {
+                    airTimeDisplay = {
+                      show: true,
+                      text: `Next episode ${format(airTime, "EEE")} at ${format(airTime, "h:mm a")}`,
+                      variant: 'scheduled' as const
+                    };
+                  } else {
+                    airTimeDisplay = {
+                      show: true,
+                      text: `Next episode in ${daysDiff} days`,
+                      variant: 'scheduled' as const
+                    };
+                  }
+                } else {
+                  // No future episodes, find the last episode
+                  const pastEpisodes = episodes
+                    .filter((ep: any) => ep.airDate)
+                    .map((ep: any) => {
+                      const parsedAirTime = parseAirTime(ep.airDate, anime.broadcast);
+                      return parsedAirTime ? { ...ep, airDate: parsedAirTime } : null;
+                    })
+                    .filter((ep: any) => ep !== null && ep.airDate.getTime() < now.getTime())
+                    .sort((a: any, b: any) => b.airDate.getTime() - a.airDate.getTime());
+
+                  if (pastEpisodes.length > 0) {
+                    const lastEpisode = pastEpisodes[0];
+                    const daysSinceFinished = Math.floor((now.getTime() - lastEpisode.airDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                    // Format the finish date
+                    const finishDateText = daysSinceFinished < 1
+                      ? "Finished today"
+                      : daysSinceFinished < 2
+                        ? "Finished yesterday"
+                        : `Finished ${format(lastEpisode.airDate, "MMM d, yyyy")}`;
+
+                    airTimeDisplay = {
+                      show: true,
+                      text: finishDateText,
+                      variant: 'aired' as const
+                    };
+                  }
+                }
+              }
+
+              return (
+                <AnimeCard
+                  key={`watching-${entry.id}`}
+                  style={AnimeCardStyle.DETAIL}
+                  forceListLayout={true}
+                  id={anime.id}
+                  title={anime.titleEn || anime.titleJp || "Unknown"}
+                  description={anime.description || ""}
+                  episodes={anime.episodeCount || 0}
+                  episodeLength={anime.duration?.replace(/per.+?$|per/gm, '') || "?"}
+                  image={GetImageFromAnime(anime)}
+                  onClick={() => navigate(`/show/${anime.id}`)}
+                  year={anime.startDate ? new Date(anime.startDate).getFullYear().toString() : "Unknown"}
+                  airTime={airTimeDisplay}
+                  nextEpisode={nextEpisode}
+                  broadcast={anime.broadcast}
+                  options={[
+                    <AnimeStatusDropdown key={`dropdown-${entry.id}`} entry={entry as any} variant="compact" />
+                  ]}
+                />
+              );
+            })}
           </div>
         </section>
       )}
