@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
@@ -25,11 +25,6 @@ interface StatusButtonProps {
   className?: string;
   status?: StatusType;
   onResetStatus?: () => void;
-
-  /** NEW: explicitly disable the button (also disabled while loading) */
-  disabled?: boolean;
-  /** NEW: forward native type so this can be a submit button in forms */
-  type?: "button" | "submit" | "reset";
 }
 
 export default function StatusButton({
@@ -41,11 +36,11 @@ export default function StatusButton({
                                        className,
                                        status,
                                        onResetStatus,
-                                       disabled = false,
-                                       type = "button",
                                      }: StatusButtonProps) {
   const [internalStatus, setInternalStatus] = useState<StatusType>("idle");
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+
 
   useEffect(() => {
     if (!status) return;
@@ -59,19 +54,11 @@ export default function StatusButton({
     }
   }, [status, onResetStatus]);
 
-  const isDisabled = disabled || internalStatus === "loading";
-
-  // Freeze hover styles when disabled and keep base tone
   const colorClasses = {
-    blue: isDisabled
-      ? "bg-blue-600 text-white disabled:opacity-60"
-      : "bg-blue-600 hover:bg-blue-700 text-white",
-    red: isDisabled
-      ? "bg-red-600 text-white disabled:opacity-60"
-      : "bg-red-600 hover:bg-red-700 text-white",
-    transparent: isDisabled
-      ? "bg-transparent text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 disabled:opacity-60"
-      : "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600",
+    blue: "bg-blue-600 hover:bg-blue-700 text-white",
+    red: "bg-red-600 hover:bg-red-700 text-white",
+    transparent:
+      "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600",
     none: "",
   };
 
@@ -82,27 +69,18 @@ export default function StatusButton({
     idle: null,
   };
 
-  const handleClick = () => {
-    if (isDisabled) return; // hard guard: ignore clicks while disabled/loading
-    onClick?.();
-  };
-
   return (
     <button
       ref={buttonRef}
-      type={type}
-      onClick={handleClick}
-      disabled={isDisabled}
-      aria-disabled={isDisabled}
-      aria-busy={internalStatus === "loading"}
+      onClick={onClick}
+      disabled={internalStatus === "loading"}
       className={`
-        px-4 py-2 relative rounded-full font-medium transition-colors duration-300
-        flex items-center justify-center whitespace-nowrap w-fit
-        ${colorClasses[color]}
-        ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}
-        disabled:pointer-events-none
-        ${className || ""}
-      `}
+      px-4 py-2
+        relative rounded-full font-medium transition-colors duration-300 flex items-center justify-center whitespace-nowrap w-fit
+        ${colorClasses[color]} ${className || ""} ${
+        internalStatus === "loading" ? "cursor-not-allowed" : "cursor-pointer"
+      }`}
+
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
@@ -118,6 +96,7 @@ export default function StatusButton({
             : iconMap[internalStatus]}
         </motion.div>
       </AnimatePresence>
+
     </button>
   );
 }

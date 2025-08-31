@@ -178,8 +178,6 @@ const PasswordResetRequest: React.FC = () => {
                 showLabel
                 status={blocked ? "loading" : "idle"}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md"
-                type="submit"
-                disabled={disabled}
                 aria-disabled={disabled}
               />
             </div>
