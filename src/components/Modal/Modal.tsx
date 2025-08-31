@@ -37,7 +37,7 @@ export default function Modal({children, title, isOpen, closeFn, options, classN
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Dialog.Panel
-              className="transform rounded-2xl text-left align-middle shadow-xl transition-all bg-white dark:bg-gray-800">
+              className="transform rounded-lg text-left align-middle shadow-xl transition-all bg-white dark:bg-gray-800">
               <Dialog.Title>{title}</Dialog.Title>
               <div className="flex justify-between flex-col flex-no-wrap">
                 <div className="mt-2">

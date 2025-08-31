@@ -65,6 +65,7 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
     // Process all currently airing shows for "Airing This Week" section using main page logic
     currentlyAiringShows.forEach(airingInfo => {
       if (!airingInfo || !(airingInfo as any).episodes || (airingInfo as any).episodes.length === 0) return;
+      if (!airingInfo.userAnime) return; // Skip if not in user's watchlist
 
       const episodes = (airingInfo as any).episodes;
 

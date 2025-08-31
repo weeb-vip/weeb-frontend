@@ -18,11 +18,13 @@ const RequireAuth: React.FC<RequireAuthProps> = ({
   showLoginModal = false 
 }) => {
   const isLoggedIn = useLoggedInStore((state) => state.isLoggedIn);
+  const isAuthInitialized = useLoggedInStore((state) => state.isAuthInitialized);
   const openLogin = useLoginModalStore((state) => state.openLogin);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    // Only redirect/show modal after auth is initialized and user is not logged in
+    if (isAuthInitialized && !isLoggedIn) {
       if (showLoginModal) {
         // Show the login modal instead of redirecting
         openLogin();
@@ -31,9 +33,14 @@ const RequireAuth: React.FC<RequireAuthProps> = ({
         navigate(redirectTo, { replace: true });
       }
     }
-  }, [isLoggedIn, navigate, redirectTo, showLoginModal, openLogin]);
+  }, [isLoggedIn, isAuthInitialized, navigate, redirectTo, showLoginModal, openLogin]);
 
-  // If user is not logged in, don't render the protected content
+  // Don't render anything until auth is initialized
+  if (!isAuthInitialized) {
+    return <>{children}</>;
+  }
+
+  // If user is not logged in (and auth is initialized), don't render the protected content
   if (!isLoggedIn) {
     return null;
   }

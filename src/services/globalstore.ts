@@ -2,8 +2,10 @@ import {create} from 'zustand'
 
 interface LoggedInState {
   isLoggedIn: boolean
+  isAuthInitialized: boolean
   setLoggedIn: () => void
   logout: () => void
+  setAuthInitialized: () => void
 }
 
 interface LoginModalState {
@@ -22,8 +24,10 @@ interface DarkModeState {
 
 export const useLoggedInStore = create<LoggedInState>((set) => ({
   isLoggedIn: false,
-  setLoggedIn: () => set(() => ({isLoggedIn: true})),
-  logout: () => set({isLoggedIn: false}),
+  isAuthInitialized: false,
+  setLoggedIn: () => set(() => ({isLoggedIn: true, isAuthInitialized: true})),
+  logout: () => set({isLoggedIn: false, isAuthInitialized: true}),
+  setAuthInitialized: () => set({isAuthInitialized: true}),
 }))
 
 export const useLoginModalStore = create<LoginModalState>((set) => ({

@@ -34,6 +34,7 @@ const Home = React.lazy(() => import('./index'));
 const Show = React.lazy(() => import('./show'));
 const Anime = React.lazy(() => import('./profile/anime'));
 const Profile = React.lazy(() => import('./profile'));
+const ProfileSettings = React.lazy(() => import('./profile/settings'));
 const CurrentlyAiringPage = React.lazy(() => import('./CurrentlyAiring'));
 const CurrentlyAiringCalendarPage = React.lazy(() => import('./CurrentlyAiring/Calendar'));
 const PasswordResetRequest = React.lazy(() => import('./auth/password-reset-request'));
@@ -130,6 +131,20 @@ function AnimatedRoutes() {
                 <PageWrapper>
                   <Suspense fallback={<ProfilePageSkeleton/>}>
                     <Anime/>
+                  </Suspense>
+                </PageWrapper>
+              </DefaultLayout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <RequireAuth>
+              <DefaultLayout>
+                <PageWrapper>
+                  <Suspense fallback={<ProfilePageSkeleton/>}>
+                    <ProfileSettings/>
                   </Suspense>
                 </PageWrapper>
               </DefaultLayout>

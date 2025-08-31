@@ -10,6 +10,7 @@ const AuthHandler = () => {
   const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
   const setLoggedIn = useLoggedInStore((state) => state.setLoggedIn);
   const setLogout = useLoggedInStore((state) => state.logout);
+  const setAuthInitialized = useLoggedInStore((state) => state.setAuthInitialized);
   const modalOpen = useLoginModalStore((state) => state.isOpen);
   const close = useLoginModalStore((state) => state.close);
   const logout = () => {
@@ -25,6 +26,8 @@ const AuthHandler = () => {
     if (authToken) {
       setLoggedIn();
       TokenRefresher.getInstance(refreshTokenSimple).start(authToken); // Start token refresh process
+    } else {
+      setAuthInitialized(); // Mark as initialized even if no token
     }
 
   }, []);

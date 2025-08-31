@@ -7,10 +7,12 @@ import Button, { ButtonColor } from '../../components/Button/Button';
 import FormInput from '../../components/FormInput';
 import { login } from '../../services/queries';
 import { LoginInput } from '../../gql/graphql';
+import { useLoggedInStore } from '../../services/globalstore';
 import debug from '../../utils/debug';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const setLoggedIn = useLoggedInStore((state) => state.setLoggedIn);
   const [formData, setFormData] = useState<LoginInput>({
     username: '',
     password: ''
@@ -23,10 +25,13 @@ const Login: React.FC = () => {
     onSuccess: (response) => {
       if (response?.Credentials?.token) {
         debug.auth('Login successful');
-        
+
         // Store the auth token in localStorage
         localStorage.setItem('authToken', response.Credentials.token);
         
+        // Update the logged-in state in Zustand store
+        setLoggedIn();
+
         // Navigate to home page
         navigate('/');
       } else {
@@ -103,8 +108,8 @@ const Login: React.FC = () => {
               type="text"
               value={formData.username}
               onChange={handleInputChange}
-              placeholder="Username or Email"
-              label="Username or Email"
+              placeholder="Email"
+              label="Email"
               icon={faUser}
               required
               autoComplete="username"

@@ -189,8 +189,8 @@ export const refreshTokenSimple = async (): Promise<SigninResult> => {
   return response.RefreshToken;
 };
 
-export const updateUserDetails = async () => ({
-  queryFn: async (user: UpdateUserInput) => {
+export const updateUserDetails = () => ({
+  mutationFn: async (user: UpdateUserInput) => {
     const response = await AuthenticatedClient().request(mutateUpdateUserDetails, {
       input: user
     });
