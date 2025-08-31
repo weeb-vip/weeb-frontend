@@ -6,7 +6,7 @@ import { GetImageFromAnime } from "../../services/utils";
 import { AnimeStatusDropdown } from "../AnimeStatusDropdown/AnimeStatusDropdown";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
-import { getAirTimeDisplay, findNextEpisode } from "../../services/airTimeUtils";
+import { getAirTimeDisplay, findNextEpisode, parseAirTime, getCurrentTime } from "../../services/airTimeUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronRight, faPlay, faCalendarDays, faBookmark } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
@@ -55,7 +55,7 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
     const allWatchlistShows = [...watching, ...planToWatch];
     const airingSoon: any[] = [];
     const recentlyAired: any[] = [];
-    const now = new Date();
+    const now = getCurrentTime();
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
@@ -136,18 +136,39 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
           // Find the most recent episode that aired in the last 2 weeks
           const recentEpisodes = (airingInfo as any).episodes
             .filter((ep: any) => ep.airDate)
-            .map((ep: any) => ({ ...ep, airDate: new Date(ep.airDate!) }))
-            .filter((ep: any) => ep.airDate <= now && ep.airDate >= twoWeeksAgo)
+            .map((ep: any) => {
+              // Use parseAirTime to get the correct air time with timezone conversion
+              const parsedAirTime = parseAirTime(ep.airDate, airingInfo.broadcast);
+              return parsedAirTime ? { ...ep, airDate: parsedAirTime } : null;
+            })
+            .filter((ep: any) => ep !== null)
+            .filter((ep: any) => {
+              // Only include episodes that have actually aired (in the past) and within the last 2 weeks
+              const epTime = ep.airDate.getTime();
+              const nowTime = now.getTime();
+              return epTime < nowTime && epTime >= twoWeeksAgo.getTime();
+            })
             .sort((a: any, b: any) => b.airDate.getTime() - a.airDate.getTime()); // Most recent first
 
           if (recentEpisodes.length > 0) {
             const mostRecentEpisode = recentEpisodes[0];
             const daysSinceAired = (now.getTime() - mostRecentEpisode.airDate.getTime()) / (1000 * 60 * 60 * 24);
 
-            // Create air time display for recently aired episode
-            const recentAirTimeInfo = airingInfo.broadcast ?
-              getAirTimeDisplay(mostRecentEpisode.airDate.toISOString(), airingInfo.broadcast) :
-              { show: true, text: "Recently aired", variant: 'aired' as const };
+            // Create air time display for recently aired episode showing when it aired
+            const daysSinceAiredText = daysSinceAired < 1 
+              ? 'Today' 
+              : daysSinceAired < 2 
+                ? 'Yesterday' 
+                : `${Math.floor(daysSinceAired)} days ago`;
+            
+            const airTimeText = format(mostRecentEpisode.airDate, 'h:mm a');
+            const airDayText = format(mostRecentEpisode.airDate, 'EEE');
+            
+            const recentAirTimeInfo = {
+              show: true,
+              text: `Aired ${daysSinceAiredText} (${airDayText} at ${airTimeText})`,
+              variant: 'aired' as const
+            };
 
             const enhancedEntry = {
               ...entry,
@@ -328,36 +349,70 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {recentlyAired.map((entry: any) => (
-              <div key={`aired-${entry.id}`} className="relative">
-                <AnimeCard
-                  style={AnimeCardStyle.DETAIL}
-                  forceListLayout={true}
-                  id={entry.anime?.id}
-                  title={entry.anime?.titleEn || entry.anime?.titleJp || "Unknown"}
-                  description={entry.anime?.description || ""}
-                  episodes={entry.airingInfo?.episodeCount || entry.anime?.episodeCount || 0}
-                  episodeLength={entry.airingInfo?.duration?.replace(/per.+?$|per/gm, '') || entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
-                  image={GetImageFromAnime(entry.airingInfo) || GetImageFromAnime(entry.anime)}
-                  onClick={() => navigate(`/show/${entry.anime?.id}`)}
-                  year={entry.airingInfo?.startDate ? new Date(entry.airingInfo.startDate).getFullYear().toString() :
-                        entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : "Unknown"}
-                  airTime={{
-                    show: true,
-                    text: `Episode ${entry.airingInfo?.recentEpisode?.episodeNumber || '?'} • ${entry.airingInfo?.daysSinceAired === 0 ? 'Today' : entry.airingInfo?.daysSinceAired === 1 ? 'Yesterday' : `${entry.airingInfo?.daysSinceAired} days ago`}`,
-                    variant: 'aired' as const
-                  }}
-                  // entry={{ airingInfo: { isInWatchlist: true } }}
-                  options={[
-                    <AnimeStatusDropdown key={`dropdown-${entry.id}`} entry={entry as any} variant="compact" />
-                  ]}
-                />
-                {/*/!* Episode indicator *!/*/}
-                {/*<div className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">*/}
-                {/*  New Episode*/}
-                {/*</div>*/}
-              </div>
-            ))}
+            {recentlyAired.map((entry: any) => {
+              const anime = entry.anime;
+              const airingInfo = entry.airingInfo;
+
+              // Get worker timing data (same as main page)
+              const timingData = getTimingData(anime.id);
+
+              // Use worker timing data if available, otherwise use the calculated air time display
+              let airTimeDisplay: any;
+              let episodeData: any;
+
+              if (timingData) {
+                // Use worker timing data for more accurate information
+                airTimeDisplay = {
+                  show: true,
+                  text: timingData.isCurrentlyAiring
+                    ? "Currently airing"
+                    : timingData.hasAlreadyAired
+                      ? "Recently aired"
+                      : timingData.countdown ? `Airing in ${timingData.countdown}` : timingData.airDateTime,
+                  variant: timingData.isCurrentlyAiring
+                    ? 'airing' as const
+                    : timingData.hasAlreadyAired
+                      ? 'aired' as const
+                      : 'countdown' as const,
+                };
+
+                // Use episode data from worker
+                episodeData = timingData.episode;
+              } else {
+                // Use the air time display from ProfileDashboard logic
+                airTimeDisplay = airingInfo.airTimeDisplay;
+                episodeData = airingInfo.recentEpisode;
+              }
+
+              return (
+                <div key={`aired-${entry.id}`} className="relative">
+                  <AnimeCard
+                    style={AnimeCardStyle.DETAIL}
+                    forceListLayout={true}
+                    id={anime?.id}
+                    title={anime?.titleEn || anime?.titleJp || "Unknown"}
+                    description={anime?.description || ""}
+                    episodes={airingInfo?.episodeCount || anime?.episodeCount || 0}
+                    episodeLength={airingInfo?.duration?.replace(/per.+?$|per/gm, '') || anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
+                    image={GetImageFromAnime(airingInfo) || GetImageFromAnime(anime)}
+                    onClick={() => navigate(`/show/${anime?.id}`)}
+                    year={airingInfo?.startDate ? new Date(airingInfo.startDate).getFullYear().toString() :
+                          anime?.startDate ? new Date(anime.startDate).getFullYear().toString() : "Unknown"}
+                    airTime={airTimeDisplay}
+                    nextEpisode={episodeData}
+                    broadcast={airingInfo?.broadcast}
+                    // entry={{ airingInfo: { isInWatchlist: true } }}
+                    options={[
+                      <AnimeStatusDropdown key={`dropdown-${entry.id}`} entry={entry as any} variant="compact" />
+                    ]}
+                  />
+                  {/*/!* Episode indicator *!/*/}
+                  {/*<div className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">*/}
+                  {/*  New Episode*/}
+                  {/*</div>*/}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

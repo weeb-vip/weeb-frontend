@@ -13,6 +13,8 @@ import {
   RefreshTokenMutationVariables,
   RegisterInput,
   RegisterResult,
+  RequestPasswordResetInput,
+  ResetPasswordInput,
   SigninResult,
   UpdateUserInput,
   User,
@@ -25,7 +27,7 @@ import {
   getAnimeDetailsByID,
   getCurrentlyAiring, getCurrentlyAiringWithDates,
   getHomePageData, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
-  mutationCreateSession, mutationRefreshToken,
+  mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword,
   mutationRegister, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserDetails
 } from "./api/graphql/queries";
 
@@ -122,6 +124,22 @@ export const login = () => ({
     // @ts-ignore
     const response = await request(global.config.graphql_host, mutationCreateSession, input);
     return response.CreateSession;
+  }
+})
+
+export const requestPasswordReset = () => ({
+  mutationFn: async (input: { input: RequestPasswordResetInput }): Promise<boolean> => {
+    // @ts-ignore
+    const response = await request(global.config.graphql_host, mutationRequestPasswordReset, input);
+    return response.RequestPasswordReset;
+  }
+})
+
+export const resetPassword = () => ({
+  mutationFn: async (input: { input: ResetPasswordInput }): Promise<boolean> => {
+    // @ts-ignore
+    const response = await request(global.config.graphql_host, mutationResetPassword, input);
+    return response.ResetPassword;
   }
 })
 

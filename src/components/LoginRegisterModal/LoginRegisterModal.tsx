@@ -1,10 +1,15 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faLock } from '@fortawesome/free-solid-svg-icons';
 import { LoginInput, SigninResult } from "../../gql/graphql";
 import {login, refreshTokenSimple, register} from "../../services/queries";
 import { TokenRefresher } from "../../services/token_refresher";
 import { useMutation } from "@tanstack/react-query";
 import {useLoggedInStore, useLoginModalStore} from "../../services/globalstore";
 import Loader from "../Loader";
+import FormInput from "../FormInput";
+import Button, { ButtonColor } from "../Button";
 import debug from "../../utils/debug";
 
 export interface LoginRegisterModalProps {
@@ -137,89 +142,69 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="username" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-            {!isRegisterState ? 'Username or Email' : 'Username'}
-          </label>
-          <input
-            id="username"
-            name="username"
-            type="text"
-            value={formData.username}
-            onChange={handleChange}
-            placeholder={!isRegisterState ? 'Enter your username or email' : 'Enter your weeb username'}
-            className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 
-              bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-              ${validationErrors.username 
-                ? 'border-red-500 focus:ring-red-400' 
-                : 'border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500'
-              }`}
-            aria-describedby={validationErrors.username ? "username-error" : undefined}
-            required
-          />
-          {validationErrors.username && (
-            <p id="username-error" className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.username}</p>
-          )}
-        </div>
+        <FormInput
+          id="username"
+          name="username"
+          type="text"
+          value={formData.username}
+          onChange={handleChange}
+          placeholder={!isRegisterState ? 'Enter your email' : 'Enter your email'}
+          label={!isRegisterState ? 'Email' : 'Email'}
+          icon={faUser}
+          error={validationErrors.username}
+          required
+        />
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Password</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 
-              bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-              ${validationErrors.password 
-                ? 'border-red-500 focus:ring-red-400' 
-                : 'border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500'
-              }`}
-            aria-describedby={validationErrors.password ? "password-error" : undefined}
-            required
-          />
-          {validationErrors.password && (
-            <p id="password-error" className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.password}</p>
-          )}
-        </div>
+        <FormInput
+          id="password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Enter your password"
+          label="Password"
+          icon={faLock}
+          error={validationErrors.password}
+          required
+        />
 
         {isRegisterState && (
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Enter your password again"
-              className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 
-                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                ${validationErrors.confirmPassword 
-                  ? 'border-red-500 focus:ring-red-400' 
-                  : 'border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500'
-                }`}
-              aria-describedby={validationErrors.confirmPassword ? "confirm-password-error" : undefined}
-              required
-            />
-            {validationErrors.confirmPassword && (
-              <p id="confirm-password-error" className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.confirmPassword}</p>
-            )}
-          </div>
+          <FormInput
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            placeholder="Enter your password again"
+            label="Confirm Password"
+            icon={faLock}
+            error={validationErrors.confirmPassword}
+            required
+          />
         )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full px-6 py-3 mt-6 text-white rounded-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-300 flex items-center justify-center gap-2 font-medium"
-          aria-label={isLoading ? `${!isRegisterState ? 'Logging in' : 'Registering'}...` : `${!isRegisterState ? 'Login' : 'Register'}`}
-        >
-          {isLoading && <Loader />}
-          {!isRegisterState ? 'Login' : 'Register'}
-        </button>
+        <Button
+          color={ButtonColor.blue}
+          label={!isRegisterState ? 'Login' : 'Register'}
+          onClick={() => {}}
+          showLabel
+          status={isLoading ? 'loading' : 'idle'}
+          className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md mt-6"
+        />
       </form>
+
+      {/* Password Reset Link - Only show in login mode */}
+      {!isRegisterState && (
+        <div className="mt-4 text-center">
+          <Link
+            to="/auth/password-reset-request"
+            onClick={closeFn}
+            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
+          >
+            Forgot your password?
+          </Link>
+        </div>
+      )}
 
       {/*
       <hr className="mb-6" />

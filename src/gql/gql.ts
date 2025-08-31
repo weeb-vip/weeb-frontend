@@ -20,6 +20,8 @@ const documents = {
     "\n    mutation RefreshToken($token: String!) {\n        RefreshToken(token: $token) {\n            id\n            Credentials {\n                token\n                refresh_token\n            }\n        }\n    }\n": types.RefreshTokenDocument,
     "\n        mutation Register($input: RegisterInput!) {\n            Register(input: $input) {\n                id\n            }\n        }\n  ": types.RegisterDocument,
     "\n        mutation CreateSession($input: LoginInput!) {\n            CreateSession(input: $input) {\n                id\n                Credentials {\n                    refresh_token\n                    token\n                }\n            }\n        }\n  ": types.CreateSessionDocument,
+    "\n        mutation RequestPasswordReset($input: RequestPasswordResetInput!) {\n            RequestPasswordReset(input: $input)\n        }\n    ": types.RequestPasswordResetDocument,
+    "\n        mutation ResetPassword($input: ResetPasswordInput!) {\n            ResetPassword(input: $input)\n        }\n    ": types.ResetPasswordDocument,
     "\n    query getUserDetails {\n        UserDetails {\n            id\n            firstname\n            lastname\n            username\n            language\n            email\n            active_sessions {\n                id\n                ip_address\n                token\n                user_agent\n                user_id\n            }\n        }\n    }": types.GetUserDetailsDocument,
     "\n    mutation UpdateUserDetails($input: UpdateUserInput!) {\n        UpdateUserDetails(input: $input) {\n            id\n            firstname\n            lastname\n            username\n            language\n            email\n        }\n    }\n": types.UpdateUserDetailsDocument,
     "\n    query UserAnimes($input: UserAnimesInput!) {\n        UserAnimes(input: $input) {\n            page\n            limit\n            total\n            animes {\n                id\n                userID\n                animeID\n                status\n                score\n                episodes\n                rewatching\n                rewatchingEpisodes\n                tags\n                listID\n                createdAt\n                updatedAt\n                deletedAt\n                anime {\n                    id\n                    titleEn\n                    titleJp\n                    titleRomaji\n                    titleKanji\n                    imageUrl\n                    startDate\n                    description\n                    episodeCount\n                    duration\n                }\n            }\n        }\n    }\n": types.UserAnimesDocument,
@@ -70,6 +72,14 @@ export function graphql(source: "\n        mutation Register($input: RegisterInp
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n        mutation CreateSession($input: LoginInput!) {\n            CreateSession(input: $input) {\n                id\n                Credentials {\n                    refresh_token\n                    token\n                }\n            }\n        }\n  "): (typeof documents)["\n        mutation CreateSession($input: LoginInput!) {\n            CreateSession(input: $input) {\n                id\n                Credentials {\n                    refresh_token\n                    token\n                }\n            }\n        }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n        mutation RequestPasswordReset($input: RequestPasswordResetInput!) {\n            RequestPasswordReset(input: $input)\n        }\n    "): (typeof documents)["\n        mutation RequestPasswordReset($input: RequestPasswordResetInput!) {\n            RequestPasswordReset(input: $input)\n        }\n    "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n        mutation ResetPassword($input: ResetPasswordInput!) {\n            ResetPassword(input: $input)\n        }\n    "): (typeof documents)["\n        mutation ResetPassword($input: ResetPasswordInput!) {\n            ResetPassword(input: $input)\n        }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -211,6 +211,22 @@ export const mutationCreateSession = graphql(
   `
 )
 
+export const mutationRequestPasswordReset = graphql(
+    `
+        mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
+            RequestPasswordReset(input: $input)
+        }
+    `
+)
+
+export const mutationResetPassword = graphql(
+    `
+        mutation ResetPassword($input: ResetPasswordInput!) {
+            ResetPassword(input: $input)
+        }
+    `
+)
+
 export const queryUserDetails = graphql(`
     query getUserDetails {
         UserDetails {

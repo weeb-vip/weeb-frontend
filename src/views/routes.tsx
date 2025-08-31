@@ -34,6 +34,8 @@ const Anime = React.lazy(() => import('./profile/anime'));
 const Profile = React.lazy(() => import('./profile'));
 const CurrentlyAiringPage = React.lazy(() => import('./CurrentlyAiring'));
 const CurrentlyAiringCalendarPage = React.lazy(() => import('./CurrentlyAiring/Calendar'));
+const PasswordResetRequest = React.lazy(() => import('./auth/password-reset-request'));
+const PasswordReset = React.lazy(() => import('./auth/password-reset'));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -124,6 +126,28 @@ function AnimatedRoutes() {
                 </Suspense>
               </PageWrapper>
             </DefaultLayout>
+          }
+        />
+        
+        <Route
+          path="/auth/password-reset-request"
+          element={
+            <PageWrapper>
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                <PasswordResetRequest/>
+              </Suspense>
+            </PageWrapper>
+          }
+        />
+        
+        <Route
+          path="/auth/password-reset"
+          element={
+            <PageWrapper>
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                <PasswordReset/>
+              </Suspense>
+            </PageWrapper>
           }
         />
 
