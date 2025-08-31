@@ -78,7 +78,7 @@ export function ShowPageSkeleton() {
       </div>
 
       {/* Background banner skeleton - matches show/index.tsx:190-233 */}
-      <div className="relative bg-cover bg-center bg-white dark:bg-gray-900 h-[420px] transition-all duration-300 overflow-hidden">
+      <div className="relative bg-cover bg-center bg-white dark:bg-gray-900 h-[600px] transition-all duration-300 overflow-hidden">
         <div className="absolute block inset-0 bg-white dark:bg-gray-900 w-full h-full transition-colors duration-300"/>
         <div className="absolute inset-0 w-full h-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
       </div>
