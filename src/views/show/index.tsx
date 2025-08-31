@@ -15,8 +15,8 @@ import CharactersWithStaff from "./components/Characters";
 import {AnimeStatusDropdown} from "../../components/AnimeStatusDropdown/AnimeStatusDropdown";
 import {utc} from "@date-fns/utc/utc";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPlus} from "@fortawesome/free-solid-svg-icons";
-import {parseAirTime, getAirTimeDisplay, parseDurationToMinutes, isCurrentlyAiring} from "../../services/airTimeUtils";
+import {faPlus, faCalendar, faClapperboard, faClock} from "@fortawesome/free-solid-svg-icons";
+import {parseAirTime, getAirTimeDisplay, parseDurationToMinutes, isCurrentlyAiring, findNextEpisode, getCurrentTime} from "../../services/airTimeUtils";
 import debug from "../../utils/debug";
 import { ShowPageSkeleton } from "../../components/Skeletons/PageSkeletons";
 
@@ -116,11 +116,12 @@ export default function Index() {
 
   const anime = show.anime;
 
-  const nextEpisode = anime?.episodes?.find((ep) => {
-    if (!ep.airDate) return false;
-    const airDate = new Date(ep.airDate);
-    return airDate > new Date();
-  });
+  // Use the same findNextEpisode logic as other pages
+  const now = getCurrentTime();
+  const nextEpisodeResult = anime?.episodes && anime.broadcast
+    ? findNextEpisode(anime.episodes, anime.broadcast, now)
+    : null;
+  const nextEpisode = nextEpisodeResult?.episode;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
@@ -277,45 +278,68 @@ export default function Index() {
         </div>
         <div className="bg-gray-100 dark:bg-gray-900 py-8 px-4 sm:px-8 lg:px-16 transition-colors duration-300">
           <div className="max-w-screen-2xl mx-auto flex flex-col gap-8">
-            {nextEpisode && (
-              <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded shadow text-sm transition-colors duration-300">
+            {nextEpisode && nextEpisodeResult && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:border-gray-700 p-4 transition-colors duration-300">
                 {(() => {
                   const airTimeDisplay = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast, parseDurationToMinutes(anime.duration));
-                  const airTime = parseAirTime(nextEpisode.airDate, anime.broadcast);
-                  const isCurrentlyAir = isCurrentlyAiring(nextEpisode.airDate, anime.broadcast, parseDurationToMinutes(anime.duration));
+                  const airTime = nextEpisodeResult.airTime;
 
-                  let statusColor = 'text-gray-600 dark:text-gray-400';
+                  // Use the same color scheme as AnimeCard
+                  let statusColor = 'text-blue-600 dark:text-blue-400';
                   let statusText = 'Next Episode';
+                  let statusIcon = faCalendar;
 
                   if (airTimeDisplay) {
                     if (airTimeDisplay.variant === 'airing') {
                       statusColor = 'text-orange-600 dark:text-orange-400';
                       statusText = 'Currently Airing';
+                      statusIcon = faClapperboard;
                     } else if (airTimeDisplay.variant === 'aired') {
                       statusColor = 'text-green-600 dark:text-green-400';
                       statusText = 'Recently Aired';
+                      statusIcon = faCalendar;
                     } else if (airTimeDisplay.variant === 'countdown') {
                       statusColor = 'text-red-600 dark:text-red-400';
                       statusText = 'Airing Soon';
+                      statusIcon = faClock;
                     } else if (airTimeDisplay.variant === 'scheduled') {
                       statusColor = 'text-blue-600 dark:text-blue-400';
                       statusText = 'Next Episode';
+                      statusIcon = faCalendar;
                     }
                   }
 
                   return (
-                    <>
-                      <h3 className={`font-semibold mb-1 ${statusColor}`}>{statusText}</h3>
-                      <p className="text-gray-900 dark:text-gray-100">
-                        <strong>Episode {nextEpisode.episodeNumber}:</strong> {nextEpisode.titleEn || nextEpisode.titleJp || "TBA"}
-                      </p>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {airTimeDisplay ? airTimeDisplay.text :
-                          airTime ? `Airing ${format(airTime, "EEE MMM do 'at' h:mm a")}` :
-                          `Airing on ${format(new Date(nextEpisode.airDate), "dd MMM yyyy")}`
-                        }
-                      </p>
-                    </>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`flex items-center gap-2 ${statusColor}`}>
+                          <FontAwesomeIcon icon={statusIcon} className="text-sm" />
+                          <span className="font-semibold text-xs uppercase tracking-wide">{statusText}</span>
+                        </div>
+                        <div>
+                          <span className="font-bold text-gray-900 dark:text-gray-100">
+                            Episode {nextEpisode.episodeNumber}
+                          </span>
+                          <span className="text-gray-600 dark:text-gray-400 ml-2">
+                            {nextEpisode.titleEn || nextEpisode.titleJp || "TBA"}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className={`flex items-center gap-2 ${statusColor} flex-shrink-0`}>
+                        <FontAwesomeIcon icon={faClock} className="text-xs" />
+                        <span className="text-sm font-medium">
+                          {airTimeDisplay ? airTimeDisplay.text :
+                            airTime ? (
+                              airTime <= now 
+                                ? `Aired ${format(airTime, "EEE MMM do 'at' h:mm a")}`
+                                : `Airing ${format(airTime, "EEE MMM do 'at' h:mm a")}`
+                            ) :
+                            nextEpisode.airDate ? `Airing on ${format(new Date(nextEpisode.airDate), "dd MMM yyyy")}` : "TBA"
+                          }
+                        </span>
+                      </div>
+                    </div>
                   );
                 })()}
               </div>

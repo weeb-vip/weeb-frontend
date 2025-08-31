@@ -154,17 +154,25 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
 
           if (recentEpisodes.length > 0) {
             const mostRecentEpisode = recentEpisodes[0];
-            const daysSinceAired = (now.getTime() - mostRecentEpisode.airDate.getTime()) / (1000 * 60 * 60 * 24);
 
             // For now, include all shows with recent episodes (until we can properly determine finished status)
             // TODO: Add better logic to filter only finished shows
             if (true) {
-              // Create air time display for recently aired episode showing when it aired
-              const daysSinceAiredText = daysSinceAired < 1
-                ? 'Today'
-                : daysSinceAired < 2
-                  ? 'Yesterday'
-                  : `${Math.floor(daysSinceAired)} days ago`;
+              // Use proper date comparison to avoid timezone issues
+              const airDate = mostRecentEpisode.airDate;
+              const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+              const episodeDate = new Date(airDate.getFullYear(), airDate.getMonth(), airDate.getDate());
+
+              let daysSinceAiredText;
+              if (episodeDate.getTime() === today.getTime()) {
+                daysSinceAiredText = 'Today';
+              } else if (episodeDate.getTime() === yesterday.getTime()) {
+                daysSinceAiredText = 'Yesterday';
+              } else {
+                const daysDiff = Math.floor((today.getTime() - episodeDate.getTime()) / (1000 * 60 * 60 * 24));
+                daysSinceAiredText = `${daysDiff} days ago`;
+              }
 
               const airTimeText = format(mostRecentEpisode.airDate, 'h:mm a');
               const airDayText = format(mostRecentEpisode.airDate, 'EEE');
@@ -181,7 +189,7 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
                   ...airingInfo,
                   airTimeDisplay: recentAirTimeInfo,
                   recentEpisode: mostRecentEpisode,
-                  daysSinceAired: Math.floor(daysSinceAired)
+                  daysSinceAired: Math.floor((today.getTime() - episodeDate.getTime()) / (1000 * 60 * 60 * 24))
                 }
               };
 
@@ -209,7 +217,16 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
     });
 
     recentlyAired.sort((a, b) => {
-      return (a.airingInfo?.daysSinceAired || 0) - (b.airingInfo?.daysSinceAired || 0);
+      // Sort by actual air time (most recent first) using parseAirTime for proper timezone conversion
+        const aEpisode = a.airingInfo?.recentEpisode;
+        const bEpisode = b.airingInfo?.recentEpisode;
+        const aBroadcast = a.airingInfo?.broadcast;
+        const bBroadcast = b.airingInfo?.broadcast;
+
+        const aAirTime = (aEpisode?.airDate && aBroadcast) ? parseAirTime(aEpisode.airDate, aBroadcast)?.getTime() || 0 : 0;
+        const bAirTime = (bEpisode?.airDate && bBroadcast) ? parseAirTime(bEpisode.airDate, bBroadcast)?.getTime() || 0 : 0;
+        return bAirTime - aAirTime; // Most recent first (descending order)
+
     });
 
     const currentlyWatching = watching.slice(0, 6);
