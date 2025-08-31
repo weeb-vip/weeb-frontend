@@ -183,7 +183,7 @@ console.log("ANIME PASED", anime);
                     <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm rounded-lg p-3 w-80 max-w-[calc(100vw-2rem)]" style={{ boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)' }}>
                       <div className="text-center">
                         <p className="text-gray-700 dark:text-gray-200">
-                          Japanese TV broadcast time. Streaming services usually release around the same time.
+                          Japanese TV broadcast time (in local time). Streaming services usually release with 3 hours after show ends.
                         </p>
                       </div>
                       <div className="absolute top-full left-4 sm:left-1/2 sm:transform sm:-translate-x-1/2 border-8 border-transparent border-t-white dark:border-t-gray-900"></div>
