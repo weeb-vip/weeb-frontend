@@ -5,11 +5,7 @@ import {formatInTimeZone} from 'date-fns-tz';
 // Get current time with dev offset applied (for testing)
 export function getCurrentTime(): Date {
   const now = new Date();
-  const devOffset = (window as any).__DEV_TIME_OFFSET__ || 0;
 
-  if (devOffset !== 0) {
-    return new Date(now.getTime() + devOffset);
-  }
 
   return now;
 }

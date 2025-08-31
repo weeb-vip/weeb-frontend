@@ -35,15 +35,6 @@ describe('getCurrentTime', () => {
     expect(result.getTime()).toBeLessThanOrEqual(after);
   });
 
-  test('applies dev time offset when set', () => {
-    const offset = 2 * 60 * 60 * 1000; // 2 hours
-    mockWindow.__DEV_TIME_OFFSET__ = offset;
-
-    const normalTime = new Date();
-    const offsetTime = getCurrentTime();
-
-    expect(offsetTime.getTime() - normalTime.getTime()).toBeCloseTo(offset, -3);
-  });
 });
 
 describe('parseDurationToMinutes', () => {
