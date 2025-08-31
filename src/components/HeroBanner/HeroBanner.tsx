@@ -5,6 +5,7 @@ import {StatusType} from '../Button/Button';
 import {AnimeStatusDropdown} from '../AnimeStatusDropdown/AnimeStatusDropdown';
 import {GetImageFromAnime} from '../../services/utils';
 import {useAnimeCountdownStore} from '../../stores/animeCountdownStore';
+import {findNextEpisode, parseAirTime, getAirDateTime} from '../../services/airTimeUtils';
 import debug from "../../utils/debug";
 
 interface HeroBannerProps {
@@ -16,6 +17,13 @@ interface HeroBannerProps {
     anidbid?: string | null;
     broadcast?: string | null;
     userAnime?: any;
+    episodes?: Array<{
+      id: string;
+      episodeNumber?: number | null;
+      titleEn?: string | null;
+      titleJp?: string | null;
+      airDate?: string | null;
+    }> | null;
   };
   onAddAnime: (id: string) => void;
   animeStatus: StatusType;
@@ -64,6 +72,9 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const episode = timingData?.episode;
   const episodeTitle = episode ? (episode.titleEn || episode.titleJp || "Next Episode") : (hasTimingData ? "Next Episode" : "No upcoming episodes");
   const episodeNumber = episode?.episodeNumber ? `${episode.episodeNumber}` : "";
+console.log("ANIME PASED", anime);
+  const animeNextEpisodeInfo = findNextEpisode(anime.episodes, anime.broadcast)
+  const airTimeAndDate = parseAirTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast)
 
 
   return (
@@ -145,13 +156,14 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight">{title}</h1>
 
-          {hasTimingData && airDateTime && (
+          {((hasTimingData && airDateTime) || airTimeAndDate) && (
             <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
               <p className="text-lg sm:text-xl lg:text-2xl font-medium">
-                {episodeNumber ? `Episode ${episodeNumber}: ${episodeTitle}` : episodeTitle}
+                {(hasTimingData && airDateTime) ? (episodeNumber ? `Episode ${episodeNumber}: ${episodeTitle}` : episodeTitle) : ''}
+                {(!hasTimingData && airTimeAndDate) ? (animeNextEpisodeInfo?.episode.episodeNumber ? `Episode ${animeNextEpisodeInfo?.episode.episodeNumber}: ${animeNextEpisodeInfo?.episode.titleEn || animeNextEpisodeInfo?.episode.titleJp || "Next Episode"}` : "Next Episode") : ''}
               </p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <p className="text-base sm:text-lg text-gray-300">Airing {airDateTime}</p>
+                <p className="text-base sm:text-lg text-gray-300">Airing {airDateTime || (airTimeAndDate && getAirDateTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast))}</p>
                 {anime.broadcast && (
                 <div className="relative">
                   <span
