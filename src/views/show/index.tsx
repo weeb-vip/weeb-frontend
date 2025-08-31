@@ -370,7 +370,7 @@ export default function Index() {
                   <Tabs tabs={["Episodes", "Characters", "Trailers", "Artworks"]} defaultTab="Episodes">
                     <div>
 
-                      {anime?.episodes && <Tables episodes={anime.episodes}/>}
+                      {anime?.episodes && <Tables episodes={anime.episodes} broadcast={anime.broadcast}/>}
                     </div>
                     <div>
                       <CharactersWithStaff animeId={anime.id}/>

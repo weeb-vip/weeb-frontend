@@ -7,9 +7,10 @@ import {Transition} from "@headlessui/react";
 import Button, {ButtonColor} from "../../../components/Button";
 import {Episode} from "../../../gql/graphql";
 import {utc} from "@date-fns/utc/utc";
+import { parseAirTime } from "../../../services/airTimeUtils";
 // import {Episode} from "../../../services/api/details";
 
-function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episode[] }) {
+function Table({seasonNumber, episodes, broadcast}: { seasonNumber: number, episodes: Episode[], broadcast?: string | null }) {
   return (
     <div className="inline-block min-w-full overflow-hidden rounded-lg shadow m-auto">
       <div className={"flex flex-row flex-grow flex-nowrap p-6 space-x-6 items-center bg-white dark:bg-gray-800 transition-colors duration-300"}>
@@ -36,8 +37,9 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
           </thead>
           <tbody>
           {episodes.map((episode) => {
-            const airdate = episode.airDate ? parseISO(episode.airDate) : null
-            const formattedAirdate = airdate && isDate(airdate) ? format(airdate, 'dd MMM yyyy', { in: utc}) : "TBA"
+            // Use parseAirTime to get the correct air time with timezone conversion
+            const airdate = episode.airDate ? parseAirTime(episode.airDate, broadcast) : null
+            const formattedAirdate = airdate && isDate(airdate) ? format(airdate, 'dd MMM yyyy') : "TBA"
 
             return (
               <tr key={episode.id}>
@@ -67,7 +69,8 @@ function Table({seasonNumber, episodes}: { seasonNumber: number, episodes: Episo
 
 function Tables({
                   episodes,
-                }: { episodes: Episode[] }) {
+                  broadcast
+                }: { episodes: Episode[], broadcast?: string | null }) {
 
 
 
@@ -75,7 +78,7 @@ function Tables({
     <div className="flex flex-col flex-grow">
       <div className={"hidden"}/>
         { /* @ts-ignore */}
-        <Table seasonNumber={1} episodes={episodes.sort((a: Episode, b: Episode) => a.episodeNumber - b.episodeNumber)}/>
+        <Table seasonNumber={1} episodes={episodes.sort((a: Episode, b: Episode) => a.episodeNumber - b.episodeNumber)} broadcast={broadcast}/>
 
     </div>
   );

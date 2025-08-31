@@ -362,13 +362,37 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
 
               if (timingData) {
                 // Use worker timing data for more accurate information
+                let displayText = timingData.airDateTime;
+                
+                if (timingData.isCurrentlyAiring) {
+                  displayText = "Currently airing";
+                } else if (timingData.hasAlreadyAired && timingData.episode?.airDate) {
+                  // Create detailed air time display for recently aired episodes using parseAirTime for timezone conversion
+                  const parsedAirTime = parseAirTime(timingData.episode.airDate, airingInfo.broadcast);
+                  if (parsedAirTime) {
+                    const currentTime = getCurrentTime();
+                    const daysSinceAired = (currentTime.getTime() - parsedAirTime.getTime()) / (1000 * 60 * 60 * 24);
+                    
+                    const daysSinceAiredText = daysSinceAired < 1 
+                      ? 'Today' 
+                      : daysSinceAired < 2 
+                        ? 'Yesterday' 
+                        : `${Math.floor(daysSinceAired)} days ago`;
+                    
+                    const airTimeText = format(parsedAirTime, 'h:mm a');
+                    const airDayText = format(parsedAirTime, 'EEE');
+                    
+                    displayText = `Aired ${daysSinceAiredText} (${airDayText} at ${airTimeText})`;
+                  } else {
+                    displayText = "Recently aired";
+                  }
+                } else if (timingData.countdown) {
+                  displayText = `Airing in ${timingData.countdown}`;
+                }
+
                 airTimeDisplay = {
                   show: true,
-                  text: timingData.isCurrentlyAiring
-                    ? "Currently airing"
-                    : timingData.hasAlreadyAired
-                      ? "Recently aired"
-                      : timingData.countdown ? `Airing in ${timingData.countdown}` : timingData.airDateTime,
+                  text: displayText,
                   variant: timingData.isCurrentlyAiring
                     ? 'airing' as const
                     : timingData.hasAlreadyAired
@@ -379,8 +403,33 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
                 // Use episode data from worker
                 episodeData = timingData.episode;
               } else {
-                // Use the air time display from ProfileDashboard logic
-                airTimeDisplay = airingInfo.airTimeDisplay;
+                // Create custom aired time display for recently aired section using parseAirTime
+                if (airingInfo.recentEpisode && airingInfo.recentEpisode.airDate) {
+                  const parsedAirTime = parseAirTime(airingInfo.recentEpisode.airDate, airingInfo.broadcast);
+                  if (parsedAirTime) {
+                    const currentTime = getCurrentTime();
+                    const daysSinceAired = (currentTime.getTime() - parsedAirTime.getTime()) / (1000 * 60 * 60 * 24);
+                    
+                    const daysSinceAiredText = daysSinceAired < 1 
+                      ? 'Today' 
+                      : daysSinceAired < 2 
+                        ? 'Yesterday' 
+                        : `${Math.floor(daysSinceAired)} days ago`;
+                    
+                    const airTimeText = format(parsedAirTime, 'h:mm a');
+                    const airDayText = format(parsedAirTime, 'EEE');
+                    
+                    airTimeDisplay = {
+                      show: true,
+                      text: `Aired ${daysSinceAiredText} (${airDayText} at ${airTimeText})`,
+                      variant: 'aired' as const
+                    };
+                  } else {
+                    airTimeDisplay = { show: true, text: "Recently aired", variant: 'aired' as const };
+                  }
+                } else {
+                  airTimeDisplay = { show: true, text: "Recently aired", variant: 'aired' as const };
+                }
                 episodeData = airingInfo.recentEpisode;
               }
 
