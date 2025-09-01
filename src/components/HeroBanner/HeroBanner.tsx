@@ -92,6 +92,10 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             <img
               src={bgUrl}
               alt="bg preload"
+              loading="eager"
+              // @ts-ignore - fetchPriority is a valid HTML attribute but not yet in React types
+              fetchPriority="high"
+              decoding="async"
               className={`absolute w-full h-full object-cover ${
                 useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'
               } transition-all duration-500`}
@@ -140,7 +144,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
               <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
               {countdown === "JUST AIRED" ? "JUST AIRED" : "AIRING SOON"}
               {countdown && !countdown.includes("JUST AIRED") && !countdown.includes("AIRING NOW") && (
-                <span className="ml-2 px-2 py-1 bg-white/20 rounded text-xs">
+                <span className="ml-2 px-2 py-1 bg-black/25 rounded text-xs font-medium">
                   in {countdown}
                 </span>
               )}

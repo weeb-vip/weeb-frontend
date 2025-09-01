@@ -94,7 +94,13 @@ function Header() {
       className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
       {/* Mobile */}
       <div className="flex sm:hidden w-full items-center space-x-4">
-        <Link to="/"><img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo"
+        <Link to="/"><img 
+                          src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" 
+                          alt="logo"
+                          width="40"
+                          height="40"
+                          loading="eager"
+                          decoding="async"
                           className="w-10 h-10"/></Link>
         <div className="flex-grow"><Autocomplete/></div>
         <button className="p-4" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
@@ -140,7 +146,14 @@ function Header() {
                 {/* Header with logo + close */}
                 <div className="flex items-center justify-between mb-8">
                   <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center space-x-4">
-                    <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" className="w-10 h-10"/>
+                    <img 
+                      src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" 
+                      alt="logo" 
+                      width="40"
+                      height="40"
+                      loading="eager"
+                      decoding="async"
+                      className="w-10 h-10"/>
                     <WeebVipWordmark size="sm"/>
                   </Link>
                   <button
@@ -221,7 +234,14 @@ function Header() {
       <div className="hidden sm:flex flex-row items-center justify-between space-x-4 mt-4 sm:mt-0">
         <div className="flex items-center space-x-4">
           <Link to="/" className="flex flex-row space-x-4">
-            <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" className="w-14 h-14"/>
+            <img 
+              src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" 
+              alt="logo" 
+              width="56"
+              height="56"
+              loading="eager"
+              decoding="async"
+              className="w-14 h-14"/>
             <WeebVipWordmark/>
           </Link>
         </div>
