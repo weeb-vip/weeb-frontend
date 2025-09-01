@@ -10,7 +10,7 @@ export default function ProfilePage() {
   if (isLoading || !user) return <Loader />;
 
   return (
-    <div className="max-w-screen-2xl mx-auto p-6">
+    <div className="max-w-screen-2xl mx-auto">
       {/* User Info Section */}
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-8 transition-colors duration-300">
         <div className="flex items-center justify-between mb-4">

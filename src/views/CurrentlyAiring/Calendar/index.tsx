@@ -81,7 +81,7 @@ export default function AiringCalendarPage() {
   if (isLoading || !data) return <Loader />;
 
   const animeByDate: Record<string, any[]> = {};
-  
+
   for (const anime of data.currentlyAiring || []) {
     for (const episode of anime.episodes || []) {
       // Parse air time for this specific episode
@@ -107,12 +107,12 @@ export default function AiringCalendarPage() {
     animeByDate[dateKey].sort((a, b) => {
       const aTime = a.episodeAirTime;
       const bTime = b.episodeAirTime;
-      
+
       // Both should have episodeAirTime since we filtered out entries without it above
       if (aTime && bTime) {
         return aTime.getTime() - bTime.getTime();
       }
-      
+
       // Fallback (shouldn't happen with the filtering above)
       return 0;
     });
@@ -134,7 +134,7 @@ export default function AiringCalendarPage() {
   };
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 py-6 relative">
+    <div className="max-w-screen-xl mx-auto relative">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <div className="flex gap-2">
           <StatusButton
