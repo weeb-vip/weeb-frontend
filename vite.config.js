@@ -17,7 +17,7 @@ export default defineConfig({
 
 
     build: {
-        target: ['es2018', 'safari11'], // or 'es2015' for broadest support
+        target: ['es2020', 'safari14'], // Updated targets for better performance
         rollupOptions: {
             output: {
                 entryFileNames: 'assets/[name]-[hash].js',
@@ -28,7 +28,29 @@ export default defineConfig({
                         return 'assets/[name]-[hash].js';
                     }
                     return 'assets/[name]-[hash].[ext]';
+                },
+                manualChunks: {
+                    // Critical vendor chunks
+                    'react-vendor': ['react', 'react-dom'],
+                    'router': ['react-router-dom'],
+                    'query': ['@tanstack/react-query'],
+                    'ui': ['@headlessui/react', '@fortawesome/react-fontawesome', '@fortawesome/fontawesome-svg-core'],
+                    'apollo': ['@apollo/client', 'graphql'],
+                    'utils': ['date-fns', 'he', 'query-string'],
+                    // Separate chunks for heavy imports
+                    'motion': ['motion'],
+                    'flagsmith': ['flagsmith']
                 }
+            }
+        },
+        // Enable modern features
+        cssCodeSplit: true,
+        assetsInlineLimit: 4096,
+        // Improve build performance
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true
             }
         }
     },

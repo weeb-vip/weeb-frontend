@@ -30,17 +30,26 @@ import {
 } from "../components/Skeletons/PageSkeletons";
 
 
-const Home = React.lazy(() => import('./index'));
-const Show = React.lazy(() => import('./show'));
-const Anime = React.lazy(() => import('./profile/anime'));
-const Profile = React.lazy(() => import('./profile'));
-const ProfileSettings = React.lazy(() => import('./profile/settings'));
-const CurrentlyAiringPage = React.lazy(() => import('./CurrentlyAiring'));
-const CurrentlyAiringCalendarPage = React.lazy(() => import('./CurrentlyAiring/Calendar'));
-const PasswordResetRequest = React.lazy(() => import('./auth/password-reset-request'));
-const PasswordReset = React.lazy(() => import('./auth/password-reset'));
-const EmailVerification = React.lazy(() => import('./auth/verification'));
-const Login = React.lazy(() => import('./auth/login'));
+// Critical routes - load immediately for better performance
+const Home = React.lazy(() => import(/* webpackChunkName: "home" */ './index'));
+
+// Secondary routes - load on demand
+const Show = React.lazy(() => import(/* webpackChunkName: "show" */ './show'));
+const Profile = React.lazy(() => import(/* webpackChunkName: "profile" */ './profile'));
+const CurrentlyAiringPage = React.lazy(() => import(/* webpackChunkName: "currently-airing" */ './CurrentlyAiring'));
+
+// Grouped routes for better caching
+const ProfileSettings = React.lazy(() => import(/* webpackChunkName: "profile" */ './profile/settings'));
+const Anime = React.lazy(() => import(/* webpackChunkName: "profile" */ './profile/anime'));
+
+// Auth routes - separate chunk since they're used less frequently
+const Login = React.lazy(() => import(/* webpackChunkName: "auth" */ './auth/login'));
+const PasswordResetRequest = React.lazy(() => import(/* webpackChunkName: "auth" */ './auth/password-reset-request'));
+const PasswordReset = React.lazy(() => import(/* webpackChunkName: "auth" */ './auth/password-reset'));
+const EmailVerification = React.lazy(() => import(/* webpackChunkName: "auth" */ './auth/verification'));
+
+// Calendar - separate chunk as it's feature-specific
+const CurrentlyAiringCalendarPage = React.lazy(() => import(/* webpackChunkName: "calendar" */ './CurrentlyAiring/Calendar'));
 
 function AnimatedRoutes() {
   const location = useLocation();
