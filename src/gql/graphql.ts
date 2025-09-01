@@ -15,6 +15,7 @@ export type Scalars = {
   /** RFC3339 formatted Date */
   Date: any;
   Int64: any;
+  Season: any;
   /** RFC3339 formatted DateTime */
   Time: any;
 };
@@ -149,7 +150,7 @@ export type AnimeSeason = {
   /** Additional notes about this season */
   notes?: Maybe<Scalars['String']>;
   /** Season identifier (e.g., SPRING_2024) */
-  season: Season;
+  season: Scalars['Season'];
   /** Status of the anime season */
   status: AnimeSeasonStatus;
   updatedAt: Scalars['Time'];
@@ -400,6 +401,8 @@ export type Query = {
   UserLists?: Maybe<Array<UserList>>;
   /** Get anime by ID */
   anime: Anime;
+  /** Get anime by season name and year (more flexible) */
+  animeBySeasonAndYear?: Maybe<Array<Anime>>;
   /** Get anime by season and year */
   animeBySeasons?: Maybe<Array<Anime>>;
   /** AnimeAPI info */
@@ -443,8 +446,14 @@ export type QueryAnimeArgs = {
 };
 
 
+export type QueryAnimeBySeasonAndYearArgs = {
+  seasonName: Scalars['String'];
+  year: Scalars['Int'];
+};
+
+
 export type QueryAnimeBySeasonsArgs = {
-  season: Season;
+  season: Scalars['Season'];
 };
 
 
@@ -544,33 +553,6 @@ export type ScraperApi = {
   /** Version of event scraper-api service */
   version: Scalars['String'];
 };
-
-export enum Season {
-  Fall_2020 = 'FALL_2020',
-  Fall_2021 = 'FALL_2021',
-  Fall_2022 = 'FALL_2022',
-  Fall_2023 = 'FALL_2023',
-  Fall_2024 = 'FALL_2024',
-  Fall_2025 = 'FALL_2025',
-  Spring_2020 = 'SPRING_2020',
-  Spring_2021 = 'SPRING_2021',
-  Spring_2022 = 'SPRING_2022',
-  Spring_2023 = 'SPRING_2023',
-  Spring_2024 = 'SPRING_2024',
-  Spring_2025 = 'SPRING_2025',
-  Summer_2020 = 'SUMMER_2020',
-  Summer_2021 = 'SUMMER_2021',
-  Summer_2022 = 'SUMMER_2022',
-  Summer_2023 = 'SUMMER_2023',
-  Summer_2024 = 'SUMMER_2024',
-  Summer_2025 = 'SUMMER_2025',
-  Winter_2020 = 'WINTER_2020',
-  Winter_2021 = 'WINTER_2021',
-  Winter_2022 = 'WINTER_2022',
-  Winter_2023 = 'WINTER_2023',
-  Winter_2024 = 'WINTER_2024',
-  Winter_2025 = 'WINTER_2025'
-}
 
 export type Session = {
   __typename?: 'Session';
@@ -746,7 +728,7 @@ export type GetHomePageDataQueryVariables = Exact<{
 export type GetHomePageDataQuery = { __typename?: 'Query', topRatedAnime?: Array<{ __typename?: 'Anime', id: string, anidbid?: string | null, titleEn?: string | null, imageUrl?: string | null, duration?: string | null, tags?: Array<string> | null, episodeCount?: number | null, animeStatus?: string | null, rating?: string | null, startDate?: any | null, ranking?: number | null, userAnime?: { __typename?: 'UserAnime', id: string, status?: Status | null, score?: number | null } | null }> | null, newestAnime?: Array<{ __typename?: 'Anime', id: string, anidbid?: string | null, titleEn?: string | null, imageUrl?: string | null, duration?: string | null, tags?: Array<string> | null, episodeCount?: number | null, animeStatus?: string | null, rating?: string | null, startDate?: any | null, ranking?: number | null, userAnime?: { __typename?: 'UserAnime', id: string, status?: Status | null, score?: number | null } | null }> | null };
 
 export type GetSeasonalAnimeQueryVariables = Exact<{
-  season: Season;
+  season: Scalars['Season'];
 }>;
 
 

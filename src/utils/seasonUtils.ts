@@ -1,4 +1,5 @@
-import { Season } from "../gql/graphql";
+// Season is now a scalar (string) type, so we can use string directly
+type Season = string;
 
 export function getCurrentSeason(date: Date = new Date()): Season {
   const year = date.getFullYear();

@@ -2,7 +2,7 @@ import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {CurrentlyAiringQuery, GetHomePageDataQuery, Status} from "../gql/graphql";
 import {format} from "date-fns";
 import {fetchCurrentlyAiringWithDates, fetchHomePageData, fetchSeasonalAnime, upsertAnime} from "../services/queries";
-import {useState, useMemo} from "react";
+import {useState, useMemo, Fragment} from "react";
 import AnimeCard, {AnimeCardSkeleton, AnimeCardStyle} from "../components/AnimeCard";
 import {Link, useNavigate} from "react-router-dom";
 import {utc} from "@date-fns/utc/utc";
@@ -16,6 +16,9 @@ import debug from "../utils/debug";
 import {getAirTimeDisplay, findNextEpisode} from "../services/airTimeUtils";
 import {useAnimeCountdownStore} from "../stores/animeCountdownStore";
 import {getCurrentSeason, getSeasonDisplayName, getSeasonOptions} from "../utils/seasonUtils";
+import {Menu, Transition} from "@headlessui/react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faChevronDown} from "@fortawesome/free-solid-svg-icons";
 
 
 function Index() {
@@ -48,6 +51,7 @@ function Index() {
 
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
   const [hoveredAnime, setHoveredAnime] = useState<any>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
 
 
@@ -305,31 +309,75 @@ function Index() {
         )}
       </div>
       <div className={"w-full flex flex-col"}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>{seasonDisplayName} Anime</h1>
-            <div className="flex gap-2">
-              {seasonOptions.map((season) => (
-                <button
-                  key={season}
-                  onClick={() => setSelectedSeason(season)}
-                  className={`px-3 py-1 rounded text-sm font-medium transition-colors duration-200 ${
-                    selectedSeason === season
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {getSeasonDisplayName(season)}
-                </button>
-              ))}
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+          <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>{seasonDisplayName} Anime</h1>
+          
+          {/* Desktop: Button layout */}
+          <div className="hidden sm:flex gap-2">
+            {seasonOptions.map((season) => (
+              <button
+                key={season}
+                onClick={() => setSelectedSeason(season)}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors duration-200 ${
+                  selectedSeason === season
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                {getSeasonDisplayName(season)}
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile: Dropdown layout */}
+          <div className="sm:hidden relative">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-gray-900 dark:text-gray-100 font-medium text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm"
+            >
+              <span className="truncate">{getSeasonDisplayName(selectedSeason)}</span>
+              <FontAwesomeIcon
+                icon={faChevronDown}
+                className={`w-3 h-3 ml-2 flex-shrink-0 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {isDropdownOpen && (
+              <>
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setIsDropdownOpen(false)}
+                />
+
+                {/* Dropdown menu */}
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-20 py-1">
+                  {seasonOptions.map((season) => (
+                    <button
+                      key={season}
+                      onClick={() => {
+                        setSelectedSeason(season);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm transition-colors duration-200 ${
+                        selectedSeason === season 
+                          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium' 
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      {getSeasonDisplayName(season)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
         {seasonalDataIsLoading ? (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {Array(8).fill({id: 1}).map((anime, index) => (
-              <AnimeCardSkeleton key={`seasonal-anime-${index}`}  {...anime} />
+              <AnimeCardSkeleton key={`seasonal-anime-${index}`} style={AnimeCardStyle.DETAIL} />
             ))}
           </div>
         ) : (
