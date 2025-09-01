@@ -1,7 +1,7 @@
 import {graphql} from "../../../gql";
 
 export const getHomePageData = graphql(/* GraphQL */`
-    query getHomePageData($limit: Int) {
+    query getHomePageData($limit: Int, $season: Season!) {
         topRatedAnime(limit: $limit) {
             id
             anidbid
@@ -21,7 +21,7 @@ export const getHomePageData = graphql(/* GraphQL */`
                 score
             }
         }
-        mostPopularAnime(limit: $limit) {
+        animeBySeasons(season: $season) {
             id
             anidbid
             titleEn
@@ -34,6 +34,9 @@ export const getHomePageData = graphql(/* GraphQL */`
             rating
             startDate
             ranking
+            episodes {
+                id
+            }
             userAnime {
                 id
                 status

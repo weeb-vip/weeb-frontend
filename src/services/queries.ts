@@ -57,13 +57,14 @@ export const fetchSearchAdvancedResults = (query: string, year?: number, searchl
   select: (data: searchResults) => limit ? data.slice(0, limit) : data,
 })
 
-export const fetchHomePageData = () => ({
-  queryKey: ['homedata', {limit: 20}],
+export const fetchHomePageData = (season: string) => ({
+  queryKey: ['homedata', {limit: 20, season}],
   queryFn: async () => {
     const client = AuthenticatedClient();
     // @ts-ignore
     return client.request<GetHomePageDataQuery>(getHomePageData, {
-      limit: 20 // variables are typed too!
+      limit: 20,
+      season // variables are typed too!
     })
   },
 })

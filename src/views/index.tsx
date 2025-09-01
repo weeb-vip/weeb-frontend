@@ -15,15 +15,21 @@ import HeroBanner from "../components/HeroBanner";
 import debug from "../utils/debug";
 import {getAirTimeDisplay, findNextEpisode} from "../services/airTimeUtils";
 import {useAnimeCountdownStore} from "../stores/animeCountdownStore";
+import {getCurrentSeason, getSeasonDisplayName} from "../utils/seasonUtils";
 
 
 function Index() {
   const queryClient = useQueryClient();
   const { getTimingData } = useAnimeCountdownStore();
+  
+  // Get the current season
+  const currentSeason = getCurrentSeason();
+  const seasonDisplayName = getSeasonDisplayName(currentSeason);
+  
   const {
     data: homeData,
     isLoading: homeDataIsLoading,
-  } = useQuery<GetHomePageDataQuery>(fetchHomePageData())
+  } = useQuery<GetHomePageDataQuery>(fetchHomePageData(currentSeason))
   // Fetch currently airing with dates: yesterday to 7 days from now
   const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // Yesterday
   const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
@@ -292,7 +298,7 @@ function Index() {
         )}
       </div>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>Most Popular Anime</h1>
+        <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>{seasonDisplayName} Anime</h1>
         {homeDataIsLoading ? (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
@@ -303,14 +309,23 @@ function Index() {
         ) : (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
-            {homeData?.mostPopularAnime?.slice(0, 8).map(item => {
-              const id = `most-popular-${item.id}`;
+            {homeData?.animeBySeasons?.sort((a, b) => {
+              const getRating = (rating: string | null | undefined) => {
+                if (!rating || rating === 'N/A') return 0;
+                const parsed = parseFloat(rating);
+                return isNaN(parsed) ? 0 : parsed;
+              };
+              const ratingA = getRating(a.rating);
+              const ratingB = getRating(b.rating);
+              return ratingB - ratingA;
+            }).slice(0, 8).map(item => {
+              const id = `${currentSeason.toLowerCase()}-${item.id}`;
               return (
                 <AnimeCard style={AnimeCardStyle.DETAIL}
                            id={item.id}
                            title={item.titleEn || "Unknown"}
                            description={""}
-                           episodes={item.episodeCount ? item.episodeCount : 0}
+                           episodes={Math.max(item.episodeCount || 0, (item as any).episodes?.length || 0)}
                            episodeLength={item.duration ? item.duration?.replace(/per.+?$|per/gm, '') : "?"}
                            year={item.startDate ? format(new Date(item.startDate?.toString()), "yyyy") : "?"}
                            className={"hover:cursor-pointer"}
