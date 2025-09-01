@@ -8,6 +8,7 @@ import Autocomplete from "../Autocomplete";
 import Button, { ButtonColor } from "../Button";
 import DarkModeToggle from "../DarkModeToggle";
 
+
 /* ---------------------------- Wordmark bits ---------------------------- */
 
 export function WeebMorphLogo({
@@ -74,6 +75,9 @@ function BodyScrollLock({ active }: { active: boolean }) {
   return null;
 }
 
+
+
+
 /* -------------------------------- Header -------------------------------- */
 
 function Header() {
@@ -95,6 +99,7 @@ function Header() {
         </button>
 
         {/* Drawer */}
+        {/* Drawer */}
         <Transition show={drawerOpen} as={Fragment} appear>
           <Dialog as="div" className="relative z-50" onClose={setDrawerOpen}>
             <BodyScrollLock active={drawerOpen} />
@@ -113,95 +118,92 @@ function Header() {
               <div className="fixed inset-0 bg-black/40" />
             </Transition.Child>
 
-            {/* Sliding panel container (right anchored) */}
-            <div className="fixed inset-0 overflow-hidden">
-              <div className="absolute inset-0 flex justify-end">
-                {/* Only this child gets the transform classes */}
-                <Transition.Child
-                  as={Fragment}
-                  appear
-                  enter="transform-gpu will-change-transform transition duration-300 ease-out"
-                  enterFrom="translate-x-full"
-                  enterTo="translate-x-0"
-                  leave="transform-gpu will-change-transform transition duration-300 ease-in"
-                  leaveFrom="translate-x-0"
-                  leaveTo="translate-x-full"
-                >
-                  {/* Panel is fixed & right-anchored; NO extra transition/transform here */}
-                  <Dialog.Panel className="pointer-events-auto fixed right-0 inset-y-0 w-full bg-white dark:bg-gray-900 p-8 flex flex-col">
-                    {/* Header with logo and close button */}
-                    <div className="flex items-center justify-between mb-8">
-                      <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center space-x-4">
-                        <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" className="w-10 h-10" />
-                        <WeebVipWordmark size="sm" />
-                      </Link>
-                      <button
-                        className="text-2xl font-bold text-gray-700 dark:text-gray-300"
-                        onClick={() => setDrawerOpen(false)}
-                        aria-label="Close menu"
-                      >
-                        ✕
-                      </button>
+            {/* Slide-over (fixed + right-anchored) */}
+            <Transition.Child
+              // IMPORTANT: render a real element so classes attach cleanly
+              appear
+              as="div"
+              className="fixed inset-y-0 right-0 w-screen"
+              enter="transform-gpu will-change-transform transition-transform duration-300 ease-out"
+              enterFrom="translate-x-[100vw]"     // iOS-safe: use viewport width, not %
+              enterTo="translate-x-0"
+              leave="transform-gpu will-change-transform transition-transform duration-300 ease-in"
+              leaveFrom="translate-x-0"
+              leaveTo="translate-x-[100vw]"
+            >
+              {/* Panel fills the sliding wrapper; no transform/transition here */}
+              <Dialog.Panel className="pointer-events-auto h-full relative bg-white dark:bg-gray-900 flex flex-col p-8 transition-colors duration-300">
+                  {/* Header with logo + close */}
+                  <div className="flex items-center justify-between mb-8">
+                    <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center space-x-4">
+                      <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" className="w-10 h-10" />
+                      <WeebVipWordmark size="sm" />
+                    </Link>
+                    <button
+                      className="text-2xl font-bold text-gray-700 dark:text-gray-300"
+                      onClick={() => setDrawerOpen(false)}
+                      aria-label="Close menu"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 flex flex-col justify-start space-y-4">
+                    <div className="flex items-center justify-between px-4 py-4 rounded">
+                      <span className="text-lg text-gray-900 dark:text-gray-100">Dark Mode</span>
+                      <DarkModeToggle />
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 flex flex-col justify-start space-y-4">
+                    {!loggedIn ? (
+                      <>
+                        <button
+                          onClick={() => { setDrawerOpen(false); openLogin(); }}
+                          className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          Login
+                        </button>
+                        <button
+                          onClick={() => { setDrawerOpen(false); openRegister(); }}
+                          className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          Register
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          to="/profile"
+                          onClick={() => setDrawerOpen(false)}
+                          className="block w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          Profile
+                        </Link>
+                        <button
+                          onClick={() => {
+                            localStorage.removeItem("authToken");
+                            localStorage.removeItem("refreshToken");
+                            useLoggedInStore.getState().logout();
+                            setDrawerOpen(false);
+                            navigate("/");
+                          }}
+                          className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          Logout
+                        </button>
+                      </>
+                    )}
+                  </div>
 
-                      <div className="flex items-center justify-between px-4 py-4 rounded">
-                        <span className="text-lg text-gray-900 dark:text-gray-100">Dark Mode</span>
-                        <DarkModeToggle />
-                      </div>
-
-                      {!loggedIn ? (
-                        <>
-                          <button
-                            onClick={() => { setDrawerOpen(false); openLogin(); }}
-                            className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            Login
-                          </button>
-                          <button
-                            onClick={() => { setDrawerOpen(false); openRegister(); }}
-                            className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            Register
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <Link
-                            to="/profile"
-                            onClick={() => setDrawerOpen(false)}
-                            className="block w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            Profile
-                          </Link>
-                          <button
-                            onClick={() => {
-                              localStorage.removeItem("authToken");
-                              localStorage.removeItem("refreshToken");
-                              useLoggedInStore.getState().logout();
-                              setDrawerOpen(false);
-                              navigate("/");
-                            }}
-                            className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            Logout
-                          </button>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="text-center py-4 border-t border-gray-200 dark:border-gray-700">
-                      <span className="text-xs text-gray-400 dark:text-gray-500">Version {__APP_VERSION__}</span>
-                    </div>
-                  </Dialog.Panel>
-                </Transition.Child>
-              </div>
-            </div>
+                  {/* Footer */}
+                  <div className="text-center py-4 border-t border-gray-200 dark:border-gray-700">
+                    <span className="text-xs text-gray-400 dark:text-gray-500">Version {__APP_VERSION__}</span>
+                  </div>
+              </Dialog.Panel>
+            </Transition.Child>
           </Dialog>
         </Transition>
+
       </div>
 
       {/* Desktop */}
