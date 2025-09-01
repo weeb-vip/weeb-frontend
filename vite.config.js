@@ -56,7 +56,7 @@ export default defineConfig({
     },
     worker: {
         format: 'es',
-        plugins: [
+        plugins: () => [
             // Ensure TypeScript compilation for workers
         ],
         rollupOptions: {

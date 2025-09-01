@@ -25,7 +25,7 @@ const QueryProvider = React.lazy(() => import('./queryProvider'))
 
 const Bootstrap = () => {
   const [loaded, setLoaded] = useState(false)
-  const [config, setConfig] = useState(null)
+  const [config, setConfig] = useState<any>(null)
 
   useEffect(() => {
     // Initialize dark mode synchronously first
