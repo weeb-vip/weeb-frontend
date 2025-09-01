@@ -1,7 +1,7 @@
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {CurrentlyAiringQuery, GetHomePageDataQuery, Status} from "../gql/graphql";
 import {format} from "date-fns";
-import {fetchCurrentlyAiringWithDates, fetchHomePageData, upsertAnime} from "../services/queries";
+import {fetchCurrentlyAiringWithDates, fetchHomePageData, fetchSeasonalAnime, upsertAnime} from "../services/queries";
 import {useState, useMemo} from "react";
 import AnimeCard, {AnimeCardSkeleton, AnimeCardStyle} from "../components/AnimeCard";
 import {Link, useNavigate} from "react-router-dom";
@@ -15,21 +15,28 @@ import HeroBanner from "../components/HeroBanner";
 import debug from "../utils/debug";
 import {getAirTimeDisplay, findNextEpisode} from "../services/airTimeUtils";
 import {useAnimeCountdownStore} from "../stores/animeCountdownStore";
-import {getCurrentSeason, getSeasonDisplayName} from "../utils/seasonUtils";
+import {getCurrentSeason, getSeasonDisplayName, getSeasonOptions} from "../utils/seasonUtils";
 
 
 function Index() {
   const queryClient = useQueryClient();
   const { getTimingData } = useAnimeCountdownStore();
   
-  // Get the current season
+  // Get the current season and available season options
   const currentSeason = getCurrentSeason();
-  const seasonDisplayName = getSeasonDisplayName(currentSeason);
+  const [selectedSeason, setSelectedSeason] = useState(currentSeason);
+  const seasonOptions = getSeasonOptions(currentSeason);
+  const seasonDisplayName = getSeasonDisplayName(selectedSeason);
   
   const {
     data: homeData,
     isLoading: homeDataIsLoading,
-  } = useQuery<GetHomePageDataQuery>(fetchHomePageData(currentSeason))
+  } = useQuery<GetHomePageDataQuery>(fetchHomePageData())
+  
+  const {
+    data: seasonalData,
+    isLoading: seasonalDataIsLoading,
+  } = useQuery(fetchSeasonalAnime(selectedSeason))
   // Fetch currently airing with dates: yesterday to 7 days from now
   const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // Yesterday
   const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
@@ -298,18 +305,37 @@ function Index() {
         )}
       </div>
       <div className={"w-full flex flex-col"}>
-        <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>{seasonDisplayName} Anime</h1>
-        {homeDataIsLoading ? (
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>{seasonDisplayName} Anime</h1>
+            <div className="flex gap-2">
+              {seasonOptions.map((season) => (
+                <button
+                  key={season}
+                  onClick={() => setSelectedSeason(season)}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors duration-200 ${
+                    selectedSeason === season
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {getSeasonDisplayName(season)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        {seasonalDataIsLoading ? (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
             {Array(8).fill({id: 1}).map((anime, index) => (
-              <AnimeCardSkeleton key={`currently-airing-${index}`}  {...anime} />
+              <AnimeCardSkeleton key={`seasonal-anime-${index}`}  {...anime} />
             ))}
           </div>
         ) : (
           <div
             className="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
-            {homeData?.animeBySeasons?.sort((a, b) => {
+            {seasonalData?.animeBySeasons?.sort((a, b) => {
               const getRating = (rating: string | null | undefined) => {
                 if (!rating || rating === 'N/A') return 0;
                 const parsed = parseFloat(rating);
@@ -319,7 +345,7 @@ function Index() {
               const ratingB = getRating(b.rating);
               return ratingB - ratingA;
             }).slice(0, 8).map(item => {
-              const id = `${currentSeason.toLowerCase()}-${item.id}`;
+              const id = `${selectedSeason.toLowerCase()}-${item.id}`;
               return (
                 <AnimeCard style={AnimeCardStyle.DETAIL}
                            id={item.id}

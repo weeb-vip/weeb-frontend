@@ -26,7 +26,7 @@ import {
 import {
   getAnimeDetailsByID,
   getCurrentlyAiring, getCurrentlyAiringWithDates,
-  getHomePageData, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
+  getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
   mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationVerifyEmail,
   mutationRegister, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserDetails
 } from "./api/graphql/queries";
@@ -57,13 +57,23 @@ export const fetchSearchAdvancedResults = (query: string, year?: number, searchl
   select: (data: searchResults) => limit ? data.slice(0, limit) : data,
 })
 
-export const fetchHomePageData = (season: string) => ({
-  queryKey: ['homedata', {limit: 20, season}],
+export const fetchHomePageData = () => ({
+  queryKey: ['homedata', {limit: 20}],
   queryFn: async () => {
     const client = AuthenticatedClient();
     // @ts-ignore
     return client.request<GetHomePageDataQuery>(getHomePageData, {
-      limit: 20,
+      limit: 20 // variables are typed too!
+    })
+  },
+})
+
+export const fetchSeasonalAnime = (season: string) => ({
+  queryKey: ['seasonal-anime', {season}],
+  queryFn: async () => {
+    const client = AuthenticatedClient();
+    // @ts-ignore
+    return client.request(getSeasonalAnime, {
       season // variables are typed too!
     })
   },

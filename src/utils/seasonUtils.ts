@@ -36,3 +36,32 @@ export function getSeasonDisplayName(season: Season): string {
   const capitalizedSeason = seasonName.charAt(0) + seasonName.slice(1).toLowerCase();
   return `${capitalizedSeason} ${year}`;
 }
+
+export function getNextSeasons(currentSeason: Season, count: number = 2): Season[] {
+  const match = currentSeason.match(/^(SPRING|SUMMER|FALL|WINTER)_(\d{4})$/);
+  if (!match) return [];
+  
+  const [, seasonName, yearStr] = match;
+  let year = parseInt(yearStr);
+  
+  // Season order: WINTER -> SPRING -> SUMMER -> FALL -> WINTER (next year)
+  const seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL'];
+  let currentIndex = seasons.indexOf(seasonName);
+  
+  const nextSeasons: Season[] = [];
+  
+  for (let i = 1; i <= count; i++) {
+    currentIndex++;
+    if (currentIndex >= seasons.length) {
+      currentIndex = 0;
+      year++;
+    }
+    nextSeasons.push(`${seasons[currentIndex]}_${year}` as Season);
+  }
+  
+  return nextSeasons;
+}
+
+export function getSeasonOptions(currentSeason: Season): Season[] {
+  return [currentSeason, ...getNextSeasons(currentSeason, 2)];
+}
