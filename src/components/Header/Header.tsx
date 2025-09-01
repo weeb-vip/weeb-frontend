@@ -1,37 +1,31 @@
-import React, {Fragment, useState} from "react";
-import { Menu, Transition } from "@headlessui/react";
+import React, { Fragment, useEffect, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
-import { useFlags } from "flagsmith/react";
 import { useLoggedInStore, useLoginModalStore } from "../../services/globalstore";
 import Autocomplete from "../Autocomplete";
 import Button, { ButtonColor } from "../Button";
 import DarkModeToggle from "../DarkModeToggle";
 
-export  function WeebMorphLogo({
-                                        wordSize = "text-2xl md:text-3xl",
-                                        colorClass = "bg-gray-800 dark:bg-gray-300",
-                                      }: {
-  wordSize?: string;
-  colorClass?: string; // solid color (no gradient)
-}) {
-  const [on, setOn] = useState(false);
+/* ---------------------------- Wordmark bits ---------------------------- */
 
+export function WeebMorphLogo({
+                                wordSize = "text-2xl md:text-3xl",
+                                colorClass = "bg-gray-800 dark:bg-gray-300",
+                              }: { wordSize?: string; colorClass?: string }) {
+  const [on, setOn] = useState(false);
   return (
     <span
       className="relative inline-grid group/logo select-none whitespace-nowrap flex-shrink-0"
-      onClick={() => setOn(v => !v)}     // tap to toggle on mobile
+      onClick={() => setOn(v => !v)}
       aria-pressed={on}
       role="button"
     >
-      {/* EN layer */}
       <span
         className={[
           "col-start-1 row-start-1 font-light text-transparent bg-clip-text text-center",
-          colorClass,
-          wordSize,
-          "tracking-[0.18em]",
+          colorClass, wordSize, "tracking-[0.18em]",
           "transition-all duration-300 ease-out",
           on ? "opacity-0 -translate-y-1" : "opacity-100 translate-y-0",
           "group-hover/logo:opacity-0 group-hover/logo:-translate-y-1",
@@ -39,15 +33,11 @@ export  function WeebMorphLogo({
       >
         WEEB
       </span>
-
-      {/* JP layer */}
       <span
         lang="ja"
         className={[
           "col-start-1 row-start-1 font-light text-transparent bg-clip-text text-center",
-          colorClass,
-          wordSize,
-          "tracking-normal",
+          colorClass, wordSize, "tracking-normal",
           "transition-all duration-300 ease-out",
           on ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1",
           "group-hover/logo:opacity-100 group-hover/logo:translate-y-0",
@@ -62,212 +52,173 @@ export  function WeebMorphLogo({
 function WeebVipWordmark({ size = "md", className = "" }: { size?: "sm" | "md"; className?: string }) {
   const wordSize = size === "sm" ? "text-2xl tracking-[0.25em]" : "text-4xl md:text-4xl tracking-[0.28em]";
   const vipSize  = size === "sm" ? "text-sm" : "text-normal md:text-normal";
-
   return (
     <div className={`inline-flex items-center gap-2 sm:gap-3 ${className}`} role="img" aria-label="WEEB VIP wordmark">
-      {/* WEEB gradient */}
-      <WeebMorphLogo
-        wordSize={wordSize}
-        colorClass="bg-gray-800 dark:bg-gray-300"
-      />
-      {/*<span*/}
-      {/*  className={`font-light ${wordSize} text-transparent bg-clip-text dark:bg-gray-300 bg-gray-800 transition-all`}*/}
-      {/*>*/}
-      {/*  WEEB*/}
-      {/*</span>*/}
-
-
-      {/* VIP pill */}
-      <span className="inline-flex items-center gap-3 px-3 sm:px-4 py-1.5 rounded-2xl  dark:bg-slate-900/80 ring-1 ring-slate-700 transition-all">
-        <span className={`dark:text-slate-50 font-black font-light  tracking-[0.35em] ${vipSize}`}>VIP</span>
+      <WeebMorphLogo wordSize={wordSize} colorClass="bg-gray-800 dark:bg-gray-300" />
+      <span className="inline-flex items-center gap-3 px-3 sm:px-4 py-1.5 rounded-2xl dark:bg-slate-900/80 ring-1 ring-slate-700">
+        <span className={`dark:text-slate-50 font-black font-light tracking-[0.35em] ${vipSize}`}>VIP</span>
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
       </span>
     </div>
   );
 }
 
+/* -------------------------- Utility: lock scroll -------------------------- */
+function BodyScrollLock({ active }: { active: boolean }) {
+  useEffect(() => {
+    if (!active) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [active]);
+  return null;
+}
+
+/* -------------------------------- Header -------------------------------- */
+
 function Header() {
-  const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
+  const loggedIn = useLoggedInStore(s => s.isLoggedIn);
   const navigate = useNavigate();
-  const openModalLogin = useLoginModalStore((state) => state.openLogin);
-  const openModalRegister = useLoginModalStore((state) => state.openRegister);
+  const openLogin = useLoginModalStore(s => s.openLogin);
+  const openRegister = useLoginModalStore(s => s.openRegister);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-      {/* Mobile Layout */}
+      {/* Mobile */}
       <div className="flex sm:hidden w-full items-center space-x-4">
-        {/* Logo */}
-        <Link to="/">
-          <img
-            src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
-            alt="logo"
-            className="w-10 h-10"
-          />
-        </Link>
+        <Link to="/"><img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" className="w-10 h-10" /></Link>
+        <div className="flex-grow"><Autocomplete /></div>
+        <button className="p-4" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
+          <FontAwesomeIcon icon={faBars} className="text-gray-700 dark:text-gray-300 text-xl" />
+        </button>
 
-        {/* Search */}
-        <div className="flex-grow">
-          <Autocomplete />
-        </div>
+        {/* Drawer */}
+        <Transition show={drawerOpen} as={Fragment} appear>
+          <Dialog as="div" className="relative z-50" onClose={setDrawerOpen}>
+            <BodyScrollLock active={drawerOpen} />
 
-        {/* Hamburger Menu */}
-        <Menu as="div" className="relative">
-          <Menu.Button className="p-4">
-            <FontAwesomeIcon icon={faBars} className="text-gray-700 dark:text-gray-300 text-xl" />
-          </Menu.Button>
+            {/* Backdrop */}
+            <Transition.Child
+              as={Fragment}
+              appear
+              enter="transition-opacity duration-300 ease-out"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="transition-opacity duration-300 ease-in"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-black/40" />
+            </Transition.Child>
 
-          <Transition
-            as={Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <Menu.Items className="fixed inset-0 z-50 bg-white dark:bg-gray-900 p-8 flex flex-col justify-between transition-colors duration-300">
-              <div className="flex flex-col justify-start space-y-4">
-                {/* Close Button */}
-                <Menu.Item>
-                  {() => (
-                    <button
-                      className="self-end text-2xl font-bold text-gray-700 dark:text-gray-300"
-                      onClick={() =>
-                        document.activeElement &&
-                        (document.activeElement as HTMLElement).blur()
-                      }
-                    >
-                      ✕
-                    </button>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  <div className={`flex items-center space-x-4`}>
-                  <img
-                    src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
-                    alt="logo"
-                    className="w-10 h-10"
-                  />
-                  <WeebVipWordmark size="sm"/>
-                  </div>
-                </Menu.Item>
-                {/* Dark Mode Toggle */}
-                <Menu.Item>
-                  {({active}) => (
-                    <div className={`flex items-center justify-between px-4 py-4 rounded ${
-                      active ? "bg-gray-100 dark:bg-gray-700" : ""
-                    }`}>
-                      <span className="text-lg text-gray-900 dark:text-gray-100">Dark Mode</span>
-                      <DarkModeToggle />
+            {/* Sliding panel container (right anchored) */}
+            <div className="fixed inset-0 overflow-hidden">
+              <div className="absolute inset-0 flex justify-end">
+                {/* Only this child gets the transform classes */}
+                <Transition.Child
+                  as={Fragment}
+                  appear
+                  enter="transform-gpu will-change-transform transition duration-300 ease-out"
+                  enterFrom="translate-x-full"
+                  enterTo="translate-x-0"
+                  leave="transform-gpu will-change-transform transition duration-300 ease-in"
+                  leaveFrom="translate-x-0"
+                  leaveTo="translate-x-full"
+                >
+                  {/* Panel is fixed & right-anchored; NO extra transition/transform here */}
+                  <Dialog.Panel className="pointer-events-auto fixed right-0 inset-y-0 w-full bg-white dark:bg-gray-900 p-8 flex flex-col justify-between">
+                    {/* Close */}
+                    <div className="flex justify-end">
+                      <button
+                        className="text-2xl font-bold text-gray-700 dark:text-gray-300"
+                        onClick={() => setDrawerOpen(false)}
+                        aria-label="Close menu"
+                      >
+                        ✕
+                      </button>
                     </div>
-                  )}
-                </Menu.Item>
 
-                {/* Auth Items */}
-                {!loggedIn ? (
-                  <>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={openModalLogin}
-                          className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
-                            active ? "bg-gray-100 dark:bg-gray-700" : ""
-                          }`}
-                        >
-                          Login
-                        </button>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={openModalRegister}
-                          className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
-                            active ? "bg-gray-100 dark:bg-gray-700" : ""
-                          }`}
-                        >
-                          Register
-                        </button>
-                      )}
-                    </Menu.Item>
-                  </>
-                ) : (
-                  <>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <Link
-                          to="/profile"
-                          className={`block w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
-                            active ? "bg-gray-100 dark:bg-gray-700" : ""
-                          }`}
-                        >
-                          Profile
-                        </Link>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={() => {
-                            localStorage.removeItem("authToken");
-                            localStorage.removeItem("refreshToken");
-                            useLoggedInStore.getState().logout();
-                            navigate("/");
-                          }}
-                          className={`w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 ${
-                            active ? "bg-gray-100 dark:bg-gray-700" : ""
-                          }`}
-                        >
-                          Logout
-                        </button>
-                      )}
-                    </Menu.Item>
-                  </>
-                )}
-              </div>
+                    {/* Content */}
+                    <div className="flex-1 flex flex-col justify-start space-y-4">
+                      <div className="flex items-center space-x-4">
+                        <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" className="w-10 h-10" />
+                        <WeebVipWordmark size="sm" />
+                      </div>
 
-              {/* Version Footer */}
-              <div className="text-center py-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-xs text-gray-400 dark:text-gray-500">
-                  Version {__APP_VERSION__}
-                </span>
+                      <div className="flex items-center justify-between px-4 py-4 rounded">
+                        <span className="text-lg text-gray-900 dark:text-gray-100">Dark Mode</span>
+                        <DarkModeToggle />
+                      </div>
+
+                      {!loggedIn ? (
+                        <>
+                          <button
+                            onClick={() => { setDrawerOpen(false); openLogin(); }}
+                            className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Login
+                          </button>
+                          <button
+                            onClick={() => { setDrawerOpen(false); openRegister(); }}
+                            className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Register
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            to="/profile"
+                            onClick={() => setDrawerOpen(false)}
+                            className="block w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Profile
+                          </Link>
+                          <button
+                            onClick={() => {
+                              localStorage.removeItem("authToken");
+                              localStorage.removeItem("refreshToken");
+                              useLoggedInStore.getState().logout();
+                              setDrawerOpen(false);
+                              navigate("/");
+                            }}
+                            className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Logout
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="text-center py-4 border-t border-gray-200 dark:border-gray-700">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">Version {__APP_VERSION__}</span>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
               </div>
-            </Menu.Items>
-          </Transition>
-        </Menu>
+            </div>
+          </Dialog>
+        </Transition>
       </div>
 
-      {/* Desktop Layout */}
+      {/* Desktop */}
       <div className="hidden sm:flex flex-row items-center justify-between space-x-4 mt-4 sm:mt-0">
-        {/* Left: Logo + Title */}
         <div className="flex items-center space-x-4">
-          <Link to="/" className={"flex flex-row space-x-4"}>
-            <img
-              src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
-              alt="logo"
-              className="w-14 h-14"
-            />
+          <Link to="/" className="flex flex-row space-x-4">
+            <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" className="w-14 h-14" />
             <WeebVipWordmark />
           </Link>
         </div>
-
-        {/* Middle: Search */}
-        <div className="flex-grow max-w-md">
-          <Autocomplete />
-        </div>
-
-        {/* Right: Dark Mode Toggle + Auth Buttons */}
+        <div className="flex-grow max-w-md"><Autocomplete /></div>
         <div className="flex items-center space-x-4">
           <DarkModeToggle />
           {!loggedIn ? (
             <>
-              <Button color={ButtonColor.blue} label="Login" onClick={openModalLogin} showLabel />
-              <Button
-                color={ButtonColor.transparent}
-                label="Register"
-                onClick={openModalRegister}
-                showLabel
-              />
+              <Button color={ButtonColor.blue} label="Login" onClick={openLogin} showLabel />
+              <Button color={ButtonColor.transparent} label="Register" onClick={openRegister} showLabel />
             </>
           ) : (
             <>
