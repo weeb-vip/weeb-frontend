@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import './scss/base.scss'
 import { perf } from './utils/performance'
+import { AppLoadingSkeleton } from './components/Skeletons/PageSkeletons'
 
 // Start measuring app initialization
 perf.mark('app-init')
@@ -19,11 +20,7 @@ const root = createRoot(rootElement)
 // Render immediately with loading fallback
 root.render(
   <React.StrictMode>
-    <React.Suspense fallback={
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    }>
+    <React.Suspense fallback={<AppLoadingSkeleton />}>
       <Bootstrap/>
     </React.Suspense>
   </React.StrictMode>
