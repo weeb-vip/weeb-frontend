@@ -128,9 +128,13 @@ function Header() {
                   leaveTo="translate-x-full"
                 >
                   {/* Panel is fixed & right-anchored; NO extra transition/transform here */}
-                  <Dialog.Panel className="pointer-events-auto fixed right-0 inset-y-0 w-full bg-white dark:bg-gray-900 p-8 flex flex-col justify-between">
-                    {/* Close */}
-                    <div className="flex justify-end">
+                  <Dialog.Panel className="pointer-events-auto fixed right-0 inset-y-0 w-full bg-white dark:bg-gray-900 p-8 flex flex-col">
+                    {/* Header with logo and close button */}
+                    <div className="flex items-center justify-between mb-8">
+                      <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center space-x-4">
+                        <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" className="w-10 h-10" />
+                        <WeebVipWordmark size="sm" />
+                      </Link>
                       <button
                         className="text-2xl font-bold text-gray-700 dark:text-gray-300"
                         onClick={() => setDrawerOpen(false)}
@@ -142,10 +146,6 @@ function Header() {
 
                     {/* Content */}
                     <div className="flex-1 flex flex-col justify-start space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <img src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" alt="logo" className="w-10 h-10" />
-                        <WeebVipWordmark size="sm" />
-                      </div>
 
                       <div className="flex items-center justify-between px-4 py-4 rounded">
                         <span className="text-lg text-gray-900 dark:text-gray-100">Dark Mode</span>
