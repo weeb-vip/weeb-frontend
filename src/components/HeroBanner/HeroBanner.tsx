@@ -141,7 +141,6 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
           {hasTimingData && !currentlyAiring && !alreadyAired && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-red-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-              {countdown}
               {countdown === "JUST AIRED" ? "JUST AIRED" : "AIRING SOON"}
               {countdown && !countdown.includes("JUST AIRED") && !countdown.includes("AIRING NOW") && (
                 <span className="ml-2 px-2 py-1 bg-black/25 rounded text-xs font-medium">
