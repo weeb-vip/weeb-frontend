@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { fetchCurrentlyAiring, upsertAnime } from "../../services/queries";
-import { CurrentlyAiringQuery, Status } from "../../gql/graphql";
+import {fetchCurrentlyAiring, fetchCurrentlyAiringWithDates, upsertAnime} from "../../services/queries";
+import {CurrentlyAiringQuery, CurrentlyAiringWithDateQuery, Status} from "../../gql/graphql";
 import Loader from "../../components/Loader";
 import AnimeCard, { AnimeCardStyle } from "../../components/AnimeCard";
 import Button, { ButtonColor } from "../../components/Button";
@@ -20,7 +20,10 @@ type AiringList = NonNullable<CurrentlyAiringQuery['currentlyAiring']>;
 type AiringItem = AiringList[number];
 
 export default function CurrentlyAiringPage() {
-  const { data, isLoading } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiring());
+  const { data, isLoading } = useQuery<CurrentlyAiringWithDateQuery>(
+    // past day to next 7 days
+    fetchCurrentlyAiringWithDates(new Date(Date.now() - 24 * 60 * 60 * 1000), null, 7)
+  );
   const { getCountdown } = useAnimeCountdowns();
   const navigate = useNavigate();
 
@@ -216,7 +219,7 @@ export default function CurrentlyAiringPage() {
 
       <div className="px-4 space-y-8">
         {/* Category Sections */}
-        {renderAnimeSection("Airing Today", categorizedAnime.airingToday)}
+        {renderAnimeSection("Airing Next 24 Hours", categorizedAnime.airingToday)}
         {renderAnimeSection("Airing This Week", categorizedAnime.airingThisWeek)}
         {renderAnimeSection("Recently Aired", categorizedAnime.recentlyAired)}
         {renderAnimeSection("Coming Soon", categorizedAnime.comingSoon)}
