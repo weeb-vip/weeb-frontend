@@ -15,6 +15,7 @@ interface HeroBannerProps {
     titleJp?: string | null;
     description?: string | null;
     anidbid?: string | null;
+    thetvdbid?: string | null;
     broadcast?: string | null;
     userAnime?: any;
     episodes?: Array<{
@@ -46,7 +47,10 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
     setUseFallback(false);
     setBgLoaded(false);
 
-    if (anime.anidbid) {
+    if (anime.thetvdbid) {
+      const fanartUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
+      setBgUrl(fanartUrl);
+    } else if (anime.anidbid) {
       const fanartUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
       setBgUrl(fanartUrl);
     } else {

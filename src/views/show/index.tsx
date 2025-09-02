@@ -63,7 +63,10 @@ export default function Index() {
     setUseFallback(false);
     setBgLoaded(false);
 
-    if (show?.anime?.anidbid) {
+    if (show?.anime?.thetvdbid) {
+      const fanartUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
+      setBgUrl(fanartUrl);
+    } else if (show?.anime?.anidbid) {
       const fanartUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${show.anime.anidbid}/fanart`;
       setBgUrl(fanartUrl);
     } else {
@@ -325,13 +328,13 @@ export default function Index() {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className={`flex items-center gap-2 ${statusColor} flex-shrink-0`}>
                         <FontAwesomeIcon icon={faClock} className="text-xs" />
                         <span className="text-sm font-medium">
                           {airTimeDisplay ? airTimeDisplay.text :
                             airTime ? (
-                              airTime <= now 
+                              airTime <= now
                                 ? `Aired ${format(airTime, "EEE MMM do 'at' h:mm a")}`
                                 : `Airing ${format(airTime, "EEE MMM do 'at' h:mm a")}`
                             ) :

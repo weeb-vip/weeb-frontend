@@ -5,6 +5,7 @@ export const getHomePageData = graphql(/* GraphQL */`
         topRatedAnime(limit: $limit) {
             id
             anidbid
+            thetvdbid
             titleEn
             imageUrl
             duration
@@ -24,6 +25,7 @@ export const getHomePageData = graphql(/* GraphQL */`
         newestAnime(limit:100) {
             id
             anidbid
+            thetvdbid
             titleEn
             imageUrl
             duration
@@ -48,6 +50,7 @@ export const getSeasonalAnime = graphql(/* GraphQL */`
         animeBySeasons(season: $season) {
             id
             anidbid
+            thetvdbid
             titleEn
             imageUrl
             duration
@@ -76,6 +79,7 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
         anime(id: $id) {
             id
             anidbid
+            thetvdbid
             titleEn
             titleJp
             titleRomaji
@@ -130,6 +134,7 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
             duration
             ranking
             broadcast
+            thetvdbid
             episodes {
                 id
                 animeId
@@ -163,6 +168,7 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
             duration
             ranking
             broadcast
+            thetvdbid
             episodes {
                 id
                 animeId
@@ -308,6 +314,7 @@ export const queryUserAnimes = graphql(`
                     episodeCount
                     duration
                     broadcast
+                    thetvdbid
                     episodes {
                         id
                         animeId
