@@ -1,5 +1,5 @@
 import debug from '../utils/debug';
-import { useAnimeCountdownStore } from '../stores/animeCountdownStore';
+import {useAnimeCountdownStore} from '../stores/animeCountdownStore';
 
 export interface AnimeForNotification {
   id: string;
@@ -18,7 +18,11 @@ export interface AnimeForNotification {
 }
 
 export interface NotificationCallback {
-  (type: 'warning' | 'airing' | 'airing-soon' | 'finished-airing', anime: AnimeForNotification, episode?: { episodeNumber?: number | null; titleEn?: string | null; titleJp?: string | null }): void;
+  (type: 'warning' | 'airing' | 'airing-soon' | 'finished-airing', anime: AnimeForNotification, episode?: {
+    episodeNumber?: number | null;
+    titleEn?: string | null;
+    titleJp?: string | null
+  }): void;
 }
 
 export interface CountdownCallback {
@@ -43,7 +47,6 @@ class AnimeNotificationService {
     if (!this.worker) return;
 
     this.worker.addEventListener('message', (event) => {
-
 
       const message = event.data;
 
@@ -89,7 +92,7 @@ class AnimeNotificationService {
         colno: error.colno || 'No column',
         type: error.type || 'No type',
         error: error.error || 'No error object'
-      }, null, 2) );
+      }, null, 2));
     });
 
     this.worker.addEventListener('messageerror', (error) => {
@@ -139,7 +142,7 @@ class AnimeNotificationService {
 
   clearAll() {
     if (this.worker) {
-      this.worker.postMessage({ type: 'stopWatching' });
+      this.worker.postMessage({type: 'stopWatching'});
     }
   }
 
@@ -159,7 +162,7 @@ class AnimeNotificationService {
         type: 'triggerUpdate'
       });
     } else {
-      debug.warn('🔔 Worker not ready for triggerUpdate', { hasWorker: !!this.worker, isReady: this.isWorkerReady });
+      debug.warn('🔔 Worker not ready for triggerUpdate', {hasWorker: !!this.worker, isReady: this.isWorkerReady});
     }
   }
 

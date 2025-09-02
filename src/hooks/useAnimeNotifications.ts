@@ -1,17 +1,18 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchCurrentlyAiring } from '../services/queries';
+import {fetchCurrentlyAiring, fetchCurrentlyAiringWithDates} from '../services/queries';
 import { animeNotificationService, AnimeForNotification } from '../services/animeNotifications';
 import { useToast } from '../components/Toast';
-import { CurrentlyAiringQuery } from '../gql/graphql';
+import {CurrentlyAiringQuery, CurrentlyAiringWithDateQuery} from '../gql/graphql';
 import debug from '../utils/debug';
 
 export const useAnimeNotifications = () => {
   const { showToast } = useToast();
 
   // Get currently airing anime data
-  const { data: currentlyAiringData, isSuccess } = useQuery<CurrentlyAiringQuery>(
-    fetchCurrentlyAiring()
+  const { data: currentlyAiringData, isSuccess } = useQuery<CurrentlyAiringWithDateQuery>(
+    // past day to next 7 days
+    fetchCurrentlyAiringWithDates(new Date(Date.now() - 24 * 60 * 60 * 1000), null, 7)
   );
 
   useEffect(() => {
@@ -94,7 +95,7 @@ export const useAnimeNotifications = () => {
     // Start watching for notifications
     animeNotificationService.startWatching(animeForNotifications);
     debug.info(`🔔 Started watching ${animeForNotifications.length} anime for notifications`);
-    
+
     // Immediately trigger update to get initial data
     setTimeout(() => {
       debug.info('🔔 Triggering immediate update after startWatching');

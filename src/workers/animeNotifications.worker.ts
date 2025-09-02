@@ -216,6 +216,7 @@ function calculateCountdown(
 
   // 3) Already started (but not currently airing) => just aired
   if (diffMs <= 0) return "JUST AIRED";
+  // log anime title and airDate for debugging
 
   // 4) Not today (>24h away)
   return "";

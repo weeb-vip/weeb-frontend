@@ -59,7 +59,6 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
   const title = anime.titleEn || anime.titleJp || "Unknown";
 
   // All timing data comes from the worker via Zustand store
-
   const hasTimingData = Boolean(timingData || workerCountdown);
   const airDateTime = timingData?.airDateTime || "";
   const airingToday = timingData?.isAiringToday || false;
@@ -139,9 +138,10 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
             </div>
           )}
 
-          {hasTimingData && airingToday && !currentlyAiring && !alreadyAired && (
+          {hasTimingData && !currentlyAiring && !alreadyAired && (
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-red-600 text-sm font-semibold mb-4">
               <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
+              {countdown}
               {countdown === "JUST AIRED" ? "JUST AIRED" : "AIRING SOON"}
               {countdown && !countdown.includes("JUST AIRED") && !countdown.includes("AIRING NOW") && (
                 <span className="ml-2 px-2 py-1 bg-black/25 rounded text-xs font-medium">
