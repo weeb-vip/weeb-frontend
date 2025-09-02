@@ -159,7 +159,20 @@ export function Autocomplete() {
           {autocompleteState.collections.map((collection: any, index: number) => (
             <ul key={index} {...autocomplete.getListProps()} className={isMobile ? "py-2" : "py-2"}>
               {collection.items
-                .filter((item: any) => isValid(new Date(item.start_date)))
+                .filter((item: any) => {
+                  // Safari-safe date validation for format "2025-01-01 05:00:00.000000 +00:00"
+                  if (!item || !item.start_date) return false;
+                  try {
+                    // Normalize the date string for Safari compatibility
+                    let dateStr = item.start_date.toString();
+                    // Remove microseconds and fix timezone format for Safari
+                    dateStr = dateStr.replace(/(\.\d{6})?\s(\+\d{2}:\d{2})$/, '$2');
+                    const date = new Date(dateStr);
+                    return isValid(date) && !isNaN(date.getTime()) && date.getFullYear() > 1900;
+                  } catch {
+                    return false;
+                  }
+                })
                 .map((item: any) => (
                   <Item
                     key={item.objectID}
