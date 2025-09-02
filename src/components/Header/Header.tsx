@@ -57,9 +57,9 @@ function WeebVipWordmark({size = "md", className = ""}: { size?: "sm" | "md"; cl
     <div className={`inline-flex items-center gap-2 sm:gap-3 ${className}`} role="img" aria-label="WEEB VIP wordmark">
       <WeebMorphLogo wordSize={wordSize} colorClass="bg-gray-800 dark:bg-gray-300"/>
       <span
-        className="inline-flex items-center gap-3 px-3 sm:px-4 py-1.5 rounded-2xl dark:bg-slate-900/80 ring-1 ring-slate-700">
-        <span className={`dark:text-slate-50 font-black font-light tracking-[0.35em] ${vipSize}`}>VIP</span>
-        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" aria-hidden="true"/>
+        className="inline-flex items-center gap-3 px-3 sm:px-4 py-1.5 rounded-2xl dark:bg-slate-900/80 ring-1 ring-slate-700 dark:ring-slate-300/20 transition-all duration-300">
+        <span className={`text-gray-800 dark:text-slate-50 font-black font-light tracking-[0.35em] transition-colors duration-300 ${vipSize}`}>VIP</span>
+        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 transition-all duration-300" aria-hidden="true"/>
       </span>
     </div>
   );
@@ -94,8 +94,8 @@ function Header() {
       className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
       {/* Mobile */}
       <div className="flex sm:hidden w-full items-center space-x-4">
-        <Link to="/"><img 
-                          src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" 
+        <Link to="/"><img
+                          src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
                           alt="logo"
                           width="40"
                           height="40"
@@ -146,9 +146,9 @@ function Header() {
                 {/* Header with logo + close */}
                 <div className="flex items-center justify-between mb-8">
                   <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center space-x-4">
-                    <img 
-                      src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" 
-                      alt="logo" 
+                    <img
+                      src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
+                      alt="logo"
                       width="40"
                       height="40"
                       loading="eager"
@@ -234,9 +234,9 @@ function Header() {
       <div className="hidden sm:flex flex-row items-center justify-between space-x-4 mt-4 sm:mt-0">
         <div className="flex items-center space-x-4">
           <Link to="/" className="flex flex-row space-x-4">
-            <img 
-              src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png" 
-              alt="logo" 
+            <img
+              src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
+              alt="logo"
               width="56"
               height="56"
               loading="eager"
