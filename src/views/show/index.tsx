@@ -396,7 +396,6 @@ export default function Index() {
                 <div className=" w-full">
                   <Tabs tabs={["Episodes", "Characters", "Trailers", "Artworks"]} defaultTab="Episodes">
                     <div>
-
                       {anime?.episodes && <Tables episodes={anime.episodes} broadcast={anime.broadcast}/>}
                     </div>
                     <div>

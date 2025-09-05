@@ -4,9 +4,13 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBars} from "@fortawesome/free-solid-svg-icons";
 import {Link, useNavigate} from "react-router-dom";
 import {useDarkModeStore, useLoggedInStore, useLoginModalStore} from "../../services/globalstore";
+import {useQuery} from "@tanstack/react-query";
+import {getUser} from "../../services/queries";
 import Autocomplete from "../Autocomplete";
 import Button, {ButtonColor} from "../Button";
 import DarkModeToggle from "../DarkModeToggle";
+import ProfileAvatar from "../ProfileAvatar";
+import ProfileDropdown from "../ProfileDropdown";
 
 
 /* ---------------------------- Wordmark bits ---------------------------- */
@@ -88,6 +92,12 @@ function Header() {
   const openRegister = useLoginModalStore(s => s.openRegister);
   const {isDarkMode} = useDarkModeStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  
+  // Fetch user data when logged in
+  const { data: user } = useQuery({
+    ...getUser(),
+    enabled: loggedIn
+  });
 
   return (
     <header
@@ -103,9 +113,21 @@ function Header() {
                           decoding="async"
                           className="w-10 h-10"/></Link>
         <div className="flex-grow"><Autocomplete/></div>
-        <button className="p-4" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
-          <FontAwesomeIcon icon={faBars} className="text-gray-700 dark:text-gray-300 text-xl"/>
-        </button>
+        {loggedIn && user ? (
+          <button className="p-2" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
+            <ProfileAvatar 
+              username={user.username}
+              profileImageUrl={user.profileImageUrl}
+              size="sm"
+              linkToProfile={false}
+              className="!cursor-pointer"
+            />
+          </button>
+        ) : (
+          <button className="p-4" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
+            <FontAwesomeIcon icon={faBars} className="text-gray-700 dark:text-gray-300 text-xl"/>
+          </button>
+        )}
 
         {/* Drawer */}
         {/* Drawer */}
@@ -167,6 +189,41 @@ function Header() {
 
                 {/* Content */}
                 <div className="flex-1 flex flex-col justify-start space-y-4">
+                  {loggedIn && user && (
+                    <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 overflow-hidden transition-colors duration-300">
+                      <Link
+                        to="/profile"
+                        onClick={() => setDrawerOpen(false)}
+                        className="flex items-center px-4 py-4 space-x-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-300"
+                      >
+                        <ProfileAvatar 
+                          username={user.username}
+                          profileImageUrl={user.profileImageUrl}
+                          size="md"
+                          linkToProfile={false}
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">{user.username}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">{user.firstname} {user.lastname}</p>
+                        </div>
+                      </Link>
+                      <div className="border-t border-gray-200 dark:border-gray-600 transition-colors duration-300">
+                        <button
+                          onClick={() => {
+                            localStorage.removeItem("authToken");
+                            localStorage.removeItem("refreshToken");
+                            useLoggedInStore.getState().logout();
+                            setDrawerOpen(false);
+                            navigate("/");
+                          }}
+                          className="w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-300"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center justify-between px-4 py-4 rounded">
                     <span
                       className="text-lg text-gray-900 dark:text-gray-100">{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
@@ -194,29 +251,7 @@ function Header() {
                         Register
                       </button>
                     </>
-                  ) : (
-                    <>
-                      <Link
-                        to="/profile"
-                        onClick={() => setDrawerOpen(false)}
-                        className="block w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        Profile
-                      </Link>
-                      <button
-                        onClick={() => {
-                          localStorage.removeItem("authToken");
-                          localStorage.removeItem("refreshToken");
-                          useLoggedInStore.getState().logout();
-                          setDrawerOpen(false);
-                          navigate("/");
-                        }}
-                        className="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        Logout
-                      </button>
-                    </>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Footer */}
@@ -254,23 +289,7 @@ function Header() {
               <Button color={ButtonColor.transparent} label="Register" onClick={openRegister} showLabel/>
             </>
           ) : (
-            <>
-              <Link to="/profile">
-                <Button color={ButtonColor.blue} label="Profile" onClick={() => {
-                }} showLabel/>
-              </Link>
-              <Button
-                color={ButtonColor.transparent}
-                label="Logout"
-                onClick={() => {
-                  localStorage.removeItem("authToken");
-                  localStorage.removeItem("refreshToken");
-                  useLoggedInStore.getState().logout();
-                  navigate("/");
-                }}
-                showLabel
-              />
-            </>
+            user && <ProfileDropdown user={user} />
           )}
         </div>
       </div>

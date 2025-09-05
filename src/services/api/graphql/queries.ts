@@ -258,6 +258,7 @@ export const queryUserDetails = graphql(`
             username
             language
             email
+            profileImageUrl
             active_sessions {
                 id
                 ip_address
@@ -278,6 +279,21 @@ export const mutateUpdateUserDetails = graphql(`
             username
             language
             email
+            profileImageUrl
+        }
+    }
+`)
+
+export const mutateUploadProfileImage = graphql(`
+    mutation UploadProfileImage($image: Upload!) {
+        UploadProfileImage(image: $image) {
+            id
+            firstname
+            lastname
+            username
+            language
+            email
+            profileImageUrl
         }
     }
 `)

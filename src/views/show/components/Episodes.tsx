@@ -38,7 +38,9 @@ function Table({seasonNumber, episodes, broadcast}: { seasonNumber: number, epis
           <tbody>
           {episodes.map((episode) => {
             // Use parseAirTime to get the correct air time with timezone conversion
-            const airdate = episode.airDate ? parseAirTime(episode.airDate, broadcast) : null
+            // if broadcast is null, "" or "unknown", we assume China
+
+            const airdate = episode.airDate ? parseAirTime(episode.airDate, (broadcast && broadcast.toLowerCase() !== "unknown") ? broadcast : "CST") : null;
             const formattedAirdate = airdate && isDate(airdate) ? format(airdate, 'dd MMM yyyy') : "TBA"
 
             return (
