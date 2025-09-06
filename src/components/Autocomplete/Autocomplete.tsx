@@ -46,7 +46,7 @@ export function Autocomplete() {
                 searchClient,
                 queries: [
                   {
-                    indexName: "anime",
+                    indexName: global.config.algolia_index,
                     query,
                     params: {
                       hitsPerPage: 20,

@@ -1,5 +1,8 @@
 {
   "api_host": "http://localhost:8079",
   "graphql_host": "https://gateway.staging.weeb.vip/graphql",
-  "flagsmith_environment_id": "iGDuMWWgQMBw8SqEuebtsD"
+  "flagsmith_environment_id": "iGDuMWWgQMBw8SqEuebtsD",
+  "algolia_index": "anime-staging",
+  "cdn_url": "https://cdn.weeb.vip/weeb",
+  "cdn_user_url": "https://cdn.weeb.vip/weeb-user"
 }

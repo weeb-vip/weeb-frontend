@@ -218,7 +218,7 @@ export default function Index() {
                 if (!useFallback && show?.anime?.anidbid) {
                   // Fanart failed, try poster as fallback
                   setUseFallback(true);
-                  const posterUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
+                  const posterUrl = `${global.config.cdn_url}/${encodeURIComponent(GetImageFromAnime(anime))}`;
                   setBgUrl(posterUrl);
                   setBgLoaded(true);
 

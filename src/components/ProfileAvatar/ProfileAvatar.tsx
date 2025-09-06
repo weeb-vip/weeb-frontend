@@ -34,11 +34,11 @@ export function ProfileAvatar({
     const suffix = size === 'lg' ? '_64' : '_32';
     // Insert suffix before file extension
     const lastDotIndex = profileImageUrl.lastIndexOf('.');
-    if (lastDotIndex === -1) return `https://cdn.weeb.vip/weeb-user/${profileImageUrl}${suffix}`;
+    if (lastDotIndex === -1) return `${global.config.cdn_user_url}/${profileImageUrl}${suffix}`;
     
     const nameWithoutExt = profileImageUrl.substring(0, lastDotIndex);
     const extension = profileImageUrl.substring(lastDotIndex);
-    return `https://cdn.weeb.vip/weeb-user/${nameWithoutExt}${suffix}${extension}`;
+    return `${global.config.cdn_user_url}/${nameWithoutExt}${suffix}${extension}`;
   };
 
   const avatarContent = (

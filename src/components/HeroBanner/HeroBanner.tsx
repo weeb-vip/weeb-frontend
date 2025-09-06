@@ -107,7 +107,7 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
                 if (!useFallback && anime.anidbid) {
                   // Fanart failed, try poster as fallback
                   setUseFallback(true);
-                  setBgUrl(`https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`);
+                  setBgUrl(`${global.config.cdn_url}/${encodeURIComponent(GetImageFromAnime(anime))}`);
 
                 } else {
                   // Poster also failed, use same fallback as anime cards

@@ -21,8 +21,8 @@ export const SafeImage: React.FC<SafeImageProps> = ({
   return (
     <img
       {...imgProps}
-      src={`https://cdn.weeb.vip/weeb/${path}${encodeURIComponent(encodedSrc)}`}
-      data-original-src={`https://cdn.weeb.vip/weeb/${path}${encodeURIComponent(encodedSrc)}`}
+      src={`${global.config.cdn_url}/${path}${encodeURIComponent(encodedSrc)}`}
+      data-original-src={`${global.config.cdn_url}/${path}${encodeURIComponent(encodedSrc)}`}
       onError={(e) => {
         e.currentTarget.onerror = null;
         e.currentTarget.src = fallbackSrc;

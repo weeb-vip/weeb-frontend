@@ -103,7 +103,7 @@ const MobileToast: React.FC<ToastProps> = ({
           <div
             className="absolute inset-0 bg-cover bg-center opacity-20"
             style={{
-              backgroundImage: `url(https://cdn.weeb.vip/weeb/${GetImageFromAnime(anime)})`,
+              backgroundImage: `url(${global.config.cdn_url}/${GetImageFromAnime(anime)})`,
               filter: 'blur(8px)',
               transform: 'scale(1.1)',
             }}
