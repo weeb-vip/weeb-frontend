@@ -116,7 +116,6 @@ const ResendVerification: React.FC = () => {
               label="Email address"
               icon={faUser}
               required
-              autoComplete="email"
             />
           </div>
 
