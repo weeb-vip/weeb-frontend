@@ -249,6 +249,14 @@ export const mutationVerifyEmail = graphql(
     `
 )
 
+export const mutationResendVerificationEmail = graphql(
+    `
+        mutation ResendVerificationEmail($username: String!) {
+            ResendVerificationEmail(username: $username)
+        }
+    `
+)
+
 export const queryUserDetails = graphql(`
     query getUserDetails {
         UserDetails {

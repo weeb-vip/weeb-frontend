@@ -47,6 +47,7 @@ const Login = React.lazy(() => import(/* webpackChunkName: "auth" */ './auth/log
 const PasswordResetRequest = React.lazy(() => import(/* webpackChunkName: "auth" */ './auth/password-reset-request'));
 const PasswordReset = React.lazy(() => import(/* webpackChunkName: "auth" */ './auth/password-reset'));
 const EmailVerification = React.lazy(() => import(/* webpackChunkName: "auth" */ './auth/verification'));
+const ResendVerification = React.lazy(() => import(/* webpackChunkName: "auth" */ './auth/resend-verification'));
 
 // Calendar - separate chunk as it's feature-specific
 const CurrentlyAiringCalendarPage = React.lazy(() => import(/* webpackChunkName: "calendar" */ './CurrentlyAiring/Calendar'));
@@ -194,6 +195,19 @@ function AnimatedRoutes() {
               <PageWrapper>
                 <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
                   <EmailVerification/>
+                </Suspense>
+              </PageWrapper>
+            </AuthGuard>
+          }
+        />
+        
+        <Route
+          path="/auth/resend-verification"
+          element={
+            <AuthGuard>
+              <PageWrapper>
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                  <ResendVerification/>
                 </Suspense>
               </PageWrapper>
             </AuthGuard>

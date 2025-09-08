@@ -25,6 +25,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
     confirmPassword: "", // for registration validation
   });
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const setLoggedIn = useLoggedInStore((state) => state.setLoggedIn);
@@ -54,13 +55,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
     onSuccess: (response) => {
       debug.success("Registration successful!", response);
       setErrorMessage("");
-      // @ts-ignore
-      mutateLogin({
-        input: {
-          username: formData.username,
-          password: formData.password,
-        },
-      });
+      setSuccessMessage("Registration successful! Please check your email to verify your account before logging in.");
     },
     onError: (error: any) => {
       debug.warn("Registration failed");
@@ -102,9 +97,12 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
     if (validationErrors[name]) {
       setValidationErrors((prev) => ({ ...prev, [name]: "" }));
     }
-    // Clear global error message
+    // Clear global messages
     if (errorMessage) {
       setErrorMessage("");
+    }
+    if (successMessage) {
+      setSuccessMessage("");
     }
   };
 
@@ -137,6 +135,11 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
         {errorMessage && (
           <div className="w-full p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-full transition-colors duration-300">
             <p className="text-red-800 dark:text-red-200 text-sm text-center">{errorMessage}</p>
+          </div>
+        )}
+        {successMessage && (
+          <div className="w-full p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-full transition-colors duration-300">
+            <p className="text-green-800 dark:text-green-200 text-sm text-center">{successMessage}</p>
           </div>
         )}
       </div>
@@ -193,16 +196,27 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
         />
       </form>
 
-      {/* Password Reset Link - Only show in login mode */}
+      {/* Password Reset and Email Verification Links - Only show in login mode */}
       {!isRegisterState && (
-        <div className="mt-4 text-center">
-          <Link
-            to="/auth/password-reset-request"
-            onClick={closeFn}
-            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
-          >
-            Forgot your password?
-          </Link>
+        <div className="mt-4 text-center space-y-2">
+          <div>
+            <Link
+              to="/auth/password-reset-request"
+              onClick={closeFn}
+              className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
+            >
+              Forgot your password?
+            </Link>
+          </div>
+          <div>
+            <Link
+              to="/auth/resend-verification"
+              onClick={closeFn}
+              className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
+            >
+              Resend email verification
+            </Link>
+          </div>
         </div>
       )}
 
@@ -224,6 +238,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
           onClick={() => {
             setIsRegisterState(!isRegisterState);
             setErrorMessage("");
+            setSuccessMessage("");
             setValidationErrors({});
           }}
           className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors duration-300 focus:outline-none focus:underline"

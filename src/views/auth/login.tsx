@@ -137,13 +137,23 @@ const Login: React.FC = () => {
           )}
 
           <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <Link
-                to="/auth/password-reset-request"
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
-              >
-                Forgot your password?
-              </Link>
+            <div className="text-sm space-y-1">
+              <div>
+                <Link
+                  to="/auth/password-reset-request"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+              <div>
+                <Link
+                  to="/auth/resend-verification"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+                >
+                  Resend email verification
+                </Link>
+              </div>
             </div>
           </div>
 

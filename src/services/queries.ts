@@ -27,7 +27,7 @@ import {
   getAnimeDetailsByID,
   getCurrentlyAiring, getCurrentlyAiringWithDates,
   getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
-  mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationVerifyEmail,
+  mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationVerifyEmail, mutationResendVerificationEmail,
   mutationRegister, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserDetails
 } from "./api/graphql/queries";
 
@@ -164,6 +164,14 @@ export const verifyEmail = (token: string) => ({
     });
     const response = await client.request(mutationVerifyEmail);
     return response.VerifyEmail;
+  }
+})
+
+export const resendVerificationEmail = () => ({
+  mutationFn: async (input: { username: string }): Promise<boolean> => {
+    // @ts-ignore
+    const response = await request(global.config.graphql_host, mutationResendVerificationEmail, input);
+    return response.ResendVerificationEmail;
   }
 })
 
