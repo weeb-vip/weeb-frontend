@@ -6,12 +6,12 @@ import { useMutation } from '@tanstack/react-query';
 import Button, { ButtonColor } from '../../components/Button/Button';
 import FormInput from '../../components/FormInput';
 import { register } from '../../services/queries';
-import { LoginInput } from '../../gql/graphql';
+import { RegisterInput } from '../../gql/graphql';
 import debug from '../../utils/debug';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<LoginInput & { confirmPassword: string }>({
+  const [formData, setFormData] = useState<RegisterInput & { confirmPassword: string }>({
     username: '',
     password: '',
     confirmPassword: ''
@@ -102,7 +102,7 @@ const Register: React.FC = () => {
 
     setErrorMessage('');
     setSuccessMessage('');
-    const data: LoginInput = { username: formData.username, password: formData.password };
+    const data: RegisterInput = { username: formData.username, password: formData.password };
     mutateRegister({ input: data });
   };
 
