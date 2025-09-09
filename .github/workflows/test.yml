@@ -2,27 +2,52 @@ name: "Tests"
 
 on:
   push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_call:  # Allow this workflow to be called by other workflows
 
 jobs:
-  tests:
+  unit-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
       - uses: actions/cache@v4
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      - name: install yarn
+          
+      - name: Install yarn
         run: corepack enable && yarn set version stable
 
-      - name: install deps
+      - name: Install dependencies
         run: yarn install
+
+      - name: Lint check
+        run: |
+          if [ -f "package.json" ] && grep -q '"lint"' package.json; then
+            yarn lint || true
+          fi
 
       - name: Build 🏗️
         run: yarn build
 
-      - name: Test 🚨
+      - name: Unit Tests 🚨
         run: yarn test
+        
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7

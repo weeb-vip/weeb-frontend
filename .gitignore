@@ -26,3 +26,6 @@ dist-ssr
 *storybook.log
 
 test-results
+playwright-report
+.secrets
+.env.local

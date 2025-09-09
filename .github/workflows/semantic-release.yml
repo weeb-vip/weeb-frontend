@@ -3,8 +3,19 @@ on:
   push:
     branches:
       - main
+      
 jobs:
+  # Run tests first
+  test:
+    name: Run Tests
+    uses: ./.github/workflows/test.yml
+    
+  e2e:
+    name: Run E2E Tests
+    uses: ./.github/workflows/e2e-tests.yml
+    
   release:
+    needs: [test, e2e]  # Only run release after tests pass
     name: Release
     runs-on: ubuntu-latest
     steps:
