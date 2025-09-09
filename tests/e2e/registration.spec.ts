@@ -32,7 +32,7 @@ async function getLatestEmail(recipientEmail: string, retries = 15, delay = 3000
         }
       }
     } catch (error) {
-      console.log(`Attempt ${i + 1} failed:`, error.message);
+      console.log(`Attempt ${i + 1} failed:`, error instanceof Error ? error.message : String(error));
     }
 
     // Wait before retrying

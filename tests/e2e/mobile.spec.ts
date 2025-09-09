@@ -79,7 +79,7 @@ test.describe('Mobile Device Simulation', () => {
   test('iPhone simulation', async ({ page, browser, browserName }) => {
     // Skip mobile device options for Firefox as it doesn't support them
     if (browserName === 'firefox') {
-      test.skip('Firefox does not support mobile device simulation options');
+      test.skip(browserName === 'firefox', 'Firefox does not support mobile device simulation options');
       return;
     }
 
@@ -103,7 +103,7 @@ test.describe('Mobile Device Simulation', () => {
   test('Android simulation', async ({ page, browser, browserName }) => {
     // Skip mobile device options for Firefox as it doesn't support them
     if (browserName === 'firefox') {
-      test.skip('Firefox does not support mobile device simulation options');
+      test.skip(browserName === 'firefox', 'Firefox does not support mobile device simulation options');
       return;
     }
 
