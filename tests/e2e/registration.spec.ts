@@ -43,7 +43,7 @@ async function getLatestEmail(recipientEmail: string, retries = 15, delay = 3000
 }
 
 // Helper to extract verification link from email
-function extractVerificationLink(emailContent: string): string | null {
+function extractVerificationLink(emailContent: string, baseUrl: string): string | null {
   // First, decode quoted-printable encoding
   let decodedContent = emailContent
     .replace(/=\r?\n/g, '') // Remove soft line breaks
@@ -66,9 +66,17 @@ function extractVerificationLink(emailContent: string): string | null {
     link = link.replace(/&#x3D;/g, '=');
     link = link.replace(/\\/g, ''); // Remove backslashes
     
-    // If it's a relative URL, make it absolute
+    // If it's a relative URL, make it absolute using the test's base URL
     if (!link.startsWith('http')) {
-      link = `https://weeb.staging.weeb.vip${link.startsWith('/') ? '' : '/'}${link}`;
+      link = `${baseUrl}${link.startsWith('/') ? '' : '/'}${link}`;
+    } else {
+      // Replace the domain in the link with the test's base URL
+      const url = new URL(link);
+      const testUrl = new URL(baseUrl);
+      url.protocol = testUrl.protocol;
+      url.host = testUrl.host;
+      url.port = testUrl.port;
+      link = url.toString();
     }
     
     console.log(`Found verification link in email: ${link}`);
@@ -76,11 +84,20 @@ function extractVerificationLink(emailContent: string): string | null {
   }
 
   // Fallback: look for the URL pattern directly (not in href)
-  const directUrlPattern = /https:\/\/weeb\.staging\.weeb\.vip\/auth\/verification\?email=[^&\s]+&token=[^&\s"]+/gi;
+  const directUrlPattern = /https?:\/\/[^\/\s]+\/auth\/verification\?email=[^&\s]+&token=[^&\s"]+/gi;
   const directMatch = directUrlPattern.exec(decodedContent);
   if (directMatch) {
     let link = directMatch[0];
     link = link.replace(/&amp;/g, '&');
+    
+    // Replace the domain with the test's base URL
+    const url = new URL(link);
+    const testUrl = new URL(baseUrl);
+    url.protocol = testUrl.protocol;
+    url.host = testUrl.host;
+    url.port = testUrl.port;
+    link = url.toString();
+    
     console.log(`Found verification link (direct pattern): ${link}`);
     return link;
   }
@@ -223,8 +240,8 @@ test.describe('User Registration Flow', () => {
       await confirmPasswordInput.fill(testPassword);
     }
 
-    // Step 3: Submit registration - look for visible submit button
-    const submitButton = page.getByRole('button', { name: 'Register' });
+    // Step 3: Submit registration - target the submit button in the main form
+    const submitButton = page.getByRole('main').getByRole('button', { name: 'Register' });
     await submitButton.waitFor({ state: 'visible', timeout: 5000 });
     await submitButton.click({ force: true });
 
@@ -240,7 +257,12 @@ test.describe('User Registration Flow', () => {
     // Step 6: Extract verification link from email
     const emailBody = email.Content?.Body || '';
     console.log(`Email body content: ${emailBody.slice(0, 500)}...`);
-    const verificationLink = extractVerificationLink(emailBody);
+    
+    // Get the base URL from the current test context
+    const baseUrl = page.url().match(/^https?:\/\/[^\/]+/)?.[0] || 'http://localhost:8083';
+    console.log(`Using base URL for verification: ${baseUrl}`);
+    
+    const verificationLink = extractVerificationLink(emailBody, baseUrl);
     expect(verificationLink).toBeTruthy();
     console.log(`Verification link found: ${verificationLink}`);
 

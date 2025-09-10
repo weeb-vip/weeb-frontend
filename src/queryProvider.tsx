@@ -17,10 +17,12 @@ const queryClient = new QueryClient({
 })
 
 export default function QueryProvider({children}: { children: React.ReactNode }) {
+  const showDevtools = import.meta.env.VITE_ENABLE_DEVTOOLS === 'true'
+  
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools initialIsOpen={true} />
+      {showDevtools && <ReactQueryDevtools initialIsOpen={true} />}
     </QueryClientProvider>
   )
 }

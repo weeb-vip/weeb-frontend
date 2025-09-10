@@ -2,7 +2,7 @@ name: "E2E Tests"
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]  # Only run directly on develop, not main
   pull_request:
     branches: [main, develop]
   workflow_call:  # Allow this workflow to be called by other workflows
@@ -46,16 +46,26 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps ${{ matrix.browser }}
         
-      - name: Build application
-        run: yarn build
+      - name: Build Docker image
+        run: docker build -t weeb-frontend .
         env:
           VITE_GRAPHQL_HOST: https://gateway.staging.weeb.vip/graphql
           VITE_API_HOST: https://api.staging.weeb.vip
+          
+      - name: Start Docker container
+        run: |
+          docker run -d -p 8083:80 --name weeb-frontend-container weeb-frontend
+          # Wait for container to be ready
+          timeout 30 bash -c 'until curl -f http://localhost:8083 > /dev/null 2>&1; do sleep 1; done'
           
       - name: Run E2E tests
         run: yarn test:e2e --project=${{ matrix.browser }}
         env:
           CI: true
+          
+      - name: Stop Docker container
+        if: always()
+        run: docker stop weeb-frontend-container && docker rm weeb-frontend-container
           
       - name: Upload test results
         if: always()
