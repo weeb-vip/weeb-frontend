@@ -77,9 +77,12 @@ export default defineConfig({
     }] : []),
   ],
 
-  webServer: {
-    command: 'yarn dev --host',
-    url: 'http://localhost:8083',
-    reuseExistingServer: !process.env.CI,
-  },
+  // Only start webServer locally, not in CI where Docker handles it
+  ...(process.env.CI ? {} : {
+    webServer: {
+      command: 'yarn dev --host',
+      url: 'http://localhost:8083',
+      reuseExistingServer: true,
+    },
+  }),
 });
