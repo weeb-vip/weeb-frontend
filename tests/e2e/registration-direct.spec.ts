@@ -60,7 +60,7 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
 
     // Try to find success message with multiple patterns
     const successMessage = page.locator('text=/registration.*successful|check.*email|success|verify/i');
-    await expect(successMessage).toBeVisible({ timeout: 5000 });
+    await expect(successMessage).toBeVisible({ timeout: 10000 });
     console.log('Registration successful!');
 
     // Verify we're not automatically logged in

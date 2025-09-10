@@ -28,12 +28,8 @@ const Bootstrap = () => {
   const [config, setConfig] = useState<any>(null)
 
   useEffect(() => {
-    // Initialize dark mode synchronously first
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true'
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark')
-    }
-    useDarkModeStore.getState().setDarkMode(savedDarkMode)
+    // Initialize theme based on system preference or saved setting
+    useDarkModeStore.getState().initializeTheme()
 
     // Start config fetch immediately
     configApi.fetch().then((conf) => {

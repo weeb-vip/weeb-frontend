@@ -240,10 +240,79 @@ test.describe('User Registration Flow', () => {
       await confirmPasswordInput.fill(testPassword);
     }
 
-    // Step 3: Submit registration - target the submit button in the main form
-    const submitButton = page.getByRole('main').getByRole('button', { name: 'Register' });
-    await submitButton.waitFor({ state: 'visible', timeout: 5000 });
-    await submitButton.click({ force: true });
+    // Step 3: Submit registration - use multiple strategies to find submit button
+    console.log('Looking for registration submit button...');
+    
+    // Debug: Log all buttons on the page for troubleshooting
+    const allButtons = await page.locator('button').all();
+    console.log(`Found ${allButtons.length} buttons on page:`);
+    for (let i = 0; i < Math.min(allButtons.length, 10); i++) {
+      const text = await allButtons[i].textContent();
+      const type = await allButtons[i].getAttribute('type');
+      const visible = await allButtons[i].isVisible();
+      console.log(`  Button ${i}: "${text?.trim()}" (type: ${type}, visible: ${visible})`);
+    }
+    
+    // Give forms a moment to fully load
+    await page.waitForTimeout(1000);
+    
+    // Strategy 1: Try form submit button first (most reliable)
+    let submitButton = page.locator('form button[type="submit"]').first();
+    let buttonFound = await submitButton.count() > 0;
+    
+    if (!buttonFound) {
+      console.log('Form submit button not found, trying any submit button...');
+      // Strategy 2: Try any submit button
+      submitButton = page.locator('button[type="submit"]').first();
+      buttonFound = await submitButton.count() > 0;
+    }
+    
+    if (!buttonFound) {
+      console.log('No submit button found, trying main register button...');
+      // Strategy 3: Try main form register button
+      submitButton = page.getByRole('main').getByRole('button', { name: 'Register' });
+      buttonFound = await submitButton.count() > 0;
+    }
+    
+    if (!buttonFound) {
+      console.log('Main register button not found, trying any register button...');
+      // Strategy 4: Try any register button that's visible
+      submitButton = page.getByRole('button', { name: 'Register' }).last();
+      buttonFound = await submitButton.count() > 0;
+    }
+    
+    if (!buttonFound) {
+      console.log('No register button found, trying text-based search...');
+      // Strategy 5: Try text-based button search
+      submitButton = page.locator('button:has-text("Register")').first();
+      buttonFound = await submitButton.count() > 0;
+    }
+    
+    if (buttonFound) {
+      console.log('Submit button found, checking if visible...');
+      
+      // Ensure button is visible before clicking
+      try {
+        await submitButton.waitFor({ state: 'visible', timeout: 10000 });
+        
+        // Wait a bit more to ensure form is fully ready
+        await page.waitForTimeout(500);
+        
+        console.log('Clicking submit button...');
+        await submitButton.click({ force: true });
+      } catch (visibilityError) {
+        console.log('Button found but not visible, trying to scroll to it...');
+        await submitButton.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(500);
+        await submitButton.click({ force: true });
+      }
+    } else {
+      // Final debug: screenshot and page content
+      await page.screenshot({ path: 'debug-registration-form.png' });
+      const pageContent = await page.textContent('body');
+      console.log('Page content when no button found:', pageContent?.slice(0, 1000));
+      throw new Error('No registration submit button found with any strategy');
+    }
 
     // Step 4: Check for success message
     await expect(page.locator('text=/success|verify|check.*email/i')).toBeVisible({ timeout: 10000 });

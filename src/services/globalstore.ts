@@ -20,6 +20,8 @@ interface DarkModeState {
   isDarkMode: boolean
   toggleDarkMode: () => void
   setDarkMode: (dark: boolean) => void
+  initializeTheme: () => void
+  useSystemTheme: () => void
 }
 
 export const useLoggedInStore = create<LoggedInState>((set) => ({
@@ -54,8 +56,51 @@ const updateThemeColor = (isDark: boolean) => {
   }
 }
 
+const getInitialTheme = (): boolean => {
+  if (typeof window === 'undefined') return false
+  
+  const savedTheme = localStorage.getItem('darkMode')
+  if (savedTheme !== null) {
+    return savedTheme === 'true'
+  }
+  
+  // If no saved preference, use system preference
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
 export const useDarkModeStore = create<DarkModeState>((set, get) => ({
-  isDarkMode: typeof window !== 'undefined' ? localStorage.getItem('darkMode') === 'true' : false,
+  isDarkMode: getInitialTheme(),
+  initializeTheme: () => {
+    if (typeof window !== 'undefined') {
+      const initialTheme = getInitialTheme()
+      set({ isDarkMode: initialTheme })
+      
+      if (initialTheme) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+      updateThemeColor(initialTheme)
+      
+      // Listen for system theme changes if no saved preference
+      const savedTheme = localStorage.getItem('darkMode')
+      if (savedTheme === null) {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+        const handleChange = (e: MediaQueryListEvent) => {
+          const systemDark = e.matches
+          set({ isDarkMode: systemDark })
+          if (systemDark) {
+            document.documentElement.classList.add('dark')
+          } else {
+            document.documentElement.classList.remove('dark')
+          }
+          updateThemeColor(systemDark)
+        }
+        mediaQuery.addEventListener('change', handleChange)
+        return () => mediaQuery.removeEventListener('change', handleChange)
+      }
+    }
+  },
   toggleDarkMode: () => {
     const newDarkMode = !get().isDarkMode
     set({ isDarkMode: newDarkMode })
@@ -79,6 +124,40 @@ export const useDarkModeStore = create<DarkModeState>((set, get) => ({
         document.documentElement.classList.remove('dark')
       }
       updateThemeColor(dark)
+    }
+  },
+  useSystemTheme: () => {
+    if (typeof window !== 'undefined') {
+      // Clear saved preference to use system theme
+      localStorage.removeItem('darkMode')
+      
+      // Get current system preference
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      set({ isDarkMode: systemDark })
+      
+      if (systemDark) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+      updateThemeColor(systemDark)
+      
+      // Set up listener for system theme changes
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handleChange = (e: MediaQueryListEvent) => {
+        const newSystemDark = e.matches
+        set({ isDarkMode: newSystemDark })
+        if (newSystemDark) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+        updateThemeColor(newSystemDark)
+      }
+      
+      // Remove any existing listener first
+      mediaQuery.removeEventListener('change', handleChange)
+      mediaQuery.addEventListener('change', handleChange)
     }
   },
 }))
