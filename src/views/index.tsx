@@ -1,7 +1,6 @@
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {CurrentlyAiringQuery, GetHomePageDataQuery, Status} from "../gql/graphql";
+import {useQueryClient} from "@tanstack/react-query";
+import {Status} from "../gql/graphql";
 import {format} from "date-fns";
-import {fetchCurrentlyAiringWithDates, fetchHomePageData, fetchSeasonalAnime, upsertAnime} from "../services/queries";
 import {useState, useMemo, Fragment} from "react";
 import AnimeCard, {AnimeCardSkeleton, AnimeCardStyle} from "../components/AnimeCard";
 import {Link, useNavigate} from "react-router-dom";
@@ -19,6 +18,10 @@ import {getCurrentSeason, getSeasonDisplayName, getSeasonOptions} from "../utils
 import {Menu, Transition} from "@headlessui/react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronDown} from "@fortawesome/free-solid-svg-icons";
+import {useHomePageData} from "../hooks/useHomePageData";
+import {useSeasonalAnime} from "../hooks/useSeasonalAnime";
+import {useCurrentlyAiring} from "../hooks/useCurrentlyAiring";
+import {useAddAnime} from "../hooks/useAddAnime";
 
 
 function Index() {
@@ -34,19 +37,17 @@ function Index() {
   const {
     data: homeData,
     isLoading: homeDataIsLoading,
-  } = useQuery<GetHomePageDataQuery>(fetchHomePageData())
-  
+  } = useHomePageData();
+
   const {
     data: seasonalData,
     isLoading: seasonalDataIsLoading,
-  } = useQuery(fetchSeasonalAnime(selectedSeason))
-  // Fetch currently airing with dates: yesterday to 7 days from now
-  const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // Yesterday
-  const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+  } = useSeasonalAnime(selectedSeason);
+
   const {
     data: currentAiringData,
     isLoading: currentAiringIsLoading,
-  } = useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiringWithDates(startDate, endDate))
+  } = useCurrentlyAiring();
   const navigate = useNavigate()
 
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
@@ -137,19 +138,7 @@ function Index() {
   // Determine which anime to show in banner (use sorted data - get the underlying airingInfo)
   const bannerAnime = hoveredAnime || (sortedCurrentlyAiring[0]?.airingInfo);
 
-  const mutateAddAnime = useMutation({
-    ...upsertAnime(),
-    onSuccess: async (data) => {
-      debug.anime("Added anime", data)
-      // Invalidate queries to refresh the data
-      await queryClient.invalidateQueries(["homedata"]);
-      await queryClient.invalidateQueries(["currentlyAiring"]);
-      await queryClient.invalidateQueries(["user-animes"]);
-    },
-    onError: (error) => {
-      debug.error("Error adding anime", error)
-    }
-  })
+  const mutateAddAnime = useAddAnime();
 
   const addAnime = async (id: string, animeId: string) => {
     setAnimeStatuses((prev) => ({...prev, [id]: "loading"}));

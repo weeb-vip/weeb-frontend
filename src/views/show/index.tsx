@@ -1,12 +1,13 @@
 import {useNavigate, useParams} from "react-router-dom";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {fetchDetails, upsertAnime} from "../../services/queries";
+import {useQueryClient} from "@tanstack/react-query";
+import {useShowDetails} from "../../hooks/useShowDetails";
+import {useAddAnime} from "../../hooks/useAddAnime";
 import {format} from "date-fns";
 import Tabs from "../../components/Tabs";
 import {useEffect, useState} from "react";
 import Button, {ButtonColor} from "../../components/Button";
 import {StatusType} from "../../components/Button/Button";
-import {GetAnimeDetailsByIdQuery, Status} from "../../gql/graphql";
+import {Status} from "../../gql/graphql";
 import {GetImageFromAnime} from "../../services/utils";
 import {SafeImage} from "../../components/SafeImage/SafeImage";
 import Tag from "./components/tag";
@@ -55,10 +56,7 @@ export default function Index() {
 
   const {id} = useParams();
   const navigate = useNavigate();
-  const {data: show, isLoading} = useQuery<GetAnimeDetailsByIdQuery>({
-    ...fetchDetails(id || ""),
-    enabled: !!id,
-  });
+  const {data: show, isLoading} = useShowDetails(id);
   useEffect(() => {
     setUseFallback(false);
     setBgLoaded(false);
@@ -91,16 +89,7 @@ export default function Index() {
   }, []);
 
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
-  const mutateAddAnime = useMutation({
-    ...upsertAnime(),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["homedata"]);
-      queryClient.invalidateQueries(["currently-airing"]);
-      queryClient.invalidateQueries(["anime-details", id || ""]);
-    },
-    onError: () => {
-    },
-  });
+  const mutateAddAnime = useAddAnime();
 
   const addAnime = async (animeId: string) => {
     setAnimeStatuses((prev) => ({...prev, [animeId]: "loading"}));

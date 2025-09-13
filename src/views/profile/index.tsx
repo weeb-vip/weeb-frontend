@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { getUser } from "../../services/queries";
+import { useUser } from "../../hooks/useUser";
 import Loader from "../../components/Loader";
 import ProfileDashboard from "../../components/ProfileDashboard";
 import ProfileAvatar from "../../components/ProfileAvatar";
 import { ProfileImageUpload } from "../../components/ProfileImageUpload";
 
 export default function ProfilePage() {
-  const { data: user, isLoading } = useQuery(getUser());
+  const { data: user, isLoading } = useUser();
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   if (isLoading || !user) return <Loader />;

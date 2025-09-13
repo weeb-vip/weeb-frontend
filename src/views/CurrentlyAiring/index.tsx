@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import {fetchCurrentlyAiring, fetchCurrentlyAiringWithDates, upsertAnime} from "../../services/queries";
+import { useCurrentlyAiringWithDates } from "../../hooks/useCurrentlyAiringWithDates";
+import { useAddAnime } from "../../hooks/useAddAnime";
 import {CurrentlyAiringQuery, CurrentlyAiringWithDateQuery, Status} from "../../gql/graphql";
 import Loader from "../../components/Loader";
 import AnimeCard, { AnimeCardStyle } from "../../components/AnimeCard";
@@ -20,24 +20,16 @@ type AiringList = NonNullable<CurrentlyAiringQuery['currentlyAiring']>;
 type AiringItem = AiringList[number];
 
 export default function CurrentlyAiringPage() {
-  const { data, isLoading } = useQuery<CurrentlyAiringWithDateQuery>(
-    // past day to next 7 days
-    fetchCurrentlyAiringWithDates(new Date(Date.now() - 24 * 60 * 60 * 1000), null, 7)
+  const { data, isLoading } = useCurrentlyAiringWithDates(
+    new Date(Date.now() - 24 * 60 * 60 * 1000), // past day
+    null, // no end date
+    7 // next 7 days
   );
   const { getCountdown } = useAnimeCountdowns();
   const navigate = useNavigate();
 
   const [animeStatuses, setAnimeStatuses] = useState<Record<string, StatusType>>({});
-
-  const mutateAddAnime = useMutation({
-    ...upsertAnime(),
-    onSuccess: (data) => {
-      debug.anime("Added anime", data);
-    },
-    onError: (error) => {
-      debug.error("Error adding anime", error);
-    },
-  });
+  const mutateAddAnime = useAddAnime();
 
   const addAnime = async (id: string) => {
     setAnimeStatuses((prev) => ({ ...prev, [id]: "loading" }));
