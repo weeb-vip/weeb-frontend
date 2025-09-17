@@ -1,20 +1,3 @@
-import type {IConfig} from "../../config/interfaces.ts";
-
-export function getImageFromAnime(anime: any): string {
-  if (!anime) {
-    return "not found.png";
-  }
-  if (anime.title_en) {
-    anime.titleEn = anime.title_en;
-  }
-  if (anime.title_jp) {
-    anime.titleJp = anime.title_jp;
-  }
-
-  const name = anime.titleEn || anime.titleJp || anime.name || "not found";
-  return name;
-}
-
 import { configStore } from '../stores/config';
 
 export function getCdnUrl(): string {
@@ -34,12 +17,12 @@ export function getCdnUrl(): string {
 
 export function getSafeImageUrl(src: string, path?: string): string {
   const cdnUrl = getCdnUrl();
-  // Replace %20 with + to match React SafeImage behavior
-  const encodedSrc = src.toLowerCase().replace(/ /g, "_");
+  // Replace %20 with + to match React SafeImage behavior exactly
+  const encodedSrc = src.replace(/%20/g, "+");
   // Path handling - add trailing slash if path exists
   const pathPrefix = path ? `${path}/` : "";
-  // Return the properly encoded URL
-  return `${cdnUrl}/${pathPrefix}${encodeURIComponent(escapeUri(encodedSrc))}`;
+  // Return the properly encoded URL - only single encodeURIComponent like React
+  return `${cdnUrl}/${pathPrefix}${escapeUri(encodedSrc)}`;
 }
 
 function escapeUri(str) {

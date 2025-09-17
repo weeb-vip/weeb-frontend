@@ -10335,7 +10335,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esm-env@npm:^1.2.1":
+"esm-env@npm:^1.0.0, esm-env@npm:^1.2.1":
   version: 1.2.2
   resolution: "esm-env@npm:1.2.2"
   checksum: 10c0/3d25c973f2fd69c25ffff29c964399cea573fe10795ecc1d26f6f957ce0483d3254e1cceddb34bf3296a0d7b0f1d53a28992f064ba509dfe6366751e752c4166
@@ -17525,6 +17525,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"runed@npm:^0.28.0":
+  version: 0.28.0
+  resolution: "runed@npm:0.28.0"
+  dependencies:
+    esm-env: "npm:^1.0.0"
+  peerDependencies:
+    svelte: ^5.7.0
+  checksum: 10c0/f0914c4bccf0cdd32c5d7ec6a3e83f3edf684b2f9515bbf545864aa9ed6ac4ffb7e96d4b737a1f2e46f14e78db003c0e9d1923ebcf31ff9b4c9573b2df1e0712
+  languageName: node
+  linkType: hard
+
 "rxjs@npm:^7.5.5":
   version: 7.8.1
   resolution: "rxjs@npm:7.8.1"
@@ -18740,6 +18751,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"svelte-sonner@npm:^1.0.5":
+  version: 1.0.5
+  resolution: "svelte-sonner@npm:1.0.5"
+  dependencies:
+    runed: "npm:^0.28.0"
+  peerDependencies:
+    svelte: ^5.0.0
+  checksum: 10c0/881626076d3eab3c61aaeb1fc7356706615b38f555b18a6e75a87866dc1d15f919036bb326006cf1b79cf28602e3c42faaa22ea23619ee960320da7c54751d7e
+  languageName: node
+  linkType: hard
+
 "svelte2tsx@npm:^0.7.42":
   version: 0.7.43
   resolution: "svelte2tsx@npm:0.7.43"
@@ -19212,6 +19234,7 @@ __metadata:
     storybook: "npm:^8.4.7"
     svelte: "npm:^5.38.10"
     svelte-fa: "npm:^4.0.4"
+    svelte-sonner: "npm:^1.0.5"
     swr: "npm:^2.1.2"
     tailwindcss: "npm:^3.3.1"
     ts-jest: "npm:^29.4.1"

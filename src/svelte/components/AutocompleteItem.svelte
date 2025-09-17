@@ -1,7 +1,7 @@
 <script lang="ts">
   import { format, isValid } from 'date-fns';
   import SafeImage from './SafeImage.svelte';
-  import { getImageFromAnime } from '../utils/image';
+  import { GetImageFromAnime } from '../../services/utils';
 
   export let item: any;
   export let onClick: () => void;
@@ -34,7 +34,7 @@
 >
   <div class="flex-shrink-0 mr-3">
     <SafeImage
-      src={getImageFromAnime(item)}
+      src={GetImageFromAnime(item)}
       alt={item.title_en || item.name || ''}
       fallbackSrc="/assets/not found.jpg"
       style="height: 50px"

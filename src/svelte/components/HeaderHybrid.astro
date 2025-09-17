@@ -7,9 +7,9 @@ import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
 
 <header class="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
 
-  <!-- Mobile Header -->
-  <div class="flex sm:hidden w-full items-center space-x-4">
-    <a href="/">
+  <!-- Mobile/Tablet Header -->
+  <div class="flex lg:hidden w-full items-center space-x-3">
+    <a href="/" class="flex-shrink-0">
       <img
         src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
         alt="logo"
@@ -21,17 +21,20 @@ import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
       />
     </a>
 
-    <div class="flex-grow">
+    <div class="flex-grow px-2">
       <AutocompleteAdvanced client:load />
     </div>
 
-    <UserProfileHandler client:load isMobile={true} />
+    <div class="flex-shrink-0">
+      <UserProfileHandler client:load isMobile={true} />
+    </div>
   </div>
 
   <!-- Desktop Header -->
-  <div class="hidden sm:flex flex-row items-center justify-between space-x-4 mt-4 sm:mt-0">
-    <div class="flex items-center space-x-4">
-      <a href="/" class="flex flex-row space-x-4">
+  <div class="hidden lg:block relative h-16">
+    <!-- Left side: Logo and branding -->
+    <div class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center space-x-4">
+      <a href="/" class="flex flex-row items-center space-x-4">
         <img
           src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
           alt="logo"
@@ -71,11 +74,17 @@ import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
       </a>
     </div>
 
-    <div class="flex-grow max-w-md">
-      <AutocompleteAdvanced client:load />
+    <!-- Center: Autocomplete (positioned between left and right elements) -->
+    <div class="absolute top-1/2 -translate-y-1/2 px-4" style="left: 22rem; right: 12rem;">
+      <div class="flex justify-center">
+        <div class="w-full max-w-sm">
+          <AutocompleteAdvanced client:load />
+        </div>
+      </div>
     </div>
 
-    <div class="flex items-center space-x-4">
+    <!-- Right side: Dark mode and user profile -->
+    <div class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center space-x-6">
       <!-- Dark Mode Toggle -->
       <button
         class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300 w-10 h-10 flex items-center justify-center"
@@ -89,7 +98,9 @@ import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
       </button>
 
       <!-- User Profile Handler -->
-      <UserProfileHandler client:load isMobile={false} />
+      <div class="ml-6">
+        <UserProfileHandler client:load isMobile={false} />
+      </div>
     </div>
   </div>
 </header>

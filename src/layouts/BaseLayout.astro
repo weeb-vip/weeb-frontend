@@ -21,7 +21,7 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
 ---
 
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={description || defaultDescription} />
@@ -277,6 +277,28 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/logo6-rev-sm_sm.png">
 
+    <!-- Theme initialization (blocking to prevent flash) -->
+    <script>
+      // Initialize theme immediately to prevent flash
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        let shouldUseDark = false;
+
+        if (savedTheme === 'dark') {
+          shouldUseDark = true;
+        } else if (savedTheme === 'light') {
+          shouldUseDark = false;
+        } else {
+          // No saved preference, use system preference
+          shouldUseDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        if (shouldUseDark) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+
     <!-- Preload critical resources -->
     <link rel="preconnect" href="https://gateway.staging.weeb.vip">
     <link rel="preconnect" href="https://weeb-api.staging.weeb.vip">
@@ -289,16 +311,35 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
 
     <!-- Initialize app - config should already be loaded by middleware -->
     <script>
-      // Initialize theme based on system preference or saved setting
-      const savedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const shouldUseDark = savedTheme === 'dark' || (savedTheme !== 'light' && prefersDark);
+      // Initialize theme: localStorage first, then system preference
+      function initializeTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        let shouldUseDark = false;
 
-      if (shouldUseDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
+        if (savedTheme === 'dark') {
+          shouldUseDark = true;
+        } else if (savedTheme === 'light') {
+          shouldUseDark = false;
+        } else {
+          // No saved preference, use system preference
+          shouldUseDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        if (shouldUseDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+
+        console.log('Theme initialized:', {
+          savedTheme,
+          systemPrefersDark: window.matchMedia('(prefers-color-scheme: dark)').matches,
+          isDarkMode: shouldUseDark
+        });
       }
+
+      // Initialize immediately
+      initializeTheme();
 
       // Config should already be loaded by SSR middleware and available globally
       if (typeof window !== 'undefined' && !window.config) {

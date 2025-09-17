@@ -20,8 +20,10 @@
 
   function handleError(event: Event) {
     const img = event.target as HTMLImageElement;
-    // img.onerror = null; // Prevent infinite loop
-    // img.src = fallbackSrc;
+    if (img.src !== fallbackSrc) {
+      img.onerror = null; // Prevent infinite loop
+      img.src = fallbackSrc;
+    }
     // Dispatch error event for parent component if needed
     dispatch('error', event);
   }

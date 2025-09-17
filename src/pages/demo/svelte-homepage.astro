@@ -1,0 +1,25 @@
+---
+import HeaderHybrid from '../../svelte/components/HeaderHybrid.astro';
+import HomepageDemo from '../../svelte/components/HomepageDemo.svelte';
+export const prerender = false;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Svelte Homepage Demo</title>
+  </head>
+  <body class="bg-white dark:bg-gray-900 min-h-screen">
+    <!-- Header -->
+    <HeaderHybrid />
+
+    <!-- Main content with same padding as React layout -->
+    <main class="w-full py-8 px-4 lg:px-16 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+      <!-- Homepage Demo Component -->
+      <HomepageDemo client:load />
+    </main>
+  </body>
+</html>

@@ -1,16 +1,13 @@
 ---
-import DefaultLayout from '../layouts/DefaultLayout.astro';
-import HomePage from '../components/islands/HomePage';
+import SvelteLayout from '../layouts/SvelteLayout.astro';
+import HomepageDemo from '../svelte/components/HomepageDemo.svelte';
 
-// Static generation for homepage
-
-// Fetch initial data at build time for better SEO and performance
-// This will be hydrated client-side for dynamic updates
+export const prerender = false;
 ---
 
-<DefaultLayout
+<SvelteLayout
   title="Home"
   description="Discover and track your favorite anime. Get notifications for new episodes, explore seasonal anime, and manage your watchlist."
 >
-  <HomePage client:only="react" />
-</DefaultLayout>
+  <HomepageDemo client:load/>
+</SvelteLayout>

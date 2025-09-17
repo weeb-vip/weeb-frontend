@@ -187,8 +187,15 @@ export const fetchCurrentlyAiring = () => ({
   queryKey: ["currently-airing"],
   queryFn: async () => {
     return authenticatedRequest(async (client) => {
+      const defaultStartDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       // @ts-ignore
-      return client.request<CurrentlyAiringQuery>(getCurrentlyAiring)
+      return client.request<CurrentlyAiringQuery>(getCurrentlyAiringWithDates, {
+        input: {
+          startDate: defaultStartDate,
+          endDate: defaultEndDate,
+        }
+      });
     });
   },
 })

@@ -1,5 +1,7 @@
 ---
 import HeaderHybrid from '../../svelte/components/HeaderHybrid.astro';
+import AnimeCard from '../../svelte/components/AnimeCard.svelte';
+import AnimeStatusDropdown from '../../svelte/components/AnimeStatusDropdown.svelte';
 export const prerender = false;
 ---
 
@@ -56,6 +58,167 @@ export const prerender = false;
             <li>• Navigation links and login button</li>
             <li>• Smooth animations and transitions</li>
           </ul>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Anime Card Component Demo
+          </h2>
+          <p class="text-gray-600 dark:text-gray-400 mb-4">
+            Svelte version of the AnimeCard component with different styles and variants.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Detail Style Card -->
+            <div class="space-y-2">
+              <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Detail Style</h3>
+              <AnimeCard
+                client:load
+                style="detail"
+                title="Attack on Titan"
+                description="Humanity fights for survival against giant humanoid Titans."
+                episodes={25}
+                episodeLength="24 min"
+                year="2013"
+                image="https://cdn.myanimelist.net/images/anime/10/47347l.jpg"
+                id="16498"
+                airTime={{
+                  show: true,
+                  text: "Airing in 2 days",
+                  variant: "countdown"
+                }}
+                entry={{
+                  status: "WATCHING"
+                }}
+              >
+                <div slot="options" class="flex gap-2">
+                  <AnimeStatusDropdown
+                    client:load
+                    entry={{
+                      id: "1",
+                      anime: { id: "16498" },
+                      status: "WATCHING"
+                    }}
+                    variant="compact"
+                    on:statusChange={(e) => console.log('Status changed:', e.detail)}
+                    on:delete={(e) => console.log('Deleted:', e.detail)}
+                  />
+                </div>
+              </AnimeCard>
+            </div>
+
+            <!-- Episode Style Card -->
+            <div class="space-y-2">
+              <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Episode Style</h3>
+              <AnimeCard
+                client:load
+                style="episode"
+                title="One Piece"
+                description="Pirate adventure anime series."
+                episodes="1000+"
+                episodeLength="23 min"
+                year="1999"
+                image="https://cdn.myanimelist.net/images/anime/6/73245l.jpg"
+                id="21"
+                episodeTitle="The Great Battle Begins!"
+                episodeNumber="1087"
+                airdate="Nov 14, 2023"
+                airTime={{
+                  show: true,
+                  text: "Currently airing",
+                  variant: "airing"
+                }}
+                entry={{
+                  status: "COMPLETED"
+                }}
+              >
+                <div slot="options" class="flex gap-2">
+                  <AnimeStatusDropdown
+                    client:load
+                    entry={{
+                      id: "2",
+                      anime: { id: "21" },
+                      status: "COMPLETED"
+                    }}
+                    variant="icon-only"
+                    on:statusChange={(e) => console.log('Status changed:', e.detail)}
+                    on:delete={(e) => console.log('Deleted:', e.detail)}
+                  />
+                </div>
+              </AnimeCard>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Anime Status Dropdown Demo
+          </h2>
+          <p class="text-gray-600 dark:text-gray-400 mb-4">
+            Different variants of the Svelte AnimeStatusDropdown component.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="space-y-2">
+              <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Default</h3>
+              <AnimeStatusDropdown
+                client:load
+                entry={{
+                  id: "3",
+                  anime: { id: "1" },
+                  status: "WATCHING"
+                }}
+                variant="default"
+                on:statusChange={(e) => console.log('Status changed:', e.detail)}
+                on:delete={(e) => console.log('Deleted:', e.detail)}
+              />
+            </div>
+
+            <div class="space-y-2">
+              <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Compact</h3>
+              <AnimeStatusDropdown
+                client:load
+                entry={{
+                  id: "4",
+                  anime: { id: "2" },
+                  status: "COMPLETED"
+                }}
+                variant="compact"
+                on:statusChange={(e) => console.log('Status changed:', e.detail)}
+                on:delete={(e) => console.log('Deleted:', e.detail)}
+              />
+            </div>
+
+            <div class="space-y-2">
+              <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Hero</h3>
+              <AnimeStatusDropdown
+                client:load
+                entry={{
+                  id: "5",
+                  anime: { id: "3" },
+                  status: "PLANTOWATCH"
+                }}
+                variant="hero"
+                on:statusChange={(e) => console.log('Status changed:', e.detail)}
+                on:delete={(e) => console.log('Deleted:', e.detail)}
+              />
+            </div>
+
+            <div class="space-y-2">
+              <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Icon Only</h3>
+              <AnimeStatusDropdown
+                client:load
+                entry={{
+                  id: "6",
+                  anime: { id: "4" },
+                  status: "ONHOLD"
+                }}
+                variant="icon-only"
+                on:statusChange={(e) => console.log('Status changed:', e.detail)}
+                on:delete={(e) => console.log('Deleted:', e.detail)}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

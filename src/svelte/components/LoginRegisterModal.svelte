@@ -131,7 +131,7 @@
   }
 </script>
 
-<div class="w-[360px] sm:w-[400px] mx-auto p-8 sm:p-10 transition-colors duration-300">
+<div class="w-full max-w-[360px] sm:max-w-[400px] mx-auto p-6 sm:p-8 transition-colors duration-300">
   <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100 text-center">
     {!isRegisterState ? 'Login' : 'Register'}
   </h2>
