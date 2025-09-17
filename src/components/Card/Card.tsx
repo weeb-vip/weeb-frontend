@@ -1,4 +1,4 @@
-interface CardProps {
+export interface CardProps {
   children: React.ReactNode
   className?: string
   onClick?: () => void

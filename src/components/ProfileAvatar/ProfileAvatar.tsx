@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 
 interface ProfileAvatarProps {
   username?: string;
@@ -62,9 +61,9 @@ export function ProfileAvatar({
 
   if (linkToProfile) {
     return (
-      <Link to="/profile" className="block">
+      <a href="/profile" className="block">
         {avatarContent}
-      </Link>
+      </a>
     );
   }
 

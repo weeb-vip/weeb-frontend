@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { animeNotificationService } from '../services/animeNotifications';
-import debug from '../utils/debug';
 
 interface CountdownState {
   countdown: string;

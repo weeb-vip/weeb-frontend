@@ -1,4 +1,4 @@
-import {useNavigate, useParams} from "react-router-dom";
+import {useNavigate} from "../../utils/navigation";
 import {useQueryClient} from "@tanstack/react-query";
 import {useShowDetails} from "../../hooks/useShowDetails";
 import {useAddAnime} from "../../hooks/useAddAnime";
@@ -6,7 +6,7 @@ import {format} from "date-fns";
 import Tabs from "../../components/Tabs";
 import {useEffect, useState} from "react";
 import Button, {ButtonColor} from "../../components/Button";
-import {StatusType} from "../../components/Button/Button";
+import {type StatusType} from "../../components/Button/Button";
 import {Status} from "../../gql/graphql";
 import {GetImageFromAnime} from "../../services/utils";
 import {SafeImage} from "../../components/SafeImage/SafeImage";
@@ -47,14 +47,15 @@ const renderField = (label: string, value: string | string[] | null | undefined)
 
 
 export default function Index() {
-  const queryClient = useQueryClient();
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [bgLoaded, setBgLoaded] = useState(false);
   const [useFallback, setUseFallback] = useState(false);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
 
 
-  const {id} = useParams();
+  // Get id from URL manually since we're not using React Router
+  const id = window.location.pathname.split('/').pop();
+  console.log('THE ID', id);
   const navigate = useNavigate();
   const {data: show, isLoading} = useShowDetails(id);
   useEffect(() => {

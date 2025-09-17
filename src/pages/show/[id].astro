@@ -1,0 +1,18 @@
+---
+import StaticLayout from '../../layouts/StaticLayout.astro';
+import ShowContentLoader from '../../components/islands/ShowContentLoader';
+
+// Get the anime ID from the URL parameters
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect('/404');
+}
+---
+
+<StaticLayout
+  title="Anime Details"
+  description="View anime details, episodes, and information"
+>
+  <ShowContentLoader animeId={id} client:only="react" />
+</StaticLayout>

@@ -1,19 +1,18 @@
 import {Menu, Transition} from "@headlessui/react";
-import {Status, Anime} from "../../gql/graphql";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronDown, faTrash, faEllipsis} from "@fortawesome/free-solid-svg-icons";
 import {Fragment, useRef, useState, useEffect, useCallback} from "react";
-import {createPortal} from "react-dom";
 import Button, {ButtonColor} from "../Button";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
+import type {Anime} from "../../gql/graphql";
+import {Status} from "../../gql/graphql";
 import {deleteAnime, upsertAnime} from "../../services/queries";
-
-export const statusLabels: Record<Status, string> = {
-  [Status.Completed]: "Completed",
-  [Status.Dropped]: "Dropped",
-  [Status.Onhold]: "On Hold",
-  [Status.Plantowatch]: "Watchlist",
-  [Status.Watching]: "Watching",
+export const statusLabels: Record<string, string> = {
+  'COMPLETED': "Completed",
+  'DROPPED': "Dropped",
+  'ONHOLD': "On Hold",
+  'PLANTOWATCH': "Watchlist",
+  'WATCHING': "Watching",
 };
 
 interface AnimeStatusDropdownProps {
@@ -168,7 +167,7 @@ export function AnimeStatusDropdown({
       <div key={`user-anime-${entry.id}-actions`} className={`${getContainerClasses()} ${className || ''}`}>
         <Menu as="div" className="relative inline-block text-left">
           <div>
-            <Menu.Button className={getButtonClasses()} title={`Status: ${statusLabels[entry.status ?? Status.Plantowatch]}`}>
+            <Menu.Button className={getButtonClasses()} title={`Status: ${statusLabels[entry.status ?? 'PLAN_TO_WATCH']}`}>
               <FontAwesomeIcon icon={faEllipsis} className="w-3 h-3 text-gray-600 dark:text-gray-300" />
             </Menu.Button>
           </div>
@@ -228,7 +227,7 @@ export function AnimeStatusDropdown({
       <Menu as="div" className="relative inline-block text-left">
         <div>
           <Menu.Button className={getButtonClasses()}>
-            <span>{statusLabels[entry.status ?? Status.Plantowatch]}</span>
+            <span>{statusLabels[entry.status ?? 'PLAN_TO_WATCH']}</span>
             <FontAwesomeIcon icon={faChevronDown} className="w-3 h-3 ml-2 text-gray-500 dark:text-gray-400" />
           </Menu.Button>
         </div>

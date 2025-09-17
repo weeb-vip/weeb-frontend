@@ -2,11 +2,11 @@ import Card from "../Card";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCalendar, faClapperboard, faClock, faBookmark} from "@fortawesome/free-solid-svg-icons";
 import {SafeImage} from "../SafeImage/SafeImage";
-import {Link} from "react-router-dom";
+// Using anchor tags instead of React Router Link
 import {getAirTimeDisplay} from "../../services/airTimeUtils";
 import {useAnimeCountdowns} from "../../hooks/useAnimeCountdowns";
 import {useFlags} from "flagsmith/react";
-import {UserAnime} from "../../gql/graphql";
+import type {UserAnime} from "../../gql/graphql";
 import {statusLabels} from "../AnimeStatusDropdown/AnimeStatusDropdown";
 
 type UserAnimeStatus = Pick<UserAnime, "status">;
@@ -85,7 +85,9 @@ const cardStyles = {
 
 function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
   const { getCountdown } = useAnimeCountdowns();
-  const flags = useFlags(['watchlist_indicators']);
+  // Temporarily disable flags to prevent crashes until Flagsmith is properly configured
+  // const flags = useFlags(['watchlist_indicators']);
+  const flags = { watchlist_indicators: null };
 
   // Get real-time countdown from web worker if available
   const workerCountdown = (props as AnimeCardProps).id ? getCountdown((props as AnimeCardProps).id!) : null;
@@ -122,14 +124,14 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
       className={`flex ${(props as AnimeCardProps).forceListLayout ? "flex-row" : "sm:flex-row md:flex-col"} dark:bg-gray-800 rounded-md shadow w-full justify-center transition-all duration-300 ${props.className || ''} relative`}
     >
       {/* Watchlist indicator */}
-      {flags.watchlist_indicators && (props as AnimeCardProps).entry?.status && (
+      {flags.watchlist_indicators?.getValue() && (props as AnimeCardProps).entry?.status && (
         <div className="absolute top-2 left-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg z-10">
           <FontAwesomeIcon icon={faBookmark} className="mr-1" />
           {(props as AnimeCardProps).entry?.status ? statusLabels[(props as AnimeCardProps).entry?.status as string] : 'Unknown'}
         </div>
       )}
 
-      <Link to={`/show/${(props as AnimeCardProps).id}`}
+      <a href={`/show/${(props as AnimeCardProps).id}`}
             className={`flex flex-col flex-none bg-white dark:bg-gray-800 ${cardStyles[props.style]} flex-grow overflow-hidden transition-colors duration-300 ${(props as AnimeCardProps).forceListLayout ? "rounded-l-md" : "rounded-l-md lg:rounded-bl-none lg:rounded-t-md"} `}>
         <SafeImage
           src={props.image}
@@ -145,14 +147,14 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
             currentTarget.src = "/assets/not found.jpg";
           }}
         />
-      </Link>
+      </a>
       {props.style === AnimeCardStyle.DETAIL && (
         <div
           className={`flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group`}
         >
 
 
-          <Link to={`/show/${(props as AnimeCardProps).id}`} className={"flex overflow-hidden flex-col w-full"}>
+          <a href={`/show/${(props as AnimeCardProps).id}`} className={"flex overflow-hidden flex-col w-full"}>
             <div className="group w-full">
               {/* Default (visible) */}
               <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden text-gray-900 dark:text-gray-100">
@@ -190,7 +192,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
                 </div>
               )}
             </div>
-          </Link>
+          </a>
           <div
             className={`flex flex-wrap gap-2 options w-full ${
               (props as AnimeCardProps).forceListLayout ? 'justify-start' : 'justify-center'
@@ -212,7 +214,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
           className={`flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full  group`}
         >
 
-          <Link to={`/show/${(props as AnimeCardProps).id}`} className={"flex flex-col overflow-hidden w-full"}>
+          <a href={`/show/${(props as AnimeCardProps).id}`} className={"flex flex-col overflow-hidden w-full"}>
             <div className="group w-full">
               {/* Default (visible) */}
               <span className="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden text-gray-900 dark:text-gray-100">
@@ -257,7 +259,7 @@ function AnimeCard(props: AnimeCardProps | AnimeEpisodeCardProps) {
                   className={`flex-grow text-md text-base space-x-4 text-gray-600 dark:text-gray-400`}><span>{(props as AnimeEpisodeCardProps).airdate}</span></span>
               )}
             </div>
-          </Link>
+          </a>
           {/* if list align left */}
           <div
             className={`flex flex-wrap gap-2 options w-full ${

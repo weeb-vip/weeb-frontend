@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faLock } from '@fortawesome/free-solid-svg-icons';
-import { LoginInput, SigninResult } from "../../gql/graphql";
+import { type LoginInput, type SigninResult } from "../../gql/graphql";
 import {login, refreshTokenSimple, register} from "../../services/queries";
 import { TokenRefresher } from "../../services/token_refresher";
 import { useMutation } from "@tanstack/react-query";
@@ -11,6 +10,7 @@ import Loader from "../Loader";
 import FormInput from "../FormInput";
 import Button, { ButtonColor } from "../Button";
 import debug from "../../utils/debug";
+import { AuthStorage } from "../../utils/auth-storage";
 
 export interface LoginRegisterModalProps {
   closeFn?: () => void;
@@ -35,8 +35,7 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
     ...login(),
     // @ts-ignore
     onSuccess: (response: SigninResult, _variables: LoginInput) => {
-      localStorage.setItem("authToken", response.Credentials.token);
-      localStorage.setItem("refreshToken", response.Credentials.refresh_token);
+      AuthStorage.setTokens(response.Credentials.token, response.Credentials.refresh_token);
       setLoggedIn();
       TokenRefresher.getInstance(refreshTokenSimple).start(response.Credentials.token);
       setErrorMessage("");
@@ -200,22 +199,22 @@ export default function LoginRegisterModal({ closeFn }: LoginRegisterModalProps)
       {!isRegisterState && (
         <div className="mt-4 text-center space-y-2">
           <div>
-            <Link
-              to="/auth/password-reset-request"
+            <a
+              href="/auth/password-reset-request"
               onClick={closeFn}
               className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
             >
               Forgot your password?
-            </Link>
+            </a>
           </div>
           <div>
-            <Link
-              to="/auth/resend-verification"
+            <a
+              href="/auth/resend-verification"
               onClick={closeFn}
               className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
             >
               Resend email verification
-            </Link>
+            </a>
           </div>
         </div>
       )}

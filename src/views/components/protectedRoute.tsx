@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import {redirect, useLocation} from 'react-router-dom'
+// No longer using React Router, but keeping the basic structure
 import api from '../../services/api'
 
 const ProtectedAuth = () => {
   const [loggedIn, setLoggedIn]: [ boolean| null, any] = useState(null)
-  const location = useLocation()
+  // Since we're not using React Router, use window location
+  const location = { pathname: window.location.pathname };
   // @ts-ignore
   useEffect(async () => {
     try {
@@ -16,10 +17,12 @@ const ProtectedAuth = () => {
   }, [])
 
   if (loggedIn && location.pathname !== 'dashboard') {
-    return redirect("/dashboard/dashboard")
+    window.location.href = "/dashboard/dashboard";
+    return null;
   }
   if (loggedIn === false) {
-    return redirect("/auth/signin")
+    window.location.href = "/auth/signin";
+    return null;
   }
   return (<span style={{display: 'none'}}>&nbsp;</span>)
 }

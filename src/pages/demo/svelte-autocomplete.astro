@@ -1,0 +1,63 @@
+---
+import HeaderHybrid from '../../svelte/components/HeaderHybrid.astro';
+export const prerender = false;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Svelte Autocomplete Demo</title>
+    <script>
+      // Make sure global config is available
+      if (typeof window !== 'undefined') {
+        window.global = window.global || {};
+        window.global.config = window.global.config || {
+          algolia_index: 'anime-staging',
+          api_host: 'https://weeb-api.staging.weeb.vip',
+          cdn_url: 'https://cdn.weeb.vip',
+          cdn_user_url: 'https://cdn.weeb.vip'
+        };
+      }
+    </script>
+  </head>
+  <body class="bg-gray-100 dark:bg-gray-900 min-h-screen">
+    <!-- Header -->
+    <HeaderHybrid />
+
+    <div class="container mx-auto p-8">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8 text-center">
+        Svelte Autocomplete Demo
+      </h1>
+
+      <div class="max-w-2xl mx-auto space-y-8">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Svelte Header Component Demo
+          </h2>
+          <p class="text-gray-600 dark:text-gray-400 mb-4">
+            The header above contains the Svelte autocomplete component integrated into a complete header layout with navigation, dark mode toggle, and mobile menu.
+          </p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Features
+          </h2>
+          <ul class="text-gray-600 dark:text-gray-400 space-y-2">
+            <li>• Complete header with integrated autocomplete</li>
+            <li>• Responsive design (mobile and desktop layouts)</li>
+            <li>• Algolia search integration with dynamic imports</li>
+            <li>• Dark mode toggle functionality</li>
+            <li>• Mobile slide-out menu with backdrop</li>
+            <li>• Animated WEEB/ウィーブ logo wordmark</li>
+            <li>• Navigation links and login button</li>
+            <li>• Smooth animations and transitions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

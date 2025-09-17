@@ -1,7 +1,7 @@
 import { Popover } from "@headlessui/react";
 import { useRef, useState, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { CurrentlyAiringQuery } from "../../../gql/graphql";
+import { type CurrentlyAiringQuery } from "../../../gql/graphql";
 import AnimeCard, { AnimeCardStyle } from "../../../components/AnimeCard";
 import { format } from "date-fns";
 import { utc } from "@date-fns/utc/utc";

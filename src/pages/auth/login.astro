@@ -1,0 +1,15 @@
+---
+import DefaultLayout from '../../layouts/DefaultLayout.astro';
+import LoginPage from '../../components/islands/LoginPage';
+
+// Enable SSR for auth pages
+// Static generation for auth pages
+---
+
+<DefaultLayout
+  title="Login"
+  description="Sign in to your WeebVIP account to access your anime watchlist and get personalized recommendations."
+  noIndex={true}
+>
+  <LoginPage client:only="react" />
+</DefaultLayout>

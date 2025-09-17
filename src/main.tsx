@@ -35,26 +35,4 @@ setTimeout(() => {
   perf.reportVitals()
 }, 0)
 
-// Defer PWA registration to avoid blocking initial render
-setTimeout(() => {
-  import('virtual:pwa-register').then(({ registerSW }) => {
-    const updateSW = registerSW({
-      onNeedRefresh() {
-        if (confirm('New content available, reload to update?')) {
-          window.location.reload()
-        }
-      },
-      onOfflineReady() {
-        console.log('App ready to work offline')
-      },
-      immediate: true
-    })
-
-    // Check for updates every 30 seconds when visible
-    setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        updateSW()
-      }
-    }, 30000)
-  })
-}, 100)
+// PWA is now handled by Astro in BaseLayout

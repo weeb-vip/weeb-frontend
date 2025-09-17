@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from '../../utils/navigation';
 import { useLoggedInStore } from '../../services/globalstore';
 import ProfileAvatar from '../ProfileAvatar';
 
@@ -84,8 +84,8 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
 
           {/* Menu Items */}
           <div className="py-1">
-            <Link
-              to="/profile"
+            <a
+              href="/profile"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
@@ -93,10 +93,10 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               View Profile
-            </Link>
+            </a>
 
-            <Link
-              to="/profile/anime"
+            <a
+              href="/profile/anime"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
@@ -104,10 +104,10 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
               Watch List
-            </Link>
+            </a>
 
-            <Link
-              to="/settings"
+            <a
+              href="/settings"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
@@ -116,7 +116,7 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               Settings
-            </Link>
+            </a>
           </div>
 
           {/* Logout Section */}

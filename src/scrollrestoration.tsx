@@ -1,13 +1,12 @@
 // components/ScrollRestoration.tsx
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { useLocation, useNavigationType } from "react-router-dom";
 
 const scrollPositions = new Map<string, number>();
 
 export default function ScrollRestoration() {
-  const location = useLocation();
-  const navType = useNavigationType();
-  const path = location.pathname + location.search;
+  // Since we're not using React Router, we'll use window location
+  const path = window.location.pathname + window.location.search;
+  const navType = 'PUSH'; // Default navigation type
   const prevPath = useRef<string | null>(null);
 
   useLayoutEffect(() => {
@@ -20,11 +19,8 @@ export default function ScrollRestoration() {
 
   useEffect(() => {
     const saved = scrollPositions.get(path);
-    if (navType === "POP" && saved !== undefined) {
-      requestAnimationFrame(() => window.scrollTo(0, saved));
-    } else {
-      window.scrollTo(0, 0);
-    }
+    // Always scroll to top for Astro routing
+    window.scrollTo(0, 0);
     prevPath.current = path;
   }, [path, navType]);
 

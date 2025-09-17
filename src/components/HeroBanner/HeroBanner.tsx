@@ -1,7 +1,6 @@
 import React, {useState, useEffect} from 'react';
-import {Link} from 'react-router-dom';
 import Button, {ButtonColor} from '../Button';
-import {StatusType} from '../Button/Button';
+import {type StatusType} from '../Button';
 import {AnimeStatusDropdown} from '../AnimeStatusDropdown/AnimeStatusDropdown';
 import {GetImageFromAnime} from '../../services/utils';
 import {useAnimeCountdownStore} from '../../stores/animeCountdownStore';
@@ -96,7 +95,6 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
               src={bgUrl}
               alt="bg preload"
               loading="eager"
-              // @ts-ignore - fetchPriority is a valid HTML attribute but not yet in React types
               fetchPriority="high"
               decoding="async"
               className={`absolute w-full h-full object-cover ${
@@ -211,14 +209,14 @@ export default function HeroBanner({anime, onAddAnime, animeStatus, onDeleteAnim
           )}
 
           <div className="flex flex-wrap gap-4 items-center">
-            <Link to={`/show/${anime.id}`}>
+            <a href={`/show/${anime.id}`}>
               <Button
                 color={ButtonColor.blue}
                 label="More Info"
                 showLabel
                 className="px-4 py-2 text-base font-semibold shadow-md hover:shadow-lg"
               />
-            </Link>
+            </a>
 
             {!anime.userAnime ? (
               <Button

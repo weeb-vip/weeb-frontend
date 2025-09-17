@@ -1,0 +1,237 @@
+---
+// Server-side rendered show content
+import { format } from "date-fns";
+
+interface Props {
+  anime: {
+    id: string;
+    titleEn?: string;
+    titleJp?: string;
+    titleRomaji?: string;
+    titleKanji?: string;
+    titleSynonyms?: string[];
+    description?: string;
+    startDate?: string;
+    endDate?: string;
+    rating?: string;
+    ranking?: number;
+    source?: string;
+    studios?: string[];
+    licensors?: string[];
+    broadcast?: string;
+    duration?: string;
+    tags?: string[];
+    updatedAt?: string;
+    thetvdbid?: string;
+    anidbid?: string;
+    userAnime?: {
+      id: string;
+      status?: string;
+    };
+    episodes?: Array<{
+      id: string;
+      episodeNumber: number;
+      titleEn?: string;
+      titleJp?: string;
+      airDate?: string;
+    }>;
+  };
+}
+
+const { anime } = Astro.props;
+
+// Helper function to render fields
+const renderField = (label: string, value: string | string[] | null | undefined) => {
+  if (!value) return null;
+  if (Array.isArray(value)) {
+    return { label, value: value.join(", "), isArray: true };
+  }
+  return { label, value: value.toString(), isArray: false };
+};
+
+// Get image URL
+const getImageUrl = (anime: any) => {
+  return `https://cdn.weeb.vip/images/${encodeURIComponent(anime.titleEn || anime.titleJp || 'unknown')}.jpg`;
+};
+
+// Background URL
+let bgUrl = null;
+if (anime.thetvdbid) {
+  bgUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
+} else if (anime.anidbid) {
+  bgUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
+} else {
+  bgUrl = "/assets/not found.jpg";
+}
+---
+
+<div class="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
+  <!-- Background banner -->
+  <div
+    class="relative bg-cover bg-center bg-white dark:bg-gray-900 h-[600px] transition-all duration-300 overflow-hidden"
+    style={bgUrl ? `background-image: url(${bgUrl})` : undefined}
+  >
+    <div class="absolute block inset-0 bg-white dark:bg-gray-900 w-full h-full transition-colors duration-300"></div>
+  </div>
+
+  <!-- Main content card -->
+  <div class="bg-gray-100 dark:bg-gray-900 -mt-[350px] lg:-mt-[200px] transition-colors duration-300">
+    <div class="relative z-10 flex justify-center pt-20">
+      <div class="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
+        <!-- Poster -->
+        <img
+          src={getImageUrl(anime)}
+          alt={anime.titleEn || ""}
+          class="h-48 w-32 lg:h-64 lg:w-48 object-cover rounded-md"
+          onerror="this.src='/assets/not found.jpg'"
+        />
+
+        <!-- Content -->
+        <div class="lg:ml-10 mt-4 lg:mt-0 space-y-4 w-full">
+          <h1 class="text-3xl font-bold">{anime.titleEn}</h1>
+          <p class="text-sm leading-relaxed text-neutral-200">{anime.description}</p>
+          <div class="flex flex-wrap gap-4 text-sm text-neutral-300">
+            <span>{anime.startDate ? format(new Date(anime.startDate), "yyyy") : ""}</span>
+            <span>{anime.broadcast || "unknown"}</span>
+            <span>{anime.endDate ? "Finished" : "Ongoing"}</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            {anime.tags?.map((tag) => (
+              <span class="px-2 py-1 bg-gray-700 text-white text-xs rounded-full">{tag}</span>
+            ))}
+          </div>
+          <div class="flex flex-wrap gap-2 mt-4">
+            {!anime.userAnime ? (
+              <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Add to list
+              </button>
+            ) : (
+              <span class="px-4 py-2 bg-green-600 text-white rounded">
+                Status: {anime.userAnime.status}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content sections -->
+    <div class="bg-gray-100 dark:bg-gray-900 py-8 px-4 sm:px-8 lg:px-16 transition-colors duration-300">
+      <div class="max-w-screen-2xl mx-auto flex flex-col gap-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+          <!-- Details Panel -->
+          <div class="bg-white dark:bg-gray-800 p-4 rounded-md shadow-md text-sm text-gray-800 dark:text-gray-200 space-y-6 w-full lg:max-w-xs transition-colors duration-300">
+            <div class="space-y-3">
+              <h2 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Titles</h2>
+              {anime.titleJp && (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Japanese</h3>
+                  <p class="text-gray-700 dark:text-gray-300">{anime.titleJp}</p>
+                </div>
+              )}
+              {anime.titleRomaji && (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Romaji</h3>
+                  <p class="text-gray-700 dark:text-gray-300">{anime.titleRomaji}</p>
+                </div>
+              )}
+              {anime.titleKanji && (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Kanji</h3>
+                  <p class="text-gray-700 dark:text-gray-300">{anime.titleKanji}</p>
+                </div>
+              )}
+              {anime.titleSynonyms && anime.titleSynonyms.length > 0 && (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Synonyms</h3>
+                  <p class="text-gray-700 dark:text-gray-300">{anime.titleSynonyms.join(", ")}</p>
+                </div>
+              )}
+            </div>
+
+            <div class="space-y-3">
+              <h2 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Production</h2>
+              {anime.studios && (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Studios</h3>
+                  <p class="text-gray-700 dark:text-gray-300">{Array.isArray(anime.studios) ? anime.studios.join(", ") : anime.studios}</p>
+                </div>
+              )}
+              {anime.source && (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Source</h3>
+                  <p class="text-gray-700 dark:text-gray-300">{anime.source}</p>
+                </div>
+              )}
+              {anime.licensors && (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Licensors</h3>
+                  <p class="text-gray-700 dark:text-gray-300">{Array.isArray(anime.licensors) ? anime.licensors.join(", ") : anime.licensors}</p>
+                </div>
+              )}
+            </div>
+
+            <div class="space-y-3">
+              <h2 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Aired</h2>
+              {anime.startDate && (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Start Date</h3>
+                  <p class="text-gray-700 dark:text-gray-300">{format(new Date(anime.startDate), "dd MMM yyyy")}</p>
+                </div>
+              )}
+              {anime.endDate ? (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">End Date</h3>
+                  <p class="text-gray-700 dark:text-gray-300">{format(new Date(anime.endDate), "dd MMM yyyy")}</p>
+                </div>
+              ) : (
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Status</h3>
+                  <p class="text-gray-700 dark:text-gray-300">Ongoing</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <!-- Episodes Section -->
+          <div class="w-full">
+            <h2 class="text-xl font-bold mb-4">Episodes</h2>
+            {anime.episodes && anime.episodes.length > 0 ? (
+              <div class="space-y-2">
+                {anime.episodes.slice(0, 10).map((episode) => (
+                  <div class="bg-white dark:bg-gray-800 p-4 rounded shadow flex justify-between items-center">
+                    <div>
+                      <h3 class="font-semibold">Episode {episode.episodeNumber}</h3>
+                      <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {episode.titleEn || episode.titleJp || "TBA"}
+                      </p>
+                    </div>
+                    {episode.airDate && (
+                      <span class="text-sm text-gray-500">
+                        {format(new Date(episode.airDate), "MMM dd, yyyy")}
+                      </span>
+                    )}
+                  </div>
+                ))}
+                {anime.episodes.length > 10 && (
+                  <p class="text-center text-gray-500 mt-4">
+                    And {anime.episodes.length - 10} more episodes...
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p class="text-gray-500">No episodes available</p>
+            )}
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end mt-8">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Last updated: {anime.updatedAt ? format(new Date(anime.updatedAt), "dd MMM yyyy") : "Unknown"}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

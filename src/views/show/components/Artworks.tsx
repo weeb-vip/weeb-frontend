@@ -1,4 +1,4 @@
-import {Artwork} from "../../../services/api/details";
+import {type Artwork} from "../../../services/api/details";
 import Modal from "../../../components/Modal";
 import {useState} from "react";
 

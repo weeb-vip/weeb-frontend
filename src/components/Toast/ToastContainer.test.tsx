@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { ToastProps } from './Toast';
+import { type ToastProps } from './Toast';
 
 // Mock the useIsMobile hook
 const mockUseIsMobile = jest.fn();

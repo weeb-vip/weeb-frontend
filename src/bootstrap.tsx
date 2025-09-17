@@ -31,24 +31,18 @@ const Bootstrap = () => {
     // Initialize theme based on system preference or saved setting
     useDarkModeStore.getState().initializeTheme()
 
-    // Start config fetch immediately
-    configApi.fetch().then((conf) => {
-      setConfig(conf)
-      // @ts-ignore
-      global.config = conf
+    // Config should already be loaded by SSR middleware and available globally
+    // @ts-ignore
+    const existingConfig = global.config || window.config
+
+    if (existingConfig) {
+      setConfig(existingConfig)
       setLoaded(true)
-    }).catch((error) => {
-      console.error('Failed to load config, using fallback:', error)
-      // Provide fallback config to prevent blocking
-      const fallbackConfig = {
-        flagsmith_environment_id: 'fallback',
-        // Add other essential config properties
-      }
-      setConfig(fallbackConfig)
-      // @ts-ignore
-      global.config = fallbackConfig
-      setLoaded(true)
-    })
+    } else {
+      console.error('Config not found - this should have been loaded by SSR middleware')
+      // Don't provide fallback - fail fast if config not loaded properly
+      throw new Error('Config not loaded. Ensure config is initialized before making API calls.')
+    }
   }, [])
 
   // Show loading skeleton while config is loading

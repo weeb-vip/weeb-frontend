@@ -3,8 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faX, faClock, faPlay } from '@fortawesome/free-solid-svg-icons';
 import { GetImageFromAnime } from '../../services/utils';
 import { SafeImage } from "../SafeImage/SafeImage";
-import { useNavigate } from 'react-router-dom';
-import { ToastProps } from './Toast';
+import { useNavigate } from '../../utils/navigation';
+import type { ToastProps } from './Toast';
 
 const MobileToast: React.FC<ToastProps> = ({
   id,

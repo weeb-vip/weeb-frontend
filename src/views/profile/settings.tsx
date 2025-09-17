@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from '../../utils/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faEnvelope, faGlobe, faArrowLeft, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUser, updateUserDetails } from '../../services/queries';
-import { UpdateUserInput, Language } from '../../gql/graphql';
+import { type UpdateUserInput, Language } from '../../gql/graphql';
 import Button, { ButtonColor } from '../../components/Button/Button';
 import FormInput from '../../components/FormInput';
 import Loader from '../../components/Loader';
@@ -105,13 +105,13 @@ const ProfileSettings: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="mb-6">
-        <Link 
-          to="/profile" 
+        <a
+          href="/profile"
           className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors mb-4"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
           Back to Profile
-        </Link>
+        </a>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">Update your personal information and preferences</p>
       </div>

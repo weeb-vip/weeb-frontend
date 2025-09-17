@@ -1,10 +1,5 @@
 import React, {Suspense} from 'react'
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  useLocation,
-} from 'react-router-dom'
+// No longer using React Router, but keeping the structure for reference
 import Header from "../components/Header";
 import DefaultLayout from "../layouts/default";
 import FullWidthLayout from "../layouts/fullWidth";

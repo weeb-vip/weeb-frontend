@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCurrentlyAiringWithDates } from "../../../services/queries";
-import { CurrentlyAiringWithDateQuery } from "../../../gql/graphql";
+import { type CurrentlyAiringWithDateQuery } from "../../../gql/graphql";
 import Loader from "../../../components/Loader";
 import {
   format,

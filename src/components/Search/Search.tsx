@@ -2,7 +2,7 @@ import React, {useState, Fragment} from 'react'
 import {Combobox, Transition} from '@headlessui/react'
 import useSWR from 'swr'
 import useDebounce from "./useDebounce";
-import {useNavigate} from "react-router-dom";
+import {useNavigate} from "../../utils/navigation";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faSearch} from "@fortawesome/free-solid-svg-icons";
 

@@ -1,6 +1,7 @@
 import {format, isValid} from "date-fns";
 import React from "react";
-import {AutocompleteApi} from "@algolia/autocomplete-js";
+// AutocompleteApi type - using any for now to avoid import issues
+// import {AutocompleteApi} from "@algolia/autocomplete-js";
 import {SafeImage} from "../SafeImage/SafeImage";
 import {GetImageFromAnime} from "../../services/utils";
 

@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../utils/navigation";
 import {
   deleteAnime,
   fetchUserAnimes,
   upsertAnime,
 } from "../../../services/queries";
 import Loader from "../../../components/Loader";
-import {Status, UserAnime, UserAnimesQuery} from "../../../gql/graphql";
+import {Status, type UserAnime, type UserAnimesQuery} from "../../../gql/graphql";
 import AnimeCard, { AnimeCardStyle } from "../../../components/AnimeCard";
 import { useState, useMemo } from "react";
 import { GetImageFromAnime } from "../../../services/utils";

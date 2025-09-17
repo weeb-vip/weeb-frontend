@@ -1,0 +1,8 @@
+---
+import DefaultLayout from '../../layouts/DefaultLayout.astro';
+import CurrentlyAiringCalendarIsland from '../../components/islands/CurrentlyAiringCalendarIsland';
+---
+
+<DefaultLayout title="Airing Calendar">
+  <CurrentlyAiringCalendarIsland client:only="react" />
+</DefaultLayout>

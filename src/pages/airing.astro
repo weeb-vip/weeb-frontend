@@ -1,0 +1,13 @@
+---
+import DefaultLayout from '../layouts/DefaultLayout.astro';
+import CurrentlyAiringPage from '../components/islands/CurrentlyAiringPage';
+
+// Static generation for currently airing page
+---
+
+<DefaultLayout
+  title="Currently Airing Anime"
+  description="Discover what anime is currently airing this season. Get episode schedules, notifications, and add shows to your watchlist."
+>
+  <CurrentlyAiringPage client:only="react" />
+</DefaultLayout>

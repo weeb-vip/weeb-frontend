@@ -1,0 +1,17 @@
+---
+import DefaultLayout from '../../layouts/DefaultLayout.astro';
+import ProfilePage from '../../components/islands/ProfilePage';
+
+// Static generation for profile page
+
+// TODO: Add server-side authentication check
+// For now, letting client handle auth
+---
+
+<DefaultLayout
+  title="Profile"
+  description="Manage your anime watchlist, settings, and profile information."
+  noIndex={true}
+>
+  <ProfilePage client:only="react" />
+</DefaultLayout>

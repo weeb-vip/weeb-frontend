@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from '../../utils/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faLock, faArrowLeft, faCheckCircle, faUser, faEnvelope} from '@fortawesome/free-solid-svg-icons';
-import { useMutation } from '@tanstack/react-query';
-import Button, { ButtonColor, StatusType } from '../../components/Button/Button';
+import Button, { ButtonColor, type StatusType } from '../../components/Button/Button';
 import FormInput from '../../components/FormInput';
-import { resetPassword } from '../../services/queries';
-import { ResetPasswordInput } from '../../gql/graphql';
+import { usePasswordReset } from '../../hooks/usePasswordReset';
+import { type ResetPasswordInput } from '../../gql/graphql';
 
 const PasswordReset: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  // Get search params manually since we're not using React Router
+  const urlParams = new URLSearchParams(window.location.search);
   const navigate = useNavigate();
   const [token, setToken] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -22,36 +22,23 @@ const PasswordReset: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resetComplete, setResetComplete] = useState(false);
 
-  const { mutate: mutateResetPassword, isLoading } = useMutation({
-    ...resetPassword(),
-    onSuccess: (response: boolean) => {
+  const { mutate: mutateResetPassword, isLoading } = usePasswordReset(
+    (response: boolean) => {
       if (response) {
         setResetComplete(true);
-        // Redirect to home after showing success message
         setTimeout(() => {
           navigate('/');
         }, 3000);
-      } else {
-        setErrorMessage('Failed to reset password. Please try again.');
       }
     },
-    onError: (error: any) => {
-      console.error('Password reset failed:', error);
-      let errorMsg = 'Failed to reset password. Please try again.';
-
-      if (error.message.includes('token')) {
-        errorMsg = 'Invalid or expired reset token. Please request a new password reset.';
-      } else if (error.message.includes('password')) {
-        errorMsg = error.message;
-      }
-
-      setErrorMessage(errorMsg);
+    (error: any) => {
+      setErrorMessage(error.message || 'Password reset failed. Please try again.');
     }
-  });
+  );
 
   useEffect(() => {
-    const tokenParam = searchParams.get('token');
-    const emailParam = searchParams.get('email');
+    const tokenParam = urlParams.get('token');
+    const emailParam = urlParams.get('email');
 
     if (!tokenParam) {
       setErrorMessage('Invalid or missing reset token. Please request a new password reset.');
@@ -65,7 +52,7 @@ const PasswordReset: React.FC = () => {
 
     setToken(tokenParam);
     setEmail(emailParam);
-  }, [searchParams]);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -114,7 +101,7 @@ const PasswordReset: React.FC = () => {
   };
 
   // Show error state if no token
-  if (!token && !searchParams.get('token')) {
+  if (!token && !urlParams.get('token')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
@@ -131,19 +118,19 @@ const PasswordReset: React.FC = () => {
           </div>
 
           <div className="mt-8 space-y-4">
-            <Link
-              to="/auth/password-reset-request"
+            <a
+              href="/auth/password-reset-request"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
             >
               Request New Reset Link
-            </Link>
-            <Link
-              to="/"
+            </a>
+            <a
+              href="/"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
               <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
               Back to Home
-            </Link>
+            </a>
           </div>
         </div>
       </div>
@@ -260,12 +247,12 @@ const PasswordReset: React.FC = () => {
           </div>
 
           <div className="text-center">
-            <Link
-              to="/"
+            <a
+              href="/"
               className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
             >
               ← Back to Home
-            </Link>
+            </a>
           </div>
         </form>
       </div>

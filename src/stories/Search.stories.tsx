@@ -1,5 +1,5 @@
 import type {Meta, StoryObj} from '@storybook/react';
-import {MemoryRouter} from "react-router";
+// Removed MemoryRouter dependency
 
 import Search, {ISearch} from "../components/Search";
 import {searchResult, searchResults} from "../services/api/search";

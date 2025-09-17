@@ -2,7 +2,8 @@ import React, {Fragment, useEffect, useState} from "react";
 import {Dialog, Transition} from "@headlessui/react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBars} from "@fortawesome/free-solid-svg-icons";
-import {Link, useNavigate} from "react-router-dom";
+// Removed react-router-dom imports for Astro compatibility
+import { navigateWithTransition } from '../../utils/astro-navigation';
 import {useDarkModeStore, useLoggedInStore, useLoginModalStore} from "../../services/globalstore";
 import {useQuery} from "@tanstack/react-query";
 import {getUser} from "../../services/queries";
@@ -56,7 +57,7 @@ export function WeebMorphLogo({
 
 function WeebVipWordmark({size = "md", className = ""}: { size?: "sm" | "md"; className?: string }) {
   const wordSize = size === "sm" ? "text-2xl tracking-[0.25em]" : "text-4xl md:text-4xl tracking-[0.28em]";
-  const vipSize = size === "sm" ? "text-sm" : "text-normal md:text-normal";
+  const vipSize = size === "sm" ? "text-sm" : "text-base md:text-base";
   return (
     <div className={`inline-flex items-center gap-2 sm:gap-3 ${className}`} role="img" aria-label="WEEB VIP wordmark">
       <WeebMorphLogo wordSize={wordSize} colorClass="bg-gray-800 dark:bg-gray-300"/>
@@ -87,12 +88,11 @@ function BodyScrollLock({active}: { active: boolean }) {
 
 function Header() {
   const loggedIn = useLoggedInStore(s => s.isLoggedIn);
-  const navigate = useNavigate();
   const openLogin = useLoginModalStore(s => s.openLogin);
   const openRegister = useLoginModalStore(s => s.openRegister);
   const {isDarkMode} = useDarkModeStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  
+
   // Fetch user data when logged in
   const { data: user } = useQuery({
     ...getUser(),
@@ -104,18 +104,18 @@ function Header() {
       className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
       {/* Mobile */}
       <div className="flex sm:hidden w-full items-center space-x-4">
-        <Link to="/"><img
+        <a href="/"><img
                           src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
                           alt="logo"
                           width="40"
                           height="40"
                           loading="eager"
                           decoding="async"
-                          className="w-10 h-10"/></Link>
+                          className="w-10 h-10"/></a>
         <div className="flex-grow"><Autocomplete/></div>
         {loggedIn && user ? (
           <button className="p-2" aria-label="Open menu" onClick={() => setDrawerOpen(true)}>
-            <ProfileAvatar 
+            <ProfileAvatar
               username={user.username}
               profileImageUrl={user.profileImageUrl}
               size="sm"
@@ -167,7 +167,7 @@ function Header() {
                 className="pointer-events-auto h-full relative bg-white dark:bg-gray-900 flex flex-col p-8 transition-colors duration-300">
                 {/* Header with logo + close */}
                 <div className="flex items-center justify-between mb-8">
-                  <Link to="/" onClick={() => setDrawerOpen(false)} className="flex items-center space-x-4">
+                  <a href="/" onClick={() => setDrawerOpen(false)} className="flex items-center space-x-4">
                     <img
                       src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
                       alt="logo"
@@ -177,7 +177,7 @@ function Header() {
                       decoding="async"
                       className="w-10 h-10"/>
                     <WeebVipWordmark size="sm"/>
-                  </Link>
+                  </a>
                   <button
                     className="text-2xl font-bold text-gray-700 dark:text-gray-300"
                     onClick={() => setDrawerOpen(false)}
@@ -191,12 +191,12 @@ function Header() {
                 <div className="flex-1 flex flex-col justify-start space-y-4">
                   {loggedIn && user && (
                     <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 overflow-hidden transition-colors duration-300">
-                      <Link
-                        to="/profile"
+                      <a
+                        href="/profile"
                         onClick={() => setDrawerOpen(false)}
                         className="flex items-center px-4 py-4 space-x-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-300"
                       >
-                        <ProfileAvatar 
+                        <ProfileAvatar
                           username={user.username}
                           profileImageUrl={user.profileImageUrl}
                           size="md"
@@ -206,7 +206,7 @@ function Header() {
                           <p className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">{user.username}</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">{user.firstname} {user.lastname}</p>
                         </div>
-                      </Link>
+                      </a>
                       <div className="border-t border-gray-200 dark:border-gray-600 transition-colors duration-300">
                         <button
                           onClick={() => {
@@ -214,7 +214,7 @@ function Header() {
                             localStorage.removeItem("refreshToken");
                             useLoggedInStore.getState().logout();
                             setDrawerOpen(false);
-                            navigate("/");
+                            navigateWithTransition("/");
                           }}
                           className="w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-300"
                         >
@@ -223,7 +223,7 @@ function Header() {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex items-center justify-between px-4 py-4 rounded">
                     <span
                       className="text-lg text-gray-900 dark:text-gray-100">{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
@@ -268,7 +268,7 @@ function Header() {
       {/* Desktop */}
       <div className="hidden sm:flex flex-row items-center justify-between space-x-4 mt-4 sm:mt-0">
         <div className="flex items-center space-x-4">
-          <Link to="/" className="flex flex-row space-x-4">
+          <a href="/" className="flex flex-row space-x-4">
             <img
               src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
               alt="logo"
@@ -278,7 +278,7 @@ function Header() {
               decoding="async"
               className="w-14 h-14"/>
             <WeebVipWordmark/>
-          </Link>
+          </a>
         </div>
         <div className="flex-grow max-w-md"><Autocomplete/></div>
         <div className="flex items-center space-x-4">

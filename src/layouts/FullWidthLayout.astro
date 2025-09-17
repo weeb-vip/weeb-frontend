@@ -1,0 +1,25 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import HeaderIsland from '../components/islands/HeaderIsland';
+import Footer from '../components/Footer';
+import { ToastProvider } from '../components/Toast';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  noIndex?: boolean;
+}
+
+const props = Astro.props;
+---
+
+<BaseLayout {...props}>
+  <HeaderIsland client:only="react" />
+  <ToastProvider client:only="react">
+    <main class="w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+      <slot />
+    </main>
+  </ToastProvider>
+  <Footer />
+</BaseLayout>

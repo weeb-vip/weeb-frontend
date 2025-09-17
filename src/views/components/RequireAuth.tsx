@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '../../utils/navigation';
 import { useLoggedInStore, useLoginModalStore } from '../../services/globalstore';
 
 interface RequireAuthProps {
@@ -30,7 +30,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({
         openLogin();
       } else {
         // Redirect to login page
-        navigate(redirectTo, { replace: true });
+        navigate(redirectTo);
       }
     }
   }, [isLoggedIn, isAuthInitialized, navigate, redirectTo, showLoginModal, openLogin]);

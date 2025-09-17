@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import Toast, { ToastProps } from './Toast';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+
+// Fix for CommonJS ReactNode import
+type ReactNode = React.ReactNode;
+import Toast, {type ToastProps } from './Toast';
 import MobileToast from './MobileToast';
 import { useIsMobile } from '../../bootstrap';
 
@@ -66,7 +69,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   return (
     <ToastContext.Provider value={{ showToast, removeToast }}>
       {children}
-      
+
       {/* Mobile Toast - Sticky header style */}
       {isMobile && toasts.map(toast => (
         <div key={toast.id} className="relative">
@@ -81,7 +84,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
           )}
         </div>
       ))}
-      
+
       {/* Desktop Toast Container - Fixed positioning for desktop */}
       {!isMobile && (
         <div className="fixed top-28 right-6 z-30 flex flex-col items-end pointer-events-none">

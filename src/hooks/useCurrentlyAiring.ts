@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { CurrentlyAiringQuery } from "../gql/graphql";
-import { fetchCurrentlyAiringWithDates } from "../services/queries";
+import {fetchCurrentlyAiringWithDates} from "../services/queries.ts";
+import type {CurrentlyAiringQuery} from "../gql/graphql.ts";
+
 
 export const useCurrentlyAiring = (startDate?: Date, endDate?: Date) => {
   // Default to yesterday through 7 days from now if no dates provided
@@ -9,3 +10,4 @@ export const useCurrentlyAiring = (startDate?: Date, endDate?: Date) => {
 
   return useQuery<CurrentlyAiringQuery>(fetchCurrentlyAiringWithDates(defaultStartDate, defaultEndDate));
 };
+

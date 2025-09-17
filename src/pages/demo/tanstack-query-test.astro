@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TanStackQueryTest from '../../svelte/components/TanStackQueryTest.svelte';
+---
+
+<BaseLayout title="TanStack Query Test">
+  <div class="container mx-auto py-8">
+    <h1 class="text-3xl font-bold mb-6">TanStack Query Test</h1>
+    <p class="mb-4">Testing TanStack Query SSR integration with Svelte components</p>
+
+    <!-- Test component with TanStack Query -->
+    <TanStackQueryTest client:load />
+  </div>
+</BaseLayout>

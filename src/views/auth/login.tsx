@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from '../../utils/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faLock, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { useMutation } from '@tanstack/react-query';
 import Button, { ButtonColor } from '../../components/Button/Button';
 import FormInput from '../../components/FormInput';
-import { login } from '../../services/queries';
-import { LoginInput } from '../../gql/graphql';
+import { useLogin } from '../../hooks/useLogin';
+import { type LoginInput } from '../../gql/graphql';
 import { useLoggedInStore } from '../../services/globalstore';
 import debug from '../../utils/debug';
 
@@ -20,15 +19,14 @@ const Login: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const { mutate: mutateLogin, isLoading } = useMutation({
-    ...login(),
-    onSuccess: (response) => {
+  const { mutate: mutateLogin, isLoading } = useLogin(
+    (response) => {
       if (response?.Credentials?.token) {
         debug.auth('Login successful');
 
         // Store the auth token in localStorage
         localStorage.setItem('authToken', response.Credentials.token);
-        
+
         // Update the logged-in state in Zustand store
         setLoggedIn();
 
@@ -38,7 +36,7 @@ const Login: React.FC = () => {
         setErrorMessage('Login failed. Invalid response from server.');
       }
     },
-    onError: (error: any) => {
+    (error: any) => {
       debug.error('Login failed', error);
       let errorMsg = 'Login failed. Please try again.';
 
@@ -52,7 +50,7 @@ const Login: React.FC = () => {
 
       setErrorMessage(errorMsg);
     }
-  });
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -139,20 +137,20 @@ const Login: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="text-sm space-y-1">
               <div>
-                <Link
-                  to="/auth/password-reset-request"
+                <a
+                  href="/auth/password-reset-request"
                   className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
                 >
                   Forgot your password?
-                </Link>
+                </a>
               </div>
               <div>
-                <Link
-                  to="/auth/resend-verification"
+                <a
+                  href="/auth/resend-verification"
                   className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
                 >
                   Resend email verification
-                </Link>
+                </a>
               </div>
             </div>
           </div>
@@ -171,20 +169,20 @@ const Login: React.FC = () => {
           <div className="text-center space-y-2">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Don't have an account?{' '}
-              <Link
-                to="/register"
+              <a
+                href="/auth/register"
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
               >
                 Sign up here
-              </Link>
+              </a>
             </p>
-            <Link
-              to="/"
+            <a
+              href="/"
               className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors inline-flex items-center"
             >
               <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
               Back to Home
-            </Link>
+            </a>
           </div>
         </form>
       </div>

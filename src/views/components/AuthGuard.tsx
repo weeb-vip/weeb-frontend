@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '../../utils/navigation';
 import { useLoggedInStore } from '../../services/globalstore';
 
 interface AuthGuardProps {
@@ -17,7 +17,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, redirectTo = '/' }) => 
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate(redirectTo, { replace: true });
+      navigate(redirectTo);
     }
   }, [isLoggedIn, navigate, redirectTo]);
 

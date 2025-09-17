@@ -1,4 +1,3 @@
-import {ScrollRestoration} from "react-router-dom";
 import React from "react";
 
 interface PropsWithChildren<T = {}> {

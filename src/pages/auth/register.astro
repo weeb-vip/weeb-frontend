@@ -1,0 +1,14 @@
+---
+import DefaultLayout from '../../layouts/DefaultLayout.astro';
+import RegisterPage from '../../components/islands/RegisterPage';
+
+// Static generation for auth pages
+---
+
+<DefaultLayout
+  title="Register"
+  description="Create your WeebVIP account to start tracking anime, get episode notifications, and discover new shows."
+  noIndex={true}
+>
+  <RegisterPage client:only="react" />
+</DefaultLayout>

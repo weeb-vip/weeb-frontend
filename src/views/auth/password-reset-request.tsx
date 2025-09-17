@@ -1,13 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faUser, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import { useMutation } from "@tanstack/react-query";
 import Button, { ButtonColor } from "../../components/Button/Button";
 import FormInput from "../../components/FormInput";
-import { requestPasswordReset } from "../../services/queries";
-import { RequestPasswordResetInput } from "../../gql/graphql";
+import { useRequestPasswordReset } from "../../hooks/useRequestPasswordReset";
+import { type RequestPasswordResetInput } from "../../gql/graphql";
 
 const PasswordResetRequest: React.FC = () => {
   const [formData, setFormData] = useState<RequestPasswordResetInput>({ username: "", email: "" });
@@ -18,7 +16,7 @@ const PasswordResetRequest: React.FC = () => {
   const blockedRef = useRef(false);
   const [blocked, setBlocked] = useState(false);
 
-  const mutation = useMutation({ ...requestPasswordReset() });
+  const mutation = useRequestPasswordReset();
 
   // Swallow Enter/Space globally while blocked (captures before anything else)
   useEffect(() => {
@@ -93,13 +91,13 @@ const PasswordResetRequest: React.FC = () => {
             </p>
           </div>
           <div className="mt-8">
-            <Link
-              to="/"
+            <a
+              href="/"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
               <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
               Back to Home
-            </Link>
+            </a>
           </div>
         </div>
       </div>
@@ -183,12 +181,12 @@ const PasswordResetRequest: React.FC = () => {
             </div>
 
             <div className="text-center mt-2">
-              <Link
-                to="/"
+              <a
+                href="/"
                 className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
               >
                 ← Back to Home
-              </Link>
+              </a>
             </div>
           </fieldset>
         </form>

@@ -1,4 +1,4 @@
-import {Trailer} from "../../../services/api/details";
+import {type Trailer} from "../../../services/api/details";
 
 function Trailers({ trailers }: { trailers: Trailer[] }) {
   return (

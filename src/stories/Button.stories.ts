@@ -1,7 +1,8 @@
 import type {Meta, StoryObj} from '@storybook/react';
 import {fn} from '@storybook/test';
 
-import Button, {ButtonColor, ButtonProps} from "../components/Button";
+import Button, {ButtonColor} from "../components/Button";
+import type {ButtonProps} from "../components/Button";
 
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export

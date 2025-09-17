@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import {type IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 export interface FormInputProps {
@@ -46,8 +46,8 @@ const FormInput: React.FC<FormInputProps> = ({
   `;
 
   // Error and normal state classes
-  const stateClasses = error 
-    ? 'border-red-500 focus:ring-red-400' 
+  const stateClasses = error
+    ? 'border-red-500 focus:ring-red-400'
     : 'border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500';
 
   // Label classes - show label if provided, otherwise use sr-only
@@ -71,14 +71,14 @@ const FormInput: React.FC<FormInputProps> = ({
   return (
     <div>
       {label && (
-        <label 
-          htmlFor={id} 
+        <label
+          htmlFor={id}
           className={labelClasses}
         >
           {label}
         </label>
       )}
-      
+
       <div className="relative">
         {/* Left icon */}
         {icon && (
@@ -109,9 +109,9 @@ const FormInput: React.FC<FormInputProps> = ({
             onClick={onPasswordToggle}
             tabIndex={-1}
           >
-            <FontAwesomeIcon 
-              icon={isPasswordVisible ? faEyeSlash : faEye} 
-              className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" 
+            <FontAwesomeIcon
+              icon={isPasswordVisible ? faEyeSlash : faEye}
+              className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             />
           </button>
         )}

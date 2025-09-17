@@ -5,7 +5,7 @@ import {faBookmark, faCircleChevronDown, faCircleChevronUp} from "@fortawesome/f
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {Transition} from "@headlessui/react";
 import Button, {ButtonColor} from "../../../components/Button";
-import {Episode} from "../../../gql/graphql";
+import {type Episode} from "../../../gql/graphql";
 import {utc} from "@date-fns/utc/utc";
 import { parseAirTime } from "../../../services/airTimeUtils";
 // import {Episode} from "../../../services/api/details";

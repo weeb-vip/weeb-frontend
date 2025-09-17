@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from '../../utils/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faArrowLeft, faEnvelope } from '@fortawesome/free-solid-svg-icons';
-import { useMutation } from '@tanstack/react-query';
 import Button, { ButtonColor } from '../../components/Button/Button';
 import FormInput from '../../components/FormInput';
-import { resendVerificationEmail } from '../../services/queries';
+import { useResendVerificationEmail } from '../../hooks/useResendVerificationEmail';
 import debug from '../../utils/debug';
 
 const ResendVerification: React.FC = () => {
@@ -16,9 +15,8 @@ const ResendVerification: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
 
-  const { mutate: mutateResendEmail, isLoading } = useMutation({
-    ...resendVerificationEmail(),
-    onSuccess: (response) => {
+  const { mutate: mutateResendEmail, isLoading } = useResendVerificationEmail(
+    (response) => {
       if (response) {
         debug.success('Verification email resent successfully');
         setSuccessMessage('Verification email sent! Please check your inbox and spam folder.');
@@ -28,7 +26,7 @@ const ResendVerification: React.FC = () => {
         setErrorMessage('Failed to send verification email. Please try again.');
       }
     },
-    onError: (error: any) => {
+    (error: any) => {
       debug.error('Failed to resend verification email', error);
       let errorMsg = 'Failed to send verification email. Please try again.';
 
@@ -45,7 +43,7 @@ const ResendVerification: React.FC = () => {
       setErrorMessage(errorMsg);
       setSuccessMessage('');
     }
-  });
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -148,29 +146,29 @@ const ResendVerification: React.FC = () => {
           <div className="text-center space-y-2">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Already verified?{' '}
-              <Link
-                to="/login"
+              <a
+                href="/auth/login"
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
               >
                 Sign in here
-              </Link>
+              </a>
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Need help?{' '}
-              <Link
-                to="/auth/password-reset-request"
+              <a
+                href="/auth/password-reset-request"
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
               >
                 Reset your password
-              </Link>
+              </a>
             </p>
-            <Link
-              to="/"
+            <a
+              href="/"
               className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors inline-flex items-center"
             >
               <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
               Back to Home
-            </Link>
+            </a>
           </div>
         </form>
       </div>

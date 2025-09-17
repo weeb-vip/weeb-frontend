@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
 import debug from '../../utils/debug';
-import { verifyEmail } from '../../services/queries';
+import { useVerifyEmail } from '../../hooks/useVerifyEmail';
 
 interface VerificationState {
   loading: boolean;
@@ -11,26 +9,27 @@ interface VerificationState {
 }
 
 export default function EmailVerification() {
-  const [searchParams] = useSearchParams();
+  // Get search params manually since we're not using React Router
+  const urlParams = new URLSearchParams(window.location.search);
+  const email = urlParams.get('email');
+  const token = urlParams.get('token');
   const [state, setState] = useState<VerificationState>({
     loading: false,
     success: false,
     error: null
   });
 
-  const email = searchParams.get('email');
-  const token = searchParams.get('token');
 
-  const verifyEmailMutation = useMutation({
-    ...verifyEmail(token || ''),
-    onSuccess: () => {
+  const verifyEmailMutation = useVerifyEmail(
+    token || '',
+    () => {
       setState({
         loading: false,
         success: true,
         error: null
       });
     },
-    onError: (error: any) => {
+    (error: any) => {
       debug.error('Email verification failed', error);
       setState({
         loading: false,
@@ -38,7 +37,7 @@ export default function EmailVerification() {
         error: 'The verification token may be invalid or have expired. Please request a new verification email.'
       });
     }
-  });
+  );
 
   useEffect(() => {
     if (!email || !token) {
@@ -120,12 +119,12 @@ export default function EmailVerification() {
                   Your email address has been verified. You can now log in to your account.
                 </p>
                 <div className="mt-6">
-                  <Link
-                    to="/login"
+                  <a
+                    href="/auth/login"
                     className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                   >
                     Go to Login
-                  </Link>
+                  </a>
                 </div>
               </div>
             )}
@@ -162,12 +161,12 @@ export default function EmailVerification() {
                       Try Again
                     </button>
                   )}
-                  <Link
-                    to="/login"
+                  <a
+                    href="/auth/login"
                     className="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                   >
                     Back to Login
-                  </Link>
+                  </a>
                 </div>
               </div>
             )}

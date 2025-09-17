@@ -5,6 +5,7 @@ import {refreshTokenSimple} from "./services/queries";
 import LoginRegisterModal from "./components/LoginRegisterModal";
 import Modal from "./components/Modal";
 import debug from "./utils/debug";
+import {AuthStorage} from "./utils/auth-storage";
 
 const AuthHandler = () => {
   const loggedIn = useLoggedInStore((state) => state.isLoggedIn);
@@ -14,18 +15,40 @@ const AuthHandler = () => {
   const modalOpen = useLoginModalStore((state) => state.isOpen);
   const close = useLoginModalStore((state) => state.close);
   const logout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("refreshToken");
+    AuthStorage.clearTokens();
     setLogout();
-
   }
-  // check localstorage for login token
+  // check localstorage for login token and validate it
   useEffect(() => {
-    const authToken = localStorage.getItem("authToken");
+    const authToken = AuthStorage.getAuthToken();
     debug.auth("Checking stored auth token:", authToken ? "Token found" : "No token");
+
     if (authToken) {
-      setLoggedIn();
-      TokenRefresher.getInstance(refreshTokenSimple).start(authToken); // Start token refresh process
+      // Validate token by making a simple request
+      const validateToken = async () => {
+        try {
+          // Try to refresh the token - if it fails, the token is invalid
+          const result = await refreshTokenSimple();
+          if (result) {
+            setLoggedIn();
+            TokenRefresher.getInstance(refreshTokenSimple).start(authToken); // Start token refresh process
+          } else {
+            // Token is invalid
+            debug.auth("Token validation failed, clearing tokens");
+            AuthStorage.clearTokens();
+            setLogout();
+            setAuthInitialized();
+          }
+        } catch (error: any) {
+          debug.auth("Token validation error:", error.message);
+          // Token is invalid or network error
+          AuthStorage.clearTokens();
+          setLogout();
+          setAuthInitialized();
+        }
+      };
+
+      validateToken();
     } else {
       setAuthInitialized(); // Mark as initialized even if no token
     }

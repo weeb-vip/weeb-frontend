@@ -4,12 +4,11 @@ import { Status } from "../../gql/graphql";
 import AnimeCard, { AnimeCardStyle } from "../AnimeCard";
 import { GetImageFromAnime } from "../../services/utils";
 import { AnimeStatusDropdown } from "../AnimeStatusDropdown/AnimeStatusDropdown";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../utils/navigation";
 import { useMemo } from "react";
 import { getAirTimeDisplay, findNextEpisode, parseAirTime, getCurrentTime } from "../../services/airTimeUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronRight, faPlay, faCalendarDays, faBookmark } from "@fortawesome/free-solid-svg-icons";
-import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import Loader from "../Loader";
 import { useAnimeCountdownStore } from "../../stores/animeCountdownStore";
@@ -260,14 +259,14 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
-        <Link
-          to="/profile/anime"
+        <a
+          href="/profile/anime"
           className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
         >
           <FontAwesomeIcon icon={faBookmark} />
           View All Lists
           <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
-        </Link>
+        </a>
       </div>
 
       {/* Airing Soon Section */}
@@ -539,13 +538,13 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
                 {currentlyWatching.length}
               </span>
             </div>
-            <Link
-              to="/profile/anime"
+            <a
+              href="/profile/anime"
               className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors text-sm flex items-center gap-1"
             >
               View All
               <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
-            </Link>
+            </a>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -688,13 +687,13 @@ export default function ProfileDashboard({ className }: ProfileDashboardProps) {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Start adding anime to your watchlist to see personalized recommendations and airing schedules.
           </p>
-          <Link
-            to="/"
+          <a
+            href="/"
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
           >
             Explore Anime
             <FontAwesomeIcon icon={faChevronRight} />
-          </Link>
+          </a>
         </div>
       )}
     </div>

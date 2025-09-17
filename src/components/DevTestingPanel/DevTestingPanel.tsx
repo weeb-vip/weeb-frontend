@@ -3,7 +3,7 @@ import { useToast } from '../Toast';
 import Button, { ButtonColor } from '../Button';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCurrentlyAiring } from '../../services/queries';
-import { CurrentlyAiringQuery } from '../../gql/graphql';
+import { type CurrentlyAiringQuery } from '../../gql/graphql';
 import debug from '../../utils/debug';
 import { animeNotificationService } from '../../services/animeNotifications';
 

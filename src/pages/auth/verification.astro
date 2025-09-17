@@ -1,0 +1,8 @@
+---
+import DefaultLayout from '../../layouts/DefaultLayout.astro';
+import VerificationIsland from '../../components/islands/VerificationIsland';
+---
+
+<DefaultLayout title="Email Verification">
+  <VerificationIsland client:only="react" />
+</DefaultLayout>

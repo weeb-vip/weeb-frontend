@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {CharactersAndStaffByAnimeIdQuery, CharacterWithStaff} from "../../../gql/graphql";
+import {type CharactersAndStaffByAnimeIdQuery, type CharacterWithStaff} from "../../../gql/graphql";
 import { getCharactersAndStaffByAnimeID } from "../../../services/queries";
 import Loader from "../../../components/Loader";
 import { SafeImage } from "../../../components/SafeImage/SafeImage";

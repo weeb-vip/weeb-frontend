@@ -1,4 +1,4 @@
-import LoginRegisterModal, {LoginRegisterModalProps} from './LoginRegisterModal'
+import LoginRegisterModal, {type LoginRegisterModalProps} from './LoginRegisterModal'
 
 
 export {LoginRegisterModal as default}

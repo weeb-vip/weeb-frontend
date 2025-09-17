@@ -6,6 +6,7 @@ interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
   path?: string
   priority?: boolean; // Add priority prop for above-the-fold images
+  fetchPriority?: "high" | "low" | "auto"; // Explicitly define fetchPriority
 }
 
 export const SafeImage: React.FC<SafeImageProps> = ({
@@ -19,14 +20,20 @@ export const SafeImage: React.FC<SafeImageProps> = ({
  const path = imgProps.path ? imgProps.path+"/" : "";
  // replace src %20 with +
   const encodedSrc = src.replace(/%20/g, "+");
+
+  // Handle server-side rendering where global.config might not be available
+  const cdnUrl = typeof window !== 'undefined' && global?.config?.cdn_url
+    ? global.config.cdn_url
+    : 'https://cdn.weeb.vip/images';
+
   //debug.info("image url passed:", encodedSrc);
   return (
     <img
       {...imgProps}
-      src={`${global.config.cdn_url}/${path}${encodeURIComponent(encodedSrc)}`}
-      data-original-src={`${global.config.cdn_url}/${path}${encodeURIComponent(encodedSrc)}`}
+      src={`${cdnUrl}/${path}${encodeURIComponent(encodedSrc)}`}
+      data-original-src={`${cdnUrl}/${path}${encodeURIComponent(encodedSrc)}`}
       loading={priority ? "eager" : imgProps.loading || "lazy"}
-      // @ts-ignore - fetchPriority is a valid HTML attribute but not yet in React types
+      // @ts-ignore react doesn't recognize fetchPriority yet
       fetchPriority={priority ? "high" : "auto"}
       onError={(e) => {
         e.currentTarget.onerror = null;

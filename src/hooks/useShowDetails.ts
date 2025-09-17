@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { GetAnimeDetailsByIdQuery } from "../gql/graphql";
-import { fetchDetails } from "../services/queries";
+import {fetchDetails} from "../services/queries.ts";
 
-export const useShowDetails = (id?: string) => {
-  return useQuery<GetAnimeDetailsByIdQuery>({
-    ...fetchDetails(id || ""),
-    enabled: !!id,
+export const useShowDetails = (id: string | undefined) => {
+  return useQuery({
+    ...fetchDetails(id || ''),
+    enabled: !!id
   });
 };

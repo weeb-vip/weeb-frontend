@@ -1,0 +1,8 @@
+---
+import DefaultLayout from '../../layouts/DefaultLayout.astro';
+import ProfileAnimeIsland from '../../components/islands/ProfileAnimeIsland';
+---
+
+<DefaultLayout title="My Anime List">
+  <ProfileAnimeIsland client:only="react" />
+</DefaultLayout>

@@ -3,11 +3,9 @@ import {Status} from "../gql/graphql";
 import {format} from "date-fns";
 import {useState, useMemo, Fragment} from "react";
 import AnimeCard, {AnimeCardSkeleton, AnimeCardStyle} from "../components/AnimeCard";
-import {Link, useNavigate} from "react-router-dom";
-import {utc} from "@date-fns/utc/utc";
+import {useNavigate} from "../utils/navigation";
 import Button, {ButtonColor} from "../components/Button";
-import {mutate} from "swr";
-import {StatusType} from "../components/Button/Button";
+import {type StatusType} from "../components/Button/Button";
 import {GetImageFromAnime} from "../services/utils";
 import {AnimeStatusDropdown} from "../components/AnimeStatusDropdown/AnimeStatusDropdown";
 import HeroBanner from "../components/HeroBanner";
@@ -15,7 +13,6 @@ import debug from "../utils/debug";
 import {getAirTimeDisplay, findNextEpisode} from "../services/airTimeUtils";
 import {useAnimeCountdownStore} from "../stores/animeCountdownStore";
 import {getCurrentSeason, getSeasonDisplayName, getSeasonOptions} from "../utils/seasonUtils";
-import {Menu, Transition} from "@headlessui/react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronDown} from "@fortawesome/free-solid-svg-icons";
 import {useHomePageData} from "../hooks/useHomePageData";
@@ -27,13 +24,13 @@ import {useAddAnime} from "../hooks/useAddAnime";
 function Index() {
   const queryClient = useQueryClient();
   const { getTimingData } = useAnimeCountdownStore();
-  
+
   // Get the current season and available season options
   const currentSeason = getCurrentSeason();
   const [selectedSeason, setSelectedSeason] = useState(currentSeason);
   const seasonOptions = getSeasonOptions(currentSeason);
   const seasonDisplayName = getSeasonDisplayName(selectedSeason);
-  
+
   const {
     data: homeData,
     isLoading: homeDataIsLoading,
@@ -194,9 +191,9 @@ function Index() {
       <div className={"w-full flex flex-col"}>
         <div className="flex items-center justify-between mb-4">
           <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>Currently Airing Anime</h1>
-          <Link to="/airing" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">
+          <a href="/airing" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">
             See all →
-          </Link>
+          </a>
         </div>
 
         {currentAiringIsLoading ? (
@@ -300,7 +297,7 @@ function Index() {
       <div className={"w-full flex flex-col"}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
           <h1 className={"text-2xl font-bold text-gray-900 dark:text-gray-100"}>{seasonDisplayName} Anime</h1>
-          
+
           {/* Desktop: Button layout */}
           <div className="hidden sm:flex gap-2">
             {seasonOptions.map((season) => (

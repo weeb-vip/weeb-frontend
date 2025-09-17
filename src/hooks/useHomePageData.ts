@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { GetHomePageDataQuery } from "../gql/graphql";
-import { fetchHomePageData } from "../services/queries";
+import {fetchHomePageData} from "../services/queries.ts";
 
 export const useHomePageData = () => {
-  return useQuery<GetHomePageDataQuery>(fetchHomePageData());
+  return useQuery(fetchHomePageData());
 };

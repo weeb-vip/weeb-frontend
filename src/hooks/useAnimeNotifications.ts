@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {fetchCurrentlyAiring, fetchCurrentlyAiringWithDates} from '../services/queries';
-import { animeNotificationService, AnimeForNotification } from '../services/animeNotifications';
+import { fetchCurrentlyAiringWithDates} from '../services/queries';
+import { animeNotificationService, type AnimeForNotification } from '../services/animeNotifications';
 import { useToast } from '../components/Toast';
-import {CurrentlyAiringQuery, CurrentlyAiringWithDateQuery} from '../gql/graphql';
+import { type CurrentlyAiringWithDateQuery} from '../gql/graphql';
 import debug from '../utils/debug';
 
 export const useAnimeNotifications = () => {

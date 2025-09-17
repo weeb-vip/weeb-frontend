@@ -1,22 +1,28 @@
 import React, {useRef, useMemo, useEffect, useState} from "react";
-import algoliasearch from "algoliasearch/lite";
-import {createAutocomplete, AutocompleteOptions} from "@algolia/autocomplete-core";
-import {getAlgoliaResults} from "@algolia/autocomplete-preset-algolia";
+
+// Dynamic imports for SSR compatibility
+let algoliasearch: any = null;
+let createAutocomplete: any = null;
+let getAlgoliaResults: any = null;
+
+// Type for AutocompleteOptions - using any to avoid import issues
+type AutocompleteOptions = any;
 import {faSearch} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {useNavigate} from "react-router-dom";
+import {useNavigate} from "../../utils/navigation";
 import {isValid} from "date-fns";
 import Item from "./item";
 import {versionGate} from "../../services/version_gate";
 
 
-const searchClient = algoliasearch("A2HF2P5C6X", "45216ed5ac3f9e0a478d3c354d353d58");
+let searchClient: any = null;
 
 export function Autocomplete() {
   const navigate = useNavigate();
 
   const [autocompleteState, setAutocompleteState] = useState<any>({});
   const [isFocused, setIsFocused] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileFormRef = useRef<HTMLDivElement>(null);
   const mobilePanelRef = useRef<HTMLDivElement>(null);
@@ -24,12 +30,66 @@ export function Autocomplete() {
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const desktopFormRef = useRef<HTMLDivElement>(null);
   const desktopPanelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    versionGate(searchClient);
+    // Only initialize Algolia on the client side
+    const initializeAlgolia = async () => {
+      if (typeof window === 'undefined') return;
+
+      try {
+        const algoliasearchModule = await import('algoliasearch/lite');
+        const autocompleteModule = await import('@algolia/autocomplete-core');
+        const presetModule = await import('@algolia/autocomplete-preset-algolia');
+
+        // Handle both default and named exports for algoliasearch
+        if (typeof algoliasearchModule.default === 'function') {
+          algoliasearch = algoliasearchModule.default;
+        } else if (typeof algoliasearchModule === 'function') {
+          algoliasearch = algoliasearchModule;
+        } else if (algoliasearchModule.liteClient) {
+          algoliasearch = algoliasearchModule.liteClient;
+        } else {
+          throw new Error('Unable to find algoliasearch function in module');
+        }
+
+        createAutocomplete = autocompleteModule.createAutocomplete;
+        getAlgoliaResults = presetModule.getAlgoliaResults;
+
+        console.log('Modules loaded:', {
+          algoliasearch: typeof algoliasearch,
+          createAutocomplete: typeof createAutocomplete,
+          getAlgoliaResults: typeof getAlgoliaResults,
+          algoliasearchModule: Object.keys(algoliasearchModule)
+        });
+
+        if (typeof algoliasearch !== 'function') {
+          throw new Error('algoliasearch is not a function: ' + typeof algoliasearch);
+        }
+
+        searchClient = algoliasearch("A2HF2P5C6X", "45216ed5ac3f9e0a478d3c354d353d58");
+
+        versionGate(searchClient);
+
+        // Set isClient to true after everything is ready
+        setIsClient(true);
+        console.log('Algolia initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize Algolia:', error);
+        // Still set isClient to true to show a non-disabled input
+        setIsClient(true);
+      }
+    };
+
+    console.log('Autocomplete component mounting, isClient:', isClient);
+    initializeAlgolia();
   }, []);
 
 
   const autocomplete = useMemo(() => {
+    if (!isClient || !createAutocomplete || !searchClient || !getAlgoliaResults) {
+      return null;
+    }
+
     return createAutocomplete({
       onStateChange({state}) {
         setAutocompleteState(state);
@@ -59,50 +119,51 @@ export function Autocomplete() {
         ];
       },
     } as AutocompleteOptions<any>);
-  }, []);
+  }, [isClient]);
 
-  const inputProps = autocomplete.getInputProps({
+  const inputProps = autocomplete?.getInputProps({
     inputElement: desktopInputRef.current,
     onFocus: () => {
       setIsFocused(true);
-      autocomplete.setIsOpen(true);
+      autocomplete?.setIsOpen(true);
     },
     onBlur: () => {
       setIsFocused(false);
-      autocomplete.setIsOpen(false);
+      autocomplete?.setIsOpen(false);
     },
     onKeyDown: (event) => {
       if (event.key === 'Escape') {
         setIsFocused(false);
-        autocomplete.setIsOpen(false);
+        autocomplete?.setIsOpen(false);
         desktopInputRef.current?.blur();
       }
     },
-  });
+  }) || {};
 
-  const mobileInputProps = autocomplete.getInputProps({
+  const mobileInputProps = autocomplete?.getInputProps({
     inputElement: mobileInputRef.current,
     onFocus: () => {
       setIsFocused(true);
-      autocomplete.setIsOpen(true);
+      autocomplete?.setIsOpen(true);
     },
     onBlur: () => {
       setIsFocused(false);
-      autocomplete.setIsOpen(false);
+      autocomplete?.setIsOpen(false);
     },
     onKeyDown: (event) => {
       if (event.key === 'Escape') {
         setIsFocused(false);
-        autocomplete.setIsOpen(false);
+        autocomplete?.setIsOpen(false);
         mobileInputRef.current?.blur();
       }
     },
-  });
+  }) || {};
 
-  const {getEnvironmentProps} = autocomplete;
+  const {getEnvironmentProps} = autocomplete || {};
 
+  // useEffect must be called before any early returns to maintain hook order
   useEffect(() => {
-    if (!mobileFormRef.current || !mobileInputRef.current || !mobilePanelRef.current) return;
+    if (!isClient || !autocomplete || !mobileFormRef.current || !mobileInputRef.current || !mobilePanelRef.current || !getEnvironmentProps) return;
 
     const {onTouchStart, onTouchMove, onMouseDown} = getEnvironmentProps({
       formElement: mobileFormRef.current,
@@ -119,7 +180,50 @@ export function Autocomplete() {
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("mousedown", onMouseDown);
     };
-  }, [getEnvironmentProps]);
+  }, [isClient, autocomplete, getEnvironmentProps]);
+
+  // Show placeholder until Algolia is loaded
+  if (!isClient) {
+    return (
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search anime..."
+          disabled
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+        />
+        <FontAwesomeIcon
+          icon={faSearch}
+          className="absolute right-3 top-3 text-gray-400"
+        />
+      </div>
+    );
+  }
+
+  // If Algolia failed to load, show a simple input without autocomplete
+  if (!autocomplete) {
+    return (
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search anime..."
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              const query = (e.target as HTMLInputElement).value;
+              if (query.trim()) {
+                navigate(`/search?query=${encodeURIComponent(query.trim())}`);
+              }
+            }
+          }}
+        />
+        <FontAwesomeIcon
+          icon={faSearch}
+          className="absolute right-3 top-3 text-gray-400"
+        />
+      </div>
+    );
+  }
 
   const renderPanel = (panelRef: React.RefObject<HTMLDivElement>, inputRef: React.RefObject<HTMLInputElement>, isMobile = false) =>
     autocompleteState.isOpen && (
@@ -129,8 +233,8 @@ export function Autocomplete() {
           className={`
             absolute z-50 w-full left-0 right-0 overflow-auto
             transition-all duration-200 ease-in-out
-            ${isMobile 
-              ? `
+            ${isMobile
+            ? `
                 bg-white dark:bg-gray-800 
                 border border-gray-200 dark:border-gray-600 
                 rounded-b-2xl
@@ -139,7 +243,7 @@ export function Autocomplete() {
                 border-t-0
                 max-h-[calc(100vh-120px)]
               `
-              : `
+            : `
                 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg
                 border border-gray-200/50 dark:border-gray-600/50
                 rounded-b-2xl
@@ -148,16 +252,16 @@ export function Autocomplete() {
                 border-t-0
                 max-h-72
               `
-            }
+          }
           `}
-          {...autocomplete.getPanelProps({})}
+          {...(autocomplete?.getPanelProps({}) || {})}
           ref={panelRef}
         >
           {/* Subtle separator line */}
           <div className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent mx-4" />
 
           {autocompleteState.collections.map((collection: any, index: number) => (
-            <ul key={index} {...autocomplete.getListProps()} className={isMobile ? "py-2" : "py-2"}>
+            <ul key={index} {...(autocomplete?.getListProps() || {})} className={isMobile ? "py-2" : "py-2"}>
               {collection.items
                 .filter((item: any) => {
                   // Safari-safe date validation for format "2025-01-01 05:00:00.000000 +00:00"
@@ -207,26 +311,26 @@ export function Autocomplete() {
       {/* Mobile: nearly full-screen search */}
       <div className={`
         sm:hidden z-50 transition-all duration-300 ease-in-out
-        ${isFocused 
-          ? 'fixed inset-4 top-8' 
-          : 'relative w-full'
-        }
+        ${isFocused
+        ? 'fixed inset-4 top-8'
+        : 'relative w-full'
+      }
       `}>
         <div
           className={`
             transition-all duration-300 ease-in-out
-            ${isFocused && autocompleteState.isOpen 
-              ? 'shadow-2xl rounded-t-2xl' 
-              : isFocused
-                ? 'shadow-2xl rounded-2xl'
-                : 'shadow-sm focus-within:shadow-xl rounded-full'
-            }
-            ${isFocused 
-              ? 'w-full relative bg-white dark:bg-gray-800' 
-              : 'w-full relative'
-            }
+            ${isFocused && autocompleteState.isOpen
+            ? 'shadow-2xl rounded-t-2xl'
+            : isFocused
+              ? 'shadow-2xl rounded-2xl'
+              : 'shadow-sm focus-within:shadow-xl rounded-full'
+          }
+            ${isFocused
+            ? 'w-full relative bg-white dark:bg-gray-800'
+            : 'w-full relative'
+          }
           `}
-          {...autocomplete.getRootProps({})}
+          {...(autocomplete?.getRootProps({}) || {})}
           ref={mobileFormRef}
         >
           <FontAwesomeIcon
@@ -242,12 +346,12 @@ export function Autocomplete() {
               outline-none border border-gray-200 dark:border-gray-600 
               focus:border-gray-400 dark:focus:border-gray-500 
               transition-all duration-300
-              ${isFocused && autocompleteState.isOpen 
-                ? 'text-lg rounded-t-2xl border-b-0' 
-                : isFocused
-                  ? 'text-lg rounded-2xl'
-                  : 'text-base rounded-full'
-              }
+              ${isFocused && autocompleteState.isOpen
+              ? 'text-lg rounded-t-2xl border-b-0'
+              : isFocused
+                ? 'text-lg rounded-2xl'
+                : 'text-base rounded-full'
+            }
             `}
             {...mobileInputProps}
             ref={mobileInputRef}
@@ -265,14 +369,14 @@ export function Autocomplete() {
           transition-all duration-300 ease-in-out
           scale-100 focus-within:scale-105
           relative
-          ${isFocused && autocompleteState.isOpen 
-            ? 'shadow-2xl' 
-            : 'shadow-sm focus-within:shadow-xl'
-          }
-          ${isFocused && autocompleteState.isOpen 
-            ? 'rounded-t-2xl' 
-            : 'rounded-full'
-          }
+          ${isFocused && autocompleteState.isOpen
+          ? 'shadow-2xl'
+          : 'shadow-sm focus-within:shadow-xl'
+        }
+          ${isFocused && autocompleteState.isOpen
+          ? 'rounded-t-2xl'
+          : 'rounded-full'
+        }
           bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg
         `}
         {...autocomplete.getRootProps({})}
@@ -292,10 +396,10 @@ export function Autocomplete() {
             border border-gray-200 dark:border-gray-600 
             focus:border-gray-400 dark:focus:border-gray-500 
             transition-all duration-300
-            ${isFocused && autocompleteState.isOpen 
-              ? 'rounded-t-2xl border-b-0' 
-              : 'rounded-full'
-            }
+            ${isFocused && autocompleteState.isOpen
+            ? 'rounded-t-2xl border-b-0'
+            : 'rounded-full'
+          }
           `}
           {...inputProps}
         />

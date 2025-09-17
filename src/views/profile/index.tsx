@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useUser } from "../../hooks/useUser";
 import Loader from "../../components/Loader";
 import ProfileDashboard from "../../components/ProfileDashboard";
@@ -34,9 +33,9 @@ export default function ProfilePage() {
             </div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Profile</h2>
           </div>
-          <Link to="/settings" className="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-300 text-sm">
+          <a href="/settings" className="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-300 text-sm">
             Settings
-          </Link>
+          </a>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
