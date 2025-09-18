@@ -352,11 +352,11 @@
   }
 </script>
 
-<div class="flex flex-col max-w-screen-2xl" style="margin: 0 auto">
+<div class="flex flex-col max-w-screen-2xl px-4 lg:px-0" style="margin: 0 auto">
 
   <!-- Hero Banner Section -->
   {#if $currentlyAiringQuery.isLoading || sortedCurrentlyAiring.length > 0}
-    <div class="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] sm:h-[650px] md:h-[700px] mb-12 md:mb-8 -mt-[2rem] -mx-2 md:mt-0 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
+    <div class="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] sm:h-[650px] md:h-[700px] md:mt-8 mb-8 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
       {#if bannerAnime && !$currentlyAiringQuery.isLoading}
         {#key bannerAnime.id}
           <HeroBanner

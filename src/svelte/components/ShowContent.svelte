@@ -11,8 +11,10 @@
   import CharactersWithStaff from './CharactersWithStaff.svelte';
   import { fetchDetails, upsertAnime, deleteAnime } from '../../services/queries';
   import { GetImageFromAnime } from '../../services/utils';
-  import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes } from '../../services/airTimeUtils';
+  import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import debug from '../../utils/debug';
+  import { animeNotificationStore } from '../stores/animeNotifications';
+  import ShowContentSkeleton from './ShowContentSkeleton.svelte';
   export let animeId: string;
 
   let bgUrl: string | null = null;
@@ -106,6 +108,32 @@
     scheduled: { color: 'text-blue-600 dark:text-blue-400', text: 'Next Episode', icon: 'fa-calendar' }
   };
 
+  // Hero banner style timing data (from notification store)
+  $: timingDataStore = anime?.id ? animeNotificationStore.getTimingData(anime.id) : null;
+  $: countdownStore = anime?.id ? animeNotificationStore.getCountdown(anime.id) : null;
+  $: timingData = timingDataStore ? $timingDataStore : null;
+  $: workerCountdown = countdownStore ? $countdownStore : null;
+
+  // Computed timing values (matching React HeroBanner logic)
+  $: hasTimingData = Boolean(timingData || workerCountdown);
+  $: airDateTime = timingData?.airDateTime || "";
+  $: airingToday = timingData?.isAiringToday || false;
+  $: currentlyAiring = timingData?.isCurrentlyAiring || workerCountdown?.isAiring || false;
+  $: alreadyAired = timingData?.hasAlreadyAired || workerCountdown?.hasAired || false;
+  $: countdown = timingData?.countdown || workerCountdown?.countdown || "";
+  $: progress = timingData?.progress || workerCountdown?.progress;
+
+  // Episode info from worker
+  $: episode = timingData?.episode;
+  $: episodeTitle = episode ? (episode.titleEn || episode.titleJp || "Next Episode") : (hasTimingData ? "Next Episode" : "No upcoming episodes");
+
+  // JST popover state
+  let showJstPopover = false;
+
+  // For fallback air time calculation (same as hero banner)
+  $: animeNextEpisodeInfo = anime ? findNextEpisode(anime.episodes, anime.broadcast) : null;
+  $: airTimeAndDate = animeNextEpisodeInfo ? parseAirTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast) : null;
+
   $: status = airTimeDisplay?.variant || 'scheduled';
   $: config = statusConfig[status] || statusConfig.scheduled;
 
@@ -185,9 +213,7 @@
 </script>
 
 {#if isLoading}
-  <div class="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
-    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-  </div>
+  <ShowContentSkeleton />
 {:else if isError || !anime}
   <div class="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
     <p class="text-gray-500 dark:text-gray-400">Failed to load anime details</p>
@@ -195,7 +221,7 @@
 {:else}
   <div class="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
     <!-- Sticky Header -->
-    <div class="fixed top-22 left-0 right-0 z-30 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}">
+    <div class="fixed top-24 left-0 right-0 z-30 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}">
       <!-- Background container with overflow hidden -->
       <div class="relative overflow-hidden border-b border-gray-200 dark:border-gray-700 px-4 py-4 shadow-md">
         <!-- Background with blur -->
@@ -320,43 +346,88 @@
 
       <div class="bg-gray-100 dark:bg-gray-900 py-8 px-4 sm:px-8 lg:px-16 transition-colors duration-300">
         <div class="max-w-screen-2xl mx-auto flex flex-col gap-8">
-          <!-- Next Episode Card -->
-          {#if nextEpisode && nextEpisodeResult}
+          <!-- Next Episode Info -->
+          {#if hasTimingData || (episode && animeNextEpisodeInfo)}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:border-gray-700 p-4 transition-colors duration-300">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <!-- Status badge -->
+                  {#if hasTimingData && currentlyAiring}
+                    <div class="relative inline-flex items-center px-3 py-1 rounded-full bg-orange-600 text-xs font-semibold overflow-hidden text-white w-fit">
+                      {#if progress !== undefined}
+                        <div
+                          class="absolute inset-0 bg-orange-400 transition-all duration-1000 ease-out"
+                          style="width: {progress}%"
+                        ></div>
+                      {/if}
+                      <span class="relative z-10 w-1.5 h-1.5 bg-white rounded-full mr-2 animate-pulse"></span>
+                      <span class="relative z-10">AIRING NOW</span>
+                    </div>
+                  {:else if hasTimingData && !currentlyAiring && !alreadyAired}
+                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-red-600 text-xs font-semibold text-white w-fit">
+                      <span class="w-1.5 h-1.5 bg-white rounded-full mr-2 animate-pulse"></span>
+                      {countdown === "JUST AIRED" ? "JUST AIRED" : "AIRING SOON"}
+                      {#if countdown && !countdown.includes("JUST AIRED") && !countdown.includes("AIRING NOW")}
+                        <span class="ml-2 px-1.5 py-0.5 bg-black/25 rounded text-xs font-medium">
+                          in {countdown}
+                        </span>
+                      {/if}
+                    </div>
+                  {:else}
+                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-600 text-xs font-semibold text-white w-fit">
+                      <i class="fas fa-calendar w-3 h-3 mr-2"></i>
+                      NEXT EPISODE
+                    </div>
+                  {/if}
 
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center gap-2 {config.color}">
-                    <i class="fas {config.icon} text-sm"></i>
-                    <span class="font-semibold text-xs uppercase tracking-wide">{config.text}</span>
-                  </div>
-                  <div>
+                  <!-- Episode info -->
+                  <div class="min-w-0 flex-1">
                     <span class="font-bold text-gray-900 dark:text-gray-100">
-                      Episode {nextEpisode.episodeNumber}
+                      {#if episode}
+                        Episode {episode.episodeNumber}
+                      {:else if animeNextEpisodeInfo}
+                        Episode {animeNextEpisodeInfo?.episode.episodeNumber || "TBA"}
+                      {/if}
                     </span>
-                    <span class="text-gray-600 dark:text-gray-400 ml-2">
-                      {nextEpisode.titleEn || nextEpisode.titleJp || "TBA"}
+                    <span class="text-gray-600 dark:text-gray-400 ml-2 block sm:inline truncate">
+                      {#if episode}
+                        {episodeTitle}
+                      {:else if animeNextEpisodeInfo}
+                        {animeNextEpisodeInfo?.episode.titleEn || animeNextEpisodeInfo?.episode.titleJp || "TBA"}
+                      {/if}
                     </span>
                   </div>
                 </div>
 
-                <div class="flex items-center gap-2 {config.color} flex-shrink-0">
+                <!-- Air time info -->
+                <div class="flex items-center gap-2 text-gray-600 dark:text-gray-300 flex-shrink-0 self-start sm:self-center">
                   <i class="fas fa-clock text-xs"></i>
                   <span class="text-sm font-medium">
-                    {#if airTimeDisplay}
-                      {airTimeDisplay.text}
-                    {:else if airTime}
-                      {#if airTime <= now}
-                        Aired {format(airTime, "EEE MMM do 'at' h:mm a")}
-                      {:else}
-                        Airing {format(airTime, "EEE MMM do 'at' h:mm a")}
-                      {/if}
-                    {:else if nextEpisode.airDate}
-                      Airing on {format(new Date(nextEpisode.airDate), "dd MMM yyyy")}
-                    {:else}
-                      TBA
-                    {/if}
+                    {airDateTime || (airTimeAndDate && getAirDateTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast)) || "TBA"}
                   </span>
+                  {#if anime.broadcast}
+                    <div class="relative">
+                      <span
+                        class="px-2 py-1 bg-blue-600/20 text-blue-600 dark:text-blue-300 rounded text-xs font-medium cursor-help"
+                        on:mouseenter={() => showJstPopover = true}
+                        on:mouseleave={() => showJstPopover = false}
+                      >
+                        JST
+                      </span>
+                      {#if showJstPopover}
+                        <div class="absolute bottom-full right-0 mb-2 z-50">
+                          <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm rounded-lg p-3 w-72 sm:w-80 max-w-[calc(100vw-2rem)]" style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);">
+                            <div class="text-center">
+                              <p class="text-gray-700 dark:text-gray-200">
+                                Japanese TV broadcast time (in local time). Streaming services usually release with 3 hours after show ends.
+                              </p>
+                            </div>
+                            <div class="absolute top-full right-4 border-8 border-transparent border-t-white dark:border-t-gray-900"></div>
+                          </div>
+                        </div>
+                      {/if}
+                    </div>
+                  {/if}
                 </div>
               </div>
             </div>
