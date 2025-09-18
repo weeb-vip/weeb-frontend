@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import SafeImage from './SafeImage.svelte';
+  import ScrollingText from './ScrollingText.svelte';
 
   export let style: 'default' | 'hover-transparent' | 'hover' | 'transparent' | 'long' | 'detail' | 'episode' = 'default';
   export let forceListLayout: boolean = false;
@@ -75,17 +76,11 @@
   {#if style === 'detail'}
     <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
       <a href="/show/{id}" class="flex overflow-hidden flex-col w-full">
-        <div class="group w-full">
-          <!-- Default (visible) -->
-          <span class="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden text-gray-900 dark:text-gray-100">
-            {title}
-          </span>
-
-          <!-- On hover (revealed) -->
-          <span class="hidden group-hover:block whitespace-nowrap w-max text-md font-bold group-hover:animate-marquee text-gray-900 dark:text-gray-100">
-            {title}
-          </span>
-        </div>
+        <ScrollingText
+          text={title}
+          className="text-md font-bold text-gray-900 dark:text-gray-100"
+          maxWidth="100%"
+        />
 
         <div class="flex flex-col space-y-2 text-md font-normal mt-2 items-start text-gray-700 dark:text-gray-300">
           <div class="flex items-center">
@@ -118,29 +113,17 @@
   {#if style === 'episode'}
     <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
       <a href="/show/{id}" class="flex flex-col overflow-hidden w-full">
-        <div class="group w-full">
-          <!-- Default (visible) -->
-          <span class="block whitespace-nowrap text-md font-bold w-full truncate group-hover:hidden text-gray-900 dark:text-gray-100">
-            {title}
-          </span>
+        <ScrollingText
+          text={title}
+          className="text-md font-bold text-gray-900 dark:text-gray-100"
+          maxWidth="100%"
+        />
 
-          <!-- On hover (revealed) -->
-          <span class="hidden group-hover:block whitespace-nowrap text-md font-bold group-hover:animate-marquee text-gray-900 dark:text-gray-100">
-            {title}
-          </span>
-        </div>
-
-        <div class="group w-full">
-          <!-- Default (visible) -->
-          <span class="block whitespace-nowrap text-md font-normal w-full truncate group-hover:hidden text-gray-900 dark:text-gray-100">
-            {episodeTitle}
-          </span>
-
-          <!-- On hover (revealed) -->
-          <span class="hidden group-hover:block whitespace-nowrap text-md font-normal group-hover:animate-marquee text-gray-900 dark:text-gray-100">
-            {episodeTitle}
-          </span>
-        </div>
+        <ScrollingText
+          text={episodeTitle}
+          className="text-md font-normal text-gray-900 dark:text-gray-100"
+          maxWidth="100%"
+        />
 
         <div class="flex flex-col w-full justify-between space-y-2">
           <span class="flex-grow text-md text-base space-x-4 text-gray-600 dark:text-gray-400">

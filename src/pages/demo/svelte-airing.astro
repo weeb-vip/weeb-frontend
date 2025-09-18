@@ -1,0 +1,8 @@
+---
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import CurrentlyAiringDemo from '../../svelte/components/CurrentlyAiringDemo.svelte';
+---
+
+<SvelteLayout title="Svelte Airing Demo" description="Svelte version of the airing page for testing and comparison">
+  <CurrentlyAiringDemo client:load />
+</SvelteLayout>

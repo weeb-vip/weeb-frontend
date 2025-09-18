@@ -1,385 +1,495 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { createQuery, createMutation, QueryClient } from '@tanstack/svelte-query';
+  import { createQuery, createMutation } from '@tanstack/svelte-query';
+  import { format } from 'date-fns';
+  import { utc } from '@date-fns/utc/utc';
   import AnimeCard from './AnimeCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
+  import Button from './Button.svelte';
+  import HeroBanner from './HeroBanner.svelte';
+  import HeroBannerSkeleton from './HeroBannerSkeleton.svelte';
   import { initializeQueryClient } from '../services/query-client';
-  import { ensureConfigLoaded } from '../../services/config-loader';
-  import { AuthStorage } from '../../utils/auth-storage';
-  import { GraphQLClient } from 'graphql-request';
+  import {
+    fetchCurrentlyAiring,
+    upsertAnime,
+    deleteAnime
+  } from '../../services/queries';
+  import { GetImageFromAnime } from '../../services/utils';
+  import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
+  import { animeNotificationService } from '../../services/animeNotifications';
 
-  let queryClient: QueryClient | null = null;
-  let isClient = false;
-  let config: any = null;
+  let animeStatuses: Record<string, 'idle' | 'loading' | 'success' | 'error'> = {};
 
-  // GraphQL queries
-  const getCurrentlyAiringQuery = `
-    query CurrentlyAiring {
-      currentlyAiring {
-        sunday {
-          anime {
-            id
-            title
-            description
-            image
-            episodes
-            duration
-            year
-            status
-          }
-          nextEpisode {
-            episode
-            airDate
-          }
+  // Initialize query client
+  const queryClient = initializeQueryClient();
+
+  // Create TanStack Query stores
+  const currentlyAiringQuery = createQuery(fetchCurrentlyAiring(), queryClient);
+
+  // Create mutations with success callbacks
+  const upsertAnimeMutation = createMutation({
+    ...upsertAnime(),
+    onSuccess: (data, variables) => {
+      // Invalidate query to refresh data
+      queryClient.invalidateQueries({ queryKey: ['currently-airing'] });
+
+      // Update anime status
+      animeStatuses = { ...animeStatuses };
+      const animeId = variables.input.animeID;
+      Object.keys(animeStatuses).forEach(key => {
+        if (key.includes(animeId)) {
+          animeStatuses[key] = 'success';
         }
-        monday {
-          anime {
-            id
-            title
-            description
-            image
-            episodes
-            duration
-            year
-            status
-          }
-          nextEpisode {
-            episode
-            airDate
-          }
+      });
+    },
+    onError: (error, variables) => {
+      console.error('❌ Upsert mutation failed:', error);
+
+      // Update anime status to error
+      const animeId = variables.input.animeID;
+      animeStatuses = { ...animeStatuses };
+      Object.keys(animeStatuses).forEach(key => {
+        if (key.includes(animeId)) {
+          animeStatuses[key] = 'error';
         }
-        tuesday {
-          anime {
-            id
-            title
-            description
-            image
-            episodes
-            duration
-            year
-            status
-          }
-          nextEpisode {
-            episode
-            airDate
-          }
-        }
-        wednesday {
-          anime {
-            id
-            title
-            description
-            image
-            episodes
-            duration
-            year
-            status
-          }
-          nextEpisode {
-            episode
-            airDate
-          }
-        }
-        thursday {
-          anime {
-            id
-            title
-            description
-            image
-            episodes
-            duration
-            year
-            status
-          }
-          nextEpisode {
-            episode
-            airDate
-          }
-        }
-        friday {
-          anime {
-            id
-            title
-            description
-            image
-            episodes
-            duration
-            year
-            status
-          }
-          nextEpisode {
-            episode
-            airDate
-          }
-        }
-        saturday {
-          anime {
-            id
-            title
-            description
-            image
-            episodes
-            duration
-            year
-            status
-          }
-          nextEpisode {
-            episode
-            airDate
-          }
-        }
-      }
+      });
     }
-  `;
+  }, queryClient);
 
-  const upsertAnimeQuery = `
-    mutation AddAnime($input: UserAnimeInput!) {
-      AddAnime(input: $input) {
-        id
-        status
-      }
+  const deleteAnimeMutation = createMutation({
+    ...deleteAnime(),
+    onSuccess: (data, animeId) => {
+      // Invalidate query to refresh data
+      queryClient.invalidateQueries({ queryKey: ['currently-airing'] });
+    },
+    onError: (error) => {
+      console.error('❌ Delete mutation failed:', error);
     }
-  `;
+  }, queryClient);
 
-  const deleteAnimeQuery = `
-    mutation DeleteAnime($input: String!) {
-      DeleteAnime(input: $input)
-    }
-  `;
+  // Process currently airing data for airing page with categories
+  function processCurrentlyAiring(data: any) {
+    if (!data?.currentlyAiring) return [];
 
-  onMount(async () => {
-    try {
-      config = await ensureConfigLoaded();
-      queryClient = initializeQueryClient();
-      isClient = true;
-    } catch (error) {
-      console.warn('Failed to initialize:', error);
-      isClient = true;
-    }
-  });
+    const now = new Date();
+    const currentlyAiringShows = data.currentlyAiring || [];
+    const processedAnime: any[] = [];
 
-  // Create authenticated GraphQL client
-  function createAuthClient() {
-    const token = AuthStorage.getAuthToken();
-    if (!config?.graphql_host) {
-      throw new Error('Config not loaded');
-    }
-    return new GraphQLClient(config.graphql_host, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : ''
+    // Process each anime and determine its next episode
+    currentlyAiringShows.forEach((anime: any) => {
+      if (!anime || !(anime as any).episodes || (anime as any).episodes.length === 0) return;
+
+      const episodes = (anime as any).episodes;
+
+      // Use shared function to find the next episode
+      const nextEpisodeResult = findNextEpisode(episodes, anime.broadcast, now);
+
+      // If we found a next episode, add this anime to our list
+      if (nextEpisodeResult) {
+        const { episode: nextEpisode, airTime: nextEpisodeAirTime } = nextEpisodeResult;
+        // Generate air time display info (using local timezone formatting)
+        const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast) || {
+          show: true,
+          text: nextEpisodeAirTime <= now
+                  ? "Recently aired"
+                  : (() => {
+                      const timeDiff = nextEpisodeAirTime.getTime() - now.getTime();
+                      const isWithin24Hours = timeDiff <= (24 * 60 * 60 * 1000);
+                      return isWithin24Hours
+                        ? `Airing ${format(nextEpisodeAirTime, "EEE")} at ${format(nextEpisodeAirTime, "h:mm a")}`
+                        : `${format(nextEpisodeAirTime, "EEE")} at ${format(nextEpisodeAirTime, "h:mm a")}`;
+                    })(),
+          variant: nextEpisodeAirTime <= now ? 'aired' as const : 'scheduled' as const
+        };
+
+        const processedEntry = {
+          id: `airing-${anime.id}`,
+          anime: {
+            id: anime.id,
+            titleEn: anime.titleEn,
+            titleJp: anime.titleJp,
+            description: anime.description,
+            episodeCount: null,
+            duration: anime.duration,
+            startDate: anime.startDate,
+            imageUrl: anime.imageUrl,
+            userAnime: anime.userAnime || null
+          },
+          status: null,
+          airingInfo: {
+            ...anime,
+            airTimeDisplay: airTimeInfo,
+            nextEpisodeDate: nextEpisodeAirTime,
+            nextEpisode: {
+              ...nextEpisode,
+              airDate: nextEpisodeAirTime
+            },
+            isInWatchlist: false
+          }
+        };
+
+        processedAnime.push(processedEntry);
       }
     });
+
+    // Filter and sort anime: only recently aired (last 30 minutes) or future episodes
+    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+
+    // Separate recently aired and future episodes
+    const recentlyAired = processedAnime
+            .filter(anime => {
+              const airTime = anime.airingInfo.nextEpisodeDate;
+              return airTime <= now && airTime >= thirtyMinutesAgo;
+            })
+            .sort((a, b) => b.airingInfo.nextEpisodeDate.getTime() - a.airingInfo.nextEpisodeDate.getTime()) // Most recent first
+            .slice(0, 10); // More entries for airing page
+
+    const futureEpisodes = processedAnime
+            .filter(anime => anime.airingInfo.nextEpisodeDate > now)
+            .sort((a, b) => a.airingInfo.nextEpisodeDate.getTime() - b.airingInfo.nextEpisodeDate.getTime()); // Earliest first
+
+    // Combine: recently aired first, then future episodes
+    return [...recentlyAired, ...futureEpisodes];
   }
 
-  // Fetch currently airing anime
-  $: currentlyAiringQuery = isClient && queryClient && config ? createQuery({
-    queryKey: ['currently-airing'],
-    queryFn: async () => {
-      try {
-        const client = createAuthClient();
-        const data = await client.request(getCurrentlyAiringQuery);
-        return data.currentlyAiring;
-      } catch (error) {
-        console.error('Failed to fetch currently airing:', error);
-        throw error;
-      }
-    },
-    enabled: isClient && !!config
-  }, queryClient) : null;
-
-  // Mutation for updating anime status
-  $: updateAnimeMutation = isClient && queryClient && config ? createMutation({
-    mutationFn: async ({ animeId, status }: { animeId: string; status: string }) => {
-      const client = createAuthClient();
-      const data = await client.request(upsertAnimeQuery, {
-        input: { animeID: animeId, status }
-      });
-      return data.AddAnime;
-    },
-    onSuccess: () => {
-      // Invalidate and refetch
-      if (queryClient) {
-        queryClient.invalidateQueries({ queryKey: ['currently-airing'] });
-      }
-    }
-  }, queryClient) : null;
-
-  // Mutation for deleting anime
-  $: deleteAnimeMutation = isClient && queryClient && config ? createMutation({
-    mutationFn: async (animeId: string) => {
-      const client = createAuthClient();
-      const data = await client.request(deleteAnimeQuery, { input: animeId });
-      return data.DeleteAnime;
-    },
-    onSuccess: () => {
-      // Invalidate and refetch
-      if (queryClient) {
-        queryClient.invalidateQueries({ queryKey: ['currently-airing'] });
-      }
-    }
-  }, queryClient) : null;
-
   function handleStatusChange(event: CustomEvent) {
-    if (!updateAnimeMutation) return;
     const { animeId, status } = event.detail;
-    $updateAnimeMutation.mutate({ animeId, status });
+    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status } });
   }
 
   function handleDelete(event: CustomEvent) {
-    if (!deleteAnimeMutation) return;
+    console.log('🗑️ handleDelete called with:', event.detail);
     const { animeId } = event.detail;
+    console.log('🗑️ Calling deleteAnimeMutation with animeId:', animeId);
     $deleteAnimeMutation.mutate(animeId);
   }
 
-  // Get all anime from all days
-  function getAllAnime(data: any) {
-    if (!data) return [];
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const allAnime = [];
+  function clearAnimeStatus(animeId: string) {
+    console.log('🧹 clearAnimeStatus called with animeId:', animeId);
+    // Call the delete mutation first
+    console.log('🗑️ Calling deleteAnimeMutation from clearAnimeStatus with animeId:', animeId);
+    $deleteAnimeMutation.mutate(animeId);
 
-    for (const day of days) {
-      if (data[day] && Array.isArray(data[day])) {
-        for (const item of data[day]) {
-          if (item.anime) {
-            allAnime.push({
-              ...item.anime,
-              nextEpisode: item.nextEpisode,
-              day
-            });
-          }
-        }
+    // Clear status for all keys that contain this animeId
+    const updated = { ...animeStatuses };
+    Object.keys(updated).forEach(key => {
+      if (key.includes(animeId)) {
+        delete updated[key];
       }
-    }
-
-    return allAnime;
+    });
+    animeStatuses = updated;
   }
 
-  $: animeList = currentlyAiringQuery ? getAllAnime($currentlyAiringQuery?.data) : [];
+  function handleAddAnime(id: string, animeId: string) {
+    animeStatuses[id] = 'loading';
+    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: 'PLANTOWATCH' } });
+  }
+
+  function navigateToShow(animeId: string) {
+    window.location.href = `/show/${animeId}`;
+  }
+
+  function navigateToCalendar() {
+    window.location.href = '/airing/calendar';
+  }
+
+  // Reactive data using TanStack Query stores
+  $: sortedCurrentlyAiring = processCurrentlyAiring($currentlyAiringQuery.data);
+
+  // Debug logging for data fetching
+  $: {
+    console.log('Currently airing query status:', {
+      isLoading: $currentlyAiringQuery.isLoading,
+      isError: $currentlyAiringQuery.isError,
+      isSuccess: $currentlyAiringQuery.isSuccess,
+      error: $currentlyAiringQuery.error,
+      dataKeys: $currentlyAiringQuery.data ? Object.keys($currentlyAiringQuery.data) : null,
+      currentlyAiringCount: $currentlyAiringQuery.data?.currentlyAiring?.length || 0
+    });
+  }
+
+  // Set up anime notifications when currently airing data is available
+  $: if ($currentlyAiringQuery.isSuccess && $currentlyAiringQuery.data?.currentlyAiring) {
+    // Notifications are now managed globally by AnimeNotificationProvider
+    // Just trigger an update to refresh the data for the hero banner
+    setTimeout(() => {
+      animeNotificationService.triggerImmediateUpdate();
+    }, 50);
+  }
+
+  // Determine which anime to show in banner (first airing anime, no hover handling)
+  $: bannerAnime = sortedCurrentlyAiring[0]?.airingInfo;
+
+  // Categorize anime for different sections
+  $: categorizedAnime = (() => {
+    if (!sortedCurrentlyAiring.length) return {
+      airingToday: [],
+      airingThisWeek: [],
+      comingSoon: [],
+      recentlyAired: []
+    };
+
+    const now = new Date();
+    const categories = {
+      airingToday: [] as typeof sortedCurrentlyAiring,
+      airingThisWeek: [] as typeof sortedCurrentlyAiring,
+      comingSoon: [] as typeof sortedCurrentlyAiring,
+      recentlyAired: [] as typeof sortedCurrentlyAiring
+    };
+
+    sortedCurrentlyAiring.forEach(entry => {
+      const airTime = entry.airingInfo.nextEpisodeDate;
+      const diffMs = airTime.getTime() - now.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+      if (diffMs <= 0 && Math.abs(diffMs) <= (7 * 24 * 60 * 60 * 1000)) {
+        categories.recentlyAired.push(entry);
+      } else if (diffMs > 0 && diffMs <= (24 * 60 * 60 * 1000)) {
+        categories.airingToday.push(entry);
+      } else if (diffDays > 0 && diffDays <= 7) {
+        categories.airingThisWeek.push(entry);
+      } else {
+        categories.comingSoon.push(entry);
+      }
+    });
+
+    return categories;
+  })();
 </script>
 
-<div class="space-y-6">
-  {#if !isClient || !queryClient}
-    <!-- Loading skeleton -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {#each Array(6) as _}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 animate-pulse">
-          <div class="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+<div class="flex flex-col max-w-screen-2xl px-4 lg:px-0" style="margin: 0 auto">
+
+  <!-- Hero Banner Section -->
+  {#if $currentlyAiringQuery.isLoading || sortedCurrentlyAiring.length > 0}
+    <div class="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] sm:h-[650px] md:h-[700px] md:mt-8 mb-8 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
+      {#if bannerAnime && !$currentlyAiringQuery.isLoading}
+        {#key bannerAnime.id}
+          <HeroBanner
+            anime={bannerAnime}
+            onAddAnime={(animeId) => handleAddAnime(`hero-${animeId}`, animeId)}
+            animeStatus={animeStatuses[`hero-${bannerAnime.id}`] || 'idle'}
+            onDeleteAnime={clearAnimeStatus}
+          />
+        {/key}
+      {:else}
+        <HeroBannerSkeleton />
+      {/if}
+    </div>
+  {/if}
+
+  <!-- Header with Calendar Button -->
+  <div class="mb-8 flex justify-end">
+    <Button
+      color="blue"
+      label="View Calendar"
+      status="idle"
+      onClick={navigateToCalendar}
+    />
+  </div>
+
+  <!-- Content Sections -->
+  <div class="space-y-8">
+    <!-- Airing Next 24 Hours -->
+    {#if categorizedAnime.airingToday.length > 0}
+      <div class="flex flex-col space-y-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+          Airing Next 24 Hours ({categorizedAnime.airingToday.length})
+        </h2>
+        <div class="flex flex-col space-y-4">
+          {#each categorizedAnime.airingToday as entry (entry.id)}
+            <AnimeCard
+              forceListLayout={true}
+              id={entry.airingInfo.id}
+              style="episode"
+              title={entry.airingInfo.titleEn || entry.airingInfo.titleJp || "Unknown"}
+              episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
+              description=""
+              episodeLength=""
+              episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
+              className="hover:cursor-pointer"
+              year=""
+              image={GetImageFromAnime(entry.airingInfo)}
+              airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do", { in: utc }) : "Unknown"}
+              airTime={entry.airingInfo.airTimeDisplay}
+              onClick={() => navigateToShow(entry.airingInfo.id)}
+              episodes={0}
+            >
+              <div slot="options">
+                {#if !entry.airingInfo.userAnime}
+                  <Button
+                    color="blue"
+                    label="Add to list"
+                    status={animeStatuses[entry.airingInfo.id] || 'idle'}
+                    onClick={() => handleAddAnime(entry.airingInfo.id, entry.airingInfo.id)}
+                  />
+                {:else}
+                  <AnimeStatusDropdown
+                    entry={{
+                      ...entry.airingInfo.userAnime,
+                      anime: entry.airingInfo
+                    }}
+                    variant="compact"
+                    on:statusChange={handleStatusChange}
+                    on:delete={handleDelete}
+                  />
+                {/if}
+              </div>
+            </AnimeCard>
+          {/each}
         </div>
-      {/each}
-    </div>
-  {:else if $currentlyAiringQuery?.isLoading}
-    <!-- Loading state -->
-    <div class="text-center py-8">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-      <p class="mt-2 text-gray-600 dark:text-gray-400">Loading currently airing anime...</p>
-    </div>
-  {:else if $currentlyAiringQuery?.error}
-    <!-- Error state -->
-    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-      <p class="text-red-600 dark:text-red-400">
-        <i class="fas fa-exclamation-triangle mr-2"></i>
-        Failed to load anime: {$currentlyAiringQuery.error.message}
-      </p>
-      <button
-        on:click={() => $currentlyAiringQuery?.refetch()}
-        class="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-      >
-        Try Again
-      </button>
-    </div>
-  {:else if animeList.length === 0}
-    <!-- Empty state -->
-    <div class="text-center py-12">
-      <i class="fas fa-tv text-6xl text-gray-400 mb-4"></i>
-      <p class="text-gray-600 dark:text-gray-400 text-lg">No currently airing anime found</p>
-    </div>
-  {:else}
-    <!-- Display anime -->
-    <div class="mb-4 flex justify-between items-center">
-      <p class="text-gray-600 dark:text-gray-400">
-        Found {animeList.length} currently airing anime
-      </p>
-      <button
-        on:click={() => $currentlyAiringQuery?.refetch()}
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        disabled={$currentlyAiringQuery?.isFetching}
-      >
-        {#if $currentlyAiringQuery?.isFetching}
-          <i class="fas fa-sync fa-spin mr-2"></i>
-        {:else}
-          <i class="fas fa-sync mr-2"></i>
-        {/if}
-        Refresh
-      </button>
-    </div>
+      </div>
+    {/if}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {#each animeList as anime (anime.id)}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <AnimeCard
-            style="detail"
-            title={anime.title}
-            description={anime.description || ''}
-            episodes={anime.episodes || 'Unknown'}
-            episodeLength={anime.duration ? `${anime.duration} min` : 'Unknown'}
-            year={anime.year || 'Unknown'}
-            image={anime.image}
-            id={anime.id}
-            airTime={anime.nextEpisode?.airDate ? {
-              show: true,
-              text: `Episode ${anime.nextEpisode.episode} - ${anime.day}`,
-              variant: 'scheduled'
-            } : undefined}
-            entry={anime.status ? { status: anime.status } : null}
-          >
-            <div slot="options" class="flex gap-2 w-full">
-              <AnimeStatusDropdown
-                entry={{
-                  id: anime.id,
-                  anime: { id: anime.id },
-                  status: anime.status || 'PLANTOWATCH'
-                }}
-                variant="compact"
-                on:statusChange={handleStatusChange}
-                on:delete={handleDelete}
-              />
-              {#if $updateAnimeMutation?.isPending && $updateAnimeMutation?.variables?.animeId === anime.id}
-                <span class="text-sm text-gray-500 dark:text-gray-400">
-                  <i class="fas fa-spinner fa-spin"></i> Updating...
-                </span>
-              {/if}
-              {#if $deleteAnimeMutation?.isPending && $deleteAnimeMutation?.variables === anime.id}
-                <span class="text-sm text-red-500 dark:text-red-400">
-                  <i class="fas fa-spinner fa-spin"></i> Removing...
-                </span>
-              {/if}
-            </div>
-          </AnimeCard>
+    <!-- Airing This Week -->
+    {#if categorizedAnime.airingThisWeek.length > 0}
+      <div class="flex flex-col space-y-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+          Airing This Week ({categorizedAnime.airingThisWeek.length})
+        </h2>
+        <div class="flex flex-col space-y-4">
+          {#each categorizedAnime.airingThisWeek as entry (entry.id)}
+            <AnimeCard
+              forceListLayout={true}
+              id={entry.airingInfo.id}
+              style="episode"
+              title={entry.airingInfo.titleEn || entry.airingInfo.titleJp || "Unknown"}
+              episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
+              description=""
+              episodeLength=""
+              episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
+              className="hover:cursor-pointer"
+              year=""
+              image={GetImageFromAnime(entry.airingInfo)}
+              airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do", { in: utc }) : "Unknown"}
+              airTime={entry.airingInfo.airTimeDisplay}
+              onClick={() => navigateToShow(entry.airingInfo.id)}
+              episodes={0}
+            >
+              <div slot="options">
+                {#if !entry.airingInfo.userAnime}
+                  <Button
+                    color="blue"
+                    label="Add to list"
+                    status={animeStatuses[entry.airingInfo.id] || 'idle'}
+                    onClick={() => handleAddAnime(entry.airingInfo.id, entry.airingInfo.id)}
+                  />
+                {:else}
+                  <AnimeStatusDropdown
+                    entry={{
+                      ...entry.airingInfo.userAnime,
+                      anime: entry.airingInfo
+                    }}
+                    variant="compact"
+                    on:statusChange={handleStatusChange}
+                    on:delete={handleDelete}
+                  />
+                {/if}
+              </div>
+            </AnimeCard>
+          {/each}
         </div>
-      {/each}
-    </div>
-  {/if}
+      </div>
+    {/if}
 
-  {#if $updateAnimeMutation?.isError}
-    <div class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg">
-      <i class="fas fa-exclamation-circle mr-2"></i>
-      Failed to update status
-    </div>
-  {/if}
+    <!-- Recently Aired -->
+    {#if categorizedAnime.recentlyAired.length > 0}
+      <div class="flex flex-col space-y-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+          Recently Aired ({categorizedAnime.recentlyAired.length})
+        </h2>
+        <div class="flex flex-col space-y-4">
+          {#each categorizedAnime.recentlyAired as entry (entry.id)}
+            <AnimeCard
+              forceListLayout={true}
+              id={entry.airingInfo.id}
+              style="episode"
+              title={entry.airingInfo.titleEn || entry.airingInfo.titleJp || "Unknown"}
+              episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
+              description=""
+              episodeLength=""
+              episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
+              className="hover:cursor-pointer"
+              year=""
+              image={GetImageFromAnime(entry.airingInfo)}
+              airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do", { in: utc }) : "Unknown"}
+              airTime={entry.airingInfo.airTimeDisplay}
+              onClick={() => navigateToShow(entry.airingInfo.id)}
+              episodes={0}
+            >
+              <div slot="options">
+                {#if !entry.airingInfo.userAnime}
+                  <Button
+                    color="blue"
+                    label="Add to list"
+                    status={animeStatuses[entry.airingInfo.id] || 'idle'}
+                    onClick={() => handleAddAnime(entry.airingInfo.id, entry.airingInfo.id)}
+                  />
+                {:else}
+                  <AnimeStatusDropdown
+                    entry={{
+                      ...entry.airingInfo.userAnime,
+                      anime: entry.airingInfo
+                    }}
+                    variant="compact"
+                    on:statusChange={handleStatusChange}
+                    on:delete={handleDelete}
+                  />
+                {/if}
+              </div>
+            </AnimeCard>
+          {/each}
+        </div>
+      </div>
+    {/if}
 
-  {#if $deleteAnimeMutation?.isError}
-    <div class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg">
-      <i class="fas fa-exclamation-circle mr-2"></i>
-      Failed to remove anime
-    </div>
-  {/if}
-
-  {#if $updateAnimeMutation?.isSuccess}
-    <div class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg">
-      <i class="fas fa-check-circle mr-2"></i>
-      Status updated successfully
-    </div>
-  {/if}
+    <!-- Coming Soon -->
+    {#if categorizedAnime.comingSoon.length > 0}
+      <div class="flex flex-col space-y-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+          Coming Soon ({categorizedAnime.comingSoon.length})
+        </h2>
+        <div class="flex flex-col space-y-4">
+          {#each categorizedAnime.comingSoon as entry (entry.id)}
+            <AnimeCard
+              forceListLayout={true}
+              id={entry.airingInfo.id}
+              style="episode"
+              title={entry.airingInfo.titleEn || entry.airingInfo.titleJp || "Unknown"}
+              episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
+              description=""
+              episodeLength=""
+              episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
+              className="hover:cursor-pointer"
+              year=""
+              image={GetImageFromAnime(entry.airingInfo)}
+              airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do", { in: utc }) : "Unknown"}
+              airTime={entry.airingInfo.airTimeDisplay}
+              onClick={() => navigateToShow(entry.airingInfo.id)}
+              episodes={0}
+            >
+              <div slot="options">
+                {#if !entry.airingInfo.userAnime}
+                  <Button
+                    color="blue"
+                    label="Add to list"
+                    status={animeStatuses[entry.airingInfo.id] || 'idle'}
+                    onClick={() => handleAddAnime(entry.airingInfo.id, entry.airingInfo.id)}
+                  />
+                {:else}
+                  <AnimeStatusDropdown
+                    entry={{
+                      ...entry.airingInfo.userAnime,
+                      anime: entry.airingInfo
+                    }}
+                    variant="compact"
+                    on:statusChange={handleStatusChange}
+                    on:delete={handleDelete}
+                  />
+                {/if}
+              </div>
+            </AnimeCard>
+          {/each}
+        </div>
+      </div>
+    {/if}
+  </div>
 </div>
