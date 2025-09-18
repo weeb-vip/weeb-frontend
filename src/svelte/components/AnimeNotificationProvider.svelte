@@ -1,15 +1,19 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { initializeAnimeNotifications, cleanupAnimeNotifications } from '../stores/animeNotificationProvider';
+  import { onMount } from 'svelte';
+  import { initializeAnimeNotifications } from '../stores/animeNotificationProvider';
+  import debug from '../../utils/debug';
 
-  // Initialize the anime notifications system on mount
+  // onMount only runs on the client, so we can safely check window there
   onMount(async () => {
-    await initializeAnimeNotifications();
-  });
+    // Use a global flag to ensure we only initialize once per browser session
+    // This persists across page navigations but resets on page refresh
+    if (!window.__animeNotificationsComponentMounted) {
+      window.__animeNotificationsComponentMounted = true;
 
-  // Cleanup on destroy
-  onDestroy(() => {
-    cleanupAnimeNotifications();
+      debug.info('🔔 AnimeNotificationProvider: Checking initialization status');
+      // The singleton manager in the store handles duplicate initialization checks
+      await initializeAnimeNotifications();
+    }
   });
 </script>
 

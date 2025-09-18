@@ -2,7 +2,7 @@
 import '../scss/base.scss';
 import '../fontawesome';
 import { ViewTransitions } from 'astro:transitions';
-import GlobalNotifications from '../components/islands/GlobalNotifications';
+import GlobalToaster from '../svelte/components/GlobalToaster.svelte';
 
 export interface Props {
   title?: string;
@@ -304,8 +304,8 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
     <link rel="preconnect" href="https://weeb-api.staging.weeb.vip">
   </head>
   <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-    <!-- Global notifications and anime notifications -->
-    <GlobalNotifications client:only="react" />
+    <!-- Global Svelte toaster for notifications -->
+    <GlobalToaster client:only="svelte" transition:persist="toast-provider" />
 
     <slot />
 

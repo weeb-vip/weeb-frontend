@@ -1,6 +1,7 @@
 ---
-import StaticLayout from '../../layouts/StaticLayout.astro';
-import ShowContentLoader from '../../components/islands/ShowContentLoader';
+import SvelteFullWidthLayout from '../../layouts/SvelteFullWidthLayout.astro';
+import ShowContentWithProvider from '../../svelte/components/ShowContentWithProvider.svelte';
+export const prerender = false;
 
 // Get the anime ID from the URL parameters
 const { id } = Astro.params;
@@ -10,9 +11,9 @@ if (!id) {
 }
 ---
 
-<StaticLayout
+<SvelteFullWidthLayout
   title="Anime Details"
   description="View anime details, episodes, and information"
 >
-  <ShowContentLoader animeId={id} client:only="react" />
-</StaticLayout>
+  <ShowContentWithProvider animeId={id} client:load />
+</SvelteFullWidthLayout>

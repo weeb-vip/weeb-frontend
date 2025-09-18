@@ -9,7 +9,6 @@
   import CurrentlyAiringCard from './CurrentlyAiringCard.svelte';
   import HeroBanner from './HeroBanner.svelte';
   import HeroBannerSkeleton from './HeroBannerSkeleton.svelte';
-  import AnimeNotificationProvider from './AnimeNotificationProvider.svelte';
   import { initializeQueryClient } from '../services/query-client';
   import {
     fetchHomePageData,
@@ -107,26 +106,8 @@
   onMount(() => {
     fetchSeasonalData(selectedSeason);
 
-    // Set up anime notification toasts (like React useAnimeNotifications)
-    animeNotificationService.setNotificationCallback((type, anime, episode) => {
-      switch (type) {
-        case 'warning':
-          animeToast.warning(anime, episode);
-          break;
-
-        case 'airing-soon':
-          animeToast.airingSoon(anime, episode, 30);
-          break;
-
-        case 'airing':
-          animeToast.nowAiring(anime, episode);
-          break;
-
-        case 'finished-airing':
-          animeToast.finished(anime, episode);
-          break;
-      }
-    });
+    // Notification callback is now set up globally in AnimeNotificationProvider
+    // We don't need to set it up here anymore
 
   });
 
@@ -344,10 +325,8 @@
       episodes: anime.episodes
     }));
 
-    // Start watching for notifications
-    animeNotificationService.startWatching(animeForNotifications);
-
-    // Trigger immediate update to get initial data
+    // Notifications are now managed globally by AnimeNotificationProvider
+    // Just trigger an update to refresh the data for the hero banner
     setTimeout(() => {
       animeNotificationService.triggerImmediateUpdate();
     }, 50);
@@ -374,8 +353,6 @@
 </script>
 
 <div class="flex flex-col max-w-screen-2xl" style="margin: 0 auto">
-  <!-- Anime Notification Provider (invisible component) -->
-  <AnimeNotificationProvider />
 
   <!-- Hero Banner Section -->
   {#if $currentlyAiringQuery.isLoading || sortedCurrentlyAiring.length > 0}

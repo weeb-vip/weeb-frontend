@@ -37,18 +37,22 @@
 
   // Anime-specific toast tests
   function testAnimeAiringSoon() {
+    console.log('🧪 Manual test: airing soon toast');
     animeToast.airingSoon(sampleAnime, sampleEpisode, 30);
   }
 
   function testAnimeWarning() {
+    console.log('🧪 Manual test: warning toast');
     animeToast.warning(sampleAnime, sampleEpisode);
   }
 
   function testAnimeNowAiring() {
+    console.log('🧪 Manual test: now airing toast');
     animeToast.nowAiring(sampleAnime, sampleEpisode);
   }
 
   function testAnimeFinished() {
+    console.log('🧪 Manual test: finished toast');
     animeToast.finished(sampleAnime, sampleEpisode);
   }
 </script>

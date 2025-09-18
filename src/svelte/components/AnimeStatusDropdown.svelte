@@ -137,7 +137,7 @@
   }
 
   function onDeleteAnime() {
-    console.log('🗑️ AnimeStatusDropdown onDeleteAnime called for:', entry.anime?.id);
+    console.log('🗑️ AnimeStatusDropdown onDeleteAnime called for anime:', entry.anime?.id);
     dispatch('delete', {
       animeId: entry.anime?.id || ''
     });
@@ -172,7 +172,7 @@
         title="Status: {statusLabels[entry.status ?? 'PLANTOWATCH']}"
         on:click={toggleMenu}
       >
-        <i class="fas fa-ellipsis-h w-3 h-3 text-gray-600 dark:text-gray-300"></i>
+        <i class="fas fa-ellipsis-v w-3 h-3 text-gray-600 dark:text-gray-300" style="display: flex; align-items: center; justify-content: center; line-height: 1;"></i>
       </button>
 
       {#if isMenuOpen}
