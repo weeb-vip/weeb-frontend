@@ -8,23 +8,62 @@
 
   onMount(async () => {
     try {
-      debug.auth("Initializing auth state");
+      debug.auth("Initializing Svelte auth state");
 
       // Check if we have tokens
       const authToken = AuthStorage.getAuthToken();
       const refreshToken = AuthStorage.getRefreshToken();
 
-      if (authToken && refreshToken) {
-        debug.auth("Found existing tokens, setting logged in state");
-        loggedInStore.setLoggedIn();
+      debug.auth("Checking stored tokens:", {
+        authToken: authToken ? "Found" : "Missing",
+        refreshToken: refreshToken ? "Found" : "Missing"
+      });
 
-        // Start token refresher
-        try {
-          TokenRefresher.getInstance(async () => {
-            return refreshTokenSimple();
-          }).start(authToken);
-        } catch (error) {
-          debug.error("Failed to start token refresher:", error);
+      if (authToken || refreshToken) {
+        // If we have a refresh token, try to refresh
+        if (refreshToken) {
+          try {
+            debug.auth("Attempting to refresh token");
+            const result = await refreshTokenSimple();
+
+            if (result?.Credentials) {
+              debug.success("Token refreshed successfully");
+              loggedInStore.setLoggedIn();
+
+              // Start token refresher with the new token
+              TokenRefresher.getInstance(async () => {
+                return refreshTokenSimple();
+              }).start(result.Credentials.token);
+
+              loggedInStore.setAuthInitialized();
+            }
+          } catch (error: any) {
+            debug.error("Token validation/refresh failed:", error.message);
+
+            // Only clear tokens if it's an auth error
+            const isAuthError = error.message?.toLowerCase().includes('unauthorized') ||
+                               error.message?.toLowerCase().includes('invalid') ||
+                               error.message?.toLowerCase().includes('expired') ||
+                               error.message?.toLowerCase().includes('forbidden');
+
+            if (isAuthError) {
+              debug.auth("Authentication failed, clearing tokens");
+              AuthStorage.clearTokens();
+              loggedInStore.logout();
+            } else {
+              debug.warn("Network or temporary error, keeping tokens for retry");
+              // Still set as logged in if we have auth token
+              if (authToken) {
+                loggedInStore.setLoggedIn();
+              }
+            }
+            loggedInStore.setAuthInitialized();
+          }
+        } else if (authToken) {
+          // Only auth token, no refresh token
+          debug.warn("Auth token found but no refresh token");
+          loggedInStore.setLoggedIn();
+          loggedInStore.setAuthInitialized();
         }
       } else {
         debug.auth("No tokens found, user not logged in");

@@ -291,29 +291,39 @@ export const getUser = () => ({
 })
 
 export const refreshTokenSimple = async (): Promise<SigninResult> => {
-  const authtoken = AuthStorage.getAuthToken();
-  if (!authtoken) throw new Error("Missing auth token in localStorage");
-
-  let payload: any;
-  try {
-    payload = JSON.parse(atob(authtoken.split('.')[1]));
-  } catch (e) {
-    throw new Error("Failed to decode JWT payload");
+  const refreshToken = AuthStorage.getRefreshToken();
+  if (!refreshToken) {
+    debug.auth("No refresh token found in storage");
+    throw new Error("No refresh token available");
   }
 
-  const refreshToken = payload?.refresh_token;
-  if (!refreshToken) throw new Error("No refresh_token found in JWT");
+  debug.auth("Attempting to refresh token...");
 
-  debug.auth("Refreshing token...", refreshToken);
+  try {
+    const config = await getConfig();
+    const response = await request<RefreshTokenMutation>(
+      config.graphql_host,
+      mutationRefreshToken,
+      {token: refreshToken}
+    );
 
-  const config = await getConfig();
-  const response = await request<RefreshTokenMutation>(
-    config.graphql_host,
-    mutationRefreshToken,
-    {token: refreshToken}
-  );
+    debug.success("Token refreshed successfully");
 
-  return response.RefreshToken;
+    // Store the new tokens
+    if (response.RefreshToken?.Credentials) {
+      AuthStorage.setTokens(
+        response.RefreshToken.Credentials.token,
+        response.RefreshToken.Credentials.refresh_token
+      );
+    }
+
+    return response.RefreshToken;
+  } catch (error) {
+    debug.error("Token refresh failed:", error);
+    // Only clear tokens if the refresh actually failed
+    // This allows retry logic to work properly
+    throw error;
+  }
 };
 
 export const updateUserDetails = () => ({

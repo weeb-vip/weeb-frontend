@@ -57,9 +57,7 @@
   <!-- Watchlist indicator -->
   {#if entry?.status}
     <div class="absolute top-2 left-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg z-10">
-      <svg class="w-3 h-3 mr-1 inline" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
-      </svg>
+      <i class="fas fa-bookmark text-xs mr-1"></i>
       {statusLabels[entry.status] || 'Unknown'}
     </div>
   {/if}
@@ -90,29 +88,21 @@
         </div>
 
         <div class="flex flex-col space-y-2 text-md font-normal mt-2 items-start text-gray-700 dark:text-gray-300">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
-            </svg>
+          <div class="flex items-center">
+            <i class="fas fa-tv text-sm w-4 text-center mr-2"></i>
             <span>{episodes}</span>
           </div>
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-            </svg>
+          <div class="flex items-center">
+            <i class="fas fa-clock text-sm w-4 text-center mr-2"></i>
             <span>{episodeLength}</span>
           </div>
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-            </svg>
+          <div class="flex items-center">
+            <i class="fas fa-calendar text-sm w-4 text-center mr-2"></i>
             <span>{year}</span>
           </div>
           {#if airTime?.show}
-            <div class="flex items-center gap-2 {getAirTimeColorClasses(airTime.variant)}">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-              </svg>
+            <div class="flex items-center {getAirTimeColorClasses(airTime.variant)}">
+              <i class="fas fa-broadcast-tower text-sm w-4 text-center mr-2"></i>
               <span class="text-xs font-medium">{airTime.text}</span>
             </div>
           {/if}
@@ -158,10 +148,8 @@
           </span>
 
           {#if airTime?.show}
-            <div class="flex items-center gap-2 {getAirTimeColorClasses(airTime.variant)}">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-              </svg>
+            <div class="flex items-center {getAirTimeColorClasses(airTime.variant)}">
+              <i class="fas fa-broadcast-tower text-sm w-4 text-center mr-2"></i>
               <span class="text-xs font-medium">{airTime.text}</span>
             </div>
           {:else}

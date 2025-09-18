@@ -21,36 +21,67 @@ const AuthHandler = () => {
   // check localstorage for login token and validate it
   useEffect(() => {
     const authToken = AuthStorage.getAuthToken();
-    debug.auth("Checking stored auth token:", authToken ? "Token found" : "No token");
+    const refreshToken = AuthStorage.getRefreshToken();
+    debug.auth("Checking stored tokens:", {
+      authToken: authToken ? "Found" : "Missing",
+      refreshToken: refreshToken ? "Found" : "Missing"
+    });
 
-    if (authToken) {
-      // Validate token by making a simple request
-      const validateToken = async () => {
+    if (authToken || refreshToken) {
+      // Validate and/or refresh the token
+      const validateAndRefreshToken = async () => {
         try {
-          // Try to refresh the token - if it fails, the token is invalid
-          const result = await refreshTokenSimple();
-          if (result) {
+          // If we have a refresh token, try to refresh
+          if (refreshToken) {
+            debug.auth("Attempting to refresh token");
+            const result = await refreshTokenSimple();
+
+            if (result?.Credentials) {
+              debug.success("Token refreshed successfully");
+              setLoggedIn();
+
+              // Start token refresher with the new token
+              TokenRefresher.getInstance(refreshTokenSimple).start(result.Credentials.token);
+              setAuthInitialized();
+            } else {
+              throw new Error("Invalid refresh response");
+            }
+          } else if (authToken) {
+            // We only have auth token, no refresh token - this shouldn't happen
+            // but we'll try to use it
+            debug.warn("Auth token found but no refresh token");
             setLoggedIn();
-            TokenRefresher.getInstance(refreshTokenSimple).start(authToken); // Start token refresh process
-          } else {
-            // Token is invalid
-            debug.auth("Token validation failed, clearing tokens");
-            AuthStorage.clearTokens();
-            setLogout();
             setAuthInitialized();
           }
         } catch (error: any) {
-          debug.auth("Token validation error:", error.message);
-          // Token is invalid or network error
-          AuthStorage.clearTokens();
-          setLogout();
+          debug.error("Token validation/refresh failed:", error.message);
+
+          // Only clear tokens if refresh actually failed
+          // Check if it's a real auth error vs network error
+          const isAuthError = error.message?.toLowerCase().includes('unauthorized') ||
+                             error.message?.toLowerCase().includes('invalid') ||
+                             error.message?.toLowerCase().includes('expired') ||
+                             error.message?.toLowerCase().includes('forbidden');
+
+          if (isAuthError) {
+            debug.auth("Authentication failed, clearing tokens");
+            AuthStorage.clearTokens();
+            setLogout();
+          } else {
+            debug.warn("Network or temporary error, keeping tokens for retry");
+            // Still set as logged in to avoid logged out state on network issues
+            if (authToken) {
+              setLoggedIn();
+            }
+          }
           setAuthInitialized();
         }
       };
 
-      validateToken();
+      validateAndRefreshToken();
     } else {
-      setAuthInitialized(); // Mark as initialized even if no token
+      debug.auth("No tokens found, user not logged in");
+      setAuthInitialized(); // Mark as initialized even if no tokens
     }
 
   }, []);

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+
   export let anime: {
     id?: string | number;
     titleEn?: string;
@@ -13,8 +15,46 @@
   export let status: 'airing-soon' | 'airing' | 'finished' | 'warning';
   export let timeInfo: string = '';
 
-  function handleClick() {
+  let isMobile = false;
+
+  onMount(() => {
+    // Check if mobile/tablet including iPads
+    const checkIfMobile = () => {
+      // Check for touch capability (includes iPads)
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+      // Check viewport width (less than lg breakpoint)
+      const isNarrowScreen = window.innerWidth < 1024;
+
+      // Check for iPad specifically (including iPad Pro)
+      const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && hasTouch;
+
+      // Check for other tablets and mobile devices
+      const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      return isNarrowScreen || isIPad || (hasTouch && isMobileUserAgent);
+    };
+
+    isMobile = checkIfMobile();
+
+    const handleResize = () => {
+      isMobile = checkIfMobile();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  });
+
+  function handleShowClick(e: MouseEvent) {
+    e.stopPropagation();
     if (anime.id) {
+      window.location.href = `/show/${anime.id}`;
+    }
+  }
+
+  function handleContainerClick(e: MouseEvent) {
+    // On desktop, clicking the container navigates to the show
+    if (!isMobile && anime.id) {
       window.location.href = `/show/${anime.id}`;
     }
   }
@@ -53,10 +93,11 @@
   const config = statusConfig[status];
 </script>
 
-<button
-  class="flex items-center gap-3 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-lg pl-2 pr-2 py-2 transition-all duration-300 ease-in-out hover:bg-white/90 dark:hover:bg-gray-800/90 hover:shadow-xl cursor-pointer text-left"
-  on:click={handleClick}
-  type="button"
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div
+  class="flex items-center gap-3 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-lg pl-2 pr-2 py-2 transition-all duration-300 ease-in-out {!isMobile ? 'cursor-pointer hover:bg-white/90 dark:hover:bg-gray-800/90 hover:shadow-xl' : ''}"
+  on:click={handleContainerClick}
 >
   <!-- Anime Image -->
   <div class="flex-shrink-0">
@@ -101,10 +142,24 @@
     {/if}
   </div>
 
-  <!-- Status Badge -->
-  <div class="flex-shrink-0 mr-2">
-    <div class="w-10 h-10 {config.bgColor} {config.borderColor} border rounded-full flex items-center justify-center">
-      <i class="fas {config.icon} {config.color} text-base"></i>
+  <!-- Go to Show Button (mobile only) or Status Icon (desktop) -->
+  {#if isMobile}
+    <div class="flex-shrink-0 mr-2">
+      <button
+        on:click={handleShowClick}
+        class="w-10 h-10 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white border border-blue-600 dark:border-blue-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg"
+        type="button"
+        title="Go to {title} page"
+        aria-label="Go to {title} page"
+      >
+        <i class="fas fa-arrow-right text-sm"></i>
+      </button>
     </div>
-  </div>
-</button>
+  {:else}
+    <div class="flex-shrink-0 mr-2">
+      <div class="w-10 h-10 {config.bgColor} {config.borderColor} border rounded-full flex items-center justify-center">
+        <i class="fas {config.icon} {config.color} text-base"></i>
+      </div>
+    </div>
+  {/if}
+</div>

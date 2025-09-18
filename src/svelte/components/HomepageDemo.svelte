@@ -45,16 +45,22 @@
   }
 
   function getSeasonOptions(currentSeason: string): string[] {
+    // Show current season plus next 2 seasons (same as React component)
     const [season, yearStr] = currentSeason.split('_');
-    const year = parseInt(yearStr);
+    let year = parseInt(yearStr);
     const seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL'];
-    const currentSeasonIndex = seasons.indexOf(season);
+    let currentIndex = seasons.indexOf(season);
 
-    const options: string[] = [];
-    for (let i = 0; i < 4; i++) {
-      const seasonIndex = (currentSeasonIndex - i + 4) % 4;
-      const seasonYear = seasonIndex > currentSeasonIndex ? year - 1 : year;
-      options.push(`${seasons[seasonIndex]}_${seasonYear}`);
+    const options: string[] = [currentSeason];
+
+    // Add next 2 seasons
+    for (let i = 1; i <= 2; i++) {
+      currentIndex++;
+      if (currentIndex >= seasons.length) {
+        currentIndex = 0;
+        year++;
+      }
+      options.push(`${seasons[currentIndex]}_${year}`);
     }
 
     return options;
