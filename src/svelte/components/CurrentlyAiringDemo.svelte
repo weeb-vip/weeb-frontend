@@ -185,11 +185,17 @@
   }
 
   function navigateToShow(animeId: string) {
-    window.location.href = `/show/${animeId}`;
+    // Use proper navigation for View Transitions
+    const link = document.createElement('a');
+    link.href = `/show/${animeId}`;
+    link.click();
   }
 
   function navigateToCalendar() {
-    window.location.href = '/airing/calendar';
+    // Use proper navigation for View Transitions
+    const link = document.createElement('a');
+    link.href = '/airing/calendar';
+    link.click();
   }
 
   // Reactive data using TanStack Query stores
@@ -278,12 +284,12 @@
 
   <!-- Header with Calendar Button -->
   <div class="mb-8 flex justify-end">
-    <Button
-      color="blue"
-      label="View Calendar"
-      status="idle"
-      onClick={navigateToCalendar}
-    />
+    <a
+      href="/airing/calendar"
+      class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+    >
+      View Calendar
+    </a>
   </div>
 
   <!-- Content Sections -->

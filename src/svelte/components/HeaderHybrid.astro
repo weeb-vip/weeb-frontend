@@ -22,11 +22,11 @@ import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
     </a>
 
     <div class="flex-grow px-2">
-      <AutocompleteAdvanced client:load />
+      <AutocompleteAdvanced client:idle />
     </div>
 
     <div class="flex-shrink-0">
-      <UserProfileHandler client:load isMobile={true} />
+      <UserProfileHandler client:idle isMobile={true} />
     </div>
   </div>
 
@@ -78,7 +78,7 @@ import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
     <div class="absolute top-1/2 -translate-y-1/2 px-4" style="left: 22rem; right: 12rem;">
       <div class="flex justify-center">
         <div class="w-full max-w-sm">
-          <AutocompleteAdvanced client:load />
+          <AutocompleteAdvanced client:idle />
         </div>
       </div>
     </div>
@@ -99,17 +99,17 @@ import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
 
       <!-- User Profile Handler -->
       <div class="ml-6">
-        <UserProfileHandler client:load isMobile={false} />
+        <UserProfileHandler client:idle isMobile={false} />
       </div>
     </div>
   </div>
 </header>
 
 <!-- Auth State Initializer (Client-side) -->
-<AuthInitializer client:load />
+<AuthInitializer client:idle />
 
 <!-- Login/Register Modal Handler (Client-side) -->
-<LoginModalHandler client:load />
+<LoginModalHandler client:idle />
 
 <script>
   // Client-side interactivity

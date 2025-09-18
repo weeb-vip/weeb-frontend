@@ -1,8 +1,4 @@
 ---
-import DefaultLayout from '../layouts/DefaultLayout.astro';
-import ProfileSettingsIsland from '../components/islands/ProfileSettingsIsland';
+// Redirect to new settings location
+return Astro.redirect("/profile/settings", 301);
 ---
-
-<DefaultLayout>
-  <ProfileSettingsIsland client:only="react" />
-</DefaultLayout>

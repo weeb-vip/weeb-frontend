@@ -1,4 +1,5 @@
 ---
+import { ViewTransitions } from 'astro:transitions';
 import HeaderHybrid from '../svelte/components/HeaderHybrid.astro';
 import GlobalToaster from '../svelte/components/GlobalToaster.svelte';
 import AnimeNotificationProvider from '../svelte/components/AnimeNotificationProvider.svelte';
@@ -30,10 +31,36 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
     <meta name="generator" content={Astro.generator}/>
     <title>{pageTitle}</title>
 
+    <!-- View Transitions for smoother navigation -->
+    <ViewTransitions />
+
+    <!-- Critical inline styles to prevent flash -->
+    <style is:inline>
+      /* Set default light mode colors immediately */
+      html {
+        background-color: white;
+        color: #111827;
+      }
+
+      /* Override for dark mode */
+      html.dark {
+        background-color: #111827;
+        color: #f3f4f6;
+      }
+
+      /* Prevent transition flash on page load */
+      html.no-transitions * {
+        transition: none !important;
+      }
+    </style>
+
     <!-- Theme initialization (blocking to prevent flash) -->
-    <script>
+    <script is:inline>
       // Initialize theme immediately to prevent flash
-      (function() {
+      function initTheme() {
+        // Add no-transitions class to prevent flash
+        document.documentElement.classList.add('no-transitions');
+
         const savedTheme = localStorage.getItem('theme');
         let shouldUseDark = false;
 
@@ -46,10 +73,26 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
           shouldUseDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         }
 
+        // Always explicitly set the theme class to prevent flash
         if (shouldUseDark) {
           document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
         }
-      })();
+
+        // Re-enable transitions after a small delay
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            document.documentElement.classList.remove('no-transitions');
+          });
+        });
+      }
+
+      // Initialize on first load
+      initTheme();
+
+      // Re-initialize on View Transitions navigation
+      document.addEventListener('astro:after-swap', initTheme);
     </script>
 
     <!-- SEO -->
@@ -74,18 +117,29 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
     <meta property="twitter:image" content={image || "/assets/icons/logo6-rev-sm_sm.png"} />
 </head>
 <body class="bg-white dark:bg-gray-900 min-h-screen">
-    <HeaderHybrid/>
+    <!-- Header (persisted across navigation) -->
+    <div transition:persist="header">
+        <HeaderHybrid/>
+    </div>
 
     <!-- Main content - full width layout -->
     <main class="w-full pt-24 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
         <slot />
     </main>
 
-    <!-- Global Toast Configuration -->
-    <GlobalToaster client:load />
+    <!-- Global Toast Configuration (persisted) -->
+    <div transition:persist="toaster">
+        <GlobalToaster client:idle />
+    </div>
 
-    <!-- Anime Notification Provider -->
-    <AnimeNotificationProvider client:load />
-    <DevTestingPanel client:load />
+    <!-- Anime Notification Provider (persisted) -->
+    <div transition:persist="notifications">
+        <AnimeNotificationProvider client:idle />
+    </div>
+
+    <!-- Dev Testing Panel (persisted) -->
+    <div transition:persist="devpanel">
+        <DevTestingPanel client:idle />
+    </div>
 </body>
 </html>

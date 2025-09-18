@@ -1,6 +1,6 @@
 ---
-import DefaultLayout from '../../layouts/DefaultLayout.astro';
-import ProfilePage from '../../components/islands/ProfilePage';
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import ProfilePage from '../../svelte/components/ProfilePage.svelte';
 
 // Static generation for profile page
 
@@ -8,10 +8,10 @@ import ProfilePage from '../../components/islands/ProfilePage';
 // For now, letting client handle auth
 ---
 
-<DefaultLayout
+<SvelteLayout
   title="Profile"
   description="Manage your anime watchlist, settings, and profile information."
   noIndex={true}
 >
-  <ProfilePage client:only="react" />
-</DefaultLayout>
+  <ProfilePage client:idle />
+</SvelteLayout>
