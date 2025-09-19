@@ -9,10 +9,7 @@ export default defineConfig({
   output: 'server',
   adapter: cloudflare({
     mode: 'directory',
-    functionPerRoute: false,
-    routes: {
-      exclude: ['/favicon.ico', '/robots.txt', '/sitemap.xml', '/_astro/*']
-    }
+    functionPerRoute: false
   }),
 
   integrations: [
@@ -30,7 +27,15 @@ export default defineConfig({
     },
 
     ssr: {
-      noExternal: ['@tanstack/svelte-query', '@tanstack/query-core']
+      noExternal: ['@tanstack/svelte-query', '@tanstack/query-core'],
+      target: 'webworker'
+    },
+
+    build: {
+      minify: true,
+      rollupOptions: {
+        external: ['node:*']
+      }
     },
 
     plugins: [

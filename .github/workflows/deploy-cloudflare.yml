@@ -65,12 +65,14 @@ jobs:
 
       - name: Build for Cloudflare Pages
         run: |
-          # Install Cloudflare adapter for SSR (using yarn to handle dependencies better)
-          yarn add @astrojs/cloudflare --dev
 
           # Use Cloudflare-specific config and build
           cp astro.config.cloudflare.mjs astro.config.mjs
           yarn build
+
+          # Verify the build output structure
+          echo "Build output structure:"
+          ls -la dist/
         env:
           APP_CONFIG: ${{ inputs.environment }}
           VITE_APP_VERSION: ${{ inputs.tag }}
