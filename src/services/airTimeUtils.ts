@@ -284,7 +284,7 @@ export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | 
   show: boolean;
   text: string;
   variant?: 'countdown' | 'scheduled' | 'aired' | 'airing';
-  icon?: React.ReactNode;
+  icon?: any;
 } | null {
 
   const airInfo = getAirTimeInfo(airDate, broadcast, durationMinutes);

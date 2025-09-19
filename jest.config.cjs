@@ -1,6 +1,7 @@
-import type { Config } from 'jest';
+const { Config } = require('jest');
 
-const config: Config = {
+/** @type {import('jest').Config} */
+const config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   transform: {
@@ -15,13 +16,6 @@ const config: Config = {
   // Transform ES modules from node_modules
   transformIgnorePatterns: [
     'node_modules/(?!(uuid)/)'
-  ],
-  // Handle ES modules
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  }
+  ]
 };
-export default config;
+module.exports = config;
