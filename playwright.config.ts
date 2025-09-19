@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:8083',
+    baseURL: 'http://localhost:4321',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -35,21 +35,21 @@ export default defineConfig({
       use: {
         ...devices['Pixel 5'],
         // Use localhost accessible from mobile
-        baseURL: process.env.MOBILE_BASE_URL || 'http://localhost:8083',
+        baseURL: process.env.MOBILE_BASE_URL || 'http://localhost:4321',
       },
     },
     {
       name: 'mobile-safari',
       use: {
         ...devices['iPhone 12'],
-        baseURL: process.env.MOBILE_BASE_URL || 'http://localhost:8083',
+        baseURL: process.env.MOBILE_BASE_URL || 'http://localhost:4321',
       },
     },
     {
       name: 'tablet-chrome',
       use: {
         ...devices['iPad Pro'],
-        baseURL: process.env.MOBILE_BASE_URL || 'http://localhost:8083',
+        baseURL: process.env.MOBILE_BASE_URL || 'http://localhost:4321',
       },
     },
 
@@ -79,7 +79,7 @@ export default defineConfig({
 
   webServer: {
     command: `APP_CONFIG=staging ${process.env.CI ? 'bun run' : 'yarn'} preview --host`,
-    url: 'http://localhost:8083',
+    url: 'http://localhost:4321',
     reuseExistingServer: !process.env.CI, // In CI, don't reuse server for clean tests
   },
 });
