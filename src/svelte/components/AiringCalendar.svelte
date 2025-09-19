@@ -148,7 +148,7 @@
 
 </script>
 
-<div class="max-w-screen-xl mx-auto relative py-8">
+<div class="max-w-screen-xl mx-auto relative py-8 px-0">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
     <div class="flex gap-2">
       <Button

@@ -16,6 +16,7 @@
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
+  import { navigateWithTransition } from '../../utils/astro-navigation';
 
   let animeStatuses: Record<string, 'idle' | 'loading' | 'success' | 'error'> = {};
 
@@ -186,16 +187,12 @@
 
   function navigateToShow(animeId: string) {
     // Use proper navigation for View Transitions
-    const link = document.createElement('a');
-    link.href = `/show/${animeId}`;
-    link.click();
+    navigateWithTransition(`/show/${animeId}`);
   }
 
   function navigateToCalendar() {
     // Use proper navigation for View Transitions
-    const link = document.createElement('a');
-    link.href = '/airing/calendar';
-    link.click();
+    navigateWithTransition('/airing/calendar');
   }
 
   // Reactive data using TanStack Query stores

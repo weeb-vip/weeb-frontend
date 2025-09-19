@@ -3,6 +3,7 @@
   import { isValid } from 'date-fns';
   import AutocompleteItem from './AutocompleteItem.svelte';
   import { configStore } from '../stores/config';
+  import { navigateWithTransition } from '../../utils/astro-navigation';
 
   // Dynamic imports for SSR compatibility
   let algoliasearch: any = null;
@@ -160,7 +161,7 @@
     }
     // Navigate to show page
     if (typeof window !== 'undefined') {
-      window.location.href = `/show/${item.id ? encodeURIComponent(item.id) : ''}`;
+      navigateWithTransition(`/show/${item.id ? encodeURIComponent(item.id) : ''}`);
     }
     if (desktopInputRef) desktopInputRef.blur();
     if (mobileInputRef) mobileInputRef.blur();
@@ -260,7 +261,7 @@
           const target = e.target;
           const query = target.value;
           if (query.trim()) {
-            window.location.href = `/search?query=${encodeURIComponent(query.trim())}`;
+            navigateWithTransition(`/search?query=${encodeURIComponent(query.trim())}`);
           }
         }
       }}

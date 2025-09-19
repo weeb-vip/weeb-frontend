@@ -4,6 +4,7 @@
   import { fetchUserAnimes, upsertAnime, deleteAnime } from '../../services/queries';
   import { Status, type UserAnime } from '../../gql/graphql';
   import { GetImageFromAnime } from '../../services/utils';
+  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { initializeQueryClient } from '../services/query-client';
   import AnimeCard from './AnimeCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
@@ -102,7 +103,7 @@
   }
 
   function navigateToAnime(animeId: string) {
-    window.location.href = `/show/${animeId}`;
+    navigateWithTransition(`/show/${animeId}`);
   }
 
   function handleDropdownStatusChange(event: CustomEvent) {

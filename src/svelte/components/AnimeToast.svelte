@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { navigateWithTransition } from '../../utils/astro-navigation';
 
   export let anime: {
     id?: string | number;
@@ -48,14 +49,14 @@
   function handleShowClick(e: MouseEvent) {
     e.stopPropagation();
     if (anime.id) {
-      window.location.href = `/show/${anime.id}`;
+      navigateWithTransition(`/show/${anime.id}`);
     }
   }
 
   function handleContainerClick(e: MouseEvent) {
     // On desktop, clicking the container navigates to the show
     if (!isMobile && anime.id) {
-      window.location.href = `/show/${anime.id}`;
+      navigateWithTransition(`/show/${anime.id}`);
     }
   }
 

@@ -6,6 +6,7 @@
   import type { LoginInput } from '../../gql/graphql';
   import debug from '../../utils/debug';
   import { useLogin } from '../services/queries';
+  import { navigateWithTransition } from '../../utils/astro-navigation';
 
   let formData: LoginInput = { username: '', password: '' };
   let errorMessage = '';
@@ -17,7 +18,7 @@
     debug.auth('Login successful');
     errorMessage = '';
     // Navigate to home page
-    window.location.href = '/';
+    navigateWithTransition('/');
   }
 
   $: if ($loginMutation.isError) {

@@ -2,6 +2,7 @@
   import { format } from 'date-fns';
   import AnimeCard from './AnimeCard.svelte';
   import { GetImageFromAnime } from '../../services/utils';
+  import { navigateWithTransition } from '../../utils/astro-navigation';
 
   export let anime: any;
   export let isOpen: boolean = false;
@@ -44,7 +45,7 @@
   }
 
   function navigateToShow() {
-    window.location.href = `/show/${anime.id}`;
+    navigateWithTransition(`/show/${anime.id}`);
   }
 
   $: if (typeof window !== 'undefined') {
