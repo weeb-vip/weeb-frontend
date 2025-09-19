@@ -1,0 +1,15 @@
+---
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import LoginPage from '../../svelte/components/LoginPage.svelte';
+import LoginSkeleton from '../../svelte/components/LoginSkeleton.svelte';
+---
+
+<SvelteLayout
+  title="Login"
+  description="Sign in to your WeebVIP account to access your anime watchlist and get personalized recommendations."
+  noIndex={true}
+>
+  <LoginPage client:load>
+    <LoginSkeleton slot="fallback" />
+  </LoginPage>
+</SvelteLayout>

@@ -1,0 +1,15 @@
+---
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import ProfileAnimeList from '../../svelte/components/ProfileAnimeList.svelte';
+
+// TODO: Add server-side authentication check
+// For now, letting client handle auth
+---
+
+<SvelteLayout
+  title="My Anime List"
+  description="Manage your anime watchlist and track your viewing progress."
+  noIndex={true}
+>
+  <ProfileAnimeList client:idle />
+</SvelteLayout>

@@ -3,6 +3,9 @@
   "compilerOptions": {
     "module": "commonjs",
     "esModuleInterop": true,
-    "isolatedModules": false
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": false,
+    "verbatimModuleSyntax": false,
+    "types": ["jest", "@types/jest", "node"]
   }
 }

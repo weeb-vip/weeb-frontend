@@ -1,0 +1,11 @@
+---
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import AiringCalendar from '../../svelte/components/AiringCalendar.svelte';
+---
+
+<SvelteLayout
+  title="Airing Calendar"
+  description="View anime airing schedule in a calendar format. See episodes by date and plan your watching schedule."
+>
+  <AiringCalendar client:idle />
+</SvelteLayout>

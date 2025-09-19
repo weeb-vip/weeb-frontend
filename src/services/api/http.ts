@@ -1,10 +1,47 @@
-import axios from 'axios'
 import config from '../../config'
 
-const instance = axios.create({
-  baseURL: config?.api_host || 'http://localhost:8079',
-  // timeout: 1000,
-  withCredentials: true,
-})
+class FetchClient {
+  private baseURL: string;
 
+  constructor() {
+    this.baseURL = config?.api_host || 'http://localhost:8079';
+  }
+
+  async get(url: string) {
+    const response = await fetch(`${this.baseURL}${url}`, {
+      method: 'GET',
+      credentials: 'include', // equivalent to withCredentials: true
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { data };
+  }
+
+  async post(url: string, data?: any) {
+    const response = await fetch(`${this.baseURL}${url}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    return { data: responseData };
+  }
+}
+
+const instance = new FetchClient();
 export default instance

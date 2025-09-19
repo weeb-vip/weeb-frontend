@@ -1,0 +1,17 @@
+---
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import ProfilePage from '../../svelte/components/ProfilePage.svelte';
+
+// Static generation for profile page
+
+// TODO: Add server-side authentication check
+// For now, letting client handle auth
+---
+
+<SvelteLayout
+  title="Profile"
+  description="Manage your anime watchlist, settings, and profile information."
+  noIndex={true}
+>
+  <ProfilePage client:idle />
+</SvelteLayout>

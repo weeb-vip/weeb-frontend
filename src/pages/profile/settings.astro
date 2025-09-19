@@ -1,0 +1,17 @@
+---
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import ProfileSettings from '../../svelte/components/ProfileSettings.svelte';
+
+// Static generation for profile settings page
+
+// TODO: Add server-side authentication check
+// For now, letting client handle auth
+---
+
+<SvelteLayout
+  title="Profile Settings"
+  description="Update your personal information and preferences."
+  noIndex={true}
+>
+  <ProfileSettings client:idle />
+</SvelteLayout>

@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/show/*", "destination": "/show/222222222222/index.html" }
+  ]
+}

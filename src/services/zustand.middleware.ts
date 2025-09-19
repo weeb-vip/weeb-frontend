@@ -1,4 +1,5 @@
-import { create as baseCreate, StateCreator } from 'zustand';
+import { create as baseCreate } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 const isBrowser = typeof window !== 'undefined';

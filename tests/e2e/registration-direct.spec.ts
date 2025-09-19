@@ -15,17 +15,24 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
   });
 
   test('register user via direct navigation', async ({ page }) => {
-    // Navigate directly to login page
-    await page.goto('/register');
+    // Navigate directly to register page
+    await page.goto('/auth/register');
     await page.waitForLoadState('networkidle');
 
+    // Wait for client-side hydration and form to be ready
+    // The form might not be immediately visible due to Svelte client:load hydration
+    console.log('Waiting for registration form to load...');
 
+    // Wait for the form element to appear (this indicates hydration is complete)
+    await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
 
+    // Additional wait for any async loading (query client initialization)
+    await page.waitForTimeout(2000);
 
     // Fill registration form
     console.log('Filling registration form...');
 
-    // Find and fill email field
+    // Find and fill email field with more robust selector
     const emailInput = page.locator('input[type="email"], input[name="username"], input[placeholder*="email" i]').first();
     await emailInput.waitFor({ state: 'visible', timeout: 10000 });
     await emailInput.fill(testEmail);
@@ -74,6 +81,10 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
     // Navigate directly to resend verification page
     await page.goto('/auth/resend-verification');
     await page.waitForLoadState('networkidle');
+
+    // Wait for client-side hydration
+    await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
+    await page.waitForTimeout(2000);
 
     // Check page loaded correctly
     await expect(page.locator('h2:has-text("Resend Email Verification")')).toBeVisible();

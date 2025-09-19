@@ -1,0 +1,13 @@
+---
+import SvelteLayout from '../layouts/SvelteLayout.astro';
+import CurrentlyAiringDemo from '../svelte/components/CurrentlyAiringDemo.svelte';
+
+// Static generation for currently airing page
+---
+
+<SvelteLayout
+  title="Currently Airing Anime"
+  description="Discover what anime is currently airing this season. Get episode schedules, notifications, and add shows to your watchlist."
+>
+  <CurrentlyAiringDemo client:idle />
+</SvelteLayout>

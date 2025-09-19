@@ -1,0 +1,141 @@
+---
+import { ViewTransitions } from 'astro:transitions';
+import HeaderHybrid from '../svelte/components/HeaderHybrid.astro';
+import Footer from '../svelte/components/Footer.svelte';
+import DevTestingPanel from '../svelte/components/DevTestingPanel.svelte';
+import GlobalToaster from '../svelte/components/GlobalToaster.svelte';
+import AnimeNotificationProvider from '../svelte/components/AnimeNotificationProvider.svelte';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  noIndex?: boolean;
+}
+
+const { title, description, image, noIndex } = Astro.props;
+
+const defaultTitle = 'WeebVIP - Track Your Anime Watchlist';
+const defaultDescription = 'Discover, track, and manage your anime watchlist with WeebVIP. Get notifications for new episodes, explore seasonal anime, and connect with other anime fans.';
+
+const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="description" content={description || defaultDescription} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+    <meta name="viewport" content="width=device-width"/>
+    <meta name="generator" content={Astro.generator}/>
+    <title>{pageTitle}</title>
+
+    <!-- View Transitions for smoother navigation -->
+    <ViewTransitions />
+
+    <!-- Critical inline styles to prevent flash -->
+    <style is:inline>
+      /* Set default light mode colors immediately */
+      html {
+        background-color: white;
+        color: #111827;
+      }
+
+      /* Override for dark mode */
+      html.dark {
+        background-color: #111827;
+        color: #f3f4f6;
+      }
+
+      /* Prevent transition flash on page load */
+      html.no-transitions * {
+        transition: none !important;
+      }
+    </style>
+
+    <!-- Theme initialization (blocking to prevent flash) -->
+    <script is:inline>
+      // Initialize theme immediately to prevent flash
+      function initTheme() {
+        // Add no-transitions class to prevent flash
+        document.documentElement.classList.add('no-transitions');
+
+        const savedTheme = localStorage.getItem('theme');
+        let shouldUseDark = false;
+
+        if (savedTheme === 'dark') {
+          shouldUseDark = true;
+        } else if (savedTheme === 'light') {
+          shouldUseDark = false;
+        } else {
+          // No saved preference, use system preference
+          shouldUseDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        // Always explicitly set the theme class to prevent flash
+        if (shouldUseDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+
+        // Re-enable transitions after a small delay
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            document.documentElement.classList.remove('no-transitions');
+          });
+        });
+      }
+
+      // Initialize on first load
+      initTheme();
+
+      // Re-initialize on View Transitions navigation
+      document.addEventListener('astro:after-swap', initTheme);
+
+      // Ensure View Transitions are enabled
+      if (!document.startViewTransition) {
+        console.warn('View Transitions not supported in this browser');
+      }
+    </script>
+
+    <!-- SEO -->
+    {noIndex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- Theme -->
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#1f2937">
+</head>
+<body class="bg-white dark:bg-gray-900 min-h-screen">
+    <!-- Header (persisted across navigation) -->
+    <div transition:persist="header">
+        <HeaderHybrid/>
+    </div>
+
+    <!-- Main content with header spacing -->
+    <main class="w-full pt-24 pb-8 px-4 lg:px-16 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+        <slot />
+    </main>
+
+    <!-- Footer (persisted across navigation) -->
+    <div transition:persist="footer">
+        <Footer />
+    </div>
+
+    <!-- Global Toast Configuration (persisted) -->
+    <div transition:persist="toaster">
+        <GlobalToaster client:idle />
+    </div>
+
+    <!-- Dev Testing Panel (persisted) -->
+    <div transition:persist="devpanel">
+        <DevTestingPanel client:idle />
+    </div>
+
+    <!-- Anime Notifications (persisted) -->
+    <div transition:persist="notifications">
+        <AnimeNotificationProvider client:idle />
+    </div>
+</body>
+</html>

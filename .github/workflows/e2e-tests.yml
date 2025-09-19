@@ -11,74 +11,57 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    
-    strategy:
-      matrix:
-        browser: [chromium, webkit]
-    
+
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-          
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '18'
-          
+          bun-version: latest
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: |
             **/node_modules
             ~/.cache/ms-playwright
-          key: ${{ runner.os }}-e2e-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('**/playwright.config.ts') }}
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-e2e-bun-${{ hashFiles('**/bun.lockb', '**/yarn.lock', '**/package-lock.json') }}-${{ hashFiles('**/playwright.config.ts') }}
           restore-keys: |
-            ${{ runner.os }}-e2e-
-            
-      - name: Install yarn
-        run: corepack enable && yarn set version stable
-        
+            ${{ runner.os }}-e2e-bun-
+
       - name: Install dependencies
-        run: yarn install
-        
+        run: bun install
+
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps ${{ matrix.browser }}
-        
-      - name: Build Docker image
-        run: docker build -t weeb-frontend .
-        env:
-          VITE_GRAPHQL_HOST: https://gateway.staging.weeb.vip/graphql
-          VITE_API_HOST: https://api.staging.weeb.vip
-          
-      - name: Start Docker container
-        run: |
-          docker run -d -p 8083:80 --name weeb-frontend-container weeb-frontend
-          # Wait for container to be ready
-          timeout 30 bash -c 'until curl -f http://localhost:8083 > /dev/null 2>&1; do sleep 1; done'
-          
-      - name: Run E2E tests
-        run: yarn test:e2e --project=${{ matrix.browser }}
+        run: bunx playwright install --with-deps chromium
+
+      - name: Build for staging
+        run: APP_CONFIG=staging bun run build
         env:
           CI: true
-          
-      - name: Stop Docker container
-        if: always()
-        run: docker stop weeb-frontend-container && docker rm weeb-frontend-container
+
+      - name: Run E2E tests
+        run: bunx playwright test --project=chromium
+        env:
+          CI: true
           
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-${{ matrix.browser }}
+          name: playwright-report-chromium
           path: playwright-report/
           retention-days: 7
-          
+
       - name: Upload test videos
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-videos-${{ matrix.browser }}
+          name: test-videos-chromium
           path: test-results/
           retention-days: 7

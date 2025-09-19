@@ -1,10 +1,12 @@
-import axios from 'axios'
-
 const configApi = {
   fetch: async () => {
-    const {
-      data: config,
-    } = await axios.get('/config.json')
+    const response = await fetch('/config.json');
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const config = await response.json();
     // @ts-ignore
     global.config = config
     return config

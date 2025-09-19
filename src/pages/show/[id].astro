@@ -1,0 +1,19 @@
+---
+import SvelteFullWidthLayout from '../../layouts/SvelteFullWidthLayout.astro';
+import ShowContentWithProvider from '../../svelte/components/ShowContentWithProvider.svelte';
+export const prerender = false;
+
+// Get the anime ID from the URL parameters
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect('/404');
+}
+---
+
+<SvelteFullWidthLayout
+  title="Anime Details"
+  description="View anime details, episodes, and information"
+>
+  <ShowContentWithProvider animeId={id} client:load />
+</SvelteFullWidthLayout>

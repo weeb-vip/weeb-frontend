@@ -444,7 +444,7 @@ describe('getAirTimeDisplay (static time)', () => {
 
     expect(result).not.toBe(null);
     expect(result?.variant).toBe('scheduled');
-    expect(result?.text).toMatch(/^Airing \w+ at \d+:\d+ [AP]M$/);
+    expect(result?.text).toMatch(/^\w+ at \d+:\d+ [AP]M$/);
   });
 
   test('returns null for invalid input', () => {

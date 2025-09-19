@@ -1,4 +1,3 @@
-import React from 'react';
 import {format} from 'date-fns';
 import {formatInTimeZone} from 'date-fns-tz';
 
@@ -285,7 +284,7 @@ export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | 
   show: boolean;
   text: string;
   variant?: 'countdown' | 'scheduled' | 'aired' | 'airing';
-  icon?: React.ReactNode;
+  icon?: any;
 } | null {
 
   const airInfo = getAirTimeInfo(airDate, broadcast, durationMinutes);
@@ -320,9 +319,14 @@ export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | 
   // For scheduled episodes, show shorter format for cards
   const shortDateTime = airInfo.airDate ? `${format(airInfo.airDate, "EEE")} at ${format(airInfo.airDate, "h:mm a")}` : airInfo.formattedDateTime;
 
+  // Check if episode is within 24 hours to decide whether to show "Airing" prefix
+  const currentTime = now || getCurrentTime();
+  const timeDiff = airInfo.airDate.getTime() - currentTime.getTime();
+  const isWithin24Hours = timeDiff <= (24 * 60 * 60 * 1000);
+
   return {
     show: true,
-    text: `Airing ${shortDateTime}`,
+    text: isWithin24Hours ? `Airing ${shortDateTime}` : shortDateTime,
     variant: 'scheduled' as const
   };
 }

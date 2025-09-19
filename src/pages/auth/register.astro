@@ -1,0 +1,15 @@
+---
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import RegisterPage from '../../svelte/components/RegisterPage.svelte';
+import RegisterSkeleton from '../../svelte/components/RegisterSkeleton.svelte';
+---
+
+<SvelteLayout
+  title="Register"
+  description="Create your WeebVIP account to start tracking anime, get episode notifications, and discover new shows."
+  noIndex={true}
+>
+  <RegisterPage client:load>
+    <RegisterSkeleton slot="fallback" />
+  </RegisterPage>
+</SvelteLayout>

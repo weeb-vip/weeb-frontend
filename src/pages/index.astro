@@ -1,0 +1,13 @@
+---
+import SvelteLayout from '../layouts/SvelteLayout.astro';
+import HomepageDemo from '../svelte/components/HomepageDemo.svelte';
+
+export const prerender = false;
+---
+
+<SvelteLayout
+  title="Home"
+  description="Discover and track your favorite anime. Get notifications for new episodes, explore seasonal anime, and manage your watchlist."
+>
+  <HomepageDemo client:load/>
+</SvelteLayout>

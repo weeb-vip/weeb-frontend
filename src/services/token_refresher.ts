@@ -1,5 +1,6 @@
-import {SigninResult} from "../gql/graphql";
+import {type SigninResult} from "../gql/graphql";
 import debug from "../utils/debug";
+import {AuthStorage} from "../utils/auth-storage";
 
 type RefreshTokenFunction<T> = () => Promise<T>;
 
@@ -14,7 +15,7 @@ export class TokenRefresher {
     this.refreshWindow = refreshWindow; // Default refresh window is 1 minute
     
     // Log current token expiry if available
-    const currentToken = localStorage.getItem("authToken");
+    const currentToken = AuthStorage.getAuthToken();
     if (currentToken) {
       const currentExpiry = this.getTokenExpiry(currentToken);
       if (currentExpiry) {
@@ -122,13 +123,21 @@ export class TokenRefresher {
   }
 
   /**
-   * Stores the refreshed auth token in localStorage.
+   * Stores the refreshed auth token in localStorage and cookies.
    * @param token - The refreshed JWT token.
    */
   private storeAuthToken(token: string): void {
     try {
       debug.auth('Storing auth token');
-      localStorage.setItem('authToken', token);
+      // Update both localStorage and cookies - we need to preserve the refresh token
+      const refreshToken = AuthStorage.getRefreshToken();
+      if (refreshToken) {
+        AuthStorage.setTokens(token, refreshToken);
+      } else {
+        // Fallback to just setting auth token
+        localStorage.setItem('authToken', token);
+        document.cookie = `authToken=${token}; Path=/; Secure; SameSite=Strict`;
+      }
 
     } catch (error) {
       debug.error('Failed to store auth token:', error);

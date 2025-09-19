@@ -77,12 +77,9 @@ export default defineConfig({
     }] : []),
   ],
 
-  // Only start webServer locally, not in CI where Docker handles it
-  ...(process.env.CI ? {} : {
-    webServer: {
-      command: 'yarn dev --host',
-      url: 'http://localhost:8083',
-      reuseExistingServer: true,
-    },
-  }),
+  webServer: {
+    command: `APP_CONFIG=staging ${process.env.CI ? 'bun run' : 'yarn'} preview --host`,
+    url: 'http://localhost:8083',
+    reuseExistingServer: !process.env.CI, // In CI, don't reuse server for clean tests
+  },
 });

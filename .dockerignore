@@ -1,1 +1,58 @@
+# Dependencies
 node_modules
+.yarn
+
+# Build outputs
+dist
+.astro
+
+# Development files
+.vscode
+.idea
+*.log
+*.tmp
+
+# Git
+.git
+.gitignore
+
+# CI/CD
+.github
+
+# Documentation
+*.md
+!README.md
+
+# Environment files
+.env*
+!.env.example
+
+# Testing
+coverage
+test-results
+playwright-report
+
+# Storybook
+storybook-static
+.storybook
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*

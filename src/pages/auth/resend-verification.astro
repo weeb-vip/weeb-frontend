@@ -1,0 +1,15 @@
+---
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import ResendVerificationPage from '../../svelte/components/ResendVerificationPage.svelte';
+import ResendVerificationSkeleton from '../../svelte/components/ResendVerificationSkeleton.svelte';
+---
+
+<SvelteLayout
+  title="Resend Verification"
+  description="Resend email verification to complete your WeebVIP account setup."
+  noIndex={true}
+>
+  <ResendVerificationPage client:load>
+    <ResendVerificationSkeleton slot="fallback" />
+  </ResendVerificationPage>
+</SvelteLayout>

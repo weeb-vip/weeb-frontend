@@ -12,12 +12,13 @@ test('homepage loads correctly', async ({ page }) => {
 
 test('navigation works', async ({ page }) => {
   await page.goto('/');
-  
+
   // Wait for the page to load
   await page.waitForLoadState('networkidle');
-  
+
   // Check if navigation elements are present
-  const navigation = page.locator('nav, header');
+  // Use first() to get the main header since there might be multiple headers on the page
+  const navigation = page.locator('nav, header').first();
   await expect(navigation).toBeVisible();
 });
 
