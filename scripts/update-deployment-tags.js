@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 const WORKFLOW_PATH = '.github/workflows/deploy-cloudflare.yml';
+const TAGS_FILE = '.github/deployment-tags.json';
 const MAX_TAGS = 15; // Maximum number of tags to show in the dropdown
 
 function getLatestTags() {
