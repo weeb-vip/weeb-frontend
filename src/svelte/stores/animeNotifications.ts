@@ -43,7 +43,18 @@ function createAnimeNotificationStore() {
 
     debug.info('🔔 Svelte: Initializing anime notification store');
 
-    // Set up countdown callback to receive worker data
+    // Set up timing callback to receive comprehensive worker data
+    animeNotificationService.setTimingCallback((animeId, timingData) => {
+      update(store => ({
+        ...store,
+        timingData: {
+          ...store.timingData,
+          [animeId]: timingData
+        }
+      }));
+    });
+
+    // Set up countdown callback to receive worker data (backward compatibility)
     animeNotificationService.setCountdownCallback((animeId, countdown, isAiring, hasAired, progress) => {
       update(store => {
         const newCountdowns = {
@@ -59,9 +70,10 @@ function createAnimeNotificationStore() {
           isAiring,
           hasAired,
           progress,
+          // Use current values, not OR logic that prevents state transitions
           isAiringToday: currentTiming?.isAiringToday || false,
-          isCurrentlyAiring: currentTiming?.isCurrentlyAiring || isAiring,
-          hasAlreadyAired: currentTiming?.hasAlreadyAired || hasAired,
+          isCurrentlyAiring: isAiring, // Use fresh value from worker
+          hasAlreadyAired: hasAired,   // Use fresh value from worker
           airDateTime: currentTiming?.airDateTime || '',
         };
 

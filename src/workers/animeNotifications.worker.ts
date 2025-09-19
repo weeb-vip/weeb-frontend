@@ -496,8 +496,9 @@ function updateCountdowns() {
     const { episode: nextEpisode, airTime } = nextEpisodeResult;
     const timeToAir = airTime.getTime() - now.getTime();
 
-    // Only send updates for anime airing within 24 hours
-    if (timeToAir > 24 * 60 * 60 * 1000 || timeToAir < -24 * 60 * 60 * 1000) {
+    // Only send updates for anime airing within 24 hours or recently aired (within 7 days)
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    if (timeToAir > 24 * 60 * 60 * 1000 || timeToAir < -sevenDaysMs) {
       return;
     }
 

@@ -16,7 +16,7 @@
   :global(.toaster-container) {
     top: 6.5rem !important; /* Desktop header: 96px (6rem) + small gap */
     right: 1.5rem !important;
-    z-index: 40 !important;
+    z-index: 30 !important;
   }
 
   /* Standard toasts */
@@ -77,7 +77,7 @@
   /* Mobile responsiveness */
   @media (max-width: 640px) {
     :global(.toaster-container) {
-      top: 6rem !important; /* Mobile header: 72px (4.5rem) + small gap */
+      top: 6.5rem !important; /* Mobile header: 72px (4.5rem) + small gap */
       right: 1rem !important;
       left: 1rem !important;
     }

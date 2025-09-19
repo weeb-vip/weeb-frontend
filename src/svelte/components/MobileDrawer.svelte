@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { fade, fly } from 'svelte/transition';
+  import { cubicOut } from 'svelte/easing';
   import { loggedInStore } from '../stores/auth';
   import { navigateWithTransition } from '../../utils/astro-navigation';
   import { AuthStorage } from '../../utils/auth-storage';
@@ -11,8 +13,10 @@
   export let isLoggedIn = false;
 
   let drawerElement: HTMLDivElement;
+  let mounted = false;
 
   onMount(() => {
+    mounted = true;
     // Lock body scroll when drawer is open
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -79,19 +83,26 @@
 </script>
 
 {#if isOpen}
-  <!-- Backdrop -->
+  <!-- Backdrop with fade animation -->
   <div
-    class="fixed inset-0 bg-black/40 z-50 transition-opacity duration-300"
+    class="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm"
     on:click={handleBackdropClick}
     bind:this={drawerElement}
+    transition:fade={{ duration: 300, easing: cubicOut }}
   >
-    <!-- Slide-over panel -->
-    <div
-      class="fixed inset-y-0 right-0 w-screen transform transition-transform duration-300 ease-out {isOpen ? 'translate-x-0' : 'translate-x-full'}"
+    <!-- Slide-over panel from right -->
+    <div class="fixed inset-y-0 right-0 w-full max-w-sm"
+      transition:fly={{
+        x: '100%',
+        duration: 300,
+        easing: cubicOut,
+        opacity: 1
+      }}
+      on:click|stopPropagation
     >
-      <div class="h-full bg-white dark:bg-gray-900 flex flex-col p-8 transition-colors duration-300">
+      <div class="h-full bg-white dark:bg-gray-900 flex flex-col shadow-2xl p-6 overflow-y-auto">
         <!-- Header with logo + close -->
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
           <a href="/" on:click={handleLinkClick} class="flex items-center space-x-4">
             <img
               src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
@@ -116,11 +127,13 @@
             </div>
           </a>
           <button
-            class="text-2xl font-bold text-gray-700 dark:text-gray-300"
+            class="p-2 -m-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             on:click={onClose}
             aria-label="Close menu"
           >
-            ✕
+            <svg class="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -180,15 +193,25 @@
             <!-- Login/Register Buttons -->
             <button
               on:click={handleLoginClick}
-              class="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+              class="w-full text-left px-4 py-4 rounded-lg text-lg font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all"
             >
-              Login
+              <div class="flex items-center justify-between">
+                <span>Login</span>
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </button>
             <button
               on:click={handleRegisterClick}
-              class="w-full text-left px-4 py-4 rounded text-lg text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+              class="w-full text-left px-4 py-4 rounded-lg text-lg font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98] transition-all"
             >
-              Register
+              <div class="flex items-center justify-between">
+                <span>Register</span>
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </button>
           {/if}
         </div>

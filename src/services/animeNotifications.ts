@@ -29,10 +29,15 @@ export interface CountdownCallback {
   (animeId: string, countdown: string, isAiring: boolean, hasAired: boolean, progress?: number): void;
 }
 
+export interface TimingCallback {
+  (animeId: string, timingData: any): void;
+}
+
 class AnimeNotificationService {
   private worker: Worker | null = null;
   private notificationCallback?: NotificationCallback;
   private countdownCallback?: CountdownCallback;
+  private timingCallback?: TimingCallback;
   private isWorkerReady: boolean = false;
 
   setNotificationCallback(callback: NotificationCallback) {
@@ -41,6 +46,10 @@ class AnimeNotificationService {
 
   setCountdownCallback(callback: CountdownCallback) {
     this.countdownCallback = callback;
+  }
+
+  setTimingCallback(callback: TimingCallback) {
+    this.timingCallback = callback;
   }
 
   private setupWorkerListeners() {
@@ -80,6 +89,11 @@ class AnimeNotificationService {
       } else if (message.type === 'timing') {
         // Update Zustand store with comprehensive timing data
         useAnimeCountdownStore.getState().setTimingData(message.animeId, message.timingData);
+
+        // Also call Svelte timing callback if set
+        if (this.timingCallback) {
+          this.timingCallback(message.animeId, message.timingData);
+        }
       }
     });
 
