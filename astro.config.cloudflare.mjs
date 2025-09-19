@@ -1,4 +1,3 @@
-
 import { defineConfig } from 'astro/config';
 import svelte from '@astrojs/svelte';
 import tailwind from '@astrojs/tailwind';
@@ -10,11 +9,7 @@ export default defineConfig({
   output: 'server',
   adapter: cloudflare({
     mode: 'directory',
-    functionPerRoute: false,
-    runtime: {
-      mode: 'local',
-      type: 'pages'
-    }
+    functionPerRoute: false
   }),
 
   integrations: [
@@ -24,25 +19,15 @@ export default defineConfig({
     })
   ],
 
-  // Minimal Vite config for essential functionality only
   vite: {
     define: {
       global: 'globalThis',
-      __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || 'dev'),
+      __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || 'dev')
     },
-
     ssr: {
-      noExternal: ['@tanstack/svelte-query', '@tanstack/query-core'],
-      target: 'webworker'
+      external: ['node:*'],
+      noExternal: ['@tanstack/svelte-query', '@tanstack/query-core']
     },
-
-    build: {
-      minify: true,
-      rollupOptions: {
-        external: ['node:*']
-      }
-    },
-
     plugins: [
       viteStaticCopy({
         targets: [

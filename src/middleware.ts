@@ -70,7 +70,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     try {
       const config = context.locals.config;
       if (config) {
-        const html = await response.text();
+        // Clone the response to avoid "body already used" error
+        const clonedResponse = response.clone();
+        const html = await clonedResponse.text();
         const configScript = `<script>window.config = ${JSON.stringify(config)}; if (typeof global !== 'undefined') { global.config = window.config; }</script>`;
 
         // Inject the script before the closing head tag

@@ -65,14 +65,26 @@ jobs:
 
       - name: Build for Cloudflare Pages
         run: |
-
           # Use Cloudflare-specific config and build
           cp astro.config.cloudflare.mjs astro.config.mjs
+
+          echo "Building with Cloudflare adapter..."
           yarn build
 
           # Verify the build output structure
-          echo "Build output structure:"
+          echo "=== Build output structure ==="
           ls -la dist/
+
+          # Check for _worker.js
+          if [ -f "dist/_worker.js" ]; then
+            echo "✅ Found _worker.js"
+          else
+            echo "❌ Missing _worker.js - checking for functions directory"
+            if [ -d "dist/_worker" ]; then
+              echo "Found _worker directory"
+              ls -la dist/_worker/
+            fi
+          fi
         env:
           APP_CONFIG: ${{ inputs.environment }}
           VITE_APP_VERSION: ${{ inputs.tag }}

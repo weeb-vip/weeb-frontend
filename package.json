@@ -20,7 +20,10 @@
     "test:e2e:report": "playwright show-report",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "update-deployment-tags": "node scripts/update-deployment-tags.js"
+    "update-deployment-tags": "node scripts/update-deployment-tags.js",
+    "deploy:staging": "node scripts/deploy-cloudflare.js staging",
+    "deploy:production": "node scripts/deploy-cloudflare.js production",
+    "deploy:cf": "node scripts/deploy-cloudflare.js"
   },
   "repository": {
     "type": "git",
@@ -98,7 +101,8 @@
     "uuid": "^12.0.0",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^1.0.3",
-    "vite-plugin-static-copy": "^0.13.1"
+    "vite-plugin-static-copy": "^0.13.1",
+    "wrangler": "^4.38.0"
   },
   "release": {
     "branches": [
