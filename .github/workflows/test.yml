@@ -16,33 +16,32 @@ jobs:
         with:
           persist-credentials: false
           
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '18'
-          
+          bun-version: latest
+
       - uses: actions/cache@v4
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-          
-      - name: Install yarn
-        run: corepack enable && yarn set version stable
+          path: |
+            **/node_modules
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-modules-${{ hashFiles('**/bun.lockb', '**/yarn.lock', '**/package-lock.json') }}
 
       - name: Install dependencies
-        run: yarn install
+        run: bun install
 
       - name: Lint check
         run: |
           if [ -f "package.json" ] && grep -q '"lint"' package.json; then
-            yarn lint || true
+            bun run lint || true
           fi
 
       - name: Build 🏗️
-        run: yarn build
+        run: bun run build
 
       - name: Unit Tests 🚨
-        run: yarn test
+        run: bun run test
         
       - name: Upload coverage reports
         if: always()

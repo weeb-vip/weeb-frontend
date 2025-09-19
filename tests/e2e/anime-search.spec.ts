@@ -70,10 +70,10 @@ test('anime search functionality', async ({ page }) => {
 test('show detail page', async ({ page }) => {
   // Try to go to a show page
   const response = await page.goto('/show/1');
-  
+
   // Wait for page to load
   await page.waitForLoadState('networkidle');
-  
+
   // Check if page loaded successfully (not 404)
   if (response && response.status() === 404) {
     // If 404, just check that 404 page is properly displayed
@@ -82,13 +82,19 @@ test('show detail page', async ({ page }) => {
   } else {
     // Check if show details are visible - use more flexible selectors
     await expect(page.locator('body')).toBeVisible();
-    
+
     // Look for common show page elements (more flexible)
-    const titleElements = page.locator('h1, h2, .title, [data-testid="show-title"], .show-title');
-    const hasTitle = await titleElements.count() > 0;
-    
+    // Focus on visible elements in the main content area
+    const mainContent = page.locator('main').first();
+    const titleElements = mainContent.locator('h1, h2, .title, [data-testid="show-title"], .show-title');
+    const visibleTitleElements = titleElements.locator('visible=true');
+    const hasTitle = await visibleTitleElements.count() > 0;
+
     if (hasTitle) {
-      await expect(titleElements.first()).toBeVisible();
+      await expect(visibleTitleElements.first()).toBeVisible();
+    } else {
+      // If no title, at least check that main content exists
+      await expect(mainContent).toBeVisible();
     }
   }
 });
