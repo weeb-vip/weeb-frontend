@@ -7,6 +7,8 @@
   import { AuthStorage } from '../../utils/auth-storage';
   import ProfileAvatar from './ProfileAvatar.svelte';
 
+  const version = __APP_VERSION__;
+
   export let isOpen = false;
   export let onClose: () => void;
   export let user: any = null;
@@ -218,7 +220,7 @@
 
         <!-- Footer -->
         <div class="text-center py-4 border-t border-gray-200 dark:border-gray-700">
-          <span class="text-xs text-gray-400 dark:text-gray-500">Version 1.0.0</span>
+          <span class="text-xs text-gray-400 dark:text-gray-500">Version {version}</span>
         </div>
       </div>
     </div>
