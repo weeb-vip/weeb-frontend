@@ -45,25 +45,31 @@ jobs:
           echo "RELEASE_VERSION=$GITHUB_REF_NAME" >> $GITHUB_ENV
       - name: Update deployment tags
         run: |
-          echo "🔄 Updating deployment workflow with new tag: $RELEASE_VERSION"
-          node scripts/update-deployment-tags.js
+          # Only update if semantic-release actually created a new tag
+          if [ -n "$RELEASE_VERSION" ] && [ "$RELEASE_VERSION" != "HEAD" ]; then
+            echo "🔄 Updating deployment workflow with new tag: $RELEASE_VERSION"
+            node scripts/update-deployment-tags.js
 
-          # Check if there are changes to commit
-          if git diff --quiet .github/workflows/deploy-cloudflare.yml; then
-            echo "No changes to deployment workflow"
+            # Check if there are changes to commit
+            if git diff --quiet .github/workflows/deploy-cloudflare.yml; then
+              echo "No changes to deployment workflow"
+            else
+              echo "Committing updated deployment tags"
+
+              # Configure git with the token (since persist-credentials: false)
+              git config --global user.email "noreply@weeb.vip"
+              git config --global user.name "weeb-vip-bot"
+              git remote set-url origin https://x-access-token:$ACCESS_TOKEN@github.com/$GITHUB_REPOSITORY.git
+
+              git add .github/workflows/deploy-cloudflare.yml
+              git commit -m "ci: update deployment tags with $RELEASE_VERSION"
+              git push origin HEAD:main
+            fi
           else
-            echo "Committing updated deployment tags"
-            git config --global user.email "noreply@weeb.vip"
-            git config --global user.name "weeb-vip-bot"
-            git add .github/workflows/deploy-cloudflare.yml
-            git commit -m "ci: update deployment tags with $RELEASE_VERSION"
-
-            # Use the same token method as semantic-release
-            git remote set-url origin https://x-access-token:${{ secrets.ACCESS_TOKEN }}@github.com/${{ github.repository }}.git
-            git push origin main
+            echo "No new release created, skipping deployment tag update"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
