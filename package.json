@@ -19,7 +19,8 @@
     "test:e2e:android": "ANDROID_EMULATOR=true playwright test --project=android-emulator",
     "test:e2e:report": "playwright show-report",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "update-deployment-tags": "node scripts/update-deployment-tags.js"
   },
   "repository": {
     "type": "git",

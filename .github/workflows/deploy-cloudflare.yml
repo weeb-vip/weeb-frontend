@@ -1,0 +1,100 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Select a Git tag to deploy'
+        required: true
+        type: choice
+        options:
+          - v1.74.1
+          - v1.74.0
+          - v1.73.5
+          - v1.73.4
+          - v1.73.3
+          - v1.73.2
+          - v1.73.1
+          - v1.73.0
+          - v1.72.2
+          - v1.72.1
+      environment:
+        description: 'Deployment environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Cloudflare Pages
+
+    steps:
+      - name: Checkout specific tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Set environment variables
+        run: |
+          echo "APP_CONFIG=${{ inputs.environment }}" >> $GITHUB_ENV
+          echo "VITE_APP_VERSION=${{ inputs.tag }}" >> $GITHUB_ENV
+
+      - name: Build for Cloudflare Pages
+        run: |
+          # Install Cloudflare adapter for SSR
+          npm install @astrojs/cloudflare
+
+          # Use Cloudflare-specific config and build
+          cp astro.config.cloudflare.mjs astro.config.mjs
+          yarn build
+        env:
+          APP_CONFIG: ${{ inputs.environment }}
+          VITE_APP_VERSION: ${{ inputs.tag }}
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=weeb-${{ inputs.environment }} --compatibility-date=2024-09-19
+
+      - name: Create deployment comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentUrl = `https://weeb-${{ inputs.environment }}.pages.dev`;
+
+            // Create a deployment status
+            await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: '${{ inputs.tag }}',
+              environment: '${{ inputs.environment }}',
+              description: 'Cloudflare Pages deployment',
+              auto_merge: false,
+              required_contexts: []
+            });
+
+            console.log(`Deployed ${{ inputs.tag }} to ${{ inputs.environment }}: ${deploymentUrl}`);
+
+      - name: Notify deployment status
+        run: |
+          echo "✅ Successfully deployed ${{ inputs.tag }} to ${{ inputs.environment }}"
+          echo "🌐 Deployment URL: https://weeb-${{ inputs.environment }}.pages.dev"
