@@ -65,8 +65,8 @@ jobs:
 
       - name: Build for Cloudflare Pages
         run: |
-          # Install Cloudflare adapter for SSR
-          npm install @astrojs/cloudflare
+          # Install Cloudflare adapter for SSR (using yarn to handle dependencies better)
+          yarn add @astrojs/cloudflare --dev
 
           # Use Cloudflare-specific config and build
           cp astro.config.cloudflare.mjs astro.config.mjs

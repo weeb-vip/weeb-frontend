@@ -43,51 +43,9 @@ jobs:
           git fetch --tags
           export GITHUB_REF_NAME=$(git describe --tags --abbrev=0)
           echo "RELEASE_VERSION=$GITHUB_REF_NAME" >> $GITHUB_ENV
-      - name: Update deployment tags
-        uses: actions/github-script@v7
-        if: env.RELEASE_VERSION != '' && env.RELEASE_VERSION != 'HEAD'
-        with:
-          github-token: ${{ secrets.ACCESS_TOKEN }}
-          script: |
-            const { execSync } = require('child_process');
-            const fs = require('fs');
-
-            // Run the update script
-            console.log(`🔄 Updating deployment workflow with new tag: ${process.env.RELEASE_VERSION}`);
-            execSync('node scripts/update-deployment-tags.js', { stdio: 'inherit' });
-
-            // Read the updated workflow file
-            const workflowPath = '.github/workflows/deploy-cloudflare.yml';
-            const workflowContent = fs.readFileSync(workflowPath, 'utf8');
-
-            // Get current file from GitHub API
-            const { data: currentFile } = await github.rest.repos.getContent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: workflowPath,
-            });
-
-            // Update file via GitHub API (bypasses branch protection)
-            await github.rest.repos.createOrUpdateFileContents({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: workflowPath,
-              message: `ci: update deployment tags with ${process.env.RELEASE_VERSION}`,
-              content: Buffer.from(workflowContent).toString('base64'),
-              sha: currentFile.sha,
-              committer: {
-                name: 'weeb-vip-bot',
-                email: 'noreply@weeb.vip'
-              },
-              author: {
-                name: 'weeb-vip-bot',
-                email: 'noreply@weeb.vip'
-              }
-            });
-
-            console.log(`✅ Updated deployment workflow with ${process.env.RELEASE_VERSION}`);
-        env:
-          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+      # Note: Auto-update of deployment tags disabled due to workflow file permissions
+      # To update tags, run: yarn update-deployment-tags
+      # This can be done manually or via a separate workflow without branch protection
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
