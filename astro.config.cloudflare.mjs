@@ -8,8 +8,11 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 export default defineConfig({
   output: 'server',
   adapter: cloudflare({
-    mode: 'advanced',
-    functionPerRoute: false
+    mode: 'directory',
+    functionPerRoute: false,
+    routes: {
+      exclude: ['/favicon.ico', '/robots.txt', '/sitemap.xml', '/_astro/*']
+    }
   }),
 
   integrations: [

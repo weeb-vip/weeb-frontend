@@ -80,7 +80,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=weeb-${{ inputs.environment }}
+          command: pages deploy ./dist --project-name=weeb-${{ inputs.environment }} --branch=${{ inputs.environment == 'production' && 'main' || 'staging' }}
 
       - name: Create deployment comment
         uses: actions/github-script@v7
