@@ -4,12 +4,12 @@ import tailwind from '@astrojs/tailwind';
 import node from '@astrojs/node';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
-import cloudflare from '@astrojs/cloudflare';
-
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
-  adapter: cloudflare(),
+  adapter: node({
+    mode: 'standalone'
+  }),
 
   integrations: [
     svelte(),
