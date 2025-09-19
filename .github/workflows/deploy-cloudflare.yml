@@ -18,6 +18,11 @@ on:
           - v1.73.0
           - v1.72.2
           - v1.72.1
+          - v1.72.0
+          - v1.71.0
+          - v1.70.10
+          - v1.70.9
+          - v1.70.8
       environment:
         description: 'Deployment environment'
         required: true
