@@ -1,8 +1,15 @@
 ---
-import DefaultLayout from '../../layouts/DefaultLayout.astro';
-import ResendVerificationIsland from '../../components/islands/ResendVerificationIsland';
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import ResendVerificationPage from '../../svelte/components/ResendVerificationPage.svelte';
+import ResendVerificationSkeleton from '../../svelte/components/ResendVerificationSkeleton.svelte';
 ---
 
-<DefaultLayout title="Resend Verification">
-  <ResendVerificationIsland client:only="react" />
-</DefaultLayout>
+<SvelteLayout
+  title="Resend Verification"
+  description="Resend email verification to complete your WeebVIP account setup."
+  noIndex={true}
+>
+  <ResendVerificationPage client:load>
+    <ResendVerificationSkeleton slot="fallback" />
+  </ResendVerificationPage>
+</SvelteLayout>

@@ -1,8 +1,15 @@
 ---
-import DefaultLayout from '../../layouts/DefaultLayout.astro';
-import VerificationIsland from '../../components/islands/VerificationIsland';
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import EmailVerificationPage from '../../svelte/components/EmailVerificationPage.svelte';
+import EmailVerificationSkeleton from '../../svelte/components/EmailVerificationSkeleton.svelte';
 ---
 
-<DefaultLayout title="Email Verification">
-  <VerificationIsland client:only="react" />
-</DefaultLayout>
+<SvelteLayout
+  title="Email Verification"
+  description="Verify your email address to complete your WeebVIP account setup."
+  noIndex={true}
+>
+  <EmailVerificationPage client:load>
+    <EmailVerificationSkeleton slot="fallback" />
+  </EmailVerificationPage>
+</SvelteLayout>

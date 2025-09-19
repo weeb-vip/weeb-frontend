@@ -139,9 +139,9 @@ export function useVerifyEmail() {
 
 export function useResendVerificationEmail() {
   return createMutation({
-    mutationFn: async () => {
+    mutationFn: async (input: { username: string }): Promise<boolean> => {
       const queryConfig = resendVerificationQuery();
-      return queryConfig.mutationFn();
+      return queryConfig.mutationFn(input);
     },
   });
 }

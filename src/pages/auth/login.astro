@@ -1,15 +1,15 @@
 ---
-import DefaultLayout from '../../layouts/DefaultLayout.astro';
-import LoginPage from '../../components/islands/LoginPage';
-
-// Enable SSR for auth pages
-// Static generation for auth pages
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import LoginPage from '../../svelte/components/LoginPage.svelte';
+import LoginSkeleton from '../../svelte/components/LoginSkeleton.svelte';
 ---
 
-<DefaultLayout
+<SvelteLayout
   title="Login"
   description="Sign in to your WeebVIP account to access your anime watchlist and get personalized recommendations."
   noIndex={true}
 >
-  <LoginPage client:only="react" />
-</DefaultLayout>
+  <LoginPage client:load>
+    <LoginSkeleton slot="fallback" />
+  </LoginPage>
+</SvelteLayout>
