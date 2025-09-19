@@ -56,7 +56,10 @@ jobs:
             git config --global user.email "noreply@weeb.vip"
             git config --global user.name "weeb-vip-bot"
             git add .github/workflows/deploy-cloudflare.yml
-            git commit -m "chore: update deployment tags with $RELEASE_VERSION"
+            git commit -m "ci: update deployment tags with $RELEASE_VERSION"
+
+            # Use the same token method as semantic-release
+            git remote set-url origin https://x-access-token:${{ secrets.ACCESS_TOKEN }}@github.com/${{ github.repository }}.git
             git push origin main
           fi
         env:
