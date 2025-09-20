@@ -340,16 +340,7 @@
   // Determine which anime to show in banner (use hovered anime, last hovered, or fallback to first)
   $: bannerAnime = hoveredAnime || lastHoveredAnime || (sortedCurrentlyAiring[0]?.airingInfo);
 
-  // Debug logging
-  $: {
-    console.log('Selected season:', selectedSeason);
-    console.log('Seasonal loading:', seasonalLoading);
-    console.log('Seasonal error:', seasonalError);
-    if (seasonalData) {
-      console.log('Seasonal data received:', seasonalData);
-      console.log('Anime count:', seasonalData?.animeBySeasons?.length || 0);
-    }
-  }
+  // Remove debug logging
 </script>
 
 <div class="flex flex-col max-w-screen-2xl px-4 lg:px-0" style="margin: 0 auto">

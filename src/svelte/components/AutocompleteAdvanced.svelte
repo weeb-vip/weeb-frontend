@@ -30,9 +30,7 @@
 
     try {
       // Initialize config store - fetch from HTTP and wait for it
-      console.log('Initializing config store...');
       await configStore.init();
-      console.log('Config store initialized successfully');
     } catch (error) {
       console.error('Failed to initialize config store:', error);
     }
@@ -58,28 +56,17 @@
         createAutocomplete = autocompleteModule.createAutocomplete;
         getAlgoliaResults = presetModule.getAlgoliaResults;
 
-        console.log('Modules loaded:', {
-          algoliasearch: typeof algoliasearch,
-          createAutocomplete: typeof createAutocomplete,
-          getAlgoliaResults: typeof getAlgoliaResults,
-          algoliasearchModule: Object.keys(algoliasearchModule)
-        });
+        // Modules loaded successfully
 
         if (typeof algoliasearch !== 'function') {
           throw new Error('algoliasearch is not a function: ' + typeof algoliasearch);
         }
 
         searchClient = algoliasearch("A2HF2P5C6X", "45216ed5ac3f9e0a478d3c354d353d58");
-        console.log('Search client created:', searchClient);
+        // Search client created successfully
 
         autocompleteInstance = createAutocomplete({
           onStateChange({ state }) {
-            console.log('Autocomplete state changed:', {
-              isOpen: state.isOpen,
-              query: state.query,
-              collections: state.collections?.length || 0,
-              status: state.status
-            });
             autocompleteState = state;
           },
           getSources() {
@@ -90,7 +77,6 @@
                   return item.title_en;
                 },
                 getItems({ query }) {
-                  console.log('getItems called with query:', query);
                   if (!query) {
                     return [];
                   }
@@ -98,8 +84,6 @@
                   // Get config from the Svelte store with fallback
                   const config = configStore.get();
                   const indexName = config?.algolia_index || 'anime-staging';
-
-                  console.log('Using Algolia index from Svelte store:', indexName, 'config:', config);
 
                   return getAlgoliaResults({
                     searchClient,
@@ -119,11 +103,11 @@
           },
         });
 
-        console.log('Autocomplete instance created:', autocompleteInstance);
+        // Autocomplete instance created successfully
 
         isClient = true;
         isLoading = false;
-        console.log('Algolia initialized successfully (Svelte)');
+        // Algolia initialized successfully
 
         // Add environment event listeners
         if (mobileFormRef && mobileInputRef && mobilePanelRef) {

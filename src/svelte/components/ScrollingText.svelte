@@ -20,9 +20,7 @@
 
     isOverflowing = textWidth > containerWidth;
 
-    if (wasOverflowing !== isOverflowing) {
-      console.log('Overflow check for text:', text, 'containerWidth:', containerWidth, 'textWidth:', textWidth, 'isOverflowing:', isOverflowing);
-    }
+    // Remove debug logging for overflow checks
   }
 
   onMount(() => {

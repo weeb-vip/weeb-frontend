@@ -8,9 +8,42 @@
   import { getQueryClient } from '../services/query-client';
   import debug from '../../utils/debug';
 
+  // Accept SSR auth data to avoid unnecessary GraphQL calls
+  export let ssrAuth: {
+    isLoggedIn: boolean;
+    authToken: string | undefined;
+    refreshToken: string | undefined;
+    hasAuthToken: boolean;
+    hasRefreshToken: boolean;
+  } | undefined = undefined;
+
   onMount(async () => {
     try {
-      debug.auth("Initializing auth state via user details query");
+      // If we have SSR auth data, use it instead of making GraphQL calls
+      if (ssrAuth) {
+        debug.auth("Using SSR auth data - skipping GraphQL user query");
+
+        if (ssrAuth.isLoggedIn && ssrAuth.hasAuthToken) {
+          debug.success("SSR data shows user is logged in");
+          loggedInStore.setLoggedIn();
+
+          // Start token refresher if we have refresh capabilities
+          if (ssrAuth.hasRefreshToken && ssrAuth.authToken) {
+            TokenRefresher.getInstance(async () => {
+              return refreshTokenSimple();
+            }).start(ssrAuth.authToken);
+          }
+        } else {
+          debug.auth("SSR data shows user is not logged in");
+          loggedInStore.logout();
+        }
+
+        // Mark auth as initialized
+        loggedInStore.setAuthInitialized();
+        return;
+      }
+
+      debug.auth("No SSR auth data - initializing auth state via user details query");
 
       // Create a query client for this auth check
       const queryClient = getQueryClient();

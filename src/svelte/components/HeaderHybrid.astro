@@ -3,6 +3,9 @@ import AutocompleteAdvanced from '../../svelte/components/AutocompleteAdvanced.s
 import LoginModalHandler from '../../svelte/components/LoginModalHandler.svelte';
 import UserProfileHandler from '../../svelte/components/UserProfileHandler.svelte';
 import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
+
+// Get SSR auth data from middleware
+const { auth } = Astro.locals;
 ---
 
 <header class="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 h-24 transition-colors duration-300">
@@ -105,8 +108,8 @@ import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
   </div>
 </header>
 
-<!-- Auth State Initializer (Client-side) -->
-<AuthInitializer client:idle />
+<!-- Auth State Initializer (Client-side) with SSR auth data -->
+<AuthInitializer client:idle ssrAuth={auth} />
 
 <!-- Login/Register Modal Handler (Client-side) -->
 <LoginModalHandler client:idle />

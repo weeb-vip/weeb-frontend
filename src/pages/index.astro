@@ -2,6 +2,16 @@
 import SvelteLayout from '../layouts/SvelteLayout.astro';
 import HomepageDemo from '../svelte/components/HomepageDemo.svelte';
 
+// Access SSR auth data
+const { auth } = Astro.locals;
+
+// Log SSR auth status
+console.log('SSR Home page - Auth status:', {
+  isLoggedIn: auth.isLoggedIn,
+  hasAuthToken: auth.hasAuthToken,
+  hasRefreshToken: auth.hasRefreshToken
+});
+
 export const prerender = false;
 ---
 
@@ -9,5 +19,5 @@ export const prerender = false;
   title="Home"
   description="Discover and track your favorite anime. Get notifications for new episodes, explore seasonal anime, and manage your watchlist."
 >
-  <HomepageDemo client:load/>
+  <HomepageDemo client:load ssrAuth={auth}/>
 </SvelteLayout>

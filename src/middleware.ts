@@ -1,5 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { ensureConfigLoaded } from './services/config-loader';
+import { AuthStorage } from './utils/auth-storage';
 
 // Ensure config is loaded at startup for SSR
 let configLoadPromise: Promise<any> | null = null;
@@ -12,7 +13,7 @@ if (typeof window === 'undefined') {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const { request, url } = context;
+  const { request, url, cookies } = context;
 
   // Ensure config is loaded before processing any request
   try {
@@ -25,6 +26,30 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return new Response('Configuration error', { status: 500 });
   }
 
+  // Extract cookies from request headers
+  const cookieString = request.headers.get('cookie') || '';
+
+  // Debug: Log cookie information
+  console.log('[Middleware] Cookie debug:', {
+    hasCookieHeader: !!request.headers.get('cookie'),
+    cookieLength: cookieString.length,
+    url: url.pathname,
+    host: request.headers.get('host')
+  });
+
+  // Check authentication status from cookies
+  const isLoggedIn = AuthStorage.isLoggedInFromCookieString(cookieString);
+  const tokens = AuthStorage.getTokensFromCookieString(cookieString);
+
+  // Make auth info available to all components via Astro.locals
+  context.locals.auth = {
+    isLoggedIn,
+    authToken: tokens.authToken,
+    refreshToken: tokens.refreshToken,
+    hasAuthToken: !!tokens.authToken,
+    hasRefreshToken: !!tokens.refreshToken
+  };
+
   // Log requests in development
   if (import.meta.env.DEV) {
     console.log(`[${new Date().toISOString()}] ${request.method} ${url.pathname}`);
@@ -35,15 +60,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const authRoutes = ['/auth/login', '/auth/register'];
 
   if (protectedRoutes.some(route => url.pathname.startsWith(route))) {
-    // TODO: Implement server-side auth check
-    // For now, let client handle authentication
-    // In a real implementation, you'd check for JWT tokens here
+    // Server-side auth check for protected routes
+    if (!isLoggedIn) {
+      // Redirect to login page if not authenticated
+      return context.redirect('/auth/login');
+    }
   }
 
   // Redirect authenticated users away from auth pages
   if (authRoutes.some(route => url.pathname === route)) {
-    // TODO: Implement server-side auth check
-    // If user is already authenticated, redirect to profile
+    // If user is already authenticated, redirect to home or profile
+    if (isLoggedIn) {
+      return context.redirect('/profile');
+    }
   }
 
   // Process the response

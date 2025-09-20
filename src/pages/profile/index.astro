@@ -2,10 +2,15 @@
 import SvelteLayout from '../../layouts/SvelteLayout.astro';
 import ProfilePage from '../../svelte/components/ProfilePage.svelte';
 
-// Static generation for profile page
+// Server-side authentication check
+const { auth } = Astro.locals;
 
-// TODO: Add server-side authentication check
-// For now, letting client handle auth
+// Show auth status for SSR rendering
+console.log('SSR Profile page - Auth status:', {
+  isLoggedIn: auth.isLoggedIn,
+  hasAuthToken: auth.hasAuthToken,
+  hasRefreshToken: auth.hasRefreshToken
+});
 ---
 
 <SvelteLayout
@@ -13,5 +18,8 @@ import ProfilePage from '../../svelte/components/ProfilePage.svelte';
   description="Manage your anime watchlist, settings, and profile information."
   noIndex={true}
 >
-  <ProfilePage client:idle />
+  <ProfilePage
+    client:idle
+    ssrAuth={auth}
+  />
 </SvelteLayout>
