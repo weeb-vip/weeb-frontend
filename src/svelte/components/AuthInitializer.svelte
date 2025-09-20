@@ -3,71 +3,51 @@
   import { loggedInStore } from '../stores/auth';
   import { AuthStorage } from '../../utils/auth-storage';
   import { TokenRefresher } from '../../services/token_refresher';
-  import { refreshTokenSimple } from '../../services/queries';
+  import { refreshTokenSimple, getUser } from '../../services/queries';
+  import { createQuery } from '@tanstack/svelte-query';
+  import { getQueryClient } from '../services/query-client';
   import debug from '../../utils/debug';
 
   onMount(async () => {
     try {
-      debug.auth("Initializing Svelte auth state");
+      debug.auth("Initializing auth state via user details query");
 
-      // Check cookie-based login status
-      const isLoggedInFromCookies = loggedInStore.checkCookieStatus();
+      // Create a query client for this auth check
+      const queryClient = getQueryClient();
 
-      debug.auth("Cookie-based login check:", {
-        isLoggedIn: isLoggedInFromCookies
+      // Attempt to fetch user details to determine auth state
+      const userQuery = createQuery(getUser(), queryClient);
+
+      // Subscribe to the query result
+      const unsubscribe = userQuery.subscribe((result) => {
+        if (result.isSuccess && result.data) {
+          debug.success("User details fetched successfully - user is logged in");
+          loggedInStore.setLoggedIn();
+
+          // Start token refresher if we have refresh capabilities
+          const refreshToken = AuthStorage.getRefreshToken();
+          if (refreshToken) {
+            TokenRefresher.getInstance(async () => {
+              return refreshTokenSimple();
+            }).start(AuthStorage.getAuthToken() || '');
+          }
+        } else if (result.isError) {
+          debug.auth("User details query failed - user is not logged in:", result.error?.message);
+          loggedInStore.logout();
+          AuthStorage.clearTokens();
+        }
+
+        // Mark auth as initialized regardless of success/failure
+        loggedInStore.setAuthInitialized();
       });
 
-      if (isLoggedInFromCookies) {
-        // Get tokens for refresh logic
-        const authToken = AuthStorage.getAuthToken();
-        const refreshToken = AuthStorage.getRefreshToken();
-        // If we have a refresh token, try to refresh
-        if (refreshToken) {
-          try {
-            debug.auth("Attempting to refresh token");
-            const result = await refreshTokenSimple();
-
-            if (result?.Credentials) {
-              debug.success("Token refreshed successfully");
-              loggedInStore.setLoggedIn();
-
-              // Start token refresher with the new token
-              TokenRefresher.getInstance(async () => {
-                return refreshTokenSimple();
-              }).start(result.Credentials.token);
-            }
-          } catch (error: any) {
-            debug.error("Token validation/refresh failed:", error.message);
-
-            // Only clear tokens if it's an auth error
-            const isAuthError = error.message?.toLowerCase().includes('unauthorized') ||
-                               error.message?.toLowerCase().includes('invalid') ||
-                               error.message?.toLowerCase().includes('expired') ||
-                               error.message?.toLowerCase().includes('forbidden');
-
-            if (isAuthError) {
-              debug.auth("Authentication failed, clearing tokens");
-              AuthStorage.clearTokens();
-              loggedInStore.logout();
-            } else {
-              debug.warn("Network or temporary error, keeping tokens for retry");
-              // Still set as logged in if we have auth token
-              if (authToken) {
-                loggedInStore.setLoggedIn();
-              }
-            }
-          }
-        } else if (authToken) {
-          // Only auth token, no refresh token
-          debug.warn("Auth token found but no refresh token");
-          loggedInStore.setLoggedIn();
-        }
-      } else {
-        debug.auth("No tokens found, user not logged in");
-      }
+      // Clean up subscription on component destroy
+      return () => {
+        unsubscribe();
+      };
     } catch (error) {
       debug.error("Auth initialization failed:", error);
-      // In case of error, ensure auth is marked as initialized
+      loggedInStore.logout();
       loggedInStore.setAuthInitialized();
     }
   });
