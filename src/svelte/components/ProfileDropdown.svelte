@@ -29,7 +29,7 @@
   });
 
   function handleLogout() {
-    AuthStorage.clearTokens();
+    AuthStorage.logout();
     loggedInStore.logout();
     isOpen = false;
     navigateWithTransition("/");

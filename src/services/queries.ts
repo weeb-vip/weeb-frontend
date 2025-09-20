@@ -124,10 +124,14 @@ export const authenticatedRequest = async <T>(requestFn: (client: GraphQLClient)
 export const AuthenticatedClient = async () => {
   const token = AuthStorage.getAuthToken();
   const config = await getConfig();
+
+  console.log('🔧 Creating GraphQL client with token:', token ? 'Present' : 'Missing');
+
   // @ts-ignore
   return new GraphQLClient(config.graphql_host, {
+    credentials: 'include', // Send cookies with requests
     headers: {
-      Authorization: `Bearer ${token}`
+      ...(token && { Authorization: `Bearer ${token}` })
     }
   })
 }
@@ -262,6 +266,7 @@ export const verifyEmail = (token: string) => ({
     const config = await getConfig();
     // @ts-ignore
     const client = new GraphQLClient(config.graphql_host, {
+      credentials: 'include',
       headers: {
         Authorization: `Bearer ${token}`
       }

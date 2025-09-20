@@ -46,7 +46,7 @@
   }
 
   function handleLogout() {
-    AuthStorage.clearTokens();
+    AuthStorage.logout();
     loggedInStore.logout();
     onClose();
     navigateWithTransition("/");

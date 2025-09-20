@@ -36,7 +36,14 @@ class CookieUtils {
       cookieString += `; SameSite=${options.sameSite}`;
     }
 
+    console.log(`Setting cookie: ${cookieString}`);
     document.cookie = cookieString;
+
+    // Verify it was set
+    setTimeout(() => {
+      const value = CookieUtils.get(name);
+      console.log(`Cookie ${name} verification:`, value ? 'SUCCESS' : 'FAILED');
+    }, 100);
   }
 
   static remove(name: string, path: string = '/') {
@@ -52,13 +59,23 @@ export class AuthStorage {
       // Only run on client-side
       if (typeof window === 'undefined') return;
 
-      // Set secure cookies with proper options
+      console.log('Storing tokens in cookies:', {
+        protocol: window.location.protocol,
+        hostname: window.location.hostname,
+        authTokenLength: authToken.length,
+        refreshTokenLength: refreshToken.length
+      });
+
+      // More permissive cookie options for debugging
       const cookieOptions = {
         path: '/',
-        secure: window.location.protocol === 'https:',
-        sameSite: 'Strict' as const,
+        // Only use secure on production HTTPS
+        secure: window.location.protocol === 'https:' && window.location.hostname !== 'localhost',
+        sameSite: 'Lax' as const, // Changed from Strict to Lax for better compatibility
         maxAge: 7 * 24 * 60 * 60 // 7 days
       };
+
+      console.log('Cookie options:', cookieOptions);
 
       CookieUtils.set('authToken', authToken, cookieOptions);
       CookieUtils.set('refreshToken', refreshToken, cookieOptions);
@@ -76,8 +93,8 @@ export class AuthStorage {
 
       const cookieOptions = {
         path: '/',
-        secure: window.location.protocol === 'https:',
-        sameSite: 'Strict' as const,
+        secure: window.location.protocol === 'https:' && window.location.hostname !== 'localhost',
+        sameSite: 'Lax' as const,
         maxAge: 7 * 24 * 60 * 60 // 7 days
       };
 
@@ -108,13 +125,28 @@ export class AuthStorage {
 
   static clearTokens() {
     try {
-      // Clear cookies
+      console.log("🚨 clearTokens() called - preserving cookies (auth error/refresh scenario)");
+      debug.warn("clearTokens() called but cookies preserved (likely auth error, not explicit logout)");
+
+      // Don't clear cookies on auth errors - only on explicit logout
+      // Cookies should persist to allow automatic re-auth
+    } catch (error) {
+      debug.error("Failed to clear auth tokens:", error);
+    }
+  }
+
+  static logout() {
+    try {
+      console.log("🚪 logout() called - clearing cookies");
+      debug.auth("Explicit logout - removing cookies");
+
+      // Only clear cookies on explicit logout
       CookieUtils.remove('authToken');
       CookieUtils.remove('refreshToken');
 
-      debug.auth("Tokens cleared from cookies");
+      debug.auth("Tokens cleared from cookies on logout");
     } catch (error) {
-      debug.error("Failed to clear auth tokens:", error);
+      debug.error("Failed to clear auth tokens on logout:", error);
     }
   }
 
