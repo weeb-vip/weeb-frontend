@@ -235,36 +235,32 @@ export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | 
 
 export const register = () => ({
   mutationFn: async (input: { input: RegisterInput }): Promise<RegisterResult> => {
-    const config = await getConfig();
-    // @ts-ignore
-    const response = await request(config.graphql_host, mutationRegister, input);
+    const client = await AuthenticatedClient();
+    const response = await client.request(mutationRegister, input);
     return response.Register;
   }
 })
 
 export const login = () => ({
   mutationFn: async (input: { input: LoginInput }) => {
-    const config = await getConfig();
-    // @ts-ignore
-    const response = await request(config.graphql_host, mutationCreateSession, input);
+    const client = await AuthenticatedClient();
+    const response = await client.request(mutationCreateSession, input);
     return response.CreateSession;
   }
 })
 
 export const requestPasswordReset = () => ({
   mutationFn: async (input: { input: RequestPasswordResetInput }): Promise<boolean> => {
-    const config = await getConfig();
-    // @ts-ignore
-    const response = await request(config.graphql_host, mutationRequestPasswordReset, input);
+    const client = await AuthenticatedClient();
+    const response = await client.request(mutationRequestPasswordReset, input);
     return response.RequestPasswordReset;
   }
 })
 
 export const resetPassword = () => ({
   mutationFn: async (input: { input: ResetPasswordInput }): Promise<boolean> => {
-    const config = await getConfig();
-    // @ts-ignore
-    const response = await request(config.graphql_host, mutationResetPassword, input);
+    const client = await AuthenticatedClient();
+    const response = await client.request(mutationResetPassword, input);
     return response.ResetPassword;
   }
 })
@@ -294,9 +290,8 @@ export const verifyEmail = (token: string) => ({
 
 export const resendVerificationEmail = () => ({
   mutationFn: async (input: { username: string }): Promise<boolean> => {
-    const config = await getConfig();
-    // @ts-ignore
-    const response = await request(config.graphql_host, mutationResendVerificationEmail, input);
+    const client = await AuthenticatedClient();
+    const response = await client.request(mutationResendVerificationEmail, input);
     return response.ResendVerificationEmail;
   }
 })
@@ -387,9 +382,8 @@ export const deleteAnime = () => ({
 export const getCharactersAndStaffByAnimeID = (id: string) => ({
   queryKey: ["charactersAndStaff", id],
   queryFn: async () => {
-    const config = await getConfig();
-    // @ts-ignore
-    const data = await request(config.graphql_host, queryCharactersAndStaffByAnimeID, {
+    const client = await AuthenticatedClient();
+    const data = await client.request(queryCharactersAndStaffByAnimeID, {
       animeId: id
     })
     return data.charactersAndStaffByAnimeId;

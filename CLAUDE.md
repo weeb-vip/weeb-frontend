@@ -76,7 +76,7 @@ This is a React frontend application for an anime tracking platform built with:
 
 ### Development Notes
 
-The app serves different environments (development, staging) through config files. GraphQL schema is pulled from `https://gateway.staging.weeb.vip/graphql` for code generation.
+The app serves different environments (development, staging) through config files. GraphQL schema is pulled from `https://gateway.weeb.vip/graphql` for code generation.
 
 Key pages include:
 - Home (`/`) - Main anime discovery

@@ -43,7 +43,7 @@ function createConfigStore() {
           // Fallback config for development
           const fallbackConfig: IConfig = {
             api_host: 'https://weeb-api.staging.weeb.vip',
-            graphql_host: 'https://gateway.staging.weeb.vip/graphql',
+            graphql_host: 'https://gateway.weeb.vip/graphql',
             algolia_index: 'anime-staging',
             cdn_url: 'https://cdn.weeb.vip',
             cdn_user_url: 'https://cdn.weeb.vip',
