@@ -22,6 +22,7 @@ export function useRegister() {
     try {
       const response = await fetch('/api/graphql', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

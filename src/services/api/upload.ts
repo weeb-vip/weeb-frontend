@@ -47,6 +47,7 @@ export async function uploadProfileImage(file: File): Promise<any> {
     // @ts-ignore
     const response = await fetch(global.config.graphql_host, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Authorization': `Bearer ${token}`,
         // Don't set Content-Type - let the browser set it with the boundary for multipart/form-data

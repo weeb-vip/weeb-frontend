@@ -58,6 +58,7 @@ export async function testUploadFormat(): Promise<void> {
       // @ts-ignore
       const response = await fetch(global.config.graphql_host, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`,
         },

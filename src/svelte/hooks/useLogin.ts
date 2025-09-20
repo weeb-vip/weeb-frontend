@@ -24,6 +24,7 @@ export function useLogin() {
     try {
       const response = await fetch('/api/graphql', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
