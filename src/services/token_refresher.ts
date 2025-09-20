@@ -123,20 +123,19 @@ export class TokenRefresher {
   }
 
   /**
-   * Stores the refreshed auth token in localStorage and cookies.
+   * Stores the refreshed auth token in cookies.
    * @param token - The refreshed JWT token.
    */
   private storeAuthToken(token: string): void {
     try {
       debug.auth('Storing auth token');
-      // Update both localStorage and cookies - we need to preserve the refresh token
+      // Update cookies - we need to preserve the refresh token
       const refreshToken = AuthStorage.getRefreshToken();
       if (refreshToken) {
         AuthStorage.setTokens(token, refreshToken);
+        debug.auth('Auth token updated with existing refresh token');
       } else {
-        // Fallback to just setting auth token
-        localStorage.setItem('authToken', token);
-        document.cookie = `authToken=${token}; Path=/; Secure; SameSite=Strict`;
+        debug.warn('No refresh token found, unable to update auth token');
       }
 
     } catch (error) {

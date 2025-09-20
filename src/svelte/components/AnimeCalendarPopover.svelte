@@ -17,18 +17,32 @@
   function togglePopover() {
     if (!isOpen && buttonRef) {
       const rect = buttonRef.getBoundingClientRect();
-      let left = rect.left + window.scrollX;
-      const top = rect.bottom + window.scrollY + 8;
-      const panelWidth = 420;
-      const screenWidth = window.innerWidth;
+      const isMobile = window.innerWidth < 768;
 
-      // Clamp left so it doesn't overflow on mobile
-      if (left + panelWidth > screenWidth) {
-        left = screenWidth - panelWidth - 8; // 8px margin
-        if (left < 8) left = 8; // Prevent negative offset
+      console.log('Button rect:', rect);
+      console.log('Window scroll:', window.scrollX, window.scrollY);
+
+      // Simple positioning: directly below the button
+      let top = rect.bottom + window.scrollY + 8;
+      let left = rect.left + window.scrollX;
+
+      console.log('Initial position:', { top, left });
+
+      // On mobile, try to center the popover
+      if (isMobile) {
+        const panelWidth = Math.min(window.innerWidth - 32, 350);
+        left = rect.left + window.scrollX - (panelWidth - rect.width) / 2;
+
+        // Keep it on screen
+        const margin = 16;
+        if (left < margin) left = margin;
+        if (left + panelWidth > window.innerWidth - margin) {
+          left = window.innerWidth - panelWidth - margin;
+        }
       }
 
       position = { top, left };
+      console.log('Final position:', position);
     }
     isOpen = !isOpen;
   }
@@ -80,10 +94,19 @@
 </button>
 
 {#if isOpen}
+  <!-- Mobile backdrop for easier closing -->
+  {#if typeof window !== 'undefined' && window.innerWidth < 768}
+    <div
+      class="fixed inset-0 bg-black/20 z-40 md:hidden"
+      on:click={closePopover}
+    ></div>
+  {/if}
+
   <div
     bind:this={popoverRef}
-    class="fixed z-50 w-[420px] max-w-[95vw] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 transition-colors duration-300"
-    style="top: {position.top}px; left: {position.left}px;"
+    class="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 transition-colors duration-300
+           max-h-[70vh] overflow-y-auto"
+    style="top: {position.top}px; left: {position.left}px; width: {typeof window !== 'undefined' && window.innerWidth < 768 ? Math.min(window.innerWidth - 32, 350) : 420}px;"
   >
     <AnimeCard
       style="episode"
