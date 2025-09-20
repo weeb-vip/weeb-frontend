@@ -129,9 +129,17 @@ export const AuthenticatedClient = async () => {
 
   // @ts-ignore
   return new GraphQLClient(config.graphql_host, {
-    credentials: 'include', // Re-enabled - server now supports credentials
     headers: {
       ...(token && { Authorization: `Bearer ${token}` })
+    },
+    // For graphql-request, credentials should be passed at the top level
+    credentials: 'include',
+    // Alternative: use fetch options directly
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      return fetch(input, {
+        ...init,
+        credentials: 'include'
+      });
     }
   })
 }
@@ -266,9 +274,17 @@ export const verifyEmail = (token: string) => ({
     const config = await getConfig();
     // @ts-ignore
     const client = new GraphQLClient(config.graphql_host, {
-      credentials: 'include', // Re-enabled - server now supports credentials
       headers: {
         Authorization: `Bearer ${token}`
+      },
+      // For graphql-request, credentials should be passed at the top level
+      credentials: 'include',
+      // Alternative: use fetch options directly
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+        return fetch(input, {
+          ...init,
+          credentials: 'include'
+        });
       }
     });
     const response = await client.request(mutationVerifyEmail);

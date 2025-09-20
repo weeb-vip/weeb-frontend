@@ -19,9 +19,13 @@ export function createQueryClient() {
         // Don't refetch on window focus during SSR
         refetchOnWindowFocus: false,
         refetchOnMount: true,
+        // Add networkMode to ensure credentials are included
+        networkMode: 'online',
       },
       mutations: {
         retry: false,
+        // Add networkMode for mutations too
+        networkMode: 'online',
       },
     },
   });
