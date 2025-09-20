@@ -129,7 +129,7 @@ export const AuthenticatedClient = async () => {
 
   // @ts-ignore
   return new GraphQLClient(config.graphql_host, {
-    // credentials: 'include', // Temporarily disabled due to CORS
+    credentials: 'include', // Re-enabled - server now supports credentials
     headers: {
       ...(token && { Authorization: `Bearer ${token}` })
     }
@@ -266,7 +266,7 @@ export const verifyEmail = (token: string) => ({
     const config = await getConfig();
     // @ts-ignore
     const client = new GraphQLClient(config.graphql_host, {
-      // credentials: 'include', // Temporarily disabled due to CORS
+      credentials: 'include', // Re-enabled - server now supports credentials
       headers: {
         Authorization: `Bearer ${token}`
       }
