@@ -10,16 +10,17 @@
     try {
       debug.auth("Initializing Svelte auth state");
 
-      // Check if we have tokens
-      const authToken = AuthStorage.getAuthToken();
-      const refreshToken = AuthStorage.getRefreshToken();
+      // Check cookie-based login status
+      const isLoggedInFromCookies = loggedInStore.checkCookieStatus();
 
-      debug.auth("Checking stored tokens:", {
-        authToken: authToken ? "Found" : "Missing",
-        refreshToken: refreshToken ? "Found" : "Missing"
+      debug.auth("Cookie-based login check:", {
+        isLoggedIn: isLoggedInFromCookies
       });
 
-      if (authToken || refreshToken) {
+      if (isLoggedInFromCookies) {
+        // Get tokens for refresh logic
+        const authToken = AuthStorage.getAuthToken();
+        const refreshToken = AuthStorage.getRefreshToken();
         // If we have a refresh token, try to refresh
         if (refreshToken) {
           try {
@@ -34,8 +35,6 @@
               TokenRefresher.getInstance(async () => {
                 return refreshTokenSimple();
               }).start(result.Credentials.token);
-
-              loggedInStore.setAuthInitialized();
             }
           } catch (error: any) {
             debug.error("Token validation/refresh failed:", error.message);
@@ -57,20 +56,18 @@
                 loggedInStore.setLoggedIn();
               }
             }
-            loggedInStore.setAuthInitialized();
           }
         } else if (authToken) {
           // Only auth token, no refresh token
           debug.warn("Auth token found but no refresh token");
           loggedInStore.setLoggedIn();
-          loggedInStore.setAuthInitialized();
         }
       } else {
         debug.auth("No tokens found, user not logged in");
-        loggedInStore.setAuthInitialized();
       }
     } catch (error) {
       debug.error("Auth initialization failed:", error);
+      // In case of error, ensure auth is marked as initialized
       loggedInStore.setAuthInitialized();
     }
   });

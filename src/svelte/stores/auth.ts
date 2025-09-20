@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { AuthStorage } from '../../utils/auth-storage';
 
 interface LoggedInState {
   isLoggedIn: boolean;
@@ -22,6 +23,16 @@ function createLoggedInStore() {
     setLoggedIn: () => update(state => ({ ...state, isLoggedIn: true, isAuthInitialized: true })),
     logout: () => update(state => ({ ...state, isLoggedIn: false, isAuthInitialized: true })),
     setAuthInitialized: () => update(state => ({ ...state, isAuthInitialized: true })),
+    // Check current cookie-based login status
+    checkCookieStatus: () => {
+      const isLoggedInFromCookies = AuthStorage.isLoggedIn();
+      update(state => ({
+        ...state,
+        isLoggedIn: isLoggedInFromCookies,
+        isAuthInitialized: true
+      }));
+      return isLoggedInFromCookies;
+    },
     set,
     update
   };

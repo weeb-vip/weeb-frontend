@@ -76,6 +76,24 @@ export class AuthStorage {
     }
   }
 
+  static isLoggedIn(): boolean {
+    try {
+      const authToken = CookieUtils.get('authToken');
+      const refreshToken = CookieUtils.get('refreshToken');
+
+      console.log('🔍 Checking login status:', {
+        authToken: authToken ? 'Present' : 'Missing',
+        refreshToken: refreshToken ? 'Present' : 'Missing'
+      });
+
+      // User is logged in if they have either an auth token or refresh token
+      return !!(authToken || refreshToken);
+    } catch (error) {
+      debug.error("Failed to check login status:", error);
+      return false;
+    }
+  }
+
   static clearTokens() {
     try {
       console.log("🚨 clearTokens() called - server manages cookies, client does nothing");
@@ -107,5 +125,28 @@ export class AuthStorage {
 
     const cookieMatch = cookieString.match(/authToken=([^;]+)/);
     return cookieMatch ? cookieMatch[1] : undefined;
+  }
+
+  // Server-side utility to check if user is authenticated
+  static isLoggedInFromCookieString(cookieString: string | undefined): boolean {
+    if (!cookieString) return false;
+
+    const authToken = cookieString.match(/authToken=([^;]+)/);
+    const refreshToken = cookieString.match(/refreshToken=([^;]+)/);
+
+    return !!(authToken || refreshToken);
+  }
+
+  // Server-side utility to get both tokens from cookie string
+  static getTokensFromCookieString(cookieString: string | undefined): { authToken?: string; refreshToken?: string } {
+    if (!cookieString) return {};
+
+    const authMatch = cookieString.match(/authToken=([^;]+)/);
+    const refreshMatch = cookieString.match(/refreshToken=([^;]+)/);
+
+    return {
+      authToken: authMatch ? authMatch[1] : undefined,
+      refreshToken: refreshMatch ? refreshMatch[1] : undefined
+    };
   }
 }
