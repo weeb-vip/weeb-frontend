@@ -129,7 +129,7 @@ export const AuthenticatedClient = async () => {
 
   // @ts-ignore
   return new GraphQLClient(config.graphql_host, {
-    credentials: 'include', // Send cookies with requests
+    // credentials: 'include', // Temporarily disabled due to CORS
     headers: {
       ...(token && { Authorization: `Bearer ${token}` })
     }
@@ -266,7 +266,7 @@ export const verifyEmail = (token: string) => ({
     const config = await getConfig();
     // @ts-ignore
     const client = new GraphQLClient(config.graphql_host, {
-      credentials: 'include',
+      // credentials: 'include', // Temporarily disabled due to CORS
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -314,12 +314,11 @@ export const refreshTokenSimple = async (): Promise<SigninResult> => {
 
     debug.success("Token refreshed successfully");
 
-    // Store the new tokens
+    // Server automatically updates HttpOnly cookies with new tokens
+    console.log("🔄 Token refresh successful - server updated cookies");
+
     if (response.RefreshToken?.Credentials) {
-      AuthStorage.setTokens(
-        response.RefreshToken.Credentials.token,
-        response.RefreshToken.Credentials.refresh_token
-      );
+      debug.auth("Refresh token response received - server manages cookie updates");
     }
 
     return response.RefreshToken;

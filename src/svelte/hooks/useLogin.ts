@@ -45,11 +45,16 @@ export function useLogin() {
 
       const signinResult: SigninResult = result.data.signin;
 
-      // Store tokens
-      AuthStorage.setTokens(signinResult.Credentials.token, signinResult.Credentials.refresh_token);
+      // Server sets HttpOnly cookies automatically - no manual storage needed
+      console.log("✅ Login successful - server set cookies automatically");
 
-      // Start token refresher
-      TokenRefresher.getInstance(refreshTokenSimple).start(signinResult.Credentials.token);
+      // Start token refresher (will read tokens from cookies)
+      const authToken = AuthStorage.getAuthToken();
+      if (authToken) {
+        TokenRefresher.getInstance(refreshTokenSimple).start(authToken);
+      } else {
+        debug.warn("No auth token found in cookies after login");
+      }
 
       state.update(s => ({ ...s, isLoading: false, success: true }));
 

@@ -10,7 +10,7 @@ class FetchClient {
   async get(url: string) {
     const response = await fetch(`${this.baseURL}${url}`, {
       method: 'GET',
-      credentials: 'include', // equivalent to withCredentials: true
+      // credentials: 'include', // Temporarily disabled due to CORS
       headers: {
         'Content-Type': 'application/json',
       },
@@ -27,7 +27,7 @@ class FetchClient {
   async post(url: string, data?: any) {
     const response = await fetch(`${this.baseURL}${url}`, {
       method: 'POST',
-      credentials: 'include',
+      // credentials: 'include', // Temporarily disabled due to CORS
       headers: {
         'Content-Type': 'application/json',
       },

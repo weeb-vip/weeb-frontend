@@ -123,23 +123,19 @@ export class TokenRefresher {
   }
 
   /**
-   * Stores the refreshed auth token in cookies.
-   * @param token - The refreshed JWT token.
+   * Server handles token storage via HttpOnly cookies.
+   * @param token - The refreshed JWT token (for restart logic only).
    */
   private storeAuthToken(token: string): void {
     try {
-      debug.auth('Storing auth token');
-      // Update cookies - we need to preserve the refresh token
-      const refreshToken = AuthStorage.getRefreshToken();
-      if (refreshToken) {
-        AuthStorage.setTokens(token, refreshToken);
-        debug.auth('Auth token updated with existing refresh token');
-      } else {
-        debug.warn('No refresh token found, unable to update auth token');
-      }
+      debug.auth('Token refresh completed - server updated HttpOnly cookies');
+      console.log('🔄 Token refreshed successfully - server manages cookie storage');
+
+      // Server automatically updates HttpOnly cookies during refresh
+      // No manual cookie setting needed by client
 
     } catch (error) {
-      debug.error('Failed to store auth token:', error);
+      debug.error('Failed to handle token refresh:', error);
     }
   }
 }

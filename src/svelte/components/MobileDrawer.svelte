@@ -45,7 +45,19 @@
     }
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    try {
+      // Call server logout endpoint to clear HttpOnly cookies
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include' // Send cookies to server
+      });
+      console.log("🚪 Server logout successful - cookies cleared");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+
+    // Update client state
     AuthStorage.logout();
     loggedInStore.logout();
     onClose();

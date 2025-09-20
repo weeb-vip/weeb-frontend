@@ -71,8 +71,8 @@ export function useLogin() {
     onSuccess: (data: SigninResult) => {
       debug.auth("Svelte login successful");
 
-      // Store tokens
-      AuthStorage.setTokens(data.Credentials.token, data.Credentials.refresh_token);
+      // Server sets HttpOnly cookies automatically
+      console.log("✅ Svelte login successful - server set cookies");
 
       // Update auth store
       loggedInStore.setLoggedIn();

@@ -52,58 +52,11 @@ class CookieUtils {
   }
 }
 
-// Cookie-based auth storage (no localStorage)
+// Server-set cookie auth storage (read-only)
 export class AuthStorage {
-  static setTokens(authToken: string, refreshToken: string) {
-    try {
-      // Only run on client-side
-      if (typeof window === 'undefined') return;
-
-      console.log('Storing tokens in cookies:', {
-        protocol: window.location.protocol,
-        hostname: window.location.hostname,
-        authTokenLength: authToken.length,
-        refreshTokenLength: refreshToken.length
-      });
-
-      // More permissive cookie options for debugging
-      const cookieOptions = {
-        path: '/',
-        // Only use secure on production HTTPS
-        secure: window.location.protocol === 'https:' && window.location.hostname !== 'localhost',
-        sameSite: 'Lax' as const, // Changed from Strict to Lax for better compatibility
-        maxAge: 7 * 24 * 60 * 60 // 7 days
-      };
-
-      console.log('Cookie options:', cookieOptions);
-
-      CookieUtils.set('authToken', authToken, cookieOptions);
-      CookieUtils.set('refreshToken', refreshToken, cookieOptions);
-
-      debug.auth("Tokens stored in cookies");
-    } catch (error) {
-      debug.error("Failed to store auth tokens:", error);
-    }
-  }
-
-  static setAuthToken(authToken: string) {
-    try {
-      // Only run on client-side
-      if (typeof window === 'undefined') return;
-
-      const cookieOptions = {
-        path: '/',
-        secure: window.location.protocol === 'https:' && window.location.hostname !== 'localhost',
-        sameSite: 'Lax' as const,
-        maxAge: 7 * 24 * 60 * 60 // 7 days
-      };
-
-      CookieUtils.set('authToken', authToken, cookieOptions);
-      debug.auth("Auth token stored in cookies");
-    } catch (error) {
-      debug.error("Failed to store auth token:", error);
-    }
-  }
+  // ⚠️ REMOVED: Manual cookie setting - server sets HttpOnly cookies
+  // static setTokens() - Tokens are now set by the server during login/refresh
+  // static setAuthToken() - Server handles all cookie management
 
   static getAuthToken(): string | null {
     try {
@@ -125,11 +78,11 @@ export class AuthStorage {
 
   static clearTokens() {
     try {
-      console.log("🚨 clearTokens() called - preserving cookies (auth error/refresh scenario)");
-      debug.warn("clearTokens() called but cookies preserved (likely auth error, not explicit logout)");
+      console.log("🚨 clearTokens() called - server manages cookies, client does nothing");
+      debug.warn("clearTokens() called but server manages all cookies");
 
-      // Don't clear cookies on auth errors - only on explicit logout
-      // Cookies should persist to allow automatic re-auth
+      // Server-set HttpOnly cookies can't be cleared by client JavaScript
+      // Auth errors are handled by server-side logic
     } catch (error) {
       debug.error("Failed to clear auth tokens:", error);
     }
@@ -137,16 +90,14 @@ export class AuthStorage {
 
   static logout() {
     try {
-      console.log("🚪 logout() called - clearing cookies");
-      debug.auth("Explicit logout - removing cookies");
+      console.log("🚪 logout() called - server will clear cookies");
+      debug.auth("Logout - server will handle cookie removal");
 
-      // Only clear cookies on explicit logout
-      CookieUtils.remove('authToken');
-      CookieUtils.remove('refreshToken');
-
-      debug.auth("Tokens cleared from cookies on logout");
+      // HttpOnly cookies can only be cleared by the server
+      // The logout endpoint should clear the cookies
+      // Client just needs to call the logout API
     } catch (error) {
-      debug.error("Failed to clear auth tokens on logout:", error);
+      debug.error("Failed to handle logout:", error);
     }
   }
 
