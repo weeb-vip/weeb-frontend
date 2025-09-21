@@ -1,16 +1,171 @@
 ---
 import SvelteLayout from '../layouts/SvelteLayout.astro';
-import HomepageDemo from '../svelte/components/HomepageDemo.svelte';
+import HomepageSSR from '../svelte/components/HomepageSSR.svelte';
+import { GraphQLClient } from 'graphql-request';
+import { ensureConfigLoaded } from '../services/config-loader';
+import {
+  getHomePageData,
+  getCurrentlyAiringWithDates,
+  getSeasonalAnime
+} from '../services/api/graphql/queries';
 
 // Access SSR auth data
-const { auth } = Astro.locals;
+const { auth, config } = Astro.locals;
 
-// Log SSR auth status
-console.log('SSR Home page - Auth status:', {
-  isLoggedIn: auth.isLoggedIn,
-  hasAuthToken: auth.hasAuthToken,
-  hasRefreshToken: auth.hasRefreshToken
-});
+// Function to get current season
+function getCurrentSeason(): string {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+
+  if (month >= 0 && month <= 2) return `WINTER_${year}`;
+  if (month >= 3 && month <= 5) return `SPRING_${year}`;
+  if (month >= 6 && month <= 8) return `SUMMER_${year}`;
+  return `FALL_${year}`;
+}
+
+// Create authenticated GraphQL client for SSR
+function createSSRGraphQLClient(authToken: string | undefined) {
+  return new GraphQLClient(config.graphql_host, {
+    headers: {
+      ...(authToken && { Authorization: `Bearer ${authToken}` })
+    },
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      return fetch(input, {
+        ...init,
+        credentials: 'include'
+      });
+    }
+  });
+}
+
+// Helper function to check if error is auth-related
+function isAuthError(error: any): boolean {
+  const message = error?.message?.toLowerCase() || '';
+  const response = error?.response;
+
+  // Check for GraphQL errors in the error response
+  if (response?.errors && Array.isArray(response.errors)) {
+    const hasAuthError = response.errors.some((err: any) => {
+      const msg = (err.message || '').toLowerCase();
+      return msg.includes('access denied') ||
+             msg.includes('unauthorized') ||
+             msg.includes('invalid token') ||
+             msg.includes('jwt') ||
+             msg.includes('authentication') ||
+             msg.includes('forbidden') ||
+             msg.includes('expired');
+    });
+    if (hasAuthError) return true;
+  }
+
+  // Also check for auth errors in the error message itself
+  return message.includes('access denied') ||
+         message.includes('unauthorized') ||
+         message.includes('invalid token') ||
+         message.includes('jwt') ||
+         message.includes('authentication') ||
+         message.includes('forbidden') ||
+         message.includes('expired');
+}
+
+// Fetch all data server-side
+let homeData: any = null;
+let currentlyAiringData: any = null;
+let seasonalData: any = null;
+let ssrError: string | null = null;
+let isTokenExpired = false;
+
+const currentSeason = getCurrentSeason();
+
+try {
+  const client = createSSRGraphQLClient(auth.authToken);
+
+  // Fetch home page data (top rated + newest anime)
+  try {
+    homeData = await client.request(getHomePageData, { limit: 20 });
+  } catch (error) {
+    console.error('[SSR] Failed to fetch home data:', error);
+    if (isAuthError(error)) {
+      console.warn('[SSR] Auth error detected for home data - token may be expired');
+      isTokenExpired = true;
+      // Try fetching without auth token for public data
+      try {
+        const publicClient = createSSRGraphQLClient(undefined);
+        homeData = await publicClient.request(getHomePageData, { limit: 20 });
+      } catch (publicError) {
+        console.error('[SSR] Failed to fetch home data without auth:', publicError);
+      }
+    }
+  }
+
+  // Fetch currently airing data
+  try {
+    const defaultStartDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    currentlyAiringData = await client.request(getCurrentlyAiringWithDates, {
+      input: {
+        startDate: defaultStartDate,
+        endDate: defaultEndDate,
+      }
+    });
+  } catch (error) {
+    console.error('[SSR] Failed to fetch currently airing data:', error);
+    if (isAuthError(error)) {
+      console.warn('[SSR] Auth error detected for currently airing data - token may be expired');
+      isTokenExpired = true;
+      // Try fetching without auth token for public data
+      try {
+        const publicClient = createSSRGraphQLClient(undefined);
+        currentlyAiringData = await publicClient.request(getCurrentlyAiringWithDates, {
+          input: {
+            startDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          }
+        });
+      } catch (publicError) {
+        console.error('[SSR] Failed to fetch currently airing data without auth:', publicError);
+      }
+    }
+  }
+
+  // Fetch seasonal data for current season
+  try {
+    seasonalData = await client.request(getSeasonalAnime, {
+      season: currentSeason
+    });
+  } catch (error) {
+    console.error('[SSR] Failed to fetch seasonal data:', error);
+    if (isAuthError(error)) {
+      console.warn('[SSR] Auth error detected for seasonal data - token may be expired');
+      isTokenExpired = true;
+      // Try fetching without auth token for public data
+      try {
+        const publicClient = createSSRGraphQLClient(undefined);
+        seasonalData = await publicClient.request(getSeasonalAnime, {
+          season: currentSeason
+        });
+      } catch (publicError) {
+        console.error('[SSR] Failed to fetch seasonal data without auth:', publicError);
+      }
+    }
+  }
+
+} catch (error) {
+  console.error('[SSR] Failed to create GraphQL client:', error);
+  ssrError = 'Failed to load data';
+}
+
+// If token was expired, update auth status
+if (isTokenExpired) {
+  console.log('[SSR] Token expired detected - updating auth locals');
+  auth.isLoggedIn = false;
+  auth.authToken = undefined;
+  auth.refreshToken = undefined;
+  auth.hasAuthToken = false;
+  auth.hasRefreshToken = false;
+}
 
 export const prerender = false;
 ---
@@ -19,5 +174,14 @@ export const prerender = false;
   title="Home"
   description="Discover and track your favorite anime. Get notifications for new episodes, explore seasonal anime, and manage your watchlist."
 >
-  <HomepageDemo client:load ssrAuth={auth}/>
+  <HomepageSSR
+    client:load
+    {auth}
+    {homeData}
+    {currentlyAiringData}
+    {seasonalData}
+    {currentSeason}
+    {ssrError}
+    {isTokenExpired}
+  />
 </SvelteLayout>

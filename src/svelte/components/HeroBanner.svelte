@@ -18,6 +18,7 @@
   let useFallback = false;
   let showJstPopover = false;
   let currentAnimeId: string | null = null;
+  let imageElement: HTMLImageElement;
 
   // Get timing data from the anime notification store
   $: timingDataStore = animeNotificationStore.getTimingData(anime.id);
@@ -42,6 +43,12 @@
   // Initialize config on mount
   onMount(async () => {
     await configStore.init();
+
+    // Check if image is already loaded (for SSR hydration)
+    if (imageElement && imageElement.complete && imageElement.naturalHeight !== 0) {
+      console.log('🖼️ HeroBanner background image already loaded on mount for:', anime.id);
+      bgLoaded = true;
+    }
   });
 
   // Set background URL based on anime data - only reset loading state when anime actually changes
@@ -61,6 +68,13 @@
         bgUrl = GetImageFromAnime(anime);
         bgLoaded = true;
       }
+
+      // Check if image is already cached and loaded
+      if (bgUrl && imageElement) {
+        if (imageElement.complete && imageElement.naturalHeight !== 0) {
+          bgLoaded = true;
+        }
+      }
     }
   }
 
@@ -72,6 +86,7 @@
   const airTimeAndDate = parseAirTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast);
 
   function handleImageLoad() {
+    console.log('🖼️ HeroBanner background image loaded for:', anime.id);
     bgLoaded = true;
   }
 
@@ -102,13 +117,14 @@
 
 <div class="relative w-full h-[600px] sm:h-[650px] md:h-[700px] rounded-lg">
   <!-- Background layer -->
-  <div class="absolute inset-0 overflow-hidden bg-white dark:bg-gray-900 md:rounded-lg xs:rounded-none">
+  <div class="absolute inset-0 overflow-hidden bg-gray-800 md:rounded-lg xs:rounded-none">
     {#if bgUrl}
       <div
         class="absolute inset-0 w-full h-full"
-        style="opacity: {bgLoaded ? 1 : 0}; transition: opacity 500ms;"
+        style="opacity: {bgLoaded ? 1 : 0.1}; transition: opacity 500ms;"
       >
         <img
+          bind:this={imageElement}
           src={bgUrl}
           alt="bg preload"
           loading="eager"

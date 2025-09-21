@@ -39,6 +39,11 @@
   $: if ($loginMutation.isSuccess) {
     loggedInStore.setLoggedIn();
     errorMessage = "";
+
+    // Dispatch custom event to trigger data refresh
+    console.log('🎉 Login successful - dispatching loginSuccess event');
+    window.dispatchEvent(new CustomEvent('loginSuccess'));
+
     if (closeFn) {
       closeFn();
     }
