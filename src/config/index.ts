@@ -21,6 +21,7 @@ export function getConfig(): IConfig {
       cdn_url: 'https://cdn.weeb.vip',
       cdn_user_url: 'https://cdn.weeb.vip',
       flagsmith_environment_id: 'fallback',
+      umami_website_id: 'weeb-fallback',
     } as any;
   }
   return config;

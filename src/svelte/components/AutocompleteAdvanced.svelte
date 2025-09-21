@@ -4,6 +4,7 @@
   import AutocompleteItem from './AutocompleteItem.svelte';
   import { configStore } from '../stores/config';
   import { navigateWithTransition } from '../../utils/astro-navigation';
+  import { analytics } from '../../utils/analytics';
 
   // Dynamic imports for SSR compatibility
   let algoliasearch: any = null;
@@ -245,6 +246,7 @@
           const target = e.target;
           const query = target.value;
           if (query.trim()) {
+            analytics.searchPerformed(query.trim(), 0); // Results count will be updated on search page
             navigateWithTransition(`/search?query=${encodeURIComponent(query.trim())}`);
           }
         }

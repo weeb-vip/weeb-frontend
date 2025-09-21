@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import SafeImage from './SafeImage.svelte';
   import ScrollingText from './ScrollingText.svelte';
+  import { analytics } from '../../utils/analytics';
 
   export let style: 'default' | 'hover-transparent' | 'hover' | 'transparent' | 'long' | 'detail' | 'episode' = 'default';
   export let forceListLayout: boolean = false;
@@ -64,6 +65,7 @@
   {/if}
 
   <a href="/show/{id}"
+     on:click={() => analytics.animeViewed(id || '', title)}
      class="flex flex-col flex-none bg-white dark:bg-gray-800 {cardStyles[style]} flex-grow overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md' : 'rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}">
     <SafeImage
       src={image}
@@ -75,7 +77,7 @@
 
   {#if style === 'detail'}
     <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
-      <a href="/show/{id}" class="flex overflow-hidden flex-col w-full">
+      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full">
         <ScrollingText
           text={title}
           className="text-md font-bold text-gray-900 dark:text-gray-100"
@@ -112,7 +114,7 @@
 
   {#if style === 'episode'}
     <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
-      <a href="/show/{id}" class="flex flex-col overflow-hidden w-full">
+      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full">
         <ScrollingText
           text={title}
           className="text-md font-bold text-gray-900 dark:text-gray-100"

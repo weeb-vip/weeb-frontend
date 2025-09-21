@@ -4,5 +4,6 @@
   "flagsmith_environment_id": "UTEJ78yJUDFkkkcm6czCw5",
   "algolia_index": "anime",
   "cdn_url": "https://cdn.weeb.vip/weeb",
-  "cdn_user_url": "https://cdn.weeb.vip/weeb-user"
+  "cdn_user_url": "https://cdn.weeb.vip/weeb-user",
+  "umami_website_id": "weeb-vip"
 }
