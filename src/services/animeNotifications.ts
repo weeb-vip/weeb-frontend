@@ -120,17 +120,8 @@ class AnimeNotificationService {
 
     try {
       // Use Vite's ?worker import to force TypeScript compilation
-      // if dev then use date.now() and append a random number to avoid caching
-      if (!import.meta.env.DEV) {
-        const {default: WorkerConstructor} = await import('../workers/animeNotifications.worker.ts?worker');
-        this.worker = new WorkerConstructor();
-      } else {
-        const cacheBuster = Date.now() + '-' + Math.floor(Math.random() * 100000);
-        const url = new URL('../workers/animeNotifications.worker.ts?worker', import.meta.url);
-        url.searchParams.append('cacheBuster', cacheBuster);
-        this.worker = new Worker(url);
-        debug.info('🐛 Dev mode: Worker loaded with cache buster:', cacheBuster);
-      }
+      const {default: WorkerConstructor} = await import('../workers/animeNotifications.worker.ts?worker');
+      this.worker = new WorkerConstructor();
       this.setupWorkerListeners();
       debug.info('Worker created successfully');
     } catch (error) {

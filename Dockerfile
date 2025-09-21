@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM oven/bun:1.1.34-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
@@ -9,20 +9,24 @@ ARG VITE_APP_VERSION=dev
 ENV VITE_APP_VERSION=$VITE_APP_VERSION
 ENV NODE_ENV=production
 
-# Copy package files
-COPY package.json bun.lockb* ./
+# Install Yarn
+RUN corepack enable
 
-# Install dependencies with Bun (include dev dependencies for build)
-RUN bun install --frozen-lockfile
+# Copy package files and Yarn configuration
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn .yarn
+
+# Install dependencies with Yarn (include dev dependencies for build)
+RUN yarn install --immutable
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN bun run build
+RUN yarn build
 
 # ---- Production stage ----
-FROM oven/bun:1.1.34-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
@@ -34,10 +38,6 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV APP_CONFIG=staging
-
-# Copy package files and install only production dependencies
-COPY package.json bun.lockb* ./
-RUN bun install --frozen-lockfile --production
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
@@ -59,10 +59,10 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD bun --version || exit 1
+  CMD node --version || exit 1
 
 # Use tini as entrypoint for proper signal handling
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Start the application using Bun
-CMD ["bun", "run", "start"]
+# Start the application using Node
+CMD ["node", "./dist/server/entry.mjs"]
