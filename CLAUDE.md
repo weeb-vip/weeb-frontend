@@ -40,23 +40,21 @@ debug.log('Debug information');         // 🐛 DEBUG: 14:32:15: Debug informati
 
 ## Architecture Overview
 
-This is a React frontend application for an anime tracking platform built with:
+This is an Astro frontend application for an anime tracking platform built with:
 
-- **Vite** as the build tool and development server
-- **React 18** with TypeScript
+- **Astro** as the build tool and development server
+- **Svelte** with TypeScript
 - **TailwindCSS** for styling with SCSS for additional styles
-- **React Router v6** for routing with page-level code splitting
-- **TanStack Query** (React Query) for data fetching and caching
-- **Apollo Client** for GraphQL operations
-- **Zustand** for global state management
+- **TanStack Query** (Svelte Query) for data fetching and caching
+- **Svelte stores** for global state management
 - **Flagsmith** for feature flags
-- **Motion** (Framer Motion) for animations
+- **Motion** for animations
 
 ### Key Architectural Patterns
 
 **Configuration System**: The app uses environment-specific config files in `src/config/static/` that get copied during build. Config is loaded at bootstrap and made globally available.
 
-**Authentication**: Handled through `src/auth.tsx` with JWT token management and automatic refresh via `src/services/token_refresher.ts`. Login state managed in Zustand store.
+**Authentication**: Handled through Astro middleware with JWT token management. Login state managed in Svelte stores.
 
 **Routing**: Uses lazy-loaded pages with two layout types:
 - `DefaultLayout` - Standard layout with header
@@ -69,8 +67,8 @@ This is a React frontend application for an anime tracking platform built with:
 
 **Component Structure**: Components organized by feature in `src/components/` with index files for clean imports. Each component typically includes TypeScript interfaces and follows React functional patterns.
 
-**State Management**: 
-- Global state via Zustand stores in `src/services/globalstore.ts`
+**State Management**:
+- Global state via Svelte stores in `src/svelte/stores/`
 - Local query state via TanStack Query
 - Feature flags via Flagsmith integration
 

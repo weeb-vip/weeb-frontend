@@ -1,5 +1,5 @@
 import debug from '../utils/debug';
-import {useAnimeCountdownStore} from '../stores/animeCountdownStore';
+import {animeCountdownStore} from '../svelte/stores/animeCountdown';
 
 export interface AnimeForNotification {
   id: string;
@@ -75,7 +75,7 @@ class AnimeNotificationService {
       } else if (message.type === 'countdown') {
 
         // Update Zustand store directly (backward compatibility)
-        useAnimeCountdownStore.getState().setCountdown(message.animeId, {
+        animeCountdownStore.setCountdown(message.animeId, {
           countdown: message.countdown,
           isAiring: message.isAiring,
           hasAired: message.hasAired,
@@ -88,7 +88,7 @@ class AnimeNotificationService {
         }
       } else if (message.type === 'timing') {
         // Update Zustand store with comprehensive timing data
-        useAnimeCountdownStore.getState().setTimingData(message.animeId, message.timingData);
+        animeCountdownStore.setTimingData(message.animeId, message.timingData);
 
         // Also call Svelte timing callback if set
         if (this.timingCallback) {

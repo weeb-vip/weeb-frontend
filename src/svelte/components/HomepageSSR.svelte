@@ -21,7 +21,7 @@
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
   import { AuthStorage } from '../../utils/auth-storage';
-  import { useLoggedInStore } from '../../services/globalstore';
+  import { loggedInStore } from '../stores/auth';
   import { fade, fly, crossfade } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
 
@@ -114,8 +114,7 @@
   // Track login state for refetching data
   let previousLoginState: boolean | null = null;
 
-  // Get the Zustand store as a Svelte store
-  const loggedInStore = useLoggedInStore;
+  // Svelte store is already imported and ready to use
 
   // Handle initialization and login state changes
   onMount(() => {

@@ -14,7 +14,7 @@ jest.mock('../utils/debug', () => ({
   default: mockDebug,
 }));
 
-// Mock the Zustand store
+// Mock the Svelte store
 const mockSetCountdown = jest.fn();
 const mockSetTimingData = jest.fn();
 const mockGetState = jest.fn(() => ({
@@ -22,9 +22,10 @@ const mockGetState = jest.fn(() => ({
   setTimingData: mockSetTimingData,
 }));
 
-jest.mock('../stores/animeCountdownStore', () => ({
-  useAnimeCountdownStore: {
-    getState: mockGetState,
+jest.mock('../svelte/stores/animeCountdown', () => ({
+  animeCountdownStore: {
+    setCountdown: mockSetCountdown,
+    setTimingData: mockSetTimingData,
   }
 }));
 
@@ -109,8 +110,8 @@ class TestableAnimeNotificationService {
           this.notificationCallback(message.notificationType, message.anime, message.episode);
         }
       } else if (message.type === 'countdown') {
-        // Update Zustand store directly
-        mockGetState().setCountdown(message.animeId, {
+        // Update Svelte store directly
+        mockSetCountdown(message.animeId, {
           countdown: message.countdown,
           isAiring: message.isAiring,
           hasAired: message.hasAired,
@@ -122,8 +123,8 @@ class TestableAnimeNotificationService {
           this.countdownCallback(message.animeId, message.countdown, message.isAiring, message.hasAired, message.progress);
         }
       } else if (message.type === 'timing') {
-        // Update Zustand store with comprehensive timing data
-        mockGetState().setTimingData(message.animeId, message.timingData);
+        // Update Svelte store with comprehensive timing data
+        mockSetTimingData(message.animeId, message.timingData);
       }
     });
 
@@ -293,7 +294,7 @@ describe('AnimeNotificationService', () => {
     });
 
     describe('Countdown messages', () => {
-      it('should handle countdown messages and update Zustand store', () => {
+      it('should handle countdown messages and update Svelte store', () => {
         const countdownMessage = {
           type: 'countdown',
           animeId: 'attack-titan',
@@ -339,7 +340,7 @@ describe('AnimeNotificationService', () => {
     });
 
     describe('Timing messages', () => {
-      it('should handle timing messages and update Zustand store', () => {
+      it('should handle timing messages and update Svelte store', () => {
         const timingData = {
           countdown: '2h',
           isAiring: false,
