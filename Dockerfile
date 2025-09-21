@@ -39,6 +39,14 @@ ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV APP_CONFIG=staging
 
+# Install Yarn
+RUN corepack enable
+
+# Copy package files and install production dependencies
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn .yarn
+RUN yarn workspaces focus --production
+
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/public ./public
