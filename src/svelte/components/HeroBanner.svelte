@@ -14,11 +14,13 @@
   export let onDeleteAnime: ((id: string) => void) | undefined = undefined;
 
   let bgUrl: string | null = null;
+  let bgWebPUrl: string | null = null;
   let bgLoaded = false;
   let useFallback = false;
   let showJstPopover = false;
   let currentAnimeId: string | null = null;
   let imageElement: HTMLImageElement;
+  let supportsWebP = false;
 
   // Get timing data from the anime notification store
   $: timingDataStore = animeNotificationStore.getTimingData(anime.id);
@@ -40,9 +42,22 @@
   $: episodeTitle = episode ? (episode.titleEn || episode.titleJp || "Next Episode") : (hasTimingData ? "Next Episode" : "No upcoming episodes");
   $: episodeNumber = episode?.episodeNumber ? `${episode.episodeNumber}` : "";
 
+  // Check WebP support
+  function checkWebPSupport(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const webP = new Image();
+      webP.onload = webP.onerror = () => resolve(webP.height === 2);
+      webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+    });
+  }
+
   // Initialize config on mount
   onMount(async () => {
     await configStore.init();
+
+    // Check WebP support
+    supportsWebP = await checkWebPSupport();
+    console.log('🖼️ WebP support:', supportsWebP);
 
     // Check if image is already loaded (for SSR hydration)
     if (imageElement && imageElement.complete && imageElement.naturalHeight !== 0) {
@@ -50,6 +65,38 @@
       bgLoaded = true;
     }
   });
+
+  // Generate optimized image URLs
+  function generateOptimizedImageUrls() {
+    const baseParams = new URLSearchParams({
+      w: '1920',  // Max width for hero banners
+      h: '1080',  // Max height for hero banners
+      fit: 'cover',
+      q: '85'     // High quality for hero images
+    });
+
+    if (supportsWebP) {
+      baseParams.set('f', 'webp');
+    }
+
+    if (anime.thetvdbid) {
+      const baseUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
+      bgUrl = `${baseUrl}?${baseParams.toString()}`;
+      if (supportsWebP) {
+        bgWebPUrl = bgUrl;
+      }
+    } else if (anime.anidbid) {
+      const baseUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
+      bgUrl = `${baseUrl}?${baseParams.toString()}`;
+      if (supportsWebP) {
+        bgWebPUrl = bgUrl;
+      }
+    } else {
+      // No anidbid available, use same fallback as anime cards
+      bgUrl = GetImageFromAnime(anime);
+      bgLoaded = true;
+    }
+  }
 
   // Set background URL based on anime data - only reset loading state when anime actually changes
   $: {
@@ -59,15 +106,7 @@
       useFallback = false;
       bgLoaded = false;
 
-      if (anime.thetvdbid) {
-        bgUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
-      } else if (anime.anidbid) {
-        bgUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
-      } else {
-        // No anidbid available, use same fallback as anime cards
-        bgUrl = GetImageFromAnime(anime);
-        bgLoaded = true;
-      }
+      generateOptimizedImageUrls();
 
       // Check if image is already cached and loaded
       if (bgUrl && imageElement) {
@@ -76,6 +115,11 @@
         }
       }
     }
+  }
+
+  // Regenerate URLs when WebP support is detected
+  $: if (supportsWebP && currentAnimeId === anime.id) {
+    generateOptimizedImageUrls();
   }
 
   $: title = anime.titleEn || anime.titleJp || "Unknown";
@@ -123,16 +167,38 @@
         class="absolute inset-0 w-full h-full"
         style="opacity: {bgLoaded ? 1 : 0.1}; transition: opacity 500ms;"
       >
-        <img
-          bind:this={imageElement}
-          src={bgUrl}
-          alt="bg preload"
-          loading="eager"
-          decoding="async"
-          class="absolute w-full h-full object-cover {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} transition-all duration-500"
-          on:load={handleImageLoad}
-          on:error={handleImageError}
-        />
+        {#if supportsWebP && bgWebPUrl}
+          <picture>
+            <source srcset={bgWebPUrl} type="image/webp">
+            <img
+              bind:this={imageElement}
+              src={bgUrl}
+              alt="Anime background"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+              width="1920"
+              height="1080"
+              class="absolute w-full h-full object-cover {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} transition-all duration-500"
+              on:load={handleImageLoad}
+              on:error={handleImageError}
+            />
+          </picture>
+        {:else}
+          <img
+            bind:this={imageElement}
+            src={bgUrl}
+            alt="Anime background"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+            width="1920"
+            height="1080"
+            class="absolute w-full h-full object-cover {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} transition-all duration-500"
+            on:load={handleImageLoad}
+            on:error={handleImageError}
+          />
+        {/if}
       </div>
     {/if}
 

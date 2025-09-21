@@ -1,6 +1,9 @@
 ---
 import SvelteFullWidthLayout from '../../layouts/SvelteFullWidthLayout.astro';
 import ShowContentWithProvider from '../../svelte/components/ShowContentWithProvider.svelte';
+import { GraphQLClient } from 'graphql-request';
+import { ensureConfigLoaded } from '../../services/config-loader';
+
 export const prerender = false;
 
 // Get the anime ID from the URL parameters
@@ -9,11 +12,57 @@ const { id } = Astro.params;
 if (!id) {
   return Astro.redirect('/404');
 }
+
+// Access SSR auth data and config
+const { auth, config } = Astro.locals;
+
+// Fetch basic anime info for SEO
+let animeTitle = 'Anime Details';
+let animeDescription = 'View anime details, episodes, and information';
+let animeImage = '/assets/og-image.jpg';
+
+try {
+  const client = new GraphQLClient(config.graphql_host, {
+    headers: {
+      ...(auth.authToken && { Authorization: `Bearer ${auth.authToken}` })
+    }
+  });
+
+  // Simple query to get basic anime info for SEO
+  const basicAnimeQuery = `
+    query GetBasicAnimeInfo($id: ID!) {
+      anime(id: $id) {
+        id
+        titleEn
+        titleJp
+        description
+        poster
+      }
+    }
+  `;
+
+  const animeData = await client.request(basicAnimeQuery, { id });
+
+  if (animeData?.anime) {
+    animeTitle = animeData.anime.titleEn || animeData.anime.titleJp || 'Anime Details';
+    animeDescription = animeData.anime.description
+      ? `${animeData.anime.description.substring(0, 160)}...`
+      : `Watch and track ${animeTitle} episodes, get notifications, and manage your anime watchlist on WeebVIP.`;
+
+    if (animeData.anime.poster) {
+      animeImage = `https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(animeData.anime.poster)}`;
+    }
+  }
+} catch (error) {
+  console.error('[SSR] Failed to fetch basic anime info for SEO:', error);
+  // Fallback to generic SEO data
+}
 ---
 
 <SvelteFullWidthLayout
-  title="Anime Details"
-  description="View anime details, episodes, and information"
+  title={animeTitle}
+  description={animeDescription}
+  image={animeImage}
 >
   <ShowContentWithProvider animeId={id} client:load />
 </SvelteFullWidthLayout>

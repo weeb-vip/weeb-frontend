@@ -33,7 +33,6 @@
     "@algolia/autocomplete-core": "^1.19.4",
     "@algolia/autocomplete-js": "^1.9.2",
     "@algolia/autocomplete-preset-algolia": "^1.19.4",
-    "@apollo/client": "^3.7.14",
     "@astrojs/cloudflare": "^12.6.8",
     "@astrojs/node": "^9.4.3",
     "@astrojs/svelte": "^7.1.1",
@@ -59,14 +58,11 @@
     "graphql-request": "^6.0.0",
     "he": "^1.2.0",
     "motion": "^12.10.5",
-    "qa": "^0.0.1",
     "query-string": "^8.1.0",
     "sass": "^1.62.1",
-    "socket.io-client": "^4.6.1",
     "svelte": "^5.38.10",
     "svelte-fa": "^4.0.4",
     "svelte-sonner": "^1.0.5",
-    "swr": "^2.1.2",
     "zustand": "^5.0.4"
   },
   "devDependencies": {

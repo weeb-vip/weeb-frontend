@@ -17,22 +17,62 @@ const { title, description, image, noIndex } = Astro.props;
 
 const defaultTitle = 'WeebVIP - Track Your Anime Watchlist';
 const defaultDescription = 'Discover, track, and manage your anime watchlist with WeebVIP. Get notifications for new episodes, explore seasonal anime, and connect with other anime fans.';
+const defaultImage = '/assets/og-image.jpg'; // You'll need to add this image
 
 const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
+const pageDescription = description || defaultDescription;
+const pageImage = image || defaultImage;
+
+// Handle canonical URL with fallback
+const siteUrl = Astro.site || 'https://weeb.vip';
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 ---
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <meta name="description" content={description || defaultDescription} />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="generator" content={Astro.generator}/>
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <meta name="keywords" content="anime, watchlist, tracker, episodes, notifications, seasonal anime, anime calendar, weeb, otaku" />
+    <meta name="author" content="WeebVIP" />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:image" content={new URL(pageImage, siteUrl)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="WeebVIP" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalUrl} />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+    <meta name="twitter:image" content={new URL(pageImage, siteUrl)} />
+    <meta name="twitter:creator" content="@weebvip" />
+    <meta name="twitter:site" content="@weebvip" />
+
+    <!-- Favicons -->
     <link rel="icon" href="/assets/favicon/favicon.ico"/>
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png"/>
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png"/>
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png"/>
-    <meta name="viewport" content="width=device-width"/>
-    <meta name="generator" content={Astro.generator}/>
-    <title>{pageTitle}</title>
+    <link rel="manifest" href="/assets/favicon/site.webmanifest"/>
+
+    <!-- Additional SEO -->
+    <meta name="format-detection" content="telephone=no"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="WeebVIP"/>
 
     <!-- View Transitions for smoother navigation -->
     <ViewTransitions />
@@ -106,9 +146,35 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
     <!-- SEO -->
     {noIndex && <meta name="robots" content="noindex, nofollow" />}
 
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "WeebVIP",
+        "description": "Track your anime watchlist with episode notifications and seasonal anime discovery",
+        "url": "https://weeb.vip",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://weeb.vip/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        },
+        "sameAs": [
+          "https://twitter.com/weebvip"
+        ]
+      }
+    </script>
+
     <!-- Theme -->
     <meta name="color-scheme" content="dark light">
     <meta name="theme-color" content="#1f2937">
+    <meta name="msapplication-TileColor" content="#1f2937">
+
+    <!-- Performance hints -->
+    <link rel="dns-prefetch" href="//weeb-api.staging.weeb.vip">
+    <link rel="dns-prefetch" href="//cdn.weeb.vip">
+    <link rel="preconnect" href="https://weeb-api.staging.weeb.vip" crossorigin>
+    <link rel="preconnect" href="https://cdn.weeb.vip" crossorigin>
 </head>
 <body class="bg-white dark:bg-gray-900 min-h-screen">
     <!-- Header (persisted across navigation) -->

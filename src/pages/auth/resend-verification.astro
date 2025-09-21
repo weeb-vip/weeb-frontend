@@ -9,7 +9,7 @@ import ResendVerificationSkeleton from '../../svelte/components/ResendVerificati
   description="Resend email verification to complete your WeebVIP account setup."
   noIndex={true}
 >
-  <ResendVerificationPage client:load>
+  <ResendVerificationPage client:visible>
     <ResendVerificationSkeleton slot="fallback" />
   </ResendVerificationPage>
 </SvelteLayout>

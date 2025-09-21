@@ -84,14 +84,20 @@
     ...fetchHomePageData(),
     initialData: homeData,
     refetchOnWindowFocus: false,
-    refetchOnMount: false // Don't auto-refetch on mount since we have SSR data
+    refetchOnMount: false, // Don't auto-refetch on mount since we have SSR data
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnReconnect: false // Don't refetch when reconnecting
   }, queryClient);
 
   const currentlyAiringQuery = createQuery({
     ...fetchCurrentlyAiring(),
     initialData: currentlyAiringData,
     refetchOnWindowFocus: false,
-    refetchOnMount: false // Don't auto-refetch on mount since we have SSR data
+    refetchOnMount: false, // Don't auto-refetch on mount since we have SSR data
+    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes (more dynamic)
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    refetchOnReconnect: false // Don't refetch when reconnecting
   }, queryClient);
 
   // Create seasonal anime query for dynamic season changes
@@ -99,7 +105,10 @@
     ...fetchSeasonalAnime(selectedSeason),
     enabled: selectedSeason !== currentSeason, // Only fetch if different from SSR season
     initialData: selectedSeason === currentSeason ? seasonalData : undefined,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes (seasonal data changes slowly)
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    refetchOnReconnect: false
   }, queryClient);
 
   // Track login state for refetching data
@@ -154,6 +163,7 @@
     });
 
     // Also watch for direct cookie/token changes (fallback method)
+    // Use a longer interval to reduce performance impact
     const tokenCheckInterval = setInterval(() => {
       const currentAuthToken = AuthStorage.getAuthToken();
       const hadToken = !!lastAuthToken;
@@ -171,7 +181,7 @@
 
         lastAuthToken = currentAuthToken;
       }
-    }, 1000); // Check every second
+    }, 5000); // Check every 5 seconds instead of 1 second
 
     // Listen for custom login success events
     const handleLoginSuccess = () => {

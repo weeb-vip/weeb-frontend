@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://weeb.vip/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Disallow private/auth areas
+Disallow: /auth/
+Disallow: /profile/
+Disallow: /settings
+
+# Allow public pages
+Allow: /
+Allow: /show/
+Allow: /airing
+Allow: /airing/calendar
+
+# Block dynamic search parameters
+Disallow: /*?*
+Allow: /*?utm_*

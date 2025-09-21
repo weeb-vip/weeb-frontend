@@ -81,76 +81,58 @@ const currentSeason = getCurrentSeason();
 try {
   const client = createSSRGraphQLClient(auth.authToken);
 
-  // Fetch home page data (top rated + newest anime)
-  try {
-    homeData = await client.request(getHomePageData, { limit: 20 });
-  } catch (error) {
-    console.error('[SSR] Failed to fetch home data:', error);
-    if (isAuthError(error)) {
-      console.warn('[SSR] Auth error detected for home data - token may be expired');
-      isTokenExpired = true;
-      // Try fetching without auth token for public data
-      try {
-        const publicClient = createSSRGraphQLClient(undefined);
-        homeData = await publicClient.request(getHomePageData, { limit: 20 });
-      } catch (publicError) {
-        console.error('[SSR] Failed to fetch home data without auth:', publicError);
+  // Helper function to fetch with timeout and error handling
+  async function fetchWithFallback(query, variables, description) {
+    try {
+      // Allow longer timeout for SSR - you'll optimize APIs on backend
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+
+      const requestPromise = client.request(query, variables);
+      return await Promise.race([requestPromise, timeoutPromise]);
+    } catch (error) {
+      console.error(`[SSR] Failed to fetch ${description}:`, error);
+
+      if (isAuthError(error)) {
+        console.warn(`[SSR] Auth error detected for ${description} - token may be expired`);
+        isTokenExpired = true;
+
+        // Try fetching without auth token for public data
+        try {
+          const publicClient = createSSRGraphQLClient(undefined);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Public request timeout')), 8000)
+          );
+
+          const publicRequestPromise = publicClient.request(query, variables);
+          return await Promise.race([publicRequestPromise, timeoutPromise]);
+        } catch (publicError) {
+          console.error(`[SSR] Failed to fetch ${description} without auth:`, publicError);
+          return null;
+        }
       }
+      return null;
     }
   }
 
-  // Fetch currently airing data
-  try {
-    const defaultStartDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  // Prepare request parameters
+  const defaultStartDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    currentlyAiringData = await client.request(getCurrentlyAiringWithDates, {
-      input: {
-        startDate: defaultStartDate,
-        endDate: defaultEndDate,
-      }
-    });
-  } catch (error) {
-    console.error('[SSR] Failed to fetch currently airing data:', error);
-    if (isAuthError(error)) {
-      console.warn('[SSR] Auth error detected for currently airing data - token may be expired');
-      isTokenExpired = true;
-      // Try fetching without auth token for public data
-      try {
-        const publicClient = createSSRGraphQLClient(undefined);
-        currentlyAiringData = await publicClient.request(getCurrentlyAiringWithDates, {
-          input: {
-            startDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
-            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          }
-        });
-      } catch (publicError) {
-        console.error('[SSR] Failed to fetch currently airing data without auth:', publicError);
-      }
-    }
-  }
+  // Fetch all data in parallel for better performance
+  const [homeResult, currentlyAiringResult, seasonalResult] = await Promise.allSettled([
+    fetchWithFallback(getHomePageData, { limit: 20 }, 'home data'),
+    fetchWithFallback(getCurrentlyAiringWithDates, {
+      input: { startDate: defaultStartDate, endDate: defaultEndDate }
+    }, 'currently airing data'),
+    fetchWithFallback(getSeasonalAnime, { season: currentSeason }, 'seasonal data')
+  ]);
 
-  // Fetch seasonal data for current season
-  try {
-    seasonalData = await client.request(getSeasonalAnime, {
-      season: currentSeason
-    });
-  } catch (error) {
-    console.error('[SSR] Failed to fetch seasonal data:', error);
-    if (isAuthError(error)) {
-      console.warn('[SSR] Auth error detected for seasonal data - token may be expired');
-      isTokenExpired = true;
-      // Try fetching without auth token for public data
-      try {
-        const publicClient = createSSRGraphQLClient(undefined);
-        seasonalData = await publicClient.request(getSeasonalAnime, {
-          season: currentSeason
-        });
-      } catch (publicError) {
-        console.error('[SSR] Failed to fetch seasonal data without auth:', publicError);
-      }
-    }
-  }
+  // Extract results
+  homeData = homeResult.status === 'fulfilled' ? homeResult.value : null;
+  currentlyAiringData = currentlyAiringResult.status === 'fulfilled' ? currentlyAiringResult.value : null;
+  seasonalData = seasonalResult.status === 'fulfilled' ? seasonalResult.value : null;
 
 } catch (error) {
   console.error('[SSR] Failed to create GraphQL client:', error);
@@ -167,6 +149,17 @@ if (isTokenExpired) {
   auth.hasRefreshToken = false;
 }
 
+// Get the first banner image for preloading
+let bannerImageUrl = null;
+if (currentlyAiringData?.getAiringAnimeAll?.length > 0) {
+  const firstAnime = currentlyAiringData.getAiringAnimeAll[0];
+  if (firstAnime.thetvdbid) {
+    bannerImageUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${firstAnime.thetvdbid}/fanart?w=1920&h=1080&fit=cover&q=85&f=webp`;
+  } else if (firstAnime.anidbid) {
+    bannerImageUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${firstAnime.anidbid}/fanart?w=1920&h=1080&fit=cover&q=85&f=webp`;
+  }
+}
+
 export const prerender = false;
 ---
 
@@ -174,6 +167,9 @@ export const prerender = false;
   title="Home"
   description="Discover and track your favorite anime. Get notifications for new episodes, explore seasonal anime, and manage your watchlist."
 >
+  {bannerImageUrl && (
+    <link slot="head" rel="preload" as="image" href={bannerImageUrl} fetchpriority="high" />
+  )}
   <HomepageSSR
     client:load
     {auth}
