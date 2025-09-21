@@ -29,12 +29,44 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Extract cookies from request headers
   const cookieString = request.headers.get('cookie') || '';
 
-  // Debug: Log cookie information
-  console.log('[Middleware] Cookie debug:', {
+  // Debug: Log cookie and header information
+  const cookieNames = cookieString ? cookieString.split(';').map(c => c.trim().split('=')[0]) : [];
+
+  // Parse cookies to extract token values (masked for security)
+  const parsedCookies: Record<string, string> = {};
+  if (cookieString) {
+    cookieString.split(';').forEach(cookie => {
+      const [name, ...valueParts] = cookie.trim().split('=');
+      const value = valueParts.join('=');
+      if (name && value) {
+        // Mask sensitive tokens but show first/last few chars
+        if (name === 'authToken' || name === 'refreshToken') {
+          parsedCookies[name] = value.length > 10
+            ? `${value.substring(0, 5)}...${value.substring(value.length - 5)}`
+            : value;
+        } else {
+          parsedCookies[name] = value;
+        }
+      }
+    });
+  }
+
+  console.log('[Middleware] Request debug:', {
     hasCookieHeader: !!request.headers.get('cookie'),
     cookieLength: cookieString.length,
+    cookieNames: cookieNames,
+    parsedCookies: parsedCookies,
     url: url.pathname,
-    host: request.headers.get('host')
+    host: request.headers.get('host'),
+    'x-forwarded-host': request.headers.get('x-forwarded-host'),
+    'x-forwarded-proto': request.headers.get('x-forwarded-proto'),
+    'x-forwarded-for': request.headers.get('x-forwarded-for'),
+    'x-original-host': request.headers.get('x-original-host'),
+    hasAuthToken: cookieString.includes('authToken='),
+    hasRefreshToken: cookieString.includes('refreshToken='),
+    hasAccessToken: cookieString.includes('access_token='),
+    // Show full cookie string for debugging (be careful with sensitive data)
+    fullCookieString: cookieString || 'none'
   });
 
   // Check authentication status from cookies

@@ -131,21 +131,25 @@ export class AuthStorage {
   static isLoggedInFromCookieString(cookieString: string | undefined): boolean {
     if (!cookieString) return false;
 
+    // Check for both old and new cookie names
     const authToken = cookieString.match(/authToken=([^;]+)/);
     const refreshToken = cookieString.match(/refreshToken=([^;]+)/);
+    const accessToken = cookieString.match(/access_token=([^;]+)/);
 
-    return !!(authToken || refreshToken);
+    return !!(authToken || refreshToken || accessToken);
   }
 
   // Server-side utility to get both tokens from cookie string
   static getTokensFromCookieString(cookieString: string | undefined): { authToken?: string; refreshToken?: string } {
     if (!cookieString) return {};
 
+    // Check for both old and new cookie names
     const authMatch = cookieString.match(/authToken=([^;]+)/);
     const refreshMatch = cookieString.match(/refreshToken=([^;]+)/);
+    const accessMatch = cookieString.match(/access_token=([^;]+)/);
 
     return {
-      authToken: authMatch ? authMatch[1] : undefined,
+      authToken: authMatch ? authMatch[1] : (accessMatch ? accessMatch[1] : undefined),
       refreshToken: refreshMatch ? refreshMatch[1] : undefined
     };
   }
