@@ -36,7 +36,7 @@ try {
         titleEn
         titleJp
         description
-        poster
+        imageUrl
       }
     }
   `;
@@ -49,8 +49,8 @@ try {
       ? `${animeData.anime.description.substring(0, 160)}...`
       : `Watch and track ${animeTitle} episodes, get notifications, and manage your anime watchlist on WeebVIP.`;
 
-    if (animeData.anime.poster) {
-      animeImage = `https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(animeData.anime.poster)}`;
+    if (animeData.anime.imageUrl) {
+      animeImage = `https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(animeData.anime.imageUrl)}`;
     }
   }
 } catch (error) {

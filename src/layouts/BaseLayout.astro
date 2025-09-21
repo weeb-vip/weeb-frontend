@@ -308,8 +308,10 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
     <link rel="preconnect" href="https://gateway.staging.weeb.vip">
     <link rel="preconnect" href="https://weeb-api.staging.weeb.vip">
 
-    <!-- Umami Analytics -->
-    <script defer src="https://analytics.weeb.vip/script.js" data-website-id={config.umami_website_id}></script>
+    <!-- Umami Analytics (disabled in test environments) -->
+    {import.meta.env.NODE_ENV !== 'test' && !import.meta.env.PLAYWRIGHT && (
+      <script defer src="https://analytics.weeb.vip/script.js" data-website-id={config.umami_website_id}></script>
+    )}
   </head>
   <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
     <!-- Global Svelte toaster for notifications -->

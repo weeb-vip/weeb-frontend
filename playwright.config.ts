@@ -78,7 +78,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: `APP_CONFIG=staging ${process.env.CI ? 'bun run' : 'yarn'} preview --host`,
+    command: `APP_CONFIG=staging PLAYWRIGHT=true ${process.env.CI ? 'bun run' : 'yarn'} preview --host`,
     url: 'http://localhost:4321',
     reuseExistingServer: !process.env.CI, // In CI, don't reuse server for clean tests
   },

@@ -64,7 +64,7 @@
 
 {#if isVisible}
   <div
-    class="toast-container mb-3 max-w-sm w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 dark:ring-gray-600 overflow-hidden"
+    class="toast-container mb-3 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 dark:ring-gray-600 overflow-hidden"
     in:fly={{ x: 300, duration: 300 }}
     out:fly={{ x: 300, duration: 300 }}
   >
@@ -85,10 +85,10 @@
 
         <!-- Content -->
         <div class="ml-3 w-0 flex-1">
-          <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
             {toast.title}
           </p>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4;">
             {toast.message}
           </p>
 
