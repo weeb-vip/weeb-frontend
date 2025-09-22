@@ -126,6 +126,7 @@ export const AuthenticatedClient = async () => {
   const config = await getConfig();
 
   console.log('🔧 Creating GraphQL client with token:', token ? 'Present' : 'Missing');
+  console.log('🌐 GraphQL URL:', config.graphql_host);
 
   // @ts-ignore
   return new GraphQLClient(config.graphql_host, {
@@ -268,6 +269,7 @@ export const resetPassword = () => ({
 export const verifyEmail = (token: string) => ({
   mutationFn: async (): Promise<boolean> => {
     const config = await getConfig();
+    console.log('🌐 Verify Email GraphQL URL:', config.graphql_host);
     // @ts-ignore
     const client = new GraphQLClient(config.graphql_host, {
       headers: {

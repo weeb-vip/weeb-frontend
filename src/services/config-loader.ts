@@ -6,7 +6,14 @@ let configData: IConfig | null = null;
 
 // Initialize config asynchronously for SSR (Cloudflare Workers compatible)
 async function initializeConfigSSR(): Promise<IConfig> {
+  console.log('[SSR] 🔧 Environment variables:', {
+    NODE_ENV: process.env.NODE_ENV,
+    APP_CONFIG: process.env.APP_CONFIG,
+    VITE_NODE_ENV: process.env.VITE_NODE_ENV,
+  });
+
   if (configData) {
+    console.log('[SSR] 🔧 Using cached config:', configData);
     return configData;
   }
 
@@ -18,14 +25,25 @@ async function initializeConfigSSR(): Promise<IConfig> {
     // In Cloudflare Workers, we need to fetch the config like a client
     // since we don't have filesystem access
     let response;
+    let configUrl;
 
     try {
-      // Try to fetch from the current domain (works in Workers)
-      response = await fetch('/config.json');
+      // In development, use localhost URL for SSR since relative URLs don't work in SSR context
+      const isDev = process.env.NODE_ENV === 'development';
+      configUrl = isDev ? 'http://localhost:4322/config.json' : '/config.json';
+      console.log('[SSR] 🔧 Fetching config from:', configUrl);
+      response = await fetch(configUrl);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
     } catch (fetchError) {
+      console.log('[SSR] 🔧 First fetch failed:', fetchError);
       // If that fails, try the absolute URL as fallback
       const baseUrl = globalThis.location?.origin || 'https://weeb-production.pages.dev';
-      response = await fetch(`${baseUrl}/config.json`);
+      configUrl = `${baseUrl}/config.json`;
+      console.log('[SSR] 🔧 Fallback fetching config from:', configUrl);
+      response = await fetch(configUrl);
     }
 
     if (!response.ok) {
@@ -33,6 +51,7 @@ async function initializeConfigSSR(): Promise<IConfig> {
     }
 
     configData = await response.json();
+    console.log('[SSR] 🔧 Config loaded:', configData);
 
     // Set on globalThis for compatibility
     // @ts-ignore

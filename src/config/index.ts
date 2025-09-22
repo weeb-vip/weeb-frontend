@@ -12,18 +12,32 @@ function safeGetConfig(): IConfig | null {
 }
 
 export function getConfig(): IConfig {
+  console.log('[CONFIG] 🔧 getConfig() called');
+  console.log('[CONFIG] 🔧 Environment:', {
+    NODE_ENV: typeof process !== 'undefined' ? process.env.NODE_ENV : 'undefined',
+    APP_CONFIG: typeof process !== 'undefined' ? process.env.APP_CONFIG : 'undefined',
+    isServer: typeof window === 'undefined'
+  });
+
   const config = safeGetConfig();
+  console.log('[CONFIG] 🔧 safeGetConfig result:', config);
+
   if (!config) {
-    // Return a fallback config for server-side rendering
-    return {
+    console.log('[CONFIG] 🔧 No config found, using fallback');
+    const fallbackConfig = {
       api_host: 'https://weeb-api.staging.weeb.vip',
+      graphql_host: 'https://gateway.staging.weeb.vip/graphql',
       algolia_index: 'fallback',
       cdn_url: 'https://cdn.weeb.vip',
       cdn_user_url: 'https://cdn.weeb.vip',
       flagsmith_environment_id: 'fallback',
       posthog_api_key: 'phc_fallback_key',
     } as any;
+    console.log('[CONFIG] 🔧 Fallback config:', fallbackConfig);
+    return fallbackConfig;
   }
+
+  console.log('[CONFIG] 🔧 Returning config:', config);
   return config;
 }
 

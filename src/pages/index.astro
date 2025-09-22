@@ -26,6 +26,7 @@ function getCurrentSeason(): string {
 
 // Create authenticated GraphQL client for SSR
 function createSSRGraphQLClient(authToken: string | undefined) {
+  console.log('🌐 SSR GraphQL URL:', config.graphql_host);
   return new GraphQLClient(config.graphql_host, {
     headers: {
       ...(authToken && { Authorization: `Bearer ${authToken}` })

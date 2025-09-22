@@ -4,8 +4,8 @@
   "version": "1.5.3",
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "dev": "NODE_ENV=development astro dev",
+    "build": "NODE_ENV=development astro build",
     "preview": "astro preview",
     "start": "node ./dist/server/entry.mjs",
     "test": "jest",
