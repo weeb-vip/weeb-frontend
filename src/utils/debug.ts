@@ -7,7 +7,7 @@ interface DebugConfig {
 const getDebugConfig = (): DebugConfig => {
   // Use globalThis to access Vite env vars in a TypeScript-safe way
   const env = (globalThis as any).import?.meta?.env || (import.meta as any).env || {};
-  const isDevelopment = env.DEV || process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env.NODE_ENV === 'development';
   const debugEnabled = env.VITE_DEBUG === 'true';
 
   return {

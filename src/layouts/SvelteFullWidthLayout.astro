@@ -141,8 +141,10 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
     </div>
 
     <!-- Dev Testing Panel (persisted) -->
-    <div transition:persist="devpanel">
-        <DevTestingPanel client:idle />
-    </div>
+    {process.env.NODE_ENV === 'development' && (
+        <div transition:persist="devpanel">
+            <DevTestingPanel client:idle />
+        </div>
+    )}
 </body>
 </html>

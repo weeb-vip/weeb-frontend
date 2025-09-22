@@ -6,14 +6,19 @@ let configData: IConfig | null = null;
 
 // Initialize config asynchronously for SSR (Cloudflare Workers compatible)
 async function initializeConfigSSR(): Promise<IConfig> {
-  console.log('[SSR] 🔧 Environment variables:', {
-    NODE_ENV: process.env.NODE_ENV,
-    APP_CONFIG: process.env.APP_CONFIG,
-    VITE_NODE_ENV: process.env.VITE_NODE_ENV,
-  });
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev) {
+    console.log('[SSR] 🔧 Environment variables:', {
+      NODE_ENV: process.env.NODE_ENV,
+      APP_CONFIG: process.env.APP_CONFIG,
+      VITE_NODE_ENV: process.env.VITE_NODE_ENV,
+    });
+  }
 
   if (configData) {
-    console.log('[SSR] 🔧 Using cached config:', configData);
+    if (isDev) {
+      console.log('[SSR] 🔧 Using cached config:', configData);
+    }
     return configData;
   }
 
@@ -37,18 +42,24 @@ async function initializeConfigSSR(): Promise<IConfig> {
         const port = process.env.PORT || '3000';
         configUrl = `http://localhost:${port}/config.json`;
       }
-      console.log('[SSR] 🔧 Fetching config from:', configUrl);
+      if (isDev) {
+        console.log('[SSR] 🔧 Fetching config from:', configUrl);
+      }
       response = await fetch(configUrl);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
     } catch (fetchError) {
-      console.log('[SSR] 🔧 First fetch failed:', fetchError);
+      if (isDev) {
+        console.log('[SSR] 🔧 First fetch failed:', fetchError);
+      }
       // If that fails, try the absolute URL as fallback
       const baseUrl = globalThis.location?.origin || 'https://weeb-production.pages.dev';
       configUrl = `${baseUrl}/config.json`;
-      console.log('[SSR] 🔧 Fallback fetching config from:', configUrl);
+      if (isDev) {
+        console.log('[SSR] 🔧 Fallback fetching config from:', configUrl);
+      }
       response = await fetch(configUrl);
     }
 
@@ -57,13 +68,17 @@ async function initializeConfigSSR(): Promise<IConfig> {
     }
 
     configData = await response.json();
-    console.log('[SSR] 🔧 Config loaded:', configData);
+    if (isDev) {
+      console.log('[SSR] 🔧 Config loaded:', configData);
+    }
 
     // Set on globalThis for compatibility
     // @ts-ignore
     globalThis.config = configData;
 
-    console.log('[SSR] Config loaded successfully');
+    if (isDev) {
+      console.log('[SSR] Config loaded successfully');
+    }
     return configData;
   } catch (error) {
     console.error('[SSR] Failed to load config:', error);
@@ -98,7 +113,10 @@ async function initializeConfigClient(): Promise<IConfig> {
         // @ts-ignore
         window.config = config;
 
-        console.log('[Client] Config loaded successfully');
+        const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
+        if (isDev) {
+          console.log('[Client] Config loaded successfully');
+        }
         return config;
       });
   }
