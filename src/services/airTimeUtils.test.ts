@@ -408,7 +408,7 @@ describe('getAirTimeDisplay (static time)', () => {
 
     expect(result).not.toBe(null);
     expect(result?.variant).toBe('airing');
-    expect(result?.text).toContain('Currently airing');
+    expect(result?.text).toContain('Airing');
   });
 
   test('returns correct display for future episode', () => {
