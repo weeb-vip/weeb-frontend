@@ -141,7 +141,7 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
     </div>
 
     <!-- Dev Testing Panel (persisted) -->
-    {import.meta.env.DEV && (
+    {__ENABLE_DEV_FEATURES__ && (
         <div transition:persist="devpanel">
             <DevTestingPanel client:idle />
         </div>

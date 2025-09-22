@@ -4,7 +4,7 @@
   import { onMount } from 'svelte';
 
   // Only show in development
-  const isDev = import.meta.env.DEV;
+  const isDev = __ENABLE_DEV_FEATURES__;
 
   // Panel state
   let isOpen = false;

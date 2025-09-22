@@ -198,7 +198,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     </div>
 
     <!-- Dev Testing Panel (persisted) -->
-    {import.meta.env.DEV && (
+    {__ENABLE_DEV_FEATURES__ && (
         <div transition:persist="devpanel">
             <DevTestingPanel client:idle />
         </div>
