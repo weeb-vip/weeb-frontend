@@ -69,7 +69,12 @@ jobs:
           cp astro.config.cloudflare.mjs astro.config.mjs
 
           echo "Building with Cloudflare adapter..."
-          yarn build
+          # Build with proper Vite mode for production
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            yarn build --mode production
+          else
+            yarn build --mode staging
+          fi
 
           # Verify the build output structure
           echo "=== Build output structure ==="
