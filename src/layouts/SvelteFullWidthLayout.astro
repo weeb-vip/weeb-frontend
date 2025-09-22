@@ -4,6 +4,7 @@ import HeaderHybrid from '../svelte/components/HeaderHybrid.astro';
 import GlobalToaster from '../svelte/components/GlobalToaster.svelte';
 import AnimeNotificationProvider from '../svelte/components/AnimeNotificationProvider.svelte';
 import DevTestingPanel from '../svelte/components/DevTestingPanel.svelte';
+import PostHog from '../components/PostHog.astro';
 
 export interface Props {
   title?: string;
@@ -118,6 +119,7 @@ const pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
     <meta property="twitter:title" content={pageTitle} />
     <meta property="twitter:description" content={description || defaultDescription} />
     <meta property="twitter:image" content={image || "/assets/icons/logo6-rev-sm_sm.png"} />
+    <PostHog />
 </head>
 <body class="bg-white dark:bg-gray-900 min-h-screen">
     <!-- Header (persisted across navigation) -->

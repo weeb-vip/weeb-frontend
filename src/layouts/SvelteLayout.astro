@@ -5,6 +5,7 @@ import Footer from '../svelte/components/Footer.svelte';
 import DevTestingPanel from '../svelte/components/DevTestingPanel.svelte';
 import GlobalToaster from '../svelte/components/GlobalToaster.svelte';
 import AnimeNotificationProvider from '../svelte/components/AnimeNotificationProvider.svelte';
+import PostHog from "../components/PostHog.astro";
 
 export interface Props {
   title?: string;
@@ -175,6 +176,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <link rel="dns-prefetch" href="//cdn.weeb.vip">
     <link rel="preconnect" href="https://weeb-api.staging.weeb.vip" crossorigin>
     <link rel="preconnect" href="https://cdn.weeb.vip" crossorigin>
+    <PostHog />
 </head>
 <body class="bg-white dark:bg-gray-900 min-h-screen">
     <!-- Header (persisted across navigation) -->

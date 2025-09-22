@@ -4,6 +4,5 @@
   "flagsmith_environment_id": "iGDuMWWgQMBw8SqEuebtsD",
   "algolia_index": "anime-staging",
   "cdn_url": "https://cdn.weeb.vip/weeb-staging",
-  "cdn_user_url": "https://cdn.weeb.vip/weeb-user-staging",
-  "posthog_api_key": ""
+  "cdn_user_url": "https://cdn.weeb.vip/weeb-user-staging"
 }
