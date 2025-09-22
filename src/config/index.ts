@@ -14,8 +14,8 @@ function safeGetConfig(): IConfig | null {
 export function getConfig(): IConfig {
   console.log('[CONFIG] 🔧 getConfig() called');
   console.log('[CONFIG] 🔧 Environment:', {
-    NODE_ENV: typeof process !== 'undefined' ? process.env.NODE_ENV : 'undefined',
-    APP_CONFIG: typeof process !== 'undefined' ? process.env.APP_CONFIG : 'undefined',
+    DEV: import.meta.env.DEV,
+    MODE: import.meta.env.MODE,
     isServer: typeof window === 'undefined'
   });
 

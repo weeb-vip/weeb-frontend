@@ -198,7 +198,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     </div>
 
     <!-- Dev Testing Panel (persisted) -->
-    {process.env.NODE_ENV === 'development' && (
+    {import.meta.env.DEV && (
         <div transition:persist="devpanel">
             <DevTestingPanel client:idle />
         </div>

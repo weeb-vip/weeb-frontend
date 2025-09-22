@@ -6,7 +6,7 @@ let configData: IConfig | null = null;
 
 // Initialize config asynchronously for SSR (Cloudflare Workers compatible)
 async function initializeConfigSSR(): Promise<IConfig> {
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev = import.meta.env.DEV;
   if (isDev) {
     console.log('[SSR] 🔧 Environment variables:', {
       NODE_ENV: process.env.NODE_ENV,
@@ -34,7 +34,7 @@ async function initializeConfigSSR(): Promise<IConfig> {
 
     try {
       // In SSR context, we need absolute URLs since relative URLs don't work
-      const isDev = process.env.NODE_ENV === 'development';
+      const isDev = import.meta.env.DEV;
       if (isDev) {
         configUrl = 'http://localhost:4322/config.json';
       } else {
@@ -113,7 +113,7 @@ async function initializeConfigClient(): Promise<IConfig> {
         // @ts-ignore
         window.config = config;
 
-        const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
+        const isDev = import.meta.env.DEV;
         if (isDev) {
           console.log('[Client] Config loaded successfully');
         }
