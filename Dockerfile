@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM node:20-alpine AS build
+FROM oven/bun:1-alpine AS build
 
 WORKDIR /app
 
@@ -12,25 +12,20 @@ ARG VITE_APP_VERSION=dev
 ENV VITE_APP_VERSION=$VITE_APP_VERSION
 ENV NODE_ENV=production
 
-# Install Yarn
-RUN corepack enable
+# Copy package files
+COPY package.json bun.lockb* ./
 
-# Copy package files and Yarn configuration
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn .yarn
-
-# Install dependencies with Yarn (include dev dependencies for build)
-# Allow failures for optional dependencies
-RUN yarn install --immutable || yarn install
+# Install dependencies with Bun (much faster than yarn/npm)
+RUN bun install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN yarn build
+RUN bun run build
 
 # ---- Production stage ----
-FROM node:20-alpine AS production
+FROM oven/bun:1-alpine AS production
 
 WORKDIR /app
 
@@ -43,13 +38,9 @@ ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV APP_CONFIG=staging
 
-# Install Yarn
-RUN corepack enable
-
 # Copy package files and install production dependencies
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn .yarn
-RUN yarn workspaces focus --production
+COPY package.json bun.lockb* ./
+RUN bun install --production --frozen-lockfile
 
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
@@ -59,11 +50,11 @@ COPY --from=build /app/public ./public
 COPY --from=build /app/src/config ./src/config
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S astro -u 1001 -G nodejs
+RUN addgroup -g 1001 -S bunuser && \
+    adduser -S astro -u 1001 -G bunuser
 
 # Change ownership of the app directory
-RUN chown -R astro:nodejs /app
+RUN chown -R astro:bunuser /app
 USER astro
 
 # Expose port
@@ -71,10 +62,10 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node --version || exit 1
+  CMD bun --version || exit 1
 
 # Use tini as entrypoint for proper signal handling
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Start the application using Node
-CMD ["node", "./dist/server/entry.mjs"]
+# Start the application using Bun
+CMD ["bun", "run", "./dist/server/entry.mjs"]

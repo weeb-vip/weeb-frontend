@@ -106,6 +106,16 @@ describe('parseAirTime', () => {
     const parsedDate = parseAirTime(airDate, broadcast);
     expect(parsedDate).toEqual(new Date("2025-08-31T01:30:00Z"));
   });
+
+  test('handles Tuesdays at 00:00 JST correctly', () => {
+    const airDate = "2025-09-02T00:00:00Z"; // Tuesday in UTC
+    const broadcast = "Tuesdays at 00:00 (JST)";
+    // 00:00 JST Tuesday = 15:00 UTC Monday (previous day)
+    const expectedLocalDate = new Date("2025-09-01T15:00:00Z");
+
+    const parsedDate = parseAirTime(airDate, broadcast);
+    expect(parsedDate).toEqual(expectedLocalDate);
+  });
 });
 
 
