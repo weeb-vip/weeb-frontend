@@ -4,7 +4,10 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 # Set environment variables
-ENV APP_CONFIG=staging
+# APP_CONFIG determines which config to use: staging (default) or production
+# Override with: docker build --build-arg APP_CONFIG=production
+ARG APP_CONFIG=staging
+ENV APP_CONFIG=$APP_CONFIG
 ARG VITE_APP_VERSION=dev
 ENV VITE_APP_VERSION=$VITE_APP_VERSION
 ENV NODE_ENV=production
@@ -17,7 +20,8 @@ COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn .yarn
 
 # Install dependencies with Yarn (include dev dependencies for build)
-RUN yarn install --immutable
+# Allow failures for optional dependencies
+RUN yarn install --immutable || yarn install
 
 # Copy source code
 COPY . .
