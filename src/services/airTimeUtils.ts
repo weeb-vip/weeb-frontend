@@ -294,7 +294,7 @@ export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | 
   if (isCurrentlyAiring(airDate, broadcast, durationMinutes)) {
     return {
       show: true,
-      text: airInfo.countdown.includes("left") ? `Airing (${airInfo.countdown})` : "Airing",
+      text: airInfo.countdown && airInfo.countdown !== "AIRING NOW" ? `Airing (${airInfo.countdown})` : "Airing",
       variant: 'airing' as const
     };
   }

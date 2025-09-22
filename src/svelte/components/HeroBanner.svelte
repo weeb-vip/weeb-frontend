@@ -230,9 +230,9 @@
         <div class="inline-flex items-center px-4 py-2 rounded-full bg-red-600 text-sm font-semibold mb-4">
           <span class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
           {countdown === "JUST AIRED" ? "JUST AIRED" : "AIRING SOON"}
-          {#if countdown && !countdown.includes("JUST AIRED") && !countdown.includes("AIRING NOW")}
+          {#if countdown && !countdown.includes("JUST AIRED") && countdown !== "AIRING NOW"}
             <span class="ml-2 px-2 py-1 bg-black/25 rounded text-xs font-medium">
-              in {countdown}
+              {countdown.includes("left") ? countdown : `in ${countdown}`}
             </span>
           {/if}
         </div>
