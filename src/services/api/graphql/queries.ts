@@ -61,9 +61,6 @@ export const getSeasonalAnime = graphql(/* GraphQL */`
             rating
             startDate
             ranking
-            episodes {
-                id
-            }
             userAnime {
                 id
                 status
