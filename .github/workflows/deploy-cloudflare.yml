@@ -71,9 +71,9 @@ jobs:
           echo "Building with Cloudflare adapter..."
           # Build with proper Vite mode for production
           if [ "${{ inputs.environment }}" = "production" ]; then
-            yarn build --mode production
+            NODE_ENV=production yarn build --mode production
           else
-            yarn build --mode staging
+            NODE_ENV=production yarn build --mode staging
           fi
 
           # Verify the build output structure
