@@ -13,5 +13,21 @@ const config = getConfig();
         capture_pageview: true,
         person_profiles: 'identified_only'
     });
+
+    // Debug logging for PostHog initialization
+    console.log('🔍 PostHog initialized with config:', {
+        api_host: 'https://analytics.weeb.vip',
+        capture_pageview: true,
+        person_profiles: 'identified_only',
+        key: posthogKey ? 'PROVIDED' : 'MISSING'
+    });
+
+    // Test if PostHog is working
+    setTimeout(() => {
+        console.log('🔍 PostHog status check:', {
+            loaded: !!window.posthog,
+            methods: window.posthog ? Object.keys(window.posthog) : 'not available'
+        });
+    }, 1000);
   </script>
 )}

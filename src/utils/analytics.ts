@@ -25,15 +25,22 @@ declare global {
  * @param eventData - Optional data to send with the event
  */
 export function trackEvent(eventName: string, eventData?: Record<string, any>) {
+  console.log('🔍 trackEvent called:', { eventName, eventData, hasWindow: typeof window !== 'undefined', hasPosthog: typeof window !== 'undefined' && !!window.posthog });
+
   if (typeof window !== 'undefined' && window.posthog) {
     try {
+      console.log('📊 Calling posthog.capture with:', { eventName, eventData });
       window.posthog.capture(eventName, eventData);
-      console.log('📊 Analytics event tracked:', eventName, eventData);
+      console.log('✅ PostHog event tracked successfully:', eventName);
     } catch (error) {
-      console.warn('📊 Analytics tracking failed:', error);
+      console.error('❌ PostHog event tracking failed:', error);
     }
   } else {
-    console.warn('📊 PostHog analytics not available');
+    console.warn('⚠️ PostHog not available for tracking:', {
+      hasWindow: typeof window !== 'undefined',
+      hasPosthog: typeof window !== 'undefined' && !!window.posthog,
+      windowPosthog: typeof window !== 'undefined' ? window.posthog : 'no window'
+    });
   }
 }
 
@@ -83,13 +90,22 @@ export const analytics = {
  * @param userProperties - Optional user properties to set
  */
 export function identifyUser(userId: string, userProperties?: Record<string, any>) {
+  console.log('🔍 identifyUser called:', { userId, userProperties, hasWindow: typeof window !== 'undefined', hasPosthog: typeof window !== 'undefined' && !!window.posthog });
+
   if (typeof window !== 'undefined' && window.posthog) {
     try {
+      console.log('📊 Calling posthog.identify with:', { userId, userProperties });
       window.posthog.identify(userId, userProperties);
-      console.log('📊 User identified:', userId);
+      console.log('✅ PostHog user identified successfully:', userId);
     } catch (error) {
-      console.warn('📊 User identification failed:', error);
+      console.error('❌ PostHog user identification failed:', error);
     }
+  } else {
+    console.warn('⚠️ PostHog not available for identification:', {
+      hasWindow: typeof window !== 'undefined',
+      hasPosthog: typeof window !== 'undefined' && !!window.posthog,
+      windowPosthog: typeof window !== 'undefined' ? window.posthog : 'no window'
+    });
   }
 }
 

@@ -22,17 +22,31 @@ function createLoggedInStore() {
   return {
     subscribe,
     setLoggedIn: (userData?: { id: string; username?: string; email?: string }) => {
+      console.log('🔍 setLoggedIn called with userData:', userData);
       update(state => ({ ...state, isLoggedIn: true, isAuthInitialized: true }));
+
       // Identify user in PostHog for analytics
       if (userData?.id) {
+        console.log('📊 About to identify user in PostHog:', userData);
         identifyUser(userData.id, {
           username: userData.username,
           email: userData.email
         });
+      } else {
+        console.warn('⚠️ setLoggedIn called without user data - skipping PostHog identification');
       }
     },
     logout: () => {
       update(state => ({ ...state, isLoggedIn: false, isAuthInitialized: true }));
+
+      // Clear any client-accessible cookies (non-HttpOnly ones)
+      if (typeof document !== 'undefined') {
+        const cookiesToClear = ['authToken', 'refreshToken', 'session', 'user'];
+        cookiesToClear.forEach(cookieName => {
+          document.cookie = `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        });
+      }
+
       // Reset PostHog session when user logs out
       if (typeof window !== 'undefined' && window.posthog) {
         try {
