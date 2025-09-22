@@ -26,7 +26,7 @@
   $: airTimeDisplay = timingData ? {
     show: true,
     text: timingData.isCurrentlyAiring
-      ? "Currently airing"
+      ? "Airing"
       : timingData.hasAlreadyAired
         ? "Recently aired"
         : timingData.countdown ? `Airing in ${timingData.countdown}` : timingData.airDateTime,

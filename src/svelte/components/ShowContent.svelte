@@ -102,7 +102,7 @@
   $: airTime = nextEpisodeResult?.airTime;
 
   $: statusConfig = {
-    airing: { color: 'text-orange-600 dark:text-orange-400', text: 'Currently Airing', icon: 'fa-clapperboard' },
+    airing: { color: 'text-orange-600 dark:text-orange-400', text: 'Airing', icon: 'fa-clapperboard' },
     aired: { color: 'text-green-600 dark:text-green-400', text: 'Recently Aired', icon: 'fa-calendar' },
     countdown: { color: 'text-red-600 dark:text-red-400', text: 'Airing Soon', icon: 'fa-clock' },
     scheduled: { color: 'text-blue-600 dark:text-blue-400', text: 'Next Episode', icon: 'fa-calendar' }

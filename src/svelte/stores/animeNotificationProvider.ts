@@ -169,15 +169,21 @@ class AnimeNotificationManager {
           debug.info('🔔 Svelte: Setting up anime notifications with data');
 
           // Convert currently airing data to notification format
-          const animeForNotifications: AnimeForNotification[] = data.currentlyAiring.map(anime => ({
-            id: anime.id,
-            titleEn: anime.titleEn,
-            titleJp: anime.titleJp,
-            imageUrl: anime.imageUrl,
-            duration: anime.duration,
-            broadcast: anime.broadcast,
-            episodes: anime.episodes
-          }));
+          // Filter out anime where all episodes have null airdate
+          const animeForNotifications: AnimeForNotification[] = data.currentlyAiring
+            .filter(anime => {
+              const hasValidAirDate = anime.episodes?.some((ep: any) => ep.airDate !== null && ep.airDate !== undefined);
+              return hasValidAirDate;
+            })
+            .map(anime => ({
+              id: anime.id,
+              titleEn: anime.titleEn,
+              titleJp: anime.titleJp,
+              imageUrl: anime.imageUrl,
+              duration: anime.duration,
+              broadcast: anime.broadcast,
+              episodes: anime.episodes
+            }));
 
           // Start watching for notifications ONCE
           await animeNotificationStore.startWatching(animeForNotifications);

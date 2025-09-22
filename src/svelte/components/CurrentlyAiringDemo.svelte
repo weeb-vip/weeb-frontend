@@ -81,6 +81,10 @@
 
       const episodes = (anime as any).episodes;
 
+      // Skip anime where all episodes have null airdate
+      const hasValidAirDate = episodes.some((ep: any) => ep.airDate !== null && ep.airDate !== undefined);
+      if (!hasValidAirDate) return;
+
       // Use shared function to find the next episode
       const nextEpisodeResult = findNextEpisode(episodes, anime.broadcast, now);
 
