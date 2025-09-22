@@ -25,7 +25,23 @@
 
         if (ssrAuth.isLoggedIn && ssrAuth.hasAuthToken) {
           debug.success("SSR data shows user is logged in");
-          loggedInStore.setLoggedIn();
+
+          // Fetch user data for PostHog identification
+          try {
+            const { getUserQuery } = await import('../../services/queries');
+            const queryConfig = getUserQuery();
+            const userData = await queryConfig.queryFn();
+
+            loggedInStore.setLoggedIn({
+              id: userData.id,
+              username: userData.username,
+              email: userData.email
+            });
+          } catch (error) {
+            debug.warn("Failed to fetch user data for analytics:", error);
+            // Still set logged in, just without PostHog identification
+            loggedInStore.setLoggedIn();
+          }
 
           // Start token refresher if we have refresh capabilities
           if (ssrAuth.hasRefreshToken && ssrAuth.authToken) {
@@ -55,7 +71,11 @@
       const unsubscribe = userQuery.subscribe((result) => {
         if (result.isSuccess && result.data) {
           debug.success("User details fetched successfully - user is logged in");
-          loggedInStore.setLoggedIn();
+          loggedInStore.setLoggedIn({
+            id: result.data.id,
+            username: result.data.username,
+            email: result.data.email
+          });
 
           // Start token refresher if we have refresh capabilities
           const refreshToken = AuthStorage.getRefreshToken();

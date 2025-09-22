@@ -36,8 +36,10 @@
   $: isLoading = $loginMutation.isPending || $registerMutation.isPending;
 
   // Handle login state changes
-  $: if ($loginMutation.isSuccess) {
-    loggedInStore.setLoggedIn();
+  $: if ($loginMutation.isSuccess && $loginMutation.data) {
+    loggedInStore.setLoggedIn({
+      id: $loginMutation.data.id
+    });
     errorMessage = "";
 
     // Dispatch custom event to trigger data refresh

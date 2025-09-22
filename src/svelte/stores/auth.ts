@@ -31,7 +31,18 @@ function createLoggedInStore() {
         });
       }
     },
-    logout: () => update(state => ({ ...state, isLoggedIn: false, isAuthInitialized: true })),
+    logout: () => {
+      update(state => ({ ...state, isLoggedIn: false, isAuthInitialized: true }));
+      // Reset PostHog session when user logs out
+      if (typeof window !== 'undefined' && window.posthog) {
+        try {
+          window.posthog.reset();
+          console.log('📊 PostHog session reset on logout');
+        } catch (error) {
+          console.warn('📊 PostHog reset failed:', error);
+        }
+      }
+    },
     setAuthInitialized: () => update(state => ({ ...state, isAuthInitialized: true })),
     // Check current cookie-based login status
     checkCookieStatus: () => {

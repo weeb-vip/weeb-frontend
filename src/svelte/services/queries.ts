@@ -74,8 +74,10 @@ export function useLogin() {
       // Server sets HttpOnly cookies automatically
       console.log("✅ Svelte login successful - server set cookies");
 
-      // Update auth store
-      loggedInStore.setLoggedIn();
+      // Update auth store and identify user in PostHog
+      loggedInStore.setLoggedIn({
+        id: data.id
+      });
 
       // Start token refresher
       TokenRefresher.getInstance(async () => {
