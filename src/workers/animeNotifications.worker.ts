@@ -198,8 +198,7 @@ function calculateCountdown(
     const episodeDurationMs = (durationMinutes || 24) * 60 * 1000;
     const remainingMs = airStartMs + episodeDurationMs - currentMs;
     const remainingMinutes = Math.floor(remainingMs / (1000 * 60));
-    if (remainingMinutes <= 0) return "ENDING SOON";
-    if (remainingMinutes < 60) return `${remainingMinutes}m left`;
+    if (remainingMinutes < 60) return `${Math.max(remainingMinutes, 0)}m left`;
     return "AIRING NOW";
   }
 
