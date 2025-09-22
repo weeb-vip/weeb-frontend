@@ -28,9 +28,15 @@ async function initializeConfigSSR(): Promise<IConfig> {
     let configUrl;
 
     try {
-      // In development, use localhost URL for SSR since relative URLs don't work in SSR context
+      // In SSR context, we need absolute URLs since relative URLs don't work
       const isDev = process.env.NODE_ENV === 'development';
-      configUrl = isDev ? 'http://localhost:4322/config.json' : '/config.json';
+      if (isDev) {
+        configUrl = 'http://localhost:4322/config.json';
+      } else {
+        // In production/container, construct URL to self-serve the config
+        const port = process.env.PORT || '3000';
+        configUrl = `http://localhost:${port}/config.json`;
+      }
       console.log('[SSR] 🔧 Fetching config from:', configUrl);
       response = await fetch(configUrl);
 
