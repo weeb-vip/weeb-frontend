@@ -1,10 +1,28 @@
 <script>
   import { Toaster } from 'svelte-sonner';
+  import { onMount } from 'svelte';
+
+  let isMobile = false;
+  let position = 'top-right';
+
+  onMount(() => {
+    const checkScreenSize = () => {
+      isMobile = window.innerWidth <= 768;
+      position = isMobile ? 'top-center' : 'top-right';
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  });
 </script>
 
 <!-- Global Toaster Configuration -->
 <Toaster
-  position="top-right"
+  {position}
   class="toaster-container"
   toastOptions={{
     duration: 6000,
@@ -15,9 +33,22 @@
 
 <style>
   :global(.toaster-container) {
-    top: 6.5rem !important; /* Desktop header: 96px (6rem) + small gap */
-    right: 1.5rem !important;
-    z-index: 30 !important;
+    z-index: 50 !important; /* Higher z-index to appear above content */
+  }
+
+  /* Mobile positioning - let Sonner handle it, just adjust top */
+  @media (max-width: 768px) {
+    :global(.toaster-container) {
+      top: 7rem !important;
+    }
+  }
+
+  /* Desktop positioning adjustments */
+  @media (min-width: 769px) {
+    :global(.toaster-container) {
+      top: 6.5rem !important; /* Desktop header: 96px (6rem) + small gap */
+      right: 1.5rem !important;
+    }
   }
 
   /* Force ALL Sonner toasts to be exactly 20rem width */
@@ -25,6 +56,15 @@
     width: 20rem !important;
     max-width: 20rem !important;
     min-width: 20rem !important;
+  }
+
+  /* Mobile responsive toast width */
+  @media (max-width: 768px) {
+    :global([data-sonner-toast]) {
+      width: auto !important;
+      max-width: calc(100vw - 2rem) !important;
+      min-width: 16rem !important;
+    }
   }
 
   /* Standard toasts */
@@ -48,6 +88,17 @@
     background: rgb(31, 41, 55) !important;
     border-color: rgb(55, 65, 81) !important;
     color: white !important;
+  }
+
+  /* Mobile responsive toast styling */
+  @media (max-width: 768px) {
+    :global(.custom-toast) {
+      width: auto !important;
+      max-width: calc(100vw - 2rem) !important;
+      min-width: 16rem !important;
+      font-size: 0.8rem !important;
+      padding: 0.625rem !important;
+    }
   }
 
   /* Custom anime toasts - fully rounded with theme colors */
@@ -120,19 +171,10 @@
     border-left: 4px solid rgb(59, 130, 246) !important;
   }
 
-  /* Mobile positioning only - no width changes */
+  /* Small screens - let Sonner handle positioning */
   @media (max-width: 640px) {
     :global(.toaster-container) {
-      top: 6.5rem !important; /* Mobile header: 72px (4.5rem) + small gap */
-      right: 1rem !important;
-      left: auto !important; /* Remove left positioning to keep fixed width */
-    }
-  }
-
-  /* Very small screens - adjust positioning only */
-  @media (max-width: 360px) {
-    :global(.toaster-container) {
-      right: 0.5rem !important;
+      top: 7rem !important;
     }
   }
 
