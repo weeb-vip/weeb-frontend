@@ -28,10 +28,7 @@ function createLoggedInStore() {
       // Identify user in PostHog for analytics
       if (userData?.id) {
         console.log('📊 About to identify user in PostHog:', userData);
-        identifyUser(userData.id, {
-          username: userData.username,
-          email: userData.email
-        });
+        identifyUser(userData.id, {});
       } else {
         console.warn('⚠️ setLoggedIn called without user data - skipping PostHog identification');
       }
