@@ -11,6 +11,10 @@ declare global {
     posthog?: {
       capture: (eventName: string, properties?: Record<string, any>) => void;
       identify: (userId: string, userProperties?: Record<string, any>) => void;
+      isFeatureEnabled: (flag: string) => boolean;
+      onFeatureFlags: (callback: () => void) => void;
+      reset: () => void;
+      get_distinct_id: () => string;
     };
   }
 }
@@ -72,6 +76,58 @@ export const analytics = {
   errorOccurred: (errorType: string, errorMessage: string) =>
     trackEvent('error_occurred', { error_type: errorType, error_message: errorMessage }),
 };
+
+/**
+ * Identify a user in PostHog
+ * @param userId - The unique user ID
+ * @param userProperties - Optional user properties to set
+ */
+export function identifyUser(userId: string, userProperties?: Record<string, any>) {
+  if (typeof window !== 'undefined' && window.posthog) {
+    try {
+      window.posthog.identify(userId, userProperties);
+      console.log('📊 User identified:', userId);
+    } catch (error) {
+      console.warn('📊 User identification failed:', error);
+    }
+  }
+}
+
+/**
+ * Check if a feature flag is enabled
+ * @param flagKey - The feature flag key
+ * @returns boolean indicating if the flag is enabled
+ */
+export function isFeatureEnabled(flagKey: string): boolean {
+  if (typeof window !== 'undefined' && window.posthog) {
+    try {
+      return window.posthog.isFeatureEnabled(flagKey);
+    } catch (error) {
+      console.warn('📊 Feature flag check failed:', error);
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Wait for feature flags to be loaded before executing callback
+ * @param callback - Function to execute when flags are ready
+ */
+export function onFeatureFlags(callback: () => void) {
+  if (typeof window !== 'undefined' && window.posthog) {
+    try {
+      window.posthog.onFeatureFlags(callback);
+    } catch (error) {
+      console.warn('📊 Feature flags callback failed:', error);
+      // Execute callback anyway in case of error
+      callback();
+    }
+  } else {
+    // Execute callback immediately if PostHog not available
+    callback();
+  }
+}
 
 /**
  * Initialize analytics tracking
