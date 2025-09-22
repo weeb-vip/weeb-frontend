@@ -21,8 +21,8 @@ RUN bun install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Build the application
-RUN bun run build
+# Build the application for production
+RUN NODE_ENV=production bun run build --mode production
 
 # ---- Production stage ----
 FROM oven/bun:1-alpine AS production

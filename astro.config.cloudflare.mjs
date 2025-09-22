@@ -22,7 +22,8 @@ export default defineConfig({
   vite: {
     define: {
       global: 'globalThis',
-      __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || 'dev')
+      __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || 'dev'),
+      __ENABLE_DEV_FEATURES__: process.env.NODE_ENV === 'development'
     },
     ssr: {
       external: ['node:*'],
