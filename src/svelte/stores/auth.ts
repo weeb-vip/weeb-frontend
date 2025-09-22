@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import { AuthStorage } from '../../utils/auth-storage';
+import { identifyUser } from '../../utils/analytics';
 
 interface LoggedInState {
   isLoggedIn: boolean;
@@ -20,7 +21,16 @@ function createLoggedInStore() {
 
   return {
     subscribe,
-    setLoggedIn: () => update(state => ({ ...state, isLoggedIn: true, isAuthInitialized: true })),
+    setLoggedIn: (userData?: { id: string; username?: string; email?: string }) => {
+      update(state => ({ ...state, isLoggedIn: true, isAuthInitialized: true }));
+      // Identify user in PostHog for analytics
+      if (userData?.id) {
+        identifyUser(userData.id, {
+          username: userData.username,
+          email: userData.email
+        });
+      }
+    },
     logout: () => update(state => ({ ...state, isLoggedIn: false, isAuthInitialized: true })),
     setAuthInitialized: () => update(state => ({ ...state, isAuthInitialized: true })),
     // Check current cookie-based login status

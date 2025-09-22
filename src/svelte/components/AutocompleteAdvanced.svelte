@@ -257,12 +257,21 @@
     </svg>
   </div>
 {:else}
-  <!-- Backdrop overlay when focused -->
+  <!-- Desktop backdrop overlay when focused -->
   <div
-    class="fixed inset-0 z-40 bg-white/30 dark:bg-gray-900/30 backdrop-blur-md transition-opacity duration-300 ease-in-out {isFocused ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
+    class="hidden sm:block fixed inset-0 z-[45] bg-white/30 dark:bg-gray-900/30 backdrop-blur-md transition-opacity duration-300 ease-in-out {isFocused ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
     role="presentation"
     on:click={() => {
       if (desktopInputRef) desktopInputRef.blur();
+    }}
+    on:keydown={() => {}}
+  ></div>
+
+  <!-- Mobile backdrop overlay when focused -->
+  <div
+    class="sm:hidden fixed inset-0 z-[45] bg-white/30 dark:bg-gray-900/30 backdrop-blur-md transition-opacity duration-300 ease-in-out {isFocused ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
+    role="presentation"
+    on:click={() => {
       if (mobileInputRef) mobileInputRef.blur();
     }}
     on:keydown={() => {}}
@@ -317,7 +326,7 @@
     </svg>
     <input
       bind:this={desktopInputRef}
-      class="w-full py-2 px-4 pl-10 text-base outline-none text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 transition-all duration-300 {isFocused && autocompleteState.isOpen ? 'rounded-t-2xl border-b-0' : 'rounded-full'}"
+      class="w-full py-2 px-4 pl-10 text-base outline-none text-gray-900 dark:text-gray-100 bg-transparent border border-gray-200 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 transition-all duration-300 {isFocused && autocompleteState.isOpen ? 'rounded-t-2xl border-b-0' : 'rounded-full'}"
       placeholder="Search anime..."
       on:focus={handleFocus}
       on:blur={handleBlur}
