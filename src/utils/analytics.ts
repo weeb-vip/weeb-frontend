@@ -1,5 +1,5 @@
 /**
- * Analytics utilities for Umami tracking
+ * Analytics utilities for PostHog tracking
  *
  * Usage:
  * - trackEvent('anime_added', { anime_id: '123', title: 'Attack on Titan' })
@@ -8,27 +8,28 @@
 
 declare global {
   interface Window {
-    umami?: {
-      track: (eventName: string, eventData?: Record<string, any>) => void;
+    posthog?: {
+      capture: (eventName: string, properties?: Record<string, any>) => void;
+      identify: (userId: string, userProperties?: Record<string, any>) => void;
     };
   }
 }
 
 /**
- * Track custom events in Umami Analytics
+ * Track custom events in PostHog Analytics
  * @param eventName - The name of the event (e.g., 'anime_added', 'list_updated')
  * @param eventData - Optional data to send with the event
  */
 export function trackEvent(eventName: string, eventData?: Record<string, any>) {
-  if (typeof window !== 'undefined' && window.umami) {
+  if (typeof window !== 'undefined' && window.posthog) {
     try {
-      window.umami.track(eventName, eventData);
+      window.posthog.capture(eventName, eventData);
       console.log('📊 Analytics event tracked:', eventName, eventData);
     } catch (error) {
       console.warn('📊 Analytics tracking failed:', error);
     }
   } else {
-    console.warn('📊 Umami analytics not available');
+    console.warn('📊 PostHog analytics not available');
   }
 }
 
@@ -74,31 +75,31 @@ export const analytics = {
 
 /**
  * Initialize analytics tracking
- * Call this after the page loads to ensure Umami is available
+ * Call this after the page loads to ensure PostHog is available
  */
 export function initializeAnalytics() {
   if (typeof window !== 'undefined') {
-    // Wait for Umami to be available
-    const checkUmami = () => {
-      if (window.umami) {
-        console.log('📊 Umami analytics initialized');
+    // Wait for PostHog to be available
+    const checkPostHog = () => {
+      if (window.posthog) {
+        console.log('📊 PostHog analytics initialized');
         return true;
       }
       return false;
     };
 
     // Check immediately
-    if (!checkUmami()) {
+    if (!checkPostHog()) {
       // If not available, check every 100ms for up to 5 seconds
       let attempts = 0;
       const maxAttempts = 50;
 
       const interval = setInterval(() => {
         attempts++;
-        if (checkUmami() || attempts >= maxAttempts) {
+        if (checkPostHog() || attempts >= maxAttempts) {
           clearInterval(interval);
           if (attempts >= maxAttempts) {
-            console.warn('📊 Umami analytics failed to initialize after 5 seconds');
+            console.warn('📊 PostHog analytics failed to initialize after 5 seconds');
           }
         }
       }, 100);

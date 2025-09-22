@@ -5,5 +5,5 @@
   "algolia_index": "anime-staging",
   "cdn_url": "https://cdn.weeb.vip/weeb-staging",
   "cdn_user_url": "https://cdn.weeb.vip/weeb-user-staging",
-  "umami_website_id": "weeb-staging"
+  "posthog_api_key": "phc_your_staging_api_key_here"
 }

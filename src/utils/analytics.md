@@ -1,16 +1,16 @@
-# Analytics Integration with Umami
+# Analytics Integration with PostHog
 
-This project uses Umami analytics for privacy-focused tracking.
+This project uses PostHog analytics for comprehensive product analytics and feature tracking.
 
 ## Setup
 
-Analytics is automatically configured based on environment:
-- **Production**: `weeb-vip`
-- **Staging**: `weeb-staging`
-- **Development**: `weeb-staging`
-- **Local**: `weeb-local`
+Analytics is automatically configured based on environment using API keys:
+- **Production**: Production PostHog API key
+- **Staging**: Staging PostHog API key
+- **Development**: Development PostHog API key
+- **Local**: Local development API key
 
-The website ID is loaded from `src/config/static/{environment}/index.json`
+The API key is loaded from `src/config/static/{environment}/index.json`
 
 ## Usage
 
@@ -112,12 +112,12 @@ trackEvent('custom_action', {
 ## Analytics Dashboard
 
 Access analytics at: `https://analytics.weeb.vip`
-- **Username**: admin
-- **Password**: umami (change after first login)
+- Log in with your configured authentication method
+- PostHog provides comprehensive dashboards for events, user journeys, and feature flags
 
 ## Privacy
 
-- Umami is GDPR compliant
-- No cookies used for tracking
-- No personal data collected
-- All data stays on our servers
+- PostHog is GDPR compliant
+- Configurable data retention policies
+- User privacy controls available
+- Self-hosted on our infrastructure for data control
