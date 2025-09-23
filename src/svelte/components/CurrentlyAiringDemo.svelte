@@ -14,6 +14,7 @@
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
   import { navigateWithTransition } from '../../utils/astro-navigation';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   // SSR props
   export let ssrData: any = null;
@@ -313,7 +314,7 @@
               forceListLayout={true}
               id={entry.airingInfo.id}
               style="episode"
-              title={entry.airingInfo.titleEn || entry.airingInfo.titleJp || "Unknown"}
+              title={getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
               description=""
               episodeLength=""
@@ -364,7 +365,7 @@
               forceListLayout={true}
               id={entry.airingInfo.id}
               style="episode"
-              title={entry.airingInfo.titleEn || entry.airingInfo.titleJp || "Unknown"}
+              title={getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
               description=""
               episodeLength=""
@@ -415,7 +416,7 @@
               forceListLayout={true}
               id={entry.airingInfo.id}
               style="episode"
-              title={entry.airingInfo.titleEn || entry.airingInfo.titleJp || "Unknown"}
+              title={getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
               description=""
               episodeLength=""
@@ -466,7 +467,7 @@
               forceListLayout={true}
               id={entry.airingInfo.id}
               style="episode"
-              title={entry.airingInfo.titleEn || entry.airingInfo.titleJp || "Unknown"}
+              title={getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
               description=""
               episodeLength=""

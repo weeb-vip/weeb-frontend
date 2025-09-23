@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { navigateWithTransition } from '../../utils/astro-navigation';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let anime: {
     id?: string | number;
@@ -60,7 +61,7 @@
     }
   }
 
-  const title = anime.titleEn || anime.titleJp || 'Unknown Anime';
+  const title = getAnimeTitle(anime, $preferencesStore.titleLanguage);
   const episodeTitle = episode?.titleEn || episode?.titleJp || '';
   const episodeNumber = episode?.episodeNumber || '?';
 

@@ -18,6 +18,7 @@
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import { toast } from 'svelte-sonner';
   import { animeToast } from '../utils/animeToast';
   import { animeNotificationService } from '../../services/animeNotifications';
@@ -465,7 +466,7 @@
             <AnimeCard
             style="detail"
             id={anime.id}
-            title={anime.titleEn || anime.titleJp || "Unknown"}
+            title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
             description=""
             episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
             episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
@@ -527,7 +528,7 @@
             <AnimeCard
               style="detail"
               id={anime.id}
-              title={anime.titleEn || anime.titleJp || "Unknown"}
+              title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
               description=""
               episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
               episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
@@ -589,7 +590,7 @@
             <AnimeCard
               style="detail"
               id={anime.id}
-              title={anime.titleEn || anime.titleJp || "Unknown"}
+              title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
               description=""
               episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
               episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}

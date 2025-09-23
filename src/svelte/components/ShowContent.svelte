@@ -16,6 +16,7 @@
   import debug from '../../utils/debug';
   import { animeNotificationStore } from '../stores/animeNotifications';
   import ShowContentSkeleton from './ShowContentSkeleton.svelte';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   export let animeId: string;
   export let ssrAnimeData: any = null;
   export let ssrCharactersData: any = null;

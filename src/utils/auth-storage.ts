@@ -58,6 +58,55 @@ export class AuthStorage {
   // static setTokens() - Tokens are now set by the server during login/refresh
   // static setAuthToken() - Server handles all cookie management
 
+  // 🌍 Localhost development: Manually set cookies when server doesn't
+  static setTokensForLocalhost(authToken: string, refreshToken?: string): void {
+    if (typeof window === 'undefined') return;
+
+    // Only set cookies for localhost development
+    const isLocalhost = window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname.includes('localhost');
+
+    if (!isLocalhost) {
+      debug.auth('Not localhost - skipping manual cookie setting');
+      return;
+    }
+
+    debug.auth('🏠 Localhost detected - setting authentication cookies manually');
+
+    // Set access token cookie (accessible by JavaScript for development)
+    if (authToken) {
+      CookieUtils.set('access_token', authToken, {
+        path: '/',
+        maxAge: 24 * 60 * 60, // 24 hours
+        sameSite: 'Lax'
+      });
+      // Also set the legacy cookie name for compatibility
+      CookieUtils.set('authToken', authToken, {
+        path: '/',
+        maxAge: 24 * 60 * 60, // 24 hours
+        sameSite: 'Lax'
+      });
+    }
+
+    // Set refresh token cookie if provided
+    if (refreshToken) {
+      CookieUtils.set('refresh_token', refreshToken, {
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+        sameSite: 'Lax'
+      });
+      // Also set the expected cookie name
+      CookieUtils.set('refreshToken', refreshToken, {
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+        sameSite: 'Lax'
+      });
+    }
+
+    debug.auth('🍪 Localhost authentication cookies set successfully');
+  }
+
   // LocalStorage methods for refresh token (fallback when cookies aren't available)
   static setRefreshTokenLocalStorage(refreshToken: string): void {
     try {

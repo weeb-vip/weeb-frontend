@@ -3,6 +3,7 @@
   import AnimeCard from './AnimeCard.svelte';
   import { GetImageFromAnime } from '../../services/utils';
   import { navigateWithTransition } from '../../utils/astro-navigation';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let anime: any;
   export let isOpen: boolean = false;
@@ -80,11 +81,11 @@
 <button
   bind:this={buttonRef}
   on:click={togglePopover}
-  title="{anime.titleEn || anime.titleJp || 'Unknown'} (Ep {anime.episodes[0]?.episodeNumber || '?'}){airTimeText ? ` at ${airTimeText}` : ''}"
+  title="{getAnimeTitle(anime, $preferencesStore.titleLanguage)} (Ep {anime.episodes[0]?.episodeNumber || '?'}){airTimeText ? ` at ${airTimeText}` : ''}"
   class="text-xs text-blue-700 dark:text-blue-300 text-left hover:bg-blue-100 dark:hover:bg-blue-800/50 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col"
 >
   <span class="truncate">
-    {anime.titleEn || anime.titleJp || "Unknown"} (Ep {anime.episodes[0]?.episodeNumber || "?"})
+    {getAnimeTitle(anime, $preferencesStore.titleLanguage)} (Ep {anime.episodes[0]?.episodeNumber || "?"})
   </span>
   {#if airTimeText}
     <span class="text-gray-600 dark:text-gray-400 text-xs font-medium">
@@ -112,7 +113,7 @@
       style="episode"
       forceListLayout={true}
       id={anime.id}
-      title={anime.titleEn || anime.titleJp || "Unknown"}
+      title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
       description={anime.description || ""}
       episodes={anime.episodeCount || 0}
       episodeLength={anime.duration ? anime.duration.replace(/per.+?$/, "") : "?"}

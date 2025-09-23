@@ -6,6 +6,7 @@
   import SafeImage from './SafeImage.svelte';
   import type { ToastData } from '../stores/toast';
   import '@fortawesome/fontawesome-free/css/all.min.css';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let toast: ToastData;
   export let onClose: (id: string) => void;
@@ -104,14 +105,14 @@
               <div class="flex-shrink-0">
                 <SafeImage
                   src={GetImageFromAnime(toast.anime)}
-                  alt={toast.anime.titleEn || toast.anime.titleJp || 'Anime'}
+                  alt={getAnimeTitle(toast.anime, $preferencesStore.titleLanguage)}
                   className="w-8 h-8 rounded object-cover"
                   fallbackClassName="w-8 h-8 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center"
                 />
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                  {toast.anime.titleEn || toast.anime.titleJp}
+                  {getAnimeTitle(toast.anime, $preferencesStore.titleLanguage)}
                 </p>
                 <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
                   <i class="fas fa-play mr-1"></i>

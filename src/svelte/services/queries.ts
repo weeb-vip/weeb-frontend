@@ -74,6 +74,14 @@ export function useLogin() {
       // Server sets HttpOnly cookies automatically
       console.log("✅ Svelte login successful - server set cookies");
 
+      // 🏠 For localhost development: manually set cookies since server might not
+      if (data.Credentials?.token) {
+        AuthStorage.setTokensForLocalhost(
+          data.Credentials.token,
+          data.Credentials.refresh_token || undefined
+        );
+      }
+
       // Store refresh token in localStorage as fallback (server handles HttpOnly cookies)
       if (data.Credentials?.refresh_token) {
         AuthStorage.setRefreshTokenLocalStorage(data.Credentials.refresh_token);

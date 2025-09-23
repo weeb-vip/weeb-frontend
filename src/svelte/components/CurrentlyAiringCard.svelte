@@ -5,6 +5,7 @@
   import Button from './Button.svelte';
   import { GetImageFromAnime } from '../../services/utils';
   import { animeNotificationStore } from '../stores/animeNotifications';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let entry: any;
   export let index: number;
@@ -50,7 +51,7 @@
   <AnimeCard
     style="episode"
     id={anime.id}
-    title={anime.titleEn || anime.titleJp || "Unknown"}
+    title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
     episodeTitle={episodeTitle}
     episodeNumber={episodeNumber}
     description=""

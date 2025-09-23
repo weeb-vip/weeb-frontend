@@ -12,6 +12,7 @@
   import ProfileImageUpload from './ProfileImageUpload.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
   import { configStore } from '../stores/config';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   // Initialize query client
   const queryClient = initializeQueryClient();
@@ -492,7 +493,7 @@
               forceListLayout={true}
               id={entry.anime?.id}
               style="detail"
-              title={entry.anime?.titleEn || entry.anime?.titleJp || "Unknown"}
+              title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
               description={entry.anime?.description || ""}
               episodes={entry.anime?.episodeCount || 0}
               episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
@@ -587,7 +588,7 @@
               forceListLayout={true}
               id={entry.anime?.id || entry.airingInfo?.id}
               style="episode"
-              title={entry.anime?.titleEn || entry.airingInfo?.titleEn || "Unknown"}
+              title={getAnimeTitle(entry.anime || entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
               description={entry.anime?.description || ""}
               episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
@@ -642,7 +643,7 @@
               forceListLayout={true}
               id={entry.anime?.id || entry.airingInfo?.id}
               style="episode"
-              title={entry.anime?.titleEn || entry.airingInfo?.titleEn || "Unknown"}
+              title={getAnimeTitle(entry.anime || entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.recentEpisode?.titleEn || entry.airingInfo.recentEpisode?.titleJp || "Unknown"}
               description={entry.anime?.description || ""}
               episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}

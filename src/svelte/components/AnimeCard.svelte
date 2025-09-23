@@ -76,7 +76,7 @@
   </a>
 
   {#if style === 'detail'}
-    <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
+    <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left px-4 py-2 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
       <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full">
         <ScrollingText
                 text={title}
@@ -93,10 +93,12 @@
             <i class="fas fa-clock text-sm w-4 text-center mr-2"></i>
             <span>{episodeLength}</span>
           </div>
-          <div class="flex items-center">
-            <i class="fas fa-calendar text-sm w-4 text-center mr-2"></i>
-            <span>{year}</span>
-          </div>
+          {#if year}
+            <div class="flex items-center">
+              <i class="fas fa-calendar text-sm w-4 text-center mr-2"></i>
+              <span>{year}</span>
+            </div>
+          {/if}
           {#if airTime?.show}
             <div class="flex items-center {getAirTimeColorClasses(airTime.variant)}">
               <i class="fas fa-broadcast-tower text-sm w-4 text-center mr-2"></i>
@@ -113,7 +115,7 @@
   {/if}
 
   {#if style === 'episode'}
-    <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
+    <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left px-4 py-2 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
       <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full">
         <ScrollingText
                 text={title}

@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import type { LoginInput, SigninResult } from "../../gql/graphql";
-import { login, refreshTokenSimple } from "../../services/queries";
+import { refreshTokenSimple } from "../../services/queries";
+import { mutationCreateSession } from "../../services/api/graphql/queries";
 import { TokenRefresher } from "../../services/token_refresher";
 import { AuthStorage } from "../../utils/auth-storage";
 import debug from "../../utils/debug";
@@ -29,7 +30,7 @@ export function useLogin() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query: login().query,
+          query: mutationCreateSession,
           variables: { input }
         })
       });
@@ -48,6 +49,14 @@ export function useLogin() {
 
       // Server sets HttpOnly cookies automatically - no manual storage needed
       console.log("✅ Login successful - server set cookies automatically");
+
+      // 🏠 For localhost development: manually set cookies since server might not
+      if (signinResult.Credentials?.token) {
+        AuthStorage.setTokensForLocalhost(
+          signinResult.Credentials.token,
+          signinResult.Credentials.refresh_token || undefined
+        );
+      }
 
       // Store refresh token in localStorage as fallback (server sets HttpOnly cookies)
       if (signinResult.Credentials?.refresh_token) {

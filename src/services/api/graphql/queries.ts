@@ -7,6 +7,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             anidbid
             thetvdbid
             titleEn
+            titleJp
             imageUrl
             duration
             tags
@@ -27,6 +28,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             anidbid
             thetvdbid
             titleEn
+            titleJp
             imageUrl
             duration
             tags
@@ -52,6 +54,7 @@ export const getSeasonalAnime = graphql(/* GraphQL */`
             anidbid
             thetvdbid
             titleEn
+            titleJp
             imageUrl
             duration
             tags

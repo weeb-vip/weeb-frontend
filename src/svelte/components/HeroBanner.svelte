@@ -7,6 +7,7 @@
   import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
   import { animeCountdownStore } from '../stores/animeCountdown';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let anime: any;
   export let onAddAnime: (animeId: string) => void;
@@ -121,7 +122,7 @@
     generateOptimizedImageUrls();
   }
 
-  $: title = anime.titleEn || anime.titleJp || "Unknown";
+  $: title = getAnimeTitle(anime, $preferencesStore.titleLanguage);
 
   // For now, we'll use a simpler approach without the worker data
   // This can be enhanced later with Svelte stores for countdown data
