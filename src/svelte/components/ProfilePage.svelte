@@ -500,6 +500,7 @@
               onClick={() => navigateToAnime(entry.anime?.id)}
               year=""
               airTime={entry.airTimeDisplay}
+              showWatchingFallback={true}
               nextEpisode={entry.nextEpisode}
               broadcast={entry.anime?.broadcast}
             >

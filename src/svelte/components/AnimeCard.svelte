@@ -68,23 +68,23 @@
      on:click={() => analytics.animeViewed(id || '', title)}
      class="flex flex-col flex-none bg-white dark:bg-gray-800 {cardStyles[style]} flex-grow overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md' : 'rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}">
     <SafeImage
-      src={image}
-      alt={title}
-      className="aspect-2/3 object-cover flex-shrink-0 relative {forceListLayout ? 'w-24 sm:w-28 md:w-32' : 'w-32 sm:w-40 md:w-48'}"
-      fallbackSrc="/assets/not found.jpg"
+            src={image}
+            alt={title}
+            className="aspect-2/3 object-cover flex-auto relative {forceListLayout ? 'w-24 sm:w-28 md:w-32' : 'w-32 sm:w-40 md:w-48'}"
+            fallbackSrc="/assets/not found.jpg"
     />
   </a>
 
   {#if style === 'detail'}
-    <div class="flex flex-col justify-between flex-grow min-w-0 px-4 py-2 sm:w-full lg:w-full h-full relative w-full group">
-      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col flex-1 w-full">
+    <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
+      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full">
         <ScrollingText
-          text={title}
-          className="text-md font-bold text-gray-900 dark:text-gray-100"
-          maxWidth="100%"
+                text={title}
+                className="text-md font-bold text-gray-900 dark:text-gray-100"
+                maxWidth="100%"
         />
 
-        <div class="flex flex-col justify-evenly flex-1 text-md font-normal items-start text-gray-700 dark:text-gray-300">
+        <div class="flex flex-col space-y-2 text-md font-normal mt-2 items-start text-gray-700 dark:text-gray-300">
           <div class="flex items-center">
             <i class="fas fa-tv text-sm w-4 text-center mr-2"></i>
             <span>{episodes}</span>
@@ -93,21 +93,14 @@
             <i class="fas fa-clock text-sm w-4 text-center mr-2"></i>
             <span>{episodeLength}</span>
           </div>
-          {#if year && year !== "Unknown"}
-            <div class="flex items-center">
-              <i class="fas fa-calendar text-sm w-4 text-center mr-2"></i>
-              <span>{year}</span>
-            </div>
-          {/if}
+          <div class="flex items-center">
+            <i class="fas fa-calendar text-sm w-4 text-center mr-2"></i>
+            <span>{year}</span>
+          </div>
           {#if airTime?.show}
             <div class="flex items-center {getAirTimeColorClasses(airTime.variant)}">
               <i class="fas fa-broadcast-tower text-sm w-4 text-center mr-2"></i>
               <span class="text-xs font-medium">{airTime.text}</span>
-            </div>
-          {:else}
-            <div class="flex items-center text-gray-500 dark:text-gray-400">
-              <i class="fas fa-info-circle text-sm w-4 text-center mr-2"></i>
-              <span class="text-xs font-medium">Currently watching</span>
             </div>
           {/if}
         </div>
@@ -123,15 +116,15 @@
     <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left p-4 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
       <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full">
         <ScrollingText
-          text={title}
-          className="text-md font-bold text-gray-900 dark:text-gray-100"
-          maxWidth="100%"
+                text={title}
+                className="text-md font-bold text-gray-900 dark:text-gray-100"
+                maxWidth="100%"
         />
 
         <ScrollingText
-          text={episodeTitle}
-          className="text-md font-normal text-gray-900 dark:text-gray-100"
-          maxWidth="100%"
+                text={episodeTitle}
+                className="text-md font-normal text-gray-900 dark:text-gray-100"
+                maxWidth="100%"
         />
 
         <div class="flex flex-col w-full justify-between space-y-2">
