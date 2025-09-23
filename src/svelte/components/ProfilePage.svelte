@@ -498,7 +498,7 @@
               episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
               image={GetImageFromAnime(entry.anime)}
               onClick={() => navigateToAnime(entry.anime?.id)}
-              year={entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : "Unknown"}
+              year=""
               airTime={entry.airTimeDisplay}
               nextEpisode={entry.nextEpisode}
               broadcast={entry.anime?.broadcast}

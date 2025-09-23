@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { loggedInStore, loginModalStore } from '../stores/auth';
+  import { preferencesStore } from '../stores/preferences';
   import { AuthStorage } from '../../utils/auth-storage';
   import { TokenRefresher } from '../../services/token_refresher';
   import { refreshTokenSimple, getUser } from '../../services/queries';
@@ -21,6 +22,9 @@
 
   onMount(async () => {
     try {
+      // Initialize preferences store
+      preferencesStore.init();
+
       // Expose auth stores globally for error toast functionality
       if (typeof window !== 'undefined') {
         window.loggedInStore = loggedInStore;

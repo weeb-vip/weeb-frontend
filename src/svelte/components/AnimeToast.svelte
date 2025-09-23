@@ -97,7 +97,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-  class="flex items-center gap-3 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-lg pl-2 pr-2 py-2 transition-all duration-300 ease-in-out {!isMobile ? 'cursor-pointer hover:bg-white/90 dark:hover:bg-gray-800/90 hover:shadow-xl' : ''}"
+  class="anime-toast-content flex items-center gap-3 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-lg pl-2 pr-2 py-2 transition-all duration-300 ease-in-out {!isMobile ? 'cursor-pointer hover:bg-white/90 dark:hover:bg-gray-800/90 hover:shadow-xl' : ''}"
   on:click={handleContainerClick}
 >
   <!-- Anime Image -->

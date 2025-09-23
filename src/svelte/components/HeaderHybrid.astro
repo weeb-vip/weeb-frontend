@@ -3,6 +3,7 @@ import AutocompleteAdvanced from '../../svelte/components/AutocompleteAdvanced.s
 import LoginModalHandler from '../../svelte/components/LoginModalHandler.svelte';
 import UserProfileHandler from '../../svelte/components/UserProfileHandler.svelte';
 import AuthInitializer from '../../svelte/components/AuthInitializer.svelte';
+import TitleLanguageToggle from '../../svelte/components/TitleLanguageToggle.svelte';
 
 // Get SSR auth data from middleware
 const { auth } = Astro.locals;
@@ -28,7 +29,8 @@ const { auth } = Astro.locals;
       <AutocompleteAdvanced client:idle />
     </div>
 
-    <div class="flex-shrink-0">
+    <div class="flex-shrink-0 flex items-center space-x-2">
+      <TitleLanguageToggle client:idle />
       <UserProfileHandler client:idle isMobile={true} />
     </div>
   </div>
@@ -86,8 +88,11 @@ const { auth } = Astro.locals;
       </div>
     </div>
 
-    <!-- Right side: Dark mode and user profile -->
-    <div class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center space-x-6">
+    <!-- Right side: Language toggle, Dark mode, and user profile -->
+    <div class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center space-x-4">
+      <!-- Title Language Toggle -->
+      <TitleLanguageToggle client:idle />
+
       <!-- Dark Mode Toggle -->
       <button
         class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300 w-10 h-10 flex items-center justify-center"
@@ -101,7 +106,7 @@ const { auth } = Astro.locals;
       </button>
 
       <!-- User Profile Handler -->
-      <div class="ml-6">
+      <div class="ml-4">
         <UserProfileHandler client:idle isMobile={false} />
       </div>
     </div>

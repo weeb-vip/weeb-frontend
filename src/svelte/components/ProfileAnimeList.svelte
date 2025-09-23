@@ -9,9 +9,13 @@
   import { initializeQueryClient } from '../services/query-client';
   import AnimeCard from './AnimeCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
+  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   // Initialize query client
   const queryClient = initializeQueryClient();
+
+  // Subscribe to preferences for title language
+  $: preferences = $preferencesStore;
 
   const PAGE_SIZE = 16;
 
@@ -238,14 +242,14 @@
             <AnimeCard
               style="detail"
               id={entry.anime?.id}
-              title={entry.anime?.titleEn || entry.anime?.titleJp || "Unknown"}
+              title={getAnimeTitle(entry.anime, preferences.titleLanguage)}
               description={entry.anime?.description || ""}
               episodes={entry.anime?.episodeCount || 0}
               episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
               image={GetImageFromAnime(entry.anime)}
               className="hover:cursor-pointer"
               onClick={() => navigateToAnime(entry.anime?.id)}
-              year={entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : "Unknown"}
+              year=""
             >
               <div slot="options">
                 <AnimeStatusDropdown

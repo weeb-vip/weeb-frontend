@@ -231,9 +231,41 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
           const shouldShowLoginOption = isAuthError && window.loggedInStore && !window.loggedInStoreValue?.isLoggedIn;
 
           // Try to use the existing toast system
-          if (window.toast) {
+          if (window.globalToast) {
             if (shouldShowLoginOption) {
-              // Use custom toast with action button
+              // Show error toast with Login action first
+              window.globalToast.error(message, {
+                action: {
+                  label: 'Login',
+                  onClick: () => {
+                    if (window.loginModalStore) {
+                      window.loginModalStore.openLogin();
+                    }
+                  }
+                },
+                duration: 8000
+              });
+
+              // Show a second toast with Register action
+              setTimeout(() => {
+                window.globalToast.info('Or create a new account', {
+                  action: {
+                    label: 'Register',
+                    onClick: () => {
+                      if (window.loginModalStore) {
+                        window.loginModalStore.openRegister();
+                      }
+                    }
+                  },
+                  duration: 8000
+                });
+              }, 500);
+            } else {
+              window.globalToast.error(message);
+            }
+          } else if (window.toast) {
+            if (shouldShowLoginOption) {
+              // Fallback to original single-button approach
               window.toast.error(message, {
                 action: {
                   label: 'Login',
@@ -249,7 +281,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
             }
           } else if (window.sonner && window.sonner.toast) {
             if (shouldShowLoginOption) {
-              // Use custom toast with action button
+              // Fallback to original single-button approach
               window.sonner.toast.error(message, {
                 action: {
                   label: 'Login',
@@ -267,21 +299,64 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
             // Fallback to creating a visible error message
             console.error('Error:', message);
 
-            // Create a simple error notification
+            // Create an error notification with auth buttons if needed
             const errorDiv = document.createElement('div');
             errorDiv.className = 'fixed top-24 right-4 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm';
-            errorDiv.innerHTML = `
-              <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                </svg>
-                <span class="text-sm font-medium">${message}</span>
-              </div>
-            `;
+
+            if (shouldShowLoginOption) {
+              errorDiv.innerHTML = `
+                <div class="flex flex-col gap-3">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm font-medium">${message}</span>
+                  </div>
+                  <div class="flex gap-2 mt-2">
+                    <button class="fallback-login-btn px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors">
+                      Login
+                    </button>
+                    <button class="fallback-register-btn px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors">
+                      Register
+                    </button>
+                  </div>
+                </div>
+              `;
+
+              // Add event listeners for auth buttons
+              const loginBtn = errorDiv.querySelector('.fallback-login-btn');
+              const registerBtn = errorDiv.querySelector('.fallback-register-btn');
+
+              loginBtn.addEventListener('click', () => {
+                if (window.loginModalStore) {
+                  window.loginModalStore.openLogin();
+                }
+                // Remove the toast when button is clicked
+                errorDiv.remove();
+              });
+
+              registerBtn.addEventListener('click', () => {
+                if (window.loginModalStore) {
+                  window.loginModalStore.openRegister();
+                }
+                // Remove the toast when button is clicked
+                errorDiv.remove();
+              });
+            } else {
+              errorDiv.innerHTML = `
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                  </svg>
+                  <span class="text-sm font-medium">${message}</span>
+                </div>
+              `;
+            }
 
             document.body.appendChild(errorDiv);
 
-            // Auto-remove after 6 seconds
+            // Auto-remove after longer duration for auth errors (or 6 seconds for regular errors)
+            const duration = shouldShowLoginOption ? 10000 : 6000;
             setTimeout(() => {
               if (errorDiv.parentNode) {
                 errorDiv.style.opacity = '0';
@@ -289,7 +364,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
                 errorDiv.style.transition = 'all 0.3s ease-out';
                 setTimeout(() => errorDiv.remove(), 300);
               }
-            }, 6000);
+            }, duration);
           }
         }
 
