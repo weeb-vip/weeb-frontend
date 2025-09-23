@@ -4,16 +4,26 @@
   import { getCharactersAndStaffByAnimeID } from '../../services/queries';
 
   export let animeId: string;
+  export let ssrCharactersData: any = null;
 
   type FilterType = 'all' | 'main' | 'supporting' | 'minor';
 
   let filter: FilterType = 'all';
   let expandedCharacters = new Set<string>();
 
+  // Create query store (always, but only use if no SSR data)
   const charactersQuery = createQuery(getCharactersAndStaffByAnimeID(animeId));
 
-  $: data = $charactersQuery.data;
-  $: isLoading = $charactersQuery.isLoading;
+  // Use SSR data if available, otherwise use client-side query
+  $: data = ssrCharactersData ? ssrCharactersData.charactersAndStaffByAnimeId : $charactersQuery.data;
+  $: isLoading = ssrCharactersData ? false : $charactersQuery.isLoading;
+
+  // Log which data source is being used
+  $: if (ssrCharactersData) {
+    console.log('🏃‍♂️ [CharactersWithStaff] Using SSR characters data');
+  } else if (!$charactersQuery.isLoading) {
+    console.log('🔄 [CharactersWithStaff] Using client-side query data');
+  }
 
   $: filteredData = (() => {
     if (!data) return [];

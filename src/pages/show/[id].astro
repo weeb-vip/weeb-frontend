@@ -16,10 +16,13 @@ if (!id) {
 // Access SSR auth data and config
 const { auth, config } = Astro.locals;
 
-// Fetch basic anime info for SEO
+// Initialize variables for SEO and data
 let animeTitle = 'Anime Details';
 let animeDescription = 'View anime details, episodes, and information';
 let animeImage = '/assets/og-image.jpg';
+let animeData = null;
+let charactersData = null;
+let error = null;
 
 try {
   console.log('🌐 Show Details SSR GraphQL URL:', config.graphql_host);
@@ -29,33 +32,120 @@ try {
     }
   });
 
-  // Simple query to get basic anime info for SEO
-  const basicAnimeQuery = `
-    query GetBasicAnimeInfo($id: ID!) {
-      anime(id: $id) {
-        id
-        titleEn
-        titleJp
-        description
-        imageUrl
-      }
+  // Full anime details query (same as client-side)
+  const animeDetailsQuery = `
+    query getAnimeDetailsByID($id: ID!) {
+        anime(id: $id) {
+            id
+            anidbid
+            thetvdbid
+            titleEn
+            titleJp
+            titleRomaji
+            titleKanji
+            titleSynonyms
+            description
+            imageUrl
+            tags
+            studios
+            animeStatus
+            episodeCount
+            episodes {
+                id
+                animeId
+                episodeNumber
+                titleEn
+                titleJp
+                synopsis
+                airDate
+                createdAt
+                updatedAt
+            }
+            duration
+            rating
+            startDate
+            endDate
+            broadcast
+            source
+            licensors
+            ranking
+            createdAt
+            updatedAt
+            userAnime {
+                id
+                status
+                score
+            }
+        }
     }
   `;
 
-  const animeData = await client.request(basicAnimeQuery, { id });
+  // Characters and staff query
+  const charactersQuery = `
+    query CharactersAndStaffByAnimeId($animeId: ID!) {
+        charactersAndStaffByAnimeId(animeId: $animeId) {
+            character {
+                id
+                animeId
+                name
+                role
+                birthday
+                zodiac
+                gender
+                race
+                height
+                weight
+                title
+                martialStatus
+                summary
+                image
+                createdAt
+                updatedAt
+            }
+            staff {
+                id
+                language
+                givenName
+                familyName
+                image
+                birthday
+                birthPlace
+                bloodType
+                hobbies
+                summary
+                createdAt
+                updatedAt
+            }
+        }
+    }
+  `;
 
+  // Fetch both anime details and characters in parallel
+  const [animeResponse, charactersResponse] = await Promise.all([
+    client.request(animeDetailsQuery, { id }),
+    client.request(charactersQuery, { animeId: id })
+  ]);
+
+  animeData = animeResponse;
+  charactersData = charactersResponse;
+
+  // Set SEO data from fetched anime info
   if (animeData?.anime) {
-    animeTitle = animeData.anime.titleEn || animeData.anime.titleJp || 'Anime Details';
-    animeDescription = animeData.anime.description
-      ? `${animeData.anime.description.substring(0, 160)}...`
+    const anime = animeData.anime;
+    animeTitle = anime.titleEn || anime.titleJp || 'Anime Details';
+    animeDescription = anime.description
+      ? `${anime.description.substring(0, 160)}...`
       : `Watch and track ${animeTitle} episodes, get notifications, and manage your anime watchlist on WeebVIP.`;
 
-    if (animeData.anime.imageUrl) {
-      animeImage = `https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(animeData.anime.imageUrl)}`;
+    if (anime.imageUrl) {
+      animeImage = `https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(anime.imageUrl)}`;
     }
   }
-} catch (error) {
-  console.error('[SSR] Failed to fetch basic anime info for SEO:', error);
+
+  console.log('✅ [SSR] Successfully fetched anime data and characters');
+} catch (err) {
+  console.error('[SSR] Failed to fetch anime data:', err);
+  error = err;
   // Fallback to generic SEO data
 }
 ---
@@ -65,5 +155,11 @@ try {
   description={animeDescription}
   image={animeImage}
 >
-  <ShowContentWithProvider animeId={id} client:load />
+  <ShowContentWithProvider
+    animeId={id}
+    ssrAnimeData={animeData}
+    ssrCharactersData={charactersData}
+    ssrError={error}
+    client:load
+  />
 </SvelteFullWidthLayout>

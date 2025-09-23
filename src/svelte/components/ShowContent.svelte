@@ -16,6 +16,9 @@
   import { animeNotificationStore } from '../stores/animeNotifications';
   import ShowContentSkeleton from './ShowContentSkeleton.svelte';
   export let animeId: string;
+  export let ssrAnimeData: any = null;
+  export let ssrCharactersData: any = null;
+  export let ssrError: any = null;
 
   let bgUrl: string | null = null;
   let bgLoaded = false;
@@ -23,27 +26,70 @@
   let showStickyHeader = false;
   let animeStatuses: Record<string, 'idle' | 'loading' | 'success' | 'error'> = {};
 
-  // Fetch anime details
+  // Data state variables
   let showQueryStore: any = null;
   let showQuery: any = null;
   let show: any = null;
   let anime: any = null;
   let isLoading = true;
   let isError = false;
+  let charactersData: any = null;
+
+  // Initialize data from SSR if available
+  if (ssrAnimeData) {
+    show = ssrAnimeData;
+    anime = ssrAnimeData.anime;
+    isLoading = false;
+    isError = false;
+    console.log('🏃‍♂️ [ShowContent] Using SSR anime data');
+  }
+
+  if (ssrCharactersData) {
+    charactersData = ssrCharactersData;
+    console.log('🏃‍♂️ [ShowContent] Using SSR characters data');
+  }
+
+  if (ssrError) {
+    isError = true;
+    isLoading = false;
+    console.error('🏃‍♂️ [ShowContent] SSR error:', ssrError);
+  }
 
   onMount(() => {
     console.log('ShowContent onMount called with animeId:', animeId);
-    showQueryStore = createQuery(fetchDetails(animeId));
 
-    // Subscribe to query changes
-    showQueryStore.subscribe((value: any) => {
-      console.log('Query value updated:', value);
-      showQuery = value; // Store the actual query object
-      show = value.data;
-      anime = show?.anime;
-      isLoading = value.isLoading;
-      isError = value.isError;
-    });
+    // Only create client-side query if we don't have SSR data
+    if (!ssrAnimeData) {
+      console.log('🔄 [ShowContent] No SSR data, creating client-side query');
+      showQueryStore = createQuery(fetchDetails(animeId));
+
+      // Subscribe to query changes
+      showQueryStore.subscribe((value: any) => {
+        console.log('Query value updated:', value);
+        showQuery = value; // Store the actual query object
+        show = value.data;
+        anime = show?.anime;
+        isLoading = value.isLoading;
+        isError = value.isError;
+      });
+    } else {
+      console.log('✅ [ShowContent] Using SSR data, skipping client-side query');
+      // Create a mock query object for mutations that still need to refetch
+      showQuery = {
+        refetch: () => {
+          console.log('🔄 [ShowContent] Refetch called, creating query for mutations');
+          if (!showQueryStore) {
+            showQueryStore = createQuery(fetchDetails(animeId));
+            showQueryStore.subscribe((value: any) => {
+              show = value.data;
+              anime = show?.anime;
+              isLoading = value.isLoading;
+              isError = value.isError;
+            });
+          }
+        }
+      };
+    }
 
     // Initialize mutation
     addAnimeMutation = createMutation({
@@ -565,7 +611,7 @@
                   {/if}
                 </div>
                 <div slot="Characters">
-                  <CharactersWithStaff animeId={anime.id} />
+                  <CharactersWithStaff animeId={anime.id} ssrCharactersData={charactersData} />
                 </div>
                 <div slot="Trailers">
                   <!-- TODO: Add Trailers component -->
