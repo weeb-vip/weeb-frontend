@@ -17,6 +17,10 @@
   import { animeNotificationStore } from '../stores/animeNotifications';
   import ShowContentSkeleton from './ShowContentSkeleton.svelte';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
+
+  // Subscribe to preferences for reactive title updates
+  $: preferences = $preferencesStore;
+  $: animeTitle = anime ? getAnimeTitle(anime, preferences.titleLanguage) : '';
   export let animeId: string;
   export let ssrAnimeData: any = null;
   export let ssrCharactersData: any = null;
@@ -296,7 +300,7 @@
             />
             <div class="min-w-0 flex-1 pr-16">
               <h1 class="text-xl font-bold text-gray-900 dark:text-white truncate">
-                {anime.titleEn}
+                {animeTitle}
               </h1>
               <p class="text-sm text-gray-600 dark:text-gray-200 truncate">
                 {anime.startDate ? format(new Date(anime.startDate), "yyyy") : ""} • {anime.endDate ? "Finished" : "Ongoing"}
@@ -365,7 +369,7 @@
             fallbackSrc="/assets/not found.jpg"
           />
           <div class="lg:ml-10 mt-4 lg:mt-0 space-y-4 w-full">
-            <h1 class="text-3xl font-bold">{anime.titleEn}</h1>
+            <h1 class="text-3xl font-bold">{animeTitle}</h1>
             <p class="text-sm leading-relaxed text-neutral-200">{anime.description}</p>
             <div class="flex flex-wrap gap-4 text-sm text-neutral-300">
               <span>{anime.startDate ? format(new Date(anime.startDate), "yyyy") : ""}</span>

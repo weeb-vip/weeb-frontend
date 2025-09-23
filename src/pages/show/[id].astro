@@ -133,6 +133,7 @@ try {
   if (animeData?.anime) {
     const anime = animeData.anime;
     // For SEO purposes, default to English title first, then Japanese
+    // This matches the default preference of 'english' in preferences store
     animeTitle = anime.titleEn || anime.titleJp || 'Anime Details';
     animeDescription = anime.description
       ? `${anime.description.substring(0, 160)}...`

@@ -26,6 +26,7 @@
 
 <li
   class="aa-Item px-4 py-3 flex flex-row hover:bg-gray-50/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer group border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+  data-autocomplete-item
   on:click={onClick}
   on:keypress={(e) => { if (e.key === 'Enter') onClick(); }}
   role="option"

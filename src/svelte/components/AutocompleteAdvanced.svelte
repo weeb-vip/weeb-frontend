@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { isValid } from 'date-fns';
+  import { animate, stagger, spring } from 'motion';
   import AutocompleteItem from './AutocompleteItem.svelte';
   import { configStore } from '../stores/config';
   import { navigateWithTransition } from '../../utils/astro-navigation';
@@ -24,6 +25,7 @@
   let mobileFormRef: HTMLDivElement;
   let desktopPanelRef: HTMLDivElement;
   let mobilePanelRef: HTMLDivElement;
+  let resultsListRefs: HTMLElement[] = [];
 
 
   onMount(async () => {
@@ -188,8 +190,8 @@
     // Create backdrop element at body level (outside header constraints)
     const backdrop = document.createElement('div');
     backdrop.id = 'desktop-search-backdrop';
-    backdrop.className = 'fixed inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all duration-300 ease-in-out';
-    backdrop.style.cssText = 'z-index: 35; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);'; // Lower than header z-40
+    backdrop.className = 'fixed inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm';
+    backdrop.style.cssText = 'z-index: 35; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); opacity: 0;'; // Start invisible
     backdrop.setAttribute('role', 'presentation');
 
     backdrop.addEventListener('click', () => {
@@ -198,12 +200,26 @@
 
     // Add to body (bypasses header container constraints)
     document.body.appendChild(backdrop);
+
+    // Animate backdrop in with Motion
+    animate(backdrop,
+      { opacity: [0, 1] },
+      { duration: 0.3, easing: 'ease-out' }
+    );
   }
 
   function removeDesktopBackdrop() {
     if (typeof window === 'undefined') return;
     const backdrop = document.getElementById('desktop-search-backdrop');
-    if (backdrop) backdrop.remove();
+    if (backdrop) {
+      // Animate backdrop out before removing
+      animate(backdrop,
+        { opacity: [1, 0] },
+        { duration: 0.2, easing: 'ease-in' }
+      ).then(() => {
+        backdrop.remove();
+      });
+    }
   }
 
   function handleFocus() {
@@ -215,10 +231,39 @@
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) { // lg breakpoint
       createDesktopBackdrop();
     }
+
+    // Animate search input container on focus
+    const container = window.innerWidth >= 640 ? desktopFormRef : mobileFormRef;
+    if (container) {
+      animate(container,
+        { scale: [1, 1.02, 1] },
+        { duration: 0.4, easing: spring({ stiffness: 300, damping: 25 }) }
+      );
+    }
+
+    // Animate panel opening when results appear
+    setTimeout(() => {
+      const panel = window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
+      if (panel && autocompleteState.isOpen) {
+        animate(panel,
+          { opacity: [0, 1], y: [-10, 0], scale: [0.95, 1] },
+          { duration: 0.3, easing: spring({ stiffness: 400, damping: 30 }) }
+        );
+      }
+    }, 10);
   }
 
   function handleBlur() {
-    // Delay to allow click events to fire
+    // Animate panel closing before hiding
+    const panel = window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
+    if (panel && autocompleteState.isOpen) {
+      animate(panel,
+        { opacity: [1, 0], y: [0, -10] },
+        { duration: 0.2, easing: 'ease-out' }
+      );
+    }
+
+    // Delay to allow click events to fire and animation to complete
     setTimeout(() => {
       isFocused = false;
       if (autocompleteInstance) {
@@ -230,12 +275,23 @@
 
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
-      isFocused = false;
-      if (autocompleteInstance) {
-        autocompleteInstance.setIsOpen(false);
+      // Animate panel closing on escape
+      const panel = window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
+      if (panel && autocompleteState.isOpen) {
+        animate(panel,
+          { opacity: [1, 0], y: [0, -10] },
+          { duration: 0.2, easing: 'ease-out' }
+        );
       }
-      removeDesktopBackdrop();
-      (event.target as HTMLInputElement).blur();
+
+      setTimeout(() => {
+        isFocused = false;
+        if (autocompleteInstance) {
+          autocompleteInstance.setIsOpen(false);
+        }
+        removeDesktopBackdrop();
+        (event.target as HTMLInputElement).blur();
+      }, 200);
     }
   }
 
@@ -267,6 +323,45 @@
 
   $: inputProps = autocompleteInstance?.getInputProps({}) || {};
   $: rootProps = autocompleteInstance?.getRootProps({}) || {};
+
+  // Animate search results when they change
+  $: if (autocompleteState.collections && autocompleteState.collections.length > 0) {
+    setTimeout(() => {
+      const items = document.querySelectorAll('[data-autocomplete-item]');
+      if (items.length > 0) {
+        animate(
+          items,
+          { opacity: [0, 1], y: [20, 0] },
+          {
+            duration: 0.4,
+            delay: stagger(0.05),
+            easing: spring({ stiffness: 300, damping: 25 })
+          }
+        );
+      }
+    }, 50);
+  }
+
+  // Svelte action for mobile backdrop animation
+  function animateBackdrop(node: HTMLElement) {
+    // Animate in
+    animate(node,
+      { opacity: [0, 1] },
+      { duration: 0.3, easing: 'ease-out' }
+    );
+
+    return {
+      destroy() {
+        // Animate out (if still mounted)
+        if (node.parentNode) {
+          animate(node,
+            { opacity: [1, 0] },
+            { duration: 0.2, easing: 'ease-in' }
+          );
+        }
+      }
+    };
+  }
 </script>
 
 {#if isLoading}
@@ -321,13 +416,14 @@
   <!-- Mobile backdrop overlay when focused -->
   {#if isFocused}
     <div
-      class="sm:hidden fixed inset-0 z-[45] bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all duration-300 ease-in-out"
-      style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);"
+      class="sm:hidden fixed inset-0 z-[45] bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm"
+      style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); opacity: 0;"
       role="presentation"
       on:click={() => {
         if (mobileInputRef) mobileInputRef.blur();
       }}
       on:keydown={() => {}}
+      use:animateBackdrop
     ></div>
   {/if}
 
@@ -336,6 +432,7 @@
     <div
       bind:this={mobileFormRef}
       class="transition-all duration-300 ease-in-out {isFocused && autocompleteState.isOpen ? 'shadow-2xl rounded-t-2xl' : isFocused ? 'shadow-2xl rounded-2xl' : 'shadow-sm focus-within:shadow-xl rounded-full'} {isFocused ? 'w-full relative bg-white dark:bg-gray-800' : 'w-full relative'}"
+      style="transform-origin: center top;"
       {...rootProps}
     >
       <svg class="absolute top-0 bottom-0 left-4 m-auto h-5 w-5 text-gray-500 dark:text-gray-400 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -354,7 +451,8 @@
       {#if isFocused && autocompleteState.isOpen}
         <div
           bind:this={mobilePanelRef}
-          class="absolute z-50 w-full left-0 right-0 overflow-auto transition-all duration-200 ease-in-out bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-b-2xl shadow-2xl -mt-px border-t-0 max-h-[calc(100vh-120px)]"
+          class="absolute z-50 w-full left-0 right-0 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-b-2xl shadow-2xl -mt-px border-t-0 max-h-[calc(100vh-120px)]"
+          style="transform-origin: center top; opacity: 0;"
         >
           <div class="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent mx-4"></div>
           {#each autocompleteState.collections as collection}
@@ -373,6 +471,7 @@
   <div
     class="hidden sm:flex z-[60] left-1/2 -translate-x-1/2 w-full max-w-xl top-0 focus-within:top-16 transition-all duration-300 ease-in-out scale-100 focus-within:scale-105 relative {isFocused && autocompleteState.isOpen ? 'shadow-2xl' : 'shadow-sm focus-within:shadow-xl'} {isFocused && autocompleteState.isOpen ? 'rounded-t-2xl' : 'rounded-full'} bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg"
     bind:this={desktopFormRef}
+    style="transform-origin: center top;"
     {...rootProps}
   >
     <svg class="absolute top-0 bottom-0 left-4 m-auto h-5 w-5 text-gray-500 dark:text-gray-400 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,7 +491,8 @@
       {#if isFocused && autocompleteState.isOpen}
         <div
           bind:this={desktopPanelRef}
-          class="absolute z-[60] w-full left-0 right-0 overflow-auto transition-all duration-200 ease-in-out bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-600/50 rounded-b-2xl shadow-2xl shadow-black/10 dark:shadow-black/30 -mt-px border-t-0 max-h-72"
+          class="absolute z-[60] w-full left-0 right-0 overflow-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-600/50 rounded-b-2xl shadow-2xl shadow-black/10 dark:shadow-black/30 -mt-px border-t-0 max-h-72"
+          style="transform-origin: center top; opacity: 0;"
         >
           <div class="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent mx-4"></div>
           {#each autocompleteState.collections as collection}
