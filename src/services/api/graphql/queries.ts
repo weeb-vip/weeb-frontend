@@ -254,6 +254,14 @@ export const mutationResendVerificationEmail = graphql(
     `
 )
 
+export const mutationLogout = graphql(
+    `
+        mutation Logout {
+            Logout
+        }
+    `
+)
+
 export const queryUserDetails = graphql(`
     query getUserDetails {
         UserDetails {

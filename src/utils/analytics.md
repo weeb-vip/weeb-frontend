@@ -111,7 +111,7 @@ trackEvent('custom_action', {
 
 ## Analytics Dashboard
 
-Access analytics at: `https://analytics.weeb.vip`
+Access analytics at: `https://us.i.posthog.com`
 - Log in with your configured authentication method
 - PostHog provides comprehensive dashboards for events, user journeys, and feature flags
 

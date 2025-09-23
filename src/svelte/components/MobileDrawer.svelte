@@ -6,6 +6,7 @@
   import { navigateWithTransition } from '../../utils/astro-navigation';
   import { AuthStorage } from '../../utils/auth-storage';
   import ProfileAvatar from './ProfileAvatar.svelte';
+  import { logout } from '../../services/queries';
 
   const version = __APP_VERSION__;
 
@@ -47,7 +48,12 @@
 
   async function handleLogout() {
     try {
-      // Call server logout endpoint to clear HttpOnly cookies
+      // Call GraphQL logout mutation first
+      const logoutQuery = logout();
+      await logoutQuery.mutationFn();
+      console.log("🚪 GraphQL logout successful");
+
+      // Also call local API endpoint to ensure all cookies are cleared
       await fetch('/api/logout', {
         method: 'POST',
         credentials: 'include' // Send cookies to server

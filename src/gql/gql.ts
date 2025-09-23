@@ -25,6 +25,7 @@ const documents = {
     "\n        mutation ResetPassword($input: ResetPasswordInput!) {\n            ResetPassword(input: $input)\n        }\n    ": types.ResetPasswordDocument,
     "\n        mutation VerifyEmail {\n            VerifyEmail\n        }\n    ": types.VerifyEmailDocument,
     "\n        mutation ResendVerificationEmail($username: String!) {\n            ResendVerificationEmail(username: $username)\n        }\n    ": types.ResendVerificationEmailDocument,
+    "\n        mutation Logout {\n            Logout\n        }\n    ": types.LogoutDocument,
     "\n    query getUserDetails {\n        UserDetails {\n            id\n            firstname\n            lastname\n            username\n            language\n            email\n            profileImageUrl\n            active_sessions {\n                id\n                ip_address\n                token\n                user_agent\n                user_id\n            }\n        }\n    }": types.GetUserDetailsDocument,
     "\n    mutation UpdateUserDetails($input: UpdateUserInput!) {\n        UpdateUserDetails(input: $input) {\n            id\n            firstname\n            lastname\n            username\n            language\n            email\n            profileImageUrl\n        }\n    }\n": types.UpdateUserDetailsDocument,
     "\n    mutation UploadProfileImage($image: Upload!) {\n        UploadProfileImage(image: $image) {\n            id\n            firstname\n            lastname\n            username\n            language\n            email\n            profileImageUrl\n        }\n    }\n": types.UploadProfileImageDocument,
@@ -96,6 +97,10 @@ export function graphql(source: "\n        mutation VerifyEmail {\n            V
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n        mutation ResendVerificationEmail($username: String!) {\n            ResendVerificationEmail(username: $username)\n        }\n    "): (typeof documents)["\n        mutation ResendVerificationEmail($username: String!) {\n            ResendVerificationEmail(username: $username)\n        }\n    "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n        mutation Logout {\n            Logout\n        }\n    "): (typeof documents)["\n        mutation Logout {\n            Logout\n        }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
