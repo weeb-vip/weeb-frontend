@@ -26,6 +26,7 @@ console.log("🔍 Should load PostHog:", shouldLoadPostHog);
         api_host: 'https://analytics.weeb.vip',
         capture_pageview: true,
         person_profiles: 'identified_only'
+        compression: 'gzip-js' // Ensure gzip compression is used
     });
 
     // Debug logging for PostHog initialization
