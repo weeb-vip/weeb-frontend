@@ -66,18 +66,19 @@
 
   <a href="/show/{id}"
      on:click={() => analytics.animeViewed(id || '', title)}
-     class="flex flex-col flex-none bg-white dark:bg-gray-800 {cardStyles[style]} flex-grow overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md' : 'rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}">
+     class="flex flex-col bg-white dark:bg-gray-800 {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'flex-shrink-0 rounded-l-md' : 'rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}"
+     style="{forceListLayout ? 'flex-basis: 35%; min-width: 120px; max-width: 180px;' : ''}">
     <SafeImage
             src={image}
             alt={title}
-            className="aspect-2/3 object-cover flex-auto relative {forceListLayout ? 'w-24 sm:w-28 md:w-32' : 'w-32 sm:w-40 md:w-48'}"
+            className="aspect-2/3 object-cover w-full h-full relative"
             fallbackSrc="/assets/not found.jpg"
     />
   </a>
 
   {#if style === 'detail'}
-    <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left px-4 py-2 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
-      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full">
+    <div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group">
+      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full flex-grow">
         <ScrollingText
                 text={title}
                 className="text-md font-bold text-gray-900 dark:text-gray-100"
@@ -108,15 +109,16 @@
         </div>
       </a>
 
-      <div class="flex flex-wrap gap-2 options w-full {forceListLayout ? 'justify-start' : 'justify-center'}">
+      <!-- Always positioned at bottom -->
+      <div class="flex flex-wrap gap-2 options w-full mt-auto pt-3 {forceListLayout ? 'justify-start' : 'justify-center'}">
         <slot name="options"></slot>
       </div>
     </div>
   {/if}
 
   {#if style === 'episode'}
-    <div class="flex flex-col flex-grow min-w-0 sm:justify-start sm:align-left px-4 py-2 sm:w-full lg:w-full space-y-4 h-full relative w-full group">
-      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full">
+    <div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group">
+      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full flex-grow">
         <ScrollingText
                 text={title}
                 className="text-md font-bold text-gray-900 dark:text-gray-100"
@@ -147,7 +149,8 @@
         </div>
       </a>
 
-      <div class="flex flex-wrap gap-2 options w-full {forceListLayout ? 'justify-start' : 'justify-center'}">
+      <!-- Always positioned at bottom -->
+      <div class="flex flex-wrap gap-2 options w-full mt-auto pt-3 {forceListLayout ? 'justify-start' : 'justify-center'}">
         <slot name="options"></slot>
       </div>
     </div>

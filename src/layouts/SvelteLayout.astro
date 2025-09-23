@@ -227,8 +227,9 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
       document.addEventListener('DOMContentLoaded', function() {
         // Global error toast system
         function showErrorToast(message, isAuthError = false) {
-          // Check if user is not logged in and this is an auth error
-          const shouldShowLoginOption = isAuthError && window.loggedInStore && !window.loggedInStoreValue?.isLoggedIn;
+          // Check if user is not logged in - if isAuthError is true or user is clearly not logged in, show login options
+          const isUserLoggedIn = window.loggedInStoreValue?.isLoggedIn || false;
+          const shouldShowLoginOption = (isAuthError || message.toLowerCase().includes('log in')) && !isUserLoggedIn;
 
           // Try to use the existing toast system
           if (window.globalToast) {
@@ -301,7 +302,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 
             // Create an error notification with auth buttons if needed
             const errorDiv = document.createElement('div');
-            errorDiv.className = 'fixed top-24 right-4 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm';
+            errorDiv.className = 'fixed top-24 right-4 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm border border-red-500';
 
             if (shouldShowLoginOption) {
               errorDiv.innerHTML = `
@@ -313,10 +314,10 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
                     <span class="text-sm font-medium">${message}</span>
                   </div>
                   <div class="flex gap-2 mt-2">
-                    <button class="fallback-login-btn px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors">
+                    <button class="fallback-login-btn px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-blue-300 focus:outline-none">
                       Login
                     </button>
-                    <button class="fallback-register-btn px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors">
+                    <button class="fallback-register-btn px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-green-300 focus:outline-none">
                       Register
                     </button>
                   </div>
@@ -381,7 +382,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
               const errorMsg = event.reason.message.toLowerCase();
               if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
                 message = 'Network error. Please check your connection.';
-              } else if (errorMsg.includes('unauthorized') || errorMsg.includes('forbidden') || errorMsg.includes('access denied') || errorMsg.includes('authentication')) {
+              } else if (errorMsg.includes('unauthorized') || errorMsg.includes('forbidden') || errorMsg.includes('access denied') || errorMsg.includes('authentication') || errorMsg.includes('not authenticated') || errorMsg.includes('not logged in') || errorMsg.includes('login required')) {
                 message = 'Please log in to continue.';
                 isAuthError = true;
               } else if (errorMsg.includes('not found')) {
@@ -394,7 +395,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
             message = event.reason;
             // Check if string error is auth-related
             const lowerMsg = message.toLowerCase();
-            if (lowerMsg.includes('unauthorized') || lowerMsg.includes('forbidden') || lowerMsg.includes('access denied') || lowerMsg.includes('authentication')) {
+            if (lowerMsg.includes('unauthorized') || lowerMsg.includes('forbidden') || lowerMsg.includes('access denied') || lowerMsg.includes('authentication') || lowerMsg.includes('not authenticated') || lowerMsg.includes('not logged in') || lowerMsg.includes('login required')) {
               isAuthError = true;
             }
           }
@@ -418,6 +419,11 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
         // Add test function for debugging
         window.testErrorToast = function() {
           showErrorToast('Test error message - this should appear as a toast!');
+        };
+
+        // Add test function for auth error with login/register buttons
+        window.testAuthErrorToast = function() {
+          showErrorToast('Please log in to add anime to your list', true);
         };
 
         const progressBar = document.getElementById('navigation-progress');

@@ -1,0 +1,13 @@
+---
+import SvelteLayout from '../layouts/SvelteLayout.astro';
+import AboutPage from '../svelte/components/AboutPage.svelte';
+
+export const prerender = true;
+---
+
+<SvelteLayout
+  title="About WeebVIP"
+  description="Learn about WeebVIP - the ultimate platform for tracking your anime watchlist, getting episode notifications, and discovering new seasonal anime."
+>
+  <AboutPage client:load />
+</SvelteLayout>

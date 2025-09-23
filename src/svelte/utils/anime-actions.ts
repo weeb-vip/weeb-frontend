@@ -66,7 +66,7 @@ export function useAddAnimeWithToast() {
         // Extract specific error messages
         if (error?.message) {
           const errorMsg = error.message.toLowerCase();
-          if (errorMsg.includes('unauthorized') || errorMsg.includes('forbidden') || errorMsg.includes('access denied') || errorMsg.includes('authentication')) {
+          if (errorMsg.includes('unauthorized') || errorMsg.includes('forbidden') || errorMsg.includes('access denied') || errorMsg.includes('authentication') || errorMsg.includes('not authenticated') || errorMsg.includes('not logged in') || errorMsg.includes('login required')) {
             message = 'Please log in to add anime to your list';
             isAuthError = true;
           } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
@@ -140,7 +140,7 @@ export function useDeleteAnimeWithToast() {
         // Extract specific error messages
         if (error?.message) {
           const errorMsg = error.message.toLowerCase();
-          if (errorMsg.includes('unauthorized') || errorMsg.includes('forbidden') || errorMsg.includes('access denied') || errorMsg.includes('authentication')) {
+          if (errorMsg.includes('unauthorized') || errorMsg.includes('forbidden') || errorMsg.includes('access denied') || errorMsg.includes('authentication') || errorMsg.includes('not authenticated') || errorMsg.includes('not logged in') || errorMsg.includes('login required')) {
             message = 'Please log in to manage your list';
             isAuthError = true;
           } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
