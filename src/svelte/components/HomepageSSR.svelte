@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createQuery, createMutation } from '@tanstack/svelte-query';
+  import { createQuery } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
   import { onMount } from 'svelte';
   import AnimeCard from './AnimeCard.svelte';
@@ -13,10 +13,9 @@
   import {
     fetchHomePageData,
     fetchCurrentlyAiring,
-    fetchSeasonalAnime,
-    upsertAnime,
-    deleteAnime
+    fetchSeasonalAnime
   } from '../../services/queries';
+  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
@@ -195,6 +194,23 @@
     // Expose refresh function globally for debugging/integration
     window.refreshHomepageData = refreshAllData;
 
+    // Background prefetch next two seasons for instant switching
+    if (seasonOptions.length > 1) {
+      // Use setTimeout to ensure this runs after page has fully loaded
+      setTimeout(() => {
+        console.log('🚀 Background prefetching next seasons:', seasonOptions.slice(1));
+
+        // Prefetch the next two seasons quietly in background
+        seasonOptions.slice(1).forEach(season => {
+          queryClient.prefetchQuery({
+            ...fetchSeasonalAnime(season),
+            staleTime: 10 * 60 * 1000, // Keep fresh for 10 minutes
+            gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+          });
+        });
+      }, 2000); // Wait 2 seconds after component mount
+    }
+
     return () => {
       unsubscribe();
       clearInterval(tokenCheckInterval);
@@ -205,38 +221,42 @@
   });
 
   // Create mutations with success callbacks
-  const upsertAnimeMutation = createMutation({
-    ...upsertAnime(),
-    onSuccess: (data, variables) => {
+  // Create enhanced mutations with toast handling
+  const upsertAnimeMutation = useAddAnimeWithToast();
+  const deleteAnimeMutation = useDeleteAnimeWithToast();
+
+  // Extend upsert mutation with custom status tracking callbacks
+  const originalUpsertMutate = upsertAnimeMutation.mutate;
+  upsertAnimeMutation.mutate = (variables, options = {}) => {
+    // Update status tracking on success
+    const originalOnSuccess = options.onSuccess;
+    options.onSuccess = (data, vars) => {
       // Update anime status
       animeStatuses = { ...animeStatuses };
       Object.keys(animeStatuses).forEach(key => {
-        if (key.includes(variables.input.animeID)) {
+        if (key.includes(vars.animeID)) {
           animeStatuses[key] = 'success';
         }
       });
-    },
-    onError: (error, variables) => {
-      console.error('❌ Upsert mutation failed:', error);
-      const animeId = variables.input.animeID;
+      if (originalOnSuccess) originalOnSuccess(data, vars);
+    };
+
+    // Update status tracking on error
+    const originalOnError = options.onError;
+    options.onError = (error, vars) => {
+      // Update anime status to error
+      const animeId = vars.animeID;
       animeStatuses = { ...animeStatuses };
       Object.keys(animeStatuses).forEach(key => {
         if (key.includes(animeId)) {
           animeStatuses[key] = 'error';
         }
       });
-    }
-  }, queryClient);
+      if (originalOnError) originalOnError(error, vars);
+    };
 
-  const deleteAnimeMutation = createMutation({
-    ...deleteAnime(),
-    onSuccess: (data, animeId) => {
-      console.log('✅ Delete mutation succeeded:', data);
-    },
-    onError: (error) => {
-      console.error('❌ Delete mutation failed:', error);
-    }
-  }, queryClient);
+    return originalUpsertMutate(variables, options);
+  };
 
   // Process currently airing data
   function processCurrentlyAiring(data: any) {

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { createQuery, createMutation } from '@tanstack/svelte-query';
-  import { fetchUserAnimes, upsertAnime, deleteAnime } from '../../services/queries';
+  import { createQuery } from '@tanstack/svelte-query';
+  import { fetchUserAnimes } from '../../services/queries';
+  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { Status, type UserAnime } from '../../gql/graphql';
   import { GetImageFromAnime } from '../../services/utils';
   import { navigateWithTransition } from '../../utils/astro-navigation';
@@ -50,21 +51,32 @@
       queryClient
     );
 
-    upsertAnimeMutation = createMutation({
-      ...upsertAnime(),
-      onSuccess: () => {
-        // Invalidate and refetch user animes to update the list
-        queryClient.invalidateQueries({ queryKey: ['user-animes'] });
-      }
-    }, queryClient);
+    // Use consolidated mutations with toast handling
+    upsertAnimeMutation = useAddAnimeWithToast();
+    deleteAnimeMutation = useDeleteAnimeWithToast();
 
-    deleteAnimeMutation = createMutation({
-      ...deleteAnime(),
-      onSuccess: () => {
-        // Invalidate and refetch user animes to update the list
+    // Extend mutations with custom query invalidation for user animes
+    const originalUpsertMutate = upsertAnimeMutation.mutate;
+    upsertAnimeMutation.mutate = (variables, options = {}) => {
+      const originalOnSuccess = options.onSuccess;
+      options.onSuccess = (data, vars) => {
+        // Invalidate user animes query to update the list
         queryClient.invalidateQueries({ queryKey: ['user-animes'] });
-      }
-    }, queryClient);
+        if (originalOnSuccess) originalOnSuccess(data, vars);
+      };
+      return originalUpsertMutate(variables, options);
+    };
+
+    const originalDeleteMutate = deleteAnimeMutation.mutate;
+    deleteAnimeMutation.mutate = (variables, options = {}) => {
+      const originalOnSuccess = options.onSuccess;
+      options.onSuccess = (data, vars) => {
+        // Invalidate user animes query to update the list
+        queryClient.invalidateQueries({ queryKey: ['user-animes'] });
+        if (originalOnSuccess) originalOnSuccess(data, vars);
+      };
+      return originalDeleteMutate(variables, options);
+    };
   }
 
   // Computed values

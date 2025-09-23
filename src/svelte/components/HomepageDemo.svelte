@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createQuery, createMutation } from '@tanstack/svelte-query';
+  import { createQuery } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
   import { onMount } from 'svelte';
   import AnimeCard from './AnimeCard.svelte';
@@ -13,10 +13,9 @@
   import {
     fetchHomePageData,
     fetchSeasonalAnime,
-    fetchCurrentlyAiring,
-    upsertAnime,
-    deleteAnime
+    fetchCurrentlyAiring
   } from '../../services/queries';
+  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { toast } from 'svelte-sonner';
@@ -118,83 +117,59 @@
     }
   }
 
-  // Create mutations with success callbacks
-  const upsertAnimeMutation = createMutation({
-    ...upsertAnime(),
-    onSuccess: (data, variables) => {
-      // Invalidate both queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['homedata'] });
-      queryClient.invalidateQueries({ queryKey: ['currently-airing'] });
+  // Create enhanced mutations with toast handling
+  const upsertAnimeMutation = useAddAnimeWithToast();
+  const deleteAnimeMutation = useDeleteAnimeWithToast();
 
-      // Show success toast
-      const animeId = variables.input.animeID;
-      const status = variables.input.status;
-
-      // Find the anime to get its title
-      let animeTitle = 'Anime';
-      let animeData = null;
-
-      // Try to find anime in currently airing data
-      const currentlyAiring = sortedCurrentlyAiring.find(entry => entry.airingInfo.id === animeId);
-      if (currentlyAiring) {
-        animeTitle = currentlyAiring.airingInfo.titleEn || currentlyAiring.airingInfo.titleJp || 'Anime';
-        animeData = {
-          id: currentlyAiring.airingInfo.id,
-          titleEn: currentlyAiring.airingInfo.titleEn,
-          titleJp: currentlyAiring.airingInfo.titleJp,
-          imageUrl: currentlyAiring.airingInfo.imageUrl
-        };
-      }
-
-      // User action completed successfully - no toast needed
-
+  // Extend upsert mutation with custom status tracking callbacks
+  const originalUpsertMutate = upsertAnimeMutation.mutate;
+  upsertAnimeMutation.mutate = (variables, options = {}) => {
+    // Update status tracking on success
+    const originalOnSuccess = options.onSuccess;
+    options.onSuccess = (data, vars) => {
       // Update anime status
       animeStatuses = { ...animeStatuses };
+      const animeId = vars.animeID;
       Object.keys(animeStatuses).forEach(key => {
         if (key.includes(animeId)) {
           animeStatuses[key] = 'success';
         }
       });
-    },
-    onError: (error, variables) => {
-      console.error('❌ Upsert mutation failed:', error);
-      // Silent error - no toast needed for user actions
 
+      // Invalidate additional queries specific to homepage
+      queryClient.invalidateQueries({ queryKey: ['homedata'] });
+
+      if (originalOnSuccess) originalOnSuccess(data, vars);
+    };
+
+    // Update status tracking on error
+    const originalOnError = options.onError;
+    options.onError = (error, vars) => {
       // Update anime status to error
-      const animeId = variables.input.animeID;
+      const animeId = vars.animeID;
       animeStatuses = { ...animeStatuses };
       Object.keys(animeStatuses).forEach(key => {
         if (key.includes(animeId)) {
           animeStatuses[key] = 'error';
         }
       });
-    }
-  }, queryClient);
+      if (originalOnError) originalOnError(error, vars);
+    };
 
-  const deleteAnimeMutation = createMutation({
-    ...deleteAnime(),
-    onSuccess: (data, animeId) => {
-      console.log('✅ Delete mutation succeeded:', data);
-      // Invalidate both queries to refresh data
+    return originalUpsertMutate(variables, options);
+  };
+
+  // Extend delete mutation with additional query invalidation
+  const originalDeleteMutate = deleteAnimeMutation.mutate;
+  deleteAnimeMutation.mutate = (variables, options = {}) => {
+    const originalOnSuccess = options.onSuccess;
+    options.onSuccess = (data, vars) => {
+      // Invalidate additional queries specific to homepage
       queryClient.invalidateQueries({ queryKey: ['homedata'] });
-      queryClient.invalidateQueries({ queryKey: ['currently-airing'] });
-
-      // Find the anime to get its title
-      let animeTitle = 'Anime';
-
-      // Try to find anime in currently airing data
-      const currentlyAiring = sortedCurrentlyAiring.find(entry => entry.airingInfo.id === animeId);
-      if (currentlyAiring) {
-        animeTitle = currentlyAiring.airingInfo.titleEn || currentlyAiring.airingInfo.titleJp || 'Anime';
-      }
-
-      // User action completed successfully - no toast needed
-    },
-    onError: (error) => {
-      console.error('❌ Delete mutation failed:', error);
-      // Silent error - no toast needed for user actions
-    }
-  }, queryClient);
+      if (originalOnSuccess) originalOnSuccess(data, vars);
+    };
+    return originalDeleteMutate(variables, options);
+  };
 
   // Process currently airing data - exactly like React component
   function processCurrentlyAiring(data: any) {

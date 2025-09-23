@@ -74,6 +74,14 @@ export function useLogin() {
       // Server sets HttpOnly cookies automatically
       console.log("✅ Svelte login successful - server set cookies");
 
+      // Store refresh token in localStorage as fallback (server handles HttpOnly cookies)
+      if (data.Credentials?.refresh_token) {
+        AuthStorage.setRefreshTokenLocalStorage(data.Credentials.refresh_token);
+        debug.auth('Refresh token stored in localStorage during Svelte login');
+      } else {
+        debug.warn('No refresh token received in Svelte login response');
+      }
+
       // Update auth store and identify user in PostHog
       loggedInStore.setLoggedIn({
         id: data.id

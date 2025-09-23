@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { format } from 'date-fns';
-  import { createQuery, createMutation } from '@tanstack/svelte-query';
+  import { createQuery } from '@tanstack/svelte-query';
   import SafeImage from './SafeImage.svelte';
   import Button from './Button.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
@@ -9,7 +9,8 @@
   import Tag from './Tag.svelte';
   import Episodes from './Episodes.svelte';
   import CharactersWithStaff from './CharactersWithStaff.svelte';
-  import { fetchDetails, upsertAnime, deleteAnime } from '../../services/queries';
+  import { fetchDetails } from '../../services/queries';
+  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import debug from '../../utils/debug';
@@ -91,35 +92,43 @@
       };
     }
 
-    // Initialize mutation
-    addAnimeMutation = createMutation({
-      ...upsertAnime(),
-      onSuccess: () => {
-        // Invalidate and refetch queries
+    // Initialize consolidated mutations with toast handling
+    addAnimeMutation = useAddAnimeWithToast();
+    deleteAnimeMutation = useDeleteAnimeWithToast();
+
+    // Extend mutations with custom query refetch on success
+    const originalAddMutate = addAnimeMutation.mutate;
+    addAnimeMutation.mutate = (variables, options = {}) => {
+      const originalOnSuccess = options.onSuccess;
+      options.onSuccess = (data, vars) => {
+        // Refetch show data
         if (showQuery && showQuery.refetch) {
           showQuery.refetch();
         }
-      }
-    });
+        if (originalOnSuccess) originalOnSuccess(data, vars);
+      };
+      return originalAddMutate(variables, options);
+    };
 
-    // Subscribe to mutation store to get the actual mutation value
+    const originalDeleteMutate = deleteAnimeMutation.mutate;
+    deleteAnimeMutation.mutate = (variables, options = {}) => {
+      const originalOnSuccess = options.onSuccess;
+      options.onSuccess = (data, vars) => {
+        // Refetch show data
+        if (showQuery && showQuery.refetch) {
+          showQuery.refetch();
+        }
+        if (originalOnSuccess) originalOnSuccess(data, vars);
+      };
+      return originalDeleteMutate(variables, options);
+    };
+
+    // Subscribe to mutation stores to get the actual mutation values
     addAnimeMutation.subscribe((value: any) => {
       mutationStore = value;
       console.log('Add mutation store updated:', mutationStore);
     });
 
-    // Initialize delete mutation
-    deleteAnimeMutation = createMutation({
-      ...deleteAnime(),
-      onSuccess: () => {
-        // Invalidate and refetch queries
-        if (showQuery && showQuery.refetch) {
-          showQuery.refetch();
-        }
-      }
-    });
-
-    // Subscribe to delete mutation store
     deleteAnimeMutation.subscribe((value: any) => {
       deleteMutationStore = value;
       console.log('Delete mutation store updated:', deleteMutationStore);

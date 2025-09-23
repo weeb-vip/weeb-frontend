@@ -306,6 +306,16 @@ export const logout = () => ({
   }
 })
 
+// Helper to wrap existing queries with auto-refresh
+export const withAutoRefresh = <T>(queryFn: () => Promise<T>) => {
+  return () => executeWithAutoRefresh(queryFn);
+};
+
+// Helper to wrap SSR queries with auto-refresh
+export const withAutoRefreshSSR = <T>(queryFn: (authToken?: string) => Promise<T>) => {
+  return (cookieString?: string) => executeWithAutoRefreshSSR(queryFn, cookieString);
+};
+
 export const getUser = () => ({
   queryKey: ["user"],
   queryFn: async (): Promise<User> => {
@@ -315,6 +325,177 @@ export const getUser = () => ({
     });
   }
 })
+
+// Auto-retry mechanism for auth errors
+export const executeWithAutoRefresh = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 1
+): Promise<T> => {
+  let lastError: any;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      const message = error?.message?.toLowerCase() || '';
+      const response = error?.response;
+
+      // Check if this is an auth error
+      const isAuthError = message.includes('access denied') ||
+                         message.includes('unauthorized') ||
+                         message.includes('invalid token') ||
+                         message.includes('jwt') ||
+                         message.includes('authentication') ||
+                         message.includes('forbidden') ||
+                         (response?.errors && Array.isArray(response.errors) &&
+                          response.errors.some((err: any) => {
+                            const msg = (err.message || '').toLowerCase();
+                            return msg.includes('access denied') ||
+                                   msg.includes('unauthorized') ||
+                                   msg.includes('invalid token') ||
+                                   msg.includes('jwt') ||
+                                   msg.includes('authentication') ||
+                                   msg.includes('forbidden');
+                          }));
+
+      if (isAuthError && attempt < maxRetries) {
+        debug.auth(`Auth error detected on attempt ${attempt + 1}, trying to refresh token`);
+
+        try {
+          // Attempt to refresh the token
+          await refreshTokenSimple();
+          debug.auth('Token refreshed successfully, retrying operation');
+
+          // Continue to next iteration to retry the operation
+          continue;
+        } catch (refreshError) {
+          debug.error('Token refresh failed during auto-retry:', refreshError);
+          // If refresh fails, clear tokens and break out of retry loop
+          clearInvalidTokens();
+          break;
+        }
+      } else if (isAuthError) {
+        // Auth error but no more retries left, or refresh failed
+        debug.auth('Auth error with no more retries available, clearing tokens');
+        clearInvalidTokens();
+        break;
+      } else {
+        // Not an auth error, don't retry
+        break;
+      }
+    }
+  }
+
+  // If we get here, all retries failed
+  throw lastError;
+};
+
+// SSR-compatible auto-refresh for server-side operations
+export const executeWithAutoRefreshSSR = async <T>(
+  operation: (authToken?: string) => Promise<T>,
+  cookieString?: string,
+  maxRetries: number = 1
+): Promise<T> => {
+  let lastError: any;
+  let currentAuthToken = AuthStorage.getTokenFromCookieString(cookieString);
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation(currentAuthToken);
+    } catch (error: any) {
+      lastError = error;
+      const message = error?.message?.toLowerCase() || '';
+      const response = error?.response;
+
+      // Check if this is an auth error
+      const isAuthError = message.includes('access denied') ||
+                         message.includes('unauthorized') ||
+                         message.includes('invalid token') ||
+                         message.includes('jwt') ||
+                         message.includes('authentication') ||
+                         message.includes('forbidden') ||
+                         (response?.errors && Array.isArray(response.errors) &&
+                          response.errors.some((err: any) => {
+                            const msg = (err.message || '').toLowerCase();
+                            return msg.includes('access denied') ||
+                                   msg.includes('unauthorized') ||
+                                   msg.includes('invalid token') ||
+                                   msg.includes('jwt') ||
+                                   msg.includes('authentication') ||
+                                   msg.includes('forbidden');
+                          }));
+
+      if (isAuthError && attempt < maxRetries && cookieString) {
+        debug.auth(`SSR auth error detected on attempt ${attempt + 1}, trying to refresh token`);
+
+        try {
+          // Get refresh token from cookies
+          const tokens = AuthStorage.getTokensFromCookieString(cookieString);
+          if (!tokens.refreshToken) {
+            debug.auth('No refresh token found in SSR cookies');
+            break;
+          }
+
+          // Attempt to refresh the token (SSR context)
+          const config = await getConfig();
+          const refreshResponse = await fetch(config.graphql_host, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cookie': cookieString || ''
+            },
+            body: JSON.stringify({
+              query: `
+                mutation RefreshToken($token: String!) {
+                  RefreshToken(token: $token) {
+                    id
+                    Credentials {
+                      token
+                      refresh_token
+                    }
+                  }
+                }
+              `,
+              variables: { token: tokens.refreshToken }
+            })
+          });
+
+          if (!refreshResponse.ok) {
+            throw new Error(`SSR refresh failed: ${refreshResponse.status}`);
+          }
+
+          const refreshData = await refreshResponse.json();
+
+          if (refreshData.errors) {
+            throw new Error(refreshData.errors[0]?.message || 'SSR token refresh failed');
+          }
+
+          // Update current auth token for retry
+          currentAuthToken = refreshData.data.RefreshToken.Credentials.token;
+          debug.auth('SSR token refreshed successfully, retrying operation');
+
+          // Continue to next iteration to retry the operation
+          continue;
+        } catch (refreshError) {
+          debug.error('SSR token refresh failed during auto-retry:', refreshError);
+          break;
+        }
+      } else if (isAuthError) {
+        // Auth error but no more retries left, or no cookie string provided
+        debug.auth('SSR auth error with no more retries available');
+        break;
+      } else {
+        // Not an auth error, don't retry
+        break;
+      }
+    }
+  }
+
+  // If we get here, all retries failed
+  throw lastError;
+};
 
 export const refreshTokenSimple = async (): Promise<SigninResult> => {
   const refreshToken = AuthStorage.getRefreshToken();
@@ -327,19 +508,115 @@ export const refreshTokenSimple = async (): Promise<SigninResult> => {
 
   try {
     const config = await getConfig();
-    const response = await request<RefreshTokenMutation>(
-      config.graphql_host,
-      mutationRefreshToken,
-      {token: refreshToken}
-    );
+
+    // Use fetch directly to capture response headers (graphql-request may not expose them)
+    debug.auth("Making refresh token request with fetch to capture headers");
+
+    const fetchResponse = await fetch(config.graphql_host, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `
+          mutation RefreshToken($token: String!) {
+            RefreshToken(token: $token) {
+              id
+              Credentials {
+                token
+                refresh_token
+              }
+            }
+          }
+        `,
+        variables: { token: refreshToken }
+      })
+    });
+
+    // Log response headers for debugging
+    const setCookieHeader = fetchResponse.headers.get('set-cookie');
+    debug.auth("Refresh token response details:", {
+      status: fetchResponse.status,
+      statusText: fetchResponse.statusText,
+      url: fetchResponse.url,
+      currentDomain: window.location.hostname,
+      currentProtocol: window.location.protocol,
+      setCookieHeaders: setCookieHeader,
+      hasCookieHeaders: !!setCookieHeader,
+      allHeaders: Object.fromEntries(fetchResponse.headers.entries())
+    });
+
+    // Parse set-cookie headers to understand the cookie attributes
+    if (setCookieHeader) {
+      debug.auth("Set-Cookie header analysis:", {
+        rawHeader: setCookieHeader,
+        hasHttpOnly: setCookieHeader.includes('HttpOnly'),
+        hasSecure: setCookieHeader.includes('Secure'),
+        hasSameSite: setCookieHeader.includes('SameSite'),
+        sameSiteValue: setCookieHeader.match(/SameSite=([^;]+)/)?.[1],
+        hasDomain: setCookieHeader.includes('Domain'),
+        domainValue: setCookieHeader.match(/Domain=([^;]+)/)?.[1],
+        hasPath: setCookieHeader.includes('Path'),
+        pathValue: setCookieHeader.match(/Path=([^;]+)/)?.[1]
+      });
+    } else {
+      debug.warn("No set-cookie headers found in response - server may not be setting cookies");
+    }
+
+    if (!fetchResponse.ok) {
+      throw new Error(`HTTP error! status: ${fetchResponse.status}`);
+    }
+
+    const responseData = await fetchResponse.json();
+
+    if (responseData.errors) {
+      throw new Error(responseData.errors[0]?.message || 'Refresh token failed');
+    }
+
+    const response = { RefreshToken: responseData.data.RefreshToken };
 
     debug.success("Token refreshed successfully");
 
     // Server automatically updates HttpOnly cookies with new tokens
     console.log("🔄 Token refresh successful - server updated cookies");
 
+    // Debug cookie state before and after
+    const cookiesBefore = document.cookie;
+    debug.auth("Cookies before refresh response:", cookiesBefore);
+
     if (response.RefreshToken?.Credentials) {
       debug.auth("Refresh token response received - server manages cookie updates");
+      debug.auth("New tokens received:", {
+        hasAuthToken: !!response.RefreshToken.Credentials.token,
+        hasRefreshToken: !!response.RefreshToken.Credentials.refresh_token,
+        authTokenLength: response.RefreshToken.Credentials.token?.length,
+        refreshTokenLength: response.RefreshToken.Credentials.refresh_token?.length
+      });
+
+      // Store new refresh token in localStorage as fallback
+      if (response.RefreshToken.Credentials.refresh_token) {
+        AuthStorage.setRefreshTokenLocalStorage(response.RefreshToken.Credentials.refresh_token);
+        debug.auth('New refresh token stored in localStorage during refresh');
+      }
+
+      // Note: Server should set HttpOnly cookies automatically for auth tokens
+      // We don't manually set cookies - only use localStorage for refresh token fallback
+
+      // Check cookies after a brief delay to see if they were updated
+      setTimeout(() => {
+        const cookiesAfter = document.cookie;
+        debug.auth("Cookies after refresh response:", cookiesAfter);
+
+        const authTokenAfter = AuthStorage.getAuthToken();
+        const refreshTokenAfter = AuthStorage.getRefreshToken();
+        debug.auth("Token check after refresh:", {
+          authTokenFromCookie: authTokenAfter ? "Present" : "Missing",
+          refreshTokenFromCookie: refreshTokenAfter ? "Present" : "Missing",
+          authTokenLength: authTokenAfter?.length,
+          refreshTokenLength: refreshTokenAfter?.length
+        });
+      }, 100);
     }
 
     return response.RefreshToken;

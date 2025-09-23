@@ -135,6 +135,7 @@ try {
   currentlyAiringData = currentlyAiringResult.status === 'fulfilled' ? currentlyAiringResult.value : null;
   seasonalData = seasonalResult.status === 'fulfilled' ? seasonalResult.value : null;
 
+
 } catch (error) {
   console.error('[SSR] Failed to create GraphQL client:', error);
   ssrError = 'Failed to load data';

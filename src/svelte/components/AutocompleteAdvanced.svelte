@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { isValid } from 'date-fns';
   import AutocompleteItem from './AutocompleteItem.svelte';
   import { configStore } from '../stores/config';
@@ -24,6 +24,7 @@
   let mobileFormRef: HTMLDivElement;
   let desktopPanelRef: HTMLDivElement;
   let mobilePanelRef: HTMLDivElement;
+
 
   onMount(async () => {
     // Only run on client-side
@@ -110,24 +111,44 @@
         isLoading = false;
         // Algolia initialized successfully
 
-        // Add environment event listeners
+        // Add environment event listeners for both mobile and desktop
+        const cleanupFunctions = [];
+
+        // Setup mobile environment props
         if (mobileFormRef && mobileInputRef && mobilePanelRef) {
-          const envProps = autocompleteInstance.getEnvironmentProps({
+          const mobileEnvProps = autocompleteInstance.getEnvironmentProps({
             formElement: mobileFormRef,
             inputElement: mobileInputRef,
             panelElement: mobilePanelRef,
           });
 
-          window.addEventListener("touchstart", envProps.onTouchStart);
-          window.addEventListener("touchmove", envProps.onTouchMove);
-          window.addEventListener("mousedown", envProps.onMouseDown);
+          window.addEventListener("touchstart", mobileEnvProps.onTouchStart);
+          window.addEventListener("touchmove", mobileEnvProps.onTouchMove);
 
-          return () => {
-            window.removeEventListener("touchstart", envProps.onTouchStart);
-            window.removeEventListener("touchmove", envProps.onTouchMove);
-            window.removeEventListener("mousedown", envProps.onMouseDown);
-          };
+          cleanupFunctions.push(() => {
+            window.removeEventListener("touchstart", mobileEnvProps.onTouchStart);
+            window.removeEventListener("touchmove", mobileEnvProps.onTouchMove);
+          });
         }
+
+        // Setup desktop environment props
+        if (desktopFormRef && desktopInputRef && desktopPanelRef) {
+          const desktopEnvProps = autocompleteInstance.getEnvironmentProps({
+            formElement: desktopFormRef,
+            inputElement: desktopInputRef,
+            panelElement: desktopPanelRef,
+          });
+
+          window.addEventListener("mousedown", desktopEnvProps.onMouseDown);
+
+          cleanupFunctions.push(() => {
+            window.removeEventListener("mousedown", desktopEnvProps.onMouseDown);
+          });
+        }
+
+        return () => {
+          cleanupFunctions.forEach(cleanup => cleanup());
+        };
       } catch (error) {
         console.error('Failed to initialize Algolia (Svelte):', error);
         // Still set isClient to true to show a non-disabled input
@@ -137,6 +158,11 @@
 
     console.log('Autocomplete component mounting (Svelte), isClient:', isClient);
     initializeAlgolia();
+  });
+
+  onDestroy(() => {
+    // Clean up desktop backdrop when component is destroyed
+    removeDesktopBackdrop();
   });
 
   function handleItemClick(item: any) {
@@ -152,10 +178,42 @@
     if (mobileInputRef) mobileInputRef.blur();
   }
 
+  function createDesktopBackdrop() {
+    if (typeof window === 'undefined') return;
+
+    // Remove existing backdrop
+    const existing = document.getElementById('desktop-search-backdrop');
+    if (existing) existing.remove();
+
+    // Create backdrop element at body level (outside header constraints)
+    const backdrop = document.createElement('div');
+    backdrop.id = 'desktop-search-backdrop';
+    backdrop.className = 'fixed inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all duration-300 ease-in-out';
+    backdrop.style.cssText = 'z-index: 35; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);'; // Lower than header z-40
+    backdrop.setAttribute('role', 'presentation');
+
+    backdrop.addEventListener('click', () => {
+      if (desktopInputRef) desktopInputRef.blur();
+    });
+
+    // Add to body (bypasses header container constraints)
+    document.body.appendChild(backdrop);
+  }
+
+  function removeDesktopBackdrop() {
+    if (typeof window === 'undefined') return;
+    const backdrop = document.getElementById('desktop-search-backdrop');
+    if (backdrop) backdrop.remove();
+  }
+
   function handleFocus() {
     isFocused = true;
     if (autocompleteInstance) {
       autocompleteInstance.setIsOpen(true);
+    }
+    // Create backdrop for desktop only, bypassing header constraints
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) { // lg breakpoint
+      createDesktopBackdrop();
     }
   }
 
@@ -166,6 +224,7 @@
       if (autocompleteInstance) {
         autocompleteInstance.setIsOpen(false);
       }
+      removeDesktopBackdrop();
     }, 200);
   }
 
@@ -175,6 +234,7 @@
       if (autocompleteInstance) {
         autocompleteInstance.setIsOpen(false);
       }
+      removeDesktopBackdrop();
       (event.target as HTMLInputElement).blur();
     }
   }
@@ -257,25 +317,19 @@
     </svg>
   </div>
 {:else}
-  <!-- Desktop backdrop overlay when focused -->
-  <div
-    class="hidden sm:block fixed inset-0 z-[45] bg-white/30 dark:bg-gray-900/30 backdrop-blur-md transition-opacity duration-300 ease-in-out {isFocused ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
-    role="presentation"
-    on:click={() => {
-      if (desktopInputRef) desktopInputRef.blur();
-    }}
-    on:keydown={() => {}}
-  ></div>
 
   <!-- Mobile backdrop overlay when focused -->
-  <div
-    class="sm:hidden fixed inset-0 z-[45] bg-white/30 dark:bg-gray-900/30 backdrop-blur-md transition-opacity duration-300 ease-in-out {isFocused ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
-    role="presentation"
-    on:click={() => {
-      if (mobileInputRef) mobileInputRef.blur();
-    }}
-    on:keydown={() => {}}
-  ></div>
+  {#if isFocused}
+    <div
+      class="sm:hidden fixed inset-0 z-[45] bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all duration-300 ease-in-out"
+      style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);"
+      role="presentation"
+      on:click={() => {
+        if (mobileInputRef) mobileInputRef.blur();
+      }}
+      on:keydown={() => {}}
+    ></div>
+  {/if}
 
   <!-- Mobile: nearly full-screen search -->
   <div class="sm:hidden z-50 transition-all duration-300 ease-in-out {isFocused ? 'fixed inset-4 top-8' : 'relative w-full'}">
@@ -317,7 +371,7 @@
 
   <!-- Desktop: floating, always-visible search -->
   <div
-    class="hidden sm:flex z-50 left-1/2 -translate-x-1/2 w-full max-w-xl top-0 focus-within:top-16 transition-all duration-300 ease-in-out scale-100 focus-within:scale-105 relative {isFocused && autocompleteState.isOpen ? 'shadow-2xl' : 'shadow-sm focus-within:shadow-xl'} {isFocused && autocompleteState.isOpen ? 'rounded-t-2xl' : 'rounded-full'} bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg"
+    class="hidden sm:flex z-[60] left-1/2 -translate-x-1/2 w-full max-w-xl top-0 focus-within:top-16 transition-all duration-300 ease-in-out scale-100 focus-within:scale-105 relative {isFocused && autocompleteState.isOpen ? 'shadow-2xl' : 'shadow-sm focus-within:shadow-xl'} {isFocused && autocompleteState.isOpen ? 'rounded-t-2xl' : 'rounded-full'} bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg"
     bind:this={desktopFormRef}
     {...rootProps}
   >
@@ -338,7 +392,7 @@
       {#if isFocused && autocompleteState.isOpen}
         <div
           bind:this={desktopPanelRef}
-          class="absolute z-50 w-full left-0 right-0 overflow-auto transition-all duration-200 ease-in-out bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-600/50 rounded-b-2xl shadow-2xl shadow-black/10 dark:shadow-black/30 -mt-px border-t-0 max-h-72"
+          class="absolute z-[60] w-full left-0 right-0 overflow-auto transition-all duration-200 ease-in-out bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-600/50 rounded-b-2xl shadow-2xl shadow-black/10 dark:shadow-black/30 -mt-px border-t-0 max-h-72"
         >
           <div class="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent mx-4"></div>
           {#each autocompleteState.collections as collection}
@@ -352,4 +406,6 @@
       {/if}
     </div>
   </div>
+
 {/if}
+

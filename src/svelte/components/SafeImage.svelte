@@ -18,33 +18,61 @@
   $: imageUrl = getSafeImageUrl(src, path);
   $: actualLoading = loading || (priority ? 'eager' : 'lazy');
 
+  let isLoaded = false;
+  let isError = false;
+  let imgElement: HTMLImageElement;
+
   function handleError(event: Event) {
     const img = event.target as HTMLImageElement;
     if (img.src !== fallbackSrc) {
       img.onerror = null; // Prevent infinite loop
       img.src = fallbackSrc;
     }
+    isError = true;
+    isLoaded = true;
     // Dispatch error event for parent component if needed
     dispatch('error', event);
   }
 
   function handleLoad(event: Event) {
+    isLoaded = true;
+    const img = event.target as HTMLImageElement;
+    img.classList.add('loaded');
     // Dispatch load event for parent component if needed
     dispatch('load', event);
   }
+
+  // Check if image is already loaded when component mounts (SSR case)
+  function checkIfAlreadyLoaded(img: HTMLImageElement) {
+    if (img && (img.complete || img.naturalWidth > 0)) {
+      isLoaded = true;
+      img.classList.add('loaded');
+    }
+  }
 </script>
 
-<img
-  src={imageUrl}
-  {alt}
-  class={className}
-  {style}
-  {width}
-  {height}
-  loading={actualLoading}
-  fetchpriority={priority ? 'high' : 'auto'}
-  data-original-src={imageUrl}
-  on:error={handleError}
-  on:load={handleLoad}
-  on:click
-/>
+<div class="relative inline-block">
+  <img
+    bind:this={imgElement}
+    src={imageUrl}
+    {alt}
+    class="{className} transition-opacity duration-300 {!isLoaded && actualLoading === 'lazy' ? 'opacity-0' : 'opacity-100'}"
+    {style}
+    {width}
+    {height}
+    loading={actualLoading}
+    fetchpriority={priority ? 'high' : 'auto'}
+    data-original-src={imageUrl}
+    on:error={handleError}
+    on:load={handleLoad}
+    on:click
+    use:checkIfAlreadyLoaded
+  />
+
+  {#if !isLoaded && actualLoading === 'lazy'}
+    <!-- Skeleton loader while image loads -->
+    <div
+      class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"
+    ></div>
+  {/if}
+</div>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { loggedInStore } from '../stores/auth';
+  import { loggedInStore, loginModalStore } from '../stores/auth';
   import { AuthStorage } from '../../utils/auth-storage';
   import { TokenRefresher } from '../../services/token_refresher';
   import { refreshTokenSimple, getUser } from '../../services/queries';
@@ -17,8 +17,21 @@
     hasRefreshToken: boolean;
   } | undefined = undefined;
 
+  let currentLoggedInState: any = { isLoggedIn: false, isAuthInitialized: false };
+
   onMount(async () => {
     try {
+      // Expose auth stores globally for error toast functionality
+      if (typeof window !== 'undefined') {
+        window.loggedInStore = loggedInStore;
+        window.loginModalStore = loginModalStore;
+
+        // Subscribe to store changes and keep current value available
+        loggedInStore.subscribe((state) => {
+          currentLoggedInState = state;
+          window.loggedInStoreValue = state;
+        });
+      }
       // If we have SSR auth data, use it instead of making GraphQL calls
       if (ssrAuth) {
         debug.auth("Using SSR auth data - skipping GraphQL user query");

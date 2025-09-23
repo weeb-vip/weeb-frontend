@@ -1,0 +1,155 @@
+/* Smooth page transitions and loading states */
+
+/* Image fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Element slide-in animation */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Apply fade-in to all images */
+img {
+  animation: fadeIn 0.3s ease-out;
+  transition: opacity 0.3s ease-out;
+}
+
+/* Lazy loaded images - start invisible */
+img[loading="lazy"] {
+  opacity: 0;
+}
+
+/* When images are loaded */
+img[loading="lazy"].loaded,
+img.loaded {
+  opacity: 1;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Card animations */
+.anime-card,
+[class*="card"] {
+  animation: fadeIn 0.4s ease-out backwards;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Stagger animation for lists */
+.anime-card:nth-child(1) { animation-delay: 0ms; }
+.anime-card:nth-child(2) { animation-delay: 50ms; }
+.anime-card:nth-child(3) { animation-delay: 100ms; }
+.anime-card:nth-child(4) { animation-delay: 150ms; }
+.anime-card:nth-child(5) { animation-delay: 200ms; }
+.anime-card:nth-child(6) { animation-delay: 250ms; }
+.anime-card:nth-child(7) { animation-delay: 300ms; }
+.anime-card:nth-child(8) { animation-delay: 350ms; }
+
+/* Click feedback for interactive elements */
+a, button {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.1s ease-out, box-shadow 0.2s ease-out;
+}
+
+a:active,
+button:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Ripple effect on click */
+a::after,
+button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+  pointer-events: none;
+}
+
+a:active::after,
+button:active::after {
+  width: 200px;
+  height: 200px;
+}
+
+/* Hover feedback */
+a:hover,
+button:hover {
+  transition: all 0.2s ease-out;
+}
+
+/* Page content fade-in */
+main {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Section animations */
+section {
+  animation: fadeIn 0.4s ease-out backwards;
+}
+
+/* Loading skeleton animation */
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.skeleton {
+  animation: shimmer 1.5s infinite linear;
+  background: linear-gradient(
+    to right,
+    #f6f7f8 0%,
+    #edeef1 20%,
+    #f6f7f8 40%,
+    #f6f7f8 100%
+  );
+  background-size: 468px 104px;
+}
+
+/* Dark mode skeleton */
+.dark .skeleton {
+  background: linear-gradient(
+    to right,
+    #374151 0%,
+    #4b5563 20%,
+    #374151 40%,
+    #374151 100%
+  );
+}
+
+/* Prevent layout shift on navigation */
+body.navigating main {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Navigation progress bar */
+#navigation-loader {
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+}

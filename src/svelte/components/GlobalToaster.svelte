@@ -67,27 +67,36 @@
     }
   }
 
-  /* Standard toasts */
+  /* Standard toasts - matching anime toast design */
   :global(.custom-toast) {
-    background: rgb(255, 255, 255) !important;
-    backdrop-filter: blur(12px) !important;
-    border: 1px solid rgb(229, 231, 235) !important;
-    border-radius: 1rem !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(229, 231, 235, 0.5) !important;
+    border-radius: 9999px !important;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
     width: 20rem !important;
     max-width: 20rem !important;
     min-width: 20rem !important;
     font-size: 0.875rem !important;
-    padding: 0.75rem !important;
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
+    padding: 0.875rem 1.5rem !important;
+    transition: all 0.3s ease !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
   }
 
   :global(.dark .custom-toast) {
-    background: rgb(31, 41, 55) !important;
-    border-color: rgb(55, 65, 81) !important;
+    background: rgba(31, 41, 55, 0.8) !important;
+    border-color: rgba(55, 65, 81, 0.5) !important;
     color: white !important;
+  }
+
+  :global(.custom-toast:hover) {
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  :global(.dark .custom-toast:hover) {
+    background: rgba(31, 41, 55, 0.9) !important;
   }
 
   /* Mobile responsive toast styling */
@@ -154,21 +163,83 @@
     line-height: 1.4 !important;
   }
 
-  /* Type-specific colored accents */
-  :global(.custom-toast[data-type="success"]) {
-    border-left: 4px solid rgb(34, 197, 94) !important;
+
+  /* Error toast specific styling - anime toast style */
+  :global([data-sonner-toast][data-type="error"]) {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(254, 226, 226, 0.5) !important;
+    border-radius: 9999px !important;
+    color: rgb(127, 29, 29) !important;
+    backdrop-filter: blur(24px) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
   }
 
-  :global(.custom-toast[data-type="error"]) {
-    border-left: 4px solid rgb(239, 68, 68) !important;
+  :global(.dark [data-sonner-toast][data-type="error"]) {
+    background: rgba(55, 65, 81, 0.8) !important;
+    border: 1px solid rgba(75, 85, 99, 0.5) !important;
+    color: rgb(248, 113, 113) !important;
   }
 
-  :global(.custom-toast[data-type="warning"]) {
-    border-left: 4px solid rgb(234, 179, 8) !important;
+  :global([data-sonner-toast][data-type="error"]:hover) {
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
   }
 
-  :global(.custom-toast[data-type="info"]) {
-    border-left: 4px solid rgb(59, 130, 246) !important;
+  :global(.dark [data-sonner-toast][data-type="error"]:hover) {
+    background: rgba(31, 41, 55, 0.9) !important;
+  }
+
+  /* Success toast specific styling - anime toast style */
+  :global([data-sonner-toast][data-type="success"]) {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(220, 252, 231, 0.5) !important;
+    border-radius: 9999px !important;
+    color: rgb(21, 128, 61) !important;
+    backdrop-filter: blur(24px) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  :global(.dark [data-sonner-toast][data-type="success"]) {
+    background: rgba(55, 65, 81, 0.8) !important;
+    border: 1px solid rgba(75, 85, 99, 0.5) !important;
+    color: rgb(74, 222, 128) !important;
+  }
+
+  :global([data-sonner-toast][data-type="success"]:hover) {
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  :global(.dark [data-sonner-toast][data-type="success"]:hover) {
+    background: rgba(31, 41, 55, 0.9) !important;
+  }
+
+  /* All sonner toasts get consistent theme-aware styling - anime toast style */
+  :global([data-sonner-toast]) {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(229, 231, 235, 0.5) !important;
+    border-radius: 9999px !important;
+    color: rgb(17, 24, 39) !important;
+    font-size: 0.875rem !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    backdrop-filter: blur(24px) !important;
+    padding: 0.875rem 1.5rem !important;
+    transition: all 0.3s ease !important;
+  }
+
+  :global(.dark [data-sonner-toast]) {
+    background: rgba(31, 41, 55, 0.8) !important;
+    border: 1px solid rgba(55, 65, 81, 0.5) !important;
+    color: rgb(243, 244, 246) !important;
+  }
+
+  :global([data-sonner-toast]:hover) {
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  :global(.dark [data-sonner-toast]:hover) {
+    background: rgba(31, 41, 55, 0.9) !important;
   }
 
   /* Small screens - let Sonner handle positioning */

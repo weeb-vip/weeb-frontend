@@ -49,6 +49,14 @@ export function useLogin() {
       // Server sets HttpOnly cookies automatically - no manual storage needed
       console.log("✅ Login successful - server set cookies automatically");
 
+      // Store refresh token in localStorage as fallback (server sets HttpOnly cookies)
+      if (signinResult.Credentials?.refresh_token) {
+        AuthStorage.setRefreshTokenLocalStorage(signinResult.Credentials.refresh_token);
+        debug.auth('Refresh token stored in localStorage during login');
+      } else {
+        debug.warn('No refresh token received in login response');
+      }
+
       // Start token refresher (will read tokens from cookies)
       const authToken = AuthStorage.getAuthToken();
       if (authToken) {

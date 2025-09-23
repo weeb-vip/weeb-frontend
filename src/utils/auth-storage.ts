@@ -52,11 +52,46 @@ class CookieUtils {
   }
 }
 
-// Server-set cookie auth storage (read-only)
+// Server-set cookie auth storage (read-only) with localStorage fallback for refresh tokens
 export class AuthStorage {
   // ⚠️ REMOVED: Manual cookie setting - server sets HttpOnly cookies
   // static setTokens() - Tokens are now set by the server during login/refresh
   // static setAuthToken() - Server handles all cookie management
+
+  // LocalStorage methods for refresh token (fallback when cookies aren't available)
+  static setRefreshTokenLocalStorage(refreshToken: string): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('refreshToken', refreshToken);
+        debug.auth('Refresh token stored in localStorage as fallback');
+      }
+    } catch (error) {
+      debug.error('Failed to store refresh token in localStorage:', error);
+    }
+  }
+
+  static getRefreshTokenLocalStorage(): string | null {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem('refreshToken');
+      }
+    } catch (error) {
+      debug.error('Failed to get refresh token from localStorage:', error);
+    }
+    return null;
+  }
+
+  static clearRefreshTokenLocalStorage(): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('refreshToken');
+        debug.auth('Refresh token cleared from localStorage');
+      }
+    } catch (error) {
+      debug.error('Failed to clear refresh token from localStorage:', error);
+    }
+  }
+
 
   static getAuthToken(): string | null {
     try {
@@ -69,9 +104,22 @@ export class AuthStorage {
 
   static getRefreshToken(): string | null {
     try {
-      return CookieUtils.get('refreshToken');
+      // First try to get from cookies (server-set HttpOnly)
+      const cookieToken = CookieUtils.get('refreshToken');
+      if (cookieToken) {
+        return cookieToken;
+      }
+
+      // Fallback to localStorage if cookie not available
+      const localStorageToken = this.getRefreshTokenLocalStorage();
+      if (localStorageToken) {
+        debug.auth('Using refresh token from localStorage fallback');
+        return localStorageToken;
+      }
+
+      return null;
     } catch (error) {
-      debug.error("Failed to get refresh token from cookies:", error);
+      debug.error("Failed to get refresh token:", error);
       return null;
     }
   }
@@ -96,8 +144,11 @@ export class AuthStorage {
 
   static clearTokens() {
     try {
-      console.log("🚨 clearTokens() called - server manages cookies, client does nothing");
-      debug.warn("clearTokens() called but server manages all cookies");
+      console.log("🚨 clearTokens() called - server manages cookies, clearing localStorage");
+      debug.warn("clearTokens() called - server manages cookies, clearing localStorage tokens");
+
+      // Clear localStorage tokens
+      this.clearRefreshTokenLocalStorage();
 
       // Server-set HttpOnly cookies can't be cleared by client JavaScript
       // Auth errors are handled by server-side logic
@@ -108,8 +159,11 @@ export class AuthStorage {
 
   static logout() {
     try {
-      console.log("🚪 logout() called - server will clear cookies");
-      debug.auth("Logout - server will handle cookie removal");
+      console.log("🚪 logout() called - server will clear cookies, clearing localStorage");
+      debug.auth("Logout - server will handle cookie removal, clearing localStorage tokens");
+
+      // Clear localStorage tokens
+      this.clearRefreshTokenLocalStorage();
 
       // HttpOnly cookies can only be cleared by the server
       // The logout endpoint should clear the cookies

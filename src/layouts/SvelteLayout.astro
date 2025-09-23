@@ -12,9 +12,10 @@ export interface Props {
   description?: string;
   image?: string;
   noIndex?: boolean;
+  variant?: 'default' | 'fullwidth';
 }
 
-const { title, description, image, noIndex } = Astro.props;
+const { title, description, image, noIndex, variant = 'default' } = Astro.props;
 
 const defaultTitle = 'WeebVIP - Track Your Anime Watchlist';
 const defaultDescription = 'Discover, track, and manage your anime watchlist with WeebVIP. Get notifications for new episodes, explore seasonal anime, and connect with other anime fans.';
@@ -179,15 +180,24 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <PostHog />
 </head>
 <body class="bg-white dark:bg-gray-900 min-h-screen">
+    <!-- Navigation Progress Bar -->
+    <div id="navigation-progress" class="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform -translate-y-full transition-all duration-300 opacity-0" style="z-index: 9999; box-shadow: 0 2px 10px rgba(59, 130, 246, 0.6);"></div>
+
     <!-- Header (persisted across navigation) -->
     <div transition:persist="header">
         <HeaderHybrid/>
     </div>
 
-    <!-- Main content with header spacing -->
-    <main class="w-full pt-24 pb-8 px-4 lg:px-16 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
-        <slot />
-    </main>
+    <!-- Main content with conditional styling based on variant -->
+    {variant === 'fullwidth' ? (
+        <main class="w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+            <slot />
+        </main>
+    ) : (
+        <main class="w-full pt-24 pb-8 px-4 lg:px-16 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+            <slot />
+        </main>
+    )}
 
     <!-- Footer (persisted across navigation) -->
     <div transition:persist="footer">
@@ -210,5 +220,390 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <div transition:persist="notifications">
         <AnimeNotificationProvider client:idle />
     </div>
+
+    <!-- Enhanced Navigation & Transition Scripts -->
+    <script>
+      // Enhanced navigation feedback and smooth transitions
+      document.addEventListener('DOMContentLoaded', function() {
+        // Global error toast system
+        function showErrorToast(message, isAuthError = false) {
+          // Check if user is not logged in and this is an auth error
+          const shouldShowLoginOption = isAuthError && window.loggedInStore && !window.loggedInStoreValue?.isLoggedIn;
+
+          // Try to use the existing toast system
+          if (window.toast) {
+            if (shouldShowLoginOption) {
+              // Use custom toast with action button
+              window.toast.error(message, {
+                action: {
+                  label: 'Login',
+                  onClick: () => {
+                    if (window.loginModalStore) {
+                      window.loginModalStore.openLogin();
+                    }
+                  }
+                }
+              });
+            } else {
+              window.toast.error(message);
+            }
+          } else if (window.sonner && window.sonner.toast) {
+            if (shouldShowLoginOption) {
+              // Use custom toast with action button
+              window.sonner.toast.error(message, {
+                action: {
+                  label: 'Login',
+                  onClick: () => {
+                    if (window.loginModalStore) {
+                      window.loginModalStore.openLogin();
+                    }
+                  }
+                }
+              });
+            } else {
+              window.sonner.toast.error(message);
+            }
+          } else {
+            // Fallback to creating a visible error message
+            console.error('Error:', message);
+
+            // Create a simple error notification
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-24 right-4 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm';
+            errorDiv.innerHTML = `
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-sm font-medium">${message}</span>
+              </div>
+            `;
+
+            document.body.appendChild(errorDiv);
+
+            // Auto-remove after 6 seconds
+            setTimeout(() => {
+              if (errorDiv.parentNode) {
+                errorDiv.style.opacity = '0';
+                errorDiv.style.transform = 'translateX(100%)';
+                errorDiv.style.transition = 'all 0.3s ease-out';
+                setTimeout(() => errorDiv.remove(), 300);
+              }
+            }, 6000);
+          }
+        }
+
+        // Global error handler for unhandled promises
+        window.addEventListener('unhandledrejection', function(event) {
+          console.error('Unhandled promise rejection:', event.reason);
+
+          let message = 'Something went wrong. Please try again.';
+
+          // Extract user-friendly message from common error types
+          let isAuthError = false;
+          if (event.reason && typeof event.reason === 'object') {
+            if (event.reason.message) {
+              const errorMsg = event.reason.message.toLowerCase();
+              if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
+                message = 'Network error. Please check your connection.';
+              } else if (errorMsg.includes('unauthorized') || errorMsg.includes('forbidden') || errorMsg.includes('access denied') || errorMsg.includes('authentication')) {
+                message = 'Please log in to continue.';
+                isAuthError = true;
+              } else if (errorMsg.includes('not found')) {
+                message = 'The requested item was not found.';
+              } else if (event.reason.message.length < 100) {
+                message = event.reason.message;
+              }
+            }
+          } else if (typeof event.reason === 'string' && event.reason.length < 100) {
+            message = event.reason;
+            // Check if string error is auth-related
+            const lowerMsg = message.toLowerCase();
+            if (lowerMsg.includes('unauthorized') || lowerMsg.includes('forbidden') || lowerMsg.includes('access denied') || lowerMsg.includes('authentication')) {
+              isAuthError = true;
+            }
+          }
+
+          showErrorToast(message, isAuthError);
+        });
+
+        // Global error handler for JavaScript errors
+        window.addEventListener('error', function(event) {
+          console.error('Global error:', event.error);
+
+          // Only show toast for non-script loading errors
+          if (!event.filename || !event.filename.includes('.js')) {
+            showErrorToast('An unexpected error occurred.');
+          }
+        });
+
+        // Expose global function for components to use
+        window.showErrorToast = showErrorToast;
+
+        // Add test function for debugging
+        window.testErrorToast = function() {
+          showErrorToast('Test error message - this should appear as a toast!');
+        };
+
+        const progressBar = document.getElementById('navigation-progress');
+        let progressTimer = null;
+        let progressTimeout = null;
+        let isNavigating = false;
+
+        // Show immediate feedback on any link click
+        function showInstantFeedback() {
+          // Add visual feedback to the entire page
+          document.body.style.cursor = 'wait';
+          isNavigating = true;
+
+          // Only show progress bar if navigation takes longer than 100ms (temporary for testing)
+          progressTimeout = setTimeout(() => {
+            if (isNavigating && progressBar) {
+              progressBar.style.opacity = '1';
+              progressBar.style.transform = 'translateY(0)';
+              progressBar.style.width = '0%';
+
+              // Animate progress bar
+              let progress = 0;
+              progressTimer = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90; // Don't complete until navigation finishes
+                progressBar.style.width = progress + '%';
+              }, 100);
+            }
+          }, 100); // Temporary for testing
+        }
+
+        // Hide feedback when navigation completes
+        function hideNavigationFeedback() {
+          document.body.style.cursor = '';
+
+          // Clear the progress bar timeout if it hasn't fired yet
+          if (progressTimeout) {
+            clearTimeout(progressTimeout);
+            progressTimeout = null;
+          }
+
+          if (progressBar) {
+            progressBar.style.width = '100%';
+            setTimeout(() => {
+              progressBar.style.opacity = '0';
+              progressBar.style.transform = 'translateY(-100%)';
+            }, 200);
+          }
+
+          if (progressTimer) {
+            clearInterval(progressTimer);
+            progressTimer = null;
+          }
+
+          isNavigating = false;
+        }
+
+        // Listen for all link clicks for immediate feedback
+        document.addEventListener('click', function(e) {
+          const link = e.target.closest('a');
+          if (link && link.href && !link.href.startsWith('#') && !link.href.startsWith('mailto:') && !link.href.startsWith('tel:') && !link.target) {
+            // Only show feedback for internal navigation links
+            const isInternal = link.href.startsWith(window.location.origin) || link.href.startsWith('/');
+            if (isInternal) {
+              showInstantFeedback();
+
+              // Add click feedback to the link itself
+              link.style.transform = 'scale(0.98)';
+              link.style.opacity = '0.8';
+              setTimeout(() => {
+                if (link.style) {
+                  link.style.transform = '';
+                  link.style.opacity = '';
+                }
+              }, 150);
+            }
+          }
+        });
+
+        // Enhanced View Transitions event listeners
+        document.addEventListener('astro:before-preparation', function() {
+          console.log('🚀 Navigation starting');
+          if (!isNavigating) {
+            showInstantFeedback();
+          }
+        });
+
+        document.addEventListener('astro:after-swap', function() {
+          console.log('🔄 Content swapped');
+
+          // Add smooth fade-in for new content
+          const main = document.querySelector('main');
+          if (main) {
+            main.style.opacity = '0';
+            main.style.transform = 'translateY(10px)';
+            requestAnimationFrame(() => {
+              main.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+              main.style.opacity = '1';
+              main.style.transform = 'translateY(0)';
+            });
+          }
+        });
+
+        document.addEventListener('astro:page-load', function() {
+          console.log('✅ Page loaded');
+          hideNavigationFeedback();
+
+          // Stagger animate elements on new page
+          const animatableElements = document.querySelectorAll('.anime-card, [class*="card"], section > div, .grid > div');
+          animatableElements.forEach((el, index) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+              el.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out';
+              el.style.opacity = '1';
+              el.style.transform = 'translateY(0)';
+            }, index * 50);
+          });
+        });
+
+        // Fallback for regular page loads
+        window.addEventListener('beforeunload', showInstantFeedback);
+        window.addEventListener('load', hideNavigationFeedback);
+      });
+
+      // Add smooth scroll behavior
+      document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
+
+    <!-- Integration with svelte-sonner toast system -->
+    <script>
+      // Wait for svelte-sonner to be available and integrate with our error system
+      document.addEventListener('DOMContentLoaded', function() {
+        // Check periodically for svelte-sonner to be available
+        let checkInterval = setInterval(() => {
+          // Try different ways that svelte-sonner might expose the toast function
+          if (typeof toast !== 'undefined') {
+            window.globalToast = toast;
+            clearInterval(checkInterval);
+            console.log('✅ Global toast system connected to svelte-sonner');
+          }
+        }, 100);
+
+        // Stop checking after 5 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval);
+        }, 5000);
+      });
+
+      // Import and setup the toast system when module is available
+      setTimeout(async () => {
+        try {
+          const module = await import('svelte-sonner');
+          if (module.toast) {
+            window.globalToast = module.toast;
+            console.log('✅ Global toast system connected via import');
+
+            // Update the showErrorToast function to use the real toast
+            if (window.showErrorToast) {
+              const originalShowError = window.showErrorToast;
+              window.showErrorToast = function(message) {
+                if (window.globalToast) {
+                  window.globalToast.error(message);
+                } else {
+                  originalShowError(message);
+                }
+              };
+            }
+          }
+        } catch (e) {
+          console.log('Could not import svelte-sonner, using fallback toasts');
+        }
+      }, 1000);
+    </script>
+
+    <!-- Enhanced CSS for better transitions -->
+    <style>
+      /* Smooth transitions for all interactive elements */
+      a, button {
+        transition: all 0.2s ease-out !important;
+      }
+
+      /* Click feedback for interactive elements */
+      a:active, button:active {
+        transform: scale(0.98) !important;
+        transition: transform 0.1s ease-out !important;
+      }
+
+      /* Improved image loading */
+      img {
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+      }
+
+      img[loading="lazy"] {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      img[loading="lazy"].loaded,
+      img.loaded {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Smooth page transitions */
+      main {
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+      }
+
+      /* Better View Transitions */
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation-duration: 0.4s;
+        animation-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
+      }
+
+      ::view-transition-old(root) {
+        animation-name: slide-out-fade;
+      }
+
+      ::view-transition-new(root) {
+        animation-name: slide-in-fade;
+      }
+
+      @keyframes slide-out-fade {
+        to {
+          opacity: 0;
+          transform: translateX(-30px);
+        }
+      }
+
+      @keyframes slide-in-fade {
+        from {
+          opacity: 0;
+          transform: translateX(30px);
+        }
+      }
+
+      /* Loading states */
+      .navigating * {
+        pointer-events: none;
+      }
+
+      .navigating main {
+        opacity: 0.7;
+        transition: opacity 0.2s ease-out;
+      }
+
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+          animation: none !important;
+        }
+      }
+    </style>
 </body>
 </html>

@@ -1,13 +1,138 @@
 ---
 import SvelteLayout from '../layouts/SvelteLayout.astro';
 import CurrentlyAiringDemo from '../svelte/components/CurrentlyAiringDemo.svelte';
+import { GraphQLClient } from 'graphql-request';
+import { getCurrentlyAiringWithDates } from '../services/api/graphql/queries';
 
-// Static generation for currently airing page
+export const prerender = false;
+
+// Access SSR auth data
+const { auth, config } = Astro.locals;
+
+// Create authenticated GraphQL client for SSR
+function createSSRGraphQLClient(authToken: string | undefined) {
+  console.log('🌐 SSR Airing GraphQL URL:', config.graphql_host);
+  return new GraphQLClient(config.graphql_host, {
+    headers: {
+      ...(authToken && { Authorization: `Bearer ${authToken}` })
+    },
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      return fetch(input, {
+        ...init,
+        credentials: 'include'
+      });
+    }
+  });
+}
+
+// Helper function to check if error is auth-related
+function isAuthError(error: any): boolean {
+  const message = error?.message?.toLowerCase() || '';
+  const response = error?.response;
+
+  if (response?.errors && Array.isArray(response.errors)) {
+    const hasAuthError = response.errors.some((err: any) => {
+      const msg = (err.message || '').toLowerCase();
+      return msg.includes('access denied') ||
+             msg.includes('unauthorized') ||
+             msg.includes('invalid token') ||
+             msg.includes('jwt') ||
+             msg.includes('authentication') ||
+             msg.includes('forbidden') ||
+             msg.includes('expired');
+    });
+    if (hasAuthError) return true;
+  }
+
+  return message.includes('access denied') ||
+         message.includes('unauthorized') ||
+         message.includes('invalid token') ||
+         message.includes('jwt') ||
+         message.includes('authentication') ||
+         message.includes('forbidden') ||
+         message.includes('expired');
+}
+
+// Fetch currently airing data server-side
+let currentlyAiringData: any = null;
+let ssrError: string | null = null;
+let isTokenExpired = false;
+
+try {
+  const client = createSSRGraphQLClient(auth.authToken);
+
+  // Helper function to fetch with timeout and error handling
+  async function fetchWithFallback(query, variables, description) {
+    try {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+
+      const requestPromise = client.request(query, variables);
+      return await Promise.race([requestPromise, timeoutPromise]);
+    } catch (error) {
+      console.error(`[SSR] Failed to fetch ${description}:`, error);
+
+      if (isAuthError(error)) {
+        console.warn(`[SSR] Auth error detected for ${description} - token may be expired`);
+        isTokenExpired = true;
+
+        // Try fetching without auth token for public data
+        try {
+          const publicClient = createSSRGraphQLClient(undefined);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Public request timeout')), 8000)
+          );
+
+          const publicRequestPromise = publicClient.request(query, variables);
+          return await Promise.race([publicRequestPromise, timeoutPromise]);
+        } catch (publicError) {
+          console.error(`[SSR] Failed to fetch ${description} without auth:`, publicError);
+          return null;
+        }
+      }
+      return null;
+    }
+  }
+
+  // Prepare request parameters for currently airing (same as client-side)
+  const defaultStartDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  // Fetch currently airing data
+  currentlyAiringData = await fetchWithFallback(getCurrentlyAiringWithDates, {
+    input: { startDate: defaultStartDate, endDate: defaultEndDate }
+  }, 'currently airing data');
+
+  console.log('[SSR] Airing page data result:', {
+    currentlyAiringLength: currentlyAiringData?.currentlyAiring?.length || 0,
+    hasData: !!currentlyAiringData
+  });
+
+} catch (error) {
+  console.error('[SSR] Failed to create GraphQL client for airing page:', error);
+  ssrError = 'Failed to load data';
+}
+
+// If token was expired, update auth status
+if (isTokenExpired) {
+  console.log('[SSR] Token expired detected on airing page - updating auth locals');
+  auth.isLoggedIn = false;
+  auth.authToken = undefined;
+  auth.refreshToken = undefined;
+  auth.hasAuthToken = false;
+  auth.hasRefreshToken = false;
+}
 ---
 
 <SvelteLayout
   title="Currently Airing Anime"
   description="Discover what anime is currently airing this season. Get episode schedules, notifications, and add shows to your watchlist."
 >
-  <CurrentlyAiringDemo client:idle />
+  <CurrentlyAiringDemo
+    client:load
+    ssrData={currentlyAiringData}
+    ssrError={ssrError}
+    isTokenExpired={isTokenExpired}
+  />
 </SvelteLayout>

@@ -22,6 +22,11 @@
 
   type ViewMode = 'month' | 'week';
 
+  // SSR props
+  export let ssrData: any = null;
+  export let ssrError: string | null = null;
+  export let isTokenExpired: boolean = false;
+
   let currentDate = new Date();
   let viewMode: ViewMode = 'month';
   let mounted = false;
@@ -29,7 +34,7 @@
   // Initialize query client
   const queryClient = initializeQueryClient();
 
-  // Client-side only query
+  // Client-side query (will use SSR data as initial data for default month view)
   let currentQuery: any;
 
   // Calculate date ranges
@@ -43,16 +48,37 @@
 
   $: days = eachDayOfInterval({ start, end });
 
+  // Check if current date range matches SSR data range (default month view)
+  $: isDefaultMonthView = viewMode === 'month' &&
+    isSameDay(currentDate, new Date()) &&
+    ssrData;
+
   // Create query for current date range (only on client)
   $: if (mounted && start && end) {
+    const queryConfig = fetchCurrentlyAiringWithDates(start, end);
     currentQuery = createQuery(
-      fetchCurrentlyAiringWithDates(start, end),
+      {
+        ...queryConfig,
+        // Use SSR data as initial data for default month view
+        ...(isDefaultMonthView && ssrData && {
+          initialData: ssrData
+        })
+      },
       queryClient
     );
   }
 
   onMount(() => {
     mounted = true;
+
+    // Handle SSR errors
+    if (ssrError) {
+      console.warn('SSR Calendar error:', ssrError);
+    }
+
+    if (isTokenExpired) {
+      console.warn('SSR Calendar: Token was expired during data fetch');
+    }
 
     // Prefetch adjacent date ranges after initial load
     setTimeout(() => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createQuery, createMutation } from '@tanstack/svelte-query';
+  import { createQuery } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
   import { utc } from '@date-fns/utc/utc';
   import AnimeCard from './AnimeCard.svelte';
@@ -8,64 +8,70 @@
   import HeroBanner from './HeroBanner.svelte';
   import HeroBannerSkeleton from './HeroBannerSkeleton.svelte';
   import { initializeQueryClient } from '../services/query-client';
-  import {
-    fetchCurrentlyAiring,
-    upsertAnime,
-    deleteAnime
-  } from '../../services/queries';
+  import { fetchCurrentlyAiring } from '../../services/queries';
+  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
   import { navigateWithTransition } from '../../utils/astro-navigation';
+
+  // SSR props
+  export let ssrData: any = null;
+  export let ssrError: string | null = null;
+  export let isTokenExpired: boolean = false;
 
   let animeStatuses: Record<string, 'idle' | 'loading' | 'success' | 'error'> = {};
 
   // Initialize query client
   const queryClient = initializeQueryClient();
 
-  // Create TanStack Query stores
-  const currentlyAiringQuery = createQuery(fetchCurrentlyAiring(), queryClient);
+  // Create TanStack Query stores with SSR data
+  const currentlyAiringQuery = createQuery({
+    ...fetchCurrentlyAiring(),
+    initialData: ssrData,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Don't auto-refetch on mount since we have SSR data
+    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
+  }, queryClient);
 
-  // Create mutations with success callbacks
-  const upsertAnimeMutation = createMutation({
-    ...upsertAnime(),
-    onSuccess: (data, variables) => {
-      // Invalidate query to refresh data
-      queryClient.invalidateQueries({ queryKey: ['currently-airing'] });
+  // Create enhanced mutations with toast handling
+  const upsertAnimeMutation = useAddAnimeWithToast();
 
+  // Extend with custom status tracking callbacks
+  const originalUpsertMutate = upsertAnimeMutation.mutate;
+  upsertAnimeMutation.mutate = (variables, options = {}) => {
+    // Update status tracking on success
+    const originalOnSuccess = options.onSuccess;
+    options.onSuccess = (data, vars) => {
       // Update anime status
       animeStatuses = { ...animeStatuses };
-      const animeId = variables.input.animeID;
+      const animeId = vars.animeID;
       Object.keys(animeStatuses).forEach(key => {
         if (key.includes(animeId)) {
           animeStatuses[key] = 'success';
         }
       });
-    },
-    onError: (error, variables) => {
-      console.error('❌ Upsert mutation failed:', error);
+      if (originalOnSuccess) originalOnSuccess(data, vars);
+    };
 
+    // Update status tracking on error
+    const originalOnError = options.onError;
+    options.onError = (error, vars) => {
       // Update anime status to error
-      const animeId = variables.input.animeID;
+      const animeId = vars.animeID;
       animeStatuses = { ...animeStatuses };
       Object.keys(animeStatuses).forEach(key => {
         if (key.includes(animeId)) {
           animeStatuses[key] = 'error';
         }
       });
-    }
-  }, queryClient);
+      if (originalOnError) originalOnError(error, vars);
+    };
 
-  const deleteAnimeMutation = createMutation({
-    ...deleteAnime(),
-    onSuccess: (data, animeId) => {
-      // Invalidate query to refresh data
-      queryClient.invalidateQueries({ queryKey: ['currently-airing'] });
-    },
-    onError: (error) => {
-      console.error('❌ Delete mutation failed:', error);
-    }
-  }, queryClient);
+    return originalUpsertMutate(variables, options);
+  };
+
+  const deleteAnimeMutation = useDeleteAnimeWithToast();
 
   // Process currently airing data for airing page with categories
   function processCurrentlyAiring(data: any) {

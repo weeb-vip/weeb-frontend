@@ -2,6 +2,9 @@
   import { toast } from 'svelte-sonner';
   import { animeToast } from '../utils/animeToast';
   import { onMount } from 'svelte';
+  import { refreshTokenSimple } from '../../services/queries';
+  import debug from '../../utils/debug';
+  import { AuthStorage } from '../../utils/auth-storage';
 
   // Only show in development
   const isDev = __ENABLE_DEV_FEATURES__;
@@ -78,6 +81,65 @@
     console.log('🧪 Manual test: finished toast');
     animeToast.finished(sampleAnime, sampleEpisode);
   }
+
+  async function testRefreshToken() {
+    try {
+      debug.auth('🧪 Manual test: refresh token');
+
+      // Log initial state
+      const initialAuthToken = AuthStorage.getAuthToken();
+      const initialRefreshToken = AuthStorage.getRefreshToken();
+      debug.auth('Initial token state:', {
+        hasAuthToken: !!initialAuthToken,
+        hasRefreshToken: !!initialRefreshToken,
+        authTokenLength: initialAuthToken?.length,
+        refreshTokenLength: initialRefreshToken?.length,
+        allCookies: document.cookie
+      });
+
+      toast.info('Refreshing authentication token...');
+
+      const result = await refreshTokenSimple();
+
+      if (result?.Credentials?.token) {
+        // Check final state
+        setTimeout(() => {
+          const finalAuthToken = AuthStorage.getAuthToken();
+          const finalRefreshToken = AuthStorage.getRefreshToken();
+          debug.auth('Final token state after refresh:', {
+            hasAuthToken: !!finalAuthToken,
+            hasRefreshToken: !!finalRefreshToken,
+            authTokenChanged: initialAuthToken !== finalAuthToken,
+            refreshTokenChanged: initialRefreshToken !== finalRefreshToken,
+            authTokenLength: finalAuthToken?.length,
+            refreshTokenLength: finalRefreshToken?.length,
+            allCookies: document.cookie
+          });
+        }, 200);
+
+        toast.success('Token refreshed successfully!');
+        debug.success('Manual token refresh completed');
+      } else {
+        toast.error('Token refresh failed - invalid response');
+        debug.error('Token refresh returned invalid response:', result);
+      }
+    } catch (error) {
+      console.error('❌ Manual token refresh failed:', error);
+
+      let message = 'Failed to refresh token';
+      if (error?.message) {
+        if (error.message.toLowerCase().includes('no refresh token')) {
+          message = 'No refresh token found - please log in';
+        } else if (error.message.toLowerCase().includes('unauthorized') || error.message.toLowerCase().includes('expired')) {
+          message = 'Refresh token expired - please log in again';
+        } else if (error.message.length < 80) {
+          message = error.message;
+        }
+      }
+
+      toast.error(message);
+    }
+  }
 </script>
 
 {#if isDev}
@@ -128,7 +190,7 @@
         </div>
 
         <!-- Anime Toasts -->
-        <div>
+        <div class="mb-3">
           <div class="text-xs text-gray-400 mb-2">Anime Toasts</div>
           <div class="grid grid-cols-2 gap-2">
             <button
@@ -156,6 +218,17 @@
               <i class="fas fa-check-circle mr-1"></i> Finished
             </button>
           </div>
+        </div>
+
+        <!-- Auth Tools -->
+        <div>
+          <div class="text-xs text-gray-400 mb-2">Auth Tools</div>
+          <button
+            on:click={testRefreshToken}
+            class="w-full px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded text-xs transition-colors"
+          >
+            <i class="fas fa-sync mr-1"></i> Refresh Token
+          </button>
         </div>
       {:else}
         <!-- Collapsed state -->
@@ -215,7 +288,7 @@
           </div>
 
           <!-- Anime Toasts -->
-          <div>
+          <div class="mb-4">
             <div class="text-xs text-gray-400 mb-2">Anime Toasts</div>
             <div class="grid grid-cols-1 gap-2">
               <button
@@ -243,6 +316,17 @@
                 <i class="fas fa-check-circle mr-2"></i> Finished
               </button>
             </div>
+          </div>
+
+          <!-- Auth Tools -->
+          <div>
+            <div class="text-xs text-gray-400 mb-2">Auth Tools</div>
+            <button
+              on:click={testRefreshToken}
+              class="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 rounded text-xs transition-colors flex items-center justify-center"
+            >
+              <i class="fas fa-sync mr-2"></i> Refresh Token
+            </button>
           </div>
         </div>
       {:else}

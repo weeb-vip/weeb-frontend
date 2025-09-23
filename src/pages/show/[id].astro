@@ -1,5 +1,5 @@
 ---
-import SvelteFullWidthLayout from '../../layouts/SvelteFullWidthLayout.astro';
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
 import ShowContentWithProvider from '../../svelte/components/ShowContentWithProvider.svelte';
 import { GraphQLClient } from 'graphql-request';
 import { ensureConfigLoaded } from '../../services/config-loader';
@@ -150,10 +150,11 @@ try {
 }
 ---
 
-<SvelteFullWidthLayout
+<SvelteLayout
   title={animeTitle}
   description={animeDescription}
   image={animeImage}
+  variant="fullwidth"
 >
   <ShowContentWithProvider
     animeId={id}
@@ -162,4 +163,4 @@ try {
     ssrError={error}
     client:load
   />
-</SvelteFullWidthLayout>
+</SvelteLayout>
