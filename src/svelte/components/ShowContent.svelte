@@ -198,14 +198,28 @@
   $: config = statusConfig[status] || statusConfig.scheduled;
 
   // Handle scroll for sticky header
+  let stickyHeaderEl: HTMLDivElement;
+
   onMount(() => {
     const handleScroll = () => {
       const scrollThreshold = 400;
       showStickyHeader = window.scrollY > scrollThreshold;
     };
 
+    // Move sticky header to body to avoid scroll container issues
+    if (stickyHeaderEl) {
+      document.body.appendChild(stickyHeaderEl);
+    }
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      // Clean up: remove from body
+      if (stickyHeaderEl && stickyHeaderEl.parentNode) {
+        stickyHeaderEl.parentNode.removeChild(stickyHeaderEl);
+      }
+    };
   });
 
   // Handle add anime
@@ -281,7 +295,7 @@
 {:else}
   <div class="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
     <!-- Sticky Header -->
-    <div class="fixed top-24 left-0 right-0 z-30 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}">
+    <div bind:this={stickyHeaderEl} class="fixed top-24 left-0 right-0 z-20 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}" style="pointer-events: {showStickyHeader ? 'auto' : 'none'};">
       <!-- Background container with overflow hidden -->
       <div class="relative overflow-hidden border-b border-gray-200 dark:border-gray-700 px-4 py-4 shadow-md">
         <!-- Background with blur -->

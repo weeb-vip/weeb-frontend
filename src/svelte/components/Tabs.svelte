@@ -13,13 +13,22 @@
   let currentX = 0;
   let isTransitioning = false;
   let isSticky = false;
+  let stickyTabsEl: HTMLDivElement;
 
   $: activeIndex = tabs.indexOf(activeTab);
+
+  // Action to assign sticky reference
+  function assignStickyRef(node: HTMLDivElement) {
+    stickyTabsEl = node;
+    return {};
+  }
 
   // Handle sticky behavior on scroll
   onMount(() => {
     let tabsOriginalTop: number | null = null;
     let ticking = false;
+    let originalParent: Node | null = null;
+    let nextSibling: Node | null = null;
 
     const handleScroll = () => {
       if (!ticking) {
@@ -29,11 +38,14 @@
             return;
           }
 
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          // Check multiple possible scroll containers
+          const windowScrollY = window.scrollY || window.pageYOffset;
+          const documentScrollY = document.documentElement.scrollTop || document.body.scrollTop;
+          const scrollTop = Math.max(windowScrollY, documentScrollY);
 
-          // Store original position on first calculation (only when not sticky)
-          if (tabsOriginalTop === null && !isSticky) {
-            const tabsRect = tabsRef.getBoundingClientRect();
+          // Store original position on first calculation (only when not sticky and element is in original position)
+          if (tabsOriginalTop === null && !isSticky && stickyTabsEl && stickyTabsEl.parentNode !== document.body) {
+            const tabsRect = stickyTabsEl.getBoundingClientRect();
             tabsOriginalTop = tabsRect.top + scrollTop;
           }
 
@@ -45,7 +57,25 @@
             // The tabs should become sticky when they would go under the header
             // This means when scroll position + header height > tabs original position
             const shouldBeSticky = scrollTop + headerHeight > tabsOriginalTop;
-            isSticky = shouldBeSticky;
+
+            if (shouldBeSticky !== isSticky) {
+              isSticky = shouldBeSticky;
+
+              // Move sticky tabs to body when sticky, restore when not sticky
+              if (isSticky && stickyTabsEl && stickyTabsEl.parentNode !== document.body) {
+                // Store original position before moving
+                originalParent = stickyTabsEl.parentNode;
+                nextSibling = stickyTabsEl.nextSibling;
+                document.body.appendChild(stickyTabsEl);
+              } else if (!isSticky && stickyTabsEl && stickyTabsEl.parentNode === document.body && originalParent) {
+                // Restore to original position
+                if (nextSibling) {
+                  originalParent.insertBefore(stickyTabsEl, nextSibling);
+                } else {
+                  originalParent.appendChild(stickyTabsEl);
+                }
+              }
+            }
           }
 
           ticking = false;
@@ -54,10 +84,39 @@
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Check initial position
+    // Listen to multiple scroll containers like in ShowContent
+    function bindScroll() {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      document.addEventListener('scroll', handleScroll, { passive: true });
+      document.documentElement.addEventListener('scroll', handleScroll, { passive: true });
+      document.body.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll(); // Check initial position
+    }
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    function unbindScroll() {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('scroll', handleScroll);
+      document.documentElement.removeEventListener('scroll', handleScroll);
+      document.body.removeEventListener('scroll', handleScroll);
+    }
+
+    // Initial bind
+    bindScroll();
+
+    // Handle Astro view transitions
+    const rebind = () => {
+      unbindScroll();
+      bindScroll();
+    };
+
+    document.addEventListener('astro:after-swap', rebind);
+    document.addEventListener('astro:page-load', rebind);
+
+    return () => {
+      document.removeEventListener('astro:after-swap', rebind);
+      document.removeEventListener('astro:page-load', rebind);
+      unbindScroll();
+    };
   });
 
   // Handle touch events for smooth swiping
@@ -200,8 +259,9 @@
   <!-- Mobile: Dropdown + Navigation -->
   <div
     bind:this={tabsRef}
+    use:assignStickyRef
     class="sm:hidden transition-all duration-200 {isSticky
-      ? 'fixed left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-2 shadow-sm'
+      ? 'fixed left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 pt-4 py-2 shadow-sm'
       : ''}"
     style={isSticky ? 'top: 10.5rem' : ''}
   >

@@ -9,7 +9,7 @@ import TitleLanguageToggle from '../../svelte/components/TitleLanguageToggle.sve
 const { auth } = Astro.locals;
 ---
 
-<header class="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 h-24 transition-colors duration-300">
+<header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 h-24 transition-colors duration-300">
 
   <!-- Mobile/Tablet Header -->
   <div class="flex lg:hidden w-full items-center space-x-3 h-16">
@@ -121,6 +121,44 @@ const { auth } = Astro.locals;
 <script>
   // Client-side interactivity
   document.addEventListener('DOMContentLoaded', () => {
+    // Store the original parent for the header
+    const header = document.getElementById('main-header');
+    const originalParent = header?.parentNode;
+
+    // Only move header if it's not already in body and we're on a problematic page
+    function ensureHeaderPlacement() {
+      const header = document.getElementById('main-header');
+      if (header && header.parentNode !== document.body) {
+        // Check if we're in a potentially problematic scroll container
+        let parent = header.parentNode;
+        let hasScrollContainer = false;
+        while (parent && parent !== document.body) {
+          const style = window.getComputedStyle(parent as Element);
+          if (style.overflow === 'scroll' || style.overflow === 'auto' || style.overflowY === 'scroll' || style.overflowY === 'auto') {
+            hasScrollContainer = true;
+            break;
+          }
+          parent = parent.parentNode;
+        }
+
+        // Only move if we detect a scroll container issue
+        if (hasScrollContainer) {
+          document.body.appendChild(header);
+        }
+      }
+    }
+
+    // Check on load
+    setTimeout(ensureHeaderPlacement, 100);
+
+    // Also handle after Astro navigation
+    document.addEventListener('astro:after-swap', () => {
+      setTimeout(ensureHeaderPlacement, 100);
+    });
+
+    document.addEventListener('astro:page-load', () => {
+      setTimeout(ensureHeaderPlacement, 100);
+    });
     // Dark mode toggle
     const darkModeToggle = document.getElementById('dark-mode-toggle');
     const sunIcon = document.querySelector('.sun-icon');
