@@ -261,7 +261,7 @@
     bind:this={tabsRef}
     use:assignStickyRef
     class="sm:hidden transition-all duration-200 {isSticky
-      ? 'fixed left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 pt-4 py-2 shadow-sm'
+      ? 'fixed left-0 right-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-2 pt-6 shadow-sm'
       : ''}"
     style={isSticky ? 'top: 10.5rem' : ''}
   >
