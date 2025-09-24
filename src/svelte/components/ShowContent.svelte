@@ -198,7 +198,20 @@
   $: config = statusConfig[status] || statusConfig.scheduled;
 
   // Handle scroll for sticky header
-  let stickyHeaderEl: HTMLDivElement;
+  // Svelte action to portal element to body
+  function portal(node: HTMLElement) {
+    // Move element to body
+    document.body.appendChild(node);
+
+    return {
+      destroy() {
+        // Remove from body when component is destroyed
+        if (node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      }
+    };
+  }
 
   onMount(() => {
     const handleScroll = () => {
@@ -206,28 +219,10 @@
       showStickyHeader = window.scrollY > scrollThreshold;
     };
 
-    // Move sticky header to body to avoid scroll container issues
-    // Use requestAnimationFrame to ensure DOM is ready
-    const moveToBody = () => {
-      if (stickyHeaderEl && stickyHeaderEl.parentNode !== document.body) {
-        document.body.appendChild(stickyHeaderEl);
-      }
-    };
-
-    // Try immediately
-    moveToBody();
-
-    // Also try after a frame in case element wasn't ready
-    requestAnimationFrame(moveToBody);
-
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      // Clean up: remove from body
-      if (stickyHeaderEl && stickyHeaderEl.parentNode) {
-        stickyHeaderEl.parentNode.removeChild(stickyHeaderEl);
-      }
     };
   });
 
@@ -304,7 +299,7 @@
 {:else}
   <div class="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
     <!-- Sticky Header -->
-    <div bind:this={stickyHeaderEl} class="fixed top-24 left-0 right-0 z-50 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}" style="pointer-events: {showStickyHeader ? 'auto' : 'none'};">
+    <div use:portal class="fixed top-24 left-0 right-0 z-50 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}" style="pointer-events: {showStickyHeader ? 'auto' : 'none'};">
       <!-- Background container with overflow hidden -->
       <div class="relative overflow-hidden border-b border-gray-200 dark:border-gray-700 px-4 py-4 shadow-md">
         <!-- Background with blur -->
