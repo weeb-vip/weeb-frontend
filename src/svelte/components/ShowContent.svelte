@@ -299,7 +299,7 @@
 {:else}
   <div class="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
     <!-- Sticky Header -->
-    <div use:portal class="fixed top-24 left-0 right-0 z-50 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}" style="pointer-events: {showStickyHeader ? 'auto' : 'none'};">
+    <div use:portal class="fixed top-24 left-0 right-0 z-20 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}" style="pointer-events: {showStickyHeader ? 'auto' : 'none'};">
       <!-- Background container with overflow hidden -->
       <div class="relative overflow-hidden border-b border-gray-200 dark:border-gray-700 px-4 py-4 shadow-md">
         <!-- Background with blur -->

@@ -328,16 +328,30 @@
   $: if (autocompleteState.collections && autocompleteState.collections.length > 0) {
     setTimeout(() => {
       const items = document.querySelectorAll('[data-autocomplete-item]');
-      if (items.length > 0) {
-        animate(
-          items,
-          { opacity: [0, 1], y: [20, 0] },
-          {
-            duration: 0.4,
-            delay: stagger(0.05),
-            easing: spring({ stiffness: 300, damping: 25 })
+      if (items.length > 0 && typeof animate === 'function' && typeof stagger === 'function' && typeof spring === 'function') {
+        try {
+          const animationOptions: any = {
+            duration: 0.4
+          };
+
+          // Only add delay if stagger is properly defined
+          if (stagger) {
+            animationOptions.delay = stagger(0.05);
           }
-        );
+
+          // Only add easing if spring is properly defined
+          if (spring) {
+            animationOptions.easing = spring({ stiffness: 300, damping: 25 });
+          }
+
+          animate(
+            items,
+            { opacity: [0, 1], y: [20, 0] },
+            animationOptions
+          );
+        } catch (e) {
+          // Silently fail - animations are not critical
+        }
       }
     }, 50);
   }
@@ -451,8 +465,8 @@
       {#if isFocused && autocompleteState.isOpen}
         <div
           bind:this={mobilePanelRef}
-          class="absolute z-50 w-full left-0 right-0 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-b-2xl shadow-2xl -mt-px border-t-0 max-h-[calc(100vh-120px)]"
-          style="transform-origin: center top; opacity: 0;"
+          class="absolute z-50 w-full left-0 right-0 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-b-2xl shadow-2xl -mt-px border-t-0 max-h-[calc(100vh-120px)] animate-dropdown"
+          style="transform-origin: center top;"
         >
           <div class="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent mx-4"></div>
           {#each autocompleteState.collections as collection}
@@ -491,8 +505,8 @@
       {#if isFocused && autocompleteState.isOpen}
         <div
           bind:this={desktopPanelRef}
-          class="absolute z-[60] w-full left-0 right-0 overflow-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-600/50 rounded-b-2xl shadow-2xl shadow-black/10 dark:shadow-black/30 -mt-px border-t-0 max-h-72"
-          style="transform-origin: center top; opacity: 0;"
+          class="absolute z-[60] w-full left-0 right-0 overflow-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-600/50 rounded-b-2xl shadow-2xl shadow-black/10 dark:shadow-black/30 -mt-px border-t-0 max-h-72 animate-dropdown"
+          style="transform-origin: center top;"
         >
           <div class="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent mx-4"></div>
           {#each autocompleteState.collections as collection}
@@ -508,4 +522,21 @@
   </div>
 
 {/if}
+
+<style>
+  @keyframes dropdown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-dropdown {
+    animation: dropdown 0.3s ease-out forwards;
+  }
+</style>
 
