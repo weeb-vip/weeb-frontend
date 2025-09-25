@@ -74,8 +74,32 @@
       <ProfileDropdown {user} />
     {/if}
   {:else}
-    <!-- Error state or no user -->
-    <div class="text-red-500 text-sm">Error loading user</div>
+    <!-- Error state or no user - show login/register instead of error -->
+    {#if isMobile}
+      <!-- Mobile: Hamburger menu button -->
+      <button class="p-4" aria-label="Open menu" on:click={handleMobileProfileClick}>
+        <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    {:else}
+      <!-- Desktop: Login/Register buttons -->
+      <div class="flex items-center space-x-4">
+        <button
+          class="px-4 py-2 relative rounded-full font-medium transition-colors duration-300 flex items-center justify-center whitespace-nowrap w-fit bg-blue-600 hover:bg-blue-700 text-white"
+          on:click={handleLoginClick}
+        >
+          Login
+        </button>
+
+        <button
+          class="px-4 py-2 relative rounded-full font-medium transition-colors duration-300 flex items-center justify-center whitespace-nowrap w-fit bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600"
+          on:click={handleRegisterClick}
+        >
+          Register
+        </button>
+      </div>
+    {/if}
   {/if}
 {:else}
   <!-- Not logged in -->

@@ -193,14 +193,15 @@ export class AuthStorage {
 
   static clearTokens() {
     try {
-      console.log("🚨 clearTokens() called - server manages cookies, clearing localStorage");
-      debug.warn("clearTokens() called - server manages cookies, clearing localStorage tokens");
+      console.log("🚨 clearTokens() called - server manages cookies, preserving refresh token in localStorage");
+      debug.warn("clearTokens() called - server manages cookies, preserving refresh token for recovery");
 
-      // Clear localStorage tokens
-      this.clearRefreshTokenLocalStorage();
+      // DO NOT clear refresh token from localStorage - preserve it for token refresh attempts
+      // this.clearRefreshTokenLocalStorage(); // REMOVED - preserve refresh token
 
       // Server-set HttpOnly cookies can't be cleared by client JavaScript
       // Auth errors are handled by server-side logic
+      // Refresh token in localStorage remains for automatic recovery
     } catch (error) {
       debug.error("Failed to clear auth tokens:", error);
     }
@@ -211,7 +212,7 @@ export class AuthStorage {
       console.log("🚪 logout() called - server will clear cookies, clearing localStorage");
       debug.auth("Logout - server will handle cookie removal, clearing localStorage tokens");
 
-      // Clear localStorage tokens
+      // Clear localStorage tokens on intentional logout
       this.clearRefreshTokenLocalStorage();
 
       // HttpOnly cookies can only be cleared by the server
