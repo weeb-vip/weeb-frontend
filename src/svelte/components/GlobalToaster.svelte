@@ -36,17 +36,17 @@
     z-index: 50 !important; /* Higher z-index to appear above content */
   }
 
-  /* Mobile positioning - let Sonner handle it, just adjust top */
+  /* Mobile positioning - let Sonner handle it, just adjust top with safe area */
   @media (max-width: 768px) {
     :global(.toaster-container) {
-      top: 7rem !important;
+      top: calc(7rem + env(safe-area-inset-top, 0px)) !important;
     }
   }
 
   /* Desktop positioning adjustments */
   @media (min-width: 769px) {
     :global(.toaster-container) {
-      top: 6.5rem !important; /* Desktop header: 96px (6rem) + small gap */
+      top: calc(6.5rem + env(safe-area-inset-top, 0px)) !important; /* Desktop header: 96px (6rem) + small gap + safe area */
       right: 1.5rem !important;
     }
   }
@@ -242,17 +242,17 @@
     background: rgba(31, 41, 55, 0.9) !important;
   }
 
-  /* Small screens - let Sonner handle positioning */
+  /* Small screens - let Sonner handle positioning with safe area */
   @media (max-width: 640px) {
     :global(.toaster-container) {
-      top: 7rem !important;
+      top: calc(7rem + env(safe-area-inset-top, 0px)) !important;
     }
   }
 
-  /* Tablet (between mobile and desktop) */
+  /* Tablet (between mobile and desktop) with safe area */
   @media (min-width: 640px) and (max-width: 1023px) {
     :global(.toaster-container) {
-      top: 5rem !important; /* Tablet uses mobile header layout */
+      top: calc(5rem + env(safe-area-inset-top, 0px)) !important; /* Tablet uses mobile header layout + safe area */
     }
   }
 </style>

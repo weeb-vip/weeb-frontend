@@ -29,6 +29,10 @@
       document.body.style.overflow = '';
     }
 
+    // Initialize theme color on mount
+    const initialDarkMode = document.documentElement.classList.contains('dark');
+    updateThemeColor(initialDarkMode);
+
     return () => {
       document.body.style.overflow = '';
     };
@@ -86,14 +90,43 @@
     window.dispatchEvent(new CustomEvent('openRegister'));
   }
 
+  // Update theme-color meta tag for PWA status bar
+  function updateThemeColor(isDark: boolean) {
+    if (typeof window !== 'undefined') {
+      const newColor = isDark ? '#111827' : '#ffffff';
+
+      // Update all theme-color meta tags
+      const metaTags = document.querySelectorAll('meta[name="theme-color"]');
+      console.log('Found theme-color meta tags:', metaTags.length);
+
+      if (metaTags.length > 0) {
+        metaTags.forEach(tag => {
+          console.log('Updating meta tag:', tag, 'to color:', newColor);
+          tag.setAttribute('content', newColor);
+        });
+      } else {
+        // Create the meta tag if none exist
+        console.log('Creating new theme-color meta tag with color:', newColor);
+        const newMetaTag = document.createElement('meta');
+        newMetaTag.name = 'theme-color';
+        newMetaTag.content = newColor;
+        document.head.appendChild(newMetaTag);
+      }
+    }
+  }
+
   function toggleDarkMode() {
     const isDarkMode = document.documentElement.classList.contains('dark');
     if (isDarkMode) {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
+      // Update theme color for PWA status bar
+      updateThemeColor(false);
     } else {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
+      // Update theme color for PWA status bar
+      updateThemeColor(true);
     }
   }
 
@@ -122,7 +155,7 @@
       }}
       on:click|stopPropagation
     >
-      <div class="h-full bg-white dark:bg-gray-900 flex flex-col shadow-2xl p-6 overflow-y-auto">
+      <div class="h-full bg-white dark:bg-gray-900 flex flex-col shadow-2xl overflow-y-auto" style="padding: 1.5rem; padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));">
         <!-- Header with logo + close -->
         <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
           <a href="/" on:click={handleLinkClick} class="flex items-center space-x-4">

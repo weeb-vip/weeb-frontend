@@ -65,7 +65,8 @@
 
 {#if isVisible}
   <div
-    class="fixed top-20 right-4 z-50 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-600 overflow-hidden"
+    class="fixed right-4 z-50 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-600 overflow-hidden"
+    style="top: calc(5rem + env(safe-area-inset-top, 0px));"
     in:slide={{ duration: 300 }}
     out:slide={{ duration: 300 }}
   >

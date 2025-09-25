@@ -9,7 +9,7 @@ import TitleLanguageToggle from '../../svelte/components/TitleLanguageToggle.sve
 const { auth } = Astro.locals;
 ---
 
-<header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 h-24 transition-colors duration-300">
+<header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300" style="padding: 1rem; padding-top: calc(1rem + env(safe-area-inset-top, 20px)); height: calc(6rem + env(safe-area-inset-top, 20px));">
 
   <!-- Mobile/Tablet Header -->
   <div class="flex lg:hidden w-full items-center space-x-3 h-16">

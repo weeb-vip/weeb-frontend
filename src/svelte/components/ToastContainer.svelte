@@ -36,7 +36,7 @@
 
   <!-- Queue indicator - show if there are more toasts waiting -->
   {#if mobileQueue.length > 1}
-    <div class="fixed top-[8.5rem] right-4 z-40">
+    <div class="fixed right-4 z-40" style="top: calc(8.5rem + env(safe-area-inset-top, 0px));">
       <div class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full shadow-lg">
         +{mobileQueue.length - 1} more
       </div>
@@ -46,7 +46,7 @@
 
 <!-- Desktop Toasts - Show all simultaneously -->
 {#if !isMobile}
-  <div class="fixed top-28 right-6 z-30 flex flex-col items-end pointer-events-none">
+  <div class="fixed right-6 z-30 flex flex-col items-end pointer-events-none" style="top: calc(7rem + env(safe-area-inset-top, 0px));">
     {#each toasts as toast (toast.id)}
       <div class="pointer-events-auto">
         <Toast {toast} onClose={handleRemoveToast} />
