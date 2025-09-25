@@ -1,6 +1,7 @@
 import {type SigninResult} from "../gql/graphql";
 import debug from "../utils/debug";
 import {AuthStorage} from "../utils/auth-storage";
+import {loggedInStore} from "../svelte/stores/auth";
 
 type RefreshTokenFunction<T> = () => Promise<T>;
 
@@ -117,7 +118,11 @@ export class TokenRefresher {
       debug.auth('Refreshing token...');
       const newTokenResponse = await this.refreshFunction();
       debug.success('Token refreshed successfully!');
-      const newToken = newTokenResponse.Credentials.token
+      const newToken = newTokenResponse.Credentials.token;
+
+      if (!newToken) {
+        throw new Error('Token refresh succeeded but no token received');
+      }
 
       this.storeAuthToken(newToken);
 
@@ -142,6 +147,10 @@ export class TokenRefresher {
 
       // Server automatically updates HttpOnly cookies during refresh
       // No manual cookie setting needed by client
+
+      // Update the logged in store to reflect successful token refresh
+      loggedInStore.setLoggedIn();
+      debug.auth('Updated logged in store after token refresh');
 
     } catch (error) {
       debug.error('Failed to handle token refresh:', error);
