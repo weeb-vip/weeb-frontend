@@ -137,7 +137,19 @@
 
     // Set initial auth token state for comparison
     let lastAuthToken = AuthStorage.getAuthToken();
+    const refreshToken = AuthStorage.getRefreshToken();
     console.log('🔧 Initial auth token:', lastAuthToken ? 'Present' : 'Missing');
+    console.log('🔧 Initial refresh token:', refreshToken ? 'Present' : 'Missing');
+
+    // If auth token is missing but refresh token exists, attempt to refresh
+    if (!lastAuthToken && refreshToken) {
+      console.log('🔄 Auth token missing but refresh token available, attempting refresh...');
+      import('../../services/token_refresher').then(({ TokenRefresher }) => {
+        import('../../services/queries').then(({ refreshTokenSimple }) => {
+          TokenRefresher.getInstance(refreshTokenSimple);
+        });
+      });
+    }
 
     // Watch for login state changes using Zustand subscription
     const unsubscribe = loggedInStore.subscribe((state) => {

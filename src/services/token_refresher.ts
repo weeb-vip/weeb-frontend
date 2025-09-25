@@ -10,9 +10,9 @@ export class TokenRefresher {
   private refreshFunction: RefreshTokenFunction<SigninResult>;
   private refreshWindow: number;
 
-  private constructor(refreshFunction: RefreshTokenFunction<SigninResult>, refreshWindow: number = 60 * 1000) {
+  private constructor(refreshFunction: RefreshTokenFunction<SigninResult>, refreshWindow: number = 5 * 60 * 1000) {
     this.refreshFunction = refreshFunction;
-    this.refreshWindow = refreshWindow; // Default refresh window is 1 minute
+    this.refreshWindow = refreshWindow; // Default refresh window is 5 minutes
     
     // Log current token expiry if available
     const currentToken = AuthStorage.getAuthToken();
@@ -30,8 +30,14 @@ export class TokenRefresher {
       debug.auth('TokenRefresher started but no current token found');
     }
     
-    // lets try to refresh
-    this.refreshToken();
+    // Check if we have a refresh token and attempt to refresh if needed
+    const refreshToken = AuthStorage.getRefreshToken();
+    if (refreshToken) {
+      debug.auth('TokenRefresher found refresh token, attempting initial refresh');
+      this.refreshToken();
+    } else {
+      debug.auth('TokenRefresher initialized but no refresh token available');
+    }
   }
 
   /**
@@ -39,7 +45,7 @@ export class TokenRefresher {
    * @param refreshFunction - The function to refresh the token.
    * @param refreshWindow - The window (in milliseconds) before token expiry to refresh.
    */
-  public static getInstance(refreshFunction: RefreshTokenFunction<SigninResult>, refreshWindow: number = 60 * 1000): TokenRefresher {
+  public static getInstance(refreshFunction: RefreshTokenFunction<SigninResult>, refreshWindow: number = 5 * 60 * 1000): TokenRefresher {
     if (!TokenRefresher.instance) {
       TokenRefresher.instance = new TokenRefresher(refreshFunction, refreshWindow);
     }
@@ -64,10 +70,9 @@ export class TokenRefresher {
     const refreshTime = expiryTime - now - this.refreshWindow;
 
     if (refreshTime <= 0) {
-
-      //throw new Error('Token is already expired or too close to expiration.');
-      debug.auth('Token is already expired or too close to expiration.');
-      // attempt to refresh token
+      debug.auth('Token is already expired or too close to expiration. Refreshing immediately...');
+      // Token is expired or about to expire, refresh immediately
+      this.refreshToken();
       return;
     }
 
@@ -115,12 +120,16 @@ export class TokenRefresher {
       const newToken = newTokenResponse.Credentials.token
 
       this.storeAuthToken(newToken);
+
+      debug.auth('Token refreshed successfully - continuing without page reload');
+
       this.start(newToken); // Restart the process with the new token
     } catch (error) {
       debug.error('Failed to refresh token:', error);
       // Optionally, you can implement retry logic here
     }
   }
+
 
   /**
    * Server handles token storage via HttpOnly cookies.

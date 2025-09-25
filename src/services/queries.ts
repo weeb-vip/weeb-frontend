@@ -130,9 +130,9 @@ export const AuthenticatedClient = async () => {
 
   // @ts-ignore
   return new GraphQLClient(config.graphql_host, {
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` })
-    },
+    // headers: {
+    //   ...(token && { Authorization: `Bearer ${token}` })
+    // },
     // For graphql-request, credentials should be passed at the top level
     credentials: 'include',
     // Alternative: use fetch options directly
@@ -600,8 +600,16 @@ export const refreshTokenSimple = async (): Promise<SigninResult> => {
         debug.auth('New refresh token stored in localStorage during refresh');
       }
 
-      // Note: Server should set HttpOnly cookies automatically for auth tokens
-      // We don't manually set cookies - only use localStorage for refresh token fallback
+      // For localhost development: Set cookies manually since server may not set them
+      if (response.RefreshToken.Credentials.token) {
+        AuthStorage.setTokensForLocalhost(
+          response.RefreshToken.Credentials.token,
+          response.RefreshToken.Credentials.refresh_token || undefined
+        );
+      }
+
+      // Note: Server should set HttpOnly cookies automatically for auth tokens in production
+      // We only manually set cookies for localhost development
 
       // Check cookies after a brief delay to see if they were updated
       setTimeout(() => {
