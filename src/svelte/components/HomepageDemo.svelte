@@ -73,50 +73,24 @@
   const currentSeason = getCurrentSeason();
   const seasonOptions = getSeasonOptions(currentSeason);
 
-  // Create TanStack Query stores
+  // Create TanStack Query stores - these will run in parallel automatically
   const homeDataQuery = createQuery(fetchHomePageData(), queryClient);
   const currentlyAiringQuery = createQuery(fetchCurrentlyAiring(), queryClient);
+  const seasonalQuery = createQuery(fetchSeasonalAnime(selectedSeason), queryClient);
 
-  // Create seasonal data with manual fetching
-  let seasonalData: any = null;
-  let seasonalLoading = false;
-  let seasonalError: any = null;
   let hoveredAnime: any = null;
   let lastHoveredAnime: any = null;
 
-  // Function to fetch seasonal data
-  async function fetchSeasonalData(season: string) {
-    seasonalLoading = true;
-    seasonalError = null;
-    seasonalData = null;
+  // Performance monitoring
+  let performanceStartTime = 0;
+  let allQueriesLoaded = false;
 
-    try {
-      const queryConfig = fetchSeasonalAnime(season);
-      const data = await queryConfig.queryFn();
-      seasonalData = data;
-    } catch (error) {
-      seasonalError = error;
-      console.error('Failed to fetch seasonal data:', error);
-    } finally {
-      seasonalLoading = false;
-    }
-  }
-
-  // Initial fetch on mount
   onMount(() => {
-    fetchSeasonalData(selectedSeason);
-
-    // Notification callback is now set up globally in AnimeNotificationProvider
-    // We don't need to set it up here anymore
-
+    performanceStartTime = performance.now();
   });
 
-  // Watch for season changes and fetch data
-  $: {
-    if (typeof window !== 'undefined') {
-      fetchSeasonalData(selectedSeason);
-    }
-  }
+  // Create reactive seasonal query that updates when season changes
+  $: seasonalQueryForSeason = createQuery(fetchSeasonalAnime(selectedSeason), queryClient);
 
   // Create enhanced mutations with toast handling
   const upsertAnimeMutation = useAddAnimeWithToast();
@@ -287,6 +261,35 @@
   // Reactive data using TanStack Query stores
   $: sortedCurrentlyAiring = processCurrentlyAiring($currentlyAiringQuery.data);
   $: homeData = $homeDataQuery.data;
+  $: seasonalData = $seasonalQueryForSeason.data;
+
+  // Move complex sorting logic out of template for better performance
+  $: sortedSeasonalData = seasonalData?.animeBySeasons ?
+    [...seasonalData.animeBySeasons]
+      .sort((a, b) => {
+        const getRating = (rating: any) => {
+          if (!rating || rating === 'N/A') return 0;
+          const parsed = parseFloat(rating);
+          return isNaN(parsed) ? 0 : parsed;
+        };
+        const ratingA = getRating(a.rating);
+        const ratingB = getRating(b.rating);
+        return ratingB - ratingA;
+      })
+      .slice(0, 8) : [];
+
+  // Performance monitoring - log when all queries complete
+  $: if (!allQueriesLoaded &&
+         !$homeDataQuery.isLoading &&
+         !$currentlyAiringQuery.isLoading &&
+         !$seasonalQueryForSeason.isLoading &&
+         ($homeDataQuery.isSuccess || $homeDataQuery.isError) &&
+         ($currentlyAiringQuery.isSuccess || $currentlyAiringQuery.isError) &&
+         ($seasonalQueryForSeason.isSuccess || $seasonalQueryForSeason.isError)) {
+    allQueriesLoaded = true;
+    const loadTime = performance.now() - performanceStartTime;
+    console.log(`🚀 Homepage loaded in ${loadTime.toFixed(2)}ms with TanStack parallel queries`);
+  }
 
   // Set up anime notifications when currently airing data is available
   $: if ($currentlyAiringQuery.isSuccess && $currentlyAiringQuery.data?.currentlyAiring) {
@@ -438,7 +441,7 @@
       </div>
     </div>
 
-    {#if seasonalLoading}
+    {#if $seasonalQueryForSeason.isLoading}
       <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
         {#each Array(8) as _, index}
           {#if index < 5}
@@ -450,18 +453,9 @@
           {/if}
         {/each}
       </div>
-    {:else if seasonalData && seasonalData.animeBySeasons}
+    {:else if sortedSeasonalData.length > 0}
       <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
-        {#each seasonalData.animeBySeasons.sort((a, b) => {
-          const getRating = (rating) => {
-            if (!rating || rating === 'N/A') return 0;
-            const parsed = parseFloat(rating);
-            return isNaN(parsed) ? 0 : parsed;
-          };
-          const ratingA = getRating(a.rating);
-          const ratingB = getRating(b.rating);
-          return ratingB - ratingA;
-        }).slice(0, 8) as anime, index}
+        {#each sortedSeasonalData as anime, index}
           <div class="{index >= 5 ? 'lg:hidden xl:block' : ''}">
             <AnimeCard
             style="detail"
