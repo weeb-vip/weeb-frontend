@@ -190,7 +190,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 
     <!-- Main content with conditional styling based on variant -->
     {variant === 'fullwidth' ? (
-        <main class="w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+        <main class="w-full pt-24 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
             <slot />
         </main>
     ) : (
