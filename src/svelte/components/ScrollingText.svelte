@@ -4,12 +4,13 @@
   export let text: string;
   export let className: string = '';
   export let maxWidth: string = '100%';
-  export let scrollSpeed: number = 3; // seconds for consistent speed
+  export let scrollSpeed: number = 50; // pixels per second for consistent speed
 
   let containerRef: HTMLDivElement;
   let measureRef: HTMLSpanElement;
   let isOverflowing = false;
   let isHovered = false;
+  let animationDuration = 3; // calculated duration based on text width
 
   function checkOverflow() {
     if (!containerRef || !measureRef) return;
@@ -20,7 +21,12 @@
 
     isOverflowing = textWidth > containerWidth;
 
-    // Remove debug logging for overflow checks
+    // Calculate animation duration based on text width for consistent speed
+    if (isOverflowing) {
+      // Distance to scroll = textWidth + some padding (2rem = 32px)
+      const scrollDistance = textWidth + 32;
+      animationDuration = scrollDistance / scrollSpeed;
+    }
   }
 
   onMount(() => {
@@ -77,7 +83,7 @@
   {#if isOverflowing}
     <span
       class="absolute top-0 left-0 inline-block whitespace-nowrap transition-opacity duration-200 {isHovered ? 'opacity-100 animate-scroll' : 'opacity-0'}"
-      style="--scroll-speed: {scrollSpeed}s;"
+      style="--scroll-duration: {animationDuration}s;"
     >
       {text}
     </span>
@@ -95,6 +101,6 @@
   }
 
   .animate-scroll {
-    animation: scroll var(--scroll-speed) linear infinite;
+    animation: scroll var(--scroll-duration) linear infinite;
   }
 </style>
