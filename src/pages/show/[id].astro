@@ -2,7 +2,7 @@
 import SvelteLayout from '../../layouts/SvelteLayout.astro';
 import ShowContentWithProvider from '../../svelte/components/ShowContentWithProvider.svelte';
 import { GraphQLClient } from 'graphql-request';
-import { ensureConfigLoaded } from '../../services/config-loader';
+// Config now loaded via middleware - no direct import needed
 
 export const prerender = false;
 

@@ -152,10 +152,5 @@ export function isConfigLoaded(): boolean {
   return configData !== null;
 }
 
-// For SSR - load config immediately when this module is imported
-if (typeof window === 'undefined') {
-  // Start loading config but don't block module loading
-  initializeConfigSSR().catch(error => {
-    console.error('[SSR] Failed to initialize config on module load:', error);
-  });
-}
+// Note: Removed global scope config loading for Cloudflare Pages compatibility
+// Config will be loaded on first request instead

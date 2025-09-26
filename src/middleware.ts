@@ -1,5 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
-import { ensureConfigLoaded } from './services/config-loader';
+import { getConfig } from './config/build-time-loader';
 import { AuthStorage } from './utils/auth-storage';
 
 // Config cache for performance - but loaded inside handler for Cloudflare Pages compatibility
@@ -26,12 +26,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const startTime = Date.now();
 
-  // Ensure config is available - compatible with Cloudflare Pages
+  // Ensure config is available - build-time loading (much faster!)
   try {
     // Load config on first request and cache it
     if (!configData) {
-      configData = await ensureConfigLoaded();
-      console.log('[Middleware] Config loaded on first request');
+      configData = await getConfig();
+      console.log('[Middleware] Config loaded from build-time import');
     }
 
     // Make config available in Astro locals for components to access

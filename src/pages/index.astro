@@ -2,7 +2,7 @@
 import SvelteLayout from '../layouts/SvelteLayout.astro';
 import HomepageSSR from '../svelte/components/HomepageSSR.svelte';
 import { GraphQLClient } from 'graphql-request';
-import { ensureConfigLoaded } from '../services/config-loader';
+// Config now loaded via middleware - no direct import needed
 import {
   getHomePageData,
   getCurrentlyAiringWithDates,
