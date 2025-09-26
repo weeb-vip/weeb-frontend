@@ -1,20 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { ensureConfigLoaded } from './services/config-loader';
 import { AuthStorage } from './utils/auth-storage';
-import {
-  initTelemetry,
-  withSpan,
-  recordSSRRequest,
-  recordSSRDuration,
-  recordAuthCheckDuration
-} from './utils/telemetry';
-
-// Initialize OpenTelemetry
-if (typeof window === 'undefined') {
-  initTelemetry().catch(error => {
-    console.warn('Failed to initialize telemetry:', error);
-  });
-}
 
 // Ensure config is loaded at startup for SSR - load once and cache
 let configData: any = null;
@@ -54,41 +40,24 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const startTime = Date.now();
 
-  // Track SSR request
-  recordSSRRequest({
-    path: url.pathname,
-    method: request.method,
-  });
+  // Ensure config is available - use cached version
+  try {
+    // If config hasn't loaded yet, wait for the startup promise
+    if (!configData && configLoadPromise) {
+      configData = await configLoadPromise;
+    }
 
-  // Wrap the entire middleware in a span
-  return withSpan(
-    'middleware.onRequest',
-    async (span) => {
-      span.setAttributes({
-        'http.url': url.href,
-        'http.method': request.method,
-        'http.route': url.pathname,
-      });
+    // If still no config, try loading (fallback)
+    if (!configData) {
+      configData = await ensureConfigLoaded();
+    }
 
-      // Ensure config is available - use cached version
-      try {
-        // If config hasn't loaded yet, wait for the startup promise
-        if (!configData && configLoadPromise) {
-          configData = await configLoadPromise;
-        }
-
-        // If still no config, try loading (fallback)
-        if (!configData) {
-          configData = await ensureConfigLoaded();
-        }
-
-        // Make config available in Astro locals for components to access
-        context.locals.config = configData;
-      } catch (error) {
-        console.error('[Middleware] Failed to load config:', error);
-        span.setStatus({ code: 2, message: 'Config load failed' });
-        return new Response('Configuration error', { status: 500 });
-      }
+    // Make config available in Astro locals for components to access
+    context.locals.config = configData;
+  } catch (error) {
+    console.error('[Middleware] Failed to load config:', error);
+    return new Response('Configuration error', { status: 500 });
+  }
 
   // Extract cookies from request headers
   const cookieString = request.headers.get('cookie') || '';
@@ -137,18 +106,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Check authentication status from cookies
-  const authStart = Date.now();
-  const authResult = await withSpan('auth.check', async () => {
+  const authResult = (() => {
     const isLoggedIn = AuthStorage.isLoggedInFromCookieString(cookieString);
     const tokens = AuthStorage.getTokensFromCookieString(cookieString);
     return { isLoggedIn, tokens };
-  });
-
-  recordAuthCheckDuration(Date.now() - authStart, {
-    isLoggedIn: authResult.isLoggedIn,
-    hasAuthToken: !!authResult.tokens.authToken,
-    hasRefreshToken: !!authResult.tokens.refreshToken,
-  });
+  })();
 
   // Make auth info available to all components via Astro.locals
   context.locals.auth = {
@@ -202,23 +164,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-      // Skip HTML modification - config is already available via Astro.locals
-      // This saves significant processing time on every HTML response
+  // Skip HTML modification - config is already available via Astro.locals
+  // This saves significant processing time on every HTML response
 
-      // Record total SSR duration
-      recordSSRDuration(Date.now() - startTime, {
-        path: url.pathname,
-        method: request.method,
-        statusCode: response.status,
-        isLoggedIn: context.locals.auth?.isLoggedIn || false,
-      });
-
-      span.setAttributes({
-        'http.status_code': response.status,
-        'ssr.duration': Date.now() - startTime,
-      });
-
-      return response;
-    }
-  );
+  return response;
 });
