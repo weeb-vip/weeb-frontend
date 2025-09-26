@@ -1,6 +1,19 @@
 import { defineMiddleware } from 'astro:middleware';
 import { ensureConfigLoaded } from './services/config-loader';
 import { AuthStorage } from './utils/auth-storage';
+import {
+  initTelemetry,
+  withSpan,
+  recordSSRRequest,
+  recordSSRDuration,
+  recordConfigLoadDuration,
+  recordAuthCheckDuration
+} from './utils/telemetry';
+
+// Initialize OpenTelemetry
+if (typeof window === 'undefined') {
+  initTelemetry();
+}
 
 // Ensure config is loaded at startup for SSR
 let configLoadPromise: Promise<any> | null = null;
@@ -14,6 +27,7 @@ if (typeof window === 'undefined') {
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, url, cookies } = context;
+  const startTime = Date.now();
 
   // Skip middleware for static assets (huge performance improvement)
   const isStaticAsset = url.pathname.startsWith('/assets/') ||
@@ -31,16 +45,38 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   }
 
-  // Ensure config is loaded before processing any request
-  try {
-    const config = await ensureConfigLoaded();
+  // Track SSR request
+  recordSSRRequest({
+    path: url.pathname,
+    method: request.method,
+  });
 
-    // Make config available in Astro locals for components to access
-    context.locals.config = config;
-  } catch (error) {
-    console.error('[Middleware] Failed to load config:', error);
-    return new Response('Configuration error', { status: 500 });
-  }
+  // Wrap the entire middleware in a span
+  return withSpan(
+    'middleware.onRequest',
+    async (span) => {
+      span.setAttributes({
+        'http.url': url.href,
+        'http.method': request.method,
+        'http.route': url.pathname,
+      });
+
+      // Ensure config is loaded before processing any request
+      const configStart = Date.now();
+      try {
+        const config = await withSpan('config.load', async () => {
+          return await ensureConfigLoaded();
+        });
+
+        recordConfigLoadDuration(Date.now() - configStart);
+
+        // Make config available in Astro locals for components to access
+        context.locals.config = config;
+      } catch (error) {
+        console.error('[Middleware] Failed to load config:', error);
+        span.setStatus({ code: 2, message: 'Config load failed' });
+        return new Response('Configuration error', { status: 500 });
+      }
 
   // Extract cookies from request headers
   const cookieString = request.headers.get('cookie') || '';
@@ -89,16 +125,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Check authentication status from cookies
-  const isLoggedIn = AuthStorage.isLoggedInFromCookieString(cookieString);
-  const tokens = AuthStorage.getTokensFromCookieString(cookieString);
+  const authStart = Date.now();
+  const authResult = await withSpan('auth.check', async () => {
+    const isLoggedIn = AuthStorage.isLoggedInFromCookieString(cookieString);
+    const tokens = AuthStorage.getTokensFromCookieString(cookieString);
+    return { isLoggedIn, tokens };
+  });
+
+  recordAuthCheckDuration(Date.now() - authStart, {
+    isLoggedIn: authResult.isLoggedIn,
+    hasAuthToken: !!authResult.tokens.authToken,
+    hasRefreshToken: !!authResult.tokens.refreshToken,
+  });
 
   // Make auth info available to all components via Astro.locals
   context.locals.auth = {
-    isLoggedIn,
-    authToken: tokens.authToken,
-    refreshToken: tokens.refreshToken,
-    hasAuthToken: !!tokens.authToken,
-    hasRefreshToken: !!tokens.refreshToken
+    isLoggedIn: authResult.isLoggedIn,
+    authToken: authResult.tokens.authToken,
+    refreshToken: authResult.tokens.refreshToken,
+    hasAuthToken: !!authResult.tokens.authToken,
+    hasRefreshToken: !!authResult.tokens.refreshToken
   };
 
   // Log requests in development
@@ -144,8 +190,23 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  // Skip HTML modification - config is already available via Astro.locals
-  // This saves significant processing time on every HTML response
+      // Skip HTML modification - config is already available via Astro.locals
+      // This saves significant processing time on every HTML response
 
-  return response;
+      // Record total SSR duration
+      recordSSRDuration(Date.now() - startTime, {
+        path: url.pathname,
+        method: request.method,
+        statusCode: response.status,
+        isLoggedIn: context.locals.auth?.isLoggedIn || false,
+      });
+
+      span.setAttributes({
+        'http.status_code': response.status,
+        'ssr.duration': Date.now() - startTime,
+      });
+
+      return response;
+    }
+  );
 });
