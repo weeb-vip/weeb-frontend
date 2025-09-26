@@ -1,15 +1,10 @@
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { PeriodicExportingMetricReader, ConsoleMetricExporter } from '@opentelemetry/sdk-metrics';
-import { Resource } from '@opentelemetry/resources';
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import * as api from '@opentelemetry/api';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+
+// Lazy-loaded dependencies
+let deps: any = {};
 
 // Initialize telemetry only on server
-let sdk: NodeSDK | null = null;
+let sdk: any = null;
 let tracer: api.Tracer | null = null;
 let meter: api.Meter | null = null;
 
@@ -20,15 +15,63 @@ let configLoadHistogram: api.Histogram | null = null;
 let authCheckHistogram: api.Histogram | null = null;
 let graphqlDurationHistogram: api.Histogram | null = null;
 
-export function initTelemetry() {
+async function loadDependencies() {
+  if (typeof window !== 'undefined' || deps.loaded) {
+    return;
+  }
+
+  try {
+    const [
+      sdkModule,
+      autoInstrumentationsModule,
+      metricsModule,
+      resourcesModule,
+      semanticModule,
+      traceExporterModule,
+      metricExporterModule,
+    ] = await Promise.all([
+      import('@opentelemetry/sdk-node'),
+      import('@opentelemetry/auto-instrumentations-node'),
+      import('@opentelemetry/sdk-metrics'),
+      import('@opentelemetry/resources'),
+      import('@opentelemetry/semantic-conventions'),
+      import('@opentelemetry/exporter-trace-otlp-http'),
+      import('@opentelemetry/exporter-metrics-otlp-http'),
+    ]);
+
+    deps = {
+      NodeSDK: sdkModule.NodeSDK || sdkModule.default?.NodeSDK,
+      getNodeAutoInstrumentations: autoInstrumentationsModule.getNodeAutoInstrumentations || autoInstrumentationsModule.default?.getNodeAutoInstrumentations,
+      PeriodicExportingMetricReader: metricsModule.PeriodicExportingMetricReader || metricsModule.default?.PeriodicExportingMetricReader,
+      ConsoleMetricExporter: metricsModule.ConsoleMetricExporter || metricsModule.default?.ConsoleMetricExporter,
+      Resource: resourcesModule.Resource || resourcesModule.default?.Resource || resourcesModule.default,
+      ATTR_SERVICE_NAME: semanticModule.ATTR_SERVICE_NAME || semanticModule.SEMATTRS_SERVICE_NAME || semanticModule.default?.ATTR_SERVICE_NAME || 'service.name',
+      ATTR_SERVICE_VERSION: semanticModule.ATTR_SERVICE_VERSION || semanticModule.SEMATTRS_SERVICE_VERSION || semanticModule.default?.ATTR_SERVICE_VERSION || 'service.version',
+      OTLPTraceExporter: traceExporterModule.OTLPTraceExporter || traceExporterModule.default?.OTLPTraceExporter,
+      OTLPMetricExporter: metricExporterModule.OTLPMetricExporter || metricExporterModule.default?.OTLPMetricExporter,
+      loaded: true,
+    };
+  } catch (error) {
+    console.error('Failed to load OpenTelemetry dependencies:', error);
+  }
+}
+
+export async function initTelemetry() {
   if (typeof window !== 'undefined' || sdk) {
     return; // Only run on server and only once
   }
 
+  await loadDependencies();
+
+  if (!deps.loaded) {
+    console.warn('OpenTelemetry dependencies not loaded, skipping initialization');
+    return;
+  }
+
   try {
-    const resource = new Resource({
-      [ATTR_SERVICE_NAME]: 'weeb-frontend-ssr',
-      [ATTR_SERVICE_VERSION]: '1.0.0',
+    const resource = new deps.Resource({
+      [deps.ATTR_SERVICE_NAME]: 'weeb-frontend-ssr',
+      [deps.ATTR_SERVICE_VERSION]: '1.0.0',
       environment: process.env.NODE_ENV || 'development',
     });
 
@@ -39,30 +82,30 @@ export function initTelemetry() {
     const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
 
     const traceExporter = isProduction
-      ? new OTLPTraceExporter({
+      ? new deps.OTLPTraceExporter({
           url: `${otlpEndpoint}/v1/traces`,
           headers: {},
         })
-      : new OTLPTraceExporter({
+      : new deps.OTLPTraceExporter({
           url: `${otlpEndpoint}/v1/traces`,
         });
 
     const metricExporter = isProduction
-      ? new OTLPMetricExporter({
+      ? new deps.OTLPMetricExporter({
           url: `${otlpEndpoint}/v1/metrics`,
           headers: {},
         })
-      : new ConsoleMetricExporter();
+      : new deps.ConsoleMetricExporter();
 
-    sdk = new NodeSDK({
+    sdk = new deps.NodeSDK({
       resource,
       traceExporter,
-      metricReader: new PeriodicExportingMetricReader({
+      metricReader: new deps.PeriodicExportingMetricReader({
         exporter: metricExporter,
         exportIntervalMillis: 10000, // Export every 10 seconds
       }),
       instrumentations: [
-        getNodeAutoInstrumentations({
+        deps.getNodeAutoInstrumentations({
           '@opentelemetry/instrumentation-fs': {
             enabled: false, // Disable fs instrumentation to reduce noise
           },

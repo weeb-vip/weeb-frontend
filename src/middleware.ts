@@ -12,7 +12,9 @@ import {
 
 // Initialize OpenTelemetry
 if (typeof window === 'undefined') {
-  initTelemetry();
+  initTelemetry().catch(error => {
+    console.warn('Failed to initialize telemetry:', error);
+  });
 }
 
 // Ensure config is loaded at startup for SSR
@@ -158,7 +160,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (protectedRoutes.some(route => url.pathname.startsWith(route))) {
     // Server-side auth check for protected routes
-    if (!isLoggedIn) {
+    if (!authResult.isLoggedIn) {
       // Redirect to login page if not authenticated
       return context.redirect('/auth/login');
     }
@@ -167,7 +169,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Redirect authenticated users away from auth pages
   if (authRoutes.some(route => url.pathname === route)) {
     // If user is already authenticated, redirect to home or profile
-    if (isLoggedIn) {
+    if (authResult.isLoggedIn) {
       return context.redirect('/profile');
     }
   }
