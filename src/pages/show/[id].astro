@@ -1,10 +1,9 @@
 ---
+export const prerender = false; // Dynamic anime data based on ID
 import SvelteLayout from '../../layouts/SvelteLayout.astro';
 import ShowContentWithProvider from '../../svelte/components/ShowContentWithProvider.svelte';
 import { GraphQLClient } from 'graphql-request';
 import { ensureConfigLoaded } from '../../services/config-loader';
-
-export const prerender = false;
 
 // Get the anime ID from the URL parameters
 const { id } = Astro.params;
