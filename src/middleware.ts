@@ -35,7 +35,6 @@ if (typeof window === 'undefined') {
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, url, cookies } = context;
-  const startTime = Date.now();
 
   // Skip middleware for static assets (huge performance improvement)
   const isStaticAsset = url.pathname.startsWith('/assets/') ||
@@ -52,6 +51,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (isStaticAsset) {
     return next();
   }
+
+  const startTime = Date.now();
 
   // Track SSR request
   recordSSRRequest({

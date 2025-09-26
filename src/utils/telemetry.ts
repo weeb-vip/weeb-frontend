@@ -39,16 +39,21 @@ async function loadDependencies() {
       import('@opentelemetry/exporter-metrics-otlp-http'),
     ]);
 
+    // Extract Resource from the module structure
+    const Resource = resourcesModule.Resource ||
+                     (resourcesModule.default && resourcesModule.default.Resource) ||
+                     resourcesModule.default;
+
     deps = {
-      NodeSDK: sdkModule.NodeSDK || sdkModule.default?.NodeSDK,
-      getNodeAutoInstrumentations: autoInstrumentationsModule.getNodeAutoInstrumentations || autoInstrumentationsModule.default?.getNodeAutoInstrumentations,
-      PeriodicExportingMetricReader: metricsModule.PeriodicExportingMetricReader || metricsModule.default?.PeriodicExportingMetricReader,
+      NodeSDK: sdkModule.NodeSDK || sdkModule.default?.NodeSDK || sdkModule.default,
+      getNodeAutoInstrumentations: autoInstrumentationsModule.getNodeAutoInstrumentations || autoInstrumentationsModule.default?.getNodeAutoInstrumentations || autoInstrumentationsModule.default,
+      PeriodicExportingMetricReader: metricsModule.PeriodicExportingMetricReader || metricsModule.default?.PeriodicExportingMetricReader || metricsModule.default,
       ConsoleMetricExporter: metricsModule.ConsoleMetricExporter || metricsModule.default?.ConsoleMetricExporter,
-      Resource: resourcesModule.Resource || resourcesModule.default?.Resource || resourcesModule.default,
-      ATTR_SERVICE_NAME: semanticModule.ATTR_SERVICE_NAME || semanticModule.SEMATTRS_SERVICE_NAME || semanticModule.default?.ATTR_SERVICE_NAME || 'service.name',
-      ATTR_SERVICE_VERSION: semanticModule.ATTR_SERVICE_VERSION || semanticModule.SEMATTRS_SERVICE_VERSION || semanticModule.default?.ATTR_SERVICE_VERSION || 'service.version',
-      OTLPTraceExporter: traceExporterModule.OTLPTraceExporter || traceExporterModule.default?.OTLPTraceExporter,
-      OTLPMetricExporter: metricExporterModule.OTLPMetricExporter || metricExporterModule.default?.OTLPMetricExporter,
+      Resource: Resource,
+      ATTR_SERVICE_NAME: semanticModule.ATTR_SERVICE_NAME || 'service.name',
+      ATTR_SERVICE_VERSION: semanticModule.ATTR_SERVICE_VERSION || 'service.version',
+      OTLPTraceExporter: traceExporterModule.OTLPTraceExporter || traceExporterModule.default?.OTLPTraceExporter || traceExporterModule.default,
+      OTLPMetricExporter: metricExporterModule.OTLPMetricExporter || metricExporterModule.default?.OTLPMetricExporter || metricExporterModule.default,
       loaded: true,
     };
   } catch (error) {
@@ -57,6 +62,9 @@ async function loadDependencies() {
 }
 
 export async function initTelemetry() {
+  console.log('🔍 Telemetry initialization disabled for debugging');
+  return; // Temporarily disabled
+
   if (typeof window !== 'undefined' || sdk) {
     return; // Only run on server and only once
   }
@@ -178,71 +186,32 @@ export function startSpan(name: string, attributes?: api.Attributes): api.Span {
 
 export function withSpan<T>(
   name: string,
-  fn: (span: api.Span) => T | Promise<T>,
-  attributes?: api.Attributes
+  fn: (span: any) => T | Promise<T>,
+  attributes?: any
 ): T | Promise<T> {
-  if (!tracer) {
-    return fn(api.trace.getActiveSpan() || api.trace.getTracer('noop').startSpan('noop'));
-  }
-
-  const span = tracer.startSpan(name, { attributes });
-  const context = api.trace.setSpan(api.context.active(), span);
-
-  return api.context.with(context, () => {
-    try {
-      const result = fn(span);
-      if (result instanceof Promise) {
-        return result
-          .then((value) => {
-            span.setStatus({ code: api.SpanStatusCode.OK });
-            span.end();
-            return value;
-          })
-          .catch((error) => {
-            span.setStatus({
-              code: api.SpanStatusCode.ERROR,
-              message: error.message,
-            });
-            span.recordException(error);
-            span.end();
-            throw error;
-          });
-      } else {
-        span.setStatus({ code: api.SpanStatusCode.OK });
-        span.end();
-        return result;
-      }
-    } catch (error: any) {
-      span.setStatus({
-        code: api.SpanStatusCode.ERROR,
-        message: error.message,
-      });
-      span.recordException(error);
-      span.end();
-      throw error;
-    }
-  });
+  // Telemetry disabled - just execute the function directly
+  return fn({ setAttributes: () => {}, setStatus: () => {} });
 }
 
 // Metric recording functions
 export function recordSSRRequest(attributes: Record<string, any>) {
-  ssrRequestCounter?.add(1, attributes);
+  // Telemetry disabled
 }
 
 export function recordSSRDuration(duration: number, attributes: Record<string, any>) {
-  ssrDurationHistogram?.record(duration, attributes);
+  // Telemetry disabled
 }
 
 export function recordConfigLoadDuration(duration: number) {
-  configLoadHistogram?.record(duration);
+  // Telemetry disabled
 }
 
 export function recordAuthCheckDuration(duration: number, attributes: Record<string, any>) {
-  authCheckHistogram?.record(duration, attributes);
+  // Telemetry disabled
 }
 
 export function recordGraphQLDuration(duration: number, attributes: Record<string, any>) {
-  graphqlDurationHistogram?.record(duration, attributes);
+  // Telemetry disabled
 }
 
 // Process-level handlers
