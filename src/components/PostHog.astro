@@ -1,21 +1,7 @@
 ---
 // src/components/PostHog.astro
-import { getConfig } from '../config';
-
-const config = getConfig();
-console.log("🔍 PostHog config check:", {
-  hasApiKey: !!config?.posthog_api_key,
-  apiKey: config?.posthog_api_key ? 'PROVIDED' : 'MISSING',
-  devFeaturesEnabled: __ENABLE_DEV_FEATURES__,
-  isPlaywright: import.meta.env.PLAYWRIGHT
-});
-
-const shouldLoadPostHog = config?.posthog_api_key &&
-                          config.posthog_api_key !== "" &&
-                          !__ENABLE_DEV_FEATURES__ &&
-                          !import.meta.env.PLAYWRIGHT;
-
-console.log("🔍 Should load PostHog:", shouldLoadPostHog);
+// Only run PostHog on client-side to avoid SSR issues
+const shouldLoadPostHog = false; // Disabled on SSR side
 ---
 
 {shouldLoadPostHog &&

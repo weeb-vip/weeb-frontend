@@ -6,7 +6,6 @@ import {
   withSpan,
   recordSSRRequest,
   recordSSRDuration,
-  recordConfigLoadDuration,
   recordAuthCheckDuration
 } from './utils/telemetry';
 
@@ -17,14 +16,21 @@ if (typeof window === 'undefined') {
   });
 }
 
-// Ensure config is loaded at startup for SSR
+// Ensure config is loaded at startup for SSR - load once and cache
+let configData: any = null;
 let configLoadPromise: Promise<any> | null = null;
 
 if (typeof window === 'undefined') {
-  configLoadPromise = ensureConfigLoaded().catch(error => {
-    console.error('[Middleware] Failed to load config at startup:', error);
-    throw error;
-  });
+  configLoadPromise = ensureConfigLoaded()
+    .then(config => {
+      configData = config;
+      console.log('[Middleware] Config loaded at startup');
+      return config;
+    })
+    .catch(error => {
+      console.error('[Middleware] Failed to load config at startup:', error);
+      throw error;
+    });
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -63,17 +69,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
         'http.route': url.pathname,
       });
 
-      // Ensure config is loaded before processing any request
-      const configStart = Date.now();
+      // Ensure config is available - use cached version
       try {
-        const config = await withSpan('config.load', async () => {
-          return await ensureConfigLoaded();
-        });
+        // If config hasn't loaded yet, wait for the startup promise
+        if (!configData && configLoadPromise) {
+          configData = await configLoadPromise;
+        }
 
-        recordConfigLoadDuration(Date.now() - configStart);
+        // If still no config, try loading (fallback)
+        if (!configData) {
+          configData = await ensureConfigLoaded();
+        }
 
         // Make config available in Astro locals for components to access
-        context.locals.config = config;
+        context.locals.config = configData;
       } catch (error) {
         console.error('[Middleware] Failed to load config:', error);
         span.setStatus({ code: 2, message: 'Config load failed' });

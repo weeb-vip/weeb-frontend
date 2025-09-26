@@ -13,7 +13,15 @@ export default defineConfig({
   }),
 
   integrations: [
-    svelte(),
+    svelte({
+      // Disable experimental async SSR to suppress warnings
+      compilerOptions: {
+        warningFilter: (warning) => {
+          // Suppress experimental async SSR warnings
+          return !warning.message.includes('experimental_async_ssr');
+        }
+      }
+    }),
     tailwind({
       configFile: './tailwind.config.js'
     })
