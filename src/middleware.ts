@@ -2,22 +2,8 @@ import { defineMiddleware } from 'astro:middleware';
 import { ensureConfigLoaded } from './services/config-loader';
 import { AuthStorage } from './utils/auth-storage';
 
-// Ensure config is loaded at startup for SSR - load once and cache
+// Config cache for performance - but loaded inside handler for Cloudflare Pages compatibility
 let configData: any = null;
-let configLoadPromise: Promise<any> | null = null;
-
-if (typeof window === 'undefined') {
-  configLoadPromise = ensureConfigLoaded()
-    .then(config => {
-      configData = config;
-      console.log('[Middleware] Config loaded at startup');
-      return config;
-    })
-    .catch(error => {
-      console.error('[Middleware] Failed to load config at startup:', error);
-      throw error;
-    });
-}
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, url, cookies } = context;
@@ -40,16 +26,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const startTime = Date.now();
 
-  // Ensure config is available - use cached version
+  // Ensure config is available - compatible with Cloudflare Pages
   try {
-    // If config hasn't loaded yet, wait for the startup promise
-    if (!configData && configLoadPromise) {
-      configData = await configLoadPromise;
-    }
-
-    // If still no config, try loading (fallback)
+    // Load config on first request and cache it
     if (!configData) {
       configData = await ensureConfigLoaded();
+      console.log('[Middleware] Config loaded on first request');
     }
 
     // Make config available in Astro locals for components to access
