@@ -87,7 +87,6 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <meta name="apple-touch-fullscreen" content="yes"/>
 
     <!-- Theme color for status bar (dynamically updated by JavaScript) -->
-    <meta name="theme-color" content="#ffffff">
     <meta name="msapplication-TileColor" content="#111827">
 
     <!-- View Transitions for smoother navigation -->
@@ -142,9 +141,9 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
         transition: opacity 0.5s ease-out;
       }
 
-      /* Show splash screen only in PWA mode */
+      /* Show splash screen only in PWA mode when JS enables it */
       @media (display-mode: standalone) {
-        #pwa-splash-screen {
+        #pwa-splash-screen.show {
           display: flex !important;
         }
       }
@@ -297,6 +296,18 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
           document.documentElement.classList.remove('dark');
         }
 
+        // Update theme-color meta tag for status bar
+        function updateThemeColor() {
+          const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+          if (themeColorMeta) {
+            const isDark = document.documentElement.classList.contains('dark');
+            themeColorMeta.setAttribute('content', isDark ? '#111827' : '#ffffff');
+          }
+        }
+
+        // Update theme color immediately
+        updateThemeColor();
+
         // Re-enable transitions after a small delay
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -310,6 +321,21 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 
       // Re-initialize on View Transitions navigation
       document.addEventListener('astro:after-swap', initTheme);
+
+      // Also update theme color when theme changes
+      const themeObserver = new MutationObserver(() => {
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColorMeta) {
+          const isDark = document.documentElement.classList.contains('dark');
+          themeColorMeta.setAttribute('content', isDark ? '#111827' : '#ffffff');
+        }
+      });
+
+      // Start observing theme changes
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
 
 
       // Clean up PWA source parameter if present
@@ -899,6 +925,12 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
         if (isInitialLaunch) {
           // Mark that PWA has been launched in this session
           sessionStorage.setItem('pwa-launched', 'true');
+
+          // Enable splash screen display
+          const splashScreen = document.getElementById('pwa-splash-screen');
+          if (splashScreen) {
+            splashScreen.classList.add('show');
+          }
 
           let contentLoaded = false;
           let minDisplayTime = false;
