@@ -69,10 +69,15 @@ export async function initTelemetry() {
   }
 
   try {
+    const serviceName = process.env.OTEL_SERVICE_NAME || 'weeb-frontend-ssr';
+    const serviceVersion = process.env.OTEL_SERVICE_VERSION || process.env.npm_package_version || '1.0.0';
+    const environment = process.env.OTEL_ENVIRONMENT || process.env.NODE_ENV || 'development';
+
     const resource = new deps.Resource({
-      [deps.ATTR_SERVICE_NAME]: 'weeb-frontend-ssr',
-      [deps.ATTR_SERVICE_VERSION]: '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
+      [deps.ATTR_SERVICE_NAME]: serviceName,
+      [deps.ATTR_SERVICE_VERSION]: serviceVersion,
+      environment: environment,
+      'service.instance.id': process.env.HOSTNAME || `${serviceName}-${Date.now()}`,
     });
 
     // Configure exporters based on environment
@@ -116,8 +121,8 @@ export async function initTelemetry() {
     sdk.start();
 
     // Get tracer and meter for manual instrumentation
-    tracer = api.trace.getTracer('weeb-frontend-ssr', '1.0.0');
-    meter = api.metrics.getMeter('weeb-frontend-ssr', '1.0.0');
+    tracer = api.trace.getTracer(serviceName, serviceVersion);
+    meter = api.metrics.getMeter(serviceName, serviceVersion);
 
     // Create custom metrics
     ssrRequestCounter = meter.createCounter('ssr.requests', {
