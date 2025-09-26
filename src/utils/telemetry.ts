@@ -21,54 +21,55 @@ async function loadDependencies() {
   }
 
   try {
-    const [
-      sdkModule,
-      autoInstrumentationsModule,
-      metricsModule,
-      resourcesModule,
-      semanticModule,
-      traceExporterModule,
-      metricExporterModule,
-    ] = await Promise.all([
-      import('@opentelemetry/sdk-node'),
-      import('@opentelemetry/auto-instrumentations-node'),
-      import('@opentelemetry/sdk-metrics'),
-      import('@opentelemetry/resources'),
-      import('@opentelemetry/semantic-conventions'),
-      import('@opentelemetry/exporter-trace-otlp-http'),
-      import('@opentelemetry/exporter-metrics-otlp-http'),
-    ]);
+    console.log('🔍 Loading OpenTelemetry modules...');
 
-    // Extract Resource from the module structure
-    const Resource = resourcesModule.Resource ||
-                     (resourcesModule.default && resourcesModule.default.Resource) ||
-                     resourcesModule.default;
+    // Load modules individually to better handle errors
+    const sdkModule = await import('@opentelemetry/sdk-node');
+    const autoInstrumentationsModule = await import('@opentelemetry/auto-instrumentations-node');
+    const metricsModule = await import('@opentelemetry/sdk-metrics');
+    const resourcesModule = await import('@opentelemetry/resources');
+    const semanticModule = await import('@opentelemetry/semantic-conventions');
+    const traceExporterModule = await import('@opentelemetry/exporter-trace-otlp-http');
+    const metricExporterModule = await import('@opentelemetry/exporter-metrics-otlp-http');
 
+    console.log('🔍 Extracting exports from modules...');
+
+    // Extract with better fallback handling
     deps = {
-      NodeSDK: sdkModule.NodeSDK || sdkModule.default?.NodeSDK || sdkModule.default,
-      getNodeAutoInstrumentations: autoInstrumentationsModule.getNodeAutoInstrumentations || autoInstrumentationsModule.default?.getNodeAutoInstrumentations || autoInstrumentationsModule.default,
-      PeriodicExportingMetricReader: metricsModule.PeriodicExportingMetricReader || metricsModule.default?.PeriodicExportingMetricReader || metricsModule.default,
+      NodeSDK: sdkModule.NodeSDK || sdkModule.default,
+      getNodeAutoInstrumentations: autoInstrumentationsModule.getNodeAutoInstrumentations || autoInstrumentationsModule.default,
+      PeriodicExportingMetricReader: metricsModule.PeriodicExportingMetricReader || metricsModule.default?.PeriodicExportingMetricReader,
       ConsoleMetricExporter: metricsModule.ConsoleMetricExporter || metricsModule.default?.ConsoleMetricExporter,
-      Resource: Resource,
-      ATTR_SERVICE_NAME: semanticModule.ATTR_SERVICE_NAME || 'service.name',
-      ATTR_SERVICE_VERSION: semanticModule.ATTR_SERVICE_VERSION || 'service.version',
-      OTLPTraceExporter: traceExporterModule.OTLPTraceExporter || traceExporterModule.default?.OTLPTraceExporter || traceExporterModule.default,
-      OTLPMetricExporter: metricExporterModule.OTLPMetricExporter || metricExporterModule.default?.OTLPMetricExporter || metricExporterModule.default,
+      resourceFromAttributes: resourcesModule.resourceFromAttributes || resourcesModule.default?.resourceFromAttributes,
+      defaultResource: resourcesModule.defaultResource || resourcesModule.default?.defaultResource,
+      ATTR_SERVICE_NAME: 'service.name', // Use string constants instead of imports
+      ATTR_SERVICE_VERSION: 'service.version',
+      OTLPTraceExporter: traceExporterModule.OTLPTraceExporter || traceExporterModule.default,
+      OTLPMetricExporter: metricExporterModule.OTLPMetricExporter || metricExporterModule.default,
       loaded: true,
     };
-  } catch (error) {
+
+    console.log('🔍 Dependencies loaded successfully');
+  } catch (error: any) {
     console.error('Failed to load OpenTelemetry dependencies:', error);
+    console.error('Error details:', error.message, error.stack);
   }
 }
 
 export async function initTelemetry() {
-  console.log('🔍 Telemetry initialization disabled for debugging');
-  return; // Temporarily disabled
+  // Check if telemetry is enabled via environment variable
+  const telemetryEnabled = process.env.OTEL_ENABLED === 'true' || process.env.NODE_ENV === 'production';
+
+  if (!telemetryEnabled) {
+    console.log('🔍 Telemetry disabled via OTEL_ENABLED environment variable');
+    return;
+  }
 
   if (typeof window !== 'undefined' || sdk) {
     return; // Only run on server and only once
   }
 
+  console.log('🔍 Initializing OpenTelemetry...');
   await loadDependencies();
 
   if (!deps.loaded) {
@@ -81,7 +82,7 @@ export async function initTelemetry() {
     const serviceVersion = process.env.OTEL_SERVICE_VERSION || process.env.npm_package_version || '1.0.0';
     const environment = process.env.OTEL_ENVIRONMENT || process.env.NODE_ENV || 'development';
 
-    const resource = new deps.Resource({
+    const resource = deps.resourceFromAttributes({
       [deps.ATTR_SERVICE_NAME]: serviceName,
       [deps.ATTR_SERVICE_VERSION]: serviceVersion,
       environment: environment,
@@ -189,29 +190,69 @@ export function withSpan<T>(
   fn: (span: any) => T | Promise<T>,
   attributes?: any
 ): T | Promise<T> {
-  // Telemetry disabled - just execute the function directly
-  return fn({ setAttributes: () => {}, setStatus: () => {} });
+  if (!tracer) {
+    // Telemetry disabled - just execute the function directly
+    return fn({ setAttributes: () => {}, setStatus: () => {} });
+  }
+
+  const span = tracer.startSpan(name, { attributes });
+  const context = api.trace.setSpan(api.context.active(), span);
+
+  return api.context.with(context, () => {
+    try {
+      const result = fn(span);
+      if (result instanceof Promise) {
+        return result
+          .then((value) => {
+            span.setStatus({ code: api.SpanStatusCode.OK });
+            span.end();
+            return value;
+          })
+          .catch((error) => {
+            span.setStatus({
+              code: api.SpanStatusCode.ERROR,
+              message: error.message,
+            });
+            span.recordException(error);
+            span.end();
+            throw error;
+          });
+      } else {
+        span.setStatus({ code: api.SpanStatusCode.OK });
+        span.end();
+        return result;
+      }
+    } catch (error: any) {
+      span.setStatus({
+        code: api.SpanStatusCode.ERROR,
+        message: error.message,
+      });
+      span.recordException(error);
+      span.end();
+      throw error;
+    }
+  });
 }
 
 // Metric recording functions
 export function recordSSRRequest(attributes: Record<string, any>) {
-  // Telemetry disabled
+  ssrRequestCounter?.add(1, attributes);
 }
 
 export function recordSSRDuration(duration: number, attributes: Record<string, any>) {
-  // Telemetry disabled
+  ssrDurationHistogram?.record(duration, attributes);
 }
 
 export function recordConfigLoadDuration(duration: number) {
-  // Telemetry disabled
+  configLoadHistogram?.record(duration);
 }
 
 export function recordAuthCheckDuration(duration: number, attributes: Record<string, any>) {
-  // Telemetry disabled
+  authCheckHistogram?.record(duration, attributes);
 }
 
 export function recordGraphQLDuration(duration: number, attributes: Record<string, any>) {
-  // Telemetry disabled
+  graphqlDurationHistogram?.record(duration, attributes);
 }
 
 // Process-level handlers
