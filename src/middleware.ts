@@ -15,6 +15,22 @@ if (typeof window === 'undefined') {
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, url, cookies } = context;
 
+  // Skip middleware for static assets (huge performance improvement)
+  const isStaticAsset = url.pathname.startsWith('/assets/') ||
+                        url.pathname.startsWith('/_astro/') ||
+                        url.pathname.includes('.png') ||
+                        url.pathname.includes('.jpg') ||
+                        url.pathname.includes('.ico') ||
+                        url.pathname.includes('.webp') ||
+                        url.pathname.includes('.svg') ||
+                        url.pathname.includes('.css') ||
+                        url.pathname.includes('.js') ||
+                        url.pathname.includes('.json');
+
+  if (isStaticAsset) {
+    return next();
+  }
+
   // Ensure config is loaded before processing any request
   try {
     const config = await ensureConfigLoaded();
@@ -29,45 +45,48 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Extract cookies from request headers
   const cookieString = request.headers.get('cookie') || '';
 
-  // Debug: Log cookie and header information
-  const cookieNames = cookieString ? cookieString.split(';').map(c => c.trim().split('=')[0]) : [];
+  // Only do expensive logging in development
+  if (import.meta.env.DEV) {
+    // Debug: Log cookie and header information
+    const cookieNames = cookieString ? cookieString.split(';').map(c => c.trim().split('=')[0]) : [];
 
-  // Parse cookies to extract token values (masked for security)
-  const parsedCookies: Record<string, string> = {};
-  if (cookieString) {
-    cookieString.split(';').forEach(cookie => {
-      const [name, ...valueParts] = cookie.trim().split('=');
-      const value = valueParts.join('=');
-      if (name && value) {
-        // Mask sensitive tokens but show first/last few chars
-        if (name === 'authToken' || name === 'refreshToken') {
-          parsedCookies[name] = value.length > 10
-            ? `${value.substring(0, 5)}...${value.substring(value.length - 5)}`
-            : value;
-        } else {
-          parsedCookies[name] = value;
+    // Parse cookies to extract token values (masked for security)
+    const parsedCookies: Record<string, string> = {};
+    if (cookieString) {
+      cookieString.split(';').forEach(cookie => {
+        const [name, ...valueParts] = cookie.trim().split('=');
+        const value = valueParts.join('=');
+        if (name && value) {
+          // Mask sensitive tokens but show first/last few chars
+          if (name === 'authToken' || name === 'refreshToken') {
+            parsedCookies[name] = value.length > 10
+              ? `${value.substring(0, 5)}...${value.substring(value.length - 5)}`
+              : value;
+          } else {
+            parsedCookies[name] = value;
+          }
         }
-      }
+      });
+    }
+
+    console.log('[Middleware] Request debug:', {
+      hasCookieHeader: !!request.headers.get('cookie'),
+      cookieLength: cookieString.length,
+      cookieNames: cookieNames,
+      parsedCookies: parsedCookies,
+      url: url.pathname,
+      host: request.headers.get('host'),
+      'x-forwarded-host': request.headers.get('x-forwarded-host'),
+      'x-forwarded-proto': request.headers.get('x-forwarded-proto'),
+      'x-forwarded-for': request.headers.get('x-forwarded-for'),
+      'x-original-host': request.headers.get('x-original-host'),
+      hasAuthToken: cookieString.includes('authToken='),
+      hasRefreshToken: cookieString.includes('refreshToken='),
+      hasAccessToken: cookieString.includes('access_token='),
+      // Show full cookie string for debugging (be careful with sensitive data)
+      fullCookieString: cookieString || 'none'
     });
   }
-
-  console.log('[Middleware] Request debug:', {
-    hasCookieHeader: !!request.headers.get('cookie'),
-    cookieLength: cookieString.length,
-    cookieNames: cookieNames,
-    parsedCookies: parsedCookies,
-    url: url.pathname,
-    host: request.headers.get('host'),
-    'x-forwarded-host': request.headers.get('x-forwarded-host'),
-    'x-forwarded-proto': request.headers.get('x-forwarded-proto'),
-    'x-forwarded-for': request.headers.get('x-forwarded-for'),
-    'x-original-host': request.headers.get('x-original-host'),
-    hasAuthToken: cookieString.includes('authToken='),
-    hasRefreshToken: cookieString.includes('refreshToken='),
-    hasAccessToken: cookieString.includes('access_token='),
-    // Show full cookie string for debugging (be careful with sensitive data)
-    fullCookieString: cookieString || 'none'
-  });
 
   // Check authentication status from cookies
   const isLoggedIn = AuthStorage.isLoggedInFromCookieString(cookieString);
@@ -125,31 +144,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  // For HTML responses, inject config into the page
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('text/html')) {
-    try {
-      const config = context.locals.config;
-      if (config) {
-        // Clone the response to avoid "body already used" error
-        const clonedResponse = response.clone();
-        const html = await clonedResponse.text();
-        const configScript = `<script>window.config = ${JSON.stringify(config)}; if (typeof global !== 'undefined') { global.config = window.config; }</script>`;
-
-        // Inject the script before the closing head tag
-        const modifiedHtml = html.replace('</head>', `${configScript}</head>`);
-
-        return new Response(modifiedHtml, {
-          status: response.status,
-          statusText: response.statusText,
-          headers: response.headers
-        });
-      }
-    } catch (error) {
-      console.error('[Middleware] Failed to inject config into HTML:', error);
-      // Return original response if injection fails
-    }
-  }
+  // Skip HTML modification - config is already available via Astro.locals
+  // This saves significant processing time on every HTML response
 
   return response;
 });
