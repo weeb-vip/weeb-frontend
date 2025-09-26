@@ -25,7 +25,6 @@ async function loadDependencies() {
 
     // Load modules individually to better handle errors
     const sdkModule = await import('@opentelemetry/sdk-node');
-    const autoInstrumentationsModule = await import('@opentelemetry/auto-instrumentations-node');
     const metricsModule = await import('@opentelemetry/sdk-metrics');
     const resourcesModule = await import('@opentelemetry/resources');
     const semanticModule = await import('@opentelemetry/semantic-conventions');
@@ -37,7 +36,6 @@ async function loadDependencies() {
     // Extract with better fallback handling
     deps = {
       NodeSDK: sdkModule.NodeSDK || sdkModule.default,
-      getNodeAutoInstrumentations: autoInstrumentationsModule.getNodeAutoInstrumentations || autoInstrumentationsModule.default,
       PeriodicExportingMetricReader: metricsModule.PeriodicExportingMetricReader || metricsModule.default?.PeriodicExportingMetricReader,
       ConsoleMetricExporter: metricsModule.ConsoleMetricExporter || metricsModule.default?.ConsoleMetricExporter,
       resourceFromAttributes: resourcesModule.resourceFromAttributes || resourcesModule.default?.resourceFromAttributes,
@@ -70,6 +68,11 @@ export async function initTelemetry() {
   }
 
   console.log('🔍 Initializing OpenTelemetry...');
+
+  // Set environment variables to prevent browser-specific auto-instrumentations
+  process.env.OTEL_NODE_DISABLED_INSTRUMENTATIONS = '@opentelemetry/instrumentation-http,@opentelemetry/instrumentation-express,@opentelemetry/instrumentation-fastify';
+  process.env.OTEL_LOGS_EXPORTER = 'none'; // Disable log exporters
+
   await loadDependencies();
 
   if (!deps.loaded) {
@@ -118,13 +121,10 @@ export async function initTelemetry() {
         exporter: metricExporter,
         exportIntervalMillis: 10000, // Export every 10 seconds
       }),
-      instrumentations: [
-        deps.getNodeAutoInstrumentations({
-          '@opentelemetry/instrumentation-fs': {
-            enabled: false, // Disable fs instrumentation to reduce noise
-          },
-        }),
-      ],
+      // Disable all auto-instrumentations to prevent browser compatibility issues
+      instrumentations: [],
+      // Disable auto-configuration to prevent browser exporter loading
+      autoDetectResources: false,
     });
 
     sdk.start();
