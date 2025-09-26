@@ -159,15 +159,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Cache control for different types of content
     if (url.pathname.startsWith('/assets/') || url.pathname.includes('.')) {
       response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-    } else if (url.pathname === '/') {
-      // Homepage caching strategy: short cache for logged-in users, longer for anonymous
-      const isLoggedIn = context.locals.auth?.isLoggedIn || false;
-      if (isLoggedIn) {
-        response.headers.set('Cache-Control', 'private, max-age=60'); // 1 minute for logged-in users
-      } else {
-        response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=900'); // 5/15 min for anonymous
-      }
-    } else if (url.pathname === '/airing') {
+    } else if (url.pathname === '/' || url.pathname === '/airing') {
       response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=3600');
     }
   }

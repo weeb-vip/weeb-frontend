@@ -1,5 +1,4 @@
 ---
-export const prerender = false; // Homepage needs personalized content and auth
 import SvelteLayout from '../layouts/SvelteLayout.astro';
 import HomepageSSR from '../svelte/components/HomepageSSR.svelte';
 import { GraphQLClient } from 'graphql-request';
@@ -81,16 +80,14 @@ let isTokenExpired = false;
 const currentSeason = getCurrentSeason();
 
 try {
-  // Fast path for anonymous users - skip personalized data
-  const isAnonymous = !auth.authToken;
   const client = createSSRGraphQLClient(auth.authToken);
 
   // Helper function to fetch with timeout and error handling
   async function fetchWithFallback(query, variables, description) {
     try {
-      // Ultra-aggressive timeout for critical SSR content
+      // Allow longer timeout for SSR - you'll optimize APIs on backend
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout')), 2000) // Reduced to 2s for critical content
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
       const requestPromise = client.request(query, variables);
@@ -124,22 +121,19 @@ try {
   const defaultStartDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  // SSR Strategy: Only load critical above-the-fold content
-  // 1. Hero banner data (first few items for hero)
-  // 2. Currently airing (visible immediately)
-  // 3. Skip seasonal data - load client-side for better performance
-  const [homeResult, currentlyAiringResult] = await Promise.allSettled([
-    fetchWithFallback(getHomePageData, { limit: 6 }, 'home data for hero'), // Just enough for hero banner
+  // Fetch all data in parallel for better performance
+  const [homeResult, currentlyAiringResult, seasonalResult] = await Promise.allSettled([
+    fetchWithFallback(getHomePageData, { limit: 20 }, 'home data'),
     fetchWithFallback(getCurrentlyAiringWithDates, {
       input: { startDate: defaultStartDate, endDate: defaultEndDate }
-    }, 'currently airing data')
+    }, 'currently airing data'),
+    fetchWithFallback(getSeasonalAnime, { season: currentSeason }, 'seasonal data')
   ]);
 
   // Extract results
   homeData = homeResult.status === 'fulfilled' ? homeResult.value : null;
   currentlyAiringData = currentlyAiringResult.status === 'fulfilled' ? currentlyAiringResult.value : null;
-  // seasonalData will be loaded client-side for better SSR performance
-  seasonalData = null;
+  seasonalData = seasonalResult.status === 'fulfilled' ? seasonalResult.value : null;
 
 
 } catch (error) {
@@ -167,6 +161,8 @@ if (currentlyAiringData?.getAiringAnimeAll?.length > 0) {
     bannerImageUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${firstAnime.anidbid}/fanart?w=1920&h=1080&fit=cover&q=85&f=webp`;
   }
 }
+
+export const prerender = false;
 ---
 
 <SvelteLayout
