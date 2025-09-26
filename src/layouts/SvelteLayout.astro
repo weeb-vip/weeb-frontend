@@ -891,86 +891,97 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 
     <!-- PWA Splash Screen Controller -->
     <script>
-      // Only run splash screen logic if we're in PWA mode
+      // Only run splash screen logic if we're in PWA mode AND it's initial launch
       if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-        let contentLoaded = false;
-        let minDisplayTime = false;
+        // Check if this is initial app launch (no previous session)
+        const isInitialLaunch = !sessionStorage.getItem('pwa-launched');
 
-        // Apply theme to splash screen
-        function applySplashTheme() {
-          const splashScreen = document.getElementById('pwa-splash-screen');
-          if (!splashScreen) return;
+        if (isInitialLaunch) {
+          // Mark that PWA has been launched in this session
+          sessionStorage.setItem('pwa-launched', 'true');
 
-          // Wait a bit for theme initialization to complete
-          setTimeout(() => {
-            if (document.documentElement.classList.contains('dark')) {
-              splashScreen.classList.remove('light-theme');
-            } else {
-              splashScreen.classList.add('light-theme');
-            }
-          }, 10);
-        }
+          let contentLoaded = false;
+          let minDisplayTime = false;
 
-        // Apply theme after a short delay to ensure theme init is complete
-        setTimeout(() => {
-          applySplashTheme();
-        }, 50);
-
-        // Listen for theme changes
-        const observer = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-              applySplashTheme();
-            }
-          });
-        });
-
-        observer.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['class']
-        });
-
-        // Minimum display time (1 second) to prevent flashing
-        setTimeout(() => {
-          minDisplayTime = true;
-          hideSplashIfReady();
-        }, 1000);
-
-        // Hide splash when content is ready and minimum time has passed
-        function hideSplashIfReady() {
-          if (contentLoaded && minDisplayTime) {
+          // Apply theme to splash screen
+          function applySplashTheme() {
             const splashScreen = document.getElementById('pwa-splash-screen');
-            if (splashScreen) {
-              splashScreen.classList.add('fade-out');
-              setTimeout(() => {
-                splashScreen.remove();
-                observer.disconnect(); // Clean up observer
-              }, 500); // Wait for fade animation
+            if (!splashScreen) return;
+
+            // Wait a bit for theme initialization to complete
+            setTimeout(() => {
+              if (document.documentElement.classList.contains('dark')) {
+                splashScreen.classList.remove('light-theme');
+              } else {
+                splashScreen.classList.add('light-theme');
+              }
+            }, 10);
+          }
+
+          // Apply theme after a short delay to ensure theme init is complete
+          setTimeout(() => {
+            applySplashTheme();
+          }, 50);
+
+          // Listen for theme changes
+          const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                applySplashTheme();
+              }
+            });
+          });
+
+          observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+          });
+
+          // Minimum display time (1 second) to prevent flashing
+          setTimeout(() => {
+            minDisplayTime = true;
+            hideSplashIfReady();
+          }, 1000);
+
+          // Hide splash when content is ready and minimum time has passed
+          function hideSplashIfReady() {
+            if (contentLoaded && minDisplayTime) {
+              const splashScreen = document.getElementById('pwa-splash-screen');
+              if (splashScreen) {
+                splashScreen.classList.add('fade-out');
+                setTimeout(() => {
+                  splashScreen.remove();
+                  observer.disconnect(); // Clean up observer
+                }, 500); // Wait for fade animation
+              }
             }
           }
-        }
 
-        // Multiple ways to detect when content is ready
-        function markContentLoaded() {
-          contentLoaded = true;
-          hideSplashIfReady();
-        }
+          // Multiple ways to detect when content is ready
+          function markContentLoaded() {
+            contentLoaded = true;
+            hideSplashIfReady();
+          }
 
-        // Wait for DOM content to be loaded
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', markContentLoaded);
+          // Wait for DOM content to be loaded
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', markContentLoaded);
+          } else {
+            markContentLoaded();
+          }
+
+          // Also wait for all resources (images, etc.) as fallback
+          window.addEventListener('load', markContentLoaded);
+
+          // Fallback: hide after maximum time regardless
+          setTimeout(markContentLoaded, 5000);
         } else {
-          markContentLoaded();
+          // Not initial launch - hide splash screen immediately
+          const splashScreen = document.getElementById('pwa-splash-screen');
+          if (splashScreen) {
+            splashScreen.style.display = 'none';
+          }
         }
-
-        // Also wait for all resources (images, etc.) as fallback
-        window.addEventListener('load', markContentLoaded);
-
-        // Fallback: hide after maximum time regardless
-        setTimeout(markContentLoaded, 5000);
-
-        // Hide splash on Astro page load events (for navigation)
-        document.addEventListener('astro:page-load', markContentLoaded);
       }
     </script>
 </body>
