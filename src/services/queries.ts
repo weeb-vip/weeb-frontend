@@ -215,7 +215,7 @@ export const fetchCurrentlyAiring = (limit?: number) => ({
 })
 
 export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | null, days?: number, limit?: number) => ({
-  queryKey: ["currentlyAiring"],
+  queryKey: ["currentlyAiring", { startDate: startDate.toISOString(), endDate: endDate?.toISOString(), days, limit }],
   queryFn: async () => {
     const client = await AuthenticatedClient();
     // @ts-ignore

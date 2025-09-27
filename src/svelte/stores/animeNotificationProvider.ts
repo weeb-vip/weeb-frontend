@@ -161,7 +161,8 @@ class AnimeNotificationManager {
             input: {
               startDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
               daysInFuture: 7
-            }
+            },
+            limit: 25
           });
         });
 
