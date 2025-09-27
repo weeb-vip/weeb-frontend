@@ -280,19 +280,18 @@
     const processedAnime: any[] = [];
 
     currentlyAiringShows.forEach((anime: any) => {
-      if (!anime || !(anime as any).episodes || (anime as any).episodes.length === 0) return;
+      if (!anime || !anime.nextEpisode) return;
 
-      const episodes = (anime as any).episodes;
+      const nextEpisode = anime.nextEpisode;
 
-      // Skip anime where all episodes have null airdate
-      const hasValidAirDate = episodes.some((ep: any) => ep.airDate !== null && ep.airDate !== undefined);
-      if (!hasValidAirDate) return;
+      // Skip anime where nextEpisode has null airdate or airTime
+      if (!nextEpisode.airDate && !nextEpisode.airTime) return;
 
-      const nextEpisodeResult = findNextEpisode(episodes, anime.broadcast, now);
+      // Use airTime from backend if available, otherwise fall back to airDate
+      const nextEpisodeAirTime = nextEpisode.airTime ? new Date(nextEpisode.airTime) : new Date(nextEpisode.airDate);
 
-      if (nextEpisodeResult) {
-        const { episode: nextEpisode, airTime: nextEpisodeAirTime } = nextEpisodeResult;
-        const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast) || {
+      // Generate air time display info (using local timezone formatting)
+      const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast) || {
           show: true,
           text: nextEpisodeAirTime <= now
             ? "Recently aired"
@@ -300,34 +299,33 @@
           variant: nextEpisodeAirTime <= now ? 'aired' as const : 'scheduled' as const
         };
 
-        const processedEntry = {
-          id: `homepage-${anime.id}`,
-          anime: {
-            id: anime.id,
-            titleEn: anime.titleEn,
-            titleJp: anime.titleJp,
-            description: null,
-            episodeCount: null,
-            duration: anime.duration,
-            startDate: anime.startDate,
-            imageUrl: anime.imageUrl,
-            userAnime: anime.userAnime || null
+      const processedEntry = {
+        id: `homepage-${anime.id}`,
+        anime: {
+          id: anime.id,
+          titleEn: anime.titleEn,
+          titleJp: anime.titleJp,
+          description: null,
+          episodeCount: null,
+          duration: anime.duration,
+          startDate: anime.startDate,
+          imageUrl: anime.imageUrl,
+          userAnime: anime.userAnime || null
+        },
+        status: null,
+        airingInfo: {
+          ...anime,
+          airTimeDisplay: airTimeInfo,
+          nextEpisodeDate: nextEpisodeAirTime,
+          nextEpisode: {
+            ...nextEpisode,
+            airDate: nextEpisodeAirTime
           },
-          status: null,
-          airingInfo: {
-            ...anime,
-            airTimeDisplay: airTimeInfo,
-            nextEpisodeDate: nextEpisodeAirTime,
-            nextEpisode: {
-              ...nextEpisode,
-              airDate: nextEpisodeAirTime
-            },
-            isInWatchlist: false
-          }
-        };
+          isInWatchlist: false
+        }
+      };
 
-        processedAnime.push(processedEntry);
-      }
+      processedAnime.push(processedEntry);
     });
 
     const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);

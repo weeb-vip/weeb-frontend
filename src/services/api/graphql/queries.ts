@@ -122,8 +122,8 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
 `)
 
 export const getCurrentlyAiring = graphql(/* GraphQL */`
-    query currentlyAiring {
-        currentlyAiring {
+    query currentlyAiring($limit: Int) {
+        currentlyAiring(limit: $limit) {
             id
             titleEn
             titleJp
@@ -135,7 +135,7 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
             ranking
             broadcast
             thetvdbid
-            episodes {
+            nextEpisode {
                 id
                 animeId
                 episodeNumber
@@ -143,6 +143,7 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
                 titleJp
                 synopsis
                 airDate
+                airTime
                 createdAt
                 updatedAt
             }
@@ -156,8 +157,8 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
 `)
 
 export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
-    query currentlyAiringWithDate($input: CurrentlyAiringInput) {
-        currentlyAiring(input: $input) {
+    query currentlyAiringWithDate($input: CurrentlyAiringInput, $limit: Int) {
+        currentlyAiring(input: $input, limit: $limit) {
             id
             titleEn
             titleJp
@@ -169,7 +170,7 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
             ranking
             broadcast
             thetvdbid
-            episodes {
+            nextEpisode {
                 id
                 animeId
                 episodeNumber
@@ -177,6 +178,7 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
                 titleJp
                 synopsis
                 airDate
+                airTime
                 createdAt
                 updatedAt
             }

@@ -126,7 +126,10 @@
 
   // For now, we'll use a simpler approach without the worker data
   // This can be enhanced later with Svelte stores for countdown data
-  const animeNextEpisodeInfo = findNextEpisode(anime.episodes, anime.broadcast);
+  const animeNextEpisodeInfo = anime.nextEpisode ? {
+    episode: anime.nextEpisode,
+    airTime: anime.nextEpisode.airTime ? new Date(anime.nextEpisode.airTime) : new Date(anime.nextEpisode.airDate)
+  } : null;
   const airTimeAndDate = parseAirTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast);
 
   function handleImageLoad() {

@@ -2,7 +2,7 @@
 import type { CodegenConfig } from '@graphql-codegen/cli'
 
 const config: CodegenConfig = {
-  schema: 'https://gateway.weeb.vip/graphql',
+  schema: 'https://gateway.staging.weeb.vip/graphql',
   documents: ['src/**/*.{ts,tsx}', '!src/gql/**/*'], // avoid scanning generated files
   ignoreNoDocuments: true,
   generates: {

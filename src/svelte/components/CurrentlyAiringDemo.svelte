@@ -82,24 +82,20 @@
     const currentlyAiringShows = data.currentlyAiring || [];
     const processedAnime: any[] = [];
 
-    // Process each anime and determine its next episode
+    // Process each anime and use the nextEpisode from the backend
     currentlyAiringShows.forEach((anime: any) => {
-      if (!anime || !(anime as any).episodes || (anime as any).episodes.length === 0) return;
+      if (!anime || !anime.nextEpisode) return;
 
-      const episodes = (anime as any).episodes;
+      const nextEpisode = anime.nextEpisode;
 
-      // Skip anime where all episodes have null airdate
-      const hasValidAirDate = episodes.some((ep: any) => ep.airDate !== null && ep.airDate !== undefined);
-      if (!hasValidAirDate) return;
+      // Skip anime where nextEpisode has null airdate or airTime
+      if (!nextEpisode.airDate && !nextEpisode.airTime) return;
 
-      // Use shared function to find the next episode
-      const nextEpisodeResult = findNextEpisode(episodes, anime.broadcast, now);
+      // Use airTime from backend if available, otherwise fall back to airDate
+      const nextEpisodeAirTime = nextEpisode.airTime ? new Date(nextEpisode.airTime) : new Date(nextEpisode.airDate);
 
-      // If we found a next episode, add this anime to our list
-      if (nextEpisodeResult) {
-        const { episode: nextEpisode, airTime: nextEpisodeAirTime } = nextEpisodeResult;
-        // Generate air time display info (using local timezone formatting)
-        const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast) || {
+      // Generate air time display info (using local timezone formatting)
+      const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast) || {
           show: true,
           text: nextEpisodeAirTime <= now
                   ? "Recently aired"
@@ -110,37 +106,36 @@
                         ? `Airing ${format(nextEpisodeAirTime, "EEE")} at ${format(nextEpisodeAirTime, "h:mm a")}`
                         : `${format(nextEpisodeAirTime, "EEE")} at ${format(nextEpisodeAirTime, "h:mm a")}`;
                     })(),
-          variant: nextEpisodeAirTime <= now ? 'aired' as const : 'scheduled' as const
-        };
+        variant: nextEpisodeAirTime <= now ? 'aired' as const : 'scheduled' as const
+      };
 
-        const processedEntry = {
-          id: `airing-${anime.id}`,
-          anime: {
-            id: anime.id,
-            titleEn: anime.titleEn,
-            titleJp: anime.titleJp,
-            description: anime.description,
-            episodeCount: null,
-            duration: anime.duration,
-            startDate: anime.startDate,
-            imageUrl: anime.imageUrl,
-            userAnime: anime.userAnime || null
+      const processedEntry = {
+        id: `airing-${anime.id}`,
+        anime: {
+          id: anime.id,
+          titleEn: anime.titleEn,
+          titleJp: anime.titleJp,
+          description: anime.description,
+          episodeCount: null,
+          duration: anime.duration,
+          startDate: anime.startDate,
+          imageUrl: anime.imageUrl,
+          userAnime: anime.userAnime || null
+        },
+        status: null,
+        airingInfo: {
+          ...anime,
+          airTimeDisplay: airTimeInfo,
+          nextEpisodeDate: nextEpisodeAirTime,
+          nextEpisode: {
+            ...nextEpisode,
+            airDate: nextEpisodeAirTime
           },
-          status: null,
-          airingInfo: {
-            ...anime,
-            airTimeDisplay: airTimeInfo,
-            nextEpisodeDate: nextEpisodeAirTime,
-            nextEpisode: {
-              ...nextEpisode,
-              airDate: nextEpisodeAirTime
-            },
-            isInWatchlist: false
-          }
-        };
+          isInWatchlist: false
+        }
+      };
 
-        processedAnime.push(processedEntry);
-      }
+      processedAnime.push(processedEntry);
     });
 
     // Filter and sort anime: only recently aired (last 30 minutes) or future episodes

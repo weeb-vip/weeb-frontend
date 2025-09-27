@@ -156,18 +156,18 @@
 
     // Process each anime and determine its next episode
     currentlyAiringShows.forEach((anime: any) => {
-      if (!anime || !(anime as any).episodes || (anime as any).episodes.length === 0) return;
+      if (!anime || !anime.nextEpisode) return;
 
-      const episodes = (anime as any).episodes;
+      const nextEpisode = anime.nextEpisode;
 
-      // Use shared function to find the next episode
-      const nextEpisodeResult = findNextEpisode(episodes, anime.broadcast, now);
+      // Skip anime where nextEpisode has null airdate or airTime
+      if (!nextEpisode.airDate && !nextEpisode.airTime) return;
 
-      // If we found a next episode, add this anime to our list
-      if (nextEpisodeResult) {
-        const { episode: nextEpisode, airTime: nextEpisodeAirTime } = nextEpisodeResult;
-        // Generate air time display info (using local timezone formatting)
-        const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast) || {
+      // Use airTime from backend if available, otherwise fall back to airDate
+      const nextEpisodeAirTime = nextEpisode.airTime ? new Date(nextEpisode.airTime) : new Date(nextEpisode.airDate);
+
+      // Generate air time display info (using local timezone formatting)
+      const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast) || {
           show: true,
           text: nextEpisodeAirTime <= now
             ? "Recently aired"

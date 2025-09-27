@@ -125,7 +125,8 @@ try {
   const [homeResult, currentlyAiringResult, seasonalResult] = await Promise.allSettled([
     fetchWithFallback(getHomePageData, { limit: 20 }, 'home data'),
     fetchWithFallback(getCurrentlyAiringWithDates, {
-      input: { startDate: defaultStartDate, endDate: defaultEndDate }
+      input: { startDate: defaultStartDate, endDate: defaultEndDate },
+      limit: 10
     }, 'currently airing data'),
     fetchWithFallback(getSeasonalAnime, { season: currentSeason }, 'seasonal data')
   ]);
