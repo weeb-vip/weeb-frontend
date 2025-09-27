@@ -237,7 +237,7 @@
         </div>
       {:else}
         <!-- Anime Grid -->
-        <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
+        <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
           {#each userAnimes as entry}
             <AnimeCard
               style="detail"
@@ -248,8 +248,10 @@
               episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
               image={GetImageFromAnime(entry.anime)}
               className="hover:cursor-pointer"
-              onClick={() => navigateToAnime(entry.anime?.id)}
-              year=""
+              year={entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : ""}
+              entry={entry}
+              on:click={() => navigateToAnime(entry.anime?.id)}
+
             >
               <div slot="options">
                 <AnimeStatusDropdown
