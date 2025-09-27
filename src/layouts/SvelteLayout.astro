@@ -338,20 +338,22 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
       // Re-initialize on View Transitions navigation
       document.addEventListener('astro:after-swap', initTheme);
 
-      // Also update theme color when theme changes
-      const themeObserver = new MutationObserver(() => {
-        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-        if (themeColorMeta) {
-          const isDark = document.documentElement.classList.contains('dark');
-          themeColorMeta.setAttribute('content', isDark ? '#111827' : '#ffffff');
-        }
-      });
+      // Also update theme color when theme changes (safe for re-execution)
+      if (!window.themeObserver) {
+        window.themeObserver = new MutationObserver(() => {
+          const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+          if (themeColorMeta) {
+            const isDark = document.documentElement.classList.contains('dark');
+            themeColorMeta.setAttribute('content', isDark ? '#111827' : '#ffffff');
+          }
+        });
 
-      // Start observing theme changes
-      themeObserver.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['class']
-      });
+        // Start observing theme changes
+        window.themeObserver.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['class']
+        });
+      }
 
 
       // Clean up PWA source parameter if present
