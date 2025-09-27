@@ -234,12 +234,12 @@ describe('AnimeNotificationService', () => {
         titleEn: 'Test Anime',
         duration: '24 min',
         broadcast: 'Mondays at 12:00 (JST)',
-        episodes: [{
+        nextEpisode: {
           id: 'ep1',
           episodeNumber: 1,
           titleEn: 'Episode 1',
           airDate: '2024-01-15T00:00:00Z'
-        }]
+        }
       }];
 
       await service.startWatching(animeList);
