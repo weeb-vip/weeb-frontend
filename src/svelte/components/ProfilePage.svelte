@@ -3,7 +3,7 @@
   import { createQuery, createMutation } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
   import { initializeQueryClient } from '../services/query-client';
-  import { getUser, fetchUserAnimes, fetchCurrentlyAiringWithDates } from '../../services/queries';
+  import { getUser, fetchUserAnimes, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
   import { GetImageFromAnime } from '../../services/utils';
   import { getAirTimeDisplay, findNextEpisode, getCurrentTime, parseAirTime } from '../../services/airTimeUtils';
   import Button from './Button.svelte';
@@ -13,6 +13,8 @@
   import '@fortawesome/fontawesome-free/css/all.min.css';
   import { configStore } from '../stores/config';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
+  import { navigateWithTransition } from '../../utils/astro-navigation';
+  import { Status } from '../../gql/graphql';
 
   // Initialize query client
   const queryClient = initializeQueryClient();
@@ -25,6 +27,9 @@
   let userQuery: any;
   let watchingQuery: any;
   let planToWatchQuery: any;
+  let completedQuery: any;
+  let droppedQuery: any;
+  let onHoldQuery: any;
   let currentlyAiringQuery: any;
 
   function getProfileImageUrl(profileImageUrl: string | null): string | undefined {
@@ -51,27 +56,42 @@
     userQuery = createQuery(getUser(), queryClient);
 
     watchingQuery = createQuery(
-      fetchUserAnimes({ input: { status: 'WATCHING', limit: 1000, page: 1 } }),
+      fetchUserAnimes({ input: { status: Status.Watching, limit: 1000, page: 1 } }),
       queryClient
     );
 
     planToWatchQuery = createQuery(
-      fetchUserAnimes({ input: { status: 'PLANTOWATCH', limit: 1000, page: 1 } }),
+      fetchUserAnimes({ input: { status: Status.Plantowatch, limit: 1000, page: 1 } }),
       queryClient
     );
 
-    // Fetch currently airing shows for a 2-week window
+    completedQuery = createQuery(
+      fetchUserAnimes({ input: { status: Status.Completed, limit: 1000, page: 1 } }),
+      queryClient
+    );
+
+    droppedQuery = createQuery(
+      fetchUserAnimes({ input: { status: Status.Dropped, limit: 1000, page: 1 } }),
+      queryClient
+    );
+
+    onHoldQuery = createQuery(
+      fetchUserAnimes({ input: { status: Status.Onhold, limit: 1000, page: 1 } }),
+      queryClient
+    );
+
+    // Fetch currently airing shows for a 2-week window (WITH EPISODES!)
     const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     currentlyAiringQuery = createQuery(
-      fetchCurrentlyAiringWithDates(startDate, endDate),
+      fetchCurrentlyAiringWithDatesAndEpisodes(startDate, endDate),
       queryClient
     );
   });
 
   // Process watchlist and airing data
   $: watchlistAnalysis = (() => {
-    if (!mounted || !userQuery || !watchingQuery || !planToWatchQuery || !currentlyAiringQuery) {
+    if (!mounted || !userQuery || !watchingQuery || !planToWatchQuery || !completedQuery || !droppedQuery || !onHoldQuery || !currentlyAiringQuery) {
       return {
         watching: 0,
         planToWatch: 0,
@@ -79,9 +99,13 @@
         dropped: 0,
         onHold: 0,
         airingSoon: [],
-        recentlyAired: []
+        recentlyAired: [],
+        isLoading: true
       };
     }
+
+    // Check if data is still loading
+    const isLoading = $watchingQuery.isLoading || $planToWatchQuery.isLoading || $currentlyAiringQuery.isLoading;
 
     const watching = $watchingQuery.data?.animes || [];
     const planToWatch = $planToWatchQuery.data?.animes || [];
@@ -107,8 +131,10 @@
 
     // Process all currently airing shows
     currentlyAiringShows.forEach(airingInfo => {
-      if (!airingInfo || !airingInfo.episodes || airingInfo.episodes.length === 0) return;
-      if (!airingInfo.userAnime) return; // Skip if not in user's watchlist
+      if (!airingInfo) return;
+      if (!airingInfo.episodes || airingInfo.episodes.length === 0) return;
+      // Only process shows that are in the user's watchlist
+      if (!watchlistIds.has(airingInfo.id)) return;
 
       const episodes = airingInfo.episodes;
 
@@ -132,25 +158,11 @@
             variant: nextEpisodeAirTime <= now ? 'aired' : 'scheduled'
           };
 
-          // Check if this anime is in user's watchlist
+          // Get the watchlist entry for this anime (we know it exists since we filtered above)
           const watchlistEntry = allWatchlistShows.find(entry => entry.anime?.id === airingInfo.id);
-          const isInWatchlist = watchlistIds.has(airingInfo.id);
 
           const enhancedEntry = {
-            ...(watchlistEntry || {
-              id: `non-watchlist-${airingInfo.id}`,
-              anime: {
-                id: airingInfo.id,
-                titleEn: airingInfo.titleEn,
-                titleJp: airingInfo.titleJp,
-                description: null,
-                episodeCount: null,
-                duration: airingInfo.duration,
-                startDate: airingInfo.startDate,
-                imageUrl: airingInfo.imageUrl
-              },
-              status: null
-            }),
+            ...watchlistEntry,
             airingInfo: {
               ...airingInfo,
               airTimeDisplay: airTimeInfo,
@@ -159,7 +171,7 @@
                 ...nextEpisode,
                 airDate: nextEpisodeAirTime
               },
-              isInWatchlist
+              isInWatchlist: true
             }
           };
 
@@ -245,17 +257,8 @@
       }
     });
 
-    // Sort by watchlist status first, then by air date proximity
+    // Sort by air date proximity (soonest first)
     airingSoon.sort((a, b) => {
-      // Prioritize watchlist items
-      const aInWatchlist = a.airingInfo?.isInWatchlist || false;
-      const bInWatchlist = b.airingInfo?.isInWatchlist || false;
-
-      if (aInWatchlist !== bInWatchlist) {
-        return bInWatchlist ? 1 : -1; // Watchlist items first
-      }
-
-      // Then sort by air date
       const aDate = a.airingInfo?.nextEpisodeDate || new Date();
       const bDate = b.airingInfo?.nextEpisodeDate || new Date();
       return aDate.getTime() - bDate.getTime();
@@ -354,25 +357,18 @@
     return {
       watching: watching.length,
       planToWatch: planToWatch.length,
-      completed: 0, // Would need another query for this
-      dropped: 0, // Would need another query for this
-      onHold: 0, // Would need another query for this
+      completed: $completedQuery.data?.total || 0,
+      dropped: $droppedQuery.data?.total || 0,
+      onHold: $onHoldQuery.data?.total || 0,
       airingSoon: airingSoon.slice(0, 12),
       recentlyAired: recentlyAired.slice(0, 6),
-      currentlyWatching
+      currentlyWatching,
+      isLoading
     };
   })();
 
   function navigateToAnime(animeId: string) {
     navigateWithTransition(`/show/${animeId}`);
-  }
-
-  function navigateToWatchlist(status: string) {
-    navigateWithTransition(`/profile/anime?status=${status}`);
-  }
-
-  function navigateToSettings() {
-    navigateWithTransition('/profile/settings');
   }
 </script>
 
@@ -467,26 +463,46 @@
       </a>
     </div>
     <!-- Currently Watching Section -->
-    {#if watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
-      <section>
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <i class="fas fa-play text-blue-500 text-xl"></i>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Currently Watching
-            </h2>
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-play text-blue-500 text-xl"></i>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Currently Watching
+          </h2>
+          {#if !watchlistAnalysis.isLoading && watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
             <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm font-medium px-2 py-1 rounded-full">
               {watchlistAnalysis.currentlyWatching.length}
             </span>
-          </div>
+          {/if}
+        </div>
+        {#if !watchlistAnalysis.isLoading && watchlistAnalysis.watching > 0}
           <a
             href="/profile/anime"
             class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors text-sm flex items-center gap-1"
           >
             View All →
           </a>
-        </div>
+        {/if}
+      </div>
 
+      {#if watchlistAnalysis.isLoading}
+        <!-- Loading skeleton for Currently Watching -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {#each Array(6) as _}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 animate-pulse">
+              <div class="flex gap-3">
+                <div class="w-16 h-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                <div class="flex-1">
+                  <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {:else if watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {#each watchlistAnalysis.currentlyWatching as entry}
             <AnimeCard
@@ -514,8 +530,19 @@
             </AnimeCard>
           {/each}
         </div>
-      </section>
-    {/if}
+      {:else}
+        <!-- Empty state for Currently Watching -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center">
+          <i class="fas fa-tv text-4xl text-gray-400 dark:text-gray-600 mb-3 block"></i>
+          <p class="text-gray-600 dark:text-gray-400">
+            You're not currently watching any anime
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
+            Start watching something new from your plan to watch list
+          </p>
+        </div>
+      {/if}
+    </section>
 
     <!-- Quick Stats -->
     <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm transition-colors duration-300">
@@ -568,20 +595,38 @@
     {/if}
 
     <!-- Airing This Week Section -->
-    {#if watchlistAnalysis.airingSoon.length > 0}
-      <section>
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <i class="fas fa-play text-red-500 text-xl"></i>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Airing This Week
-            </h2>
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-play text-red-500 text-xl"></i>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Airing This Week
+          </h2>
+          {#if !watchlistAnalysis.isLoading && watchlistAnalysis.airingSoon.length > 0}
             <span class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-sm font-medium px-2 py-1 rounded-full">
               {watchlistAnalysis.airingSoon.length}
             </span>
-          </div>
+          {/if}
         </div>
+      </div>
 
+      {#if watchlistAnalysis.isLoading}
+        <!-- Loading skeleton for Airing This Week -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {#each Array(3) as _}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 animate-pulse">
+              <div class="flex gap-3">
+                <div class="w-16 h-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                <div class="flex-1">
+                  <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {:else if watchlistAnalysis.airingSoon.length > 0}
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {#each watchlistAnalysis.airingSoon as entry}
             <AnimeCard
@@ -619,24 +664,53 @@
             </AnimeCard>
           {/each}
         </div>
-      </section>
-    {/if}
+      {:else}
+        <!-- Empty state for Airing This Week -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center">
+          <i class="fas fa-calendar-xmark text-4xl text-gray-400 dark:text-gray-600 mb-3 block"></i>
+          <p class="text-gray-600 dark:text-gray-400">
+            No episodes airing this week from your watchlist
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
+            Check back later or add more anime to your watchlist
+          </p>
+        </div>
+      {/if}
+    </section>
 
     <!-- Recently Aired Episodes Section -->
-    {#if watchlistAnalysis.recentlyAired.length > 0}
-      <section>
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <i class="fas fa-calendar-days text-green-500 text-xl"></i>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Recently Aired Episodes
-            </h2>
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-calendar-days text-green-500 text-xl"></i>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Recently Aired Episodes
+          </h2>
+          {#if !watchlistAnalysis.isLoading && watchlistAnalysis.recentlyAired.length > 0}
             <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm font-medium px-2 py-1 rounded-full">
               {watchlistAnalysis.recentlyAired.length}
             </span>
-          </div>
+          {/if}
         </div>
+      </div>
 
+      {#if watchlistAnalysis.isLoading}
+        <!-- Loading skeleton for Recently Aired -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {#each Array(3) as _}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 animate-pulse">
+              <div class="flex gap-3">
+                <div class="w-16 h-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                <div class="flex-1">
+                  <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {:else if watchlistAnalysis.recentlyAired.length > 0}
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {#each watchlistAnalysis.recentlyAired as entry}
             <AnimeCard
@@ -665,8 +739,19 @@
             </AnimeCard>
           {/each}
         </div>
-      </section>
-    {/if}
+      {:else}
+        <!-- Empty state for Recently Aired -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center">
+          <i class="fas fa-clock-rotate-left text-4xl text-gray-400 dark:text-gray-600 mb-3 block"></i>
+          <p class="text-gray-600 dark:text-gray-400">
+            No recent episodes from your watchlist
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
+            Episodes you've watched will appear here
+          </p>
+        </div>
+      {/if}
+    </section>
   </div>
 </div>
 

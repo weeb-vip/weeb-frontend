@@ -122,17 +122,11 @@ export const authenticatedRequest = async <T>(requestFn: (client: GraphQLClient)
 
 // create authenticated client
 export const AuthenticatedClient = async () => {
-  const token = AuthStorage.getAuthToken();
   const config = await getConfig();
-
-  console.log('🔧 Creating GraphQL client with token:', token ? 'Present' : 'Missing');
-  console.log('🌐 GraphQL URL:', config.graphql_host);
 
   // @ts-ignore
   return new GraphQLClient(config.graphql_host, {
-    // headers: {
-    //   ...(token && { Authorization: `Bearer ${token}` })
-    // },
+    // Only use HttpOnly cookies for auth - no Authorization header
     // For graphql-request, credentials should be passed at the top level
     credentials: 'include',
     // Alternative: use fetch options directly

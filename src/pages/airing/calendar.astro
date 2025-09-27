@@ -20,9 +20,7 @@ const { auth, config } = Astro.locals;
 function createSSRGraphQLClient(authToken: string | undefined) {
   console.log('🗓️ SSR Calendar GraphQL URL:', config.graphql_host);
   return new GraphQLClient(config.graphql_host, {
-    headers: {
-      ...(authToken && { Authorization: `Bearer ${authToken}` })
-    },
+    
     fetch: (input: RequestInfo | URL, init?: RequestInit) => {
       return fetch(input, {
         ...init,

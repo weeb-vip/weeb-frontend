@@ -178,11 +178,15 @@ export function useUser() {
     enabled: true, // Can be made conditional based on auth state
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error: any) => {
-      // Don't retry on 401/403
+      // Don't retry on auth errors
       if (error?.status === 401 || error?.status === 403) {
         return false;
       }
-      return failureCount < 2;
+      // Don't retry on "Access denied" from user-service
+      if (error?.message?.includes('Access denied')) {
+        return false;
+      }
+      return failureCount < 1; // Only retry once
     },
   });
 }

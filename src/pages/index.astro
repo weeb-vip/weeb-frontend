@@ -27,14 +27,21 @@ function getCurrentSeason(): string {
 // Create authenticated GraphQL client for SSR
 function createSSRGraphQLClient(authToken: string | undefined) {
   console.log('🌐 SSR GraphQL URL:', config.graphql_host);
+
+  // Get cookies from the original request to forward to GraphQL API
+  const cookieHeader = Astro.request.headers.get('cookie');
+  console.log('[SSR] Forwarding cookies:', cookieHeader ? 'Present' : 'Missing');
+
   return new GraphQLClient(config.graphql_host, {
-    headers: {
-      ...(authToken && { Authorization: `Bearer ${authToken}` })
-    },
     fetch: (input: RequestInfo | URL, init?: RequestInit) => {
       return fetch(input, {
         ...init,
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          ...init?.headers,
+          // Forward the original request's cookies to the GraphQL API
+          ...(cookieHeader && { 'Cookie': cookieHeader })
+        }
       });
     }
   });

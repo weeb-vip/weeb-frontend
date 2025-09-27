@@ -31,6 +31,15 @@
 
   $: user = userQuery ? $userQuery?.data : null;
   $: isLoading = userQuery ? $userQuery?.isLoading : false;
+  $: hasError = userQuery ? $userQuery?.isError : false;
+
+  // Fallback user data when query fails but we're actually logged in
+  // Only use fallback if user query specifically failed with access denied
+  $: fallbackUser = hasError && isLoggedIn && userQuery &&
+    $userQuery?.error?.message?.includes('Access denied') ? {
+    username: 'User',
+    profileImageUrl: null
+  } : null;
 
   function handleMobileProfileClick() {
     mobileDrawerOpen = true;
@@ -57,13 +66,14 @@
         <div class="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
       {/if}
     </div>
-  {:else if user}
+  {:else if user || fallbackUser}
+    {@const displayUser = user || fallbackUser}
     {#if isMobile}
       <!-- Mobile: Just avatar that opens menu -->
       <button class="p-2" aria-label="Open menu" on:click={handleMobileProfileClick}>
         <ProfileAvatar
-          username={user.username}
-          profileImageUrl={user.profileImageUrl}
+          username={displayUser.username}
+          profileImageUrl={displayUser.profileImageUrl}
           size="sm"
           linkToProfile={false}
           className="!cursor-pointer"
@@ -71,7 +81,7 @@
       </button>
     {:else}
       <!-- Desktop: Profile dropdown -->
-      <ProfileDropdown {user} />
+      <ProfileDropdown user={displayUser} />
     {/if}
   {:else}
     <!-- Still loading or no data yet - show loading skeleton -->

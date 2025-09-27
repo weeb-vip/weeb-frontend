@@ -66,8 +66,8 @@
 
   <a href="/show/{id}"
      on:click={() => analytics.animeViewed(id || '', title)}
-     class="flex flex-col bg-white dark:bg-gray-800 {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'flex-shrink-0 rounded-l-md' : 'rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}"
-     style="{forceListLayout ? 'flex-basis: 35%; min-width: 120px; max-width: 180px;' : ''}">
+     class="flex flex-col bg-white w-24 dark:bg-gray-800 {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'flex-shrink-0 rounded-l-md' : 'rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}"
+     style="{forceListLayout ? 'flex-basis: 25%; min-width: 80px; max-width: 120px;' : ''}">
     <SafeImage
             src={image}
             alt={title}
