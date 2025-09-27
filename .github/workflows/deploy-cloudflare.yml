@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - v1.85.17
           - v1.85.16
           - v1.85.15
           - v1.85.14
@@ -22,7 +23,6 @@ on:
           - v1.85.5
           - v1.85.4
           - v1.85.3
-          - v1.85.2
       environment:
         description: 'Deployment environment'
         required: true
