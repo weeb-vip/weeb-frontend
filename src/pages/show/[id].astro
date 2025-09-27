@@ -29,6 +29,12 @@ try {
   const client = new GraphQLClient(config.graphql_host, {
     headers: {
       ...(auth.authToken && { Authorization: `Bearer ${auth.authToken}` })
+    },
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      return fetch(input, {
+        ...init,
+        credentials: 'include'
+      });
     }
   });
 
