@@ -42,6 +42,22 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <meta name="author" content="WeebVIP" />
     <link rel="canonical" href={canonicalUrl} />
 
+    <!-- Performance optimizations: DNS prefetch and preconnect -->
+    <link rel="dns-prefetch" href="//gateway.weeb.vip" />
+    <link rel="dns-prefetch" href="//gateway.staging.weeb.vip" />
+    <link rel="dns-prefetch" href="//cdn.weeb.vip" />
+    <link rel="dns-prefetch" href="//weeb-api.staging.weeb.vip" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="//api.flagsmith.com" />
+    <link rel="dns-prefetch" href="//eu.posthog.com" />
+
+    <link rel="preconnect" href="//gateway.weeb.vip" crossorigin />
+    <link rel="preconnect" href="//gateway.staging.weeb.vip" crossorigin />
+    <link rel="preconnect" href="//cdn.weeb.vip" crossorigin />
+    <link rel="preconnect" href="//fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="//fonts.gstatic.com" crossorigin />
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalUrl} />
