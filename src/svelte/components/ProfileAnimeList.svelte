@@ -138,16 +138,16 @@
 
   function readStateFromURL() {
     if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
+      const searchParams = new URLSearchParams(window.location.search);
 
       // Set status from URL
-      const statusParam = urlParams.get('status');
+      const statusParam = searchParams.get('status');
       if (statusParam && Object.values(Status).includes(statusParam as Status)) {
         selectedStatus = statusParam as Status;
       }
 
       // Set page from URL (convert from 1-based to 0-based)
-      const pageParam = urlParams.get('page');
+      const pageParam = searchParams.get('page');
       if (pageParam) {
         const pageNumber = parseInt(pageParam, 10);
         if (!isNaN(pageNumber) && pageNumber > 0) {
