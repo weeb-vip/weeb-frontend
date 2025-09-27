@@ -636,12 +636,45 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 
         // Global error handler for JavaScript errors
         window.addEventListener('error', function(event) {
-          console.error('Global error:', event.error);
+          console.error('Global error:', event.error, {
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            message: event.message,
+            type: event.type
+          });
 
-          // Only show toast for non-script loading errors
-          if (!event.filename || !event.filename.includes('.js')) {
-            showErrorToast('An unexpected error occurred.');
+          // Skip toast for common navigation/hydration errors
+          const errorMessage = event.message || '';
+          const filename = event.filename || '';
+
+          // Don't show toast for:
+          // - Script loading errors
+          // - Astro view transition errors
+          // - Hydration errors
+          // - Network errors during navigation
+          // - Svelte component lifecycle errors
+          if (
+            filename.includes('.js') ||
+            filename.includes('.ts') ||
+            errorMessage.includes('Failed to fetch dynamically imported module') ||
+            errorMessage.includes('astro-island') ||
+            errorMessage.includes('hydrating') ||
+            errorMessage.includes('Loading chunk') ||
+            errorMessage.includes('Loading CSS chunk') ||
+            errorMessage.includes('ChunkLoadError') ||
+            errorMessage.includes('Cannot read properties of null') ||
+            errorMessage.includes('ResizeObserver') ||
+            errorMessage.toLowerCase().includes('network error') ||
+            errorMessage.toLowerCase().includes('fetch')
+          ) {
+            // Log but don't show toast for these common errors
+            console.warn('Suppressed error toast for:', errorMessage);
+            return;
           }
+
+          // Only show toast for unexpected application errors
+          showErrorToast('An unexpected error occurred.');
         });
 
         // Expose global function for components to use
