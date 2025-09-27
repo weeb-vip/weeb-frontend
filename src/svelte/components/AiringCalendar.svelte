@@ -55,7 +55,7 @@
 
   // Create query for current date range (only on client)
   $: if (mounted && start && end) {
-    const queryConfig = fetchCurrentlyAiringWithDates(start, end);
+    const queryConfig = fetchCurrentlyAiringWithDates(start, end, null, 25);
     currentQuery = createQuery(
       {
         ...queryConfig,
@@ -104,7 +104,7 @@
       ];
 
       for (const { start, end } of ranges) {
-        queryClient.prefetchQuery(fetchCurrentlyAiringWithDates(start, end));
+        queryClient.prefetchQuery(fetchCurrentlyAiringWithDates(start, end, null, 25));
       }
     }, 1000); // Delay prefetching to avoid interfering with initial load
   });
@@ -116,23 +116,26 @@
     if (!mounted || !currentQuery || !$currentQuery.data?.currentlyAiring) return result;
 
     for (const anime of $currentQuery.data.currentlyAiring) {
-      for (const episode of anime.episodes || []) {
-        // Parse air time for this specific episode
-        const episodeAirTime = parseAirTime(episode.airDate, anime.broadcast);
-        if (!episodeAirTime) continue;
+      // Use nextEpisode instead of looping through episodes
+      if (!anime.nextEpisode) continue;
 
-        const dateKey = format(episodeAirTime, "yyyy-MM-dd");
-        if (!result[dateKey]) result[dateKey] = [];
+      // Get air time from nextEpisode
+      const episodeAirTime = anime.nextEpisode.airTime
+        ? new Date(anime.nextEpisode.airTime)
+        : (anime.nextEpisode.airDate ? new Date(anime.nextEpisode.airDate) : null);
 
-        // Create entry with the episode's specific air time
-        const animeEntry = {
-          ...anime,
-          episodes: [episode], // Pass single episode as array
-          episodeAirTime: episodeAirTime, // Use the episode's air time for sorting
-        };
+      if (!episodeAirTime) continue;
 
-        result[dateKey].push(animeEntry);
-      }
+      const dateKey = format(episodeAirTime, "yyyy-MM-dd");
+      if (!result[dateKey]) result[dateKey] = [];
+
+      // Create entry with the episode's specific air time
+      const animeEntry = {
+        ...anime,
+        episodeAirTime: episodeAirTime, // Use the episode's air time for sorting
+      };
+
+      result[dateKey].push(animeEntry);
     }
 
     // Sort entries by episode air time within each day

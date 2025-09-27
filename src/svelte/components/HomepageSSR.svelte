@@ -91,7 +91,7 @@
   }, queryClient);
 
   const currentlyAiringQuery = createQuery({
-    ...fetchCurrentlyAiring(),
+    ...fetchCurrentlyAiring(10),
     initialData: currentlyAiringData,
     refetchOnWindowFocus: false,
     refetchOnMount: false, // Don't auto-refetch on mount since we have SSR data

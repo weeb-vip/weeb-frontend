@@ -28,7 +28,7 @@
 
   // Create TanStack Query stores with SSR data
   const currentlyAiringQuery = createQuery({
-    ...fetchCurrentlyAiring(),
+    ...fetchCurrentlyAiring(25),
     initialData: ssrData,
     refetchOnWindowFocus: false,
     refetchOnMount: false, // Don't auto-refetch on mount since we have SSR data

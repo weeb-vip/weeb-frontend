@@ -196,8 +196,8 @@ export const fetchDetails = (id: string) => ({
   }
 })
 
-export const fetchCurrentlyAiring = () => ({
-  queryKey: ["currently-airing"],
+export const fetchCurrentlyAiring = (limit?: number) => ({
+  queryKey: ["currently-airing", { limit }],
   queryFn: async () => {
     return authenticatedRequest(async (client) => {
       const defaultStartDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -207,13 +207,14 @@ export const fetchCurrentlyAiring = () => ({
         input: {
           startDate: defaultStartDate,
           endDate: defaultEndDate,
-        }
+        },
+        limit: limit || 25
       });
     });
   },
 })
 
-export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | null, days?: number) => ({
+export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | null, days?: number, limit?: number) => ({
   queryKey: ["currentlyAiring"],
   queryFn: async () => {
     const client = await AuthenticatedClient();
@@ -222,13 +223,14 @@ export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | 
       input: {
         startDate,
         endDate,
-      }
+      },
+      limit: limit || 25
     } : {
       input: {
         startDate,
         daysInFuture: days,
-      }
-
+      },
+      limit: limit || 25
     })
   },
 })
