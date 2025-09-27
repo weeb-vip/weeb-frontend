@@ -118,7 +118,7 @@ try {
   }
 
   // Prepare request parameters
-  const defaultStartDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const defaultStartDate = new Date(Date.now() - 60 * 60 * 1000); // 1 hour ago
   const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   // Fetch all data in parallel for better performance

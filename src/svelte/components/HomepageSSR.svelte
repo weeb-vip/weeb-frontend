@@ -13,7 +13,7 @@
   import {
     fetchHomePageData,
     fetchCurrentlyAiring,
-    fetchSeasonalAnime
+    fetchSeasonalAnime, fetchCurrentlyAiringWithDates
   } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { GetImageFromAnime } from '../../services/utils';
@@ -90,8 +90,16 @@
     refetchOnReconnect: false // Don't refetch when reconnecting
   }, queryClient);
 
+  const startDate = new Date(Date.now() - 60 * 60 * 1000); // 1 hour ago
+  const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+  console.log('🔍 Date range for query:', startDate.toISOString(), 'to', endDate.toISOString());
+
   const currentlyAiringQuery = createQuery({
-    ...fetchCurrentlyAiring(10),
+    ...fetchCurrentlyAiringWithDates(
+      // current time in UTC
+            startDate,
+      null, 7, 10
+    ),
     initialData: currentlyAiringData,
     refetchOnWindowFocus: false,
     refetchOnMount: false, // Don't auto-refetch on mount since we have SSR data

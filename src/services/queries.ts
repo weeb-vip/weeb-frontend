@@ -219,7 +219,7 @@ export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | 
   queryFn: async () => {
     const client = await AuthenticatedClient();
     // @ts-ignore
-    return client.request<CurrentlyAiringQuery>(getCurrentlyAiringWithDates, endDate ? {
+    const variables = endDate ? {
       input: {
         startDate,
         endDate,
@@ -231,7 +231,11 @@ export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | 
         daysInFuture: days,
       },
       limit: limit || 25
-    })
+    };
+
+    console.log('🔍 Sending GraphQL request with variables:', JSON.stringify(variables, null, 2));
+
+    return client.request<CurrentlyAiringQuery>(getCurrentlyAiringWithDates, variables)
   },
 })
 
