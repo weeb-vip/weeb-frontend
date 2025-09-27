@@ -117,15 +117,17 @@ try {
     }
   }
 
-  // Prepare request parameters
+  // Prepare request parameters (dates will be in UTC when sent)
   const defaultStartDate = new Date(Date.now() - 60 * 60 * 1000); // 1 hour ago
-  const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+
+  console.log('[SSR] Date range:', defaultStartDate.toISOString(), 'to', defaultEndDate?.toISOString() || 'null');
 
   // Fetch all data in parallel for better performance
   const [homeResult, currentlyAiringResult, seasonalResult] = await Promise.allSettled([
     fetchWithFallback(getHomePageData, { limit: 20 }, 'home data'),
     fetchWithFallback(getCurrentlyAiringWithDates, {
-      input: { startDate: defaultStartDate, endDate: defaultEndDate },
+      input: { startDate: defaultStartDate, endDate: null, daysInFuture: 7 },
       limit: 10
     }, 'currently airing data'),
     fetchWithFallback(getSeasonalAnime, { season: currentSeason }, 'seasonal data')
@@ -155,6 +157,7 @@ if (isTokenExpired) {
 // Get the first banner image for preloading
 let bannerImageUrl = null;
 if (currentlyAiringData?.getAiringAnimeAll?.length > 0) {
+  console.log('airing data', currentlyAiringData.getAiringAnimeAll.map(a => ({airTime: a.airtime, title: a.title})));
   const firstAnime = currentlyAiringData.getAiringAnimeAll[0];
   if (firstAnime.thetvdbid) {
     bannerImageUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${firstAnime.thetvdbid}/fanart?w=1920&h=1080&fit=cover&q=85&f=webp`;
