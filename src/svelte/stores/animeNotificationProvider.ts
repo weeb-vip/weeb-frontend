@@ -172,8 +172,8 @@ class AnimeNotificationManager {
           // Filter out anime where all episodes have null airdate
           const animeForNotifications: AnimeForNotification[] = data.currentlyAiring
             .filter(anime => {
-              const hasValidAirDate = anime.episodes?.some((ep: any) => ep.airDate !== null && ep.airDate !== undefined);
-              return hasValidAirDate;
+              // Only include anime with valid nextEpisode that has air date or air time
+              return anime.nextEpisode && (anime.nextEpisode.airDate || anime.nextEpisode.airTime);
             })
             .map(anime => ({
               id: anime.id,
@@ -182,7 +182,7 @@ class AnimeNotificationManager {
               imageUrl: anime.imageUrl,
               duration: anime.duration,
               broadcast: anime.broadcast,
-              episodes: anime.episodes
+              nextEpisode: anime.nextEpisode
             }));
 
           // Start watching for notifications ONCE

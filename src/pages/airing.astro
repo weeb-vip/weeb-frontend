@@ -102,7 +102,7 @@ try {
   // Fetch currently airing data
   currentlyAiringData = await fetchWithFallback(getCurrentlyAiringWithDates, {
     input: { startDate: defaultStartDate, endDate: defaultEndDate },
-    limit: 50
+    limit: 25
   }, 'currently airing data');
 
   console.log('[SSR] Airing page data result:', {

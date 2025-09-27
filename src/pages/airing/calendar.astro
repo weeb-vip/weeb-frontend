@@ -112,7 +112,7 @@ try {
   // Fetch calendar data for the current month view
   calendarData = await fetchWithFallback(getCurrentlyAiringWithDates, {
     input: { startDate: calendarStart, endDate: calendarEnd },
-    limit: 50
+    limit: 25
   }, 'calendar data');
 
   console.log('[SSR] Calendar page data result:', {

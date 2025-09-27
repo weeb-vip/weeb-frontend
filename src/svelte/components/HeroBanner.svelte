@@ -126,7 +126,7 @@
 
   // For now, we'll use a simpler approach without the worker data
   // This can be enhanced later with Svelte stores for countdown data
-  const animeNextEpisodeInfo = anime.nextEpisode ? {
+  const animeNextEpisodeInfo = anime.nextEpisode && (anime.nextEpisode.airDate || anime.nextEpisode.airTime) ? {
     episode: anime.nextEpisode,
     airTime: anime.nextEpisode.airTime ? new Date(anime.nextEpisode.airTime) : new Date(anime.nextEpisode.airDate)
   } : null;

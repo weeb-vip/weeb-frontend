@@ -271,6 +271,38 @@ function findNextEpisode(
   return null;
 }
 
+/**
+ * Get next episode data directly from anime object (using new nextEpisode structure)
+ * @param anime - Anime object with nextEpisode field
+ * @returns The next episode and its calculated air time, or null if none found
+ */
+function getNextEpisode(anime: AnimeForNotification): NextEpisodeResult | null {
+  if (!anime.nextEpisode) return null;
+
+  const nextEpisode = anime.nextEpisode;
+
+  // Use airTime from backend if available, otherwise fall back to airDate
+  let airTime: Date;
+  if (nextEpisode.airTime) {
+    airTime = new Date(nextEpisode.airTime);
+  } else if (nextEpisode.airDate) {
+    airTime = parseAirTime(nextEpisode.airDate, anime.broadcast) || new Date(nextEpisode.airDate);
+  } else {
+    return null;
+  }
+
+  return {
+    episode: {
+      id: nextEpisode.id,
+      episodeNumber: nextEpisode.episodeNumber,
+      titleEn: nextEpisode.titleEn,
+      titleJp: nextEpisode.titleJp,
+      airDate: nextEpisode.airDate
+    },
+    airTime
+  };
+}
+
 
 
 interface AnimeForNotification {
@@ -280,13 +312,14 @@ interface AnimeForNotification {
   imageUrl?: string | null;
   duration?: string | null;
   broadcast?: string | null;
-  episodes?: {
+  nextEpisode?: {
     id: string;
     episodeNumber?: number | null;
     titleEn?: string | null;
     titleJp?: string | null;
     airDate?: string | null;
-  }[] | null;
+    airTime?: string | null;
+  } | null;
 }
 
 interface NotificationMessage {
@@ -368,10 +401,10 @@ function clearAllIntervals() {
 
 function checkNotifications() {
   animeList.forEach(anime => {
-    if (!anime.episodes || !anime.broadcast) return;
+    if (!anime.nextEpisode || !anime.broadcast) return;
 
     const now = getCurrentTime();
-    const nextEpisodeResult = findNextEpisode(anime.episodes, anime.broadcast, now);
+    const nextEpisodeResult = getNextEpisode(anime);
     if (!nextEpisodeResult) return;
 
     const { episode: nextEpisode, airTime } = nextEpisodeResult;
@@ -486,10 +519,10 @@ function updateCountdowns() {
   checkNotifications();
 
   animeList.forEach(anime => {
-    if (!anime.episodes || !anime.broadcast) return;
+    if (!anime.nextEpisode || !anime.broadcast) return;
 
     const now = getCurrentTime();
-    const nextEpisodeResult = findNextEpisode(anime.episodes, anime.broadcast, now);
+    const nextEpisodeResult = getNextEpisode(anime);
     if (!nextEpisodeResult) return;
 
     const { episode: nextEpisode, airTime } = nextEpisodeResult;

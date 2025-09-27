@@ -8,13 +8,14 @@ export interface AnimeForNotification {
   imageUrl?: string | null;
   duration?: string | null;
   broadcast?: string | null;
-  episodes?: {
+  nextEpisode?: {
     id: string;
     episodeNumber?: number | null;
     titleEn?: string | null;
     titleJp?: string | null;
     airDate?: string | null;
-  }[] | null;
+    airTime?: string | null;
+  } | null;
 }
 
 export interface NotificationCallback {
