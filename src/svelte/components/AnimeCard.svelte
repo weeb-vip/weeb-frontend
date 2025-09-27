@@ -66,12 +66,12 @@
 
   <a href="/show/{id}"
      on:click={() => analytics.animeViewed(id || '', title)}
-     class="flex flex-col bg-white dark:bg-gray-800 {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'flex-shrink-0 rounded-l-md' : 'rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}"
-     style="{forceListLayout ? 'flex-basis: 25%; min-width: 100px; max-width: 140px;' : ''}">
+     class="flex flex-col bg-white dark:bg-gray-800 {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md h-full flex-shrink' : 'flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}"
+     style="{forceListLayout ? '' : ''}">
     <SafeImage
             src={image}
             alt={title}
-            className="aspect-2/3 object-cover w-full h-full relative"
+            className="{forceListLayout ? 'object-cover h-full relative' : 'aspect-2/3 object-cover w-full h-full relative'}"
             fallbackSrc="/assets/not found.jpg"
     />
   </a>
