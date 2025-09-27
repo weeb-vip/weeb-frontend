@@ -2,7 +2,7 @@
 import SvelteLayout from '../../layouts/SvelteLayout.astro';
 import AiringCalendar from '../../svelte/components/AiringCalendar.svelte';
 import { GraphQLClient } from 'graphql-request';
-import { getCurrentlyAiringWithDates } from '../../services/api/graphql/queries';
+import { getCurrentlyAiringWithDatesAndEpisodes } from '../../services/api/graphql/queries';
 import {
   startOfMonth,
   endOfMonth,
@@ -104,15 +104,13 @@ try {
 
   // Calculate default month view date range (same logic as client component)
   const currentDate = new Date();
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
-  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  const calendarStart = startOfMonth(currentDate);
+  const calendarEnd = endOfMonth(currentDate);
 
   // Fetch calendar data for the current month view
-  calendarData = await fetchWithFallback(getCurrentlyAiringWithDates, {
-    input: { startDate: calendarStart, endDate: calendarEnd },
-    limit: 25
+  calendarData = await fetchWithFallback(getCurrentlyAiringWithDatesAndEpisodes, {
+    input: { startDate: calendarStart, daysInFuture: 32 },
+    limit: 300
   }, 'calendar data');
 
   console.log('[SSR] Calendar page data result:', {

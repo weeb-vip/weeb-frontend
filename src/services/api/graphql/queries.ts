@@ -191,6 +191,49 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
     }
 `)
 
+export const getCurrentlyAiringWithDatesAndEpisodes = graphql(/* GraphQL */`
+    query currentlyAiringWithDateAndEpisodes($input: CurrentlyAiringInput, $limit: Int) {
+        currentlyAiring(input: $input, limit: $limit) {
+            id
+            titleEn
+            titleJp
+            anidbid
+            endDate
+            startDate
+            imageUrl
+            duration
+            ranking
+            broadcast
+            thetvdbid
+            nextEpisode {
+                id
+                animeId
+                episodeNumber
+                titleEn
+                titleJp
+                synopsis
+                airDate
+                airTime
+            }
+            episodes {
+                id
+                animeId
+                episodeNumber
+                titleEn
+                titleJp
+                synopsis
+                airDate
+                airTime
+            }
+            userAnime {
+                id
+                status
+                score
+            }
+        }
+    }
+`)
+
 export const mutationRefreshToken = graphql(`
     mutation RefreshToken($token: String!) {
         RefreshToken(token: $token) {

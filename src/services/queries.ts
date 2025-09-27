@@ -29,7 +29,7 @@ import {
 } from "../gql/graphql";
 import {
   getAnimeDetailsByID,
-  getCurrentlyAiring, getCurrentlyAiringWithDates,
+  getCurrentlyAiring, getCurrentlyAiringWithDates, getCurrentlyAiringWithDatesAndEpisodes,
   getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
   mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationVerifyEmail, mutationResendVerificationEmail,
   mutationRegister, mutationLogout, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserDetails
@@ -220,6 +220,27 @@ export const fetchCurrentlyAiringWithDates = (startDate: Date, endDate?: Date | 
     const client = await AuthenticatedClient();
     // @ts-ignore
     return client.request<CurrentlyAiringQuery>(getCurrentlyAiringWithDates, endDate ? {
+      input: {
+        startDate,
+        endDate,
+      },
+      limit: limit || 25
+    } : {
+      input: {
+        startDate,
+        daysInFuture: days,
+      },
+      limit: limit || 25
+    })
+  },
+})
+
+export const fetchCurrentlyAiringWithDatesAndEpisodes = (startDate: Date, endDate?: Date | null, days?: number, limit?: number) => ({
+  queryKey: ["currentlyAiringWithEpisodes", { startDate: startDate.toISOString(), endDate: endDate?.toISOString(), days, limit }],
+  queryFn: async () => {
+    const client = await AuthenticatedClient();
+    // @ts-ignore
+    return client.request<CurrentlyAiringQuery>(getCurrentlyAiringWithDatesAndEpisodes, endDate ? {
       input: {
         startDate,
         endDate,

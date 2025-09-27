@@ -14,7 +14,7 @@
     addWeeks,
     subWeeks,
   } from 'date-fns';
-  import { fetchCurrentlyAiringWithDates } from '../../services/queries';
+  import { fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
   import { parseAirTime } from '../../services/airTimeUtils';
   import { initializeQueryClient } from '../services/query-client';
   import AnimeCalendarPopover from './AnimeCalendarPopover.svelte';
@@ -39,29 +39,34 @@
 
   // Calculate date ranges
   $: start = viewMode === 'month'
-    ? startOfWeek(startOfMonth(currentDate), { weekStartsOn: 0 })
+    ? startOfMonth(currentDate)
     : startOfWeek(currentDate, { weekStartsOn: 0 });
 
   $: end = viewMode === 'month'
-    ? endOfWeek(endOfMonth(currentDate), { weekStartsOn: 0 })
+    ? endOfMonth(currentDate)
     : endOfWeek(currentDate, { weekStartsOn: 0 });
+
 
   $: days = eachDayOfInterval({ start, end });
 
-  // Check if current date range matches SSR data range (default month view)
+  // Check if current date range matches SSR data range (current month view)
   $: isDefaultMonthView = viewMode === 'month' &&
-    isSameDay(currentDate, new Date()) &&
+    startOfMonth(currentDate).getTime() === startOfMonth(new Date()).getTime() &&
     ssrData;
 
   // Create query for current date range (only on client)
   $: if (mounted && start && end) {
-    const queryConfig = fetchCurrentlyAiringWithDates(start, end, null, 25);
+    const queryConfig = fetchCurrentlyAiringWithDatesAndEpisodes(start, null, 32, 300);
     currentQuery = createQuery(
       {
         ...queryConfig,
-        // Use SSR data as initial data for default month view
+        // Use SSR data as initial data for default month view and prevent network request
         ...(isDefaultMonthView && ssrData && {
-          initialData: ssrData
+          initialData: ssrData,
+          staleTime: Infinity, // Prevent refetch for SSR data
+          refetchOnMount: false,
+          refetchOnWindowFocus: false,
+          refetchOnReconnect: false
         })
       },
       queryClient
@@ -87,24 +92,24 @@
       const ranges = [
         {
           start: viewMode === 'month'
-            ? startOfWeek(startOfMonth(subMonths(currentDate, 1)), { weekStartsOn: 0 })
+            ? startOfMonth(subMonths(currentDate, 1))
             : startOfWeek(subWeeks(currentDate, 1), { weekStartsOn: 0 }),
           end: viewMode === 'month'
-            ? endOfWeek(endOfMonth(subMonths(currentDate, 1)), { weekStartsOn: 0 })
+            ? endOfMonth(subMonths(currentDate, 1))
             : endOfWeek(subWeeks(currentDate, 1), { weekStartsOn: 0 }),
         },
         {
           start: viewMode === 'month'
-            ? startOfWeek(startOfMonth(addMonths(currentDate, 1)), { weekStartsOn: 0 })
+            ? startOfMonth(addMonths(currentDate, 1))
             : startOfWeek(addWeeks(currentDate, 1), { weekStartsOn: 0 }),
           end: viewMode === 'month'
-            ? endOfWeek(endOfMonth(addMonths(currentDate, 1)), { weekStartsOn: 0 })
+            ? endOfMonth(addMonths(currentDate, 1))
             : endOfWeek(addWeeks(currentDate, 1), { weekStartsOn: 0 }),
         },
       ];
 
-      for (const { start, end } of ranges) {
-        queryClient.prefetchQuery(fetchCurrentlyAiringWithDates(start, end, null, 25));
+      for (const { start } of ranges) {
+        queryClient.prefetchQuery(fetchCurrentlyAiringWithDatesAndEpisodes(start, null, 32, 300));
       }
     }, 1000); // Delay prefetching to avoid interfering with initial load
   });
@@ -116,26 +121,48 @@
     if (!mounted || !currentQuery || !$currentQuery.data?.currentlyAiring) return result;
 
     for (const anime of $currentQuery.data.currentlyAiring) {
-      // Use nextEpisode instead of looping through episodes
-      if (!anime.nextEpisode) continue;
+      // For calendar, we need to process all episodes to show by specific dates
+      if (anime.episodes && anime.episodes.length > 0) {
+        // Process all episodes
+        for (const episode of anime.episodes) {
+          const episodeAirTime = episode.airTime
+            ? new Date(episode.airTime)
+            : (episode.airDate ? new Date(episode.airDate) : null);
 
-      // Get air time from nextEpisode
-      const episodeAirTime = anime.nextEpisode.airTime
-        ? new Date(anime.nextEpisode.airTime)
-        : (anime.nextEpisode.airDate ? new Date(anime.nextEpisode.airDate) : null);
+          if (!episodeAirTime) continue;
 
-      if (!episodeAirTime) continue;
+          const dateKey = format(episodeAirTime, "yyyy-MM-dd");
+          if (!result[dateKey]) result[dateKey] = [];
 
-      const dateKey = format(episodeAirTime, "yyyy-MM-dd");
-      if (!result[dateKey]) result[dateKey] = [];
+          // Create entry with the episode's specific air time
+          const animeEntry = {
+            ...anime,
+            episodes: [episode], // Pass single episode as array for compatibility
+            episodeAirTime: episodeAirTime, // Use the episode's air time for sorting
+          };
 
-      // Create entry with the episode's specific air time
-      const animeEntry = {
-        ...anime,
-        episodeAirTime: episodeAirTime, // Use the episode's air time for sorting
-      };
+          result[dateKey].push(animeEntry);
+        }
+      } else if (anime.nextEpisode) {
+        // Fallback to nextEpisode if episodes array is empty
+        const episodeAirTime = anime.nextEpisode.airTime
+          ? new Date(anime.nextEpisode.airTime)
+          : (anime.nextEpisode.airDate ? new Date(anime.nextEpisode.airDate) : null);
 
-      result[dateKey].push(animeEntry);
+        if (!episodeAirTime) continue;
+
+        const dateKey = format(episodeAirTime, "yyyy-MM-dd");
+        if (!result[dateKey]) result[dateKey] = [];
+
+        // Create entry with the episode's specific air time
+        const animeEntry = {
+          ...anime,
+          episodes: [anime.nextEpisode], // Convert nextEpisode to episodes array for compatibility
+          episodeAirTime: episodeAirTime,
+        };
+
+        result[dateKey].push(animeEntry);
+      }
     }
 
     // Sort entries by episode air time within each day
