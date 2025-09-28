@@ -357,8 +357,8 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 
 
       // Clean up PWA source parameter if present
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('source') === 'pwa') {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get('source') === 'pwa') {
         const newUrl = window.location.pathname + window.location.hash;
         window.history.replaceState(null, '', newUrl);
       }

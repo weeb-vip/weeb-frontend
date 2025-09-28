@@ -41,9 +41,9 @@
 
   onMount(() => {
     // Get search params
-    const urlParams = new URLSearchParams(window.location.search);
-    email = urlParams.get('email');
-    token = urlParams.get('token');
+    const searchParams = new URLSearchParams(window.location.search);
+    email = searchParams.get('email');
+    token = searchParams.get('token');
 
     if (!email || !token) {
       state = {
