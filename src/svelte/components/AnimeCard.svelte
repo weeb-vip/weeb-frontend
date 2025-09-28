@@ -55,10 +55,10 @@
   }
 </script>
 
-<div class="flex {forceListLayout ? 'flex-row' : 'sm:flex-row md:flex-col'} dark:bg-gray-800 rounded-md shadow w-full justify-center transition-all duration-300 {className} relative">
+<div class="flex {forceListLayout ? 'flex-row' : 'sm:flex-row md:flex-col'} dark:bg-gray-800 rounded-md shadow w-full justify-center transition-all duration-300 {className} relative h-full">
   <!-- Watchlist indicator -->
   {#if entry?.status}
-    <div class="absolute top-2 left-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg z-10">
+    <div class="absolute top-2 left-0 sm:left-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg z-10">
       <i class="fas fa-bookmark text-xs mr-1"></i>
       {statusLabels[entry.status] || 'Unknown'}
     </div>
@@ -66,8 +66,7 @@
 
   <a href="/show/{id}"
      on:click={() => analytics.animeViewed(id || '', title)}
-     class="flex flex-col bg-white dark:bg-gray-800 {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md h-full flex-shrink' : 'flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}"
-     style="{forceListLayout ? '' : ''}">
+     class="flex flex-col bg-white dark:bg-gray-800 {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md h-full flex-shrink-0 flex-grow-0 w-32' : 'flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}">
     <SafeImage
             src={image}
             alt={title}

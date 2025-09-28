@@ -51,12 +51,12 @@
   }
 </script>
 
-<div class="relative inline-block">
+<div class="relative inline-block h-full">
   <img
     bind:this={imgElement}
     src={imageUrl}
     {alt}
-    class="{className} transition-opacity duration-300 {!isLoaded && actualLoading === 'lazy' ? 'opacity-0' : 'opacity-100'}"
+    class="{className} aspect-2/3 transition-opacity duration-300 {!isLoaded && actualLoading === 'lazy' ? 'opacity-0' : 'opacity-100'}"
     {style}
     {width}
     {height}
