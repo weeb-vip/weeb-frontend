@@ -90,18 +90,42 @@ export function useLogin() {
         debug.warn('No refresh token received in Svelte login response');
       }
 
-      // Update auth store and identify user in PostHog
-      loggedInStore.setLoggedIn({
-        id: data.id
-      });
+      // Update auth store with user data if available
+      if (data.user) {
+        loggedInStore.setLoggedIn({
+          id: data.user.id,
+          username: data.user.username,
+          email: data.user.email
+        });
+        debug.auth('Auth store updated with user data after login');
+      } else {
+        // Fallback: just set logged in status
+        loggedInStore.setLoggedIn();
+        debug.auth('Auth store updated (no user data available)');
+      }
 
       // Start token refresher
       TokenRefresher.getInstance(async () => {
         return refreshTokenSimple();
       }).start(data.Credentials.token);
 
-      // Invalidate and refetch user data
-      queryClient.invalidateQueries({ queryKey: queryKeys.user() });
+      // Invalidate all user-related queries to refresh data
+      try {
+        queryClient.invalidateQueries({ queryKey: queryKeys.user() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.currentlyAiring() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.homePageData() });
+        queryClient.invalidateQueries({ queryKey: ['user'] }); // Legacy key
+        queryClient.invalidateQueries({ queryKey: ['user-animes'] }); // User anime lists
+        queryClient.invalidateQueries({ queryKey: ['currently-airing'] }); // Legacy key
+        queryClient.invalidateQueries({ queryKey: ['currentlyAiring'] }); // Homepage currently airing with dates
+        queryClient.invalidateQueries({ queryKey: ['currentlyAiringWithEpisodes'] }); // Airing calendar version
+        queryClient.invalidateQueries({ queryKey: ['homedata'] }); // Legacy key
+        queryClient.invalidateQueries({ queryKey: ['seasonal-anime'] }); // Legacy key for seasonal data
+        debug.success('User and content queries invalidated after login');
+      } catch (error) {
+        debug.error('Failed to invalidate queries after login:', error);
+      }
     },
     onError: (error: any) => {
       debug.error("Svelte login failed:", error);

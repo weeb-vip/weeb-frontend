@@ -1,9 +1,10 @@
 import { writable } from 'svelte/store';
 import type { LoginInput, SigninResult } from "../../gql/graphql";
-import { refreshTokenSimple } from "../../services/queries";
+import { refreshTokenSimple, queryClient, queryKeys } from "../../services/queries";
 import { mutationCreateSession } from "../../services/api/graphql/queries";
 import { TokenRefresher } from "../../services/token_refresher";
 import { AuthStorage } from "../../utils/auth-storage";
+import { loggedInStore } from "../stores/auth";
 import debug from "../../utils/debug";
 
 interface LoginState {
@@ -72,6 +73,31 @@ export function useLogin() {
         TokenRefresher.getInstance(refreshTokenSimple).start(authToken);
       } else {
         debug.warn("No auth token found in cookies after login");
+      }
+
+      // Update auth store with user data if available
+      if (signinResult.user) {
+        loggedInStore.setLoggedIn({
+          id: signinResult.user.id,
+          username: signinResult.user.username,
+          email: signinResult.user.email
+        });
+        debug.auth('Auth store updated with user data after login');
+      } else {
+        // Fallback: just set logged in status
+        loggedInStore.setLoggedIn();
+        debug.auth('Auth store updated (no user data available)');
+      }
+
+      // Invalidate all user-related queries to refresh data
+      try {
+        queryClient.invalidateQueries({ queryKey: queryKeys.user() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+        queryClient.invalidateQueries({ queryKey: ['user'] }); // Legacy key
+        queryClient.invalidateQueries({ queryKey: ['user-animes'] }); // User anime lists
+        debug.success('User queries invalidated after login');
+      } catch (error) {
+        debug.error('Failed to invalidate queries after login:', error);
       }
 
       state.update(s => ({ ...s, isLoading: false, success: true }));

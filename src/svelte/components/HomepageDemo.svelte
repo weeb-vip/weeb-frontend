@@ -202,7 +202,6 @@
         };
 
         processedAnime.push(processedEntry);
-      }
     });
 
     // Filter and sort anime: only recently aired (last 30 minutes) or future episodes

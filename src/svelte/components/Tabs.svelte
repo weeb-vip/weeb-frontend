@@ -184,10 +184,12 @@
 
     if (shouldGoNext) {
       activeTab = tabs[activeIndex + 1];
-      scrollToTabsContent();
+      // Don't auto-scroll when swiping
+      // scrollToTabsContent();
     } else if (shouldGoPrev) {
       activeTab = tabs[activeIndex - 1];
-      scrollToTabsContent();
+      // Don't auto-scroll when swiping
+      // scrollToTabsContent();
     }
 
     // Reset position
@@ -204,7 +206,8 @@
       isTransitioning = true;
       currentX = 0;
       activeTab = tabs[activeIndex - 1];
-      scrollToTabsContent();
+      // Don't auto-scroll when using navigation buttons
+      // scrollToTabsContent();
       setTimeout(() => isTransitioning = false, 300);
     }
   }
@@ -214,7 +217,8 @@
       isTransitioning = true;
       currentX = 0;
       activeTab = tabs[activeIndex + 1];
-      scrollToTabsContent();
+      // Don't auto-scroll when using navigation buttons
+      // scrollToTabsContent();
       setTimeout(() => isTransitioning = false, 300);
     }
   }
@@ -225,8 +229,8 @@
     activeTab = tab;
     isDropdownOpen = false;
 
-    // Scroll to top of tabs content when switching tabs
-    scrollToTabsContent();
+    // Don't auto-scroll when manually selecting tabs - let user maintain their scroll position
+    // scrollToTabsContent();
 
     setTimeout(() => isTransitioning = false, 300);
   }
