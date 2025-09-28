@@ -36,6 +36,9 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta name="generator" content={Astro.generator}/>
+
+    <!-- Disable Cloudflare Rocket Loader to prevent script conflicts -->
+    <meta name="cf-rocket" content="false"/>
     <title>{pageTitle}</title>
     <meta name="description" content={pageDescription} />
     <meta name="keywords" content="anime, watchlist, tracker, episodes, notifications, seasonal anime, anime calendar, weeb, otaku" />
@@ -144,7 +147,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 
 
     <!-- Theme initialization (blocking to prevent flash) -->
-    <script is:inline>
+    <script is:inline data-cfasync="false">
       // Initialize theme immediately to prevent flash
       function initTheme() {
         // Add no-transitions class to prevent flash
@@ -333,7 +336,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     </div>
 
     <!-- Enhanced Navigation & Transition Scripts -->
-    <script>
+    <script data-cfasync="false">
       // Enhanced navigation feedback and smooth transitions
       document.addEventListener('DOMContentLoaded', function() {
         // Global error toast system
@@ -698,7 +701,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     </script>
 
     <!-- Integration with svelte-sonner toast system -->
-    <script>
+    <script data-cfasync="false">
       // Wait for svelte-sonner to be available and integrate with our error system
       document.addEventListener('DOMContentLoaded', function() {
         // Check periodically for svelte-sonner to be available
@@ -832,7 +835,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     </style>
 
     <!-- Initialize swipe navigation handling -->
-    <script>
+    <script data-cfasync="false">
       import { swipeNavigation } from '../utils/swipe-navigation';
 
       // Initialize swipe navigation handler immediately
