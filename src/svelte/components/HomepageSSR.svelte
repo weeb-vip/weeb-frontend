@@ -304,7 +304,7 @@
           show: true,
           text: nextEpisodeAirTime <= now
             ? "Recently aired"
-            : `Airing ${format(nextEpisodeAirTime, "EEE")} at ${format(nextEpisodeAirTime, "h:mm a")}`,
+            : `Airing ${format(nextEpisodeAirTime, "EEE MMM do")} at ${format(nextEpisodeAirTime, "h:mm a")}`,
           variant: nextEpisodeAirTime <= now ? 'aired' as const : 'scheduled' as const
         };
 

@@ -1,25 +1,11 @@
 // Web Worker for anime notifications and countdown calculations
 // This worker runs in a separate thread to provide accurate timing
 
-function formatInTZ(date: Date, timeZone: string, locale = 'en-US') {
-  const dtf = new Intl.DateTimeFormat(locale, {
-    timeZone,
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-  const parts = Object.fromEntries(dtf.formatToParts(date).map(p => [p.type, p.value]));
-  const day = Number(parts.day);
-  const ord = (n: number) =>
-    (n % 10 === 1 && n % 100 !== 11) ? 'st' :
-      (n % 10 === 2 && n % 100 !== 12) ? 'nd' :
-        (n % 10 === 3 && n % 100 !== 13) ? 'rd' : 'th';
-  const ampm = parts.dayPeriod ?? (Number(parts.hour) < 12 ? 'AM' : 'PM');
-  return `${parts.weekday} ${parts.month} ${day}${ord(day)} at ${parts.hour}:${parts.minute} ${ampm}`;
-}
+// Import date formatting utilities for consistency with main thread
+import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
+
+// === COPIED FROM airTimeUtils.ts FOR CONSISTENCY ===
 
 // Get current time with dev offset applied (for testing)
 function getCurrentTime(): Date {
@@ -87,8 +73,6 @@ function parseAirTime(airDate?: string | null, broadcast?: string | null): Date 
       utcHours += 24;
     }
 
-
-
     utcDate.setUTCHours(utcHours, jstMinutes, 0, 0);
     return utcDate;
   } else {
@@ -100,23 +84,24 @@ function parseAirTime(airDate?: string | null, broadcast?: string | null): Date 
 }
 
 /**
- * Format air date with time in local timezone
+ * Format air date with time in local timezone (using homepage format)
  */
 function getAirDateTime(
   airDate?: string | null,
   broadcast?: string | null,
-  opts?: { timeZone?: string }   // <-- add this
+  opts?: { timeZone?: string }
 ): string {
   if (!airDate) return "Unknown";
 
   const tz = opts?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const airTime = parseAirTime(airDate, broadcast); // should return a real UTC instant
+  const airTime = parseAirTime(airDate, broadcast);
 
   if (airTime) {
-    return formatInTZ(airTime, tz);
+    // Use the same format as homepage: "EEE MMM do at h:mm a" -> "Tue Mar 5th at 12:29 PM"
+    return `${formatInTimeZone(airTime, tz, "EEE MMM do")} at ${formatInTimeZone(airTime, tz, "h:mm a")}`;
   }
   // fallback if parseAirTime failed
-  return formatInTZ(new Date(airDate), tz);
+  return formatInTimeZone(new Date(airDate), tz, "EEE");
 }
 
 /**
@@ -215,7 +200,6 @@ function calculateCountdown(
 
   // 3) Already started (but not currently airing) => just aired
   if (diffMs <= 0) return "JUST AIRED";
-  // log anime title and airDate for debugging
 
   // 4) Not today (>24h away)
   return "";

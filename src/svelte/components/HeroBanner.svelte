@@ -262,7 +262,16 @@
             {/if}
           </p>
           <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-            <p class="text-base sm:text-lg text-gray-300">Airing {airDateTime || (airTimeAndDate && getAirDateTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast))}</p>
+            <p class="text-base sm:text-lg text-gray-300">
+              {#if hasTimingData && airDateTime}
+                Airing {airDateTime}
+              {:else if animeNextEpisodeInfo}
+                {@const airTime = animeNextEpisodeInfo.airTime}
+                Airing {format(airTime, "EEE MMM do")} at {format(airTime, "h:mm a")}
+              {:else}
+                Airing soon
+              {/if}
+            </p>
             {#if anime.broadcast}
               <div class="relative">
                 <span

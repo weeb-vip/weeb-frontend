@@ -422,7 +422,7 @@
       <div class="bg-gray-100 dark:bg-gray-900 py-8 px-4 sm:px-8 lg:px-16 transition-colors duration-300">
         <div class="max-w-screen-2xl mx-auto flex flex-col gap-8">
           <!-- Next Episode Info -->
-          {#if hasTimingData || (episode && animeNextEpisodeInfo)}
+          {#if nextEpisode || animeNextEpisodeInfo || hasTimingData}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:border-gray-700 p-4 transition-colors duration-300">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">

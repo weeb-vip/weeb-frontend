@@ -259,21 +259,36 @@ export function findNextEpisode(
 ): NextEpisodeResult | null {
   if (!episodes || episodes.length === 0) return null;
 
+  const now = currentTime || getCurrentTime();
+  let nextFutureEpisode: NextEpisodeResult | null = null;
+  let recentlyAiredEpisode: NextEpisodeResult | null = null;
+
   for (const episode of episodes) {
     if (episode.airDate) {
       const airTime = parseAirTime(episode.airDate, broadcast);
       if (airTime) {
-        const now = currentTime || getCurrentTime();
-        // or in the last 24 hours
-        if (airTime.getTime() > now.getTime() || (now.getTime() - airTime.getTime()) <= (24 * 60 * 60 * 1000)) {
-          return { episode, airTime };
+        const timeDiff = airTime.getTime() - now.getTime();
+
+        // If episode is in the future
+        if (timeDiff > 0) {
+          // If we haven't found a future episode yet, or this one is sooner
+          if (!nextFutureEpisode || timeDiff < (nextFutureEpisode.airTime.getTime() - now.getTime())) {
+            nextFutureEpisode = { episode, airTime };
+          }
+        }
+        // If episode recently aired (within last 24 hours)
+        else if ((-timeDiff) <= (24 * 60 * 60 * 1000)) {
+          // If we haven't found a recently aired episode yet, or this one aired more recently
+          if (!recentlyAiredEpisode || timeDiff > (recentlyAiredEpisode.airTime.getTime() - now.getTime())) {
+            recentlyAiredEpisode = { episode, airTime };
+          }
         }
       }
     }
-
   }
 
-  return null;
+  // Prefer future episodes over recently aired ones
+  return nextFutureEpisode || recentlyAiredEpisode;
 }
 
 /**
