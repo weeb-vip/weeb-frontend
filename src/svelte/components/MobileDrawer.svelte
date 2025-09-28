@@ -5,8 +5,7 @@
   import { loggedInStore } from '../stores/auth';
   import { navigateWithTransition } from '../../utils/astro-navigation';
   import { AuthStorage } from '../../utils/auth-storage';
-  import ProfileAvatar from './ProfileAvatar.svelte';
-  import { logout } from '../../services/queries';
+  import ProfileMenuContent from './ProfileMenuContent.svelte';
   import TitleLanguageToggle from './TitleLanguageToggle.svelte';
   import { preferencesStore } from '../stores/preferences';
 
@@ -52,29 +51,6 @@
     }
   }
 
-  async function handleLogout() {
-    try {
-      // Call GraphQL logout mutation first
-      const logoutQuery = logout();
-      await logoutQuery.mutationFn();
-      console.log("🚪 GraphQL logout successful");
-
-      // Also call local API endpoint to ensure all cookies are cleared
-      await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include' // Send cookies to server
-      });
-      console.log("🚪 Server logout successful - cookies cleared");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-
-    // Update client state
-    AuthStorage.logout();
-    loggedInStore.logout();
-    onClose();
-    navigateWithTransition("/");
-  }
 
   function handleLinkClick() {
     onClose();
@@ -197,58 +173,12 @@
           {#if isLoggedIn && user}
             <!-- User Profile Section -->
             <div class="rounded-lg bg-gray-50 dark:bg-gray-800/50 overflow-hidden transition-colors duration-300">
-              <a
-                href="/profile"
-                on:click={handleLinkClick}
-                class="flex items-center px-4 py-4 space-x-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-300"
-              >
-                <ProfileAvatar
-                  username={user.username}
-                  profileImageUrl={user.profileImageUrl}
-                  size="md"
-                  linkToProfile={false}
-                />
-                <div class="flex-1">
-                  <p class="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">{user.username}</p>
-                  <p class="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">{user.firstname} {user.lastname}</p>
-                </div>
-              </a>
-              <div class="border-t border-gray-200 dark:border-gray-600 transition-colors duration-300">
-                <button
-                  on:click={handleLogout}
-                  class="w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-300"
-                >
-                  Sign Out
-                </button>
-              </div>
+              <ProfileMenuContent {user} isMobile={true} onClose={onClose} />
             </div>
-
-            <!-- Navigation Menu Options -->
-            <div class="space-y-2 mt-4">
-              <a
-                href="/profile"
-                on:click={handleLinkClick}
-                class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <i class="fas fa-user w-5 text-center mr-3 text-gray-600 dark:text-gray-400"></i>
-                <span class="text-gray-700 dark:text-gray-200">View Profile</span>
-              </a>
-              <a
-                href="/profile/anime"
-                on:click={handleLinkClick}
-                class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <i class="fas fa-bookmark w-5 text-center mr-3 text-gray-600 dark:text-gray-400"></i>
-                <span class="text-gray-700 dark:text-gray-200">Watchlist</span>
-              </a>
-              <a
-                href="/settings"
-                on:click={handleLinkClick}
-                class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <i class="fas fa-cog w-5 text-center mr-3 text-gray-600 dark:text-gray-400"></i>
-                <span class="text-gray-700 dark:text-gray-200">Settings</span>
-              </a>
+          {:else}
+            <!-- Debug: Show what's wrong -->
+            <div class="px-4 py-2 bg-red-100 dark:bg-red-900 rounded text-xs">
+              Debug: isLoggedIn={isLoggedIn}, user={user ? 'exists' : 'null'}
             </div>
           {/if}
 

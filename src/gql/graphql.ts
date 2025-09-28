@@ -461,12 +461,14 @@ export type QueryAnimeArgs = {
 
 
 export type QueryAnimeBySeasonAndYearArgs = {
+  limit?: InputMaybe<Scalars['Int']>;
   seasonName: Scalars['String'];
   year: Scalars['Int'];
 };
 
 
 export type QueryAnimeBySeasonsArgs = {
+  limit?: InputMaybe<Scalars['Int']>;
   season: Scalars['Season'];
 };
 
