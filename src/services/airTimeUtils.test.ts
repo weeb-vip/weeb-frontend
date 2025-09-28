@@ -372,7 +372,7 @@ describe('findNextEpisode', () => {
     expect(result).toBe(null);
   });
 
-  test('finds next episode within 24 hour window', () => {
+  test('finds next episode prioritizing future over recently aired', () => {
     const now = new Date("2025-08-30T08:00:00-04:00");
     const episodes: Episode[] = [
       {
@@ -380,7 +380,7 @@ describe('findNextEpisode', () => {
         episodeNumber: 1,
         titleEn: "Episode 1",
         titleJp: null,
-        airDate: "2025-08-30T00:00:00Z" // This should convert to Aug 29 in EDT, so within 24h window
+        airDate: "2025-08-30T00:00:00Z" // This should convert to Aug 29 in EDT, so within 24h window (recently aired)
       },
       {
         id: "2",
@@ -393,6 +393,33 @@ describe('findNextEpisode', () => {
 
     const result = findNextEpisode(episodes, "Saturdays at 11:30 (JST)", now);
     expect(result).not.toBe(null);
+    // Should prioritize future episode (2) over recently aired episode (1)
+    expect(result?.episode.episodeNumber).toBe(2);
+  });
+
+  test('falls back to recently aired when no future episodes exist', () => {
+    const now = new Date("2025-08-30T08:00:00-04:00"); // Aug 30, 8AM EDT
+    const episodes: Episode[] = [
+      {
+        id: "1",
+        episodeNumber: 1,
+        titleEn: "Episode 1",
+        titleJp: null,
+        airDate: "2025-08-30T00:00:00Z" // Aug 30 JST date, will convert to Aug 29 EDT when combined with JST time
+      },
+      {
+        id: "2",
+        episodeNumber: 2,
+        titleEn: "Episode 2",
+        titleJp: null,
+        airDate: "2025-08-25T00:00:00Z" // Aired too long ago
+      }
+    ];
+
+    // Saturday 11:30 JST on Aug 30 -> 02:30 UTC Aug 30 -> 22:30 EDT Aug 29 (about 9h ago from now)
+    const result = findNextEpisode(episodes, "Saturdays at 11:30 (JST)", now);
+    expect(result).not.toBe(null);
+    // Should return the recently aired episode when no future episodes exist
     expect(result?.episode.episodeNumber).toBe(1);
   });
 });
