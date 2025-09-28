@@ -79,22 +79,23 @@
         isError = value.isError;
       });
     } else {
-      console.log('✅ [ShowContent] Using SSR data, skipping client-side query');
-      // Create a mock query object for mutations that still need to refetch
-      showQuery = {
-        refetch: () => {
-          console.log('🔄 [ShowContent] Refetch called, creating query for mutations');
-          if (!showQueryStore) {
-            showQueryStore = createQuery(fetchDetails(animeId));
-            showQueryStore.subscribe((value: any) => {
-              show = value.data;
-              anime = show?.anime;
-              isLoading = value.isLoading;
-              isError = value.isError;
-            });
-          }
+      console.log('✅ [ShowContent] Using SSR data, creating query for cache invalidation');
+      // Always create the client-side query even with SSR data for cache invalidation
+      showQueryStore = createQuery(fetchDetails(animeId));
+
+      // Subscribe to query changes to get updates from cache invalidation
+      showQueryStore.subscribe((value: any) => {
+        console.log('Query value updated:', value);
+        showQuery = value; // Store the actual query object
+        // Only update local state if new data is available (not just from cache invalidation)
+        if (value.data && value.data.anime) {
+          show = value.data;
+          anime = show?.anime;
+          isLoading = value.isLoading;
+          isError = value.isError;
+          console.log('🔄 [ShowContent] Updated anime state from query:', anime?.userAnime?.status);
         }
-      };
+      });
     }
 
     // Initialize consolidated mutations with toast handling
@@ -106,10 +107,8 @@
     addAnimeMutation.mutate = (variables, options = {}) => {
       const originalOnSuccess = options.onSuccess;
       options.onSuccess = (data, vars) => {
-        // Refetch show data
-        if (showQuery && showQuery.refetch) {
-          showQuery.refetch();
-        }
+        // The cache invalidation in anime-actions.ts will trigger the query refetch automatically
+        console.log('🎯 [ShowContent] Add anime success - cache invalidation will trigger refetch');
         if (originalOnSuccess) originalOnSuccess(data, vars);
       };
       return originalAddMutate(variables, options);
@@ -119,10 +118,8 @@
     deleteAnimeMutation.mutate = (variables, options = {}) => {
       const originalOnSuccess = options.onSuccess;
       options.onSuccess = (data, vars) => {
-        // Refetch show data
-        if (showQuery && showQuery.refetch) {
-          showQuery.refetch();
-        }
+        // The cache invalidation in anime-actions.ts will trigger the query refetch automatically
+        console.log('🗑️ [ShowContent] Delete anime success - cache invalidation will trigger refetch');
         if (originalOnSuccess) originalOnSuccess(data, vars);
       };
       return originalDeleteMutate(variables, options);

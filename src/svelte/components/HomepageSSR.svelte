@@ -79,12 +79,12 @@
   let hoveredAnime: any = null;
   let lastHoveredAnime: any = null;
 
-  // Create all data queries that refresh on login state changes
+  // Create all data queries that refresh on login state changes and cache invalidation
   const homeDataQuery = createQuery({
     ...fetchHomePageData(),
     initialData: homeData,
     refetchOnWindowFocus: false,
-    refetchOnMount: false, // Don't auto-refetch on mount since we have SSR data
+    refetchOnMount: true, // Enable refetch on mount to respond to cache invalidation
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     refetchOnReconnect: false // Don't refetch when reconnecting
@@ -102,7 +102,7 @@
     ),
     initialData: currentlyAiringData,
     refetchOnWindowFocus: false,
-    refetchOnMount: false, // Don't auto-refetch on mount since we have SSR data
+    refetchOnMount: true, // Enable refetch on mount to respond to cache invalidation
     staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes (more dynamic)
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     refetchOnReconnect: false // Don't refetch when reconnecting
@@ -111,9 +111,10 @@
   // Create seasonal anime query for dynamic season changes
   $: seasonalAnimeQuery = createQuery({
     ...fetchSeasonalAnime(selectedSeason),
-    enabled: selectedSeason !== currentSeason, // Only fetch if different from SSR season
+    enabled: true, // Always enable to respond to cache invalidation
     initialData: selectedSeason === currentSeason ? seasonalData : undefined,
     refetchOnWindowFocus: false,
+    refetchOnMount: true, // Enable refetch on mount to respond to cache invalidation
     staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes (seasonal data changes slowly)
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
     refetchOnReconnect: false
