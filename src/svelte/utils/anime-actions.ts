@@ -1,7 +1,7 @@
 import { createMutation } from '@tanstack/svelte-query';
 import { toast } from 'svelte-sonner';
 import type { UserAnimeInput } from "../../gql/graphql";
-import { queryClient, queryKeys } from '../services/queries';
+import { initializeQueryClient } from '../services/query-client';
 import { upsertAnime as upsertAnimeQuery, deleteAnime as deleteAnimeQuery } from "../../services/queries";
 
 /**
@@ -10,6 +10,8 @@ import { upsertAnime as upsertAnimeQuery, deleteAnime as deleteAnimeQuery } from
  */
 
 export function useAddAnimeWithToast() {
+  const queryClient = initializeQueryClient();
+
   return createMutation({
     mutationFn: async (variables: { input: UserAnimeInput }) => {
       const queryConfig = upsertAnimeQuery();
@@ -18,9 +20,8 @@ export function useAddAnimeWithToast() {
     onSuccess: (data, variables) => {
       console.log('🎯 Add anime success - invalidating queries for anime:', variables.input.animeID);
 
-      // Invalidate all relevant queries using proper query keys
+      // Invalidate all relevant queries using query client from context
       queryClient.invalidateQueries();
-
     },
     onError: (error, variables) => {
       console.error('❌ Add anime mutation failed:', error);
@@ -60,7 +61,7 @@ export function useAddAnimeWithToast() {
               }
             },
             duration: 8000
-          });
+          }, queryClient);
         } else {
           // User is logged in but still got auth error, show generic error
           toast.error('Authentication error. Please try again.');
@@ -74,6 +75,8 @@ export function useAddAnimeWithToast() {
 }
 
 export function useDeleteAnimeWithToast() {
+  const queryClient = initializeQueryClient();
+
   return createMutation({
     mutationFn: async (animeId: string) => {
       const queryConfig = deleteAnimeQuery();
@@ -82,10 +85,8 @@ export function useDeleteAnimeWithToast() {
     onSuccess: (data, animeId) => {
       console.log('🗑️ Delete anime success - invalidating queries for anime:', animeId);
 
-      // Invalidate all relevant queries using proper query keys
+      // Invalidate all relevant queries using query client from context
       queryClient.invalidateQueries();
-
-
     },
     onError: (error, animeId) => {
       console.error('❌ Delete anime mutation failed:', error);
@@ -125,7 +126,7 @@ export function useDeleteAnimeWithToast() {
               }
             },
             duration: 8000
-          });
+          }, queryClient);
         } else {
           // User is logged in but still got auth error, show generic error
           toast.error('Authentication error. Please try again.');
@@ -151,7 +152,7 @@ export function useQuickAddAnime() {
           animeID: animeId,
           status: 'PLAN_TO_WATCH'
         }
-      });
+      }, queryClient);
     },
     addToWatching: (animeId: string) => {
       return addMutation.mutate({
@@ -159,7 +160,7 @@ export function useQuickAddAnime() {
           animeID: animeId,
           status: 'WATCHING'
         }
-      });
+      }, queryClient);
     },
     addToCompleted: (animeId: string) => {
       return addMutation.mutate({
@@ -167,7 +168,7 @@ export function useQuickAddAnime() {
           animeID: animeId,
           status: 'COMPLETED'
         }
-      });
+      }, queryClient);
     },
     isLoading: addMutation.isPending
   };
