@@ -56,10 +56,33 @@
         }
       },
       {
-        onSuccess: () => {
+        onSuccess: (data: any) => {
           if (statusKey) {
             updateStatus(statusKey, 'success');
             clearStatusAfterDelay(statusKey);
+          }
+
+          // Optimistic update: immediately set userAnime property
+          if (data?.id) {
+            anime.userAnime = {
+              id: data.id,
+              animeID: anime.id,
+              status: 'PLANTOWATCH',
+              userID: '', // Will be populated by cache refresh
+              score: null,
+              episodes: null,
+              rewatching: null,
+              rewatchingEpisodes: null,
+              tags: null,
+              listID: null,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              deletedAt: null,
+              anime: anime
+            };
+
+            // Force reactivity update
+            anime = anime;
           }
         },
         onError: (error: any) => {
@@ -98,6 +121,15 @@
             updateStatus(statusKey, 'success');
             clearStatusAfterDelay(statusKey);
           }
+
+          // Optimistic update: immediately update status in userAnime
+          if (anime.userAnime) {
+            anime.userAnime.status = status;
+            anime.userAnime.updatedAt = new Date().toISOString();
+
+            // Force reactivity update
+            anime = anime;
+          }
         },
         onError: (error: any) => {
           console.error('❌ Status change failed:', error);
@@ -128,6 +160,12 @@
           updateStatus(statusKey, 'success');
           clearStatusAfterDelay(statusKey);
         }
+
+        // Optimistic update: immediately remove userAnime property
+        anime.userAnime = null;
+
+        // Force reactivity update
+        anime = anime;
       },
       onError: (error: any) => {
         console.error('❌ Delete anime failed:', error);
