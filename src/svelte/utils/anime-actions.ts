@@ -19,70 +19,7 @@ export function useAddAnimeWithToast() {
       console.log('🎯 Add anime success - invalidating queries for anime:', variables.input.animeID);
 
       // Invalidate all relevant queries using proper query keys
-      queryClient.invalidateQueries({ queryKey: queryKeys.users() }); // All user-related data
-      queryClient.invalidateQueries({ queryKey: queryKeys.currentlyAiring() }); // Currently airing
-      queryClient.invalidateQueries({ queryKey: queryKeys.homePageData() }); // Homepage data
-      queryClient.invalidateQueries({ queryKey: queryKeys.anime() }); // All anime-related data (includes details)
-
-      // CRITICAL: Invalidate the specific anime details query for the show page
-      queryClient.invalidateQueries({ queryKey: ["anime-details", variables.input.animeID] }); // React query system
-      queryClient.invalidateQueries({ queryKey: queryKeys.animeDetail(variables.input.animeID) }); // Svelte query system
-
-      queryClient.invalidateQueries({ queryKey: ['homedata'] }); // Legacy key - partial match
-      queryClient.invalidateQueries({ queryKey: ['currently-airing'] }); // Legacy key
-      queryClient.invalidateQueries({ queryKey: ['currentlyAiring'] }); // Homepage currentlyAiring key - partial match
-      queryClient.invalidateQueries({ queryKey: ['seasonal-anime'] }); // Seasonal data - partial match
-
-      // Invalidate all queries with parameters that match homepage queries
-      // But exclude calendar-specific queries with date parameters
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey[0];
-          const match = key === 'homedata' || key === 'seasonal-anime' || key === 'currently-airing' || key === 'currentlyAiring';
-
-          // Exclude calendar queries that have specific date parameters
-          const isCalendarQuery = (key === 'currentlyAiringWithEpisodes' || key === 'currentlyAiring') &&
-            query.queryKey[1] &&
-            typeof query.queryKey[1] === 'object' &&
-            'startDate' in query.queryKey[1];
-
-          const shouldInvalidate = match && !isCalendarQuery;
-          if (shouldInvalidate) {
-            console.log('🔄 Invalidating query with key:', query.queryKey);
-          } else if (isCalendarQuery) {
-            console.log('🗓️ Skipping calendar query:', query.queryKey);
-          }
-          return shouldInvalidate;
-        }
-      });
-      queryClient.invalidateQueries({ queryKey: ['user-animes'] }); // User anime lists
-      queryClient.invalidateQueries({ queryKey: ['anime-details'] }); // Anime details (legacy)
-
-      // Force refetch critical queries for immediate UI update
-      // Exclude calendar queries from refetch to prevent date range corruption
-      queryClient.refetchQueries({ queryKey: queryKeys.currentlyAiring() });
-      queryClient.refetchQueries({ queryKey: ['currently-airing'] }); // Legacy key
-      queryClient.refetchQueries({ queryKey: ['currentlyAiring'] }); // Homepage currentlyAiring key
-      queryClient.refetchQueries({ queryKey: ['homedata'] }); // Legacy key - partial match
-      queryClient.refetchQueries({ queryKey: ["anime-details", variables.input.animeID] }); // Force refetch anime details
-      queryClient.refetchQueries({ type: 'all', predicate: (query) => {
-        // Refetch all queries that start with 'homedata' or 'seasonal-anime'
-        // But exclude calendar queries with date parameters
-        const key = query.queryKey[0];
-        const match = key === 'homedata' || key === 'seasonal-anime' || key === 'currently-airing' || key === 'currentlyAiring';
-
-        // Exclude calendar queries that have specific date parameters
-        const isCalendarQuery = (key === 'currentlyAiringWithEpisodes' || key === 'currentlyAiring') &&
-          query.queryKey[1] &&
-          typeof query.queryKey[1] === 'object' &&
-          'startDate' in query.queryKey[1];
-
-        const shouldRefetch = match && !isCalendarQuery;
-        if (isCalendarQuery) {
-          console.log('🗓️ Skipping calendar refetch:', query.queryKey);
-        }
-        return shouldRefetch;
-      }});
+      queryClient.invalidateQueries();
 
     },
     onError: (error, variables) => {
@@ -146,70 +83,8 @@ export function useDeleteAnimeWithToast() {
       console.log('🗑️ Delete anime success - invalidating queries for anime:', animeId);
 
       // Invalidate all relevant queries using proper query keys
-      queryClient.invalidateQueries({ queryKey: queryKeys.users() }); // All user-related data
-      queryClient.invalidateQueries({ queryKey: queryKeys.currentlyAiring() }); // Currently airing
-      queryClient.invalidateQueries({ queryKey: queryKeys.homePageData() }); // Homepage data
-      queryClient.invalidateQueries({ queryKey: queryKeys.anime() }); // All anime-related data (includes details)
+      queryClient.invalidateQueries();
 
-      // CRITICAL: Invalidate the specific anime details query for the show page
-      queryClient.invalidateQueries({ queryKey: ["anime-details", animeId] }); // React query system
-      queryClient.invalidateQueries({ queryKey: queryKeys.animeDetail(animeId) }); // Svelte query system
-
-      queryClient.invalidateQueries({ queryKey: ['homedata'] }); // Legacy key - partial match
-      queryClient.invalidateQueries({ queryKey: ['currently-airing'] }); // Legacy key
-      queryClient.invalidateQueries({ queryKey: ['currentlyAiring'] }); // Homepage currentlyAiring key - partial match
-      queryClient.invalidateQueries({ queryKey: ['seasonal-anime'] }); // Seasonal data - partial match
-
-      // Invalidate all queries with parameters that match homepage queries
-      // But exclude calendar-specific queries with date parameters
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey[0];
-          const match = key === 'homedata' || key === 'seasonal-anime' || key === 'currently-airing' || key === 'currentlyAiring';
-
-          // Exclude calendar queries that have specific date parameters
-          const isCalendarQuery = (key === 'currentlyAiringWithEpisodes' || key === 'currentlyAiring') &&
-            query.queryKey[1] &&
-            typeof query.queryKey[1] === 'object' &&
-            'startDate' in query.queryKey[1];
-
-          const shouldInvalidate = match && !isCalendarQuery;
-          if (shouldInvalidate) {
-            console.log('🔄 Invalidating query with key:', query.queryKey);
-          } else if (isCalendarQuery) {
-            console.log('🗓️ Skipping calendar query:', query.queryKey);
-          }
-          return shouldInvalidate;
-        }
-      });
-      queryClient.invalidateQueries({ queryKey: ['user-animes'] }); // User anime lists
-      queryClient.invalidateQueries({ queryKey: ['anime-details'] }); // Anime details (legacy)
-
-      // Force refetch critical queries for immediate UI update
-      // Exclude calendar queries from refetch to prevent date range corruption
-      queryClient.refetchQueries({ queryKey: queryKeys.currentlyAiring() });
-      queryClient.refetchQueries({ queryKey: ['currently-airing'] }); // Legacy key
-      queryClient.refetchQueries({ queryKey: ['currentlyAiring'] }); // Homepage currentlyAiring key
-      queryClient.refetchQueries({ queryKey: ['homedata'] }); // Legacy key - partial match
-      queryClient.refetchQueries({ queryKey: ["anime-details", animeId] }); // Force refetch anime details
-      queryClient.refetchQueries({ type: 'all', predicate: (query) => {
-        // Refetch all queries that start with 'homedata' or 'seasonal-anime'
-        // But exclude calendar queries with date parameters
-        const key = query.queryKey[0];
-        const match = key === 'homedata' || key === 'seasonal-anime' || key === 'currently-airing' || key === 'currentlyAiring';
-
-        // Exclude calendar queries that have specific date parameters
-        const isCalendarQuery = (key === 'currentlyAiringWithEpisodes' || key === 'currentlyAiring') &&
-          query.queryKey[1] &&
-          typeof query.queryKey[1] === 'object' &&
-          'startDate' in query.queryKey[1];
-
-        const shouldRefetch = match && !isCalendarQuery;
-        if (isCalendarQuery) {
-          console.log('🗓️ Skipping calendar refetch:', query.queryKey);
-        }
-        return shouldRefetch;
-      }});
 
     },
     onError: (error, animeId) => {

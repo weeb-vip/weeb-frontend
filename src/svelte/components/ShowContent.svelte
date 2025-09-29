@@ -339,9 +339,8 @@
         {:else}
           <AnimeStatusDropdown
             entry={{
-              id: anime.userAnime.id || '',
-              anime: anime,
-              status: anime.userAnime.status || undefined
+                ...anime.userAnime,
+              id: anime.id || '',
             }}
             variant="icon-only"
             on:delete={handleDeleteAnime}
@@ -408,7 +407,7 @@
                 <AnimeStatusDropdown
                   entry={{
                     ...anime.userAnime,
-                    anime: anime
+                    id: anime.id,
                   }}
                   variant="default"
                   on:delete={handleDeleteAnime}
