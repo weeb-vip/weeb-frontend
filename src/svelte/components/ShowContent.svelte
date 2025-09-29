@@ -3,14 +3,12 @@
   import { format } from 'date-fns';
   import { createQuery } from '@tanstack/svelte-query';
   import SafeImage from './SafeImage.svelte';
-  import Button from './Button.svelte';
-  import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
+  import AnimeActions from './AnimeActions.svelte';
   import Tabs from './Tabs.svelte';
   import Tag from './Tag.svelte';
   import Episodes from './Episodes.svelte';
   import CharactersWithStaff from './CharactersWithStaff.svelte';
   import { fetchDetails } from '../../services/queries';
-  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import debug from '../../utils/debug';
@@ -30,7 +28,6 @@
   let bgLoaded = false;
   let useFallback = false;
   let showStickyHeader = false;
-  let animeStatuses: Record<string, 'idle' | 'loading' | 'success' | 'error'> = {};
 
   // Data state variables
   let showQueryStore: any = null;
@@ -98,43 +95,6 @@
       });
     }
 
-    // Initialize consolidated mutations with toast handling
-    addAnimeMutation = useAddAnimeWithToast();
-    deleteAnimeMutation = useDeleteAnimeWithToast();
-
-    // Extend mutations with custom query refetch on success
-    const originalAddMutate = addAnimeMutation.mutate;
-    addAnimeMutation.mutate = (variables, options = {}) => {
-      const originalOnSuccess = options.onSuccess;
-      options.onSuccess = (data, vars) => {
-        // The cache invalidation in anime-actions.ts will trigger the query refetch automatically
-        console.log('🎯 [ShowContent] Add anime success - cache invalidation will trigger refetch');
-        if (originalOnSuccess) originalOnSuccess(data, vars);
-      };
-      return originalAddMutate(variables, options);
-    };
-
-    const originalDeleteMutate = deleteAnimeMutation.mutate;
-    deleteAnimeMutation.mutate = (variables, options = {}) => {
-      const originalOnSuccess = options.onSuccess;
-      options.onSuccess = (data, vars) => {
-        // The cache invalidation in anime-actions.ts will trigger the query refetch automatically
-        console.log('🗑️ [ShowContent] Delete anime success - cache invalidation will trigger refetch');
-        if (originalOnSuccess) originalOnSuccess(data, vars);
-      };
-      return originalDeleteMutate(variables, options);
-    };
-
-    // Subscribe to mutation stores to get the actual mutation values
-    addAnimeMutation.subscribe((value: any) => {
-      mutationStore = value;
-      console.log('Add mutation store updated:', mutationStore);
-    });
-
-    deleteAnimeMutation.subscribe((value: any) => {
-      deleteMutationStore = value;
-      console.log('Delete mutation store updated:', deleteMutationStore);
-    });
   });
 
   // Set background image based on anime data
@@ -223,51 +183,6 @@
     };
   });
 
-  // Handle add anime
-  let addAnimeMutation: any = null;
-  let mutationStore: any = null;
-  let deleteAnimeMutation: any = null;
-  let deleteMutationStore: any = null;
-
-  async function handleAddAnime() {
-    console.log('🎯 ADD ANIME CLICKED! handleAddAnime called', { anime, mutationStore });
-    if (!anime || !mutationStore) {
-      console.log('❌ Early return - missing anime or mutation', { anime: !!anime, mutationStore: !!mutationStore });
-      return;
-    }
-    animeStatuses = { ...animeStatuses, [anime.id]: 'loading' };
-
-    try {
-      console.log('🚀 Calling mutateAsync...');
-      // In Svelte, we need to use $mutationStore to get the current value
-      await mutationStore.mutateAsync({
-        input: { animeID: anime.id, status: 'PLANTOWATCH' }
-      });
-      console.log('✅ Mutation successful');
-      animeStatuses = { ...animeStatuses, [anime.id]: 'success' };
-    } catch (error) {
-      console.error('❌ Mutation failed:', error);
-      animeStatuses = { ...animeStatuses, [anime.id]: 'error' };
-    }
-  }
-
-  async function handleDeleteAnime(event: CustomEvent) {
-    console.log('🗑️ DELETE ANIME CLICKED!', event.detail);
-    const animeId = event.detail?.animeId;
-
-    if (!animeId || !deleteMutationStore) {
-      console.log('❌ Cannot delete - missing animeId or mutation', { animeId, deleteMutationStore: !!deleteMutationStore });
-      return;
-    }
-
-    try {
-      console.log('🚀 Calling delete mutation for anime ID:', animeId);
-      await deleteMutationStore.mutateAsync(animeId);
-      console.log('✅ Delete successful');
-    } catch (error) {
-      console.error('❌ Delete failed:', error);
-    }
-  }
 
   function handleBgError() {
     if (!useFallback && anime) {
@@ -327,25 +242,10 @@
 
       <!-- Floating button outside the overflow container -->
       <div class="absolute top-1/2 -translate-y-1/2 right-4 flex items-center z-20">
-        {#if !anime.userAnime}
-          <Button
-            color="blue"
-            icon='<i class="fas fa-plus w-3 h-3" style="display: flex; align-items: center; justify-content: center; line-height: 1;"></i>'
-            showLabel={false}
-            status={animeStatuses[anime.id] || 'idle'}
-            onClick={handleAddAnime}
-            className="w-8 h-8 rounded-full flex items-center justify-center p-0"
-          />
-        {:else}
-          <AnimeStatusDropdown
-            entry={{
-                ...anime.userAnime,
-              id: anime.id || '',
-            }}
-            variant="icon-only"
-            on:delete={handleDeleteAnime}
-          />
-        {/if}
+        <AnimeActions
+          {anime}
+          variant="icon-only"
+        />
       </div>
     </div>
 
@@ -396,23 +296,7 @@
               {/each}
             </div>
             <div class="flex flex-wrap gap-2 mt-4">
-              {#if !anime.userAnime}
-                <Button
-                  color="blue"
-                  label="Add to list"
-                  status={animeStatuses[anime.id] || 'idle'}
-                  onClick={handleAddAnime}
-                />
-              {:else}
-                <AnimeStatusDropdown
-                  entry={{
-                    ...anime.userAnime,
-                    id: anime.id,
-                  }}
-                  variant="default"
-                  on:delete={handleDeleteAnime}
-                />
-              {/if}
+              <AnimeActions {anime} variant="default" />
             </div>
           </div>
         </div>

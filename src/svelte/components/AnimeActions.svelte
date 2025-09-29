@@ -2,183 +2,63 @@
   import { onMount } from 'svelte';
   import Button from './Button.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
-  import { useAnimeActions } from '../composables/useAnimeActions';
+  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
 
   // Props
   export let anime: any;
-  export let variant: 'button' | 'icon' | 'hero' | 'compact' = 'button';
-  export let statusKey: string = ''; // For tracking loading states (optional)
+  export let variant: 'default' | 'icon-only' | 'hero' | 'compact' = 'default';
   export let className: string = '';
   export let showLabel: boolean = true;
 
-  // Use centralized anime actions
-  const {
-    statusStore,
-    getAddMutation,
-    getDeleteMutation,
-    updateStatus,
-    clearStatusAfterDelay
-  } = useAnimeActions();
+  // Use mutations from anime-actions.ts
+  let addMutation: any;
+  let deleteMutation: any;
 
-  let addMutationStore: any = null;
-  let deleteMutationStore: any = null;
+  // Computed values
+  let currentStatus: 'idle' | 'loading' | 'success' | 'error' = 'idle';
 
   onMount(() => {
-    // Subscribe to mutation stores
-    const addMutation = getAddMutation();
-    const deleteMutation = getDeleteMutation();
-
-    addMutation.subscribe((value: any) => {
-      addMutationStore = value;
-    });
-
-    deleteMutation.subscribe((value: any) => {
-      deleteMutationStore = value;
-    });
+    // Initialize mutations
+    addMutation = useAddAnimeWithToast();
+    deleteMutation = useDeleteAnimeWithToast();
   });
+
+  // Update status based on mutation state
+  $: currentStatus = ($addMutation?.isPending || $deleteMutation?.isPending) ? 'loading' : 'idle';
 
   // Action handlers
   function handleAddAnime() {
-    if (!anime?.id || !addMutationStore) {
-      console.log('❌ Early return - missing anime ID or mutation store');
+    if (!anime?.id || !$addMutation) {
+      console.log('❌ Early return - missing anime ID or mutation');
       return;
     }
 
-    if (statusKey) {
-      updateStatus(statusKey, 'loading');
-    }
-
-    addMutationStore.mutate(
-      {
-        input: {
-          animeID: anime.id,
-          status: 'PLANTOWATCH'
-        }
-      },
-      {
-        onSuccess: (data: any) => {
-          if (statusKey) {
-            updateStatus(statusKey, 'success');
-            clearStatusAfterDelay(statusKey);
-          }
-
-          // Optimistic update: immediately set userAnime property
-          if (data?.id) {
-            anime.userAnime = {
-              id: data.id,
-              animeID: anime.id,
-              status: 'PLANTOWATCH',
-              userID: '', // Will be populated by cache refresh
-              score: null,
-              episodes: null,
-              rewatching: null,
-              rewatchingEpisodes: null,
-              tags: null,
-              listID: null,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              deletedAt: null,
-              anime: anime
-            };
-
-            // Force reactivity update
-            anime = anime;
-          }
-        },
-        onError: (error: any) => {
-          console.error('❌ Add anime failed:', error);
-          if (statusKey) {
-            updateStatus(statusKey, 'error');
-            clearStatusAfterDelay(statusKey, 2000);
-          }
-        }
-      }
-    );
+    $addMutation.mutate({ input: { animeID: anime.id, status: 'PLANTOWATCH' } });
   }
 
   function onStatusChange(event: CustomEvent) {
     const { animeId, status } = event.detail;
 
-    if (!addMutationStore) {
-      console.log('❌ Early return - missing add mutation store');
+    if (!$addMutation) {
+      console.log('❌ Early return - missing add mutation');
       return;
     }
 
-    if (statusKey) {
-      updateStatus(statusKey, 'loading');
-    }
-
-    addMutationStore.mutate(
-      {
-        input: {
-          animeID: animeId,
-          status
-        }
-      },
-      {
-        onSuccess: () => {
-          if (statusKey) {
-            updateStatus(statusKey, 'success');
-            clearStatusAfterDelay(statusKey);
-          }
-
-          // Optimistic update: immediately update status in userAnime
-          if (anime.userAnime) {
-            anime.userAnime.status = status;
-            anime.userAnime.updatedAt = new Date().toISOString();
-
-            // Force reactivity update
-            anime = anime;
-          }
-        },
-        onError: (error: any) => {
-          console.error('❌ Status change failed:', error);
-          if (statusKey) {
-            updateStatus(statusKey, 'error');
-            clearStatusAfterDelay(statusKey, 2000);
-          }
-        }
-      }
-    );
+    $addMutation.mutate({ input: { animeID: animeId, status } });
   }
 
   function onDelete(event: CustomEvent) {
     const animeId = event.detail?.animeId;
 
-    if (!animeId || !deleteMutationStore) {
-      console.log('❌ Early return - missing anime ID or delete mutation store');
+    if (!animeId || !$deleteMutation) {
+      console.log('❌ Early return - missing anime ID or delete mutation');
       return;
     }
 
-    if (statusKey) {
-      updateStatus(statusKey, 'loading');
-    }
-
-    deleteMutationStore.mutate(animeId, {
-      onSuccess: () => {
-        if (statusKey) {
-          updateStatus(statusKey, 'success');
-          clearStatusAfterDelay(statusKey);
-        }
-
-        // Optimistic update: immediately remove userAnime property
-        anime.userAnime = null;
-
-        // Force reactivity update
-        anime = anime;
-      },
-      onError: (error: any) => {
-        console.error('❌ Delete anime failed:', error);
-        if (statusKey) {
-          updateStatus(statusKey, 'error');
-          clearStatusAfterDelay(statusKey, 2000);
-        }
-      }
-    });
+    $deleteMutation.mutate(animeId);
   }
 
   // Computed values
-  $: currentStatus = statusKey ? ($statusStore[statusKey] || 'idle') : 'idle';
   $: hasUserAnime = anime?.userAnime;
 </script>
 
@@ -187,8 +67,7 @@
   <AnimeStatusDropdown
     entry={{
       ...anime.userAnime,
-      anime: anime,
-      id: anime.id  // Pass the anime ID for deletion (backend expects this)
+      anime: anime, // Pass the anime ID for deletion (backend expects this)
     }}
     {variant}
     on:statusChange={onStatusChange}
@@ -196,7 +75,7 @@
   />
 {:else}
   <!-- Show add button for anime not in list -->
-  {#if variant === 'icon'}
+  {#if variant === 'icon-only'}
     <Button
       color="blue"
       icon='<i class="fas fa-plus w-3 h-3" style="display: flex; align-items: center; justify-content: center; line-height: 1;"></i>'

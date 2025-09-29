@@ -592,7 +592,7 @@
                   <AnimeStatusDropdown
                     entry={{
                       ...anime.userAnime,
-                      id: anime.id,
+                      anime
                     }}
                     variant="compact"
                     on:statusChange={handleStatusChange}
@@ -643,7 +643,7 @@
                   <AnimeStatusDropdown
                     entry={{
                       ...anime.userAnime,
-                      id: anime.id,
+                      anime,
                     }}
                     variant="compact"
                     on:statusChange={handleStatusChange}
@@ -693,7 +693,7 @@
                   <AnimeStatusDropdown
                     entry={{
                       ...anime.userAnime,
-                      id: anime.id,
+                      anime
                     }}
                     variant="compact"
                     on:statusChange={handleStatusChange}
