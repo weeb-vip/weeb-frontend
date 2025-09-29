@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { format } from 'date-fns';
   import Button from './Button.svelte';
-  import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
+  import AnimeActions from './AnimeActions.svelte';
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
@@ -10,9 +10,6 @@
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let anime: any;
-  export let onAddAnime: (animeId: string) => void;
-  export let animeStatus: 'idle' | 'loading' | 'success' | 'error' = 'idle';
-  export let onDeleteAnime: ((id: string) => void) | undefined = undefined;
 
   let bgUrl: string | null = null;
   let bgWebPUrl: string | null = null;
@@ -151,15 +148,6 @@
     }
   }
 
-  function handleStatusChange(event: CustomEvent) {
-    // Handle status change if needed
-  }
-
-  function handleDelete(event: CustomEvent) {
-    if (onDeleteAnime) {
-      onDeleteAnime(anime.id);
-    }
-  }
 </script>
 
 <div class="relative w-full h-[600px] sm:h-[650px] md:h-[700px] rounded-lg">
@@ -318,23 +306,11 @@
           />
         </a>
 
-        {#if !anime.userAnime}
-          <Button
-            color="transparent"
-            label="Add to List"
-            showLabel={true}
-            status={animeStatus}
-            onClick={() => onAddAnime(anime.id)}
-            className="px-4 py-2 text-base font-semibold text-white hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition"
-          />
-        {:else}
-          <AnimeStatusDropdown
-            entry={{...anime.userAnime, anime}}
-            variant="hero"
-            on:statusChange={handleStatusChange}
-            on:delete={handleDelete}
-          />
-        {/if}
+        <AnimeActions
+          {anime}
+          variant="hero"
+          statusKey="hero-{anime.id}"
+        />
       </div>
     </div>
   </div>

@@ -445,9 +445,6 @@
         {#key bannerAnime.id}
           <HeroBanner
             anime={bannerAnime}
-            onAddAnime={(animeId) => handleAddAnime(`hero-${animeId}`, animeId)}
-            animeStatus={animeStatuses[`hero-${bannerAnime.id}`] || 'idle'}
-            onDeleteAnime={clearAnimeStatus}
           />
         {/key}
       {:else}
