@@ -137,11 +137,11 @@
   }
 
   function onDeleteAnime() {
-    console.log('🗑️ AnimeStatusDropdown onDeleteAnime called - userAnime ID:', entry.id, 'anime ID:', entry.anime?.id);
+    console.log('🗑️ AnimeStatusDropdown onDeleteAnime called - entry ID:', entry.id, 'anime ID:', entry.anime?.id);
     dispatch('delete', {
-      animeId: entry.id || ''  // Pass the userAnime record ID, not the anime ID
+      animeId: entry.id || ''  // Pass entry.id which is now the anime ID from AnimeActions
     });
-    console.log('🗑️ Delete event dispatched with userAnime ID:', entry.id);
+    console.log('🗑️ Delete event dispatched with ID:', entry.id);
   }
 
   function handleMouseEnter(index: number) {

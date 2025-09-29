@@ -187,7 +187,8 @@
   <AnimeStatusDropdown
     entry={{
       ...anime.userAnime,
-      anime
+      anime: anime,
+      id: anime.id  // Pass the anime ID for deletion (backend expects this)
     }}
     {variant}
     on:statusChange={onStatusChange}
