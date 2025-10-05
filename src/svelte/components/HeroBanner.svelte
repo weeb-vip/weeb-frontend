@@ -135,9 +135,10 @@
   }
 
   function handleImageError() {
+    console.log("HANDLING IMAGE ERROR FOR HERO BANNER", useFallback, `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`);
     if (!useFallback) {
       // Fanart failed, try poster as fallback
-      useFallback = true;
+
       bgUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
       bgWebPUrl = null; // Clear WebP URL to avoid using picture element
       bgLoaded = true;
@@ -174,6 +175,7 @@
               class="absolute w-full h-full object-cover {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} transition-all duration-500"
               on:load={handleImageLoad}
               on:error={handleImageError}
+              data-src={`https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`}
             />
           </picture>
         {:else}
@@ -189,6 +191,7 @@
             class="absolute w-full h-full object-cover {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} transition-all duration-500"
             on:load={handleImageLoad}
             on:error={handleImageError}
+            data-src={`https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`}
           />
         {/if}
       </div>

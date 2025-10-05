@@ -12,7 +12,7 @@ export function getCdnUrl(): string {
     return (window as any).global.config.cdn_url;
   }
 
-  return 'https://cdn.weeb.vip/weeb-staging';
+  return 'https://cdn.weeb.vip/weeb';
 }
 
 export function getSafeImageUrl(src: string, path?: string): string {
