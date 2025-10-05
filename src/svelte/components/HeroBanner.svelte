@@ -135,15 +135,16 @@
   }
 
   function handleImageError() {
-    if (!useFallback && anime.anidbid) {
+    if (!useFallback) {
       // Fanart failed, try poster as fallback
       useFallback = true;
-      const config = configStore.get();
-      const cdnUrl = config?.cdn_url || 'https://cdn.weeb.vip/weeb-staging';
-      bgUrl = `${cdnUrl}/${encodeURIComponent(GetImageFromAnime(anime))}`;
+      bgUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
+      bgWebPUrl = null; // Clear WebP URL to avoid using picture element
+      bgLoaded = true;
     } else {
       // Poster also failed, use same fallback as anime cards
       bgUrl = "/assets/not found.jpg";
+      bgWebPUrl = null;
       bgLoaded = true;
     }
   }

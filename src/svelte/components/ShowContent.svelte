@@ -100,8 +100,14 @@
   // Set background image based on anime data
   $: if (anime?.thetvdbid) {
     bgUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
+    bgLoaded = true;
   } else if (anime?.anidbid) {
     bgUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
+    bgLoaded = true;
+  } else if (anime) {
+    const posterUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
+    bgUrl = posterUrl;
+    bgLoaded = true;
   } else {
     bgUrl = "/assets/not found.jpg";
     bgLoaded = true;
@@ -187,12 +193,12 @@
   function handleBgError() {
     if (!useFallback && anime) {
       useFallback = true;
-      const posterUrl = `https://cdn.weeb.vip/${encodeURIComponent(GetImageFromAnime(anime))}`;
+      const posterUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
       bgUrl = posterUrl;
       bgLoaded = true;
     } else {
-      bgUrl = "/assets/not found.jpg";
-      bgLoaded = true;
+      // bgUrl = "/assets/not found.jpg";
+      // bgLoaded = true;
     }
   }
 
