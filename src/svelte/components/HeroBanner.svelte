@@ -19,6 +19,7 @@
   let currentAnimeId: string | null = null;
   let imageElement: HTMLImageElement;
   let supportsWebP = false;
+  let lastErrorUrl: string | null = null; // Track last failed URL to prevent double-firing
 
   // Get timing data from the anime countdown store
   $: timingData = $animeCountdownStore.timingData[anime.id];
@@ -129,25 +130,39 @@
   } : null;
   const airTimeAndDate = parseAirTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast);
 
-  function handleImageLoad() {
-    console.log('🖼️ HeroBanner background image loaded for:', anime.id);
+  function handleImageLoad(event) {
+    console.log('✅ HeroBanner image loaded:', event.target.src, 'useFallback:', useFallback);
     bgLoaded = true;
   }
 
-  function handleImageError() {
-    console.log("HANDLING IMAGE ERROR FOR HERO BANNER", useFallback, `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`);
+  function handleImageError(event) {
+
+
     if (!useFallback) {
       // Fanart failed, try poster as fallback
+      const fallbackUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
+      console.log("🔄 Setting fallback URL:", fallbackUrl);
 
-      bgUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
+      useFallback = true;
+      bgUrl = fallbackUrl;
       bgWebPUrl = null; // Clear WebP URL to avoid using picture element
-      bgLoaded = true;
+      bgLoaded = false; // Wait for fallback to load
+      lastErrorUrl = null; // Reset for next attempt
+
+      console.log("🔄 After setting - bgUrl:", bgUrl, "useFallback:", useFallback);
     } else {
       // Poster also failed, use same fallback as anime cards
+      console.log("🚨 Both failed, using not found image");
       bgUrl = "/assets/not found.jpg";
       bgWebPUrl = null;
-      bgLoaded = true;
+      bgLoaded = false; // Wait for not found image to load
+      lastErrorUrl = null; // Reset
     }
+  }
+
+  // Watch bgUrl changes
+  $: if (bgUrl) {
+    console.log("🔍 bgUrl changed to:", bgUrl, "useFallback:", useFallback, "bgLoaded:", bgLoaded);
   }
 
 </script>
@@ -160,25 +175,7 @@
         class="absolute inset-0 w-full h-full"
         style="opacity: {bgLoaded ? 1 : 0.1}; transition: opacity 500ms;"
       >
-        {#if supportsWebP && bgWebPUrl}
-          <picture>
-            <source srcset={bgWebPUrl} type="image/webp">
-            <img
-              bind:this={imageElement}
-              src={bgUrl}
-              alt="Anime background"
-              loading="eager"
-              decoding="async"
-              fetchpriority="high"
-              width="1920"
-              height="1080"
-              class="absolute w-full h-full object-cover {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} transition-all duration-500"
-              on:load={handleImageLoad}
-              on:error={handleImageError}
-              data-src={`https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`}
-            />
-          </picture>
-        {:else}
+
           <img
             bind:this={imageElement}
             src={bgUrl}
@@ -191,9 +188,7 @@
             class="absolute w-full h-full object-cover {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} transition-all duration-500"
             on:load={handleImageLoad}
             on:error={handleImageError}
-            data-src={`https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`}
           />
-        {/if}
       </div>
     {/if}
 
