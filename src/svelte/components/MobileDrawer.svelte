@@ -175,11 +175,6 @@
             <div class="rounded-lg bg-gray-50 dark:bg-gray-800/50 overflow-hidden transition-colors duration-300">
               <ProfileMenuContent {user} isMobile={true} onClose={onClose} />
             </div>
-          {:else}
-            <!-- Debug: Show what's wrong -->
-            <div class="px-4 py-2 bg-red-100 dark:bg-red-900 rounded text-xs">
-              Debug: isLoggedIn={isLoggedIn}, user={user ? 'exists' : 'null'}
-            </div>
           {/if}
 
           <!-- Title Language Toggle -->
