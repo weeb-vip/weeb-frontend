@@ -119,6 +119,86 @@ const { auth } = Astro.locals;
 <LoginModalHandler client:idle />
 
 <script>
+  // Initialize dark mode toggle and other interactions
+  function initializeHeader() {
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const sunIcon = document.querySelector('.sun-icon');
+    const moonIcon = document.querySelector('.moon-icon');
+
+    // Check initial dark mode state
+    let isDarkMode = document.documentElement.classList.contains('dark');
+    updateDarkModeIcon();
+
+    function updateDarkModeIcon() {
+      if (isDarkMode) {
+        sunIcon?.classList.remove('hidden');
+        moonIcon?.classList.add('hidden');
+      } else {
+        sunIcon?.classList.add('hidden');
+        moonIcon?.classList.remove('hidden');
+      }
+    }
+
+    // Remove any existing listener to prevent duplicates
+    const newDarkModeToggle = darkModeToggle?.cloneNode(true);
+    if (darkModeToggle && newDarkModeToggle) {
+      darkModeToggle.parentNode?.replaceChild(newDarkModeToggle, darkModeToggle);
+    }
+
+    document.getElementById('dark-mode-toggle')?.addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        // Update theme-color meta tag
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute('content', '#111827');
+        }
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        // Update theme-color meta tag
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute('content', '#ffffff');
+        }
+      }
+      updateDarkModeIcon();
+    });
+
+    // Logo morph interaction
+    const logoMorph = document.getElementById('logo-morph');
+    let isClicked = false;
+
+    // Remove any existing listener to prevent duplicates
+    const newLogoMorph = logoMorph?.cloneNode(true);
+    if (logoMorph && newLogoMorph) {
+      logoMorph.parentNode?.replaceChild(newLogoMorph, logoMorph);
+    }
+
+    document.getElementById('logo-morph')?.addEventListener('click', () => {
+      isClicked = !isClicked;
+      const weebText = document.getElementById('weeb-text');
+      const katakanaText = document.getElementById('katakana-text');
+
+      if (isClicked) {
+        weebText?.classList.add('opacity-0', '-translate-y-1');
+        weebText?.classList.remove('opacity-100', 'translate-y-0');
+        katakanaText?.classList.add('opacity-100', 'translate-y-0');
+        katakanaText?.classList.remove('opacity-0', 'translate-y-1');
+      } else {
+        weebText?.classList.add('opacity-100', 'translate-y-0');
+        weebText?.classList.remove('opacity-0', '-translate-y-1');
+        katakanaText?.classList.add('opacity-0', 'translate-y-1');
+        katakanaText?.classList.remove('opacity-100', 'translate-y-0');
+      }
+    });
+
+    // Note: Login/Register button handlers are now managed by UserProfileHandler Svelte component
+  }
+
   // Client-side interactivity
   document.addEventListener('DOMContentLoaded', () => {
     // Store the original parent for the header
@@ -159,59 +239,11 @@ const { auth } = Astro.locals;
     document.addEventListener('astro:page-load', () => {
       setTimeout(ensureHeaderPlacement, 100);
     });
-    // Dark mode toggle
-    const darkModeToggle = document.getElementById('dark-mode-toggle');
-    const sunIcon = document.querySelector('.sun-icon');
-    const moonIcon = document.querySelector('.moon-icon');
 
-    // Check initial dark mode state
-    let isDarkMode = document.documentElement.classList.contains('dark');
-    updateDarkModeIcon();
-
-    function updateDarkModeIcon() {
-      if (isDarkMode) {
-        sunIcon?.classList.remove('hidden');
-        moonIcon?.classList.add('hidden');
-      } else {
-        sunIcon?.classList.add('hidden');
-        moonIcon?.classList.remove('hidden');
-      }
-    }
-
-    darkModeToggle?.addEventListener('click', () => {
-      isDarkMode = !isDarkMode;
-      if (isDarkMode) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      }
-      updateDarkModeIcon();
-    });
-
-    // Logo morph interaction
-    const logoMorph = document.getElementById('logo-morph');
-    let isClicked = false;
-
-    logoMorph?.addEventListener('click', () => {
-      isClicked = !isClicked;
-      const weebText = document.getElementById('weeb-text');
-      const katakanaText = document.getElementById('katakana-text');
-
-      if (isClicked) {
-        weebText?.classList.add('opacity-0', '-translate-y-1');
-        weebText?.classList.remove('opacity-100', 'translate-y-0');
-        katakanaText?.classList.add('opacity-100', 'translate-y-0');
-        katakanaText?.classList.remove('opacity-0', 'translate-y-1');
-      } else {
-        weebText?.classList.add('opacity-100', 'translate-y-0');
-        weebText?.classList.remove('opacity-0', '-translate-y-1');
-        katakanaText?.classList.add('opacity-0', 'translate-y-1');
-        katakanaText?.classList.remove('opacity-100', 'translate-y-0');
-      }
-    });
-
-    // Note: Login/Register button handlers are now managed by UserProfileHandler Svelte component
+    // Initialize header interactions
+    initializeHeader();
   });
+
+  // Re-initialize after Astro View Transitions
+  document.addEventListener('astro:page-load', initializeHeader);
 </script>

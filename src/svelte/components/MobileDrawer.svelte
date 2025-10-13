@@ -92,23 +92,31 @@
   }
 
   function toggleDarkMode() {
-    const isDarkMode = document.documentElement.classList.contains('dark');
-    if (isDarkMode) {
+    const currentIsDarkMode = document.documentElement.classList.contains('dark');
+    if (currentIsDarkMode) {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
       // Update theme color for PWA status bar
       updateThemeColor(false);
+      isDarkMode = false;
     } else {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
       // Update theme color for PWA status bar
       updateThemeColor(true);
+      isDarkMode = true;
     }
   }
 
   let isDarkMode = false;
 
-  $: if (typeof window !== 'undefined') {
+  // Initialize isDarkMode on mount
+  $: if (mounted && typeof window !== 'undefined') {
+    isDarkMode = document.documentElement.classList.contains('dark');
+  }
+
+  // Update isDarkMode when drawer opens (to ensure it reflects current state)
+  $: if (isOpen && typeof window !== 'undefined') {
     isDarkMode = document.documentElement.classList.contains('dark');
   }
 </script>
