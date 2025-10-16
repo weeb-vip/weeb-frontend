@@ -96,7 +96,7 @@ const { auth } = Astro.locals;
       <button
         class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300 w-10 h-10 flex items-center justify-center"
         aria-label="Toggle dark mode"
-        id="dark-mode-toggle"
+        onclick="window.toggleDarkMode()"
       >
         <svg class="w-5 h-5 text-gray-700 dark:text-gray-300 dark-mode-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path class="sun-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -118,67 +118,67 @@ const { auth } = Astro.locals;
 <!-- Login/Register Modal Handler (Client-side) -->
 <LoginModalHandler client:idle />
 
-<script>
-  // Initialize dark mode toggle and other interactions
-  function initializeHeader() {
-    // Dark mode toggle
-    const darkModeToggle = document.getElementById('dark-mode-toggle');
+<script is:inline>
+  // Global dark mode toggle function
+  window.toggleDarkMode = function() {
+    const isDark = document.documentElement.classList.contains('dark');
     const sunIcon = document.querySelector('.sun-icon');
     const moonIcon = document.querySelector('.moon-icon');
 
-    // Check initial dark mode state
-    let isDarkMode = document.documentElement.classList.contains('dark');
-    updateDarkModeIcon();
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+      sunIcon?.classList.add('hidden');
+      moonIcon?.classList.remove('hidden');
 
-    function updateDarkModeIcon() {
-      if (isDarkMode) {
-        sunIcon?.classList.remove('hidden');
-        moonIcon?.classList.add('hidden');
-      } else {
-        sunIcon?.classList.add('hidden');
-        moonIcon?.classList.remove('hidden');
+      // Update theme-color meta tag
+      const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeColorMeta) {
+        themeColorMeta.setAttribute('content', '#ffffff');
+      }
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+      sunIcon?.classList.remove('hidden');
+      moonIcon?.classList.add('hidden');
+
+      // Update theme-color meta tag
+      const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeColorMeta) {
+        themeColorMeta.setAttribute('content', '#111827');
       }
     }
+  };
 
-    // Remove any existing listener to prevent duplicates
-    const newDarkModeToggle = darkModeToggle?.cloneNode(true);
-    if (darkModeToggle && newDarkModeToggle) {
-      darkModeToggle.parentNode?.replaceChild(newDarkModeToggle, darkModeToggle);
+  // Update icon state on page load
+  function updateDarkModeIcon() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const sunIcon = document.querySelector('.sun-icon');
+    const moonIcon = document.querySelector('.moon-icon');
+
+    if (isDark) {
+      sunIcon?.classList.remove('hidden');
+      moonIcon?.classList.add('hidden');
+    } else {
+      sunIcon?.classList.add('hidden');
+      moonIcon?.classList.remove('hidden');
     }
+  }
 
-    document.getElementById('dark-mode-toggle')?.addEventListener('click', () => {
-      isDarkMode = !isDarkMode;
-      if (isDarkMode) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-        // Update theme-color meta tag
-        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-        if (themeColorMeta) {
-          themeColorMeta.setAttribute('content', '#111827');
-        }
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-        // Update theme-color meta tag
-        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-        if (themeColorMeta) {
-          themeColorMeta.setAttribute('content', '#ffffff');
-        }
-      }
-      updateDarkModeIcon();
-    });
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', updateDarkModeIcon);
+  document.addEventListener('astro:page-load', updateDarkModeIcon);
+</script>
 
-    // Logo morph interaction
+<script>
+  // Logo morph interaction
+  function initializeLogoMorph() {
     const logoMorph = document.getElementById('logo-morph');
+    if (!logoMorph) return;
+
     let isClicked = false;
 
-    // Remove any existing listener to prevent duplicates
-    const newLogoMorph = logoMorph?.cloneNode(true);
-    if (logoMorph && newLogoMorph) {
-      logoMorph.parentNode?.replaceChild(newLogoMorph, logoMorph);
-    }
-
-    document.getElementById('logo-morph')?.addEventListener('click', () => {
+    logoMorph.addEventListener('click', () => {
       isClicked = !isClicked;
       const weebText = document.getElementById('weeb-text');
       const katakanaText = document.getElementById('katakana-text');
@@ -195,16 +195,10 @@ const { auth } = Astro.locals;
         katakanaText?.classList.remove('opacity-100', 'translate-y-0');
       }
     });
-
-    // Note: Login/Register button handlers are now managed by UserProfileHandler Svelte component
   }
 
   // Client-side interactivity
   document.addEventListener('DOMContentLoaded', () => {
-    // Store the original parent for the header
-    const header = document.getElementById('main-header');
-    const originalParent = header?.parentNode;
-
     // Only move header if it's not already in body and we're on a problematic page
     function ensureHeaderPlacement() {
       const header = document.getElementById('main-header');
@@ -240,10 +234,10 @@ const { auth } = Astro.locals;
       setTimeout(ensureHeaderPlacement, 100);
     });
 
-    // Initialize header interactions
-    initializeHeader();
+    // Initialize logo morph
+    initializeLogoMorph();
   });
 
-  // Re-initialize after Astro View Transitions
-  document.addEventListener('astro:page-load', initializeHeader);
+  // Re-initialize logo morph after Astro View Transitions
+  document.addEventListener('astro:page-load', initializeLogoMorph);
 </script>
