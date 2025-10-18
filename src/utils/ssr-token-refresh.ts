@@ -82,14 +82,20 @@ export async function refreshTokenSSR(
 
     debug.success('[SSR] Token refreshed successfully');
 
+    // Determine the domain for cookies
+    // Use dot-prefixed domain for production (works across subdomains)
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieDomain = isProduction ? '.weeb.vip' : undefined; // undefined = current domain only for localhost
+
     // Update cookies with new tokens
     // Set auth token with shorter expiry (24 hours)
     cookies.set('auth_token', newAuthToken, {
       path: '/',
       maxAge: 24 * 60 * 60, // 24 hours
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
+      secure: isProduction,
+      sameSite: 'lax',
+      domain: cookieDomain
     });
 
     // Also set access_token for compatibility
@@ -97,8 +103,9 @@ export async function refreshTokenSSR(
       path: '/',
       maxAge: 24 * 60 * 60,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
+      secure: isProduction,
+      sameSite: 'lax',
+      domain: cookieDomain
     });
 
     // Update refresh token if a new one was provided
@@ -107,16 +114,9 @@ export async function refreshTokenSSR(
         path: '/',
         maxAge: 7 * 24 * 60 * 60, // 7 days
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-      });
-
-      cookies.set('refresh_token', newRefreshToken, {
-        path: '/',
-        maxAge: 7 * 24 * 60 * 60,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
+        secure: isProduction,
+        sameSite: 'lax',
+        domain: cookieDomain
       });
     }
 
