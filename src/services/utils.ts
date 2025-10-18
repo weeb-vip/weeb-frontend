@@ -16,7 +16,6 @@ export function GetImageFromAnime(anime: AnimePart | any): string {
   if (anime.title_jp) {
     anime.titleJp = anime.title_jp;
   }
-  console.log("ASHDKJASHDJK: ", anime.titleEn, anime.titleJp);
   return `${escapeUri((anime.titleEn ? anime.titleEn.toLowerCase().replace(/ /g, "_") : anime.titleJp?.toLowerCase().replace(/ /g, "_")) || "")}`;
 }
 

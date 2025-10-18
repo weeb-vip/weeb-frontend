@@ -59,6 +59,23 @@
     console.error('🏃‍♂️ [ShowContent] SSR error:', ssrError);
   }
 
+  // Create query at top level (required for Svelte lifecycle)
+  showQueryStore = createQuery(fetchDetails(animeId));
+
+  // Subscribe to query changes
+  showQuery = $showQueryStore;
+
+  // Update local state from query
+  $: if ($showQueryStore.data) {
+    show = $showQueryStore.data;
+    anime = show?.anime;
+    // Only update loading/error if we don't have SSR data
+    if (!ssrAnimeData) {
+      isLoading = $showQueryStore.isLoading;
+      isError = $showQueryStore.isError;
+    }
+  }
+
   // Check WebP support
   function checkWebPSupport(): Promise<boolean> {
     return new Promise((resolve) => {
@@ -74,41 +91,6 @@
     // Check WebP support
     supportsWebP = await checkWebPSupport();
     console.log('🖼️ WebP support:', supportsWebP);
-
-    // Only create client-side query if we don't have SSR data
-    if (!ssrAnimeData) {
-      console.log('🔄 [ShowContent] No SSR data, creating client-side query');
-      showQueryStore = createQuery(fetchDetails(animeId));
-
-      // Subscribe to query changes
-      showQueryStore.subscribe((value: any) => {
-        console.log('Query value updated:', value);
-        showQuery = value; // Store the actual query object
-        show = value.data;
-        anime = show?.anime;
-        isLoading = value.isLoading;
-        isError = value.isError;
-      });
-    } else {
-      console.log('✅ [ShowContent] Using SSR data, creating query for cache invalidation');
-      // Always create the client-side query even with SSR data for cache invalidation
-      showQueryStore = createQuery(fetchDetails(animeId));
-
-      // Subscribe to query changes to get updates from cache invalidation
-      showQueryStore.subscribe((value: any) => {
-        console.log('Query value updated:', value);
-        showQuery = value; // Store the actual query object
-        // Only update local state if new data is available (not just from cache invalidation)
-        if (value.data && value.data.anime) {
-          show = value.data;
-          anime = show?.anime;
-          isLoading = value.isLoading;
-          isError = value.isError;
-          console.log('🔄 [ShowContent] Updated anime state from query:', anime?.userAnime?.status);
-        }
-      });
-    }
-
   });
 
   // Generate ordered list of image sources to try
