@@ -249,7 +249,7 @@ export class AuthStorage {
 
     // Check for both old and new cookie names
     const authMatch = cookieString.match(/authToken=([^;]+)/);
-    const refreshMatch = cookieString.match(/refreshToken=([^;]+)/);
+    const refreshMatch = cookieString.match(/refresh_token=([^;]+)/);
     const accessMatch = cookieString.match(/access_token=([^;]+)/);
 
     return {
