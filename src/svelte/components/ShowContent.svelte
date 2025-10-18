@@ -24,10 +24,11 @@
   export let ssrCharactersData: any = null;
   export let ssrError: any = null;
 
-  let bgUrl: string | null = null;
+  let imageSources: string[] = [];
   let bgLoaded = false;
-  let useFallback = false;
   let showStickyHeader = false;
+  let supportsWebP = false;
+  let useFallback = false;
 
   // Data state variables
   let showQueryStore: any = null;
@@ -58,8 +59,21 @@
     console.error('🏃‍♂️ [ShowContent] SSR error:', ssrError);
   }
 
-  onMount(() => {
+  // Check WebP support
+  function checkWebPSupport(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const webP = new Image();
+      webP.onload = webP.onerror = () => resolve(webP.height === 2);
+      webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+    });
+  }
+
+  onMount(async () => {
     console.log('ShowContent onMount called with animeId:', animeId);
+
+    // Check WebP support
+    supportsWebP = await checkWebPSupport();
+    console.log('🖼️ WebP support:', supportsWebP);
 
     // Only create client-side query if we don't have SSR data
     if (!ssrAnimeData) {
@@ -97,21 +111,63 @@
 
   });
 
-  // Set background image based on anime data
-  $: if (anime?.thetvdbid) {
-    bgUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
-    bgLoaded = true;
-  } else if (anime?.anidbid) {
-    bgUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
-    bgLoaded = true;
-  } else if (anime) {
-    const posterUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
-    bgUrl = posterUrl;
-    bgLoaded = true;
-  } else {
-    bgUrl = "/assets/not found.jpg";
+  // Generate ordered list of image sources to try
+  function generateImageSources(): string[] {
+    if (!anime) return [];
+
+    const sources: string[] = [];
+
+    const baseParams = new URLSearchParams({
+      w: '1920',
+      h: '1080',
+      fit: 'cover',
+      q: '85'
+    });
+
+    if (supportsWebP) {
+      baseParams.set('f', 'webp');
+    }
+
+    // Priority 1: TVDB fanart (highest quality)
+    if (anime.thetvdbid) {
+      const baseUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
+      sources.push(`${baseUrl}?${baseParams.toString()}`);
+    }
+
+    // Priority 2: AniDB fanart
+    if (anime.anidbid) {
+      const baseUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
+      sources.push(`${baseUrl}?${baseParams.toString()}`);
+    }
+
+    // Priority 3: CDN poster as fallback
+    const posterUrl = GetImageFromAnime(anime);
+    if (posterUrl) {
+      sources.push(`https://cdn.weeb.vip/weeb/${encodeURIComponent(posterUrl)}`);
+    }
+
+    return sources;
+  }
+
+  // Update sources when anime changes
+  $: if (anime) {
+    bgLoaded = false;
+    imageSources = generateImageSources();
+    console.log('🖼️ Generated image sources for', anime.id, ':', imageSources);
+  }
+
+  // Regenerate sources when WebP support is detected
+  $: if (supportsWebP && anime) {
+    imageSources = generateImageSources();
+  }
+
+  function handleImageChosen(event: CustomEvent) {
+    console.log('🖼️ ShowContent background image chosen:', event.detail);
     bgLoaded = true;
   }
+
+  // Get the first source for sticky header background
+  $: firstSource = imageSources.length > 0 ? imageSources[0] : null;
 
   // Find next episode
   const now = getCurrentTime();
@@ -190,18 +246,6 @@
   });
 
 
-  function handleBgError() {
-    if (!useFallback && anime) {
-      useFallback = true;
-      const posterUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
-      bgUrl = posterUrl;
-      bgLoaded = true;
-    } else {
-      // bgUrl = "/assets/not found.jpg";
-      // bgLoaded = true;
-    }
-  }
-
   function renderField(label: string, value: string | string[] | null | undefined): { label: string; value: string | string[] } | null {
     if (!value) return null;
     return { label, value };
@@ -223,7 +267,7 @@
         <!-- Background with blur -->
         <div
           class="absolute inset-0 bg-cover bg-center"
-          style="background-image: {bgUrl ? `url(${bgUrl})` : 'none'}; filter: blur(8px); transform: scale(1.1);"
+          style="background-image: {firstSource ? `url(${firstSource})` : 'none'}; filter: blur(8px); transform: scale(1.1);"
         ></div>
         <div class="absolute inset-0 bg-white/90 dark:bg-black/60 backdrop-blur-sm"></div>
         <div class="max-w-screen-2xl mx-auto relative z-10">
@@ -256,23 +300,24 @@
     </div>
 
     <!-- Hero Background -->
-    <div
-      class="relative bg-cover bg-center bg-white dark:bg-gray-900 h-[600px] transition-all duration-300 overflow-hidden"
-      style="background-image: {bgUrl ? `url(${bgUrl})` : 'none'};"
-    >
+    <div class="relative bg-white dark:bg-gray-900 h-[600px] transition-all duration-300 overflow-hidden">
       <div class="absolute block inset-0 bg-white dark:bg-gray-900 w-full h-full transition-colors duration-300"></div>
 
-      {#if bgUrl}
+      {#if imageSources.length > 0}
         <div
           class="absolute inset-0 w-full h-full"
           style="opacity: {bgLoaded ? 1 : 0}; transition: opacity 300ms;"
         >
-          <img
-            src={bgUrl}
-            alt="bg preload"
-            class="absolute w-full h-full object-cover {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} transition-all duration-300"
-            on:load={() => bgLoaded = true}
-            on:error={handleBgError}
+          <SafeImage
+            sources={imageSources}
+            alt="Anime background"
+            loading="eager"
+            priority={true}
+            fallbackSrc="/assets/not found.jpg"
+            perTryTimeoutMs={3000}
+            className="absolute w-full h-full object-cover transition-all duration-300"
+            style=""
+            on:chosen={handleImageChosen}
           />
         </div>
       {/if}

@@ -57,7 +57,7 @@
     description=""
     episodeLength=""
     year=""
-    image={GetImageFromAnime(airingInfo) || GetImageFromAnime(anime)}
+    image={GetImageFromAnime(anime)}
     airdate={airingInfo.nextEpisode?.airDate ? format(new Date(airingInfo.nextEpisode.airDate), "EEE MMM do") : "Unknown"}
     airTime={airTimeDisplay}
     entry={anime.userAnime}

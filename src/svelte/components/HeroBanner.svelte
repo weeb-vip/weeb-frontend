@@ -3,6 +3,7 @@
   import { format } from 'date-fns';
   import Button from './Button.svelte';
   import AnimeActions from './AnimeActions.svelte';
+  import SafeImage from './SafeImage.svelte';
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
@@ -11,15 +12,11 @@
 
   export let anime: any;
 
-  let bgUrl: string | null = null;
-  let bgWebPUrl: string | null = null;
+  let imageSources: string[] = [];
   let bgLoaded = false;
-  let useFallback = false;
   let showJstPopover = false;
   let currentAnimeId: string | null = null;
-  let imageElement: HTMLImageElement;
   let supportsWebP = false;
-  let lastErrorUrl: string | null = null; // Track last failed URL to prevent double-firing
 
   // Get timing data from the anime countdown store
   $: timingData = $animeCountdownStore.timingData[anime.id];
@@ -56,16 +53,12 @@
     // Check WebP support
     supportsWebP = await checkWebPSupport();
     console.log('🖼️ WebP support:', supportsWebP);
-
-    // Check if image is already loaded (for SSR hydration)
-    if (imageElement && imageElement.complete && imageElement.naturalHeight !== 0) {
-      console.log('🖼️ HeroBanner background image already loaded on mount for:', anime.id);
-      bgLoaded = true;
-    }
   });
 
-  // Generate optimized image URLs
-  function generateOptimizedImageUrls() {
+  // Generate ordered list of image sources to try
+  function generateImageSources(): string[] {
+    const sources: string[] = [];
+
     const baseParams = new URLSearchParams({
       w: '1920',  // Max width for hero banners
       h: '1080',  // Max height for hero banners
@@ -77,47 +70,40 @@
       baseParams.set('f', 'webp');
     }
 
+    // Priority 1: TVDB fanart (highest quality)
     if (anime.thetvdbid) {
       const baseUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
-      bgUrl = `${baseUrl}?${baseParams.toString()}`;
-      if (supportsWebP) {
-        bgWebPUrl = bgUrl;
-      }
-    } else if (anime.anidbid) {
-      const baseUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
-      bgUrl = `${baseUrl}?${baseParams.toString()}`;
-      if (supportsWebP) {
-        bgWebPUrl = bgUrl;
-      }
-    } else {
-      // No anidbid available, use same fallback as anime cards
-      bgUrl = GetImageFromAnime(anime);
-      bgLoaded = true;
+      sources.push(`${baseUrl}?${baseParams.toString()}`);
     }
+
+    // Priority 2: AniDB fanart
+    if (anime.anidbid) {
+      const baseUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
+      sources.push(`${baseUrl}?${baseParams.toString()}`);
+    }
+
+    // Priority 3: CDN poster as fallback
+    const posterUrl = GetImageFromAnime(anime);
+    if (posterUrl) {
+      sources.push(`https://cdn.weeb.vip/weeb/${encodeURIComponent(posterUrl)}`);
+    }
+
+    return sources;
   }
 
-  // Set background URL based on anime data - only reset loading state when anime actually changes
+  // Update sources when anime changes
   $: {
-    // Only reset the loading state if this is a different anime
     if (currentAnimeId !== anime.id) {
       currentAnimeId = anime.id;
-      useFallback = false;
       bgLoaded = false;
-
-      generateOptimizedImageUrls();
-
-      // Check if image is already cached and loaded
-      if (bgUrl && imageElement) {
-        if (imageElement.complete && imageElement.naturalHeight !== 0) {
-          bgLoaded = true;
-        }
-      }
+      imageSources = generateImageSources();
+      console.log('🖼️ Generated image sources for', anime.id, ':', imageSources);
     }
   }
 
-  // Regenerate URLs when WebP support is detected
+  // Regenerate sources when WebP support is detected
   $: if (supportsWebP && currentAnimeId === anime.id) {
-    generateOptimizedImageUrls();
+    imageSources = generateImageSources();
   }
 
   $: title = getAnimeTitle(anime, $preferencesStore.titleLanguage);
@@ -130,39 +116,9 @@
   } : null;
   const airTimeAndDate = parseAirTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast);
 
-  function handleImageLoad(event) {
-    console.log('✅ HeroBanner image loaded:', event.target.src, 'useFallback:', useFallback);
+  function handleImageChosen(event: CustomEvent) {
+    console.log('🖼️ HeroBanner image chosen:', event.detail);
     bgLoaded = true;
-  }
-
-  function handleImageError(event) {
-
-
-    if (!useFallback) {
-      // Fanart failed, try poster as fallback
-      const fallbackUrl = `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(anime))}`;
-      console.log("🔄 Setting fallback URL:", fallbackUrl);
-
-      useFallback = true;
-      bgUrl = fallbackUrl;
-      bgWebPUrl = null; // Clear WebP URL to avoid using picture element
-      bgLoaded = false; // Wait for fallback to load
-      lastErrorUrl = null; // Reset for next attempt
-
-      console.log("🔄 After setting - bgUrl:", bgUrl, "useFallback:", useFallback);
-    } else {
-      // Poster also failed, use same fallback as anime cards
-      console.log("🚨 Both failed, using not found image");
-      bgUrl = "/assets/not found.jpg";
-      bgWebPUrl = null;
-      bgLoaded = false; // Wait for not found image to load
-      lastErrorUrl = null; // Reset
-    }
-  }
-
-  // Watch bgUrl changes
-  $: if (bgUrl) {
-    console.log("🔍 bgUrl changed to:", bgUrl, "useFallback:", useFallback, "bgLoaded:", bgLoaded);
   }
 
 </script>
@@ -170,25 +126,22 @@
 <div class="relative w-full h-[600px] sm:h-[650px] md:h-[700px] rounded-lg">
   <!-- Background layer -->
   <div class="absolute inset-0 overflow-hidden bg-gray-800 md:rounded-lg xs:rounded-none">
-    {#if bgUrl}
+    {#if imageSources.length > 0}
       <div
         class="absolute inset-0 w-full h-full"
         style="opacity: {bgLoaded ? 1 : 0.1}; transition: opacity 500ms;"
       >
-
-          <img
-            bind:this={imageElement}
-            src={bgUrl}
-            alt="Anime background"
-            loading="eager"
-            decoding="async"
-            fetchpriority="high"
-            width="1920"
-            height="1080"
-            class="absolute w-full h-full object-cover {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} transition-all duration-500"
-            on:load={handleImageLoad}
-            on:error={handleImageError}
-          />
+        <SafeImage
+          sources={imageSources}
+          alt="Anime background"
+          loading="eager"
+          priority={true}
+          fallbackSrc="/assets/not found.jpg"
+          perTryTimeoutMs={3000}
+          className="absolute w-full h-full object-cover  transition-all duration-500"
+          style=""
+          on:chosen={handleImageChosen}
+        />
       </div>
     {/if}
 
