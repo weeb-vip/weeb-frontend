@@ -19,7 +19,7 @@ export async function refreshTokenSSR(
 ): Promise<RefreshTokenResponse> {
   try {
     // Get refresh token from cookies
-    const refreshToken = cookies.get('refreshToken')?.value;
+    const refreshToken = cookies.get('refresh_token')?.value;
 
     if (!refreshToken) {
       debug.auth('[SSR] No refresh token found in cookies');
@@ -84,7 +84,7 @@ export async function refreshTokenSSR(
 
     // Update cookies with new tokens
     // Set auth token with shorter expiry (24 hours)
-    cookies.set('authToken', newAuthToken, {
+    cookies.set('auth_token', newAuthToken, {
       path: '/',
       maxAge: 24 * 60 * 60, // 24 hours
       httpOnly: true,
@@ -103,7 +103,7 @@ export async function refreshTokenSSR(
 
     // Update refresh token if a new one was provided
     if (newRefreshToken) {
-      cookies.set('refreshToken', newRefreshToken, {
+      cookies.set('refresh_token', newRefreshToken, {
         path: '/',
         maxAge: 7 * 24 * 60 * 60, // 7 days
         httpOnly: true,
