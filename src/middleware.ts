@@ -1,6 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import { getConfig } from './config/build-time-loader';
 import { AuthStorage } from './utils/auth-storage';
+import { refreshTokenSSR } from './utils/ssr-token-refresh';
 
 // Config cache for performance - but loaded inside handler for Cloudflare Pages compatibility
 let configData: any = null;
@@ -88,11 +89,60 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Check authentication status from cookies
-  const authResult = (() => {
+  let authResult = (() => {
     const isLoggedIn = AuthStorage.isLoggedInFromCookieString(cookieString);
     const tokens = AuthStorage.getTokensFromCookieString(cookieString);
     return { isLoggedIn, tokens };
   })();
+
+  // Verify token validity by calling user details endpoint
+  if (authResult.tokens.authToken && authResult.isLoggedIn) {
+    try {
+      const userDetailsResponse = await fetch(`${configData?.api_host || 'http://localhost:8079'}/user`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': cookieString
+        },
+        credentials: 'include'
+      });
+
+      // If token is invalid (401/403), attempt to refresh
+      if (userDetailsResponse.status === 401 || userDetailsResponse.status === 403) {
+        console.log('[Middleware] Auth token is invalid (status: %d), attempting refresh', userDetailsResponse.status);
+
+        if (authResult.tokens.refreshToken) {
+          const refreshResult = await refreshTokenSSR(cookies, configData?.api_host || 'http://localhost:8079');
+
+          if (refreshResult.success) {
+            console.log('[Middleware] Token refreshed successfully after validation failure');
+            // Update auth result with new tokens
+            authResult.tokens.authToken = refreshResult.authToken;
+            authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
+            authResult.isLoggedIn = true;
+          } else {
+            console.log('[Middleware] Token refresh failed:', refreshResult.error);
+            // Token refresh failed, mark as logged out
+            authResult.isLoggedIn = false;
+          }
+        } else {
+          console.log('[Middleware] Auth token invalid but no refresh token available');
+          authResult.isLoggedIn = false;
+        }
+      } else if (!userDetailsResponse.ok) {
+        console.log('[Middleware] User details fetch failed with status:', userDetailsResponse.status);
+        // Other errors (500, etc.) - don't invalidate auth, might be temporary
+      } else {
+        // Token is valid, user details fetched successfully
+        if (import.meta.env.DEV) {
+          console.log('[Middleware] Auth token validated successfully');
+        }
+      }
+    } catch (error) {
+      console.error('[Middleware] Failed to verify token:', error);
+      // Network error or other issues - don't invalidate auth
+    }
+  }
 
   // Make auth info available to all components via Astro.locals
   context.locals.auth = {
