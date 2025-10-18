@@ -113,7 +113,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         console.log('[Middleware] ❌ Token refresh failed:', refreshResult.error);
         authResult.isLoggedIn = false;
       }
-    } else {
+    } else if (authResult.tokens.authToken) {
       // Has access token - check if it's expired
       const tokenExpired = isTokenExpired(authResult.tokens.authToken);
 
@@ -137,7 +137,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         console.log('[Middleware] ✅ CASE 3: Access token is valid - continuing normal flow');
       }
     }
-  } else if (hasAccessToken) {
+  } else if (hasAccessToken && authResult.tokens.authToken) {
     // Has access token but no refresh token - check if expired
     const tokenExpired = isTokenExpired(authResult.tokens.authToken);
 
