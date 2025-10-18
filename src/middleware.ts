@@ -5,8 +5,15 @@ import { refreshTokenSSR, isTokenExpired } from './utils/ssr-token-refresh';
 
 // Config cache for performance - but loaded inside handler for Cloudflare Pages compatibility
 let configData: any = null;
+let middlewareInitialized = false;
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  // Log middleware initialization on first request
+  if (!middlewareInitialized) {
+    // Use console.error to ensure it shows in production (console.log is stripped)
+    console.error('🚀 [Middleware] ✅ Middleware loaded and active');
+    middlewareInitialized = true;
+  }
   const { request, url, cookies } = context;
 
   // Skip middleware for static assets (huge performance improvement)
@@ -100,17 +107,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (hasRefreshToken) {
     if (!hasAccessToken) {
       // CASE 1: Has refresh token but NO access token - refresh immediately
-      console.log('[Middleware] 🔄 CASE 1: Has refresh token but no access token - attempting refresh');
+      // Use console.error to ensure logs show in production (console.log is stripped)
+      console.error('[Middleware] 🔄 CASE 1: Has refresh token but no access token - attempting refresh');
 
       const refreshResult = await refreshTokenSSR(cookies, configData?.api_host || 'http://localhost:8079');
 
       if (refreshResult.success) {
-        console.log('[Middleware] ✅ Token refreshed successfully - new access token obtained');
+        console.error('[Middleware] ✅ Token refreshed successfully - new access token obtained');
         authResult.tokens.authToken = refreshResult.authToken;
         authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
         authResult.isLoggedIn = true;
       } else {
-        console.log('[Middleware] ❌ Token refresh failed:', refreshResult.error);
+        console.error('[Middleware] ❌ Token refresh failed:', refreshResult.error);
         authResult.isLoggedIn = false;
       }
     } else if (authResult.tokens.authToken) {
@@ -119,22 +127,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
       if (tokenExpired) {
         // CASE 2: Has access token but it's EXPIRED - refresh it
-        console.log('[Middleware] 🔄 CASE 2: Access token expired - attempting refresh');
+        console.error('[Middleware] 🔄 CASE 2: Access token expired - attempting refresh');
 
         const refreshResult = await refreshTokenSSR(cookies, configData?.api_host || 'http://localhost:8079');
 
         if (refreshResult.success) {
-          console.log('[Middleware] ✅ Expired token refreshed successfully - new access token obtained');
+          console.error('[Middleware] ✅ Expired token refreshed successfully - new access token obtained');
           authResult.tokens.authToken = refreshResult.authToken;
           authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
           authResult.isLoggedIn = true;
         } else {
-          console.log('[Middleware] ❌ Token refresh failed:', refreshResult.error);
+          console.error('[Middleware] ❌ Token refresh failed:', refreshResult.error);
           authResult.isLoggedIn = false;
         }
       } else {
         // CASE 3: Has valid access token - continue normal flow
-        console.log('[Middleware] ✅ CASE 3: Access token is valid - continuing normal flow');
+        console.error('[Middleware] ✅ CASE 3: Access token is valid - continuing normal flow');
       }
     }
   } else if (hasAccessToken && authResult.tokens.authToken) {
@@ -142,10 +150,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const tokenExpired = isTokenExpired(authResult.tokens.authToken);
 
     if (tokenExpired) {
-      console.log('[Middleware] ⚠️ Access token expired but no refresh token available - marking as logged out');
+      console.error('[Middleware] ⚠️ Access token expired but no refresh token available - marking as logged out');
       authResult.isLoggedIn = false;
     } else {
-      console.log('[Middleware] ✅ Access token valid but no refresh token - continuing normal flow');
+      console.error('[Middleware] ✅ Access token valid but no refresh token - continuing normal flow');
     }
   }
 
