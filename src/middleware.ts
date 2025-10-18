@@ -38,6 +38,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (!configData) {
       configData = await getConfig();
       console.log('[Middleware] Config loaded from build-time import');
+      console.log('[Middleware] API Host:', configData?.api_host);
+      console.log('[Middleware] Site Name:', configData?.graphql_host);
     }
 
     // Make config available in Astro locals for components to access
@@ -110,7 +112,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       // Use console.error to ensure logs show in production (console.log is stripped)
       console.error('[Middleware] 🔄 CASE 1: Has refresh token but no access token - attempting refresh');
 
-      const refreshResult = await refreshTokenSSR(cookies, configData?.api_host || 'http://localhost:8079');
+      const refreshResult = await refreshTokenSSR(cookies, configData?.graphql_host || 'http://localhost:8079');
 
       if (refreshResult.success) {
         console.error('[Middleware] ✅ Token refreshed successfully - new access token obtained');
@@ -129,7 +131,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         // CASE 2: Has access token but it's EXPIRED - refresh it
         console.error('[Middleware] 🔄 CASE 2: Access token expired - attempting refresh');
 
-        const refreshResult = await refreshTokenSSR(cookies, configData?.api_host || 'http://localhost:8079');
+        const refreshResult = await refreshTokenSSR(cookies, configData?.graphql_host || 'http://localhost:8079');
 
         if (refreshResult.success) {
           console.error('[Middleware] ✅ Expired token refreshed successfully - new access token obtained');

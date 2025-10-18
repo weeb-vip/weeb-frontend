@@ -15,7 +15,7 @@ interface RefreshTokenResponse {
  */
 export async function refreshTokenSSR(
   cookies: AstroCookies,
-  apiHost: string
+  graphqlHost: string
 ): Promise<RefreshTokenResponse> {
   try {
     // Get refresh token from cookies
@@ -29,7 +29,7 @@ export async function refreshTokenSSR(
     debug.auth('[SSR] Attempting token refresh with refresh token');
 
     // Call the GraphQL refresh token mutation
-    const response = await fetch(`${apiHost}/graphql`, {
+    const response = await fetch(`${graphqlHost}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
