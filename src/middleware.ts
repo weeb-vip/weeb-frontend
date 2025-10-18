@@ -1,7 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import { getConfig } from './config/build-time-loader';
 import { AuthStorage } from './utils/auth-storage';
-import { refreshTokenSSR } from './utils/ssr-token-refresh';
+import { refreshTokenSSR, isTokenExpired } from './utils/ssr-token-refresh';
 
 // Config cache for performance - but loaded inside handler for Cloudflare Pages compatibility
 let configData: any = null;
@@ -24,8 +24,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (isStaticAsset) {
     return next();
   }
-
-  const startTime = Date.now();
 
   // Ensure config is available - build-time loading (much faster!)
   try {
@@ -95,52 +93,59 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return { isLoggedIn, tokens };
   })();
 
-  // Verify token validity by calling user details endpoint
-  if (authResult.tokens.authToken && authResult.isLoggedIn) {
-    try {
-      const userDetailsResponse = await fetch(`${configData?.api_host || 'http://localhost:8079'}/user`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': cookieString
-        },
-        credentials: 'include'
-      });
+  // Token refresh logic - 3 cases
+  const hasAccessToken = !!authResult.tokens.authToken;
+  const hasRefreshToken = !!authResult.tokens.refreshToken;
 
-      // If token is invalid (401/403), attempt to refresh
-      if (userDetailsResponse.status === 401 || userDetailsResponse.status === 403) {
-        console.log('[Middleware] Auth token is invalid (status: %d), attempting refresh', userDetailsResponse.status);
+  if (hasRefreshToken) {
+    if (!hasAccessToken) {
+      // CASE 1: Has refresh token but NO access token - refresh immediately
+      console.log('[Middleware] 🔄 CASE 1: Has refresh token but no access token - attempting refresh');
 
-        if (authResult.tokens.refreshToken) {
-          const refreshResult = await refreshTokenSSR(cookies, configData?.api_host || 'http://localhost:8079');
+      const refreshResult = await refreshTokenSSR(cookies, configData?.api_host || 'http://localhost:8079');
 
-          if (refreshResult.success) {
-            console.log('[Middleware] Token refreshed successfully after validation failure');
-            // Update auth result with new tokens
-            authResult.tokens.authToken = refreshResult.authToken;
-            authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
-            authResult.isLoggedIn = true;
-          } else {
-            console.log('[Middleware] Token refresh failed:', refreshResult.error);
-            // Token refresh failed, mark as logged out
-            authResult.isLoggedIn = false;
-          }
+      if (refreshResult.success) {
+        console.log('[Middleware] ✅ Token refreshed successfully - new access token obtained');
+        authResult.tokens.authToken = refreshResult.authToken;
+        authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
+        authResult.isLoggedIn = true;
+      } else {
+        console.log('[Middleware] ❌ Token refresh failed:', refreshResult.error);
+        authResult.isLoggedIn = false;
+      }
+    } else {
+      // Has access token - check if it's expired
+      const tokenExpired = isTokenExpired(authResult.tokens.authToken);
+
+      if (tokenExpired) {
+        // CASE 2: Has access token but it's EXPIRED - refresh it
+        console.log('[Middleware] 🔄 CASE 2: Access token expired - attempting refresh');
+
+        const refreshResult = await refreshTokenSSR(cookies, configData?.api_host || 'http://localhost:8079');
+
+        if (refreshResult.success) {
+          console.log('[Middleware] ✅ Expired token refreshed successfully - new access token obtained');
+          authResult.tokens.authToken = refreshResult.authToken;
+          authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
+          authResult.isLoggedIn = true;
         } else {
-          console.log('[Middleware] Auth token invalid but no refresh token available');
+          console.log('[Middleware] ❌ Token refresh failed:', refreshResult.error);
           authResult.isLoggedIn = false;
         }
-      } else if (!userDetailsResponse.ok) {
-        console.log('[Middleware] User details fetch failed with status:', userDetailsResponse.status);
-        // Other errors (500, etc.) - don't invalidate auth, might be temporary
       } else {
-        // Token is valid, user details fetched successfully
-        if (import.meta.env.DEV) {
-          console.log('[Middleware] Auth token validated successfully');
-        }
+        // CASE 3: Has valid access token - continue normal flow
+        console.log('[Middleware] ✅ CASE 3: Access token is valid - continuing normal flow');
       }
-    } catch (error) {
-      console.error('[Middleware] Failed to verify token:', error);
-      // Network error or other issues - don't invalidate auth
+    }
+  } else if (hasAccessToken) {
+    // Has access token but no refresh token - check if expired
+    const tokenExpired = isTokenExpired(authResult.tokens.authToken);
+
+    if (tokenExpired) {
+      console.log('[Middleware] ⚠️ Access token expired but no refresh token available - marking as logged out');
+      authResult.isLoggedIn = false;
+    } else {
+      console.log('[Middleware] ✅ Access token valid but no refresh token - continuing normal flow');
     }
   }
 
