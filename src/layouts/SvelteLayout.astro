@@ -109,30 +109,32 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <meta name="msapplication-TileColor" content="#111827">
 
     <!-- View Transitions for smoother navigation -->
-    <ViewTransitions />
+    <!-- Prefetch disabled to avoid Cloudflare challenge blocking -->
+    <ViewTransitions prefetch={false} />
 
     <!-- Critical inline styles to prevent flash -->
     <style is:inline>
       /* Set default light mode colors immediately */
-      html {
+      html, body {
         background-color: white;
         color: #111827;
+        min-height: 100vh;
       }
 
       /* Override for dark mode */
-      html.dark {
+      html.dark, html.dark body {
         background-color: #111827;
         color: #f3f4f6;
       }
 
       /* PWA-specific: Match theme-based background to prevent flash */
       @media (display-mode: standalone) {
-        html.dark, body.dark {
+        html.dark, html.dark body {
           background-color: #111827 !important;
           color: #f3f4f6 !important;
         }
 
-        html:not(.dark), body:not(.dark) {
+        html:not(.dark), html:not(.dark) body {
           background-color: white !important;
           color: #111827 !important;
         }

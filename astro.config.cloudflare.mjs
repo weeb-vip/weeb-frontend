@@ -29,9 +29,6 @@ export default defineConfig({
       external: ['node:*'],
       noExternal: ['@tanstack/svelte-query', '@tanstack/query-core']
     },
-    build: {
-      target: 'es2015'
-    },
     plugins: [
       viteStaticCopy({
         targets: [
