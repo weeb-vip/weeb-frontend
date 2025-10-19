@@ -835,16 +835,8 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     </style>
 
     <!-- Initialize swipe navigation handling -->
-    <script type="module" data-cfasync="false">
-      import { swipeNavigation } from '../utils/swipe-navigation';
-
-      // Initialize swipe navigation handler immediately
-      swipeNavigation;
-
-      // Clean up old states periodically
-      setInterval(() => {
-        swipeNavigation.cleanupOldStates();
-      }, 10 * 60 * 1000); // Every 10 minutes
+    <script>
+      import '../scripts/init-swipe-navigation';
     </script>
 
 </body>
