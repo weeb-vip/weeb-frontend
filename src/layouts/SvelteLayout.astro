@@ -109,8 +109,15 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <meta name="msapplication-TileColor" content="#111827">
 
     <!-- View Transitions for smoother navigation -->
-    <!-- Prefetch disabled to avoid Cloudflare challenge blocking -->
-    <ViewTransitions prefetch={false} />
+    <ViewTransitions />
+
+    <!-- Disable mobile Chrome speculation rules to prevent Cloudflare blocking -->
+    <script type="speculationrules">
+    {
+      "prefetch": [],
+      "prerender": []
+    }
+    </script>
 
     <!-- Critical inline styles to prevent flash -->
     <style is:inline>

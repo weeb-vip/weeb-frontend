@@ -13,7 +13,7 @@ const { auth } = Astro.locals;
 
   <!-- Mobile/Tablet Header -->
   <div class="flex lg:hidden w-full items-center space-x-3 h-16">
-    <a href="/" class="flex-shrink-0">
+    <a href="/" data-astro-prefetch="false" class="flex-shrink-0">
       <img
         src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
         alt="logo"
@@ -38,7 +38,7 @@ const { auth } = Astro.locals;
   <div class="hidden lg:block relative h-16">
     <!-- Left side: Logo and branding -->
     <div class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center space-x-4">
-      <a href="/" class="flex flex-row items-center space-x-4">
+      <a href="/" data-astro-prefetch="false" class="flex flex-row items-center space-x-4">
         <img
           src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
           alt="logo"
