@@ -153,7 +153,21 @@
     }
   }
 
-  onMount(tryInOrder);
+  onMount(() => {
+    tryInOrder();
+
+    // Re-trigger image loading after View Transitions
+    const handlePageLoad = () => {
+      debug.log('View Transition complete, reloading images');
+      tryInOrder();
+    };
+
+    document.addEventListener('astro:page-load', handlePageLoad);
+
+    return () => {
+      document.removeEventListener('astro:page-load', handlePageLoad);
+    };
+  });
 
   onDestroy(() => {
     destroyed = true;
