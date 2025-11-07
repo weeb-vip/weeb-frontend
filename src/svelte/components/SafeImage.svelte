@@ -41,7 +41,6 @@
 
   const dispatch = createEventDispatcher();
 
-  $: imageUrl = getSafeImageUrl(src, path);
   $: actualLoading = loading || (priority ? 'eager' : 'lazy');
 
   let isLoaded = false;
@@ -51,6 +50,7 @@
   let destroyed = false;
   let runId = 0;
   let domImageLoaded = false; // Track when the DOM <img> has loaded
+  let mounted = false; // Track if component is mounted
   const imgs: HTMLImageElement[] = [];
 
   function loadOne(url: string): Promise<{ url: string; img: HTMLImageElement }> {
@@ -85,11 +85,6 @@
 
   async function tryInOrder() {
     const id = ++runId;
-    chosenSrc = null;
-    isLoaded = false;
-    isError = false;
-    useFallback = false;
-    domImageLoaded = false; // Reset DOM load state
 
     // Build ordered list: use sources if provided, otherwise use src
     let orderedSources: string[] = [];
@@ -106,48 +101,82 @@
       });
     } else if (src) {
       // Fallback to single src
-      orderedSources = [imageUrl];
+      orderedSources = [getSafeImageUrl(src, path)];
     } else {
-      // No sources or src provided - use imageUrl as last resort
-      debug.warn('No image sources or src provided, using imageUrl');
-      orderedSources = [imageUrl];
+      // No sources or src provided
+      debug.warn('No image sources or src provided');
+      orderedSources = [getSafeImageUrl(src, path)];
     }
 
-    debug.log(`Trying ${orderedSources.length} image sources in order`);
+    debug.log(`Racing ${orderedSources.length} image sources in parallel with priority order`);
 
-    for (let i = 0; i < orderedSources.length; i++) {
-      const url = orderedSources[i];
-      const isLastSource = i === orderedSources.length - 1;
-      const hasMultipleSources = orderedSources.length > 1;
+    // Only reset states if we're loading a different image
+    const newFirstSource = orderedSources[0];
+    if (newFirstSource === chosenSrc && domImageLoaded) {
+      // Same image already loaded, no need to reload
+      debug.log('Same image source already loaded, skipping reload');
+      return;
+    }
 
-      try {
-        const { url: okUrl } = await withTimeout(loadOne(url), perTryTimeoutMs);
-        if (destroyed || id !== runId) return;
+    // Don't reset states yet - keep current image visible while loading new one
+    const previousSrc = chosenSrc;
+    const wasLoaded = domImageLoaded;
 
-        debug.success(`Image loaded successfully: ${okUrl}`);
-        chosenSrc = okUrl;
+    // Start loading all sources in parallel
+    const loadPromises = orderedSources.map((url, index) =>
+      withTimeout(loadOne(url), perTryTimeoutMs)
+        .then(result => ({ ...result, index, success: true }))
+        .catch(err => ({ url, index, success: false, error: err }))
+    );
+
+    // Wait for all to complete
+    const results = await Promise.all(loadPromises);
+    if (destroyed || id !== runId) return;
+
+    // Find the best result respecting priority order
+    const successfulResults = results.filter(r => r.success);
+
+    if (successfulResults.length > 0) {
+      // Sort by index (priority) and pick the first successful one
+      successfulResults.sort((a, b) => a.index - b.index);
+      const best = successfulResults[0];
+
+      debug.success(`Image loaded successfully: ${best.url} (priority ${best.index + 1})`);
+
+      // Only reset states if we actually have a different image
+      if (best.url !== previousSrc) {
+        chosenSrc = best.url;
         isLoaded = true;
-
-        // Mark as fallback/error if we had to use the last source AND there were multiple sources
-        if (isLastSource && hasMultipleSources) {
-          useFallback = true;
-          isError = true;
-          dispatch('chosen', { src: chosenSrc, reason: 'last-source' });
-        } else {
-          useFallback = false;
-          dispatch('chosen', { src: chosenSrc, reason: 'load' });
-        }
-        return; // stop at the first accepted success
-      } catch (err) {
-        debug.warn(`Image source failed: ${url}`);
-        // move on to the next candidate
+        domImageLoaded = false; // Reset so new image can load
+      } else {
+        // Same image, keep current state
+        debug.log('Same image loaded, keeping current state');
+        return;
       }
+
+      // Mark as fallback if we had to use the last source AND there were multiple sources
+      const hasMultipleSources = orderedSources.length > 1;
+      const isLastSource = best.index === orderedSources.length - 1;
+
+      if (isLastSource && hasMultipleSources) {
+        useFallback = true;
+        isError = true;
+        dispatch('chosen', { src: chosenSrc, reason: 'last-source' });
+      } else {
+        useFallback = false;
+        isError = false;
+        dispatch('chosen', { src: chosenSrc, reason: 'load' });
+      }
+      return;
     }
 
     // none worked → fallback
     if (!destroyed && id === runId) {
       debug.error('All image sources failed, using fallback');
-      chosenSrc = fallbackSrc ?? null;
+      if (fallbackSrc !== previousSrc) {
+        chosenSrc = fallbackSrc ?? null;
+        domImageLoaded = false; // Need to load fallback image
+      }
       useFallback = false; // Don't blur the fallback image
       isError = true;
       isLoaded = true;
@@ -155,7 +184,13 @@
     }
   }
 
+  // Track previous values to detect actual changes
+  let prevSrc = src;
+  let prevSources = sources;
+  let prevPath = path;
+
   onMount(() => {
+    mounted = true;
     tryInOrder();
 
     // Re-trigger image loading after View Transitions
@@ -179,8 +214,20 @@
     }
   });
 
-  // Re-run when inputs change
-  $: (src, sources, fallbackSrc, perTryTimeoutMs, rejectPatterns, accept, path, tryInOrder());
+  // Re-run only when source actually changes after mount
+  $: {
+    const sourcesChanged = JSON.stringify(sources) !== JSON.stringify(prevSources);
+    const srcChanged = src !== prevSrc;
+    const pathChanged = path !== prevPath;
+
+    if ((srcChanged || sourcesChanged || pathChanged) && mounted) {
+      debug.log(`Source changed - src: ${srcChanged}, sources: ${sourcesChanged}, path: ${pathChanged}`);
+      prevSrc = src;
+      prevSources = sources;
+      prevPath = path;
+      tryInOrder();
+    }
+  }
 
   // Fallback error handler for simple mode
   function handleSimpleError() {
@@ -199,12 +246,11 @@
   }
 </script>
 
-<div class="relative h-full">
+<div class="relative {className}" {style}>
   {#if !domImageLoaded}
-    <!-- Show skeleton while image is loading -->
+    <!-- Show skeleton while image is loading or selecting source -->
     <div
-      class="absolute inset-0 bg-gray-200 dark:bg-gray-700 skeleton rounded {className}"
-      style={style}
+      class="absolute inset-0 bg-gray-200 dark:bg-gray-700 skeleton rounded"
       role="status"
       aria-label="Loading image"
     >
@@ -216,8 +262,7 @@
     <img
       src={chosenSrc}
       {alt}
-      class="{className} transition-opacity duration-300 {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} {!domImageLoaded ? 'opacity-0' : 'opacity-100'}"
-      {style}
+      class="w-full h-full object-cover transition-opacity duration-300 {useFallback ? 'blur-md scale-110' : ''} {!domImageLoaded ? 'opacity-0' : 'opacity-100'}"
       {width}
       {height}
       loading={actualLoading}
