@@ -199,7 +199,7 @@
   }
 </script>
 
-<div class="relative w-full h-full">
+<div class="relative h-full">
   {#if !domImageLoaded}
     <!-- Show skeleton while image is loading -->
     <div
