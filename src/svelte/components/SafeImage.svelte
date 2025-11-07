@@ -50,6 +50,7 @@
   let useFallback = false;
   let destroyed = false;
   let runId = 0;
+  let domImageLoaded = false; // Track when the DOM <img> has loaded
   const imgs: HTMLImageElement[] = [];
 
   function loadOne(url: string): Promise<{ url: string; img: HTMLImageElement }> {
@@ -88,6 +89,7 @@
     isLoaded = false;
     isError = false;
     useFallback = false;
+    domImageLoaded = false; // Reset DOM load state
 
     // Build ordered list: use sources if provided, otherwise use src
     let orderedSources: string[] = [];
@@ -192,30 +194,39 @@
 
   function handleSimpleLoad() {
     isLoaded = true;
+    domImageLoaded = true; // Image fully loaded in DOM
     dispatch('load', { src: chosenSrc });
   }
 </script>
 
-{#if chosenSrc}
-  <img
-    src={chosenSrc}
-    {alt}
-    class="{className} transition-opacity duration-300 {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} {!isLoaded && actualLoading === 'lazy' ? 'opacity-0' : 'opacity-100'}"
-    {style}
-    {width}
-    {height}
-    loading={actualLoading}
-    fetchpriority={priority ? 'high' : 'auto'}
-    data-original-src={getSafeImageUrl(src, path)}
-    data-sources={sources.length > 0 ? JSON.stringify(sources) : undefined}
-    on:error={handleSimpleError}
-    on:load={handleSimpleLoad}
-    on:click
-  />
-{:else}
-  <!-- Placeholder while racing -->
-  <div
-    class="bg-gray-200 dark:bg-gray-700 animate-pulse rounded"
-    style={style}
-  ></div>
-{/if}
+<div class="relative w-full h-full">
+  {#if !domImageLoaded}
+    <!-- Show skeleton while image is loading -->
+    <div
+      class="absolute inset-0 bg-gray-200 dark:bg-gray-700 skeleton rounded {className}"
+      style={style}
+      role="status"
+      aria-label="Loading image"
+    >
+      <span class="sr-only">Loading...</span>
+    </div>
+  {/if}
+
+  {#if chosenSrc}
+    <img
+      src={chosenSrc}
+      {alt}
+      class="{className} transition-opacity duration-300 {useFallback ? 'blur-md scale-110 -inset-4' : 'inset-0'} {!domImageLoaded ? 'opacity-0' : 'opacity-100'}"
+      {style}
+      {width}
+      {height}
+      loading={actualLoading}
+      fetchpriority={priority ? 'high' : 'auto'}
+      data-original-src={getSafeImageUrl(src, path)}
+      data-sources={sources.length > 0 ? JSON.stringify(sources) : undefined}
+      on:error={handleSimpleError}
+      on:load={handleSimpleLoad}
+      on:click
+    />
+  {/if}
+</div>
