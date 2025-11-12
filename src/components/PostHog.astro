@@ -25,16 +25,103 @@ const posthogKey = config?.posthog_api_key || '';
         key: posthogKey ? 'PROVIDED' : 'MISSING'
     });
 
-    // Test if PostHog is working
+    // Override loadToolbar IMMEDIATELY to save state and parameters
+    const originalLoadToolbar = window.posthog.loadToolbar;
+    window.posthog.loadToolbar = function(params) {
+        console.log('🔍 PostHog loadToolbar called with params:', params);
+        localStorage.setItem('posthog_toolbar_enabled', 'true');
+        if (params) {
+            console.log('🔍 Saving toolbar params for persistence');
+            localStorage.setItem('posthog_toolbar_params', JSON.stringify(params));
+        }
+        return originalLoadToolbar.call(this, params);
+    };
+
+    // Add method to disable toolbar
+    window.disablePostHogToolbar = () => {
+        localStorage.removeItem('posthog_toolbar_enabled');
+        localStorage.removeItem('posthog_toolbar_params');
+        console.log('🔍 PostHog toolbar disabled - refresh to apply');
+    };
+
+    console.log('✅ PostHog override installed - you can now run your launch script');
+
+    // Test if PostHog is working and restore toolbar if needed
     setTimeout(() => {
         console.log('🔍 PostHog status check:', {
             loaded: !!window.posthog,
             methods: window.posthog ? Object.keys(window.posthog) : 'not available'
         });
 
-        if (window.posthog) {
-            console.log('✅ PostHog loaded - you can now run your launch script from the console');
+        // Check if toolbar was previously loaded
+        const toolbarEnabled = localStorage.getItem('posthog_toolbar_enabled');
+        const savedParams = localStorage.getItem('posthog_toolbar_params');
+
+        if (toolbarEnabled === 'true') {
+            console.log('🔍 Restoring PostHog toolbar from previous session');
+            if (savedParams) {
+                try {
+                    const params = JSON.parse(savedParams);
+                    console.log('🔍 Restoring with saved params');
+                    window.posthog.loadToolbar(params);
+                } catch (e) {
+                    console.error('🔍 Failed to parse saved toolbar params:', e);
+                    window.posthog.loadToolbar();
+                }
+            } else {
+                console.log('🔍 Restoring without params');
+                window.posthog.loadToolbar();
+            }
         }
     }, 1000);
+
+    // Function to reload toolbar
+    function reloadToolbar() {
+        console.log('🔍 reloadToolbar() called');
+        const toolbarEnabled = localStorage.getItem('posthog_toolbar_enabled');
+        const savedParams = localStorage.getItem('posthog_toolbar_params');
+
+        console.log('🔍 Toolbar state:', {
+            enabled: toolbarEnabled,
+            hasParams: !!savedParams,
+            hasPosthog: !!window.posthog
+        });
+
+        if (toolbarEnabled === 'true' && window.posthog) {
+            console.log('🔍 Reloading PostHog toolbar');
+            if (savedParams) {
+                try {
+                    const params = JSON.parse(savedParams);
+                    console.log('🔍 Reloading with saved params:', params);
+                    window.posthog.loadToolbar(params);
+                } catch (e) {
+                    console.error('🔍 Failed to parse saved toolbar params:', e);
+                    window.posthog.loadToolbar();
+                }
+            } else {
+                console.log('🔍 Reloading without params');
+                window.posthog.loadToolbar();
+            }
+        } else {
+            console.log('🔍 Not reloading toolbar - conditions not met');
+        }
+    }
+
+    // Listen to multiple Astro events for view transitions
+    document.addEventListener('astro:page-load', () => {
+        console.log('🔍 EVENT: astro:page-load');
+        setTimeout(reloadToolbar, 500);
+    });
+
+    document.addEventListener('astro:after-swap', () => {
+        console.log('🔍 EVENT: astro:after-swap');
+        setTimeout(reloadToolbar, 500);
+    });
+
+    // Also try popstate for browser back/forward
+    window.addEventListener('popstate', () => {
+        console.log('🔍 EVENT: popstate');
+        setTimeout(reloadToolbar, 500);
+    });
   </script>
 }
