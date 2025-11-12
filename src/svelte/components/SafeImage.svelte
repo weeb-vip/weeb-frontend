@@ -51,6 +51,7 @@
   let runId = 0;
   let domImageLoaded = false; // Track when the DOM <img> has loaded
   let mounted = false; // Track if component is mounted
+  let isLoadingInProgress = false; // Prevent concurrent loads
   const imgs: HTMLImageElement[] = [];
 
   function loadOne(url: string): Promise<{ url: string; img: HTMLImageElement }> {
@@ -84,6 +85,13 @@
   }
 
   async function tryInOrder() {
+    // Prevent concurrent loads
+    if (isLoadingInProgress) {
+      debug.warn('Load already in progress, skipping duplicate call');
+      return;
+    }
+
+    isLoadingInProgress = true;
     const id = ++runId;
 
     // Build ordered list: use sources if provided, otherwise use src
@@ -115,6 +123,10 @@
     if (newFirstSource === chosenSrc && domImageLoaded) {
       // Same image already loaded, no need to reload
       debug.log('Same image source already loaded, skipping reload');
+      debug.log(`  Dispatching 'chosen' event for already-loaded image: ${chosenSrc}`);
+      // Dispatch event so parent knows image is ready (important if parent reset bgLoaded)
+      dispatch('chosen', { src: chosenSrc, reason: 'already-loaded' });
+      isLoadingInProgress = false;
       return;
     }
 
@@ -131,7 +143,10 @@
 
     // Wait for all to complete
     const results = await Promise.all(loadPromises);
-    if (destroyed || id !== runId) return;
+    if (destroyed || id !== runId) {
+      isLoadingInProgress = false;
+      return;
+    }
 
     // Find the best result respecting priority order
     const successfulResults = results.filter(r => r.success);
@@ -145,12 +160,21 @@
 
       // Only reset states if we actually have a different image
       if (best.url !== previousSrc) {
+        debug.log(`Setting new chosenSrc: ${best.url} (was: ${previousSrc})`);
         chosenSrc = best.url;
         isLoaded = true;
-        domImageLoaded = false; // Reset so new image can load
+        domImageLoaded = false; // Reset so new image can load in DOM
+      } else if (!domImageLoaded) {
+        // Same image but DOM hasn't loaded it yet - this might be a retry
+        debug.log('Same image but DOM not loaded, resetting domImageLoaded');
+        domImageLoaded = false;
+        dispatch('chosen', { src: chosenSrc, reason: 'retry-same' });
       } else {
-        // Same image, keep current state
-        debug.log('Same image loaded, keeping current state');
+        // Same image, already loaded in DOM - still dispatch event for parent
+        debug.log('Same image already loaded in DOM, keeping current state');
+        debug.log('Dispatching chosen event so parent knows image is ready');
+        dispatch('chosen', { src: chosenSrc, reason: 'same-already-loaded' });
+        isLoadingInProgress = false;
         return;
       }
 
@@ -167,6 +191,7 @@
         isError = false;
         dispatch('chosen', { src: chosenSrc, reason: 'load' });
       }
+      isLoadingInProgress = false;
       return;
     }
 
@@ -182,15 +207,20 @@
       isLoaded = true;
       dispatch('chosen', { src: chosenSrc, reason: 'all-failed' });
     }
+    isLoadingInProgress = false;
   }
 
-  // Track previous values to detect actual changes
-  let prevSrc = src;
-  let prevSources = sources;
-  let prevPath = path;
+  // Track previous values to detect actual changes (initialize in onMount to avoid pre-mount comparisons)
+  let prevSrc = '';
+  let prevSources: string[] = [];
+  let prevPath = '';
 
   onMount(() => {
     mounted = true;
+    // Initialize tracking with current values
+    prevSrc = src;
+    prevSources = sources;
+    prevPath = path;
     tryInOrder();
 
     // Re-trigger image loading after View Transitions
@@ -214,16 +244,22 @@
     }
   });
 
-  // Re-run only when source actually changes after mount
+  // Re-enable reactive statements with better guards
+  // Only trigger if mounted AND the values have actually changed from what we tracked
   $: {
-    const sourcesChanged = JSON.stringify(sources) !== JSON.stringify(prevSources);
-    const srcChanged = src !== prevSrc;
-    const pathChanged = path !== prevPath;
+    if (!mounted) break $;
 
-    if ((srcChanged || sourcesChanged || pathChanged) && mounted) {
-      debug.log(`Source changed - src: ${srcChanged}, sources: ${sourcesChanged}, path: ${pathChanged}`);
+    const sourcesStr = JSON.stringify(sources);
+    const prevSourcesStr = JSON.stringify(prevSources);
+
+    if (src !== prevSrc || sourcesStr !== prevSourcesStr || path !== prevPath) {
+      debug.log(`=== Props changed after mount ===`);
+      if (src !== prevSrc) debug.log(`  src: ${prevSrc} -> ${src}`);
+      if (sourcesStr !== prevSourcesStr) debug.log(`  sources changed`);
+      if (path !== prevPath) debug.log(`  path: ${prevPath} -> ${path}`);
+
       prevSrc = src;
-      prevSources = sources;
+      prevSources = [...sources];
       prevPath = path;
       tryInOrder();
     }
@@ -233,6 +269,7 @@
   function handleSimpleError() {
     debug.error(`Image failed to load: ${chosenSrc}`);
     chosenSrc = fallbackSrc;
+    domImageLoaded = false; // Reset to load fallback
     useFallback = false; // Don't blur the fallback image
     isError = true;
     isLoaded = true;
@@ -240,6 +277,7 @@
   }
 
   function handleSimpleLoad() {
+    debug.log(`DOM image loaded: ${chosenSrc}`);
     isLoaded = true;
     domImageLoaded = true; // Image fully loaded in DOM
     dispatch('load', { src: chosenSrc });
@@ -262,7 +300,7 @@
     <img
       src={chosenSrc}
       {alt}
-      class="w-full h-full object-cover transition-opacity duration-300 {useFallback ? 'blur-md scale-110' : ''} {!domImageLoaded ? 'opacity-0' : 'opacity-100'}"
+      class="w-full h-full object-cover {useFallback ? 'blur-md scale-110' : ''} {!domImageLoaded ? 'opacity-0' : ''}"
       {width}
       {height}
       loading={actualLoading}

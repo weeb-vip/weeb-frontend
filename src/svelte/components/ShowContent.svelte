@@ -29,6 +29,7 @@
   let showStickyHeader = false;
   let supportsWebP = false;
   let useFallback = false;
+  let previousAnimeId: string | null = null; // Track anime ID changes
 
   // Data state variables
   let showQueryStore: any = null;
@@ -131,21 +132,33 @@
     return sources;
   }
 
-  // Update sources when anime changes
+  // Update sources when anime ID changes (different show)
   $: if (anime) {
-    bgLoaded = false;
+    const currentAnimeId = anime.id;
+    const isNewAnime = currentAnimeId !== previousAnimeId;
+
+    if (isNewAnime) {
+      console.log('🖼️ New anime detected, resetting bgLoaded');
+      bgLoaded = false;
+      previousAnimeId = currentAnimeId;
+    } else {
+      console.log('🖼️ Same anime, data updated - NOT resetting bgLoaded');
+    }
+
     imageSources = generateImageSources();
     console.log('🖼️ Generated image sources for', anime.id, ':', imageSources);
   }
 
   // Regenerate sources when WebP support is detected
   $: if (supportsWebP && anime) {
+    console.log('🖼️ WebP support detected, regenerating sources but NOT resetting bgLoaded');
     imageSources = generateImageSources();
   }
 
   function handleImageChosen(event: CustomEvent) {
     console.log('🖼️ ShowContent background image chosen:', event.detail);
     bgLoaded = true;
+    console.log('🖼️ bgLoaded set to true, wrapper should be visible now');
   }
 
   // Get the first source for sticky header background
