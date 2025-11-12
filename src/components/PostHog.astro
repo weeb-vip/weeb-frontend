@@ -1,9 +1,20 @@
 ---
 // src/components/PostHog.astro
 // Only run PostHog on client-side to avoid SSR issues
-import config from '../config';
-const shouldLoadPostHog = !!config?.posthog_api_key; // Enable if API key exists
-const posthogKey = config?.posthog_api_key || '';
+import { getConfig } from '../config';
+
+let shouldLoadPostHog = false;
+let posthogKey = '';
+
+try {
+  const config = getConfig();
+  if (config && config.posthog_api_key) {
+    posthogKey = config.posthog_api_key;
+    shouldLoadPostHog = true;
+  }
+} catch (error) {
+  console.warn('PostHog: Failed to load config', error);
+}
 ---
 
 {shouldLoadPostHog &&
