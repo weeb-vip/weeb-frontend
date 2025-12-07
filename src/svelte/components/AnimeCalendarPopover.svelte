@@ -115,6 +115,7 @@
       id={anime.id}
       title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
       description={anime.description || ""}
+      tags={anime.tags || []}
       episodes={anime.episodeCount || 0}
       episodeLength={anime.duration ? anime.duration.replace(/per.+?$/, "") : "?"}
       image={GetImageFromAnime(anime)}

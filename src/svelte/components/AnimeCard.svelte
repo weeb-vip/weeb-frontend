@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import SafeImage from './SafeImage.svelte';
   import ScrollingText from './ScrollingText.svelte';
+  import ScrollingTags from './ScrollingTags.svelte';
   import { analytics } from '../../utils/analytics';
 
   export let style: 'default' | 'hover-transparent' | 'hover' | 'transparent' | 'long' | 'detail' | 'episode' = 'default';
@@ -25,6 +26,9 @@
   export let airdate: string = '';
   export let episodeTitle: string = '';
   export let episodeNumber: string = '';
+
+  // Tags/genres for card display
+  export let tags: string[] = [];
 
   // Status labels mapping
   const statusLabels: Record<string, string> = {
@@ -84,6 +88,8 @@
                 maxWidth="100%"
         />
 
+        <ScrollingTags {tags} className="mt-1" />
+
         <div class="flex flex-col space-y-2 text-md font-normal mt-2 items-start text-gray-700 dark:text-gray-300">
           <div class="flex items-center">
             <i class="fas fa-tv text-sm w-4 text-center mr-2"></i>
@@ -124,9 +130,11 @@
                 maxWidth="100%"
         />
 
+        <ScrollingTags {tags} className="mt-1" />
+
         <ScrollingText
                 text={episodeTitle}
-                className="text-md font-normal text-gray-900 dark:text-gray-100"
+                className="text-md font-normal text-gray-900 dark:text-gray-100 mt-1"
                 maxWidth="100%"
         />
 

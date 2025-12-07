@@ -11,6 +11,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             duration
             tags
+            description
             episodeCount
             animeStatus
             imageUrl
@@ -32,6 +33,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             imageUrl
             duration
             tags
+            description
             episodeCount
             animeStatus
             imageUrl
@@ -58,6 +60,7 @@ export const getSeasonalAnime = graphql(/* GraphQL */`
             imageUrl
             duration
             tags
+            description
             episodeCount
             animeStatus
             imageUrl
@@ -135,6 +138,8 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
             ranking
             broadcast
             thetvdbid
+            tags
+            description
             nextEpisode {
                 id
                 animeId
@@ -170,6 +175,8 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
             ranking
             broadcast
             thetvdbid
+            tags
+            description
             nextEpisode {
                 id
                 animeId
@@ -205,6 +212,8 @@ export const getCurrentlyAiringWithDatesAndEpisodes = graphql(/* GraphQL */`
             ranking
             broadcast
             thetvdbid
+            tags
+            description
             nextEpisode {
                 id
                 animeId

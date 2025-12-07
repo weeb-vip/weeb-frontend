@@ -1,6 +1,6 @@
 ---
 import SvelteLayout from '../layouts/SvelteLayout.astro';
-import CurrentlyAiringDemo from '../svelte/components/CurrentlyAiringDemo.svelte';
+import CurrentlyAiringPage from '../svelte/components/CurrentlyAiringPage.svelte';
 import { GraphQLClient } from 'graphql-request';
 import { getCurrentlyAiringWithDates } from '../services/api/graphql/queries';
 
@@ -128,7 +128,7 @@ if (isTokenExpired) {
   title="Currently Airing Anime"
   description="Discover what anime is currently airing this season. Get episode schedules, notifications, and add shows to your watchlist."
 >
-  <CurrentlyAiringDemo
+  <CurrentlyAiringPage
     client:load
     ssrData={currentlyAiringData}
     ssrError={ssrError}

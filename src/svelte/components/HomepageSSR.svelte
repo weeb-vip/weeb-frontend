@@ -32,12 +32,10 @@
   import '@fortawesome/fontawesome-free/css/all.min.css';
 
   // SSR props
-  export let auth: any;
   export let homeData: any;
   export let currentlyAiringData: any;
   export let seasonalData: any;
   export let currentSeason: string;
-  export let ssrError: string | null;
   export let isTokenExpired: boolean = false;
 
   let selectedSeason = currentSeason;
@@ -314,7 +312,8 @@
           id: anime.id,
           titleEn: anime.titleEn,
           titleJp: anime.titleJp,
-          description: null,
+          description: anime.description || null,
+          tags: anime.tags || [],
           episodeCount: null,
           duration: anime.duration,
           startDate: anime.startDate,
@@ -571,7 +570,8 @@
               style="detail"
               id={anime.id}
               title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-              description=""
+              description={anime.description || ''}
+              tags={anime.tags || []}
               episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
               episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
               year={anime.startDate ? format(new Date(anime.startDate.toString()), "yyyy") : "?"}
@@ -622,7 +622,8 @@
               style="detail"
               id={anime.id}
               title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-              description=""
+              description={anime.description || ''}
+              tags={anime.tags || []}
               episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
               episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
               year={anime.startDate ? format(new Date(anime.startDate.toString()), "yyyy") : "?"}
@@ -672,7 +673,8 @@
               style="detail"
               id={anime.id}
               title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-              description=""
+              description={anime.description || ''}
+              tags={anime.tags || []}
               episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
               episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
               year={anime.startDate ? format(new Date(anime.startDate.toString()), "yyyy") : "?"}

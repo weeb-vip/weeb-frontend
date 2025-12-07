@@ -54,7 +54,8 @@
     title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
     episodeTitle={episodeTitle}
     episodeNumber={episodeNumber}
-    description=""
+    description={anime.description || ''}
+    tags={anime.tags || []}
     episodeLength=""
     year=""
     image={GetImageFromAnime(anime)}

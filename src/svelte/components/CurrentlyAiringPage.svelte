@@ -116,6 +116,7 @@
           titleEn: anime.titleEn,
           titleJp: anime.titleJp,
           description: anime.description,
+          tags: anime.tags || [],
           episodeCount: null,
           duration: anime.duration,
           startDate: anime.startDate,
@@ -312,6 +313,7 @@
               title={getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
               description=""
+              tags={entry.airingInfo.tags || []}
               episodeLength=""
               episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
               className="hover:cursor-pointer"
@@ -363,6 +365,7 @@
               title={getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
               description=""
+              tags={entry.airingInfo.tags || []}
               episodeLength=""
               episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
               className="hover:cursor-pointer"
@@ -414,6 +417,7 @@
               title={getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
               description=""
+              tags={entry.airingInfo.tags || []}
               episodeLength=""
               episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
               className="hover:cursor-pointer"
@@ -465,6 +469,7 @@
               title={getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
               episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
               description=""
+              tags={entry.airingInfo.tags || []}
               episodeLength=""
               episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
               className="hover:cursor-pointer"
