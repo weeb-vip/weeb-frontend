@@ -57,6 +57,45 @@
       default: return 'text-blue-600 dark:text-blue-400';
     }
   }
+
+  // Estimate duration based on available data
+  function getEstimatedDuration(): { value: string; isEstimate: boolean } {
+    // If we have actual duration, use it
+    if (episodeLength && episodeLength !== 'Unknown' && episodeLength !== '') {
+      return { value: episodeLength, isEstimate: false };
+    }
+
+    // Check if it's a short based on tags
+    const isShort = tags?.some(tag =>
+      tag.toLowerCase().includes('short') ||
+      tag.toLowerCase().includes('music')
+    );
+    if (isShort) {
+      return { value: '~12 min', isEstimate: true };
+    }
+
+    // Check if it's likely a movie (1 episode or movie-related tags)
+    const isMovie = tags?.some(tag =>
+      tag.toLowerCase().includes('movie')
+    ) || (episodes === 1 || episodes === '1');
+    if (isMovie) {
+      return { value: '~90 min', isEstimate: true };
+    }
+
+    // Default to standard TV anime length
+    return { value: '~24 min', isEstimate: true };
+  }
+
+  // Get episode display
+  function getEpisodeDisplay(): { value: string | number; isTBA: boolean } {
+    if (episodes && episodes !== 0 && episodes !== '0') {
+      return { value: episodes, isTBA: false };
+    }
+    return { value: 'TBA', isTBA: true };
+  }
+
+  $: durationDisplay = getEstimatedDuration();
+  $: episodeDisplay = getEpisodeDisplay();
 </script>
 
 <div class="flex {forceListLayout ? 'flex-row' : 'sm:flex-row md:flex-col'} dark:bg-gray-800 rounded-md shadow w-full justify-center transition-all duration-300 {className} relative h-full">
@@ -93,11 +132,11 @@
         <div class="flex flex-col space-y-2 text-md font-normal mt-2 items-start text-gray-700 dark:text-gray-300">
           <div class="flex items-center">
             <i class="fas fa-tv text-sm w-4 text-center mr-2"></i>
-            <span>{episodes}</span>
+            <span class={episodeDisplay.isTBA ? 'text-gray-400 dark:text-gray-500' : ''}>{episodeDisplay.value}</span>
           </div>
-          <div class="flex items-center">
+          <div class="flex items-center" title={durationDisplay.isEstimate ? 'Estimated duration' : ''}>
             <i class="fas fa-clock text-sm w-4 text-center mr-2"></i>
-            <span>{episodeLength}</span>
+            <span class="{durationDisplay.isEstimate ? 'text-gray-400 dark:text-gray-500 italic' : ''}">{durationDisplay.value}</span>
           </div>
           {#if year}
             <div class="flex items-center">
