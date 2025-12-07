@@ -225,7 +225,11 @@
 
     // Re-trigger image loading after View Transitions
     const handlePageLoad = () => {
-      debug.log('View Transition complete, reloading images');
+      debug.log('View Transition complete, resetting image state and reloading');
+      // Reset state because DOM has been swapped by View Transitions
+      // The <img> element is new, so we need to reload even if chosenSrc is the same
+      domImageLoaded = false;
+      isLoadingInProgress = false;
       tryInOrder();
     };
 
