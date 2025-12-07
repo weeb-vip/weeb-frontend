@@ -217,26 +217,73 @@
 
   onMount(() => {
     mounted = true;
+
+    // Reset all state on mount to handle View Transitions properly
+    // When navigating back to a page, the component may have stale state
+    domImageLoaded = false;
+    isLoadingInProgress = false;
+    isLoaded = false;
+    isError = false;
+    destroyed = false;
+    chosenSrc = null; // Force fresh image selection
+    useFallback = false;
+    runId = 0; // Reset run ID
+
+    // Clean up any previous image elements
+    for (const img of imgs) {
+      img.onload = null;
+      img.onerror = null;
+    }
+    imgs.length = 0;
+
     // Initialize tracking with current values
     prevSrc = src;
     prevSources = sources;
     prevPath = path;
-    tryInOrder();
 
-    // Re-trigger image loading after View Transitions
+    // Small delay to ensure DOM is ready after View Transitions
+    requestAnimationFrame(() => {
+      if (!destroyed) {
+        tryInOrder();
+      }
+    });
+
+    // Re-trigger image loading after View Transitions (for persisted components)
     const handlePageLoad = () => {
       debug.log('View Transition complete, resetting image state and reloading');
       // Reset state because DOM has been swapped by View Transitions
       // The <img> element is new, so we need to reload even if chosenSrc is the same
       domImageLoaded = false;
       isLoadingInProgress = false;
-      tryInOrder();
+      chosenSrc = null; // Force fresh image selection
+      requestAnimationFrame(() => {
+        if (!destroyed) {
+          tryInOrder();
+        }
+      });
+    };
+
+    // Handle browser back/forward cache (bfcache) restoration
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        debug.log('Page restored from bfcache, reloading images');
+        domImageLoaded = false;
+        isLoadingInProgress = false;
+        chosenSrc = null;
+        requestAnimationFrame(() => {
+          if (!destroyed) {
+            tryInOrder();
+          }
+        });
+      }
     };
 
     document.addEventListener('astro:page-load', handlePageLoad);
+    window.addEventListener('pageshow', handlePageShow);
 
     return () => {
       document.removeEventListener('astro:page-load', handlePageLoad);
+      window.removeEventListener('pageshow', handlePageShow);
     };
   });
 
