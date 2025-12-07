@@ -52,7 +52,7 @@
   }
 
   $: if ($loginMutation.isError) {
-    errorMessage = $loginMutation.error?.message || "Login failed. Please check your credentials and try again.";
+    errorMessage = 'Unable to sign in. Please check your credentials and try again.';
   }
 
   // Handle register state changes
@@ -62,7 +62,7 @@
   }
 
   $: if ($registerMutation.isError) {
-    errorMessage = $registerMutation.error?.message || "Registration failed. Please try again.";
+    errorMessage = 'Unable to create account. Please try again.';
   }
 
   function validateForm() {

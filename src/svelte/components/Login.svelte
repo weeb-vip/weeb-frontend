@@ -23,17 +23,7 @@
 
   $: if ($loginMutation.isError) {
     debug.error('Login failed', $loginMutation.error);
-    let errorMsg = 'Login failed. Please try again.';
-
-    if ($loginMutation.error?.message?.includes('Invalid credentials') || $loginMutation.error?.message?.includes('authentication')) {
-      errorMsg = 'Invalid username or password. Please check your credentials and try again.';
-    } else if ($loginMutation.error?.message?.includes('network') || $loginMutation.error?.message?.includes('fetch')) {
-      errorMsg = 'Network error. Please check your connection and try again.';
-    } else if ($loginMutation.error?.message) {
-      errorMsg = $loginMutation.error.message;
-    }
-
-    errorMessage = errorMsg;
+    errorMessage = 'Unable to sign in. Please check your credentials and try again.';
   }
 
   function handleInputChange(event: CustomEvent) {
