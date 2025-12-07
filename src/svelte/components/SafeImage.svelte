@@ -267,23 +267,46 @@
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
         debug.log('Page restored from bfcache, reloading images');
-        domImageLoaded = false;
-        isLoadingInProgress = false;
-        chosenSrc = null;
-        requestAnimationFrame(() => {
-          if (!destroyed) {
-            tryInOrder();
-          }
-        });
+        forceReloadImages();
       }
     };
 
+    // Handle mobile swipe-back navigation (custom event from swipe-navigation.ts)
+    const handleSwipeNavigationRestored = () => {
+      debug.log('Swipe navigation restored, reloading images');
+      forceReloadImages();
+    };
+
+    // Handle visibility change (mobile browsers may need to reload images when tab becomes visible)
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !domImageLoaded && chosenSrc) {
+        debug.log('Page became visible with incomplete image load, retrying');
+        forceReloadImages();
+      }
+    };
+
+    // Helper to force reload images
+    function forceReloadImages() {
+      domImageLoaded = false;
+      isLoadingInProgress = false;
+      chosenSrc = null;
+      requestAnimationFrame(() => {
+        if (!destroyed) {
+          tryInOrder();
+        }
+      });
+    }
+
     document.addEventListener('astro:page-load', handlePageLoad);
     window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('swipe-navigation-restored', handleSwipeNavigationRestored);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       document.removeEventListener('astro:page-load', handlePageLoad);
       window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('swipe-navigation-restored', handleSwipeNavigationRestored);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   });
 
