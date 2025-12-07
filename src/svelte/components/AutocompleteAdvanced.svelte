@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { isValid } from 'date-fns';
   import { animate, stagger, spring } from 'motion';
   import AutocompleteItem from './AutocompleteItem.svelte';
   import { configStore } from '../stores/config';
@@ -308,17 +307,7 @@
   }
 
   function filterValidItems(items: any[]): any[] {
-    return items.filter((item) => {
-      if (!item || !item.start_date) return false;
-      try {
-        let dateStr = item.start_date.toString();
-        dateStr = dateStr.replace(/(\.\d{6})?\s(\+\d{2}:\d{2})$/, '$2');
-        const date = new Date(dateStr);
-        return isValid(date) && !isNaN(date.getTime()) && date.getFullYear() > 1900;
-      } catch {
-        return false;
-      }
-    });
+    return items.filter((item) => item != null);
   }
 
   $: inputProps = autocompleteInstance?.getInputProps({}) || {};

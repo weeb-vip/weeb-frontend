@@ -7,20 +7,20 @@
   export let onClick: () => void;
 
   function formatDate(dateStr: string): string {
-    if (!dateStr) return '';
+    if (!dateStr) return 'TBA';
     try {
       // Normalize the date string for Safari compatibility
       let normalizedDate = dateStr.toString();
       // Remove microseconds and fix timezone format for Safari
       normalizedDate = normalizedDate.replace(/(\.\d{6})?\s(\+\d{2}:\d{2})$/, '$2');
       const date = new Date(normalizedDate);
-      if (isValid(date)) {
+      if (isValid(date) && !isNaN(date.getTime()) && date.getFullYear() > 1900) {
         return format(date, 'yyyy');
       }
     } catch {
-      return '';
+      return 'TBA';
     }
-    return '';
+    return 'TBA';
   }
 </script>
 
