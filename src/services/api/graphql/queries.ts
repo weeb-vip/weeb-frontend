@@ -401,6 +401,7 @@ export const queryUserAnimes = graphql(`
                     duration
                     broadcast
                     thetvdbid
+                    tags
                     episodes {
                         id
                         animeId

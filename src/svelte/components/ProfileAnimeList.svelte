@@ -249,6 +249,7 @@
               image={GetImageFromAnime(entry.anime)}
               className="hover:cursor-pointer"
               year={entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : ""}
+              tags={entry.anime?.tags || []}
               entry={entry}
               on:click={() => navigateToAnime(entry.anime?.id)}
 

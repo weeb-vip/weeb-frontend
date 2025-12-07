@@ -516,6 +516,7 @@
               image={GetImageFromAnime(entry.anime)}
               onClick={() => navigateToAnime(entry.anime?.id)}
               year=""
+              tags={entry.anime?.tags || []}
               airTime={entry.airTimeDisplay}
               showWatchingFallback={true}
               nextEpisode={entry.nextEpisode}
@@ -643,6 +644,7 @@
               image={GetImageFromAnime(entry.anime || entry.airingInfo)}
               airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do") : "Unknown"}
               airTime={entry.airingInfo.airTimeDisplay}
+              tags={entry.anime?.tags || entry.airingInfo?.tags || []}
               onClick={() => navigateToAnime(entry.anime?.id || entry.airingInfo?.id)}
               episodes={entry.anime?.episodeCount || 0}
             >
@@ -727,6 +729,7 @@
               image={GetImageFromAnime(entry.anime || entry.airingInfo)}
               airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do") : "Unknown"}
               airTime={entry.airingInfo.airTimeDisplay}
+              tags={entry.anime?.tags || entry.airingInfo?.tags || []}
               onClick={() => navigateToAnime(entry.anime?.id || entry.airingInfo?.id)}
               episodes={entry.anime?.episodeCount || 0}
             >
