@@ -16,7 +16,7 @@
     fetchCurrentlyAiring
   } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import { toast } from 'svelte-sonner';
@@ -463,7 +463,7 @@
             description=""
             episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
             episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
-            year={anime.startDate ? format(new Date(anime.startDate.toString()), "yyyy") : "?"}
+            year={getYearUTC(anime.startDate)}
             image={GetImageFromAnime(anime)}
             entry={anime.userAnime}
           >
@@ -525,7 +525,7 @@
               description=""
               episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
               episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
-              year={anime.startDate ? format(new Date(anime.startDate.toString()), "yyyy") : "?"}
+              year={getYearUTC(anime.startDate)}
               image={GetImageFromAnime(anime)}
               entry={anime.userAnime}
             >
@@ -587,7 +587,7 @@
               description=""
               episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
               episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
-              year={anime.startDate ? format(new Date(anime.startDate.toString()), "yyyy") : "?"}
+              year={getYearUTC(anime.startDate)}
               image={GetImageFromAnime(anime)}
               entry={anime.userAnime}
             >

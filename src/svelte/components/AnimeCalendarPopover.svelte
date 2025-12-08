@@ -1,7 +1,7 @@
 <script lang="ts">
   import { format } from 'date-fns';
   import AnimeCard from './AnimeCard.svelte';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { navigateWithTransition } from '../../utils/astro-navigation';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
@@ -121,7 +121,7 @@
       image={GetImageFromAnime(anime)}
       className="hover:cursor-pointer"
       onClick={navigateToShow}
-      year={anime.startDate ? new Date(anime.startDate).getFullYear().toString() : "Unknown"}
+      year={getYearUTC(anime.startDate)}
       airdate={anime.episodeAirTime ? format(anime.episodeAirTime, "EEE MMM do 'at' h:mm a") : anime.episodes[0]?.airDate ? format(new Date(anime.episodes[0].airDate), "EEE MMM do") : "Unknown"}
       episodeTitle={anime.episodes[0]?.titleEn || anime.episodes[0]?.titleJp || "Unknown"}
       episodeNumber={anime.episodes[0]?.episodeNumber?.toString() || "Unknown"}

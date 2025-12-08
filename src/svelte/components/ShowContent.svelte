@@ -9,7 +9,7 @@
   import Episodes from './Episodes.svelte';
   import CharactersWithStaff from './CharactersWithStaff.svelte';
   import { fetchDetails } from '../../services/queries';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, formatDateUTC } from '../../services/utils';
   import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import debug from '../../utils/debug';
   import { animeNotificationStore } from '../stores/animeNotifications';
@@ -278,7 +278,7 @@
                 {animeTitle}
               </h1>
               <p class="text-sm text-gray-600 dark:text-gray-200 truncate">
-                {anime.startDate ? format(new Date(anime.startDate), "yyyy") : ""} • {anime.endDate ? "Finished" : "Ongoing"}
+                {getYearUTC(anime.startDate)} • {anime.endDate ? "Finished" : "Ongoing"}
               </p>
             </div>
           </div>
@@ -332,7 +332,7 @@
             <h1 class="text-3xl font-bold">{animeTitle}</h1>
             <p class="text-sm leading-relaxed text-neutral-200">{anime.description}</p>
             <div class="flex flex-wrap gap-4 text-sm text-neutral-300">
-              <span>{anime.startDate ? format(new Date(anime.startDate), "yyyy") : ""}</span>
+              <span>{getYearUTC(anime.startDate)}</span>
               <span>{anime.broadcast || "unknown"}</span>
               <span>{anime.endDate ? "Finished" : "Ongoing"}</span>
             </div>
@@ -543,15 +543,15 @@
 
               <div class="space-y-3">
                 <h2 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Aired</h2>
-                {#if renderField("Start Date", anime.startDate ? format(new Date(anime.startDate), "dd MMM yyyy") : "Unknown")}
-                  {@const field = renderField("Start Date", anime.startDate ? format(new Date(anime.startDate), "dd MMM yyyy") : "Unknown")}
+                {#if renderField("Start Date", formatDateUTC(anime.startDate, "Unknown"))}
+                  {@const field = renderField("Start Date", formatDateUTC(anime.startDate, "Unknown"))}
                   <div>
                     <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
                     <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
                   </div>
                 {/if}
-                {#if renderField("End Date", anime.endDate ? format(new Date(anime.endDate), "dd MMM yyyy") : "Ongoing")}
-                  {@const field = renderField("End Date", anime.endDate ? format(new Date(anime.endDate), "dd MMM yyyy") : "Ongoing")}
+                {#if renderField("End Date", formatDateUTC(anime.endDate, "Ongoing"))}
+                  {@const field = renderField("End Date", formatDateUTC(anime.endDate, "Ongoing"))}
                   <div>
                     <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
                     <p class="text-gray-700 dark:text-gray-300">{field.value}</p>

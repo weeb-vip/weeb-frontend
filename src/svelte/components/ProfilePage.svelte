@@ -4,7 +4,7 @@
   import { format } from 'date-fns';
   import { initializeQueryClient } from '../services/query-client';
   import { getUser, fetchUserAnimes, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { getAirTimeDisplay, findNextEpisode, getCurrentTime, parseAirTime } from '../../services/airTimeUtils';
   import Button from './Button.svelte';
   import AnimeCard from './AnimeCard.svelte';
@@ -640,7 +640,7 @@
               episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
               episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
               className="hover:cursor-pointer"
-              year={entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : "Unknown"}
+              year={getYearUTC(entry.anime?.startDate)}
               image={GetImageFromAnime(entry.anime || entry.airingInfo)}
               airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do") : "Unknown"}
               airTime={entry.airingInfo.airTimeDisplay}
@@ -725,7 +725,7 @@
               episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
               episodeNumber={entry.airingInfo.recentEpisode?.episodeNumber?.toString() || "Unknown"}
               className="hover:cursor-pointer"
-              year={entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : "Unknown"}
+              year={getYearUTC(entry.anime?.startDate)}
               image={GetImageFromAnime(entry.anime || entry.airingInfo)}
               airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do") : "Unknown"}
               airTime={entry.airingInfo.airTimeDisplay}

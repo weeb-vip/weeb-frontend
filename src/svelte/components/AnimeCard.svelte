@@ -138,12 +138,10 @@
             <i class="fas fa-clock text-sm w-4 text-center mr-2"></i>
             <span class="{durationDisplay.isEstimate ? 'text-gray-400 dark:text-gray-500 italic' : ''}">{durationDisplay.value}</span>
           </div>
-          {#if year}
-            <div class="flex items-center">
-              <i class="fas fa-calendar text-sm w-4 text-center mr-2"></i>
-              <span>{year}</span>
-            </div>
-          {/if}
+          <div class="flex items-center">
+            <i class="fas fa-calendar text-sm w-4 text-center mr-2"></i>
+            <span class={year === 'TBA' || !year ? 'text-gray-400 dark:text-gray-500' : ''}>{year || 'TBA'}</span>
+          </div>
           {#if airTime?.show}
             <div class="flex items-center {getAirTimeColorClasses(airTime.variant)}">
               <i class="fas fa-broadcast-tower text-sm w-4 text-center mr-2"></i>

@@ -1,27 +1,9 @@
 <script lang="ts">
-  import { format, isValid } from 'date-fns';
   import SafeImage from './SafeImage.svelte';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
 
   export let item: any;
   export let onClick: () => void;
-
-  function formatDate(dateStr: string): string {
-    if (!dateStr) return 'TBA';
-    try {
-      // Normalize the date string for Safari compatibility
-      let normalizedDate = dateStr.toString();
-      // Remove microseconds and fix timezone format for Safari
-      normalizedDate = normalizedDate.replace(/(\.\d{6})?\s(\+\d{2}:\d{2})$/, '$2');
-      const date = new Date(normalizedDate);
-      if (isValid(date) && !isNaN(date.getTime()) && date.getFullYear() > 1900) {
-        return format(date, 'yyyy');
-      }
-    } catch {
-      return 'TBA';
-    }
-    return 'TBA';
-  }
 </script>
 
 <li
@@ -49,7 +31,7 @@
       {item.title_en || ''}
     </span>
     <span class="text-gray-500 dark:text-gray-400 text-xs">
-      {formatDate(item.start_date)}
+      {getYearUTC(item.start_date)}
     </span>
   </div>
 </li>

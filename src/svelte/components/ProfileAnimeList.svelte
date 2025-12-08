@@ -4,7 +4,7 @@
   import { fetchUserAnimes } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { Status, type UserAnime } from '../../gql/graphql';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { navigateWithTransition } from '../../utils/astro-navigation';
   import { initializeQueryClient } from '../services/query-client';
   import AnimeCard from './AnimeCard.svelte';
@@ -248,7 +248,7 @@
               episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
               image={GetImageFromAnime(entry.anime)}
               className="hover:cursor-pointer"
-              year={entry.anime?.startDate ? new Date(entry.anime.startDate).getFullYear().toString() : ""}
+              year={getYearUTC(entry.anime?.startDate)}
               tags={entry.anime?.tags || []}
               entry={entry}
               on:click={() => navigateToAnime(entry.anime?.id)}
