@@ -192,6 +192,16 @@
 
       <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight">{title}</h1>
 
+      {#if anime.tags && anime.tags.length > 0}
+        <div class="flex flex-wrap gap-2 mb-4">
+          {#each anime.tags.slice(0, 5) as tag}
+            <span class="inline-block bg-white/20 backdrop-blur-sm rounded-md px-3 py-1 text-sm font-medium text-white/90 whitespace-nowrap">
+              {tag}
+            </span>
+          {/each}
+        </div>
+      {/if}
+
       {#if (hasTimingData && airDateTime) || (animeNextEpisodeInfo && airTimeAndDate)}
         <div class="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
           <p class="text-lg sm:text-xl lg:text-2xl font-medium">
