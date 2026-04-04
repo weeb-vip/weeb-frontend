@@ -30,7 +30,6 @@ export function getConfig(): IConfig {
       algolia_index: 'fallback',
       cdn_url: 'https://cdn.weeb.vip',
       cdn_user_url: 'https://cdn.weeb.vip',
-      flagsmith_environment_id: 'fallback',
       posthog_api_key: 'phc_fallback_key',
     } as any;
     console.log('[CONFIG] 🔧 Fallback config:', fallbackConfig);

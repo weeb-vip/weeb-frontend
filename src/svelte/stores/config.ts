@@ -47,7 +47,6 @@ function createConfigStore() {
             algolia_index: 'anime-staging',
             cdn_url: 'https://cdn.weeb.vip',
             cdn_user_url: 'https://cdn.weeb.vip',
-            flagsmith_environment_id: 'fallback',
           } as any;
 
           console.log('Using fallback config:', fallbackConfig);

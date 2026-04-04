@@ -47,7 +47,6 @@ This is an Astro frontend application for an anime tracking platform built with:
 - **TailwindCSS** for styling with SCSS for additional styles
 - **TanStack Query** (Svelte Query) for data fetching and caching
 - **Svelte stores** for global state management
-- **Flagsmith** for feature flags
 - **Motion** for animations
 
 ### Key Architectural Patterns
@@ -70,7 +69,6 @@ This is an Astro frontend application for an anime tracking platform built with:
 **State Management**:
 - Global state via Svelte stores in `src/svelte/stores/`
 - Local query state via TanStack Query
-- Feature flags via Flagsmith integration
 
 ### Development Notes
 
