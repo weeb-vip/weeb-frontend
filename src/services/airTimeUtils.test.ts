@@ -149,7 +149,7 @@ describe('isAiringToday (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 16:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2030-08-31T16:00:00Z'));
+    jest.setSystemTime(1914422400000); // 2030-08-31T16:00:00Z
   });
 
   afterAll(() => {
@@ -184,7 +184,7 @@ describe('isCurrentlyAiring (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 12:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2030-08-31T12:00:00Z'));
+    jest.setSystemTime(1914408000000); // 2030-08-31T12:00:00Z
   });
 
   afterAll(() => {
@@ -225,7 +225,7 @@ describe('hasAlreadyAired (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 12:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2030-08-31T12:00:00Z'));
+    jest.setSystemTime(1914408000000); // 2030-08-31T12:00:00Z
   });
 
   afterAll(() => {
@@ -260,7 +260,7 @@ describe('calculateCountdown (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 12:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2030-08-31T12:00:00Z'));
+    jest.setSystemTime(1914408000000); // 2030-08-31T12:00:00Z
   });
 
   afterAll(() => {
@@ -300,7 +300,7 @@ describe('getAirTimeInfo (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 16:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2030-08-31T16:00:00Z'));
+    jest.setSystemTime(1914422400000); // 2030-08-31T16:00:00Z
   });
 
   afterAll(() => {
@@ -425,7 +425,7 @@ describe('findNextEpisode', () => {
 });
 
 describe('getAirTimeDisplay (static time)', () => {
-  const FROZEN_NOW = new Date('2030-08-31T12:00:00Z'); // Sat 12:00 UTC
+  const FROZEN_NOW = 1914408000000; // 2030-08-31T12:00:00Z Sat 12:00 UTC
 
   beforeAll(() => {
     jest.useFakeTimers();
