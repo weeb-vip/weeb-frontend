@@ -145,38 +145,38 @@ describe('getAirDateTime', () => {
   });
 });
 
-describe(‘isAiringToday (static time)’, () => {
+describe('isAiringToday (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 16:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date(‘2030-08-31T16:00:00Z’));
+    jest.setSystemTime(new Date('2030-08-31T16:00:00Z'));
   });
 
   afterAll(() => {
     jest.useRealTimers();
   });
 
-  test(‘returns true for episodes airing within 24 hours’, () => {
+  test('returns true for episodes airing within 24 hours', () => {
     // 2030-09-01 (Sun) @ 01:30 JST → 2030-08-31 16:30 UTC
-    // From frozen now (16:00 UTC) that’s +30m → within 24h
-    const airDate = ‘2030-09-01’; // JP broadcast day (YYYY-MM-DD)
-    const broadcast = ‘Sundays at 01:30 (JST)’;
+    // From frozen now (16:00 UTC) that's +30m → within 24h
+    const airDate = '2030-09-01'; // JP broadcast day (YYYY-MM-DD)
+    const broadcast = 'Sundays at 01:30 (JST)';
 
     expect(isAiringToday(airDate, broadcast)).toBe(true);
   });
 
-  test(‘returns false for episodes airing more than 24 hours away’, () => {
+  test('returns false for episodes airing more than 24 hours away', () => {
     // 2030-09-02 (Mon) @ 23:30 JST → 2030-09-02 14:30 UTC
-    // From frozen now (2030-08-31 16:00 UTC) that’s ~46h30m → >24h
-    const airDate = ‘2030-09-02’;
-    const broadcast = ‘Mondays at 23:30 (JST)’;
+    // From frozen now (2030-08-31 16:00 UTC) that's ~46h30m → >24h
+    const airDate = '2030-09-02';
+    const broadcast = 'Mondays at 23:30 (JST)';
 
     expect(isAiringToday(airDate, broadcast)).toBe(false);
   });
 
-  test(‘returns false for invalid inputs’, () => {
-    expect(isAiringToday(null, ‘Sundays at 01:30 (JST)’)).toBe(false);
-    expect(isAiringToday(‘2030-09-01’, null)).toBe(false);
+  test('returns false for invalid inputs', () => {
+    expect(isAiringToday(null, 'Sundays at 01:30 (JST)')).toBe(false);
+    expect(isAiringToday('2030-09-01', null)).toBe(false);
   });
 });
 
