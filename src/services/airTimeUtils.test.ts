@@ -145,46 +145,46 @@ describe('getAirDateTime', () => {
   });
 });
 
-describe('isAiringToday (static time)', () => {
+describe(‘isAiringToday (static time)’, () => {
   beforeAll(() => {
-    // Freeze "now" to Sat Aug 30, 2025 12:00:00 UTC
+    // Freeze "now" to Sat Aug 31, 2030 16:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2025-08-30T16:00:00Z'));
+    jest.setSystemTime(new Date(‘2030-08-31T16:00:00Z’));
   });
 
   afterAll(() => {
     jest.useRealTimers();
   });
 
-  test('returns true for episodes airing within 24 hours', () => {
-    // 2025-08-31 (Sun) @ 01:30 JST → 2025-08-30 16:30 UTC
-    // From frozen now (12:00 UTC) that’s +4h30m → within 24h
-    const airDate = '2025-08-31'; // JP broadcast day (YYYY-MM-DD)
-    const broadcast = 'Sundays at 01:30 (JST)';
+  test(‘returns true for episodes airing within 24 hours’, () => {
+    // 2030-09-01 (Sun) @ 01:30 JST → 2030-08-31 16:30 UTC
+    // From frozen now (16:00 UTC) that’s +30m → within 24h
+    const airDate = ‘2030-09-01’; // JP broadcast day (YYYY-MM-DD)
+    const broadcast = ‘Sundays at 01:30 (JST)’;
 
     expect(isAiringToday(airDate, broadcast)).toBe(true);
   });
 
-  test('returns false for episodes airing more than 24 hours away', () => {
-    // 2025-09-01 (Mon) @ 23:30 JST → 2025-09-01 14:30 UTC
-    // From frozen now (2025-08-30 12:00 UTC) that’s ~50h30m → >24h
-    const airDate = '2025-09-01';
-    const broadcast = 'Mondays at 23:30 (JST)';
+  test(‘returns false for episodes airing more than 24 hours away’, () => {
+    // 2030-09-02 (Mon) @ 23:30 JST → 2030-09-02 14:30 UTC
+    // From frozen now (2030-08-31 16:00 UTC) that’s ~46h30m → >24h
+    const airDate = ‘2030-09-02’;
+    const broadcast = ‘Mondays at 23:30 (JST)’;
 
     expect(isAiringToday(airDate, broadcast)).toBe(false);
   });
 
-  test('returns false for invalid inputs', () => {
-    expect(isAiringToday(null, 'Sundays at 01:30 (JST)')).toBe(false);
-    expect(isAiringToday('2025-08-31', null)).toBe(false);
+  test(‘returns false for invalid inputs’, () => {
+    expect(isAiringToday(null, ‘Sundays at 01:30 (JST)’)).toBe(false);
+    expect(isAiringToday(‘2030-09-01’, null)).toBe(false);
   });
 });
 
 describe('isCurrentlyAiring (static time)', () => {
   beforeAll(() => {
-    // Freeze "now" to Sat Aug 30, 2025 12:00:00 UTC
+    // Freeze "now" to Sat Aug 31, 2030 12:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2025-08-30T12:00:00Z'));
+    jest.setSystemTime(new Date('2030-08-31T12:00:00Z'));
   });
 
   afterAll(() => {
@@ -193,14 +193,14 @@ describe('isCurrentlyAiring (static time)', () => {
 
   test('returns true for episode currently airing', () => {
     // Started 10 minutes ago: 11:50 UTC = 20:50 JST (same day)
-    const airDate = '2025-08-30';
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 20:50 (JST)';
     expect(isCurrentlyAiring(airDate, broadcast, 24)).toBe(true);
   });
 
   test("returns false for episode that hasn't started", () => {
     // Starts in 10 minutes: 12:10 UTC = 21:10 JST
-    const airDate = '2025-08-30';
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 21:10 (JST)';
     expect(isCurrentlyAiring(airDate, broadcast, 24)).toBe(false);
   });
@@ -208,14 +208,14 @@ describe('isCurrentlyAiring (static time)', () => {
   test('returns false for episode that has finished', () => {
     // Started 30 minutes ago: 11:30 UTC = 20:30 JST
     // With 24m duration, it ended at 11:54 UTC (< now), so not currently airing
-    const airDate = '2025-08-30';
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 20:30 (JST)';
     expect(isCurrentlyAiring(airDate, broadcast, 24)).toBe(false);
   });
 
   test('uses default duration when not provided', () => {
     // Same as first case; omit duration -> default 24m
-    const airDate = '2025-08-30';
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 20:50 (JST)';
     expect(isCurrentlyAiring(airDate, broadcast)).toBe(true);
   });
@@ -223,9 +223,9 @@ describe('isCurrentlyAiring (static time)', () => {
 
 describe('hasAlreadyAired (static time)', () => {
   beforeAll(() => {
-    // Freeze "now" to Sat Aug 30, 2025 12:00:00 UTC
+    // Freeze "now" to Sat Aug 31, 2030 12:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2025-08-30T12:00:00Z'));
+    jest.setSystemTime(new Date('2030-08-31T12:00:00Z'));
   });
 
   afterAll(() => {
@@ -233,24 +233,24 @@ describe('hasAlreadyAired (static time)', () => {
   });
 
   test('returns true for episode that finished recently', () => {
-    // 20:00 JST on 2025-08-30 -> 11:00 UTC (started 1h ago)
+    // 20:00 JST on 2030-08-31 -> 11:00 UTC (started 1h ago)
     // With 24m duration, it ended at 11:24 UTC (< now), so recently aired.
-    const airDate = '2025-08-30';
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 20:00 (JST)';
     expect(hasAlreadyAired(airDate, broadcast, 24)).toBe(true);
   });
 
   test('returns false for episode that aired too long ago', () => {
-    // 20:00 JST on 2025-08-22 -> 11:00 UTC on Aug 22 (8 days before frozen now)
+    // 20:00 JST on 2030-08-23 -> 11:00 UTC on Aug 23 (8 days before frozen now)
     // Assume your function treats >7 days as "too long ago".
-    const airDate = '2025-08-22';
+    const airDate = '2030-08-23';
     const broadcast = 'Fridays at 20:00 (JST)';
     expect(hasAlreadyAired(airDate, broadcast, 24)).toBe(false);
   });
 
   test('returns false for future episode', () => {
-    // 22:00 JST on 2025-08-30 -> 13:00 UTC (1h in the future from frozen now)
-    const airDate = '2025-08-30';
+    // 22:00 JST on 2030-08-31 -> 13:00 UTC (1h in the future from frozen now)
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 22:00 (JST)';
     expect(hasAlreadyAired(airDate, broadcast, 24)).toBe(false);
   });
@@ -258,9 +258,9 @@ describe('hasAlreadyAired (static time)', () => {
 
 describe('calculateCountdown (static time)', () => {
   beforeAll(() => {
-    // Freeze "now" to Sat Aug 30, 2025 12:00:00 UTC
+    // Freeze "now" to Sat Aug 31, 2030 12:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2025-08-30T12:00:00Z'));
+    jest.setSystemTime(new Date('2030-08-31T12:00:00Z'));
   });
 
   afterAll(() => {
@@ -268,29 +268,29 @@ describe('calculateCountdown (static time)', () => {
   });
 
   test('returns countdown for future episode airing today', () => {
-    // 23:00 JST on 2025-08-30 -> 14:00 UTC (2h from now)
-    const airDate = '2025-08-30';
+    // 23:00 JST on 2030-08-31 -> 14:00 UTC (2h from now)
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 23:00 (JST)';
     expect(calculateCountdown(airDate, broadcast, 24)).toBe('2h');
   });
 
   test('returns "AIRING NOW" for currently airing episode (long duration)', () => {
     // 20:50 JST -> 11:50 UTC (started 10m ago). With 120m duration, remaining >= 60 -> "AIRING NOW"
-    const airDate = '2025-08-30';
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 20:50 (JST)';
     expect(calculateCountdown(airDate, broadcast, 120)).toBe('AIRING NOW');
   });
 
   test('returns empty string for episodes not airing today (>24h)', () => {
-    // 23:00 JST on 2025-09-01 -> 14:00 UTC (≈50h from now)
-    const airDate = '2025-09-01';
+    // 23:00 JST on 2030-09-02 -> 14:00 UTC (≈50h from now)
+    const airDate = '2030-09-02';
     const broadcast = 'Mondays at 23:00 (JST)';
     expect(calculateCountdown(airDate, broadcast, 24)).toBe('');
   });
 
   test('returns "JUST AIRED" for recently finished episode', () => {
     // 20:30 JST -> 11:30 UTC. With 24m duration, ended at 11:54 UTC (6m ago)
-    const airDate = '2025-08-30';
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 20:30 (JST)';
     expect(calculateCountdown(airDate, broadcast, 24)).toBe('JUST AIRED');
   });
@@ -298,9 +298,9 @@ describe('calculateCountdown (static time)', () => {
 
 describe('getAirTimeInfo (static time)', () => {
   beforeAll(() => {
-    // Freeze "now" to Sat Aug 30, 2025 12:00:00 UTC
+    // Freeze "now" to Sat Aug 31, 2030 16:00:00 UTC
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2025-08-30T16:00:00Z'));
+    jest.setSystemTime(new Date('2030-08-31T16:00:00Z'));
   });
 
   afterAll(() => {
@@ -308,8 +308,8 @@ describe('getAirTimeInfo (static time)', () => {
   });
 
   test('returns comprehensive air time info', () => {
-    // 23:00 JST on 2025-08-30 -> 14:00 UTC (which is 2h from frozen now)
-    const airDate = '2025-08-31';
+    // 01:30 JST on 2030-09-01 (Sun) -> 2030-08-31 16:30 UTC (30m from frozen now)
+    const airDate = '2030-09-01';
     const broadcast = 'Sundays at 01:30 (JST)';
 
     const result = getAirTimeInfo(airDate, broadcast, 24);
@@ -326,8 +326,8 @@ describe('getAirTimeInfo (static time)', () => {
   });
 
   test('returns comprehensive air time info', () => {
-    // 23:00 JST on 2025-08-30 -> 14:00 UTC (which is 2h from frozen now)
-    const airDate = '2025-08-30';
+    // 23:00 JST on 2030-08-31 -> 14:00 UTC (which is 2h before frozen now)
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 23:00 (JST)';
 
     const result = getAirTimeInfo(airDate, broadcast, 24);
@@ -425,7 +425,7 @@ describe('findNextEpisode', () => {
 });
 
 describe('getAirTimeDisplay (static time)', () => {
-  const FROZEN_NOW = new Date('2025-08-30T12:00:00Z'); // Sat 12:00 UTC
+  const FROZEN_NOW = new Date('2030-08-31T12:00:00Z'); // Sat 12:00 UTC
 
   beforeAll(() => {
     jest.useFakeTimers();
@@ -437,8 +437,8 @@ describe('getAirTimeDisplay (static time)', () => {
   });
 
   test('returns correct display for currently airing episode', () => {
-    // 20:50 JST on 2025-08-30 -> 11:50 UTC (started 10m ago; 24m duration => airing)
-    const airDate = '2025-08-30';
+    // 20:50 JST on 2030-08-31 -> 11:50 UTC (started 10m ago; 24m duration => airing)
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 20:50 (JST)';
 
     const result = getAirTimeDisplay(airDate, broadcast, 24);
@@ -450,7 +450,7 @@ describe('getAirTimeDisplay (static time)', () => {
 
   test('returns correct display for future episode', () => {
     // 23:00 JST -> 14:00 UTC (2h from frozen now)
-    const airDate = '2025-08-30';
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 23:00 (JST)';
 
     const result = getAirTimeDisplay(airDate, broadcast, 24);
@@ -462,7 +462,7 @@ describe('getAirTimeDisplay (static time)', () => {
 
   test('returns correct display for recently aired episode', () => {
     // 20:30 JST -> 11:30 UTC; ended at 11:54 UTC (6m ago) -> recently aired
-    const airDate = '2025-08-30';
+    const airDate = '2030-08-31';
     const broadcast = 'Saturdays at 20:30 (JST)';
 
     const result = getAirTimeDisplay(airDate, broadcast, 24);
@@ -473,8 +473,8 @@ describe('getAirTimeDisplay (static time)', () => {
   });
 
   test('returns scheduled display for episodes not airing today', () => {
-    // 23:00 JST on 2025-09-02 -> 14:00 UTC (≈> 72h away)
-    const airDate = '2025-09-02';
+    // 23:00 JST on 2030-09-03 -> 14:00 UTC (≈> 72h away)
+    const airDate = '2030-09-03';
     const broadcast = 'Tuesdays at 23:00 (JST)';
 
     const result = getAirTimeDisplay(airDate, broadcast, 24);
