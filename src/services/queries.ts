@@ -164,13 +164,14 @@ export const fetchHomePageData = () => ({
   },
 })
 
-export const fetchSeasonalAnime = (season: string) => ({
-  queryKey: ['seasonal-anime', {season}],
+export const fetchSeasonalAnime = (season: string, limit?: number) => ({
+  queryKey: ['seasonal-anime', {season, limit}],
   queryFn: async () => {
     return authenticatedRequest(async (client) => {
       // @ts-ignore
       return client.request(getSeasonalAnime, {
-        season // variables are typed too!
+        season,
+        limit: limit ?? undefined
       })
     });
   },

@@ -1,0 +1,131 @@
+---
+import SvelteLayout from '../../layouts/SvelteLayout.astro';
+import SeasonPage from '../../svelte/components/SeasonPage.svelte';
+import { GraphQLClient } from 'graphql-request';
+import { getSeasonalAnime } from '../../services/api/graphql/queries';
+
+export const prerender = false;
+
+const { season } = Astro.params;
+
+// Validate season format
+const validSeasonPattern = /^(WINTER|SPRING|SUMMER|FALL)_\d{4}$/;
+if (!season || !validSeasonPattern.test(season)) {
+  return Astro.redirect('/season/' + getCurrentSeason());
+}
+
+function getCurrentSeason(): string {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  if (month >= 3 && month <= 5) return `SPRING_${year}`;
+  if (month >= 6 && month <= 8) return `SUMMER_${year}`;
+  if (month >= 9 && month <= 11) return `FALL_${year}`;
+  const winterYear = month === 11 ? year + 1 : year;
+  return `WINTER_${winterYear}`;
+}
+
+function getSeasonDisplayName(s: string): string {
+  const [name, year] = s.split('_');
+  return `${name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()} ${year}`;
+}
+
+const { auth, config } = Astro.locals;
+
+const cookieHeader = Astro.request.headers.get('cookie');
+
+function createSSRGraphQLClient(authToken: string | undefined) {
+  return new GraphQLClient(config.graphql_host, {
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      return fetch(input, {
+        ...init,
+        credentials: 'include',
+        headers: {
+          ...init?.headers,
+          ...(cookieHeader && { 'Cookie': cookieHeader })
+        }
+      });
+    }
+  });
+}
+
+function isAuthError(error: any): boolean {
+  const message = error?.message?.toLowerCase() || '';
+  const response = error?.response;
+  if (response?.errors && Array.isArray(response.errors)) {
+    const hasAuthError = response.errors.some((err: any) => {
+      const msg = (err.message || '').toLowerCase();
+      return msg.includes('access denied') || msg.includes('unauthorized') ||
+        msg.includes('invalid token') || msg.includes('jwt') ||
+        msg.includes('authentication') || msg.includes('forbidden') ||
+        msg.includes('expired');
+    });
+    if (hasAuthError) return true;
+  }
+  return message.includes('access denied') || message.includes('unauthorized') ||
+    message.includes('invalid token') || message.includes('jwt') ||
+    message.includes('authentication') || message.includes('forbidden') ||
+    message.includes('expired');
+}
+
+let seasonalData: any = null;
+let ssrError: string | null = null;
+let isTokenExpired = false;
+
+try {
+  const client = createSSRGraphQLClient(auth.authToken);
+
+  async function fetchWithFallback(query: any, variables: any, description: string) {
+    try {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      const requestPromise = client.request(query, variables);
+      return await Promise.race([requestPromise, timeoutPromise]);
+    } catch (error) {
+      console.error(`[SSR] Failed to fetch ${description}:`, error);
+      if (isAuthError(error)) {
+        isTokenExpired = true;
+        try {
+          const publicClient = createSSRGraphQLClient(undefined);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Public request timeout')), 8000)
+          );
+          return await Promise.race([publicClient.request(query, variables), timeoutPromise]);
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
+  }
+
+  seasonalData = await fetchWithFallback(getSeasonalAnime, { season, limit: 500 }, 'seasonal data');
+} catch (error) {
+  console.error('[SSR] Failed to load season page:', error);
+  ssrError = 'Failed to load data';
+}
+
+if (isTokenExpired) {
+  auth.isLoggedIn = false;
+  auth.authToken = undefined;
+  auth.refreshToken = undefined;
+  auth.hasAuthToken = false;
+  auth.hasRefreshToken = false;
+}
+
+const displayName = getSeasonDisplayName(season);
+---
+
+<SvelteLayout
+  title={`${displayName} Anime`}
+  description={`Browse all anime from the ${displayName} season. Discover new shows, check ratings, and add them to your watchlist.`}
+>
+  <SeasonPage
+    client:load
+    {seasonalData}
+    season={season}
+    {ssrError}
+    {isTokenExpired}
+  />
+</SvelteLayout>

@@ -50,8 +50,8 @@ export const getHomePageData = graphql(/* GraphQL */`
 `)
 
 export const getSeasonalAnime = graphql(/* GraphQL */`
-    query getSeasonalAnime($season: Season!) {
-        animeBySeasons(season: $season) {
+    query getSeasonalAnime($season: Season!, $limit: Int) {
+        animeBySeasons(season: $season, limit: $limit) {
             id
             anidbid
             thetvdbid
