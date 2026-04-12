@@ -1,10 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-const BASE = process.env.BASE_URL || 'http://localhost:4322';
-
 test.describe('Season page', () => {
   test('loads current season with anime list', async ({ page }) => {
-    await page.goto(`${BASE}/season/SPRING_2026`);
+    await page.goto('/season/SPRING_2026');
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByRole('heading', { name: 'Spring 2026 Anime' })).toBeVisible();
@@ -18,7 +16,7 @@ test.describe('Season page', () => {
   });
 
   test('season navigation links are present', async ({ page }) => {
-    await page.goto(`${BASE}/season/SPRING_2026`);
+    await page.goto('/season/SPRING_2026');
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByRole('heading', { name: 'Spring 2026 Anime' })).toBeVisible();
@@ -28,7 +26,7 @@ test.describe('Season page', () => {
   });
 
   test('clicking next season navigates and shows anime cards', async ({ page }) => {
-    await page.goto(`${BASE}/season/SPRING_2026`);
+    await page.goto('/season/SPRING_2026');
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByRole('heading', { name: 'Spring 2026 Anime' })).toBeVisible();
@@ -59,7 +57,7 @@ test.describe('Season page', () => {
   });
 
   test('clicking previous season navigates and shows anime cards', async ({ page }) => {
-    await page.goto(`${BASE}/season/SPRING_2026`);
+    await page.goto('/season/SPRING_2026');
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByRole('heading', { name: 'Spring 2026 Anime' })).toBeVisible();
