@@ -480,7 +480,12 @@
   <!-- Seasonal Anime Section -->
   <div class="w-full flex flex-col mb-12">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getSeasonDisplayName(selectedSeason)} Anime</h1>
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getSeasonDisplayName(selectedSeason)} Anime</h1>
+        <a href="/season/{selectedSeason}" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">
+          See all →
+        </a>
+      </div>
 
       <!-- Desktop: Button layout -->
       <div class="hidden sm:flex gap-2">
