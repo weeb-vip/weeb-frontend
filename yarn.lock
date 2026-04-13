@@ -10442,13 +10442,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flagsmith@npm:^3.18.3":
-  version: 3.18.3
-  resolution: "flagsmith@npm:3.18.3"
-  checksum: 10c0/5b268f8f839009821109ac762b71117329dfe43d9de240f0b15320f6707ec03a76aff849bdc8265cf091df7ebc09c169157d350c616109e00f7b5972526dd089
-  languageName: node
-  linkType: hard
-
 "flattie@npm:^1.1.1":
   version: 1.1.1
   resolution: "flattie@npm:1.1.1"
@@ -19039,7 +19032,6 @@ __metadata:
     date-fns: "npm:^4.1.0"
     date-fns-tz: "npm:^3.2.0"
     dotenv: "npm:^16.0.3"
-    flagsmith: "npm:^3.18.3"
     graphql: "npm:^16.6.0"
     graphql-request: "npm:^6.0.0"
     he: "npm:^1.2.0"
