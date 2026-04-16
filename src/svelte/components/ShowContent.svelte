@@ -8,6 +8,7 @@
   import Tag from './Tag.svelte';
   import Episodes from './Episodes.svelte';
   import CharactersWithStaff from './CharactersWithStaff.svelte';
+  import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { fetchDetails } from '../../services/queries';
   import { GetImageFromAnime, getYearUTC, formatDateUTC } from '../../services/utils';
   import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
@@ -539,6 +540,7 @@
                     <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
                   </div>
                 {/if}
+                <StreamingPlatforms platforms={anime.streamingPlatforms} />
               </div>
 
               <div class="space-y-3">
