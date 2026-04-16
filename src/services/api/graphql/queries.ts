@@ -83,6 +83,7 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
             id
             anidbid
             thetvdbid
+            malId
             titleEn
             titleJp
             titleRomaji
@@ -113,6 +114,20 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
             source
             licensors
             ranking
+            scheduleInfo {
+                jpnTime
+                subTime
+                dubTime
+                notes
+                delayedTimetable
+                subDelayedTimetable
+                dubDelayedTimetable
+            }
+            streamingPlatforms {
+                platform
+                name
+                url
+            }
             createdAt
             updatedAt
             userAnime {
