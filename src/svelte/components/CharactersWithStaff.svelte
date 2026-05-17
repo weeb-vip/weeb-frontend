@@ -89,17 +89,17 @@
   function getRoleColor(role: string) {
     const roleStr = role?.toLowerCase() || '';
     if (roleStr.includes('main') || roleStr.includes('protagonist')) {
-      return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20';
+      return 'text-weeb-accent bg-weeb-surface';
     } else if (roleStr.includes('supporting')) {
-      return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20';
+      return 'text-weeb-green bg-weeb-green/10';
     }
-    return 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50';
+    return 'text-weeb-fg-muted bg-weeb-bg-elevated/50';
   }
 </script>
 
 {#if isLoading || !data}
   <div class="flex justify-center items-center py-8">
-    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-weeb-accent"></div>
   </div>
 {:else}
   <div class="space-y-6">
@@ -114,8 +114,8 @@
         <button
           on:click={() => filter = key}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors {filter === key
-            ? 'bg-blue-600 text-white dark:bg-blue-500'
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}"
+            ? 'bg-weeb-accent text-white'
+            : 'bg-weeb-surface text-weeb-fg-secondary hover:bg-weeb-surface-hover hover:bg-weeb-surface-hover'}"
         >
           {label}
         </button>
@@ -131,11 +131,11 @@
         {@const roleColor = getRoleColor(entry.character.role || '')}
 
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg {cardSize === 'main'
-            ? 'border-2 border-blue-200 dark:border-blue-800'
+          class="bg-weeb-surface rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg {cardSize === 'main'
+            ? 'border-2 border-weeb-border'
             : cardSize === 'supporting'
-            ? 'border border-green-200 dark:border-green-800'
-            : 'border border-gray-200 dark:border-gray-700'}"
+            ? 'border border-weeb-green'
+            : 'border border-weeb-border'}"
         >
           <!-- Character Header -->
           <div class="p-4">
@@ -158,7 +158,7 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between">
                   <div class="flex-1">
-                    <h3 class="font-bold text-gray-900 dark:text-white truncate {cardSize === 'main' ? 'text-xl' : 'text-lg'}">
+                    <h3 class="font-bold text-weeb-fg text-weeb-fg truncate {cardSize === 'main' ? 'text-xl' : 'text-lg'}">
                       {entry.character.name}
                     </h3>
 
@@ -169,7 +169,7 @@
                     {/if}
 
                     {#if entry.character.title}
-                      <p class="text-sm text-gray-600 dark:text-gray-400 italic mt-2">
+                      <p class="text-sm text-weeb-fg-muted italic mt-2">
                         {entry.character.title}
                       </p>
                     {/if}
@@ -177,7 +177,7 @@
                     <!-- Voice Actors Summary -->
                     {#if entry.staff && entry.staff.length > 0}
                       <div class="mt-2">
-                        <p class="text-sm text-gray-700 dark:text-gray-300">
+                        <p class="text-sm text-weeb-fg-secondary">
                           <span class="font-medium">Voice:</span>
                           {#each entry.staff.slice(0, 2) as staff, i}
                             <span>
@@ -186,7 +186,7 @@
                             </span>
                           {/each}
                           {#if entry.staff.length > 2}
-                            <span class="text-gray-500 dark:text-gray-400">
+                            <span class="text-weeb-fg-muted">
                               +{entry.staff.length - 2} more
                             </span>
                           {/if}
@@ -199,7 +199,7 @@
                   {#if entry.staff && entry.staff.length > 0}
                     <button
                       on:click={() => toggleCharacterExpanded(characterName)}
-                      class="flex-shrink-0 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                      class="flex-shrink-0 p-2 text-weeb-fg-muted hover:text-weeb-fg-secondary hover:text-weeb-fg transition-colors"
                       aria-label={isExpanded ? 'Show less' : 'Show more'}
                     >
                       <i class="fas fa-chevron-{isExpanded ? 'up' : 'down'} w-4 h-4"></i>
@@ -212,11 +212,11 @@
 
           <!-- Expanded Staff Details -->
           {#if isExpanded && entry.staff && entry.staff.length > 0}
-            <div class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-4">
-              <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Voice Actors</h4>
+            <div class="border-t border-weeb-border bg-weeb-bg-elevated/50 p-4">
+              <h4 class="font-semibold text-weeb-fg text-weeb-fg mb-3">Voice Actors</h4>
               <div class="grid gap-3 sm:grid-cols-2">
                 {#each entry.staff as staffMember, staffIdx}
-                  <div class="flex gap-3 p-2 bg-white dark:bg-gray-800 rounded">
+                  <div class="flex gap-3 p-2 bg-weeb-surface rounded">
                     <SafeImage
                       src="{encodeURIComponent(`${staffMember.givenName}_${staffMember.familyName}`)}"
                       path="staff"
@@ -224,15 +224,15 @@
                       className="h-16 w-12 object-cover rounded"
                     />
                     <div class="flex-1 min-w-0">
-                      <h5 class="font-medium text-gray-900 dark:text-white text-sm">
+                      <h5 class="font-medium text-weeb-fg text-weeb-fg text-sm">
                         {staffMember.givenName} {staffMember.familyName}
                       </h5>
                       {#if staffMember.language}
-                        <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                        <p class="text-xs text-weeb-accent font-medium">
                           {staffMember.language}
                         </p>
                       {/if}
-                      <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
+                      <div class="text-xs text-weeb-fg-muted mt-1 space-y-0.5">
                         {#if staffMember.birthPlace}
                           <p>{staffMember.birthPlace}</p>
                         {/if}
@@ -251,7 +251,7 @@
     </div>
 
     {#if filteredData.length === 0}
-      <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+      <div class="text-center py-8 text-weeb-fg-muted">
         No characters found for the selected filter.
       </div>
     {/if}

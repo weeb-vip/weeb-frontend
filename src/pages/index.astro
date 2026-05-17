@@ -179,6 +179,7 @@ export const prerender = false;
 <SvelteLayout
   title="Home"
   description="Discover and track your favorite anime. Get notifications for new episodes, explore seasonal anime, and manage your watchlist."
+  variant="fullwidth"
 >
   {bannerImageUrl && (
     <link slot="head" rel="preload" as="image" href={bannerImageUrl} fetchpriority="high" />

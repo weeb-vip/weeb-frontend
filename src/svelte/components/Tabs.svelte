@@ -265,7 +265,7 @@
     bind:this={tabsRef}
     use:assignStickyRef
     class="sm:hidden transition-all duration-200 {isSticky
-      ? 'fixed left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-2 pt-6 shadow-sm'
+      ? 'fixed left-0 right-0 z-10 bg-weeb-surface border-b border-weeb-border px-4 py-2 pt-6 shadow-sm'
       : ''}"
     style={isSticky ? 'top: 10.5rem' : ''}
   >
@@ -276,8 +276,8 @@
         on:click={goToPrevious}
         disabled={activeIndex === 0}
         class="p-1.5 rounded-full transition-colors duration-200 {activeIndex === 0
-          ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-          : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'}"
+          ? 'text-weeb-fg-muted cursor-not-allowed'
+          : 'text-weeb-fg-muted hover:text-weeb-fg hover:text-weeb-fg hover:bg-weeb-surface-hover'}"
       >
         <i class="fas fa-chevron-left w-3 h-3"></i>
       </button>
@@ -286,7 +286,7 @@
       <div class="relative flex-1 max-w-xs">
         <button
           on:click={() => isDropdownOpen = !isDropdownOpen}
-          class="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-gray-900 dark:text-gray-100 font-medium text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm"
+          class="w-full flex items-center justify-between px-3 py-2 bg-weeb-surface border border-weeb-border rounded-lg shadow-sm text-weeb-fg font-medium text-left hover:bg-weeb-surface-hover transition-colors duration-200 text-sm"
         >
           <span class="truncate">{activeTab}</span>
           <i class="fas fa-chevron-down w-3 h-3 ml-2 flex-shrink-0 transition-transform duration-200 {isDropdownOpen ? 'rotate-180' : ''}"></i>
@@ -302,13 +302,13 @@
           ></div>
 
           <!-- Dropdown menu -->
-          <div class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-20 py-1">
+          <div class="absolute top-full left-0 right-0 mt-1 bg-weeb-surface border border-weeb-border rounded-lg shadow-lg z-20 py-1">
             {#each tabs as tab}
               <button
                 on:click={() => selectTab(tab)}
                 class="w-full text-left px-3 py-2 text-sm transition-colors duration-200 {activeTab === tab
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}"
+                  ? 'bg-weeb-surface text-weeb-accent font-medium'
+                  : 'text-weeb-fg-secondary hover:bg-weeb-surface-hover'}"
               >
                 {tab}
               </button>
@@ -322,8 +322,8 @@
         on:click={goToNext}
         disabled={activeIndex === tabs.length - 1}
         class="p-1.5 rounded-full transition-colors duration-200 {activeIndex === tabs.length - 1
-          ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-          : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'}"
+          ? 'text-weeb-fg-muted cursor-not-allowed'
+          : 'text-weeb-fg-muted hover:text-weeb-fg hover:text-weeb-fg hover:bg-weeb-surface-hover'}"
       >
         <i class="fas fa-chevron-right w-3 h-3"></i>
       </button>
@@ -334,8 +334,8 @@
       {#each tabs as _, index}
         <div
           class="w-1.5 h-1.5 rounded-full transition-colors duration-200 {index === activeIndex
-            ? 'bg-blue-500'
-            : 'bg-gray-300 dark:bg-gray-600'}"
+            ? 'bg-weeb-accent'
+            : 'bg-weeb-surface-hover bg-weeb-surface-hover'}"
         ></div>
       {/each}
     </div>
@@ -343,13 +343,13 @@
 
   <!-- Desktop: Traditional tabs -->
   <div class="hidden sm:block">
-    <div class="border-b border-gray-200 dark:border-gray-700">
+    <div class="border-b border-weeb-border">
       <nav class="flex space-x-8">
         {#each tabs as tab}
           <button
             class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 {activeTab === tab
-              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
+              ? 'border-weeb-accent text-weeb-accent'
+              : 'border-transparent text-weeb-fg-muted hover:text-weeb-fg-secondary hover:text-weeb-fg-secondary hover:border-weeb-border'}"
             on:click={() => selectTab(tab)}
           >
             {tab}

@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spring 2026 Anime — weeb.vip</title>
+<style>
+:root {
+  --bg: oklch(14% 0.015 275);
+  --bg-elevated: oklch(18% 0.018 275);
+  --surface: oklch(22% 0.02 275);
+  --surface-hover: oklch(26% 0.022 275);
+  --fg: oklch(95% 0.005 265);
+  --fg-secondary: oklch(70% 0.01 270);
+  --fg-muted: oklch(55% 0.01 270);
+  --border: oklch(28% 0.015 275);
+  --accent: oklch(55% 0.15 280);
+  --accent-hover: oklch(62% 0.16 280);
+  --violet: oklch(62% 0.14 300);
+  --green: oklch(65% 0.15 155);
+  --amber: oklch(72% 0.14 85);
+  --red: oklch(60% 0.18 25);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-family: var(--font); color: var(--fg); background: var(--bg); -webkit-font-smoothing: antialiased; }
+body { min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+img { display: block; }
+button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; }
+
+/* --- NAV --- */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 24px; height: 60px;
+  background: oklch(14% 0.015 275 / 0.85);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 18px; letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+.nav-logo-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: white;
+}
+.nav-links {
+  display: flex; gap: 4px; margin-left: 24px;
+}
+.nav-links a {
+  padding: 6px 14px; border-radius: 6px;
+  font-size: 14px; font-weight: 500; color: var(--fg-secondary);
+  transition: color 0.15s, background 0.15s;
+}
+.nav-links a:hover { color: var(--fg); background: var(--surface); }
+.nav-links a.active { color: var(--fg); background: var(--surface); }
+.nav-search {
+  margin-left: auto; position: relative;
+}
+.nav-search input {
+  width: 260px; padding: 8px 12px 8px 36px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--fg); font-size: 14px;
+  outline: none; transition: border-color 0.15s, width 0.2s;
+}
+.nav-search input:focus { border-color: var(--accent); width: 320px; }
+.nav-search input::placeholder { color: var(--fg-muted); }
+.nav-search-icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--fg-muted); font-size: 14px; pointer-events: none;
+}
+.nav-auth {
+  display: flex; gap: 8px; margin-left: 16px;
+}
+.btn-ghost {
+  padding: 7px 16px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; color: var(--fg-secondary);
+  transition: color 0.15s, background 0.15s;
+}
+.btn-ghost:hover { color: var(--fg); background: var(--surface); }
+.btn-primary {
+  padding: 7px 18px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 600;
+  background: var(--accent); color: white;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+/* --- PAGE LAYOUT --- */
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 48px 0;
+}
+
+/* --- PAGE HEADER --- */
+.page-header {
+  margin-bottom: 32px;
+}
+.page-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.page-title {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800; letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.page-title .accent { color: var(--accent); }
+
+/* --- SEASON SELECTOR --- */
+.season-selector {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 32px; flex-wrap: wrap;
+}
+.season-tabs {
+  display: flex; gap: 2px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px;
+}
+.season-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  color: var(--fg-secondary);
+  transition: all 0.18s; white-space: nowrap;
+}
+.season-tab:hover:not(.active) { color: var(--fg); background: var(--surface-hover); }
+.season-tab.active {
+  background: var(--accent); color: white; font-weight: 600;
+}
+.season-tab-icon { font-size: 14px; }
+
+.season-nav {
+  display: flex; align-items: center; gap: 12px;
+  margin-left: auto;
+}
+.season-arrow {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--fg-secondary); display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.season-arrow:hover { border-color: var(--accent); color: var(--accent); background: var(--bg-elevated); }
+.year-selector {
+  display: flex; gap: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px;
+}
+.year-tab {
+  padding: 6px 14px; border-radius: 7px;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  color: var(--fg-muted); transition: all 0.15s; white-space: nowrap;
+}
+.year-tab:hover:not(.active) { color: var(--fg); background: var(--surface-hover); }
+.year-tab.active { background: var(--accent); color: white; }
+
+/* --- SEASON STATS --- */
+.season-stats {
+  display: flex; align-items: center; gap: 24px;
+  padding: 14px 20px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 40px; flex-wrap: wrap;
+}
+.stats-label {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  color: var(--accent);
+}
+.stats-divider {
+  width: 1px; height: 16px; background: var(--border);
+}
+.stats-group {
+  display: flex; align-items: center; gap: 16px;
+}
+.stat-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted);
+}
+.stat-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+}
+.stat-dot.airing { background: var(--green); }
+.stat-dot.upcoming { background: var(--amber); }
+.stat-dot.announced { background: var(--violet); }
+
+/* --- STATUS FILTER PILLS --- */
+.filter-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
+}
+.filter-title {
+  font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+}
+.filter-pills {
+  display: flex; gap: 6px;
+}
+.filter-pill {
+  padding: 6px 16px; border-radius: var(--radius);
+  font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--fg-muted); transition: all 0.15s; white-space: nowrap;
+}
+.filter-pill:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+.filter-pill.active {
+  background: var(--accent); border-color: var(--accent); color: white;
+}
+
+/* --- FEATURED SECTION --- */
+.section-heading {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 20px;
+}
+.section-title {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+}
+.section-badge {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); background: oklch(55% 0.15 280 / 0.15);
+  padding: 3px 10px; border-radius: 20px;
+}
+
+.featured-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px; margin-bottom: 48px;
+}
+.featured-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
+}
+.featured-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px oklch(0% 0 0 / 0.4);
+}
+.featured-poster {
+  width: 100%; aspect-ratio: 2 / 3; position: relative; overflow: hidden;
+}
+.featured-poster-bg {
+  width: 100%; height: 100%; position: absolute; inset: 0;
+  transition: transform 0.35s;
+}
+.featured-card:hover .featured-poster-bg { transform: scale(1.05); }
+.featured-poster-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, oklch(14% 0.015 275) 0%, oklch(14% 0.015 275 / 0.4) 40%, transparent 70%);
+}
+.featured-poster-rank {
+  position: absolute; top: 12px; left: 12px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: oklch(14% 0.015 275 / 0.8);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 800;
+  color: var(--accent); border: 1px solid var(--border);
+}
+.featured-poster-info {
+  position: absolute; bottom: 16px; left: 16px; right: 16px;
+}
+.featured-poster-info h3 {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+  line-height: 1.2; margin-bottom: 8px;
+  text-shadow: 0 2px 12px oklch(0% 0 0 / 0.6);
+}
+.featured-meta {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.featured-meta-item {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  color: oklch(80% 0.01 270);
+}
+.featured-meta-sep { color: var(--fg-muted); font-size: 10px; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+.badge-airing { background: oklch(65% 0.15 155 / 0.15); color: var(--green); }
+.badge-airing .badge-dot { background: var(--green); }
+.badge-upcoming { background: oklch(72% 0.14 85 / 0.15); color: var(--amber); }
+.badge-upcoming .badge-dot { background: var(--amber); }
+.badge-announced { background: oklch(62% 0.14 300 / 0.15); color: var(--violet); }
+.badge-announced .badge-dot { background: var(--violet); }
+
+.score-badge {
+  position: absolute; top: 12px; right: 12px;
+  padding: 4px 8px; border-radius: 6px;
+  background: oklch(14% 0.015 275 / 0.8);
+  backdrop-filter: blur(8px);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  border: 1px solid var(--border);
+}
+.score-badge.high { color: var(--green); }
+.score-badge.mid { color: var(--amber); }
+
+/* --- DIVIDER --- */
+.section-divider {
+  height: 1px; background: var(--border); margin: 8px 0 40px;
+}
+
+/* --- SHOW GRID --- */
+.shows-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+.show-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  cursor: pointer; display: flex; flex-direction: column;
+}
+.show-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px oklch(0% 0 0 / 0.35);
+  border-color: var(--surface-hover);
+}
+.show-card.hidden { display: none; }
+.show-poster {
+  width: 100%; aspect-ratio: 2 / 3;
+  position: relative; overflow: hidden; flex-shrink: 0;
+}
+.show-poster-bg {
+  width: 100%; height: 100%; position: absolute; inset: 0;
+  transition: transform 0.3s;
+}
+.show-card:hover .show-poster-bg { transform: scale(1.05); }
+.show-poster-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, oklch(22% 0.02 275) 0%, transparent 50%);
+}
+.show-poster .badge {
+  position: absolute; bottom: 8px; left: 8px;
+}
+.show-poster .score-badge {
+  top: 8px; right: 8px;
+  font-size: 11px; padding: 3px 7px;
+}
+.show-poster .status-dot {
+  position: absolute; top: 10px; left: 10px;
+  width: 8px; height: 8px; border-radius: 50%;
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px oklch(0% 0 0 / 0.2);
+}
+.show-body {
+  padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 4px;
+}
+.show-title {
+  font-size: 13px; font-weight: 700; line-height: 1.3;
+  letter-spacing: -0.01em;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.show-sub {
+  font-size: 11px; color: var(--fg-muted);
+  font-family: var(--font-mono);
+  margin-top: auto;
+}
+
+/* --- POSTER GRADIENTS --- */
+.grad-1  { background: linear-gradient(145deg, oklch(35% 0.18 280), oklch(20% 0.12 260), oklch(15% 0.08 300)); }
+.grad-2  { background: linear-gradient(145deg, oklch(30% 0.15 300), oklch(18% 0.10 275), oklch(22% 0.14 250)); }
+.grad-3  { background: linear-gradient(145deg, oklch(32% 0.12 250), oklch(22% 0.16 280), oklch(18% 0.10 310)); }
+.grad-4  { background: linear-gradient(145deg, oklch(28% 0.14 155), oklch(18% 0.08 180), oklch(22% 0.12 140)); }
+.grad-5  { background: linear-gradient(145deg, oklch(30% 0.16 25), oklch(20% 0.10 350), oklch(18% 0.12 40)); }
+.grad-6  { background: linear-gradient(145deg, oklch(25% 0.10 85), oklch(18% 0.14 60), oklch(22% 0.08 100)); }
+.grad-7  { background: linear-gradient(145deg, oklch(33% 0.13 270), oklch(20% 0.09 290), oklch(25% 0.15 255)); }
+.grad-8  { background: linear-gradient(145deg, oklch(22% 0.15 310), oklch(28% 0.10 280), oklch(18% 0.08 330)); }
+.grad-9  { background: linear-gradient(145deg, oklch(26% 0.11 200), oklch(18% 0.14 230), oklch(22% 0.09 185)); }
+.grad-10 { background: linear-gradient(145deg, oklch(30% 0.09 275), oklch(22% 0.13 255), oklch(18% 0.11 295)); }
+.grad-11 { background: linear-gradient(145deg, oklch(28% 0.14 340), oklch(20% 0.10 310), oklch(24% 0.12 360)); }
+.grad-12 { background: linear-gradient(145deg, oklch(24% 0.12 120), oklch(18% 0.08 150), oklch(20% 0.10 100)); }
+.grad-13 { background: linear-gradient(145deg, oklch(26% 0.16 260), oklch(20% 0.12 290), oklch(22% 0.08 245)); }
+.grad-14 { background: linear-gradient(145deg, oklch(30% 0.10 180), oklch(22% 0.14 200), oklch(18% 0.09 160)); }
+.grad-15 { background: linear-gradient(145deg, oklch(20% 0.13 285), oklch(28% 0.09 265), oklch(24% 0.11 305)); }
+.grad-16 { background: linear-gradient(145deg, oklch(25% 0.11 45), oklch(18% 0.15 25), oklch(22% 0.09 65)); }
+.grad-17 { background: linear-gradient(145deg, oklch(32% 0.08 300), oklch(20% 0.12 275), oklch(26% 0.10 320)); }
+.grad-18 { background: linear-gradient(145deg, oklch(22% 0.14 230), oklch(18% 0.10 255), oklch(26% 0.12 215)); }
+.grad-19 { background: linear-gradient(145deg, oklch(28% 0.09 355), oklch(20% 0.13 330), oklch(24% 0.11 10)); }
+.grad-20 { background: linear-gradient(145deg, oklch(24% 0.15 270), oklch(18% 0.11 300), oklch(22% 0.13 250)); }
+.grad-21 { background: linear-gradient(145deg, oklch(30% 0.12 140), oklch(20% 0.08 170), oklch(25% 0.10 120)); }
+
+/* --- FOOTER --- */
+.footer {
+  padding: 40px 48px; margin-top: 40px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; color: var(--fg-muted);
+}
+.footer-links { display: flex; gap: 20px; }
+.footer-links a { color: var(--fg-secondary); transition: color 0.15s; }
+.footer-links a:hover { color: var(--fg); }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+  .page { padding: 32px 24px 0; }
+  .featured-grid { gap: 16px; }
+  .shows-grid { grid-template-columns: repeat(4, 1fr); }
+  .footer { padding: 32px 24px; }
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-search input { width: 180px; }
+  .nav-search input:focus { width: 220px; }
+  .page { padding: 24px 16px 0; }
+  .page-title { font-size: 24px; }
+  .featured-grid { grid-template-columns: 1fr; }
+  .featured-poster { aspect-ratio: 16 / 9; }
+  .shows-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .season-selector { gap: 8px; }
+  .season-nav { margin-left: 0; width: 100%; justify-content: space-between; }
+  .season-stats { gap: 12px; }
+  .stats-divider { display: none; }
+  .footer { flex-direction: column; gap: 16px; text-align: center; padding: 32px 16px; }
+}
+@media (max-width: 480px) {
+  .nav { padding: 0 16px; }
+  .nav-auth { display: none; }
+  .nav-search input { width: 140px; }
+  .nav-search input:focus { width: 180px; }
+  .shows-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .show-body { padding: 8px; }
+  .show-title { font-size: 12px; }
+  .season-tabs { overflow-x: auto; }
+  .year-selector { overflow-x: auto; }
+  .featured-poster-info h3 { font-size: 15px; }
+  .footer { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="homepage.html" class="nav-logo">
+    <span class="nav-logo-icon">w</span>
+    <span>weeb.vip</span>
+  </a>
+  <div class="nav-links">
+    <a href="homepage.html">Home</a>
+    <a href="season.html" class="active">Season</a>
+    <a href="airing.html">Airing</a>
+    <a href="search.html">Browse</a>
+  </div>
+  <div class="nav-search">
+    <svg class="nav-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="search" placeholder="Search anime, studios...">
+  </div>
+  <div class="nav-auth">
+    <button class="btn-ghost">Log in</button>
+    <button class="btn-primary">Sign up</button>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<main class="page">
+
+  <!-- Header -->
+  <header class="page-header">
+    <p class="page-eyebrow">Seasonal Anime</p>
+    <h1 class="page-title">
+      <span class="accent" id="title-season">Spring</span> <span id="title-year">2026</span>
+    </h1>
+  </header>
+
+  <!-- Season / Year selector -->
+  <div class="season-selector">
+    <div class="season-tabs" role="tablist">
+      <button class="season-tab" data-season="winter" onclick="setSeason('winter')">
+        <span class="season-tab-icon">&#10052;</span> Winter
+      </button>
+      <button class="season-tab active" data-season="spring" onclick="setSeason('spring')">
+        <span class="season-tab-icon">&#9880;</span> Spring
+      </button>
+      <button class="season-tab" data-season="summer" onclick="setSeason('summer')">
+        <span class="season-tab-icon">&#9728;</span> Summer
+      </button>
+      <button class="season-tab" data-season="fall" onclick="setSeason('fall')">
+        <span class="season-tab-icon">&#127810;</span> Fall
+      </button>
+    </div>
+
+    <div class="season-nav">
+      <button class="season-arrow" onclick="prevSeason()" aria-label="Previous season">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="year-selector">
+        <button class="year-tab" data-year="2024" onclick="setYear(2024)">2024</button>
+        <button class="year-tab" data-year="2025" onclick="setYear(2025)">2025</button>
+        <button class="year-tab active" data-year="2026" onclick="setYear(2026)">2026</button>
+      </div>
+      <button class="season-arrow" onclick="nextSeason()" aria-label="Next season">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Season stats -->
+  <div class="season-stats">
+    <span class="stats-label" id="stats-label">42 shows this season</span>
+    <span class="stats-divider"></span>
+    <div class="stats-group">
+      <span class="stat-item"><span class="stat-dot airing"></span> 28 airing</span>
+      <span class="stat-item"><span class="stat-dot upcoming"></span> 10 upcoming</span>
+      <span class="stat-item"><span class="stat-dot announced"></span> 4 announced</span>
+    </div>
+  </div>
+
+  <!-- Featured This Season -->
+  <div class="section-heading">
+    <h2 class="section-title">Featured This Season</h2>
+    <span class="section-badge">Editor's Picks</span>
+  </div>
+
+  <div class="featured-grid" id="featured-grid">
+    <!-- Featured 1 -->
+    <div class="featured-card">
+      <div class="featured-poster">
+        <div class="featured-poster-bg grad-1"></div>
+        <div class="featured-poster-overlay"></div>
+        <div class="featured-poster-rank">1</div>
+        <div class="score-badge high">8.9</div>
+        <div class="featured-poster-info">
+          <span class="badge badge-airing"><span class="badge-dot"></span> Airing</span>
+          <h3>Demon Slayer: Infinity Fortress Arc</h3>
+          <div class="featured-meta">
+            <span class="featured-meta-item">12 eps</span>
+            <span class="featured-meta-sep">&middot;</span>
+            <span class="featured-meta-item">ufotable</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Featured 2 -->
+    <div class="featured-card">
+      <div class="featured-poster">
+        <div class="featured-poster-bg grad-7"></div>
+        <div class="featured-poster-overlay"></div>
+        <div class="featured-poster-rank">2</div>
+        <div class="score-badge high">8.7</div>
+        <div class="featured-poster-info">
+          <span class="badge badge-airing"><span class="badge-dot"></span> Airing</span>
+          <h3>One Piece: Elbaf Arc</h3>
+          <div class="featured-meta">
+            <span class="featured-meta-item">24 eps</span>
+            <span class="featured-meta-sep">&middot;</span>
+            <span class="featured-meta-item">Toei Animation</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Featured 3 -->
+    <div class="featured-card">
+      <div class="featured-poster">
+        <div class="featured-poster-bg grad-3"></div>
+        <div class="featured-poster-overlay"></div>
+        <div class="featured-poster-rank">3</div>
+        <div class="score-badge high">8.6</div>
+        <div class="featured-poster-info">
+          <span class="badge badge-airing"><span class="badge-dot"></span> Airing</span>
+          <h3>Jujutsu Kaisen: Shinjuku Showdown Arc</h3>
+          <div class="featured-meta">
+            <span class="featured-meta-item">13 eps</span>
+            <span class="featured-meta-sep">&middot;</span>
+            <span class="featured-meta-item">MAPPA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- All Shows + Filter -->
+  <div class="filter-bar">
+    <h2 class="filter-title" id="listing-title">All Shows &mdash; Spring 2026</h2>
+    <div class="filter-pills">
+      <button class="filter-pill active" data-filter="all" onclick="filterShows('all')">All</button>
+      <button class="filter-pill" data-filter="airing" onclick="filterShows('airing')">Airing</button>
+      <button class="filter-pill" data-filter="upcoming" onclick="filterShows('upcoming')">Upcoming</button>
+      <button class="filter-pill" data-filter="announced" onclick="filterShows('announced')">Announced</button>
+    </div>
+  </div>
+
+  <div class="shows-grid" id="shows-grid"></div>
+
+</main>
+
+<footer class="footer">
+  <span>&copy; 2026 weeb.vip</span>
+  <div class="footer-links">
+    <a href="#">About</a>
+    <a href="#">API</a>
+    <a href="#">GitHub</a>
+  </div>
+</footer>
+
+<script>
+// ---- State ----
+const seasons = ['winter','spring','summer','fall'];
+const seasonLabels = { winter:'Winter', spring:'Spring', summer:'Summer', fall:'Fall' };
+let currentSeason = 'spring';
+let currentYear = 2026;
+let currentFilter = 'all';
+
+// ---- Anime data per season (Spring 2026 shown by default) ----
+const animeData = {
+  'spring-2026': [
+    { title:'Demon Slayer: Infinity Fortress Arc',       eps:12, studio:'ufotable',          score:8.9, status:'airing',    grad:1 },
+    { title:'One Piece: Elbaf Arc',                       eps:24, studio:'Toei Animation',    score:8.7, status:'airing',    grad:7 },
+    { title:'Jujutsu Kaisen: Shinjuku Showdown Arc',     eps:13, studio:'MAPPA',             score:8.6, status:'airing',    grad:3 },
+    { title:'Frieren: Beyond Journey\'s End Part 2',     eps:12, studio:'Madhouse',           score:8.8, status:'airing',    grad:4 },
+    { title:'Re:ZERO Season 3 Part 2',                    eps:12, studio:'White Fox',          score:8.4, status:'airing',    grad:5 },
+    { title:'Mushoku Tensei Season 3',                    eps:12, studio:'Studio Bind',        score:8.5, status:'airing',    grad:6 },
+    { title:'Solo Leveling: Arise from the Shadow',       eps:13, studio:'A-1 Pictures',       score:8.3, status:'airing',    grad:2 },
+    { title:'Blue Lock Season 2 Part 2',                  eps:12, studio:'Eight Bit',          score:8.1, status:'airing',    grad:8 },
+    { title:'Dungeon Meshi Season 2',                     eps:12, studio:'Trigger',            score:8.5, status:'airing',    grad:9 },
+    { title:'Kaiju No. 8 Season 2',                       eps:12, studio:'Production I.G',     score:8.0, status:'airing',    grad:10 },
+    { title:'Wind Breaker Season 2',                      eps:13, studio:'CloverWorks',        score:7.9, status:'airing',    grad:11 },
+    { title:'The Apothecary Diaries Season 2',            eps:24, studio:'TOHO Animation',     score:8.4, status:'airing',    grad:12 },
+    { title:'Classroom of the Elite Year 3',              eps:13, studio:'Lerche',             score:7.8, status:'airing',    grad:13 },
+    { title:'Vinland Saga Season 3',                      eps:24, studio:'MAPPA',              score:8.7, status:'airing',    grad:14 },
+    { title:'Spy x Family Season 3',                      eps:12, studio:'Wit Studio',         score:8.3, status:'airing',    grad:15 },
+    { title:'Dr. STONE Science Future',                   eps:12, studio:'TMS Entertainment',  score:8.0, status:'airing',    grad:16 },
+    { title:'My Hero Academia: Vigilantes',               eps:13, studio:'Bones',              score:7.7, status:'airing',    grad:17 },
+    { title:'Shangri-La Frontier Season 2 Part 2',       eps:12, studio:'C2C',                score:7.8, status:'airing',    grad:18 },
+    { title:'Medalist',                                    eps:12, studio:'Signal.MD',          score:8.1, status:'airing',    grad:19 },
+    { title:'MF Ghost Season 3',                           eps:12, studio:'Felix Film',         score:7.5, status:'airing',    grad:20 },
+    { title:'Undead Unluck Season 2',                      eps:12, studio:'David Production',   score:7.6, status:'airing',    grad:21 },
+    { title:'The Eminence in Shadow Season 3',            eps:12, studio:'Nexus',              score:7.9, status:'airing',    grad:2 },
+    { title:'Oshi no Ko Season 3',                         eps:11, studio:'Doga Kobo',          score:8.2, status:'airing',    grad:5 },
+    { title:'Dandadan Season 2',                           eps:12, studio:'Science SARU',       score:8.3, status:'airing',    grad:8 },
+    { title:'Sakamoto Days Part 2',                        eps:12, studio:'TMS Entertainment',  score:8.0, status:'airing',    grad:11 },
+    { title:'Tower of God Season 3',                       eps:13, studio:'Telecom Animation',  score:7.7, status:'airing',    grad:14 },
+    { title:'Witch Hat Atelier',                           eps:12, studio:'BUG FILMS',          score:7.9, status:'airing',    grad:17 },
+    { title:'Lazarus',                                     eps:13, studio:'MAPPA',              score:8.0, status:'airing',    grad:20 },
+    { title:'Overlord VI',                                 eps:13, studio:'Madhouse',           score:7.8, status:'upcoming',  grad:3 },
+    { title:'Chainsaw Man Season 2',                       eps:12, studio:'MAPPA',              score:8.5, status:'upcoming',  grad:6 },
+    { title:'Bleach: Thousand-Year Blood War Part 4',     eps:13, studio:'Pierrot',            score:8.6, status:'upcoming',  grad:9 },
+    { title:'Black Clover: Sword of the Wizard King 2',   eps:12, studio:'Pierrot',            score:7.9, status:'upcoming',  grad:12 },
+    { title:'Mob Psycho 100: Reigen',                      eps:12, studio:'Bones',              score:8.2, status:'upcoming',  grad:15 },
+    { title:'Made in Abyss Season 3',                      eps:12, studio:'Kinema Citrus',      score:8.4, status:'upcoming',  grad:18 },
+    { title:'Haikyuu!! Next Generation',                   eps:12, studio:'Production I.G',     score:8.1, status:'upcoming',  grad:21 },
+    { title:'Tokyo Ghoul: Rebirth',                        eps:13, studio:'Pierrot',            score:7.6, status:'upcoming',  grad:1 },
+    { title:'Berserk: The Golden Age Memorial',            eps:12, studio:'Studio 4C',          score:8.3, status:'upcoming',  grad:4 },
+    { title:'Fire Force: Final Season',                    eps:12, studio:'David Production',   score:7.8, status:'upcoming',  grad:7 },
+    { title:'Dorohedoro Season 2',                         eps:12, studio:'MAPPA',              score:8.4, status:'announced', grad:10 },
+    { title:'Pluto Season 2',                              eps:8,  studio:'Studio M2',          score:8.5, status:'announced', grad:13 },
+    { title:'Vagabond',                                    eps:24, studio:'Wit Studio',         score:0,   status:'announced', grad:16 },
+    { title:'Slam Dunk: Second Half',                      eps:12, studio:'Toei Animation',     score:0,   status:'announced', grad:19 },
+  ],
+  'winter-2026': [
+    { title:'Attack on Titan: Paths OVA',                  eps:3,  studio:'MAPPA',              score:8.8, status:'airing',    grad:1 },
+    { title:'Spy x Family Movie 2',                        eps:1,  studio:'Wit Studio',         score:8.1, status:'airing',    grad:2 },
+    { title:'Bocchi the Rock! Season 2',                   eps:12, studio:'CloverWorks',        score:8.6, status:'airing',    grad:3 },
+    { title:'Kaguya-sama: First Kiss Never Ends',          eps:12, studio:'A-1 Pictures',       score:8.4, status:'airing',    grad:4 },
+    { title:'That Time I Got Reincarnated as a Slime S4', eps:12, studio:'8bit',               score:7.9, status:'airing',    grad:5 },
+    { title:'Tokyo Revengers: Final Arc',                  eps:13, studio:'LIDENFILMS',         score:7.5, status:'airing',    grad:6 },
+    { title:'Horimiya: Graduation',                        eps:12, studio:'CloverWorks',        score:8.0, status:'airing',    grad:7 },
+    { title:'Konosuba Season 4',                           eps:12, studio:'Drive',              score:8.1, status:'airing',    grad:8 },
+    { title:'The Rising of the Shield Hero S4',            eps:12, studio:'Kinema Citrus',      score:7.3, status:'upcoming',  grad:9 },
+    { title:'Noragami Season 3',                           eps:12, studio:'Bones',              score:8.2, status:'announced', grad:10 },
+  ],
+  'summer-2026': [
+    { title:'Naruto: Next Generations',                    eps:24, studio:'Pierrot',            score:0,   status:'announced', grad:1 },
+    { title:'Death Note: Successors',                      eps:12, studio:'Madhouse',           score:0,   status:'announced', grad:2 },
+    { title:'Cowboy Bebop: Ganymede Elegy',                eps:6,  studio:'Sunrise',            score:0,   status:'announced', grad:3 },
+    { title:'Cyberpunk: Edgerunners Season 2',             eps:10, studio:'Trigger',            score:0,   status:'announced', grad:4 },
+    { title:'Ranking of Kings Season 3',                   eps:12, studio:'Wit Studio',         score:0,   status:'announced', grad:5 },
+  ],
+  'fall-2026': [
+    { title:'Hunter x Hunter: Dark Continent',             eps:24, studio:'Madhouse',           score:0,   status:'announced', grad:1 },
+    { title:'Neon Genesis Evangelion: Rebuild 4.0+',       eps:1,  studio:'Khara',              score:0,   status:'announced', grad:2 },
+  ],
+  'winter-2025': [
+    { title:'Solo Leveling Season 2',                      eps:13, studio:'A-1 Pictures',       score:8.3, status:'airing',    grad:1 },
+    { title:'Sakamoto Days',                               eps:12, studio:'TMS Entertainment',  score:8.0, status:'airing',    grad:2 },
+    { title:'Ao no Exorcist: Beyond Kyoto',               eps:12, studio:'Studio VOLN',        score:7.5, status:'airing',    grad:3 },
+    { title:'Dr. STONE: Science Future Part 2',            eps:12, studio:'TMS Entertainment',  score:7.9, status:'airing',    grad:4 },
+    { title:'Apothecary Diaries Cour 2',                   eps:12, studio:'TOHO Animation',     score:8.3, status:'airing',    grad:5 },
+    { title:'Mashle S2 Part 2',                            eps:12, studio:'A-1 Pictures',       score:7.7, status:'airing',    grad:6 },
+  ],
+  'spring-2025': [
+    { title:'Kaiju No. 8',                                 eps:12, studio:'Production I.G',     score:8.0, status:'airing',    grad:1 },
+    { title:'Oshi no Ko Season 2',                         eps:13, studio:'Doga Kobo',          score:8.2, status:'airing',    grad:2 },
+    { title:'Dandadan',                                    eps:12, studio:'Science SARU',       score:8.3, status:'airing',    grad:3 },
+    { title:'Demon Slayer: Hashira Training Arc',          eps:8,  studio:'ufotable',           score:8.1, status:'airing',    grad:4 },
+    { title:'Wind Breaker',                                eps:13, studio:'CloverWorks',        score:7.9, status:'airing',    grad:5 },
+    { title:'Konosuba Season 3',                           eps:12, studio:'Drive',              score:8.0, status:'airing',    grad:6 },
+    { title:'My Hero Academia S7',                         eps:21, studio:'Bones',              score:7.6, status:'airing',    grad:7 },
+    { title:'Mushoku Tensei Season 2 Part 2',              eps:12, studio:'Studio Bind',        score:8.4, status:'airing',    grad:8 },
+  ],
+  'summer-2025': [
+    { title:'Blue Lock Season 2',                          eps:12, studio:'Eight Bit',          score:8.0, status:'airing',    grad:1 },
+    { title:'Re:ZERO Season 3',                            eps:16, studio:'White Fox',          score:8.4, status:'airing',    grad:2 },
+    { title:'Classroom of the Elite S3 Part 2',            eps:12, studio:'Lerche',             score:7.7, status:'airing',    grad:3 },
+    { title:'Tower of God Season 2',                       eps:13, studio:'Telecom Animation',  score:7.5, status:'airing',    grad:4 },
+    { title:'Fairy Tail: 100 Years Quest S2',              eps:12, studio:'J.C.Staff',          score:7.3, status:'airing',    grad:5 },
+    { title:'NieR:Automata Ver1.2',                        eps:12, studio:'A-1 Pictures',       score:7.8, status:'airing',    grad:6 },
+  ],
+  'fall-2025': [
+    { title:'Chainsaw Man Movie: Reze Arc',                eps:1,  studio:'MAPPA',              score:8.5, status:'airing',    grad:1 },
+    { title:'Bleach: TYBW Part 3 Cour 2',                 eps:13, studio:'Pierrot',            score:8.5, status:'airing',    grad:2 },
+    { title:'Frieren: Beyond Journey\'s End Cour 2',      eps:12, studio:'Madhouse',           score:8.7, status:'airing',    grad:3 },
+    { title:'Shangri-La Frontier S2',                      eps:12, studio:'C2C',                score:7.8, status:'airing',    grad:4 },
+    { title:'Sword Art Online: Unital Ring',               eps:24, studio:'A-1 Pictures',       score:7.4, status:'airing',    grad:5 },
+    { title:'Spy x Family Season 2 Part 2',               eps:12, studio:'Wit Studio',         score:8.2, status:'airing',    grad:6 },
+    { title:'Jujutsu Kaisen Season 3',                     eps:12, studio:'MAPPA',              score:8.5, status:'airing',    grad:7 },
+  ],
+  'winter-2024': [
+    { title:'Solo Leveling',                               eps:12, studio:'A-1 Pictures',       score:8.2, status:'airing',    grad:1 },
+    { title:'Frieren: Beyond Journey\'s End',             eps:16, studio:'Madhouse',           score:9.0, status:'airing',    grad:2 },
+    { title:'Mashle: Divine Visionary Candidate Exam',     eps:12, studio:'A-1 Pictures',       score:7.8, status:'airing',    grad:3 },
+    { title:'Dungeon Meshi',                               eps:12, studio:'Trigger',            score:8.5, status:'airing',    grad:4 },
+    { title:'Classroom of the Elite S3',                   eps:13, studio:'Lerche',             score:7.7, status:'airing',    grad:5 },
+  ],
+  'spring-2024': [
+    { title:'Mushoku Tensei Season 2 Cour 2',             eps:12, studio:'Studio Bind',        score:8.3, status:'airing',    grad:1 },
+    { title:'Demon Slayer: Hashira Training',              eps:8,  studio:'ufotable',           score:7.8, status:'airing',    grad:2 },
+    { title:'Konosuba S3',                                 eps:11, studio:'Drive',              score:7.9, status:'airing',    grad:3 },
+    { title:'Oshi no Ko',                                  eps:13, studio:'Doga Kobo',          score:8.4, status:'airing',    grad:4 },
+    { title:'Wind Breaker',                                eps:13, studio:'CloverWorks',        score:7.8, status:'airing',    grad:5 },
+    { title:'Kaiju No. 8',                                 eps:12, studio:'Production I.G',     score:7.9, status:'airing',    grad:6 },
+    { title:'Spice and Wolf: Merchant Meets the Wise Wolf',eps:12, studio:'Passione',          score:7.6, status:'airing',    grad:7 },
+  ],
+  'summer-2024': [
+    { title:'Oshi no Ko Season 2',                         eps:13, studio:'Doga Kobo',          score:8.0, status:'airing',    grad:1 },
+    { title:'Tower of God Season 2',                       eps:13, studio:'Telecom Animation',  score:7.4, status:'airing',    grad:2 },
+    { title:'Fairy Tail: 100 Years Quest',                 eps:12, studio:'J.C.Staff',          score:7.2, status:'airing',    grad:3 },
+    { title:'Alya Sometimes Hides Her Feelings in Russian',eps:12, studio:'Doga Kobo',         score:7.1, status:'airing',    grad:4 },
+    { title:'NieR:Automata Ver1.1a Part 2',                eps:12, studio:'A-1 Pictures',       score:7.6, status:'airing',    grad:5 },
+    { title:'Wistoria: Wand and Sword',                    eps:12, studio:'Actas / Bandai Namco', score:7.3, status:'airing', grad:6 },
+  ],
+  'fall-2024': [
+    { title:'Dandadan',                                    eps:12, studio:'Science SARU',       score:8.4, status:'airing',    grad:1 },
+    { title:'Blue Lock Season 2',                          eps:14, studio:'Eight Bit',          score:7.9, status:'airing',    grad:2 },
+    { title:'Re:ZERO Season 3',                            eps:8,  studio:'White Fox',          score:8.3, status:'airing',    grad:3 },
+    { title:'Bleach: TYBW Part 3',                         eps:14, studio:'Pierrot',            score:8.4, status:'airing',    grad:4 },
+    { title:'Shangri-La Frontier S2',                      eps:12, studio:'C2C',                score:7.7, status:'airing',    grad:5 },
+    { title:'Sword Art Online Alternative: GGO II',        eps:12, studio:'A-1 Pictures',       score:7.1, status:'airing',    grad:6 },
+    { title:'Dragon Ball Daima',                           eps:20, studio:'Toei Animation',     score:7.8, status:'airing',    grad:7 },
+    { title:'Ranma 1/2 (2024)',                            eps:12, studio:'MAPPA',              score:7.6, status:'airing',    grad:8 },
+  ],
+};
+
+function getKey() { return currentSeason + '-' + currentYear; }
+function getList() { return animeData[getKey()] || []; }
+
+// ---- Render functions ----
+function renderGrid() {
+  const list = getList();
+  const grid = document.getElementById('shows-grid');
+  grid.innerHTML = list.map((a, i) => {
+    const statusCls = a.status === 'airing' ? 'airing' : a.status === 'upcoming' ? 'upcoming' : 'announced';
+    const badgeLabel = a.status.charAt(0).toUpperCase() + a.status.slice(1);
+    const scoreBadge = a.score > 0
+      ? `<div class="score-badge ${a.score >= 8 ? 'high' : 'mid'}">${a.score.toFixed(1)}</div>`
+      : '';
+    const hidden = currentFilter !== 'all' && a.status !== currentFilter ? ' hidden' : '';
+    return `
+      <div class="show-card${hidden}" data-status="${a.status}">
+        <div class="show-poster">
+          <div class="show-poster-bg grad-${a.grad}"></div>
+          <div class="show-poster-overlay"></div>
+          <span class="status-dot ${statusCls}" style="background:var(--${statusCls === 'airing' ? 'green' : statusCls === 'upcoming' ? 'amber' : 'violet'})"></span>
+          ${scoreBadge}
+        </div>
+        <div class="show-body">
+          <div class="show-title">${a.title}</div>
+          <div class="show-sub">${a.eps} eps &middot; ${a.studio}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderStats() {
+  const list = getList();
+  const total = list.length;
+  const airing = list.filter(a => a.status === 'airing').length;
+  const upcoming = list.filter(a => a.status === 'upcoming').length;
+  const announced = list.filter(a => a.status === 'announced').length;
+  document.getElementById('stats-label').textContent = total + ' shows this season';
+  document.querySelector('.stats-group').innerHTML =
+    `<span class="stat-item"><span class="stat-dot airing"></span> ${airing} airing</span>` +
+    `<span class="stat-item"><span class="stat-dot upcoming"></span> ${upcoming} upcoming</span>` +
+    `<span class="stat-item"><span class="stat-dot announced"></span> ${announced} announced</span>`;
+}
+
+function renderTitles() {
+  const label = seasonLabels[currentSeason];
+  document.getElementById('title-season').textContent = label;
+  document.getElementById('title-year').textContent = currentYear;
+  document.getElementById('listing-title').innerHTML = 'All Shows &mdash; ' + label + ' ' + currentYear;
+  document.title = label + ' ' + currentYear + ' Anime — weeb.vip';
+}
+
+function renderFeatured() {
+  const list = getList();
+  const top3 = list.slice(0, 3);
+  const grid = document.getElementById('featured-grid');
+  grid.innerHTML = top3.map((a, i) => {
+    const statusCls = a.status === 'airing' ? 'airing' : a.status === 'upcoming' ? 'upcoming' : 'announced';
+    const badgeLabel = a.status.charAt(0).toUpperCase() + a.status.slice(1);
+    const scoreBadge = a.score > 0
+      ? `<div class="score-badge ${a.score >= 8 ? 'high' : 'mid'}">${a.score.toFixed(1)}</div>`
+      : '';
+    return `
+      <div class="featured-card">
+        <div class="featured-poster">
+          <div class="featured-poster-bg grad-${a.grad}"></div>
+          <div class="featured-poster-overlay"></div>
+          <div class="featured-poster-rank">${i + 1}</div>
+          ${scoreBadge}
+          <div class="featured-poster-info">
+            <span class="badge badge-${statusCls}"><span class="badge-dot"></span> ${badgeLabel}</span>
+            <h3>${a.title}</h3>
+            <div class="featured-meta">
+              <span class="featured-meta-item">${a.eps} eps</span>
+              <span class="featured-meta-sep">&middot;</span>
+              <span class="featured-meta-item">${a.studio}</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function updateUI() {
+  // Highlight season tab
+  document.querySelectorAll('.season-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.season === currentSeason);
+  });
+  // Highlight year tab
+  document.querySelectorAll('.year-tab').forEach(t => {
+    t.classList.toggle('active', +t.dataset.year === currentYear);
+  });
+  renderTitles();
+  renderStats();
+  renderFeatured();
+  renderGrid();
+}
+
+// ---- Actions ----
+function setSeason(s) {
+  currentSeason = s;
+  currentFilter = 'all';
+  resetFilterPills();
+  updateUI();
+}
+
+function setYear(y) {
+  currentYear = y;
+  currentFilter = 'all';
+  resetFilterPills();
+  updateUI();
+}
+
+function prevSeason() {
+  let idx = seasons.indexOf(currentSeason);
+  if (idx === 0) { currentYear--; idx = 3; } else { idx--; }
+  currentSeason = seasons[idx];
+  currentFilter = 'all';
+  resetFilterPills();
+  updateUI();
+}
+
+function nextSeason() {
+  let idx = seasons.indexOf(currentSeason);
+  if (idx === 3) { currentYear++; idx = 0; } else { idx++; }
+  currentSeason = seasons[idx];
+  currentFilter = 'all';
+  resetFilterPills();
+  updateUI();
+}
+
+function filterShows(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.filter === f);
+  });
+  document.querySelectorAll('#shows-grid .show-card').forEach(card => {
+    const visible = f === 'all' || card.dataset.status === f;
+    card.classList.toggle('hidden', !visible);
+  });
+}
+
+function resetFilterPills() {
+  document.querySelectorAll('.filter-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.filter === 'all');
+  });
+}
+
+// ---- Init ----
+updateUI();
+</script>
+</body>
+</html>

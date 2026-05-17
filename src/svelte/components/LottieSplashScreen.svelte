@@ -53,7 +53,7 @@
 
 {#if visible}
   <div
-    class="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900 transition-opacity duration-500"
+    class="fixed inset-0 z-[9999] flex items-center justify-center bg-weeb-bg transition-opacity duration-500"
     class:opacity-0={!visible}
     class:opacity-100={visible}
   >
@@ -68,9 +68,9 @@
       <div class="text-center">
         <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">WeebVIP</h1>
         <div class="flex space-x-1 justify-center">
-          <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-          <div class="w-2 h-2 bg-white rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
-          <div class="w-2 h-2 bg-white rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
+          <div class="w-2 h-2 bg-weeb-surface rounded-full animate-pulse"></div>
+          <div class="w-2 h-2 bg-weeb-surface rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
+          <div class="w-2 h-2 bg-weeb-surface rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
         </div>
       </div>
     </div>

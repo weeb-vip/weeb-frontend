@@ -223,27 +223,27 @@
 
 <Modal {isOpen} on:close={handleClose} className="max-w-2xl max-h-[90vh]">
   <div class="flex flex-col h-full">
-    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4">
+    <h3 class="text-lg font-medium leading-6 text-weeb-fg mb-4">
       Upload Profile Picture
     </h3>
 
     <div class="flex-1 overflow-y-auto">
       {#if !previewUrl}
         <div
-          class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 sm:p-8 text-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+          class="border-2 border-dashed border-weeb-border rounded-lg p-6 sm:p-8 text-center cursor-pointer hover:border-weeb-accent transition-colors"
           on:drop={handleDrop}
           on:dragover={handleDragOver}
           on:click={openFileDialog}
           role="button"
           tabindex="0"
         >
-          <svg class="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+          <svg class="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-weeb-fg-muted" stroke="currentColor" fill="none" viewBox="0 0 48 48">
             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p class="mt-2 text-sm text-weeb-fg-muted">
             Tap to upload or drag and drop
           </p>
-          <p class="text-xs text-gray-500 dark:text-gray-500">
+          <p class="text-xs text-weeb-fg-muted">
             PNG, JPG, GIF up to 10MB
           </p>
           <input
@@ -291,14 +291,14 @@
           </div>
 
           <div class="space-y-4 px-4">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block text-center">
+            <label class="text-sm font-medium text-weeb-fg-secondary block text-center">
               Crop Size: {Math.round(cropData.size)}px
             </label>
             <div class="px-6 py-4">
-              <div class="relative bg-gray-200 dark:bg-gray-600 h-6 rounded-full">
+              <div class="relative bg-weeb-surface h-6 rounded-full">
                 <!-- Progress track -->
                 <div
-                  class="absolute top-0 left-0 h-full bg-blue-500 rounded-full"
+                  class="absolute top-0 left-0 h-full bg-weeb-accent rounded-full"
                   style="width: {sliderProgress}%;"
                 />
                 <!-- Hidden native slider -->
@@ -312,12 +312,12 @@
                 />
                 <!-- Custom thumb -->
                 <div
-                  class="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-blue-500 border-4 border-white rounded-full shadow-lg pointer-events-none"
+                  class="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-weeb-accent border-4 border-white rounded-full shadow-lg pointer-events-none"
                   style="left: {sliderProgress}%; transform: translateX(-50%) translateY(-50%);"
                 />
               </div>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
+            <p class="text-xs text-weeb-fg-muted text-center">
               Drag the circle above to position, or use the slider to resize
             </p>
           </div>

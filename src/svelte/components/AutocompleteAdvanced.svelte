@@ -189,7 +189,7 @@
     // Create backdrop element at body level (outside header constraints)
     const backdrop = document.createElement('div');
     backdrop.id = 'desktop-search-backdrop';
-    backdrop.className = 'fixed inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm';
+    backdrop.className = 'fixed inset-0 bg-weeb-surface/50 bg-weeb-bg/50 backdrop-blur-sm';
     backdrop.style.cssText = 'z-index: 35; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); opacity: 0;'; // Start invisible
     backdrop.setAttribute('role', 'presentation');
 
@@ -370,11 +370,11 @@
 {#if isLoading}
   <!-- Loading skeleton -->
   <div class="relative">
-    <div class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-gray-100 dark:bg-gray-700 transition-colors duration-300 animate-pulse">
+    <div class="w-full px-4 py-2 border border-weeb-border rounded-full bg-weeb-surface-hover transition-colors duration-300 animate-pulse">
       <div class="flex items-center">
-        <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-32 animate-pulse"></div>
+        <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded w-32 animate-pulse"></div>
         <div class="ml-auto">
-          <div class="animate-spin h-4 w-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+          <div class="animate-spin h-4 w-4 border-2 border-weeb-border border-t-gray-600 rounded-full"></div>
         </div>
       </div>
     </div>
@@ -386,9 +386,9 @@
       type="text"
       placeholder="Search anime..."
       disabled
-      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+      class="w-full px-4 py-2 border border-weeb-border rounded-lg bg-weeb-bg-elevated bg-weeb-surface-hover text-weeb-fg-muted"
     />
-    <svg class="absolute right-3 top-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="absolute right-3 top-3 h-5 w-5 text-weeb-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
   </div>
@@ -398,7 +398,7 @@
     <input
       type="text"
       placeholder="Search anime..."
-      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+      class="w-full px-4 py-2 border border-weeb-border rounded-full bg-weeb-surface text-weeb-fg"
       on:keydown={(e) => {
         if (e.key === 'Enter') {
           const target = e.target;
@@ -410,7 +410,7 @@
         }
       }}
     />
-    <svg class="absolute right-3 top-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="absolute right-3 top-3 h-5 w-5 text-weeb-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
   </div>
@@ -419,7 +419,7 @@
   <!-- Mobile backdrop overlay when focused -->
   {#if isFocused}
     <div
-      class="sm:hidden fixed inset-0 z-[45] bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm"
+      class="sm:hidden fixed inset-0 z-[45] bg-weeb-surface/50 bg-weeb-bg/50 backdrop-blur-sm"
       style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); opacity: 0;"
       role="presentation"
       on:click={() => {
@@ -434,16 +434,16 @@
   <div class="sm:hidden z-50 transition-all duration-300 ease-in-out {isFocused ? 'fixed inset-4 top-8' : 'relative w-full'}">
     <div
       bind:this={mobileFormRef}
-      class="transition-all duration-300 ease-in-out {isFocused && autocompleteState.isOpen ? 'shadow-2xl rounded-t-2xl' : isFocused ? 'shadow-2xl rounded-2xl' : 'shadow-sm focus-within:shadow-xl rounded-full'} {isFocused ? 'w-full relative bg-white dark:bg-gray-800' : 'w-full relative'}"
+      class="transition-all duration-300 ease-in-out {isFocused && autocompleteState.isOpen ? 'shadow-2xl rounded-t-2xl' : isFocused ? 'shadow-2xl rounded-2xl' : 'shadow-sm focus-within:shadow-xl rounded-full'} {isFocused ? 'w-full relative bg-weeb-surface' : 'w-full relative'}"
       style="transform-origin: center top;"
       {...rootProps}
     >
-      <svg class="absolute top-0 bottom-0 left-4 m-auto h-5 w-5 text-gray-500 dark:text-gray-400 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="absolute top-0 bottom-0 left-4 m-auto h-5 w-5 text-weeb-fg-muted z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
       <input
         bind:this={mobileInputRef}
-        class="w-full py-3 px-4 pl-12 leading-5 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 outline-none border border-gray-200 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 transition-all duration-300 {isFocused && autocompleteState.isOpen ? 'text-lg rounded-t-2xl border-b-0' : isFocused ? 'text-lg rounded-2xl' : 'text-base rounded-full'}"
+        class="w-full py-3 px-4 pl-12 leading-5 text-weeb-fg bg-weeb-surface outline-none border border-weeb-border focus:border-weeb-accent transition-all duration-300 {isFocused && autocompleteState.isOpen ? 'text-lg rounded-t-2xl border-b-0' : isFocused ? 'text-lg rounded-2xl' : 'text-base rounded-full'}"
         placeholder={isFocused ? "Search anime..." : "Search"}
         on:focus={handleFocus}
         on:blur={handleBlur}
@@ -454,10 +454,10 @@
       {#if isFocused && autocompleteState.isOpen}
         <div
           bind:this={mobilePanelRef}
-          class="absolute z-50 w-full left-0 right-0 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-b-2xl shadow-2xl -mt-px border-t-0 max-h-[calc(100vh-120px)] animate-dropdown"
+          class="absolute z-50 w-full left-0 right-0 overflow-auto bg-weeb-surface border border-weeb-border rounded-b-2xl shadow-2xl -mt-px border-t-0 max-h-[calc(100vh-120px)] animate-dropdown"
           style="transform-origin: center top;"
         >
-          <div class="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent mx-4"></div>
+          <div class="h-px bg-gradient-to-r from-transparent via-weeb-border to-transparent mx-4"></div>
           {#each autocompleteState.collections as collection}
             <ul class="py-2">
               {#each filterValidItems(collection.items) as item (item.objectID)}
@@ -472,17 +472,17 @@
 
   <!-- Desktop: floating, always-visible search -->
   <div
-    class="hidden sm:flex z-[60] left-1/2 -translate-x-1/2 w-full max-w-xl top-0 focus-within:top-16 transition-all duration-300 ease-in-out scale-100 focus-within:scale-105 relative {isFocused && autocompleteState.isOpen ? 'shadow-2xl' : 'shadow-sm focus-within:shadow-xl'} {isFocused && autocompleteState.isOpen ? 'rounded-t-2xl' : 'rounded-full'} bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg"
+    class="hidden sm:flex z-[60] left-1/2 -translate-x-1/2 w-full max-w-xl top-0 focus-within:top-16 transition-all duration-300 ease-in-out scale-100 focus-within:scale-105 relative {isFocused && autocompleteState.isOpen ? 'shadow-2xl' : 'shadow-sm focus-within:shadow-xl'} {isFocused && autocompleteState.isOpen ? 'rounded-t-2xl' : 'rounded-full'} bg-weeb-surface/80 bg-weeb-surface/80 backdrop-blur-lg"
     bind:this={desktopFormRef}
     style="transform-origin: center top;"
     {...rootProps}
   >
-    <svg class="absolute top-0 bottom-0 left-4 m-auto h-5 w-5 text-gray-500 dark:text-gray-400 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="absolute top-0 bottom-0 left-4 m-auto h-5 w-5 text-weeb-fg-muted z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
     <input
       bind:this={desktopInputRef}
-      class="w-full py-2 px-4 pl-10 text-base outline-none text-gray-900 dark:text-gray-100 bg-transparent border border-gray-200 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 transition-all duration-300 {isFocused && autocompleteState.isOpen ? 'rounded-t-2xl border-b-0' : 'rounded-full'}"
+      class="w-full py-2 px-4 pl-10 text-base outline-none text-weeb-fg bg-transparent border border-weeb-border focus:border-weeb-accent transition-all duration-300 {isFocused && autocompleteState.isOpen ? 'rounded-t-2xl border-b-0' : 'rounded-full'}"
       placeholder="Search anime..."
       on:focus={handleFocus}
       on:blur={handleBlur}
@@ -494,10 +494,10 @@
       {#if isFocused && autocompleteState.isOpen}
         <div
           bind:this={desktopPanelRef}
-          class="absolute z-[60] w-full left-0 right-0 overflow-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border border-gray-200/50 dark:border-gray-600/50 rounded-b-2xl shadow-2xl shadow-black/10 dark:shadow-black/30 -mt-px border-t-0 max-h-72 animate-dropdown"
+          class="absolute z-[60] w-full left-0 right-0 overflow-auto bg-weeb-surface/95 bg-weeb-surface/95 backdrop-blur-lg border border-weeb-border/50 border-weeb-border/50 rounded-b-2xl shadow-2xl shadow-black/10 -mt-px border-t-0 max-h-72 animate-dropdown"
           style="transform-origin: center top;"
         >
-          <div class="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent mx-4"></div>
+          <div class="h-px bg-gradient-to-r from-transparent via-weeb-border to-transparent mx-4"></div>
           {#each autocompleteState.collections as collection}
             <ul class="py-2">
               {#each filterValidItems(collection.items) as item (item.objectID)}

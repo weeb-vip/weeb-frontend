@@ -62,10 +62,10 @@
   >
     {#if tags && tags.length > 0}
       {#each tags as tag}
-        <span class="text-xs px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded inline-block">{tag}</span>{' '}
+        <span class="text-xs px-1.5 py-0.5 bg-weeb-surface text-weeb-fg-secondary rounded inline-block">{tag}</span>{' '}
       {/each}
     {:else}
-      <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 rounded inline-block">
+      <span class="text-xs px-1.5 py-0.5 bg-weeb-surface text-weeb-fg-muted rounded inline-block">
         No tags
       </span>
     {/if}
@@ -73,7 +73,7 @@
 
   <!-- Gradient fade (only when not hovered and overflowing) -->
   {#if isOverflowing && !isHovered}
-    <span class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-gray-800 to-transparent"></span>
+    <span class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-weeb-surface to-transparent"></span>
   {/if}
 
   <!-- Scrolling content (only shown on hover if overflowing) -->
@@ -83,7 +83,7 @@
       style="--scroll-duration: {animationDuration}s;"
     >
       {#each tags as tag}
-        <span class="text-xs px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded inline-block">{tag}</span>{' '}
+        <span class="text-xs px-1.5 py-0.5 bg-weeb-surface text-weeb-fg-secondary rounded inline-block">{tag}</span>{' '}
       {/each}
     </div>
   {/if}

@@ -176,10 +176,10 @@
   $: airTime = nextEpisodeResult?.airTime;
 
   $: statusConfig = {
-    airing: { color: 'text-orange-600 dark:text-orange-400', text: 'Airing', icon: 'fa-clapperboard' },
-    aired: { color: 'text-green-600 dark:text-green-400', text: 'Recently Aired', icon: 'fa-calendar' },
-    countdown: { color: 'text-red-600 dark:text-red-400', text: 'Airing Soon', icon: 'fa-clock' },
-    scheduled: { color: 'text-blue-600 dark:text-blue-400', text: 'Next Episode', icon: 'fa-calendar' }
+    airing: { color: 'text-weeb-amber', text: 'Airing', icon: 'fa-clapperboard' },
+    aired: { color: 'text-weeb-green', text: 'Recently Aired', icon: 'fa-calendar' },
+    countdown: { color: 'text-weeb-red', text: 'Airing Soon', icon: 'fa-clock' },
+    scheduled: { color: 'text-weeb-accent', text: 'Next Episode', icon: 'fa-calendar' }
   };
 
   // Hero banner style timing data (from notification store)
@@ -250,21 +250,21 @@
 {#if isLoading}
   <ShowContentSkeleton />
 {:else if isError || !anime}
-  <div class="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
-    <p class="text-gray-500 dark:text-gray-400">Failed to load anime details</p>
+  <div class="min-h-screen bg-weeb-surface flex items-center justify-center">
+    <p class="text-weeb-fg-muted">Failed to load anime details</p>
   </div>
 {:else}
-  <div class="min-h-screen bg-white dark:bg-gray-900 relative transition-colors duration-300">
+  <div class="min-h-screen bg-weeb-surface relative transition-colors duration-300">
     <!-- Sticky Header -->
     <div use:portal class="fixed top-24 left-0 right-0 z-20 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}" style="pointer-events: {showStickyHeader ? 'auto' : 'none'};">
       <!-- Background container with overflow hidden -->
-      <div class="relative overflow-hidden border-b border-gray-200 dark:border-gray-700 px-4 py-4 shadow-md">
+      <div class="relative overflow-hidden border-b border-weeb-border px-4 py-4 shadow-md">
         <!-- Background with blur -->
         <div
           class="absolute inset-0 bg-cover bg-center"
           style="background-image: {firstSource ? `url(${firstSource})` : 'none'}; filter: blur(8px); transform: scale(1.1);"
         ></div>
-        <div class="absolute inset-0 bg-white/90 dark:bg-black/60 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 bg-weeb-surface/90 backdrop-blur-sm"></div>
         <div class="max-w-screen-2xl mx-auto relative z-10">
           <div class="flex items-center gap-4">
             <SafeImage
@@ -274,10 +274,10 @@
               fallbackSrc="/assets/not found.jpg"
             />
             <div class="min-w-0 flex-1 pr-16">
-              <h1 class="text-xl font-bold text-gray-900 dark:text-white truncate">
+              <h1 class="text-xl font-bold text-weeb-fg text-weeb-fg truncate">
                 {animeTitle}
               </h1>
-              <p class="text-sm text-gray-600 dark:text-gray-200 truncate">
+              <p class="text-sm text-weeb-fg-muted text-weeb-fg truncate">
                 {getYearUTC(anime.startDate)} • {anime.endDate ? "Finished" : "Ongoing"}
               </p>
             </div>
@@ -295,8 +295,8 @@
     </div>
 
     <!-- Hero Background -->
-    <div class="relative bg-white dark:bg-gray-900 h-[600px] transition-all duration-300 overflow-hidden">
-      <div class="absolute block inset-0 bg-white dark:bg-gray-900 w-full h-full transition-colors duration-300"></div>
+    <div class="relative bg-weeb-surface h-[600px] transition-all duration-300 overflow-hidden">
+      <div class="absolute block inset-0 bg-weeb-surface w-full h-full transition-colors duration-300"></div>
 
       {#if imageSources.length > 0}
         <div
@@ -319,7 +319,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="bg-gray-100 dark:bg-gray-900 -mt-[350px] lg:-mt-[200px] transition-colors duration-300">
+    <div class="bg-weeb-surface bg-weeb-bg -mt-[350px] lg:-mt-[200px] transition-colors duration-300">
       <div class="relative z-10 flex justify-center pt-20">
         <div class="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
           <SafeImage
@@ -348,28 +348,28 @@
         </div>
       </div>
 
-      <div class="bg-gray-100 dark:bg-gray-900 py-8 px-4 sm:px-8 lg:px-16 transition-colors duration-300">
+      <div class="bg-weeb-surface bg-weeb-bg py-8 px-4 sm:px-8 lg:px-16 transition-colors duration-300">
         <div class="max-w-screen-2xl mx-auto flex flex-col gap-8">
           <!-- Next Episode Info -->
           {#if nextEpisode || animeNextEpisodeInfo || hasTimingData}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:border-gray-700 p-4 transition-colors duration-300">
+            <div class="bg-weeb-surface rounded-lg shadow-sm border-weeb-border p-4 transition-colors duration-300">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                   <!-- Status badge -->
                   {#if hasTimingData && currentlyAiring}
-                    <div class="relative inline-flex items-center px-3 py-1 rounded-full bg-orange-600 text-xs font-semibold overflow-hidden text-white w-fit">
+                    <div class="relative inline-flex items-center px-3 py-1 rounded-full bg-weeb-amber text-xs font-semibold overflow-hidden text-white w-fit">
                       {#if progress !== undefined}
                         <div
-                          class="absolute inset-0 bg-orange-400 transition-all duration-1000 ease-out"
+                          class="absolute inset-0 bg-weeb-amber transition-all duration-1000 ease-out"
                           style="width: {progress}%"
                         ></div>
                       {/if}
-                      <span class="relative z-10 w-1.5 h-1.5 bg-white rounded-full mr-2 animate-pulse"></span>
+                      <span class="relative z-10 w-1.5 h-1.5 bg-weeb-surface rounded-full mr-2 animate-pulse"></span>
                       <span class="relative z-10">AIRING NOW</span>
                     </div>
                   {:else if hasTimingData && !currentlyAiring && !alreadyAired}
-                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-red-600 text-xs font-semibold text-white w-fit">
-                      <span class="w-1.5 h-1.5 bg-white rounded-full mr-2 animate-pulse"></span>
+                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-weeb-red text-xs font-semibold text-white w-fit">
+                      <span class="w-1.5 h-1.5 bg-weeb-surface rounded-full mr-2 animate-pulse"></span>
                       {countdown === "JUST AIRED" ? "JUST AIRED" : "AIRING SOON"}
                       {#if countdown && !countdown.includes("JUST AIRED") && !countdown.includes("AIRING NOW")}
                         <span class="ml-2 px-1.5 py-0.5 bg-black/25 rounded text-xs font-medium">
@@ -378,7 +378,7 @@
                       {/if}
                     </div>
                   {:else}
-                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-600 text-xs font-semibold text-white w-fit">
+                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-weeb-accent text-xs font-semibold text-white w-fit">
                       <i class="fas fa-calendar w-3 h-3 mr-2"></i>
                       NEXT EPISODE
                     </div>
@@ -386,14 +386,14 @@
 
                   <!-- Episode info -->
                   <div class="min-w-0 flex-1">
-                    <span class="font-bold text-gray-900 dark:text-gray-100">
+                    <span class="font-bold text-weeb-fg">
                       {#if episode}
                         Episode {episode.episodeNumber}
                       {:else if animeNextEpisodeInfo}
                         Episode {animeNextEpisodeInfo?.episode.episodeNumber || "TBA"}
                       {/if}
                     </span>
-                    <span class="text-gray-600 dark:text-gray-400 ml-2 block sm:inline truncate">
+                    <span class="text-weeb-fg-muted ml-2 block sm:inline truncate">
                       {#if episode}
                         {episodeTitle}
                       {:else if animeNextEpisodeInfo}
@@ -404,7 +404,7 @@
                 </div>
 
                 <!-- Air time info -->
-                <div class="flex items-center gap-2 text-gray-600 dark:text-gray-300 flex-shrink-0 self-start sm:self-center">
+                <div class="flex items-center gap-2 text-weeb-fg-secondary flex-shrink-0 self-start sm:self-center">
                   <i class="fas fa-clock text-xs"></i>
                   <span class="text-sm font-medium">
                     {airDateTime || (airTimeAndDate && getAirDateTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast)) || "TBA"}
@@ -412,7 +412,7 @@
                   {#if anime.broadcast}
                     <div class="relative">
                       <span
-                        class="px-2 py-1 bg-blue-600/20 text-blue-600 dark:text-blue-300 rounded text-xs font-medium cursor-help"
+                        class="px-2 py-1 bg-weeb-accent/20 text-weeb-accent rounded text-xs font-medium cursor-help"
                         on:mouseenter={() => showJstPopover = true}
                         on:mouseleave={() => showJstPopover = false}
                       >
@@ -420,13 +420,13 @@
                       </span>
                       {#if showJstPopover}
                         <div class="absolute bottom-full right-0 mb-2 z-50">
-                          <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm rounded-lg p-3 w-72 sm:w-80 max-w-[calc(100vw-2rem)]" style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);">
+                          <div class="bg-weeb-surface text-weeb-fg text-weeb-fg text-sm rounded-lg p-3 w-72 sm:w-80 max-w-[calc(100vw-2rem)]" style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);">
                             <div class="text-center">
-                              <p class="text-gray-700 dark:text-gray-200">
+                              <p class="text-weeb-fg-secondary">
                                 Japanese TV broadcast time (in local time). Streaming services usually release with 3 hours after show ends.
                               </p>
                             </div>
-                            <div class="absolute top-full right-4 border-8 border-transparent border-t-white dark:border-t-gray-900"></div>
+                            <div class="absolute top-full right-4 border-8 border-transparent border-t-weeb-surface"></div>
                           </div>
                         </div>
                       {/if}
@@ -439,122 +439,122 @@
 
           <div class="flex flex-col lg:flex-row gap-8">
             <!-- Details Panel -->
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-md shadow-md text-sm text-gray-800 dark:text-gray-200 space-y-6 w-full lg:max-w-xs transition-colors duration-300">
+            <div class="bg-weeb-surface p-4 rounded-md shadow-md text-sm text-weeb-fg space-y-6 w-full lg:max-w-xs transition-colors duration-300">
               <div class="space-y-3">
-                <h2 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Titles</h2>
+                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Titles</h2>
                 {#if renderField("Japanese", anime.titleJp)}
                   {@const field = renderField("Japanese", anime.titleJp)}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
+                    <p class="text-weeb-fg-secondary">{field.value}</p>
                   </div>
                 {/if}
                 {#if renderField("Romaji", anime.titleRomaji)}
                   {@const field = renderField("Romaji", anime.titleRomaji)}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
+                    <p class="text-weeb-fg-secondary">{field.value}</p>
                   </div>
                 {/if}
                 {#if renderField("Kanji", anime.titleKanji)}
                   {@const field = renderField("Kanji", anime.titleKanji)}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
+                    <p class="text-weeb-fg-secondary">{field.value}</p>
                   </div>
                 {/if}
                 {#if anime.titleSynonyms && anime.titleSynonyms.length > 0}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">Synonyms</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{anime.titleSynonyms.join(", ")}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">Synonyms</h3>
+                    <p class="text-weeb-fg-secondary">{anime.titleSynonyms.join(", ")}</p>
                   </div>
                 {/if}
               </div>
 
               <div class="space-y-3">
-                <h2 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Production</h2>
+                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Production</h2>
                 {#if renderField("Studios", anime.studios)}
                   {@const field = renderField("Studios", anime.studios)}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
                     {#if Array.isArray(field.value)}
                       <ul class="list-disc pl-5">
                         {#each field.value as item}
-                          <li class="text-gray-700 dark:text-gray-300">{item}</li>
+                          <li class="text-weeb-fg-secondary">{item}</li>
                         {/each}
                       </ul>
                     {:else}
-                      <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                      <p class="text-weeb-fg-secondary">{field.value}</p>
                     {/if}
                   </div>
                 {/if}
                 {#if renderField("Source", anime.source)}
                   {@const field = renderField("Source", anime.source)}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
+                    <p class="text-weeb-fg-secondary">{field.value}</p>
                   </div>
                 {/if}
                 {#if renderField("Licensors", anime.licensors)}
                   {@const field = renderField("Licensors", anime.licensors)}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
                     {#if Array.isArray(field.value)}
                       <ul class="list-disc pl-5">
                         {#each field.value as item}
-                          <li class="text-gray-700 dark:text-gray-300">{item}</li>
+                          <li class="text-weeb-fg-secondary">{item}</li>
                         {/each}
                       </ul>
                     {:else}
-                      <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                      <p class="text-weeb-fg-secondary">{field.value}</p>
                     {/if}
                   </div>
                 {/if}
               </div>
 
               <div class="space-y-3">
-                <h2 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Ranking/Rating</h2>
+                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Ranking/Rating</h2>
                 {#if renderField("Rating", anime.rating)}
                   {@const field = renderField("Rating", anime.rating)}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
+                    <p class="text-weeb-fg-secondary">{field.value}</p>
                   </div>
                 {/if}
                 {#if renderField("Ranking", anime.ranking?.toString())}
                   {@const field = renderField("Ranking", anime.ranking?.toString())}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
+                    <p class="text-weeb-fg-secondary">{field.value}</p>
                   </div>
                 {/if}
               </div>
 
               <div class="space-y-3">
-                <h2 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Other Info</h2>
+                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Other Info</h2>
                 {#if renderField("Broadcast", anime.broadcast || "Unknown")}
                   {@const field = renderField("Broadcast", anime.broadcast || "Unknown")}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
+                    <p class="text-weeb-fg-secondary">{field.value}</p>
                   </div>
                 {/if}
               </div>
 
               <div class="space-y-3">
-                <h2 class="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-1">Aired</h2>
+                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Aired</h2>
                 {#if renderField("Start Date", formatDateUTC(anime.startDate, "Unknown"))}
                   {@const field = renderField("Start Date", formatDateUTC(anime.startDate, "Unknown"))}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
+                    <p class="text-weeb-fg-secondary">{field.value}</p>
                   </div>
                 {/if}
                 {#if renderField("End Date", formatDateUTC(anime.endDate, "Ongoing"))}
                   {@const field = renderField("End Date", formatDateUTC(anime.endDate, "Ongoing"))}
                   <div>
-                    <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-1">{field.label}</h3>
-                    <p class="text-gray-700 dark:text-gray-300">{field.value}</p>
+                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
+                    <p class="text-weeb-fg-secondary">{field.value}</p>
                   </div>
                 {/if}
               </div>
@@ -583,7 +583,7 @@
 
           <!-- Footer -->
           <div class="flex justify-end mt-8">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-sm text-weeb-fg-muted">
               Last updated: {anime.updatedAt ? format(new Date(anime.updatedAt), "dd MMM yyyy") : "Unknown"}
             </p>
           </div>

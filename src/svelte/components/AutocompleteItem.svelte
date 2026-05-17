@@ -7,7 +7,7 @@
 </script>
 
 <li
-  class="aa-Item px-4 py-3 flex flex-row hover:bg-gray-50/80 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer group border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+  class="aa-Item px-4 py-3 flex flex-row hover:bg-weeb-bg-elevated/80 hover:bg-weeb-surface-hover/60 transition-all duration-200 cursor-pointer group border-b border-weeb-border border-weeb-border last:border-b-0"
   data-autocomplete-item
   on:click={onClick}
   on:keypress={(e) => { if (e.key === 'Enter') onClick(); }}
@@ -27,10 +27,10 @@
     />
   </div>
   <div class="flex flex-col justify-center flex-1 min-w-0">
-    <span class="text-gray-900 dark:text-gray-100 font-medium text-sm truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+    <span class="text-weeb-fg font-medium text-sm truncate group-hover:text-weeb-accent transition-colors duration-200">
       {item.title_en || ''}
     </span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs">
+    <span class="text-weeb-fg-muted text-xs">
       {getYearUTC(item.start_date)}
     </span>
   </div>

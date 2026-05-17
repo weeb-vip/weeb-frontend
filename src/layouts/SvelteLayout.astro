@@ -6,6 +6,8 @@ import DevTestingPanel from '../svelte/components/DevTestingPanel.svelte';
 import GlobalToaster from '../svelte/components/GlobalToaster.svelte';
 import AnimeNotificationProvider from '../svelte/components/AnimeNotificationProvider.svelte';
 import PostHog from "../components/PostHog.astro";
+import MobileDrawer from '../svelte/components/MobileDrawer.svelte';
+import '../styles/design-tokens.css';
 
 export interface Props {
   title?: string;
@@ -105,7 +107,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <meta name="apple-touch-fullscreen" content="yes"/>
 
     <!-- Theme color for status bar (dynamically updated by JavaScript) -->
-    <meta name="msapplication-TileColor" content="#111827">
+    <meta name="msapplication-TileColor" content="#1a1a2e">
 
     <!-- View Transitions for smoother navigation -->
     <ViewTransitions />
@@ -120,29 +122,18 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 
     <!-- Critical inline styles to prevent flash -->
     <style is:inline>
-      /* Set default light mode colors immediately */
+      /* Always-dark theme */
       html, body {
-        background-color: white;
-        color: #111827;
+        background-color: oklch(14% 0.015 275);
+        color: oklch(95% 0.005 265);
         min-height: 100vh;
       }
 
-      /* Override for dark mode */
-      html.dark, html.dark body {
-        background-color: #111827;
-        color: #f3f4f6;
-      }
-
-      /* PWA-specific: Match theme-based background to prevent flash */
+      /* PWA-specific */
       @media (display-mode: standalone) {
-        html.dark, html.dark body {
-          background-color: #111827 !important;
-          color: #f3f4f6 !important;
-        }
-
-        html:not(.dark), html:not(.dark) body {
-          background-color: white !important;
-          color: #111827 !important;
+        html, html body {
+          background-color: oklch(14% 0.015 275) !important;
+          color: oklch(95% 0.005 265) !important;
         }
       }
 
@@ -156,73 +147,17 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 
     <!-- Theme initialization (blocking to prevent flash) -->
     <script is:inline data-cfasync="false">
-      // Initialize theme immediately to prevent flash
+      // Initialize theme immediately — always dark
       function initTheme() {
-        // Add no-transitions class to prevent flash
         document.documentElement.classList.add('no-transitions');
+        document.documentElement.classList.add('dark');
+        try { localStorage.setItem('theme', 'dark'); } catch(e) {}
 
-        // Check if we're in PWA mode
-        const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+        var themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColorMeta) themeColorMeta.setAttribute('content', '#1a1a2e');
 
-        let savedTheme;
-        let savedDarkMode;
-        try {
-          savedTheme = localStorage.getItem('theme');
-          savedDarkMode = localStorage.getItem('darkMode');
-        } catch (error) {
-          console.warn('Could not access localStorage:', error);
-          savedTheme = null;
-          savedDarkMode = null;
-        }
-        let shouldUseDark = false;
-
-        // Debug logging for PWA theme issues
-        if (isPWA) {
-          console.log('PWA Mode - Saved theme:', savedTheme);
-          console.log('PWA Mode - Saved darkMode:', savedDarkMode);
-          console.log('System prefers dark:', window.matchMedia('(prefers-color-scheme: dark)').matches);
-        }
-
-        // Priority: 'theme' key (used by your components) over 'darkMode' key
-        if (savedTheme === 'dark') {
-          shouldUseDark = true;
-        } else if (savedTheme === 'light') {
-          shouldUseDark = false;
-        } else if (savedDarkMode === 'true') {
-          shouldUseDark = true;
-        } else if (savedDarkMode === 'false') {
-          shouldUseDark = false;
-        } else {
-          // No saved preference, use system preference
-          shouldUseDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        }
-
-        if (isPWA) {
-          console.log('PWA Mode - Final shouldUseDark:', shouldUseDark);
-        }
-
-        // Always explicitly set the theme class to prevent flash
-        if (shouldUseDark) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-
-        // Update theme-color meta tag for status bar
-        function updateThemeColor() {
-          const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-          if (themeColorMeta) {
-            const isDark = document.documentElement.classList.contains('dark');
-            themeColorMeta.setAttribute('content', isDark ? '#111827' : '#ffffff');
-          }
-        }
-
-        // Update theme color immediately
-        updateThemeColor();
-
-        // Re-enable transitions after a small delay
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
             document.documentElement.classList.remove('no-transitions');
           });
         });
@@ -234,22 +169,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
       // Re-initialize on View Transitions navigation
       document.addEventListener('astro:after-swap', initTheme);
 
-      // Also update theme color when theme changes (safe for re-execution)
-      if (!window.themeObserver) {
-        window.themeObserver = new MutationObserver(() => {
-          const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-          if (themeColorMeta) {
-            const isDark = document.documentElement.classList.contains('dark');
-            themeColorMeta.setAttribute('content', isDark ? '#111827' : '#ffffff');
-          }
-        });
-
-        // Start observing theme changes
-        window.themeObserver.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['class']
-        });
-      }
+      // Theme is always dark — no observer needed
 
 
       // Clean up PWA source parameter if present
@@ -288,9 +208,9 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     </script>
 
     <!-- Theme -->
-    <meta name="color-scheme" content="dark light">
-    <meta name="theme-color" content="#1f2937">
-    <meta name="msapplication-TileColor" content="#1f2937">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="msapplication-TileColor" content="#1a1a2e">
 
     <!-- Performance hints -->
     <link rel="dns-prefetch" href="//weeb-api.staging.weeb.vip">
@@ -299,24 +219,22 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <link rel="preconnect" href="https://cdn.weeb.vip" crossorigin>
     <PostHog />
 </head>
-<body class="bg-white dark:bg-gray-900 min-h-screen">
+<body class="bg-weeb-bg text-weeb-fg min-h-screen">
 
 
     <!-- Navigation Progress Bar -->
     <div id="navigation-progress" class="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform -translate-y-full transition-all duration-300 opacity-0" style="z-index: 9999; box-shadow: 0 2px 10px rgba(59, 130, 246, 0.6);"></div>
 
-    <!-- Header (persisted across navigation) -->
-    <div transition:persist="header">
-        <HeaderHybrid/>
-    </div>
+    <!-- Header -->
+    <HeaderHybrid/>
 
     <!-- Main content with conditional styling based on variant -->
     {variant === 'fullwidth' ? (
-        <main class="w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300" style="padding-top: calc(6rem + env(safe-area-inset-top, 20px));">
+        <main class="w-full bg-weeb-bg text-weeb-fg min-h-screen">
             <slot />
         </main>
     ) : (
-        <main class="w-full pb-8 px-4 lg:px-16 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300" style="padding-top: calc(6rem + env(safe-area-inset-top, 20px));">
+        <main class="w-full pb-8 px-4 lg:px-16 bg-weeb-bg text-weeb-fg min-h-screen">
             <slot />
         </main>
     )}
@@ -325,6 +243,9 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <div transition:persist="footer">
         <Footer />
     </div>
+
+    <!-- Mobile Drawer (rendered at body level to escape nav stacking context) -->
+    <MobileDrawer client:idle />
 
     <!-- Global Toast Configuration (persisted) -->
     <div transition:persist="toaster">

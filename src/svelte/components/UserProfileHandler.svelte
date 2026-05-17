@@ -34,18 +34,18 @@
     {:else}
       <!-- Fallback loading state -->
       <div class="flex items-center space-x-2">
-        <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+        <div class="w-10 h-10 bg-weeb-surface rounded-full animate-pulse"></div>
         {#if !isMobile}
-          <div class="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div class="w-16 h-4 bg-weeb-surface rounded animate-pulse"></div>
         {/if}
       </div>
     {/if}
   {:else}
     <!-- Show fallback while client is initializing -->
     <div class="flex items-center space-x-2">
-      <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+      <div class="w-10 h-10 bg-weeb-surface rounded-full animate-pulse"></div>
       {#if !isMobile}
-        <div class="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        <div class="w-16 h-4 bg-weeb-surface rounded animate-pulse"></div>
       {/if}
     </div>
   {/if}

@@ -362,7 +362,7 @@
   {#if !domImageLoaded}
     <!-- Show skeleton while image is loading or selecting source -->
     <div
-      class="absolute inset-0 bg-gray-200 dark:bg-gray-700 skeleton rounded"
+      class="absolute inset-0 bg-weeb-surface skeleton rounded"
       role="status"
       aria-label="Loading image"
     >

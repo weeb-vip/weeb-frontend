@@ -125,14 +125,14 @@
 <div class="flex flex-col max-w-screen-2xl px-4 lg:px-0" style="margin: 0 auto">
   <!-- Header with season nav -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-6 mb-6 gap-4">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+    <h1 class="text-3xl font-bold text-weeb-fg">
       {getSeasonDisplayName(season)} Anime
     </h1>
 
     <div class="flex items-center gap-2">
       <a
         href="/season/{prevSeason}"
-        class="px-3 py-1.5 rounded text-sm font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+        class="px-3 py-1.5 rounded text-sm font-medium bg-weeb-surface text-weeb-fg-secondary hover:bg-weeb-surface-hover hover:bg-weeb-surface-hover transition-colors duration-200"
       >
         <i class="fas fa-chevron-left mr-1"></i>
         {getSeasonDisplayName(prevSeason)}
@@ -141,7 +141,7 @@
       {#if season !== currentSeason}
         <a
           href="/season/{currentSeason}"
-          class="px-3 py-1.5 rounded text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
+          class="px-3 py-1.5 rounded text-sm font-medium bg-weeb-accent text-white hover:bg-weeb-accent transition-colors duration-200"
         >
           Current
         </a>
@@ -149,7 +149,7 @@
 
       <a
         href="/season/{nextSeason}"
-        class="px-3 py-1.5 rounded text-sm font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+        class="px-3 py-1.5 rounded text-sm font-medium bg-weeb-surface text-weeb-fg-secondary hover:bg-weeb-surface-hover hover:bg-weeb-surface-hover transition-colors duration-200"
       >
         {getSeasonDisplayName(nextSeason)}
         <i class="fas fa-chevron-right ml-1"></i>
@@ -159,7 +159,7 @@
 
   <!-- Anime count -->
   {#if animeList.length > 0}
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+    <p class="text-sm text-weeb-fg-muted mb-4">
       {animeList.length} anime
     </p>
   {/if}
@@ -175,11 +175,11 @@
         {/each}
       {:else if ssrError && animeList.length === 0}
         <div class="col-span-full text-center py-12">
-          <p class="text-gray-500 dark:text-gray-400 text-lg">{ssrError}</p>
+          <p class="text-weeb-fg-muted text-lg">{ssrError}</p>
         </div>
       {:else if animeList.length === 0}
         <div class="col-span-full text-center py-12">
-          <p class="text-gray-500 dark:text-gray-400 text-lg">No anime found for this season.</p>
+          <p class="text-weeb-fg-muted text-lg">No anime found for this season.</p>
         </div>
       {:else}
         {#each animeList as anime, index (anime.id)}

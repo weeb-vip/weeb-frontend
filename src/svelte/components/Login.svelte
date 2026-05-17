@@ -62,7 +62,7 @@
   $: isLoading = $loginMutation.isPending;
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-md w-full space-y-8">
     <div>
       <div class="flex justify-center">
@@ -75,10 +75,10 @@
           }}
         />
       </div>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-weeb-fg text-weeb-fg">
         Sign in to your account
       </h2>
-      <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+      <p class="mt-2 text-center text-sm text-weeb-fg-muted">
         Welcome back! Please enter your credentials.
       </p>
     </div>
@@ -112,8 +112,8 @@
       </div>
 
       {#if errorMessage}
-        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
-          <p class="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+        <div class="bg-weeb-red/10 border border-weeb-red/30 rounded-md p-3">
+          <p class="text-sm text-weeb-red">{errorMessage}</p>
         </div>
       {/if}
 
@@ -122,7 +122,7 @@
           <div>
             <a
               href="/auth/password-reset-request"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+              class="text-weeb-accent hover:text-weeb-accent transition-colors"
             >
               Forgot your password?
             </a>
@@ -130,7 +130,7 @@
           <div>
             <a
               href="/auth/resend-verification"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+              class="text-weeb-accent hover:text-weeb-accent transition-colors"
             >
               Resend email verification
             </a>
@@ -150,18 +150,18 @@
       </div>
 
       <div class="text-center space-y-2">
-        <p class="text-sm text-gray-600 dark:text-gray-400">
+        <p class="text-sm text-weeb-fg-muted">
           Don't have an account?{' '}
           <a
             href="/auth/register"
-            class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+            class="text-weeb-accent hover:text-weeb-accent transition-colors"
           >
             Sign up here
           </a>
         </p>
         <a
           href="/"
-          class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors inline-flex items-center"
+          class="text-sm text-weeb-fg-muted hover:text-weeb-fg transition-colors inline-flex items-center"
         >
           <Fa icon={faArrowLeft} class="mr-2" />
           Back to Home

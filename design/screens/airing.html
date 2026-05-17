@@ -1,0 +1,1473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>weeb.vip -- Currently Airing</title>
+<style>
+/* ============================================
+   DESIGN TOKENS
+   ============================================ */
+:root {
+  --bg: oklch(14% 0.015 275);
+  --bg-elevated: oklch(18% 0.018 275);
+  --surface: oklch(22% 0.02 275);
+  --surface-hover: oklch(26% 0.022 275);
+  --fg: oklch(95% 0.005 265);
+  --fg-secondary: oklch(70% 0.01 270);
+  --fg-muted: oklch(55% 0.01 270);
+  --border: oklch(28% 0.015 275);
+  --accent: oklch(55% 0.15 280);
+  --accent-hover: oklch(62% 0.16 280);
+  --violet: oklch(62% 0.14 300);
+  --green: oklch(65% 0.15 155);
+  --amber: oklch(72% 0.14 85);
+  --red: oklch(60% 0.18 25);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+/* ============================================
+   RESET + BASE
+   ============================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html {
+  font-family: var(--font);
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+  line-height: 1.5;
+}
+body { min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select { font: inherit; }
+
+/* ============================================
+   LAYOUT
+   ============================================ */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ============================================
+   NAV
+   ============================================ */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: oklch(14% 0.015 275 / 0.82);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  height: 56px;
+  gap: 24px;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  color: var(--fg);
+}
+.nav-logo-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-link {
+  font-size: 14px;
+  color: var(--fg-muted);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.nav-link:hover { color: var(--fg-secondary); background: oklch(22% 0.02 275 / 0.5); }
+.nav-link.active { color: var(--fg); background: var(--surface); }
+.nav-search {
+  flex: 1;
+  max-width: 360px;
+  position: relative;
+}
+.nav-search input {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0 16px 0 36px;
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--fg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.nav-search input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.15);
+}
+.nav-search input::placeholder { color: var(--fg-muted); }
+.nav-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-muted);
+  pointer-events: none;
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.nav-btn {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 17px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.nav-btn-ghost { color: var(--fg-secondary); }
+.nav-btn-ghost:hover { color: var(--fg); background: var(--surface); }
+.nav-btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.nav-btn-primary:hover { background: var(--accent-hover); }
+.nav-mobile-toggle {
+  display: none;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-secondary);
+}
+@media (max-width: 768px) {
+  .nav-search { max-width: none; order: 10; flex-basis: 100%; }
+  .nav-inner { flex-wrap: wrap; height: auto; padding: 10px 0; }
+  .nav-links { display: none; }
+  .nav-mobile-toggle { display: flex; }
+}
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+.page-header {
+  padding: 40px 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+.page-header-inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.page-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.page-header-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 0 oklch(65% 0.15 155 / 0.4);
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%   { box-shadow: 0 0 0 0 oklch(65% 0.15 155 / 0.4); }
+  70%  { box-shadow: 0 0 0 8px oklch(65% 0.15 155 / 0); }
+  100% { box-shadow: 0 0 0 0 oklch(65% 0.15 155 / 0); }
+}
+.label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+.page-title {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  color: var(--fg);
+}
+.page-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* View tabs */
+.view-tabs {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+  gap: 2px;
+}
+.view-tab {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.view-tab:hover { color: var(--fg-secondary); }
+.view-tab.active {
+  background: var(--accent);
+  color: white;
+}
+
+/* Timezone select */
+.tz-select {
+  height: 34px;
+  padding: 0 30px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--fg-secondary);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.tz-select:focus { outline: none; border-color: var(--accent); }
+
+/* My shows toggle */
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+}
+.toggle-wrap:hover { color: var(--fg-secondary); }
+.toggle-switch {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  position: relative;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--fg-muted);
+  top: 1px;
+  left: 1px;
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle-wrap.on .toggle-switch { background: var(--accent); border-color: var(--accent); }
+.toggle-wrap.on .toggle-switch::after { transform: translateX(16px); background: white; }
+
+/* ============================================
+   SCHEDULE VIEW
+   ============================================ */
+.schedule-view { padding: 32px 0 64px; }
+
+.day-section { margin-bottom: 32px; }
+.day-section:last-child { margin-bottom: 0; }
+
+.day-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.day-section-header:hover .day-name { color: var(--accent-hover); }
+.day-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+  transition: color 0.15s;
+}
+.day-date {
+  font-size: 13px;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.day-today-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 11px;
+  background: var(--green);
+  color: oklch(18% 0.02 155);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.day-count {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin-left: auto;
+}
+.day-chevron {
+  color: var(--fg-muted);
+  transition: transform 0.2s;
+}
+.day-section.collapsed .day-chevron { transform: rotate(-90deg); }
+.day-section.collapsed .day-cards { display: none; }
+
+.day-cards {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.day-cards::-webkit-scrollbar { height: 4px; }
+.day-cards::-webkit-scrollbar-track { background: transparent; }
+.day-cards::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.show-card {
+  flex-shrink: 0;
+  width: 320px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  scroll-snap-align: start;
+  position: relative;
+}
+.show-card:hover {
+  background: var(--surface-hover);
+  border-color: oklch(34% 0.02 275);
+  transform: translateY(-1px);
+}
+
+.show-poster {
+  width: 50px;
+  height: 70px;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.show-poster-gradient {
+  position: absolute;
+  inset: 0;
+}
+
+.show-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.show-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.show-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.show-ep {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.show-time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.show-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 11px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-top: 4px;
+  width: fit-content;
+}
+.show-countdown.upcoming {
+  background: oklch(55% 0.15 280 / 0.15);
+  color: var(--accent-hover);
+}
+.show-countdown.aired {
+  background: oklch(28% 0.015 275 / 0.6);
+  color: var(--fg-muted);
+}
+.show-countdown.airing-now {
+  background: oklch(65% 0.15 155 / 0.15);
+  color: var(--green);
+}
+.airing-now-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s infinite;
+}
+
+.show-add-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+  opacity: 0;
+}
+.show-card:hover .show-add-btn { opacity: 1; }
+.show-add-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: oklch(55% 0.15 280 / 0.1);
+}
+
+/* ============================================
+   CALENDAR VIEW
+   ============================================ */
+.calendar-view { padding: 32px 0 64px; }
+.calendar-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .calendar-layout { grid-template-columns: 1fr; }
+}
+
+.calendar-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.cal-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-muted);
+  transition: all 0.15s;
+}
+.cal-nav-btn:hover { background: var(--surface-hover); color: var(--fg); }
+.calendar-month-label {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+.cal-weekday {
+  padding: 8px 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.cal-day {
+  min-height: 80px;
+  padding: 8px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.cal-day:nth-child(7n) { border-right: none; }
+.cal-day:hover { background: var(--surface-hover); }
+.cal-day.other-month { opacity: 0.3; }
+.cal-day.today .cal-day-num {
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+}
+.cal-day.selected { background: oklch(55% 0.15 280 / 0.08); }
+.cal-day.selected .cal-day-num { color: var(--accent-hover); font-weight: 700; }
+.cal-day-num {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--fg-secondary);
+}
+.cal-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.cal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.cal-dot-accent { background: var(--accent); }
+.cal-dot-violet { background: var(--violet); }
+.cal-dot-green  { background: var(--green); }
+.cal-dot-amber  { background: var(--amber); }
+.cal-show-count {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* Side panel */
+.cal-side-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: sticky;
+  top: 72px;
+}
+.cal-panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cal-panel-label {
+  font-size: 11px;
+  color: var(--fg-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.cal-panel-date {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.cal-panel-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: 14px;
+}
+.cal-panel-shows { display: flex; flex-direction: column; }
+.cal-show-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.cal-show-item:last-child { border-bottom: none; }
+.cal-show-item:hover { background: var(--surface-hover); }
+.cal-show-poster {
+  width: 36px;
+  height: 50px;
+  border-radius: calc(var(--radius) - 2px);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+.cal-show-info { flex: 1; min-width: 0; }
+.cal-show-title {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.cal-show-meta { display: flex; align-items: center; gap: 8px; }
+.cal-ep { font-size: 11px; color: var(--fg-muted); }
+.cal-time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+/* ============================================
+   VIEW TOGGLE STATES
+   ============================================ */
+.view-panel { display: none; }
+.view-panel.active { display: block; }
+
+/* ============================================
+   FOOTER
+   ============================================ */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 0;
+  margin-top: auto;
+}
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+}
+.footer-brand-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+.footer-copy {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+.footer-link {
+  font-size: 13px;
+  color: var(--fg-muted);
+  transition: color 0.15s;
+}
+.footer-link:hover { color: var(--fg); }
+
+/* ============================================
+   POSTER GRADIENTS
+   ============================================ */
+.g1  { background: linear-gradient(160deg, oklch(35% 0.14 280), oklch(50% 0.12 300)); }
+.g2  { background: linear-gradient(160deg, oklch(38% 0.10 260), oklch(55% 0.08 230)); }
+.g3  { background: linear-gradient(160deg, oklch(45% 0.15 305), oklch(32% 0.08 280)); }
+.g4  { background: linear-gradient(160deg, oklch(40% 0.13 250), oklch(58% 0.09 270)); }
+.g5  { background: linear-gradient(160deg, oklch(30% 0.06 280), oklch(48% 0.14 300)); }
+.g6  { background: linear-gradient(160deg, oklch(50% 0.10 285), oklch(35% 0.12 260)); }
+.g7  { background: linear-gradient(160deg, oklch(42% 0.12 270), oklch(58% 0.08 310)); }
+.g8  { background: linear-gradient(160deg, oklch(55% 0.09 295), oklch(38% 0.10 265)); }
+.g9  { background: linear-gradient(160deg, oklch(36% 0.16 280), oklch(52% 0.06 300)); }
+.g10 { background: linear-gradient(160deg, oklch(48% 0.08 255), oklch(34% 0.14 285)); }
+.g11 { background: linear-gradient(160deg, oklch(58% 0.12 300), oklch(42% 0.10 270)); }
+.g12 { background: linear-gradient(160deg, oklch(33% 0.10 275), oklch(52% 0.14 295)); }
+.g13 { background: linear-gradient(160deg, oklch(50% 0.07 260), oklch(38% 0.12 285)); }
+.g14 { background: linear-gradient(160deg, oklch(42% 0.14 290), oklch(56% 0.06 265)); }
+.g15 { background: linear-gradient(160deg, oklch(36% 0.12 270), oklch(54% 0.10 305)); }
+.g16 { background: linear-gradient(160deg, oklch(52% 0.10 280), oklch(35% 0.08 255)); }
+.g17 { background: linear-gradient(160deg, oklch(46% 0.13 300), oklch(38% 0.09 270)); }
+.g18 { background: linear-gradient(160deg, oklch(32% 0.09 285), oklch(50% 0.12 300)); }
+.g19 { background: linear-gradient(160deg, oklch(56% 0.07 265), oklch(36% 0.13 290)); }
+.g20 { background: linear-gradient(160deg, oklch(40% 0.11 275), oklch(52% 0.09 310)); }
+.g21 { background: linear-gradient(160deg, oklch(34% 0.15 280), oklch(54% 0.07 265)); }
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1024px) {
+  .show-card { width: 290px; }
+}
+@media (max-width: 768px) {
+  .show-card { width: 260px; }
+  .page-header { padding: 24px 0 16px; }
+  .page-title { font-size: 1.5rem; }
+  .page-header-controls { width: 100%; }
+}
+@media (max-width: 480px) {
+  .container { padding: 0 16px; }
+  .show-card { width: 85vw; }
+  .page-header-controls { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .footer-inner { flex-direction: column; align-items: flex-start; }
+  .footer-links { flex-wrap: wrap; gap: 16px; }
+  .cal-day { min-height: 52px; padding: 4px; }
+  .cal-day-num { width: 22px; height: 22px; font-size: 11px; }
+  .cal-show-count { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     NAV
+     ============================================ -->
+<nav class="nav">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-mark">w</div>
+        weeb.vip
+      </a>
+
+      <nav class="nav-links">
+        <a href="#" class="nav-link">Home</a>
+        <a href="#" class="nav-link">Season</a>
+        <a href="#" class="nav-link active">Airing</a>
+        <a href="#" class="nav-link">Browse</a>
+      </nav>
+
+      <div class="nav-search">
+        <svg class="nav-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search anime, studios, genres...">
+      </div>
+
+      <div class="nav-right">
+        <button class="nav-btn nav-btn-ghost">Log in</button>
+        <button class="nav-btn nav-btn-primary">Sign up</button>
+      </div>
+
+      <button class="nav-mobile-toggle" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================
+     PAGE HEADER
+     ============================================ -->
+<div class="page-header">
+  <div class="container">
+    <div class="page-header-inner">
+      <div class="page-header-left">
+        <div class="page-header-eyebrow">
+          <div class="live-dot"></div>
+          <span class="label">Spring 2026</span>
+        </div>
+        <h1 class="page-title">Currently Airing</h1>
+      </div>
+
+      <div class="page-header-controls">
+        <div class="view-tabs" role="tablist">
+          <button class="view-tab active" data-view="schedule" role="tab" aria-selected="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Schedule
+          </button>
+          <button class="view-tab" data-view="calendar" role="tab" aria-selected="false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Calendar
+          </button>
+        </div>
+
+        <select class="tz-select" id="tz-select" aria-label="Timezone">
+          <option value="JST">JST (UTC+9)</option>
+          <option value="EST">EST (UTC-5)</option>
+          <option value="GMT">GMT (UTC+0)</option>
+          <option value="PST">PST (UTC-8)</option>
+          <option value="CET">CET (UTC+1)</option>
+        </select>
+
+        <label class="toggle-wrap" id="my-shows-toggle" title="Show only titles in your list">
+          <span class="toggle-switch"></span>
+          My list only
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     SCHEDULE VIEW
+     ============================================ -->
+<div class="view-panel active" id="panel-schedule">
+  <section class="schedule-view">
+    <div class="container" id="schedule-container">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+</div>
+
+<!-- ============================================
+     CALENDAR VIEW
+     ============================================ -->
+<div class="view-panel" id="panel-calendar">
+  <section class="calendar-view">
+    <div class="container">
+      <div class="calendar-layout">
+        <div class="calendar-card">
+          <div class="calendar-nav">
+            <button class="cal-nav-btn" id="cal-prev" aria-label="Previous month">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <span class="calendar-month-label" id="cal-month-label">May 2026</span>
+            <button class="cal-nav-btn" id="cal-next" aria-label="Next month">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+          <div class="calendar-weekdays">
+            <div class="cal-weekday">Mon</div>
+            <div class="cal-weekday">Tue</div>
+            <div class="cal-weekday">Wed</div>
+            <div class="cal-weekday">Thu</div>
+            <div class="cal-weekday">Fri</div>
+            <div class="cal-weekday">Sat</div>
+            <div class="cal-weekday">Sun</div>
+          </div>
+          <div class="calendar-days" id="calendar-days"></div>
+        </div>
+
+        <div class="cal-side-panel" id="cal-side-panel">
+          <div class="cal-panel-header">
+            <span class="cal-panel-label">Selected Day</span>
+            <span class="cal-panel-date" id="cal-panel-date">--</span>
+          </div>
+          <div id="cal-panel-body">
+            <div class="cal-panel-empty">Select a day to see airing shows</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================
+     FOOTER
+     ============================================ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div class="footer-brand">
+          <div class="footer-brand-mark">w</div>
+          weeb.vip
+        </div>
+        <span class="footer-copy">Anime tracking for serious fans. &copy; 2026</span>
+      </div>
+      <div class="footer-links">
+        <a href="#" class="footer-link">About</a>
+        <a href="#" class="footer-link">API</a>
+        <a href="#" class="footer-link">Discord</a>
+        <a href="#" class="footer-link">GitHub</a>
+        <a href="#" class="footer-link">Privacy</a>
+        <a href="#" class="footer-link">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================
+   DATA
+   ============================================ */
+
+const TODAY = { year: 2026, month: 4, day: 16 }; // month 0-indexed, Saturday May 16
+
+const WEEK_DATES = [
+  { dayName: 'Monday',    date: 'May 11', iso: '2026-05-11', dayKey: 'mon' },
+  { dayName: 'Tuesday',   date: 'May 12', iso: '2026-05-12', dayKey: 'tue' },
+  { dayName: 'Wednesday', date: 'May 13', iso: '2026-05-13', dayKey: 'wed' },
+  { dayName: 'Thursday',  date: 'May 14', iso: '2026-05-14', dayKey: 'thu' },
+  { dayName: 'Friday',    date: 'May 15', iso: '2026-05-15', dayKey: 'fri' },
+  { dayName: 'Saturday',  date: 'May 16', iso: '2026-05-16', dayKey: 'sat' },
+  { dayName: 'Sunday',    date: 'May 17', iso: '2026-05-17', dayKey: 'sun' },
+];
+
+const SCHEDULE = {
+  mon: [
+    { title: 'Dungeon Meshi',          ep: 'Ep 22', time: '23:00', gradient: 'g1',  status: 'aired' },
+    { title: 'Sousou no Frieren',      ep: 'Ep 31', time: '23:30', gradient: 'g2',  status: 'aired' },
+    { title: 'Kaijuu 8-gou',           ep: 'Ep 9',  time: '00:00', gradient: 'g3',  status: 'aired' },
+    { title: 'Hananoi-kun to Koi no Yamai', ep: 'Ep 7', time: '01:25', gradient: 'g4', status: 'aired' },
+  ],
+  tue: [
+    { title: 'Oshi no Ko Season 3',    ep: 'Ep 6',  time: '23:00', gradient: 'g5',  status: 'aired' },
+    { title: 'Re:Zero Season 3',       ep: 'Ep 14', time: '23:30', gradient: 'g6',  status: 'aired' },
+    { title: 'Tensui no Sakuna-hime',  ep: 'Ep 8',  time: '00:30', gradient: 'g7',  status: 'aired' },
+    { title: 'Ao no Exorcist: Beyond', ep: 'Ep 11', time: '01:00', gradient: 'g15', status: 'aired' },
+  ],
+  wed: [
+    { title: 'Girls Band Cry',         ep: 'Ep 9',  time: '23:00', gradient: 'g9',  status: 'aired' },
+    { title: 'Yozakura-san Chi no Daisakusen', ep: 'Ep 10', time: '23:30', gradient: 'g10', status: 'aired' },
+    { title: 'Blue Lock Season 2',     ep: 'Ep 18', time: '00:00', gradient: 'g11', status: 'aired' },
+    { title: 'Fairy Tail: 100 Years Quest', ep: 'Ep 15', time: '00:30', gradient: 'g8', status: 'aired' },
+  ],
+  thu: [
+    { title: 'Spy x Family Season 3',  ep: 'Ep 7',  time: '23:00', gradient: 'g12', status: 'aired' },
+    { title: 'Vinland Saga Season 3',  ep: 'Ep 5',  time: '23:30', gradient: 'g13', status: 'aired' },
+    { title: 'Sakamoto Days',          ep: 'Ep 19', time: '00:30', gradient: 'g14', status: 'aired' },
+    { title: 'Kusuriya no Hitorigoto S2', ep: 'Ep 16', time: '01:00', gradient: 'g15', status: 'aired' },
+    { title: 'Solo Leveling Season 2', ep: 'Ep 8',  time: '00:00', gradient: 'g3',  status: 'aired' },
+  ],
+  fri: [
+    { title: 'One Piece',              ep: 'Ep 1118', time: '09:30', gradient: 'g16', status: 'aired' },
+    { title: 'Wind Breaker Season 2',  ep: 'Ep 8',  time: '23:30', gradient: 'g17', status: 'aired' },
+    { title: 'Kinoko no Ko',           ep: 'Ep 6',  time: '00:00', gradient: 'g18', status: 'aired' },
+  ],
+  sat: [
+    { title: 'Bocchi the Rock! Movie', ep: 'Special', time: '18:00', gradient: 'g19', status: 'aired', countdown: 'Aired' },
+    { title: 'Hibike! Euphonium 3',    ep: 'Ep 8',  time: '23:00', gradient: 'g20', status: 'airing-now', countdown: 'LIVE' },
+    { title: 'Dandadan Season 2',      ep: 'Ep 4',  time: '23:30', gradient: 'g5',  status: 'upcoming', countdown: 'In 0h 30m' },
+    { title: 'Orb: On the Movements of the Earth', ep: 'Ep 9', time: '00:00', gradient: 'g21', status: 'upcoming', countdown: 'In 1h 00m' },
+    { title: 'Kage no Jitsuryokusha ni Naritakute!', ep: 'Ep 12', time: '01:30', gradient: 'g1', status: 'upcoming', countdown: 'In 2h 30m' },
+  ],
+  sun: [
+    { title: 'Dragon Ball Daima',      ep: 'Ep 28', time: '09:00', gradient: 'g2',  status: 'upcoming', countdown: 'Tomorrow 09:00' },
+    { title: 'Wistoria: Wand & Sword', ep: 'Ep 11', time: '17:00', gradient: 'g8',  status: 'upcoming', countdown: 'Tomorrow 17:00' },
+    { title: 'NieR:Automata Ver1.1a',  ep: 'Ep 15', time: '23:30', gradient: 'g11', status: 'upcoming', countdown: 'Tomorrow 23:30' },
+    { title: 'Mononoke the Movie: Phantom in the Rain', ep: 'Ep 7', time: '00:00', gradient: 'g14', status: 'upcoming', countdown: 'Tomorrow' },
+  ],
+};
+
+// Calendar show data
+const CAL_SHOWS = {};
+WEEK_DATES.forEach(d => {
+  CAL_SHOWS[d.iso] = SCHEDULE[d.dayKey].map(s => ({
+    title: s.title, ep: s.ep, time: s.time, gradient: s.gradient
+  }));
+});
+
+const MAY_EXTRA = {
+  '2026-05-01': [
+    { title: 'Spy x Family S3', ep: 'Ep 5', time: '23:00', gradient: 'g12' },
+    { title: 'Vinland Saga S3', ep: 'Ep 3', time: '23:30', gradient: 'g13' },
+    { title: 'Solo Leveling S2', ep: 'Ep 6', time: '00:00', gradient: 'g3' },
+  ],
+  '2026-05-02': [
+    { title: 'One Piece', ep: 'Ep 1116', time: '09:30', gradient: 'g16' },
+    { title: 'Wind Breaker S2', ep: 'Ep 6', time: '23:30', gradient: 'g17' },
+  ],
+  '2026-05-03': [
+    { title: 'Hibike! Euphonium 3', ep: 'Ep 6', time: '23:00', gradient: 'g20' },
+    { title: 'Dandadan S2', ep: 'Ep 2', time: '23:30', gradient: 'g5' },
+    { title: 'Kage no Jitsuryokusha', ep: 'Ep 10', time: '01:30', gradient: 'g1' },
+  ],
+  '2026-05-04': [
+    { title: 'Dragon Ball Daima', ep: 'Ep 26', time: '09:00', gradient: 'g2' },
+    { title: 'NieR:Automata', ep: 'Ep 13', time: '23:30', gradient: 'g11' },
+    { title: 'Mononoke', ep: 'Ep 5', time: '00:00', gradient: 'g14' },
+  ],
+  '2026-05-05': [
+    { title: 'Dungeon Meshi', ep: 'Ep 20', time: '23:00', gradient: 'g1' },
+    { title: 'Sousou no Frieren', ep: 'Ep 29', time: '23:30', gradient: 'g2' },
+    { title: 'Kaijuu 8-gou', ep: 'Ep 7', time: '00:00', gradient: 'g3' },
+  ],
+  '2026-05-06': [
+    { title: 'Oshi no Ko S3', ep: 'Ep 4', time: '23:00', gradient: 'g5' },
+    { title: 'Re:Zero S3', ep: 'Ep 12', time: '23:30', gradient: 'g6' },
+  ],
+  '2026-05-07': [
+    { title: 'Girls Band Cry', ep: 'Ep 7', time: '23:00', gradient: 'g9' },
+    { title: 'Blue Lock S2', ep: 'Ep 16', time: '00:00', gradient: 'g11' },
+    { title: 'Yozakura Family', ep: 'Ep 8', time: '23:30', gradient: 'g10' },
+  ],
+  '2026-05-08': [
+    { title: 'Spy x Family S3', ep: 'Ep 6', time: '23:00', gradient: 'g12' },
+    { title: 'Sakamoto Days', ep: 'Ep 18', time: '00:30', gradient: 'g14' },
+    { title: 'Solo Leveling S2', ep: 'Ep 7', time: '00:00', gradient: 'g3' },
+  ],
+  '2026-05-09': [
+    { title: 'One Piece', ep: 'Ep 1117', time: '09:30', gradient: 'g16' },
+    { title: 'Kinoko no Ko', ep: 'Ep 5', time: '00:00', gradient: 'g18' },
+  ],
+  '2026-05-10': [
+    { title: 'Hibike! Euphonium 3', ep: 'Ep 7', time: '23:00', gradient: 'g20' },
+    { title: 'Dandadan S2', ep: 'Ep 3', time: '23:30', gradient: 'g5' },
+    { title: 'Orb: On the Movements', ep: 'Ep 8', time: '00:00', gradient: 'g21' },
+  ],
+  '2026-05-18': [
+    { title: 'Dungeon Meshi', ep: 'Ep 23', time: '23:00', gradient: 'g1' },
+    { title: 'Sousou no Frieren', ep: 'Ep 32', time: '23:30', gradient: 'g2' },
+    { title: 'Kaijuu 8-gou', ep: 'Ep 10', time: '00:00', gradient: 'g3' },
+  ],
+  '2026-05-19': [
+    { title: 'Oshi no Ko S3', ep: 'Ep 7', time: '23:00', gradient: 'g5' },
+    { title: 'Re:Zero S3', ep: 'Ep 15', time: '23:30', gradient: 'g6' },
+    { title: 'Ao no Exorcist', ep: 'Ep 12', time: '01:00', gradient: 'g15' },
+  ],
+  '2026-05-20': [
+    { title: 'Girls Band Cry', ep: 'Ep 10', time: '23:00', gradient: 'g9' },
+    { title: 'Blue Lock S2', ep: 'Ep 19', time: '00:00', gradient: 'g11' },
+    { title: 'Fairy Tail: 100YQ', ep: 'Ep 16', time: '00:30', gradient: 'g8' },
+  ],
+  '2026-05-21': [
+    { title: 'Spy x Family S3', ep: 'Ep 8', time: '23:00', gradient: 'g12' },
+    { title: 'Sakamoto Days', ep: 'Ep 20', time: '00:30', gradient: 'g14' },
+    { title: 'Kusuriya S2', ep: 'Ep 17', time: '01:00', gradient: 'g15' },
+  ],
+  '2026-05-22': [
+    { title: 'One Piece', ep: 'Ep 1119', time: '09:30', gradient: 'g16' },
+    { title: 'Wind Breaker S2', ep: 'Ep 9', time: '23:30', gradient: 'g17' },
+  ],
+  '2026-05-23': [
+    { title: 'Hibike! Euphonium 3', ep: 'Ep 9', time: '23:00', gradient: 'g20' },
+    { title: 'Dandadan S2', ep: 'Ep 5', time: '23:30', gradient: 'g5' },
+    { title: 'Kage no Jitsuryokusha', ep: 'Ep 13', time: '01:30', gradient: 'g1' },
+  ],
+  '2026-05-24': [
+    { title: 'Dragon Ball Daima', ep: 'Ep 29', time: '09:00', gradient: 'g2' },
+    { title: 'NieR:Automata', ep: 'Ep 16', time: '23:30', gradient: 'g11' },
+  ],
+  '2026-05-25': [
+    { title: 'Dungeon Meshi', ep: 'Ep 24', time: '23:00', gradient: 'g1' },
+    { title: 'Kaijuu 8-gou', ep: 'Ep 11', time: '00:00', gradient: 'g3' },
+    { title: 'Hananoi-kun', ep: 'Ep 9', time: '01:25', gradient: 'g4' },
+  ],
+  '2026-05-26': [
+    { title: 'Oshi no Ko S3', ep: 'Ep 8', time: '23:00', gradient: 'g5' },
+    { title: 'Re:Zero S3', ep: 'Ep 16', time: '23:30', gradient: 'g6' },
+  ],
+  '2026-05-28': [
+    { title: 'Spy x Family S3', ep: 'Ep 9', time: '23:00', gradient: 'g12' },
+    { title: 'Vinland Saga S3', ep: 'Ep 7', time: '23:30', gradient: 'g13' },
+  ],
+  '2026-05-29': [
+    { title: 'One Piece', ep: 'Ep 1120', time: '09:30', gradient: 'g16' },
+    { title: 'Kinoko no Ko', ep: 'Ep 8', time: '00:00', gradient: 'g18' },
+  ],
+  '2026-05-30': [
+    { title: 'Hibike! Euphonium 3', ep: 'Ep 10', time: '23:00', gradient: 'g20' },
+    { title: 'Dandadan S2', ep: 'Ep 6', time: '23:30', gradient: 'g5' },
+    { title: 'Orb: On the Movements', ep: 'Ep 11', time: '00:00', gradient: 'g21' },
+    { title: 'Bocchi the Rock! Movie', ep: 'Special', time: '18:00', gradient: 'g19' },
+  ],
+  '2026-05-31': [
+    { title: 'Dragon Ball Daima', ep: 'Ep 30', time: '09:00', gradient: 'g2' },
+    { title: 'Wistoria', ep: 'Ep 13', time: '17:00', gradient: 'g8' },
+    { title: 'Mononoke', ep: 'Ep 9', time: '00:00', gradient: 'g14' },
+  ],
+};
+Object.assign(CAL_SHOWS, MAY_EXTRA);
+
+/* ============================================
+   RENDER SCHEDULE VIEW
+   ============================================ */
+function renderSchedule() {
+  const container = document.getElementById('schedule-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const todayIso = `${TODAY.year}-${String(TODAY.month + 1).padStart(2, '0')}-${String(TODAY.day).padStart(2, '0')}`;
+
+  WEEK_DATES.forEach(dayInfo => {
+    const shows = SCHEDULE[dayInfo.dayKey] || [];
+    const isToday = dayInfo.iso === todayIso;
+
+    const section = document.createElement('div');
+    section.className = 'day-section';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'day-section-header';
+    header.innerHTML = `
+      <span class="day-name">${dayInfo.dayName}</span>
+      <span class="day-date">${dayInfo.date}</span>
+      ${isToday ? '<span class="day-today-badge"><span class="live-dot" style="width:6px;height:6px;"></span>Today</span>' : ''}
+      <span class="day-count">${shows.length} show${shows.length !== 1 ? 's' : ''}</span>
+      <svg class="day-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    `;
+
+    header.addEventListener('click', () => {
+      section.classList.toggle('collapsed');
+    });
+
+    section.appendChild(header);
+
+    // Cards row
+    const cardsRow = document.createElement('div');
+    cardsRow.className = 'day-cards';
+
+    shows.forEach(show => {
+      const card = document.createElement('div');
+      card.className = 'show-card';
+
+      let countdownHTML = '';
+      if (show.status === 'aired') {
+        countdownHTML = '<span class="show-countdown aired">Aired</span>';
+      } else if (show.status === 'airing-now') {
+        countdownHTML = '<span class="show-countdown airing-now"><span class="airing-now-dot"></span>LIVE</span>';
+      } else if (show.countdown) {
+        countdownHTML = `<span class="show-countdown upcoming">${show.countdown}</span>`;
+      }
+
+      card.innerHTML = `
+        <div class="show-poster">
+          <div class="show-poster-gradient ${show.gradient}"></div>
+        </div>
+        <div class="show-info">
+          <div class="show-title">${show.title}</div>
+          <div class="show-meta-row">
+            <span class="show-ep">${show.ep}</span>
+            <span class="show-time">${show.time} JST</span>
+          </div>
+          ${countdownHTML}
+        </div>
+        <button class="show-add-btn" title="Add to list" aria-label="Add to list">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      `;
+      cardsRow.appendChild(card);
+    });
+
+    section.appendChild(cardsRow);
+    container.appendChild(section);
+  });
+}
+
+/* ============================================
+   RENDER CALENDAR VIEW
+   ============================================ */
+let calYear = 2026;
+let calMonth = 4;
+let selectedDate = null;
+
+function renderCalendar() {
+  const label = document.getElementById('cal-month-label');
+  const daysEl = document.getElementById('calendar-days');
+  if (!label || !daysEl) return;
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  label.textContent = `${monthNames[calMonth]} ${calYear}`;
+
+  daysEl.innerHTML = '';
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  let startDow = firstDay.getDay();
+  startDow = (startDow + 6) % 7;
+
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+  const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
+
+  const todayIso = `${TODAY.year}-${String(TODAY.month + 1).padStart(2, '0')}-${String(TODAY.day).padStart(2, '0')}`;
+
+  for (let i = 0; i < totalCells; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-day';
+
+    let dayNum, iso, otherMonth = false;
+
+    if (i < startDow) {
+      dayNum = daysInPrevMonth - startDow + 1 + i;
+      const prevMonth = calMonth === 0 ? 11 : calMonth - 1;
+      const prevYear  = calMonth === 0 ? calYear - 1 : calYear;
+      iso = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+      otherMonth = true;
+    } else if (i >= startDow + daysInMonth) {
+      dayNum = i - startDow - daysInMonth + 1;
+      const nextMonth = calMonth === 11 ? 0 : calMonth + 1;
+      const nextYear  = calMonth === 11 ? calYear + 1 : calYear;
+      iso = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+      otherMonth = true;
+    } else {
+      dayNum = i - startDow + 1;
+      iso = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    }
+
+    if (otherMonth) cell.classList.add('other-month');
+    if (iso === todayIso) cell.classList.add('today');
+    if (selectedDate === iso) cell.classList.add('selected');
+
+    const numEl = document.createElement('div');
+    numEl.className = 'cal-day-num';
+    numEl.textContent = dayNum;
+    cell.appendChild(numEl);
+
+    const shows = CAL_SHOWS[iso] || [];
+    if (shows.length > 0) {
+      const dotsEl = document.createElement('div');
+      dotsEl.className = 'cal-dots';
+      const dotClasses = ['cal-dot-accent', 'cal-dot-violet', 'cal-dot-green', 'cal-dot-amber'];
+      const dotCount = Math.min(shows.length, 5);
+      for (let d = 0; d < dotCount; d++) {
+        const dot = document.createElement('div');
+        dot.className = 'cal-dot ' + dotClasses[d % dotClasses.length];
+        dotsEl.appendChild(dot);
+      }
+      cell.appendChild(dotsEl);
+
+      const countEl = document.createElement('span');
+      countEl.className = 'cal-show-count';
+      countEl.textContent = shows.length;
+      cell.appendChild(countEl);
+    }
+
+    cell.dataset.iso = iso;
+    cell.addEventListener('click', () => selectCalDay(iso));
+    daysEl.appendChild(cell);
+  }
+}
+
+function selectCalDay(iso) {
+  selectedDate = iso;
+  renderCalendar();
+
+  const panelDate = document.getElementById('cal-panel-date');
+  const panelBody = document.getElementById('cal-panel-body');
+  if (!panelDate || !panelBody) return;
+
+  const d = new Date(iso + 'T00:00:00');
+  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  panelDate.textContent = d.toLocaleDateString('en-US', opts);
+
+  const shows = CAL_SHOWS[iso] || [];
+  if (shows.length === 0) {
+    panelBody.innerHTML = '<div class="cal-panel-empty">No shows airing this day</div>';
+    return;
+  }
+
+  panelBody.innerHTML = '';
+  const list = document.createElement('div');
+  list.className = 'cal-panel-shows';
+
+  shows.forEach(show => {
+    const item = document.createElement('div');
+    item.className = 'cal-show-item';
+    item.innerHTML = `
+      <div class="cal-show-poster">
+        <div class="show-poster-gradient ${show.gradient}" style="position:absolute;inset:0;"></div>
+      </div>
+      <div class="cal-show-info">
+        <div class="cal-show-title">${show.title}</div>
+        <div class="cal-show-meta">
+          <span class="cal-ep">${show.ep}</span>
+          <span class="cal-time">${show.time} JST</span>
+        </div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+
+  panelBody.appendChild(list);
+}
+
+/* ============================================
+   VIEW TOGGLE
+   ============================================ */
+function initViewToggle() {
+  const tabs = document.querySelectorAll('.view-tab');
+  const panels = {
+    schedule: document.getElementById('panel-schedule'),
+    calendar: document.getElementById('panel-calendar'),
+  };
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const view = tab.dataset.view;
+      tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+
+      Object.entries(panels).forEach(([key, el]) => {
+        el.classList.toggle('active', key === view);
+      });
+    });
+  });
+}
+
+/* ============================================
+   TIMEZONE SELECTOR
+   ============================================ */
+function initTimezone() {
+  const select = document.getElementById('tz-select');
+  if (!select) return;
+
+  const offsets = { JST: 9, EST: -5, GMT: 0, PST: -8, CET: 1 };
+
+  function convertTime(timeStr, fromTz, toTz) {
+    const [h, m] = timeStr.split(':').map(Number);
+    const diffHours = offsets[toTz] - offsets[fromTz];
+    let newH = h + diffHours;
+    newH = ((newH % 24) + 24) % 24;
+    return `${String(newH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  select.addEventListener('change', () => {
+    const tz = select.value;
+    document.querySelectorAll('.show-time').forEach(el => {
+      const text = el.textContent.trim();
+      const match = text.match(/^(\d{2}:\d{2}) (\w+)$/);
+      if (match) {
+        const converted = convertTime(match[1], match[2], tz);
+        el.textContent = `${converted} ${tz}`;
+      }
+    });
+    document.querySelectorAll('.cal-time').forEach(el => {
+      const text = el.textContent.trim();
+      const match = text.match(/^(\d{2}:\d{2}) (\w+)$/);
+      if (match) {
+        const converted = convertTime(match[1], match[2], tz);
+        el.textContent = `${converted} ${tz}`;
+      }
+    });
+  });
+}
+
+/* ============================================
+   MY SHOWS TOGGLE
+   ============================================ */
+function initMyShowsToggle() {
+  const toggle = document.getElementById('my-shows-toggle');
+  if (!toggle) return;
+  toggle.addEventListener('click', () => {
+    toggle.classList.toggle('on');
+    const isOn = toggle.classList.contains('on');
+    document.querySelectorAll('.show-card, .cal-show-item').forEach(row => {
+      row.style.opacity = isOn ? '0.2' : '';
+      row.style.pointerEvents = isOn ? 'none' : '';
+    });
+    if (isOn) {
+      const tracked = [0, 4, 8, 13, 18, 23, 27];
+      const cards = document.querySelectorAll('.show-card');
+      tracked.forEach(idx => {
+        if (cards[idx]) {
+          cards[idx].style.opacity = '1';
+          cards[idx].style.pointerEvents = '';
+        }
+      });
+    }
+  });
+}
+
+/* ============================================
+   CALENDAR NAVIGATION
+   ============================================ */
+function initCalNav() {
+  document.getElementById('cal-prev').addEventListener('click', () => {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  document.getElementById('cal-next').addEventListener('click', () => {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+}
+
+/* ============================================
+   INIT
+   ============================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderSchedule();
+  renderCalendar();
+  const todayIso = `${TODAY.year}-${String(TODAY.month + 1).padStart(2, '0')}-${String(TODAY.day).padStart(2, '0')}`;
+  selectCalDay(todayIso);
+  initViewToggle();
+  initTimezone();
+  initMyShowsToggle();
+  initCalNav();
+});
+</script>
+</body>
+</html>

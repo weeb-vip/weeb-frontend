@@ -84,7 +84,7 @@
   $: isLoading = $resendMutation.isPending;
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-md w-full space-y-8">
     <div>
       <div class="flex justify-center">
@@ -97,10 +97,10 @@
           }}
         />
       </div>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-weeb-fg text-weeb-fg">
         Resend Email Verification
       </h2>
-      <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+      <p class="mt-2 text-center text-sm text-weeb-fg-muted">
         Enter your email address to receive a new verification link
       </p>
     </div>
@@ -121,16 +121,16 @@
       </div>
 
       {#if errorMessage}
-        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
-          <p class="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+        <div class="bg-weeb-red/10 border border-weeb-red/30 rounded-md p-3">
+          <p class="text-sm text-weeb-red">{errorMessage}</p>
         </div>
       {/if}
 
       {#if successMessage}
-        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3">
+        <div class="bg-weeb-green/10 border border-weeb-green rounded-md p-3">
           <div class="flex items-center">
-            <Fa icon={faEnvelope} class="text-green-400 mr-2" />
-            <p class="text-sm text-green-600 dark:text-green-400">{successMessage}</p>
+            <Fa icon={faEnvelope} class="text-weeb-green mr-2" />
+            <p class="text-sm text-weeb-green">{successMessage}</p>
           </div>
         </div>
       {/if}
@@ -147,27 +147,27 @@
       </div>
 
       <div class="text-center space-y-2">
-        <p class="text-sm text-gray-600 dark:text-gray-400">
+        <p class="text-sm text-weeb-fg-muted">
           Already verified?{' '}
           <a
             href="/auth/login"
-            class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+            class="text-weeb-accent hover:text-weeb-accent transition-colors"
           >
             Sign in here
           </a>
         </p>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
+        <p class="text-sm text-weeb-fg-muted">
           Need help?{' '}
           <a
             href="/auth/password-reset-request"
-            class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+            class="text-weeb-accent hover:text-weeb-accent transition-colors"
           >
             Reset your password
           </a>
         </p>
         <a
           href="/"
-          class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors inline-flex items-center"
+          class="text-sm text-weeb-fg-muted hover:text-weeb-fg transition-colors inline-flex items-center"
         >
           <Fa icon={faArrowLeft} class="mr-2" />
           Back to Home

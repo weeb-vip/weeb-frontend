@@ -127,14 +127,14 @@
   <!-- Loading skeleton -->
   <div class="max-w-2xl mx-auto p-6">
     <div class="mb-6">
-      <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-32 mb-4 animate-pulse"></div>
-      <div class="h-8 bg-gray-300 dark:bg-gray-600 rounded w-48 mb-2 animate-pulse"></div>
-      <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-64 animate-pulse"></div>
+      <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded w-32 mb-4 animate-pulse"></div>
+      <div class="h-8 bg-weeb-surface-hover bg-weeb-surface-hover rounded w-48 mb-2 animate-pulse"></div>
+      <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded w-64 animate-pulse"></div>
     </div>
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+    <div class="bg-weeb-surface shadow rounded-lg p-6">
       <div class="space-y-6">
         {#each Array(5) as _}
-          <div class="h-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div class="h-16 bg-weeb-surface rounded animate-pulse"></div>
         {/each}
       </div>
     </div>
@@ -144,16 +144,16 @@
     <div class="mb-6">
       <a
         href="/profile"
-        class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors mb-4"
+        class="inline-flex items-center text-weeb-accent hover:text-weeb-accent transition-colors mb-4"
       >
         <Fa icon={faArrowLeft} class="mr-2" />
         Back to Profile
       </a>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
-      <p class="text-gray-600 dark:text-gray-400 mt-1">Update your personal information and preferences</p>
+      <h1 class="text-2xl font-bold text-weeb-fg text-weeb-fg">Profile Settings</h1>
+      <p class="text-weeb-fg-muted mt-1">Update your personal information and preferences</p>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 transition-colors duration-300">
+    <div class="bg-weeb-surface shadow rounded-lg p-6 transition-colors duration-300">
       <form on:submit={handleSubmit} class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormInput
@@ -205,7 +205,7 @@
         />
 
         <div>
-          <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label for="language" class="block text-sm font-medium text-weeb-fg-secondary mb-2">
             <Fa icon={faGlobe} class="mr-2" />
             Language
           </label>
@@ -214,7 +214,7 @@
             name="language"
             value={formData.language || ''}
             on:change={handleLanguageChange}
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+            class="w-full px-3 py-2 border border-weeb-border rounded-md shadow-sm bg-weeb-surface text-weeb-fg focus:outline-none focus:ring-2 focus:ring-weeb-accent focus:border-weeb-accent transition-colors duration-200"
           >
             <option value={Language.En}>English</option>
             <option value={Language.Th}>Thai</option>
@@ -222,15 +222,15 @@
         </div>
 
         {#if successMessage}
-          <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3 flex items-center">
-            <Fa icon={faCheck} class="text-green-600 dark:text-green-400 mr-2" />
-            <p class="text-sm text-green-600 dark:text-green-400">{successMessage}</p>
+          <div class="bg-weeb-green/10 border border-weeb-green rounded-md p-3 flex items-center">
+            <Fa icon={faCheck} class="text-weeb-green mr-2" />
+            <p class="text-sm text-weeb-green">{successMessage}</p>
           </div>
         {/if}
 
         {#if errorMessage}
-          <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
-            <p class="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+          <div class="bg-weeb-red/10 border border-weeb-red/30 rounded-md p-3">
+            <p class="text-sm text-weeb-red">{errorMessage}</p>
           </div>
         {/if}
 
@@ -245,7 +245,7 @@
           />
           <a
             href="/profile"
-            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 inline-flex items-center justify-center"
+            class="px-4 py-2 border border-weeb-border rounded-md text-weeb-fg-secondary hover:bg-weeb-surface-hover transition-colors duration-200 inline-flex items-center justify-center"
           >
             Cancel
           </a>

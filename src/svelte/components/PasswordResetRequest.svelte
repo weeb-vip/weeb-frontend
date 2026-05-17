@@ -103,27 +103,27 @@
 {#if isClient}
   {#if QueryClientProvider && queryClient}
     <svelte:component this={QueryClientProvider} client={queryClient}>
-      <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8 relative">
 
     {#if submitted}
       <!-- Success state -->
       <div class="text-center">
-        <div class="mx-auto h-12 w-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
-          <Fa icon={faEnvelope} class="text-green-600 dark:text-green-400 text-xl" />
+        <div class="mx-auto h-12 w-12 bg-weeb-green/15 rounded-full flex items-center justify-center mb-4">
+          <Fa icon={faEnvelope} class="text-weeb-green text-xl" />
         </div>
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Check your email</h2>
-        <p class="mt-4 text-gray-600 dark:text-gray-400">
+        <h2 class="text-3xl font-bold text-weeb-fg">Check your email</h2>
+        <p class="mt-4 text-weeb-fg-muted">
           We've sent a password reset link to <strong>{formData.email}</strong>
         </p>
-        <p class="mt-2 text-sm text-gray-500 dark:text-gray-500">
+        <p class="mt-2 text-sm text-weeb-fg-muted">
           Please check your email and follow the instructions to reset your password.
         </p>
       </div>
       <div class="mt-8">
         <a
           href="/"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-weeb-fg-muted hover:text-weeb-fg transition-colors"
         >
           <Fa icon={faArrowLeft} class="mr-2" />
           Back to Home
@@ -138,11 +138,11 @@
       {/if}
 
       <div>
-        <div class="mx-auto h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-          <Fa icon={faEnvelope} class="text-blue-600 dark:text-blue-400 text-xl" />
+        <div class="mx-auto h-12 w-12 bg-weeb-accent/15 rounded-full flex items-center justify-center">
+          <Fa icon={faEnvelope} class="text-weeb-accent text-xl" />
         </div>
-        <h2 class="mt-6 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">Reset your password</h2>
-        <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+        <h2 class="mt-6 text-center text-3xl font-bold text-weeb-fg">Reset your password</h2>
+        <p class="mt-2 text-center text-sm text-weeb-fg-muted">
           Enter your username and email address to receive a password reset link
         </p>
       </div>
@@ -184,8 +184,8 @@
           </div>
 
           {#if errorMessage}
-            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mt-4">
-              <p class="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+            <div class="bg-weeb-red/10 border border-weeb-red/30 rounded-md p-3 mt-4">
+              <p class="text-sm text-weeb-red">{errorMessage}</p>
             </div>
           {/if}
 
@@ -203,7 +203,7 @@
           <div class="text-center mt-2">
             <a
               href="/"
-              class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
+              class="text-sm text-weeb-accent hover:text-weeb-accent transition-colors"
             >
               ← Back to Home
             </a>
@@ -218,10 +218,10 @@
   {:else}
     <!-- Fallback without QueryClient - show skeleton -->
     <slot name="fallback">
-      <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8">
           <div class="text-center">
-            <p class="text-gray-600 dark:text-gray-400">Loading...</p>
+            <p class="text-weeb-fg-muted">Loading...</p>
           </div>
         </div>
       </div>
@@ -230,10 +230,10 @@
 {:else}
   <!-- SSR fallback - show skeleton -->
   <slot name="fallback">
-    <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
       <div class="max-w-md w-full space-y-8">
         <div class="text-center">
-          <p class="text-gray-600 dark:text-gray-400">Loading...</p>
+          <p class="text-weeb-fg-muted">Loading...</p>
         </div>
       </div>
     </div>

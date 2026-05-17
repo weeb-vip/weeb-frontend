@@ -270,7 +270,7 @@
 
   <!-- Hero Banner Section -->
   {#if $currentlyAiringQuery.isLoading || sortedCurrentlyAiring.length > 0}
-    <div class="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] sm:h-[650px] md:h-[700px] md:mt-8 mb-8 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
+    <div class="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] sm:h-[650px] md:h-[700px] md:mt-8 mb-8 md:mx-0 md:rounded-lg md:shadow-xl bg-weeb-surface">
       {#if bannerAnime && !$currentlyAiringQuery.isLoading}
         {#key bannerAnime.id}
           <HeroBanner
@@ -290,7 +290,7 @@
   <div class="mb-8 flex justify-end">
     <a
       href="/airing/calendar"
-      class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+      class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-weeb-accent hover:bg-weeb-accent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
     >
       View Calendar
     </a>
@@ -301,7 +301,7 @@
     <!-- Airing Next 24 Hours -->
     {#if categorizedAnime.airingToday.length > 0}
       <div class="flex flex-col space-y-4">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 class="text-xl font-bold text-weeb-fg">
           Airing Next 24 Hours ({categorizedAnime.airingToday.length})
         </h2>
         <div class="flex flex-col space-y-4">
@@ -353,7 +353,7 @@
     <!-- Airing This Week -->
     {#if categorizedAnime.airingThisWeek.length > 0}
       <div class="flex flex-col space-y-4">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 class="text-xl font-bold text-weeb-fg">
           Airing This Week ({categorizedAnime.airingThisWeek.length})
         </h2>
         <div class="flex flex-col space-y-4">
@@ -405,7 +405,7 @@
     <!-- Recently Aired -->
     {#if categorizedAnime.recentlyAired.length > 0}
       <div class="flex flex-col space-y-4">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 class="text-xl font-bold text-weeb-fg">
           Recently Aired ({categorizedAnime.recentlyAired.length})
         </h2>
         <div class="flex flex-col space-y-4">
@@ -457,7 +457,7 @@
     <!-- Coming Soon -->
     {#if categorizedAnime.comingSoon.length > 0}
       <div class="flex flex-col space-y-4">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 class="text-xl font-bold text-weeb-fg">
           Coming Soon ({categorizedAnime.comingSoon.length})
         </h2>
         <div class="flex flex-col space-y-4">

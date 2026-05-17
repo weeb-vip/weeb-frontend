@@ -375,27 +375,27 @@
 <div class="max-w-screen-2xl mx-auto px-4 py-8">
   {#if !mounted || !userQuery || (userQuery && $userQuery.isLoading)}
     <!-- Loading skeleton -->
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-8 animate-pulse">
+    <div class="bg-weeb-surface shadow rounded-lg p-6 mb-8 animate-pulse">
       <div class="flex items-center space-x-4 mb-4">
-        <div class="w-20 h-20 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-        <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-32"></div>
+        <div class="w-20 h-20 bg-weeb-surface-hover bg-weeb-surface-hover rounded-full"></div>
+        <div class="h-6 bg-weeb-surface-hover bg-weeb-surface-hover rounded w-32"></div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {#each Array(4) as _}
           <div>
-            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-2"></div>
-            <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-32"></div>
+            <div class="h-4 bg-weeb-surface rounded w-20 mb-2"></div>
+            <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded w-32"></div>
           </div>
         {/each}
       </div>
     </div>
   {:else if userQuery && $userQuery.data}
     <!-- User Info Section -->
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-8 transition-colors duration-300">
+    <div class="bg-weeb-surface shadow rounded-lg p-6 mb-8 transition-colors duration-300">
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center space-x-4">
           <div class="relative group">
-            <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
+            <div class="w-20 h-20 rounded-full overflow-hidden bg-weeb-surface">
               {#if $userQuery.data.profileImageUrl}
                 <img
                   src={getProfileImageUrl($userQuery.data.profileImageUrl)}
@@ -403,7 +403,7 @@
                   class="w-full h-full object-cover"
                 />
               {:else}
-                <div class="w-full h-full flex items-center justify-center text-2xl font-semibold text-gray-600 dark:text-gray-400">
+                <div class="w-full h-full flex items-center justify-center text-2xl font-semibold text-weeb-fg-muted">
                   {$userQuery.data.username.charAt(0).toUpperCase()}
                 </div>
               {/if}
@@ -416,35 +416,35 @@
               <span class="text-white text-sm font-medium">Change</span>
             </button>
           </div>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Profile</h2>
+          <h2 class="text-xl font-semibold text-weeb-fg">Profile</h2>
         </div>
         <a
           href="/profile/settings"
-          class="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-300 text-sm"
+          class="text-weeb-accent hover:underline transition-colors duration-300 text-sm"
         >
           Settings
         </a>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <div>
-          <p class="text-gray-600 dark:text-gray-400">Name</p>
-          <p class="text-gray-900 dark:text-gray-100 font-medium">
+          <p class="text-weeb-fg-muted">Name</p>
+          <p class="text-weeb-fg font-medium">
             {$userQuery.data.firstname} {$userQuery.data.lastname}
           </p>
         </div>
         <div>
-          <p class="text-gray-600 dark:text-gray-400">Username</p>
-          <p class="text-gray-900 dark:text-gray-100 font-medium">{$userQuery.data.username}</p>
+          <p class="text-weeb-fg-muted">Username</p>
+          <p class="text-weeb-fg font-medium">{$userQuery.data.username}</p>
         </div>
         <div>
-          <p class="text-gray-600 dark:text-gray-400">Email</p>
-          <p class="text-gray-900 dark:text-gray-100 font-medium">
+          <p class="text-weeb-fg-muted">Email</p>
+          <p class="text-weeb-fg font-medium">
             {$userQuery.data.email || "Not provided"}
           </p>
         </div>
         <div>
-          <p class="text-gray-600 dark:text-gray-400">Language</p>
-          <p class="text-gray-900 dark:text-gray-100 font-medium">{$userQuery.data.language}</p>
+          <p class="text-weeb-fg-muted">Language</p>
+          <p class="text-weeb-fg font-medium">{$userQuery.data.language}</p>
         </div>
       </div>
     </div>
@@ -454,10 +454,10 @@
   <div class="space-y-8">
     <!-- Header -->
     <div class="flex items-center justify-between">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+      <h1 class="text-3xl font-bold text-weeb-fg">Dashboard</h1>
       <a
         href="/profile/anime"
-        class="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+        class="flex items-center gap-2 text-weeb-accent hover:text-weeb-accent-hover transition-colors"
       >
         <i class="fas fa-bookmark"></i> View All Lists →
       </a>
@@ -466,12 +466,12 @@
     <section>
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
-          <i class="fas fa-play text-blue-500 text-xl"></i>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <i class="fas fa-play text-weeb-accent text-xl"></i>
+          <h2 class="text-xl font-semibold text-weeb-fg">
             Currently Watching
           </h2>
           {#if !watchlistAnalysis.isLoading && watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
-            <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm font-medium px-2 py-1 rounded-full">
+            <span class="bg-weeb-accent/15 text-weeb-accent text-sm font-medium px-2 py-1 rounded-full">
               {watchlistAnalysis.currentlyWatching.length}
             </span>
           {/if}
@@ -479,7 +479,7 @@
         {#if !watchlistAnalysis.isLoading && watchlistAnalysis.watching > 0}
           <a
             href="/profile/anime"
-            class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors text-sm flex items-center gap-1"
+            class="text-weeb-accent hover:text-weeb-accent-hover transition-colors text-sm flex items-center gap-1"
           >
             View All →
           </a>
@@ -490,13 +490,13 @@
         <!-- Loading skeleton for Currently Watching -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {#each Array(6) as _}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 animate-pulse">
+            <div class="bg-weeb-surface rounded-lg shadow-sm p-4 animate-pulse">
               <div class="flex gap-3">
-                <div class="w-16 h-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                <div class="w-16 h-24 bg-weeb-surface-hover bg-weeb-surface-hover rounded"></div>
                 <div class="flex-1">
-                  <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
-                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded mb-2"></div>
+                  <div class="h-3 bg-weeb-surface rounded w-3/4 mb-2"></div>
+                  <div class="h-3 bg-weeb-surface rounded w-1/2"></div>
                 </div>
               </div>
             </div>
@@ -533,12 +533,12 @@
         </div>
       {:else}
         <!-- Empty state for Currently Watching -->
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center">
-          <i class="fas fa-tv text-4xl text-gray-400 dark:text-gray-600 mb-3 block"></i>
-          <p class="text-gray-600 dark:text-gray-400">
+        <div class="bg-weeb-bg-elevated rounded-lg p-6 text-center">
+          <i class="fas fa-tv text-4xl text-weeb-fg-muted mb-3 block"></i>
+          <p class="text-weeb-fg-muted">
             You're not currently watching any anime
           </p>
-          <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
+          <p class="text-sm text-weeb-fg-muted mt-2">
             Start watching something new from your plan to watch list
           </p>
         </div>
@@ -546,32 +546,32 @@
     </section>
 
     <!-- Quick Stats -->
-    <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm transition-colors duration-300">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Quick Stats</h3>
+    <section class="bg-weeb-surface rounded-lg p-6 shadow-sm transition-colors duration-300">
+      <h3 class="text-lg font-semibold text-weeb-fg mb-4">Quick Stats</h3>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="text-center">
-          <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <div class="text-2xl font-bold text-weeb-accent">
             {($watchingQuery && $watchingQuery.data?.total) || 0}
           </div>
-          <div class="text-sm text-gray-600 dark:text-gray-400">Watching</div>
+          <div class="text-sm text-weeb-fg-muted">Watching</div>
         </div>
         <div class="text-center">
-          <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+          <div class="text-2xl font-bold text-weeb-green">
             {($planToWatchQuery && $planToWatchQuery.data?.total) || 0}
           </div>
-          <div class="text-sm text-gray-600 dark:text-gray-400">Plan to Watch</div>
+          <div class="text-sm text-weeb-fg-muted">Plan to Watch</div>
         </div>
         <div class="text-center">
-          <div class="text-2xl font-bold text-red-600 dark:text-red-400">
+          <div class="text-2xl font-bold text-weeb-red">
             {watchlistAnalysis.airingSoon.length}
           </div>
-          <div class="text-sm text-gray-600 dark:text-gray-400">This Week</div>
+          <div class="text-sm text-weeb-fg-muted">This Week</div>
         </div>
         <div class="text-center">
-          <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+          <div class="text-2xl font-bold text-weeb-amber">
             {watchlistAnalysis.recentlyAired.length}
           </div>
-          <div class="text-sm text-gray-600 dark:text-gray-400">Recent Episodes</div>
+          <div class="text-sm text-weeb-fg-muted">Recent Episodes</div>
         </div>
       </div>
     </section>
@@ -579,16 +579,16 @@
     <!-- Empty State -->
     {#if watchlistAnalysis.airingSoon.length === 0 && watchlistAnalysis.recentlyAired.length === 0 && (!watchlistAnalysis.currentlyWatching || watchlistAnalysis.currentlyWatching.length === 0)}
       <div class="text-center py-12">
-        <i class="fas fa-bookmark text-6xl text-gray-300 dark:text-gray-600 mb-4 block"></i>
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        <i class="fas fa-bookmark text-6xl text-weeb-fg-muted mb-4 block"></i>
+        <h3 class="text-xl font-semibold text-weeb-fg mb-2">
           Your watchlist is empty
         </h3>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
+        <p class="text-weeb-fg-muted mb-6">
           Start adding anime to your watchlist to see personalized recommendations and airing schedules.
         </p>
         <a
           href="/"
-          class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+          class="inline-flex items-center gap-2 bg-weeb-accent hover:bg-weeb-accent-hover text-white px-6 py-3 rounded-lg transition-colors"
         >
           Explore Anime →
         </a>
@@ -599,12 +599,12 @@
     <section>
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
-          <i class="fas fa-play text-red-500 text-xl"></i>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <i class="fas fa-play text-weeb-red text-xl"></i>
+          <h2 class="text-xl font-semibold text-weeb-fg">
             Airing This Week
           </h2>
           {#if !watchlistAnalysis.isLoading && watchlistAnalysis.airingSoon.length > 0}
-            <span class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-sm font-medium px-2 py-1 rounded-full">
+            <span class="bg-weeb-red/15 text-weeb-red text-sm font-medium px-2 py-1 rounded-full">
               {watchlistAnalysis.airingSoon.length}
             </span>
           {/if}
@@ -615,13 +615,13 @@
         <!-- Loading skeleton for Airing This Week -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {#each Array(3) as _}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 animate-pulse">
+            <div class="bg-weeb-surface rounded-lg shadow-sm p-4 animate-pulse">
               <div class="flex gap-3">
-                <div class="w-16 h-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                <div class="w-16 h-24 bg-weeb-surface-hover bg-weeb-surface-hover rounded"></div>
                 <div class="flex-1">
-                  <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
-                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded mb-2"></div>
+                  <div class="h-3 bg-weeb-surface rounded w-3/4 mb-2"></div>
+                  <div class="h-3 bg-weeb-surface rounded w-1/2"></div>
                 </div>
               </div>
             </div>
@@ -668,12 +668,12 @@
         </div>
       {:else}
         <!-- Empty state for Airing This Week -->
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center">
-          <i class="fas fa-calendar-xmark text-4xl text-gray-400 dark:text-gray-600 mb-3 block"></i>
-          <p class="text-gray-600 dark:text-gray-400">
+        <div class="bg-weeb-bg-elevated rounded-lg p-6 text-center">
+          <i class="fas fa-calendar-xmark text-4xl text-weeb-fg-muted mb-3 block"></i>
+          <p class="text-weeb-fg-muted">
             No episodes airing this week from your watchlist
           </p>
-          <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
+          <p class="text-sm text-weeb-fg-muted mt-2">
             Check back later or add more anime to your watchlist
           </p>
         </div>
@@ -684,12 +684,12 @@
     <section>
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
-          <i class="fas fa-calendar-days text-green-500 text-xl"></i>
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <i class="fas fa-calendar-days text-weeb-green text-xl"></i>
+          <h2 class="text-xl font-semibold text-weeb-fg">
             Recently Aired Episodes
           </h2>
           {#if !watchlistAnalysis.isLoading && watchlistAnalysis.recentlyAired.length > 0}
-            <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm font-medium px-2 py-1 rounded-full">
+            <span class="bg-weeb-green/15 text-weeb-green text-sm font-medium px-2 py-1 rounded-full">
               {watchlistAnalysis.recentlyAired.length}
             </span>
           {/if}
@@ -700,13 +700,13 @@
         <!-- Loading skeleton for Recently Aired -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {#each Array(3) as _}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 animate-pulse">
+            <div class="bg-weeb-surface rounded-lg shadow-sm p-4 animate-pulse">
               <div class="flex gap-3">
-                <div class="w-16 h-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                <div class="w-16 h-24 bg-weeb-surface-hover bg-weeb-surface-hover rounded"></div>
                 <div class="flex-1">
-                  <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
-                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded mb-2"></div>
+                  <div class="h-3 bg-weeb-surface rounded w-3/4 mb-2"></div>
+                  <div class="h-3 bg-weeb-surface rounded w-1/2"></div>
                 </div>
               </div>
             </div>
@@ -744,12 +744,12 @@
         </div>
       {:else}
         <!-- Empty state for Recently Aired -->
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center">
-          <i class="fas fa-clock-rotate-left text-4xl text-gray-400 dark:text-gray-600 mb-3 block"></i>
-          <p class="text-gray-600 dark:text-gray-400">
+        <div class="bg-weeb-bg-elevated rounded-lg p-6 text-center">
+          <i class="fas fa-clock-rotate-left text-4xl text-weeb-fg-muted mb-3 block"></i>
+          <p class="text-weeb-fg-muted">
             No recent episodes from your watchlist
           </p>
-          <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">
+          <p class="text-sm text-weeb-fg-muted mt-2">
             Episodes you've watched will appear here
           </p>
         </div>

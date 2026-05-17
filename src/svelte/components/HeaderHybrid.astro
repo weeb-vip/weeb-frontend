@@ -7,110 +7,57 @@ import TitleLanguageToggle from '../../svelte/components/TitleLanguageToggle.sve
 
 // Get SSR auth data from middleware
 const { auth } = Astro.locals;
+
+function getCurrentSeason(): string {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  if (month >= 0 && month <= 2) return `WINTER_${year}`;
+  if (month >= 3 && month <= 5) return `SPRING_${year}`;
+  if (month >= 6 && month <= 8) return `SUMMER_${year}`;
+  return `FALL_${year}`;
+}
 ---
 
-<header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300" style="padding: 1rem; padding-top: calc(1rem + env(safe-area-inset-top, 20px)); height: calc(6rem + env(safe-area-inset-top, 20px));">
+<nav class="nav" id="main-header">
+  <!-- Logo -->
+  <a href="/" data-astro-prefetch="false" class="nav-logo">
+    <img
+      src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
+      alt="weeb.vip"
+      width="32"
+      height="32"
+      loading="eager"
+      decoding="async"
+      class="nav-logo-img"
+    />
+    <span class="nav-logo-text">weeb.vip</span>
+  </a>
 
-  <!-- Mobile/Tablet Header -->
-  <div class="flex lg:hidden w-full items-center space-x-3 h-16">
-    <a href="/" data-astro-prefetch="false" class="flex-shrink-0">
-      <img
-        src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
-        alt="logo"
-        width="40"
-        height="40"
-        loading="eager"
-        decoding="async"
-        class="w-10 h-10"
-      />
-    </a>
-
-    <div class="flex-grow px-2">
-      <AutocompleteAdvanced client:idle />
-    </div>
-
-    <div class="flex-shrink-0 flex items-center space-x-2">
-      <UserProfileHandler client:idle isMobile={true} />
-    </div>
+  <!-- Nav Links (desktop only) -->
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href={`/season/${getCurrentSeason()}`}>Season</a>
+    <a href="/airing">Airing</a>
+    <a href="/search">Browse</a>
   </div>
 
-  <!-- Desktop Header -->
-  <div class="hidden lg:block relative h-16">
-    <!-- Left side: Logo and branding -->
-    <div class="absolute left-0 top-1/2 -translate-y-1/2 flex items-center space-x-4">
-      <a href="/" data-astro-prefetch="false" class="flex flex-row items-center space-x-4">
-        <img
-          src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
-          alt="logo"
-          width="56"
-          height="56"
-          loading="eager"
-          decoding="async"
-          class="w-14 h-14"
-        />
-        <!-- WeebVipWordmark -->
-        <div class="inline-flex items-center gap-2 sm:gap-3" role="img" aria-label="WEEB VIP wordmark">
-          <!-- WeebMorphLogo -->
-          <span
-            class="relative inline-grid group/logo select-none whitespace-nowrap flex-shrink-0 cursor-pointer"
-            id="logo-morph"
-          >
-            <span
-              class="col-start-1 row-start-1 font-light text-transparent bg-clip-text text-center bg-gray-800 dark:bg-gray-300 text-4xl md:text-4xl tracking-[0.28em] transition-all duration-300 ease-out opacity-100 translate-y-0 group-hover/logo:opacity-0 group-hover/logo:-translate-y-1"
-              id="weeb-text"
-            >
-              WEEB
-            </span>
-            <span
-              lang="ja"
-              class="col-start-1 row-start-1 font-light text-transparent bg-clip-text text-center bg-gray-800 dark:bg-gray-300 text-4xl md:text-4xl tracking-normal transition-all duration-300 ease-out opacity-0 translate-y-1 group-hover/logo:opacity-100 group-hover/logo:translate-y-0"
-              id="katakana-text"
-            >
-              ウィーブ
-            </span>
-          </span>
-          <!-- VIP Badge -->
-          <span class="inline-flex items-center gap-3 px-3 sm:px-4 py-1.5 rounded-2xl dark:bg-slate-900/80 ring-1 ring-slate-700 dark:ring-slate-300/20 transition-all duration-300">
-            <span class="text-gray-800 dark:text-slate-50 font-black font-light tracking-[0.35em] transition-colors duration-300 text-base md:text-base">VIP</span>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 transition-all duration-300" aria-hidden="true"></span>
-          </span>
-        </div>
-      </a>
-    </div>
-
-    <!-- Center: Autocomplete (positioned between left and right elements) -->
-    <div class="absolute top-1/2 -translate-y-1/2 px-4" style="left: 22rem; right: 12rem;">
-      <div class="flex justify-center">
-        <div class="w-full max-w-sm">
-          <AutocompleteAdvanced client:idle />
-        </div>
-      </div>
-    </div>
-
-    <!-- Right side: Language toggle, Dark mode, and user profile -->
-    <div class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center space-x-4">
-      <!-- Title Language Toggle -->
-      <TitleLanguageToggle client:idle />
-
-      <!-- Dark Mode Toggle -->
-      <button
-        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300 w-10 h-10 flex items-center justify-center"
-        aria-label="Toggle dark mode"
-        onclick="window.toggleDarkMode()"
-      >
-        <svg class="w-5 h-5 text-gray-700 dark:text-gray-300 dark-mode-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path class="sun-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-          <path class="moon-icon hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-        </svg>
-      </button>
-
-      <!-- User Profile Handler -->
-      <div class="ml-4">
-        <UserProfileHandler client:idle isMobile={false} />
-      </div>
-    </div>
+  <!-- Search -->
+  <div class="nav-search">
+    <AutocompleteAdvanced client:idle />
   </div>
-</header>
+
+  <!-- Right: Language toggle + Auth -->
+  <div class="nav-right">
+    <TitleLanguageToggle client:idle />
+    <UserProfileHandler client:idle isMobile={false} />
+  </div>
+
+  <!-- Mobile: simplified right side -->
+  <div class="nav-right-mobile">
+    <UserProfileHandler client:idle isMobile={true} />
+  </div>
+</nav>
 
 <!-- Auth State Initializer (Client-side) with SSR auth data -->
 <AuthInitializer client:idle ssrAuth={auth} />
@@ -118,66 +65,13 @@ const { auth } = Astro.locals;
 <!-- Login/Register Modal Handler (Client-side) -->
 <LoginModalHandler client:idle />
 
-<script is:inline>
-  // Global dark mode toggle function
-  window.toggleDarkMode = function() {
-    const isDark = document.documentElement.classList.contains('dark');
-    const sunIcon = document.querySelector('.sun-icon');
-    const moonIcon = document.querySelector('.moon-icon');
-
-    if (isDark) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      sunIcon?.classList.add('hidden');
-      moonIcon?.classList.remove('hidden');
-
-      // Update theme-color meta tag
-      const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-      if (themeColorMeta) {
-        themeColorMeta.setAttribute('content', '#ffffff');
-      }
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      sunIcon?.classList.remove('hidden');
-      moonIcon?.classList.add('hidden');
-
-      // Update theme-color meta tag
-      const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-      if (themeColorMeta) {
-        themeColorMeta.setAttribute('content', '#111827');
-      }
-    }
-  };
-
-  // Update icon state on page load
-  function updateDarkModeIcon() {
-    const isDark = document.documentElement.classList.contains('dark');
-    const sunIcon = document.querySelector('.sun-icon');
-    const moonIcon = document.querySelector('.moon-icon');
-
-    if (isDark) {
-      sunIcon?.classList.remove('hidden');
-      moonIcon?.classList.add('hidden');
-    } else {
-      sunIcon?.classList.add('hidden');
-      moonIcon?.classList.remove('hidden');
-    }
-  }
-
-  // Initialize on page load
-  document.addEventListener('DOMContentLoaded', updateDarkModeIcon);
-  document.addEventListener('astro:page-load', updateDarkModeIcon);
-</script>
-
 <script>
-  // Logo morph interaction
+  // Logo morph interaction (kept from original)
   function initializeLogoMorph() {
     const logoMorph = document.getElementById('logo-morph');
     if (!logoMorph) return;
 
     let isClicked = false;
-
     logoMorph.addEventListener('click', () => {
       isClicked = !isClicked;
       const weebText = document.getElementById('weeb-text');
@@ -197,47 +91,96 @@ const { auth } = Astro.locals;
     });
   }
 
-  // Client-side interactivity
-  document.addEventListener('DOMContentLoaded', () => {
-    // Only move header if it's not already in body and we're on a problematic page
-    function ensureHeaderPlacement() {
-      const header = document.getElementById('main-header');
-      if (header && header.parentNode !== document.body) {
-        // Check if we're in a potentially problematic scroll container
-        let parent = header.parentNode;
-        let hasScrollContainer = false;
-        while (parent && parent !== document.body) {
-          const style = window.getComputedStyle(parent as Element);
-          if (style.overflow === 'scroll' || style.overflow === 'auto' || style.overflowY === 'scroll' || style.overflowY === 'auto') {
-            hasScrollContainer = true;
-            break;
-          }
-          parent = parent.parentNode;
-        }
-
-        // Only move if we detect a scroll container issue
-        if (hasScrollContainer) {
-          document.body.appendChild(header);
-        }
-      }
-    }
-
-    // Check on load
-    setTimeout(ensureHeaderPlacement, 100);
-
-    // Also handle after Astro navigation
-    document.addEventListener('astro:after-swap', () => {
-      setTimeout(ensureHeaderPlacement, 100);
-    });
-
-    document.addEventListener('astro:page-load', () => {
-      setTimeout(ensureHeaderPlacement, 100);
-    });
-
-    // Initialize logo morph
-    initializeLogoMorph();
-  });
-
-  // Re-initialize logo morph after Astro View Transitions
+  document.addEventListener('DOMContentLoaded', initializeLogoMorph);
   document.addEventListener('astro:page-load', initializeLogoMorph);
 </script>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+    height: var(--weeb-nav-height, 60px);
+    background: var(--weeb-glass-bg);
+    backdrop-filter: var(--weeb-glass-blur);
+    -webkit-backdrop-filter: var(--weeb-glass-blur);
+    border-bottom: 1px solid var(--weeb-border);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--weeb-fg);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+  }
+  .nav-logo-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+  .nav-logo-text {
+    display: none;
+  }
+
+  .nav-links {
+    display: none;
+    gap: 4px;
+    margin-left: 24px;
+  }
+  .nav-links a {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--weeb-fg-secondary);
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+  }
+  .nav-links a:hover {
+    color: var(--weeb-fg);
+    background: var(--weeb-surface);
+  }
+
+  .nav-search {
+    margin-left: auto;
+    flex: 1;
+    max-width: 320px;
+    min-width: 0;
+  }
+
+  .nav-right {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .nav-right-mobile {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  /* Desktop: show nav links, logo text, right section */
+  @media (min-width: 1024px) {
+    .nav-logo-text { display: inline; }
+    .nav-links { display: flex; }
+    .nav-right { display: flex; }
+    .nav-right-mobile { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .nav {
+      padding: 0 16px;
+    }
+  }
+</style>

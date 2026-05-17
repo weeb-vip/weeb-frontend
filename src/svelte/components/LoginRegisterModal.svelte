@@ -139,19 +139,19 @@
 </script>
 
 <div class="w-full max-w-[360px] sm:max-w-[400px] mx-auto p-6 sm:p-8 transition-colors duration-300">
-  <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100 text-center">
+  <h2 class="text-2xl font-bold mb-6 text-weeb-fg text-center">
     {!isRegisterState ? 'Login' : 'Register'}
   </h2>
 
   <div class="mb-4 flex items-center">
     {#if errorMessage}
-      <div class="w-full p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-full transition-colors duration-300">
-        <p class="text-red-800 dark:text-red-200 text-sm text-center">{errorMessage}</p>
+      <div class="w-full p-3 bg-weeb-red/10 border border-weeb-red/30 rounded-full transition-colors duration-300">
+        <p class="text-weeb-red text-sm text-center">{errorMessage}</p>
       </div>
     {/if}
     {#if successMessage}
-      <div class="w-full p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-full transition-colors duration-300">
-        <p class="text-green-800 dark:text-green-200 text-sm text-center">{successMessage}</p>
+      <div class="w-full p-3 bg-weeb-green/10 border border-weeb-green rounded-full transition-colors duration-300">
+        <p class="text-weeb-green text-sm text-center">{successMessage}</p>
       </div>
     {/if}
   </div>
@@ -215,7 +215,7 @@
         <a
           href="/auth/password-reset-request"
           on:click={() => handleLinkClick(closeFn)}
-          class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
+          class="text-sm text-weeb-accent hover:text-weeb-accent-hover transition-colors duration-300 focus:outline-none focus:underline"
         >
           Forgot your password?
         </a>
@@ -224,7 +224,7 @@
         <a
           href="/auth/resend-verification"
           on:click={() => handleLinkClick(closeFn)}
-          class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
+          class="text-sm text-weeb-accent hover:text-weeb-accent-hover transition-colors duration-300 focus:outline-none focus:underline"
         >
           Resend email verification
         </a>
@@ -232,12 +232,12 @@
     </div>
   {/if}
 
-  <div class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+  <div class="mt-6 text-center text-sm text-weeb-fg-muted">
     {!isRegisterState ? "Don't have an account?" : "Already have an account?"}{' '}
     <button
       type="button"
       on:click={toggleMode}
-      class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors duration-300 focus:outline-none focus:underline"
+      class="text-weeb-accent hover:text-weeb-accent-hover font-medium transition-colors duration-300 focus:outline-none focus:underline"
     >
       {!isRegisterState ? 'Register' : 'Login'}
     </button>

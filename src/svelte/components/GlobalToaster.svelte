@@ -33,230 +33,135 @@
 
 <style>
   :global(.toaster-container) {
-    z-index: 50 !important; /* Higher z-index to appear above content */
+    z-index: 150 !important;
   }
 
-  /* Mobile positioning - let Sonner handle it, just adjust top with safe area */
+  /* Position below sticky nav */
+  :global(.toaster-container) {
+    top: calc(var(--weeb-nav-height, 60px) + 12px + env(safe-area-inset-top, 0px)) !important;
+    right: 16px !important;
+  }
+
   @media (max-width: 768px) {
     :global(.toaster-container) {
-      top: calc(7rem + env(safe-area-inset-top, 0px)) !important;
+      top: calc(var(--weeb-nav-height, 60px) + 8px + env(safe-area-inset-top, 0px)) !important;
+      right: 8px !important;
+      left: 8px !important;
     }
   }
 
-  /* Desktop positioning adjustments */
-  @media (min-width: 769px) {
-    :global(.toaster-container) {
-      top: calc(6.5rem + env(safe-area-inset-top, 0px)) !important; /* Desktop header: 96px (6rem) + small gap + safe area */
-      right: 1.5rem !important;
-    }
-  }
-
-  /* Force ALL Sonner toasts to be exactly 20rem width */
+  /* ── Base toast (all toasts) ── */
   :global([data-sonner-toast]) {
-    width: 20rem !important;
-    max-width: 20rem !important;
-    min-width: 20rem !important;
+    background: var(--weeb-surface) !important;
+    border: 1px solid var(--weeb-border) !important;
+    border-radius: var(--weeb-radius, 8px) !important;
+    color: var(--weeb-fg) !important;
+    font-family: var(--weeb-font) !important;
+    font-size: 0.875rem !important;
+    padding: 12px 16px !important;
+    backdrop-filter: blur(20px) !important;
+    box-shadow: 0 8px 32px oklch(0% 0 0 / 0.4), 0 2px 8px oklch(0% 0 0 / 0.2) !important;
+    width: 22rem !important;
+    max-width: 22rem !important;
+    min-width: 22rem !important;
+    transition: all 0.2s ease !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
   }
 
-  /* Mobile responsive toast width */
+  /* ── Custom anime toasts ── */
+  :global([data-sonner-toast][data-custom="true"]) {
+    background: var(--weeb-surface) !important;
+    border: 1px solid var(--weeb-border) !important;
+    border-radius: 14px !important;
+    padding: 10px 14px !important;
+    width: 22rem !important;
+    max-width: 22rem !important;
+    min-width: 22rem !important;
+  }
+
+  /* ── Error toast ── */
+  :global([data-sonner-toast][data-type="error"]) {
+    border-left: 3px solid var(--weeb-red) !important;
+  }
+  :global([data-sonner-toast][data-type="error"] [data-icon]) {
+    color: var(--weeb-red) !important;
+  }
+
+  /* ── Success toast ── */
+  :global([data-sonner-toast][data-type="success"]) {
+    border-left: 3px solid var(--weeb-green) !important;
+  }
+  :global([data-sonner-toast][data-type="success"] [data-icon]) {
+    color: var(--weeb-green) !important;
+  }
+
+  /* ── Warning toast ── */
+  :global([data-sonner-toast][data-type="warning"]) {
+    border-left: 3px solid var(--weeb-amber) !important;
+  }
+
+  /* ── Info toast ── */
+  :global([data-sonner-toast][data-type="info"]) {
+    border-left: 3px solid var(--weeb-accent) !important;
+  }
+
+  /* ── Toast title + description ── */
+  :global([data-sonner-toast] [data-title]) {
+    color: var(--weeb-fg) !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+  }
+
+  :global([data-sonner-toast] [data-description]) {
+    color: var(--weeb-fg-secondary) !important;
+    font-size: 0.8125rem !important;
+    line-height: 1.4 !important;
+    margin-top: 2px !important;
+  }
+
+  /* ── Toast close button ── */
+  :global([data-sonner-toast] [data-close-button]) {
+    background: var(--weeb-surface-hover) !important;
+    border: 1px solid var(--weeb-border) !important;
+    color: var(--weeb-fg-muted) !important;
+  }
+  :global([data-sonner-toast] [data-close-button]:hover) {
+    background: var(--weeb-border) !important;
+    color: var(--weeb-fg) !important;
+  }
+
+  /* ── Action button ── */
+  :global([data-sonner-toast] button[data-button]) {
+    background: var(--weeb-accent) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: var(--weeb-radius, 8px) !important;
+    padding: 6px 14px !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    margin-left: 8px !important;
+    flex-shrink: 0 !important;
+    transition: opacity 0.15s ease !important;
+  }
+  :global([data-sonner-toast] button[data-button]:hover) {
+    opacity: 0.85 !important;
+  }
+
+  /* ── Mobile responsive ── */
   @media (max-width: 768px) {
     :global([data-sonner-toast]) {
       width: auto !important;
-      max-width: calc(100vw - 2rem) !important;
-      min-width: 16rem !important;
+      max-width: calc(100vw - 16px) !important;
+      min-width: auto !important;
+      font-size: 0.8125rem !important;
+      padding: 10px 12px !important;
     }
-  }
-
-  /* Standard toasts - matching anime toast design */
-  :global(.custom-toast) {
-    background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(24px) !important;
-    border: 1px solid rgba(229, 231, 235, 0.5) !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-    width: 20rem !important;
-    max-width: 20rem !important;
-    min-width: 20rem !important;
-    font-size: 0.875rem !important;
-    padding: 0.875rem 1.5rem !important;
-    transition: all 0.3s ease !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-  }
-
-  :global(.dark .custom-toast) {
-    background: rgba(31, 41, 55, 0.8) !important;
-    border-color: rgba(55, 65, 81, 0.5) !important;
-    color: white !important;
-  }
-
-
-  /* Mobile responsive toast styling */
-  @media (max-width: 768px) {
-    :global(.custom-toast) {
+    :global([data-sonner-toast][data-custom="true"]) {
       width: auto !important;
-      max-width: calc(100vw - 2rem) !important;
-      min-width: 16rem !important;
-      font-size: 0.8rem !important;
-      padding: 0.625rem !important;
-    }
-  }
-
-  /* Custom anime toasts - fully rounded with theme colors */
-  :global([data-sonner-toast][data-custom="true"]) {
-    background: rgb(255, 255, 255) !important;
-    border: 1px solid rgb(229, 231, 235) !important;
-    border-radius: 1.5rem !important;
-    padding: 0.875rem !important;
-    width: 20rem !important;
-    max-width: 20rem !important;
-    min-width: 20rem !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-    transition: background-color 0.3s ease, border-color 0.3s ease !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-  }
-
-  :global(.dark [data-sonner-toast][data-custom="true"]) {
-    background: rgb(31, 41, 55) !important;
-    border-color: rgb(55, 65, 81) !important;
-  }
-
-  /* Text truncation and overflow handling */
-  :global(.custom-toast [data-title]) {
-    max-width: 100% !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  :global(.custom-toast [data-description]) {
-    max-width: 100% !important;
-    overflow: hidden !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    line-height: 1.4 !important;
-  }
-
-  :global([data-sonner-toast][data-custom="true"] [data-title]) {
-    max-width: 100% !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  :global([data-sonner-toast][data-custom="true"] [data-description]) {
-    max-width: 100% !important;
-    overflow: hidden !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    line-height: 1.4 !important;
-  }
-
-
-  /* Error toast specific styling - matches anime toast background */
-  :global([data-sonner-toast][data-type="error"]:not(:has(.anime-toast-content))) {
-    background: rgba(255, 255, 255, 0.8) !important; /* Same as anime toast bg-white/80 */
-    border: 1px solid rgba(229, 231, 235, 0.5) !important; /* Neutral border like anime toast */
-    border-radius: 9999px !important;
-    color: rgb(127, 29, 29) !important;
-    backdrop-filter: blur(24px) !important; /* Same as anime toast backdrop-blur-xl */
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-  }
-
-  :global(.dark [data-sonner-toast][data-type="error"]:not(:has(.anime-toast-content))) {
-    background: rgba(31, 41, 55, 0.8) !important; /* Same as anime toast dark:bg-gray-800/80 */
-    border: 1px solid rgba(55, 65, 81, 0.5) !important; /* Same as anime toast dark:border-gray-700/50 */
-    color: rgb(248, 113, 113) !important;
-  }
-
-  /* Success toast specific styling - matches anime toast background */
-  :global([data-sonner-toast][data-type="success"]:not(:has(.anime-toast-content))) {
-    background: rgba(255, 255, 255, 0.8) !important; /* Same as anime toast bg-white/80 */
-    border: 1px solid rgba(229, 231, 235, 0.5) !important; /* Neutral border like anime toast */
-    border-radius: 9999px !important;
-    color: rgb(21, 128, 61) !important;
-    backdrop-filter: blur(24px) !important; /* Same as anime toast backdrop-blur-xl */
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-  }
-
-  :global(.dark [data-sonner-toast][data-type="success"]:not(:has(.anime-toast-content))) {
-    background: rgba(31, 41, 55, 0.8) !important; /* Same as anime toast dark:bg-gray-800/80 */
-    border: 1px solid rgba(55, 65, 81, 0.5) !important; /* Same as anime toast dark:border-gray-700/50 */
-    color: rgb(74, 222, 128) !important;
-  }
-
-  /* Standard sonner toasts only (exclude anime custom toasts) - matches anime toast style */
-  :global([data-sonner-toast]:not(:has(.anime-toast-content))) {
-    background: rgba(255, 255, 255, 0.8) !important; /* Same as anime toast bg-white/80 */
-    border: 1px solid rgba(229, 231, 235, 0.5) !important; /* Same as anime toast border */
-    border-radius: 9999px !important;
-    color: rgb(17, 24, 39) !important;
-    font-size: 0.875rem !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-    backdrop-filter: blur(24px) !important; /* Same as anime toast backdrop-blur-xl */
-    padding: 0.875rem 1.5rem !important;
-    transition: opacity 0.3s ease !important;
-  }
-
-  :global(.dark [data-sonner-toast]:not(:has(.anime-toast-content))) {
-    background: rgba(31, 41, 55, 0.8) !important; /* Same as anime toast dark:bg-gray-800/80 */
-    border: 1px solid rgba(55, 65, 81, 0.5) !important; /* Same as anime toast dark:border-gray-700/50 */
-    color: rgb(243, 244, 246) !important;
-  }
-
-  /* Small screens - let Sonner handle positioning with safe area */
-  @media (max-width: 640px) {
-    :global(.toaster-container) {
-      top: calc(7rem + env(safe-area-inset-top, 0px)) !important;
-    }
-  }
-
-  /* Tablet (between mobile and desktop) with safe area */
-  @media (min-width: 640px) and (max-width: 1023px) {
-    :global(.toaster-container) {
-      top: calc(5rem + env(safe-area-inset-top, 0px)) !important; /* Tablet uses mobile header layout + safe area */
-    }
-  }
-
-  /* Action button styling - follows light/dark mode */
-  :global([data-sonner-toast] button[data-button]) {
-    background: rgb(0, 0, 0) !important; /* Black in light mode */
-    color: rgb(255, 255, 255) !important; /* White text */
-    border: none !important;
-    border-radius: 0.5rem !important; /* rounded-lg */
-    padding: 0.5rem 1rem !important; /* px-4 py-2 */
-    font-size: 0.875rem !important; /* text-sm */
-    font-weight: 500 !important; /* font-medium */
-    transition: opacity 0.2s ease !important;
-    cursor: pointer !important;
-    margin-left: 0.75rem !important; /* ml-3 */
-    flex-shrink: 0 !important;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-  }
-
-  :global([data-sonner-toast] button[data-button]:hover) {
-    opacity: 0.8 !important; /* Subtle opacity change on hover */
-  }
-
-  :global([data-sonner-toast] button[data-button]:active) {
-    opacity: 0.9 !important; /* Opacity change on active */
-  }
-
-  /* Dark mode action button styling */
-  :global(.dark [data-sonner-toast] button[data-button]) {
-    background: rgb(255, 255, 255) !important; /* White in dark mode */
-    color: rgb(0, 0, 0) !important; /* Black text */
-  }
-
-  /* Mobile action button adjustments */
-  @media (max-width: 768px) {
-    :global([data-sonner-toast] button[data-button]) {
-      padding: 0.375rem 0.75rem !important; /* px-3 py-1.5 */
-      font-size: 0.8rem !important;
-      margin-left: 0.5rem !important; /* ml-2 */
+      max-width: calc(100vw - 16px) !important;
+      min-width: auto !important;
     }
   }
 </style>

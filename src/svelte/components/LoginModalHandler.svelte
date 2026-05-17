@@ -62,12 +62,12 @@
     {:else}
       <!-- Fallback without TanStack Query -->
       <div class="w-[360px] sm:w-[400px] mx-auto p-8 sm:p-10">
-        <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100 text-center">
+        <h2 class="text-2xl font-bold mb-6 text-weeb-fg text-center">
           Login
         </h2>
         <div class="mb-4 flex items-center">
-          <div class="w-full p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-full">
-            <p class="text-yellow-800 dark:text-yellow-200 text-sm text-center">Loading authentication...</p>
+          <div class="w-full p-3 bg-weeb-amber/10 border border-weeb-amber/30 rounded-full">
+            <p class="text-weeb-amber text-sm text-center">Loading authentication...</p>
           </div>
         </div>
       </div>

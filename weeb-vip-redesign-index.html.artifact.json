@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "weeb.vip — Redesign Prototype",
+  "entry": "weeb-vip-redesign-index.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-05-16T15:25:35.602Z",
+  "updatedAt": "2026-05-16T15:25:35.609Z",
+  "metadata": {
+    "identifier": "weeb-vip-redesign-index",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

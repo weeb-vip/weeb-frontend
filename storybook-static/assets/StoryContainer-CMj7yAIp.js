@@ -1,0 +1,1 @@
+import{a4 as s,ai as e,k as d,M as m,p}from"./iframe-BBy3qS7V.js";import"./legacy-B5CYqdZO.js";import{s as f}from"./slot-ChEXTifl.js";import{s as l}from"./style-D6J7hmdZ.js";var n=m('<div class="story-container"><!></div>');function y(o,a){let r=s(a,"width",8,"320px");var t=n(),i=p(t);f(i,a,"default",{}),e(()=>l(t,`width: ${r()??""};`)),d(o,t)}export{y as S};

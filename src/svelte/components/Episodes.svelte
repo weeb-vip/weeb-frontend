@@ -27,9 +27,9 @@
 
 <div class="flex flex-col flex-grow">
   <div class="inline-block min-w-full overflow-hidden rounded-lg shadow m-auto">
-    <div class="flex flex-row flex-grow flex-nowrap p-6 space-x-6 items-center bg-white dark:bg-gray-800 transition-colors duration-300">
-      <i class="fas fa-bookmark text-2xl text-gray-600"></i>
-      <h1 class="text-left text-2xl font-normal text-gray-900 dark:text-gray-100">Episodes</h1>
+    <div class="flex flex-row flex-grow flex-nowrap p-6 space-x-6 items-center bg-weeb-surface transition-colors duration-300">
+      <i class="fas fa-bookmark text-2xl text-weeb-fg-muted"></i>
+      <h1 class="text-left text-2xl font-normal text-weeb-fg">Episodes</h1>
     </div>
 
     <table class="table-auto leading-normal w-full">
@@ -37,19 +37,19 @@
         <tr>
           <th
             scope="col"
-            class="px-5 py-3 text-base font-normal text-left text-gray-800 dark:text-gray-200 uppercase bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 transition-colors duration-300"
+            class="px-5 py-3 text-base font-normal text-left text-weeb-fg uppercase bg-weeb-surface border-b border-weeb-border transition-colors duration-300"
           >
             #
           </th>
           <th
             scope="col"
-            class="px-5 py-3 text-base font-normal text-left text-gray-800 dark:text-gray-200 uppercase bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 transition-colors duration-300"
+            class="px-5 py-3 text-base font-normal text-left text-weeb-fg uppercase bg-weeb-surface border-b border-weeb-border transition-colors duration-300"
           >
             Name
           </th>
           <th
             scope="col"
-            class="px-5 py-3 text-base font-normal text-left text-gray-800 dark:text-gray-200 uppercase bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 transition-colors duration-300"
+            class="px-5 py-3 text-base font-normal text-left text-weeb-fg uppercase bg-weeb-surface border-b border-weeb-border transition-colors duration-300"
           >
             Aired
           </th>
@@ -58,13 +58,13 @@
       <tbody>
         {#each sortedEpisodes as episode (episode.id)}
           <tr>
-            <td class="px-5 py-5 text-base bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+            <td class="px-5 py-5 text-base bg-weeb-surface border-b border-weeb-border text-weeb-fg transition-colors duration-300">
               {episode.episodeNumber}
             </td>
-            <td class="px-5 py-5 text-base bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+            <td class="px-5 py-5 text-base bg-weeb-surface border-b border-weeb-border text-weeb-fg transition-colors duration-300">
               {episode.titleEn || "TBA"}
             </td>
-            <td class="px-5 py-5 text-base bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+            <td class="px-5 py-5 text-base bg-weeb-surface border-b border-weeb-border text-weeb-fg transition-colors duration-300">
               {formatAirdate(episode)}
             </td>
           </tr>

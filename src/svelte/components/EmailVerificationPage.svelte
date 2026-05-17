@@ -29,10 +29,10 @@
   {:else}
     <!-- Loading state -->
     <slot name="fallback">
-      <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div class="min-h-screen bg-weeb-bg-elevated flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
           <div class="text-center">
-            <p class="text-gray-600 dark:text-gray-400">Loading...</p>
+            <p class="text-weeb-fg-muted">Loading...</p>
           </div>
         </div>
       </div>
@@ -41,10 +41,10 @@
 {:else}
   <!-- SSR fallback -->
   <slot name="fallback">
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="min-h-screen bg-weeb-bg-elevated flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <div class="text-center">
-          <p class="text-gray-600 dark:text-gray-400">Loading...</p>
+          <p class="text-weeb-fg-muted">Loading...</p>
         </div>
       </div>
     </div>

@@ -325,7 +325,7 @@
 
   <!-- Hero Banner Section -->
   {#if $currentlyAiringQuery.isLoading || sortedCurrentlyAiring.length > 0}
-    <div class="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] sm:h-[650px] md:h-[700px] md:mt-8 mb-8 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
+    <div class="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] sm:h-[650px] md:h-[700px] md:mt-8 mb-8 md:mx-0 md:rounded-lg md:shadow-xl bg-weeb-surface">
       {#if bannerAnime && !$currentlyAiringQuery.isLoading}
         {#key bannerAnime.id}
           <HeroBanner
@@ -344,8 +344,8 @@
   <!-- Currently Airing Section -->
   <div class="w-full flex flex-col mb-12">
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Currently Airing Anime</h1>
-      <a href="/airing" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">
+      <h1 class="text-2xl font-bold text-weeb-fg">Currently Airing Anime</h1>
+      <a href="/airing" class="text-weeb-accent hover:text-weeb-accent-hover font-medium transition-colors duration-200">
         See all →
       </a>
     </div>
@@ -385,7 +385,7 @@
   <!-- Seasonal Anime Section -->
   <div class="w-full flex flex-col mb-12">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getSeasonDisplayName(selectedSeason)} Anime</h1>
+      <h1 class="text-2xl font-bold text-weeb-fg">{getSeasonDisplayName(selectedSeason)} Anime</h1>
 
       <!-- Desktop: Button layout -->
       <div class="hidden sm:flex gap-2">
@@ -393,8 +393,8 @@
           <button
             on:click={() => selectedSeason = season}
             class="px-3 py-1 rounded text-sm font-medium transition-colors duration-200 {selectedSeason === season
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              ? 'bg-weeb-accent text-white'
+              : 'bg-weeb-surface text-weeb-fg-secondary hover:bg-weeb-surface-hover hover:bg-weeb-surface-hover'
             }"
           >
             {getSeasonDisplayName(season)}
@@ -406,7 +406,7 @@
       <div class="sm:hidden relative">
         <button
           on:click={() => isDropdownOpen = !isDropdownOpen}
-          class="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-gray-900 dark:text-gray-100 font-medium text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm"
+          class="w-full flex items-center justify-between px-3 py-2 bg-weeb-surface border border-weeb-border rounded-lg shadow-sm text-weeb-fg font-medium text-left hover:bg-weeb-surface-hover transition-colors duration-200 text-sm"
         >
           <span class="truncate">{getSeasonDisplayName(selectedSeason)}</span>
           <i class="fas fa-chevron-down w-3 h-3 ml-2 flex-shrink-0 transition-transform duration-200 {isDropdownOpen ? 'rotate-180' : ''}"></i>
@@ -420,7 +420,7 @@
           />
 
           <!-- Dropdown menu -->
-          <div class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-20 py-1">
+          <div class="absolute top-full left-0 right-0 mt-1 bg-weeb-surface border border-weeb-border rounded-lg shadow-lg z-20 py-1">
             {#each seasonOptions as season}
               <button
                 on:click={() => {
@@ -428,8 +428,8 @@
                   isDropdownOpen = false;
                 }}
                 class="w-full text-left px-3 py-2 text-sm transition-colors duration-200 {selectedSeason === season
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  ? 'bg-weeb-accent text-white'
+                  : 'text-weeb-fg hover:bg-weeb-surface hover:bg-weeb-surface'
                 }"
               >
                 {getSeasonDisplayName(season)}
@@ -499,7 +499,7 @@
   <!-- Top Rated Anime Section -->
   <div class="w-full flex flex-col">
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Top Rated Anime</h1>
+      <h1 class="text-2xl font-bold text-weeb-fg">Top Rated Anime</h1>
     </div>
 
     {#if $homeDataQuery.isLoading}
@@ -561,7 +561,7 @@
   <!-- Newest Anime Section -->
   <div class="w-full flex flex-col">
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Newest Anime</h1>
+      <h1 class="text-2xl font-bold text-weeb-fg">Newest Anime</h1>
     </div>
 
     {#if $homeDataQuery.isLoading}

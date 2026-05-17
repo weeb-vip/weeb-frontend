@@ -41,8 +41,8 @@
 
   const cardStyles = {
     default: `w-48 h-72`,
-    'hover-transparent': `w-48 h-72 hover:bg-gray-100 dark:hover:bg-gray-700`,
-    hover: `w-48 h-72 hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-lg`,
+    'hover-transparent': `w-48 h-72 hover:bg-weeb-surface-hover`,
+    hover: `w-48 h-72 hover:bg-weeb-surface-hover hover:shadow-lg`,
     transparent: `w-48 h-72 bg-transparent`,
     long: `w-96 h-96`,
     detail: ``,
@@ -51,10 +51,10 @@
 
   function getAirTimeColorClasses(variant?: string) {
     switch (variant) {
-      case 'countdown': return 'text-red-600 dark:text-red-400';
-      case 'airing': return 'text-orange-600 dark:text-orange-400';
-      case 'aired': return 'text-green-600 dark:text-green-400';
-      default: return 'text-blue-600 dark:text-blue-400';
+      case 'countdown': return 'text-weeb-red';
+      case 'airing': return 'text-weeb-amber';
+      case 'aired': return 'text-weeb-green';
+      default: return 'text-weeb-accent';
     }
   }
 
@@ -98,10 +98,10 @@
   $: episodeDisplay = getEpisodeDisplay();
 </script>
 
-<div class="flex {forceListLayout ? 'flex-row' : 'sm:flex-row md:flex-col'} dark:bg-gray-800 rounded-md shadow w-full justify-center transition-all duration-300 {className} relative h-full">
+<div class="flex {forceListLayout ? 'flex-row' : 'sm:flex-row md:flex-col'} rounded-md shadow w-full justify-center transition-all duration-300 {className} relative h-full" style="background: var(--weeb-surface);">
   <!-- Watchlist indicator -->
   {#if entry?.status}
-    <div class="absolute top-2 left-0 sm:left-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg z-10">
+    <div class="watchlist-badge">
       <i class="fas fa-bookmark text-xs mr-1"></i>
       {statusLabels[entry.status] || 'Unknown'}
     </div>
@@ -109,7 +109,7 @@
 
   <a href="/show/{id}"
      on:click={() => analytics.animeViewed(id || '', title)}
-     class="flex flex-col bg-white dark:bg-gray-800 {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md h-full flex-shrink-0 flex-grow-0 w-32' : 'flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}">
+     class="flex flex-col {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md h-full flex-shrink-0 flex-grow-0 w-32' : 'flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}" style="background: var(--weeb-surface);">
     <SafeImage
             src={image}
             alt={title}
@@ -123,24 +123,24 @@
       <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full flex-grow">
         <ScrollingText
                 text={title}
-                className="text-md font-bold text-gray-900 dark:text-gray-100"
+                className="text-md font-bold text-weeb-fg"
                 maxWidth="100%"
         />
 
         <ScrollingTags {tags} className="mt-1" />
 
-        <div class="flex flex-col space-y-2 text-md font-normal mt-2 items-start text-gray-700 dark:text-gray-300">
+        <div class="flex flex-col space-y-2 text-md font-normal mt-2 items-start text-weeb-fg-secondary">
           <div class="flex items-center">
             <i class="fas fa-tv text-sm w-4 text-center mr-2"></i>
-            <span class={episodeDisplay.isTBA ? 'text-gray-400 dark:text-gray-500' : ''}>{episodeDisplay.value}</span>
+            <span class={episodeDisplay.isTBA ? 'text-weeb-fg-muted' : ''}>{episodeDisplay.value}</span>
           </div>
           <div class="flex items-center" title={durationDisplay.isEstimate ? 'Estimated duration' : ''}>
             <i class="fas fa-clock text-sm w-4 text-center mr-2"></i>
-            <span class="{durationDisplay.isEstimate ? 'text-gray-400 dark:text-gray-500 italic' : ''}">{durationDisplay.value}</span>
+            <span class="{durationDisplay.isEstimate ? 'text-weeb-fg-muted italic' : ''}">{durationDisplay.value}</span>
           </div>
           <div class="flex items-center">
             <i class="fas fa-calendar text-sm w-4 text-center mr-2"></i>
-            <span class={year === 'TBA' || !year ? 'text-gray-400 dark:text-gray-500' : ''}>{year || 'TBA'}</span>
+            <span class={year === 'TBA' || !year ? 'text-weeb-fg-muted' : ''}>{year || 'TBA'}</span>
           </div>
           {#if airTime?.show}
             <div class="flex items-center {getAirTimeColorClasses(airTime.variant)}">
@@ -163,7 +163,7 @@
       <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full flex-grow">
         <ScrollingText
                 text={title}
-                className="text-md font-bold text-gray-900 dark:text-gray-100"
+                className="text-md font-bold text-weeb-fg"
                 maxWidth="100%"
         />
 
@@ -171,12 +171,12 @@
 
         <ScrollingText
                 text={episodeTitle}
-                className="text-md font-normal text-gray-900 dark:text-gray-100 mt-1"
+                className="text-md font-normal text-weeb-fg mt-1"
                 maxWidth="100%"
         />
 
         <div class="flex flex-col w-full justify-between space-y-2">
-          <span class="flex-grow text-md text-base space-x-4 text-gray-600 dark:text-gray-400">
+          <span class="flex-grow text-md text-base space-x-4 text-weeb-fg-muted">
             <span>episode {episodeNumber}</span>
           </span>
 
@@ -186,7 +186,7 @@
               <span class="text-xs font-medium">{airTime.text}</span>
             </div>
           {:else}
-            <span class="flex-grow text-md text-base space-x-4 text-gray-600 dark:text-gray-400">
+            <span class="flex-grow text-md text-base space-x-4 text-weeb-fg-muted">
               <span>{airdate}</span>
             </span>
           {/if}
@@ -200,3 +200,19 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .watchlist-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--weeb-accent);
+    color: white;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: var(--weeb-radius-full, 9999px);
+    font-weight: 500;
+    box-shadow: var(--weeb-shadow-card);
+    z-index: 10;
+  }
+</style>

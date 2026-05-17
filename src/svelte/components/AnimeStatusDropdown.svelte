@@ -61,16 +61,16 @@
 
   function getButtonClasses() {
     if (buttonClassName) {
-      return `inline-flex items-center justify-between rounded-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-300 ${buttonClassName}`;
+      return `inline-flex items-center justify-between rounded-full bg-weeb-surface text-weeb-fg shadow-sm hover:bg-weeb-surface-hover transition-colors duration-300 ${buttonClassName}`;
     }
-    const baseClasses = "inline-flex items-center justify-between rounded-full bg-gray-200 dark:bg-gray-600 px-2 py-2 text-base font-medium text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-300";
+    const baseClasses = "inline-flex items-center justify-between rounded-full bg-weeb-surface px-2 py-2 text-base font-medium text-weeb-fg shadow-sm hover:bg-weeb-surface-hover transition-colors duration-300";
     switch (variant) {
       case 'compact':
         return `${baseClasses} flex-1 min-w-0 px-4 py-2 text-xs`;
       case 'hero':
         return `${baseClasses} flex-grow min-w-[140px] px-4 py-2 text-base`;
       case 'icon-only':
-        return "inline-flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 shadow-sm hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-300 w-8 h-8";
+        return "inline-flex items-center justify-center rounded-full bg-weeb-surface text-weeb-fg shadow-sm hover:bg-weeb-surface-hover transition-colors duration-300 w-8 h-8";
       default:
         return `${baseClasses} flex-grow min-w-[120px] px-4 py-2 text-base`;
     }
@@ -78,7 +78,7 @@
 
   function getDeleteButtonClasses() {
     if (deleteButtonClassName) return `flex-shrink-0 ${deleteButtonClassName}`;
-    const baseClasses = "flex-shrink-0 px-2 py-2 min-w-[32px] h-[32px] text-base bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors duration-300 inline-flex items-center justify-center";
+    const baseClasses = "flex-shrink-0 px-2 py-2 min-w-[32px] h-[32px] text-base bg-weeb-red hover:bg-weeb-red text-white rounded-full transition-colors duration-300 inline-flex items-center justify-center";
     switch (variant) {
       case 'compact':
         return `${baseClasses} px-1 py-1 min-w-[24px] h-[24px] text-xs`;
@@ -90,14 +90,14 @@
   }
 
   function getMenuItemClasses(isActive = false, isCurrentStatus = false) {
-    let baseClasses = `block w-full text-left text-gray-700 dark:text-gray-200 transition-colors duration-300 cursor-pointer border-none`;
+    let baseClasses = `block w-full text-left text-weeb-fg-secondary transition-colors duration-300 cursor-pointer border-none`;
 
     if (isCurrentStatus) {
-      baseClasses += ' bg-blue-50 dark:bg-blue-900/30 font-medium';
+      baseClasses += ' bg-weeb-surface font-medium';
     } else if (isActive) {
-      baseClasses += ' bg-blue-100 dark:bg-blue-900/50';
+      baseClasses += ' bg-weeb-accent/15';
     } else {
-      baseClasses += ' hover:bg-gray-50 dark:hover:bg-gray-700';
+      baseClasses += ' hover:bg-weeb-surface-hover';
     }
 
     switch (variant) {
@@ -172,17 +172,17 @@
         title="Status: {statusLabels[entry.status ?? 'PLANTOWATCH']}"
         on:click={toggleMenu}
       >
-        <i class="fas fa-ellipsis-v w-3 h-3 text-gray-600 dark:text-gray-300" style="display: flex; align-items: center; justify-content: center; line-height: 1;"></i>
+        <i class="fas fa-ellipsis-v w-3 h-3 text-weeb-fg-secondary" style="display: flex; align-items: center; justify-content: center; line-height: 1;"></i>
       </button>
 
       {#if isMenuOpen}
         <div
           bind:this={menuElement}
-          class="absolute top-full right-0 mt-1 w-44 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black dark:ring-gray-600 ring-opacity-5 dark:ring-opacity-20 focus:outline-none z-[999]"
+          class="absolute top-full right-0 mt-1 w-44 origin-top-right rounded-md bg-weeb-surface shadow-lg ring-1 ring-black ring-weeb-border ring-opacity-5 focus:outline-none z-[999]"
           transition:scale={{duration: 100, start: 0.95}}
         >
           <!-- Status options -->
-          <div class="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-600">
+          <div class="px-3 py-2 text-xs font-medium text-weeb-fg-muted border-b border-weeb-border">
             Change Status
           </div>
           {#each statusOptions as statusOption, index}
@@ -194,14 +194,14 @@
             >
               {statusLabels[statusOption]}
               {#if entry.status === statusOption}
-                <span class="ml-2 text-blue-600 dark:text-blue-400">✓</span>
+                <span class="ml-2 text-weeb-accent">✓</span>
               {/if}
             </button>
           {/each}
           <!-- Remove option -->
-          <div class="border-t border-gray-200 dark:border-gray-600">
+          <div class="border-t border-weeb-border">
             <button
-              class="{getMenuItemClasses(activeIndex === statusOptions.length)} text-red-600 dark:text-red-400 font-medium"
+              class="{getMenuItemClasses(activeIndex === statusOptions.length)} text-weeb-red font-medium"
               on:click={onDeleteAnime}
               on:mouseenter={() => handleMouseEnter(statusOptions.length)}
               on:mouseleave={handleMouseLeave}
@@ -223,13 +223,13 @@
         on:click={toggleMenu}
       >
         <span>{statusLabels[entry.status ?? 'PLANTOWATCH']}</span>
-        <i class="fas fa-chevron-down w-3 h-3 ml-2 text-gray-500 dark:text-gray-400"></i>
+        <i class="fas fa-chevron-down w-3 h-3 ml-2 text-weeb-fg-muted"></i>
       </button>
 
       {#if isMenuOpen}
         <div
           bind:this={menuElement}
-          class="absolute top-full left-0 mt-1 w-44 origin-top-left rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black dark:ring-gray-600 ring-opacity-5 dark:ring-opacity-20 focus:outline-none z-[999]"
+          class="absolute top-full left-0 mt-1 w-44 origin-top-left rounded-md bg-weeb-surface shadow-lg ring-1 ring-black ring-weeb-border ring-opacity-5 focus:outline-none z-[999]"
           transition:scale={{duration: 100, start: 0.95}}
         >
           {#each statusOptions as statusOption, index}

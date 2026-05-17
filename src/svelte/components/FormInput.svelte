@@ -39,18 +39,18 @@
   // Base classes for all inputs
   $: baseInputClasses = `
     w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300
-    bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+    bg-weeb-surface text-weeb-fg
     ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
   `.trim();
 
   // Error and normal state classes
   $: stateClasses = error
-    ? 'border-red-500 focus:ring-red-400'
-    : 'border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500';
+    ? 'border-weeb-red focus:ring-red-400'
+    : 'border-weeb-border focus:border-weeb-accent';
 
   // Label classes - show label if provided, otherwise use sr-only
   $: labelClasses = label
-    ? 'block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300'
+    ? 'block text-sm font-medium mb-2 text-weeb-fg-secondary'
     : 'sr-only';
 
   $: inputClasses = `
@@ -78,7 +78,7 @@
     <!-- Left icon -->
     {#if icon}
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <Fa {icon} class="h-5 w-5 text-gray-400" />
+        <Fa {icon} class="h-5 w-5 text-weeb-fg-muted" />
       </div>
     {/if}
 
@@ -106,7 +106,7 @@
       >
         <Fa
           icon={isPasswordVisible ? faEyeSlash : faEye}
-          class="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          class="h-5 w-5 text-weeb-fg-muted hover:text-weeb-fg-muted hover:text-weeb-fg-secondary transition-colors"
         />
       </button>
     {/if}
@@ -114,7 +114,7 @@
 
   <!-- Error message -->
   {#if error}
-    <p id="{id}-error" class="mt-1 text-sm text-red-600 dark:text-red-400">
+    <p id="{id}-error" class="mt-1 text-sm text-weeb-red">
       {error}
     </p>
   {/if}

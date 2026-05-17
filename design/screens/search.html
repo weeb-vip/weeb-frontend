@@ -1,0 +1,1631 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browse Anime -- weeb.vip</title>
+<style>
+/* ============================================
+   DESIGN TOKENS
+   ============================================ */
+:root {
+  --bg: oklch(14% 0.015 275);
+  --bg-elevated: oklch(18% 0.018 275);
+  --surface: oklch(22% 0.02 275);
+  --surface-hover: oklch(26% 0.022 275);
+  --fg: oklch(95% 0.005 265);
+  --fg-secondary: oklch(70% 0.01 270);
+  --fg-muted: oklch(55% 0.01 270);
+  --border: oklch(28% 0.015 275);
+  --accent: oklch(55% 0.15 280);
+  --accent-hover: oklch(62% 0.16 280);
+  --violet: oklch(62% 0.14 300);
+  --green: oklch(65% 0.15 155);
+  --amber: oklch(72% 0.14 85);
+  --red: oklch(60% 0.18 25);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --max-width: 1280px;
+}
+
+/* ============================================
+   RESET + BASE
+   ============================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  font-family: var(--font);
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+body { min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select { font: inherit; }
+
+/* ============================================
+   LAYOUT
+   ============================================ */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ============================================
+   NAV
+   ============================================ */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: oklch(14% 0.015 275 / 0.8);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  height: 56px;
+  gap: 24px;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.nav-logo-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+.nav-search {
+  flex: 1;
+  max-width: 360px;
+  position: relative;
+}
+.nav-search input {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0 16px 0 36px;
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--fg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.nav-search input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.15);
+}
+.nav-search input::placeholder { color: var(--fg-muted); }
+.nav-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-muted);
+  pointer-events: none;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-link {
+  font-size: 14px;
+  color: var(--fg-secondary);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.nav-link:hover { color: var(--fg); background: var(--surface); }
+.nav-link.active { color: var(--fg); font-weight: 500; }
+.nav-btn {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 17px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.nav-btn-ghost { color: var(--fg-secondary); }
+.nav-btn-ghost:hover { color: var(--fg); background: var(--surface); }
+.nav-btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.nav-btn-primary:hover { background: var(--accent-hover); }
+
+.nav-mobile-toggle {
+  display: none;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  color: var(--fg-secondary);
+}
+.nav-mobile-toggle:hover { background: var(--surface); color: var(--fg); }
+
+@media (max-width: 768px) {
+  .nav-search { max-width: none; }
+  .nav-links { display: none; }
+  .nav-mobile-toggle { display: flex; }
+}
+
+/* ============================================
+   MOBILE DRAWER
+   ============================================ */
+.mobile-drawer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+.mobile-drawer.open { display: block; }
+.mobile-drawer-overlay {
+  position: absolute;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.6);
+}
+.mobile-drawer-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(320px, 85vw);
+  background: var(--bg-elevated);
+  padding: 40px 24px;
+  box-shadow: -10px 0 40px oklch(0% 0 0 / 0.3);
+}
+.mobile-drawer-panel nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+}
+.mobile-drawer-panel nav a {
+  font-size: 17px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  transition: background 0.15s;
+}
+.mobile-drawer-panel nav a:hover { background: var(--surface); }
+.mobile-drawer-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: var(--fg-secondary);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+}
+.mobile-drawer-close:hover { background: var(--surface); color: var(--fg); }
+
+/* ============================================
+   SEARCH HERO
+   ============================================ */
+.search-hero {
+  padding: 48px 0 32px;
+  text-align: center;
+}
+.search-hero h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin-bottom: 20px;
+  color: var(--fg);
+}
+.search-bar-wrap {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.search-bar-wrap svg.search-icon {
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-muted);
+  pointer-events: none;
+  transition: color 0.2s;
+}
+.search-bar-wrap.focused svg.search-icon {
+  color: var(--accent);
+}
+.search-bar-input {
+  width: 100%;
+  height: 56px;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 0 56px 0 56px;
+  font-size: 16px;
+  color: var(--fg);
+  background: var(--surface);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-bar-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px oklch(55% 0.15 280 / 0.12);
+}
+.search-bar-input::placeholder { color: var(--fg-muted); }
+.search-bar-clear {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-muted);
+  background: var(--border);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  cursor: pointer;
+}
+.search-bar-clear.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.search-bar-clear:hover {
+  background: var(--surface-hover);
+  color: var(--fg);
+}
+
+/* ============================================
+   FILTER BAR
+   ============================================ */
+.filter-section {
+  padding: 16px 0 0;
+}
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.filter-label {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+/* Genre tags inline */
+.genre-scroll {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.genre-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-secondary);
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.genre-tag:hover {
+  border-color: var(--accent);
+  color: var(--fg);
+  background: oklch(55% 0.15 280 / 0.08);
+}
+.genre-tag.selected {
+  background: oklch(55% 0.15 280 / 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filter-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+/* Dropdown filter */
+.filter-dropdown {
+  position: relative;
+}
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-secondary);
+  background: transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.filter-btn:hover {
+  border-color: var(--fg-muted);
+  color: var(--fg);
+}
+.filter-btn.has-value {
+  border-color: var(--accent);
+  background: oklch(55% 0.15 280 / 0.12);
+  color: var(--accent);
+}
+.filter-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.filter-btn.open svg {
+  transform: rotate(180deg);
+}
+
+/* Dropdown panel */
+.filter-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 40px oklch(0% 0 0 / 0.4);
+  padding: 16px;
+  min-width: 200px;
+  display: none;
+}
+.filter-panel.open { display: block; }
+.filter-panel-title {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--fg-muted);
+  margin-bottom: 10px;
+}
+
+/* Status options */
+.status-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.status-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+  color: var(--fg-secondary);
+}
+.status-option:hover { background: var(--surface); }
+.status-option.selected { color: var(--accent); }
+.status-radio {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.status-option.selected .status-radio {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--bg-elevated);
+}
+
+/* Year select */
+.filter-native-select {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 32px 0 12px;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--surface);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.filter-native-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.filter-select-wrap {
+  position: relative;
+}
+.filter-select-wrap svg {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-muted);
+  pointer-events: none;
+}
+
+/* Sort options */
+.sort-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sort-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+  color: var(--fg-secondary);
+}
+.sort-option:hover { background: var(--surface); }
+.sort-option.selected {
+  color: var(--accent);
+  background: oklch(55% 0.15 280 / 0.1);
+}
+
+/* ============================================
+   ACTIVE FILTERS (pills)
+   ============================================ */
+.active-filters-section {
+  min-height: 0;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+}
+.active-filters-label {
+  font-size: 12px;
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  background: oklch(55% 0.15 280 / 0.12);
+  color: var(--accent);
+  border: 1px solid oklch(55% 0.15 280 / 0.25);
+  cursor: pointer;
+  transition: all 0.15s;
+  animation: pill-in 0.15s ease;
+}
+@keyframes pill-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+.filter-pill:hover {
+  background: oklch(55% 0.15 280 / 0.18);
+}
+.filter-pill-remove {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.clear-all-btn {
+  font-size: 12px;
+  color: var(--fg-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+  cursor: pointer;
+}
+.clear-all-btn:hover { color: var(--fg); }
+
+/* ============================================
+   RESULTS HEADER
+   ============================================ */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 24px;
+  border-top: 1px solid var(--border);
+}
+.results-count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg-muted);
+  letter-spacing: -0.01em;
+}
+.results-count strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.view-toggle-btn {
+  width: 34px;
+  height: 30px;
+  border-radius: calc(var(--radius) - 2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-muted);
+  transition: all 0.15s;
+}
+.view-toggle-btn.active {
+  background: var(--accent);
+  color: white;
+}
+.view-toggle-btn:hover:not(.active) {
+  color: var(--fg);
+  background: var(--surface-hover);
+}
+
+/* ============================================
+   RESULTS GRID
+   ============================================ */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1100px) {
+  .results-grid:not(.list-view) { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .results-grid:not(.list-view) { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+}
+@media (max-width: 480px) {
+  .results-grid:not(.list-view) { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
+/* List view */
+.results-grid.list-view {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+.results-grid.list-view .anime-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.results-grid.list-view .anime-card:hover {
+  transform: none;
+}
+.results-grid.list-view .anime-card-poster {
+  width: 72px;
+  height: 100px;
+  aspect-ratio: unset;
+  flex-shrink: 0;
+  border-radius: var(--radius);
+}
+.results-grid.list-view .anime-card-info {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+.results-grid.list-view .anime-card-title {
+  font-size: 15px;
+  -webkit-line-clamp: 1;
+  transition: color 0.15s;
+}
+.results-grid.list-view .anime-card:hover .anime-card-title {
+  color: var(--accent);
+}
+.results-grid.list-view .anime-card-synopsis {
+  display: block;
+}
+.results-grid.list-view .list-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+/* ============================================
+   ANIME CARD
+   ============================================ */
+.anime-card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.anime-card:hover { transform: translateY(-4px); }
+.anime-card-poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+.anime-card-poster-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 14px;
+}
+.anime-card-poster-placeholder span {
+  font-size: 11px;
+  color: oklch(65% 0.02 280);
+  line-height: 1.2;
+  font-weight: 500;
+}
+.anime-card-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(8px);
+}
+.badge-airing { background: oklch(65% 0.15 155 / 0.85); color: white; }
+.badge-upcoming { background: oklch(72% 0.14 85 / 0.85); color: oklch(20% 0.05 85); }
+.badge-finished { background: oklch(35% 0.02 275 / 0.85); color: oklch(75% 0.01 270); }
+
+.anime-card-score {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  background: oklch(14% 0.015 275 / 0.85);
+  color: var(--amber);
+  backdrop-filter: blur(8px);
+}
+
+/* Status dot on poster */
+.anime-card-status-dot {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+}
+.dot-airing { background: var(--green); box-shadow: 0 0 6px oklch(65% 0.15 155 / 0.5); }
+.dot-upcoming { background: var(--amber); }
+.dot-finished { background: var(--fg-muted); }
+
+.anime-card-info { padding: 10px 2px 0; }
+.anime-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--fg);
+}
+.anime-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.anime-card-eps {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.anime-card-studio {
+  font-size: 12px;
+  color: var(--fg-secondary);
+}
+.anime-card-synopsis {
+  display: none;
+  font-size: 13px;
+  color: var(--fg-muted);
+  line-height: 1.5;
+  margin-top: 4px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  display: none;
+  overflow: hidden;
+}
+.results-grid.list-view .anime-card-synopsis {
+  display: -webkit-box;
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+.pagination-section {
+  padding: 40px 0 64px;
+  display: flex;
+  justify-content: center;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.page-btn {
+  min-width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--fg-muted);
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  cursor: pointer;
+  padding: 0 6px;
+}
+.page-btn:hover:not(.active):not(.ellipsis) {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--fg);
+}
+.page-btn.active {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  border-color: var(--accent);
+}
+.page-btn.ellipsis {
+  cursor: default;
+}
+.page-btn-prev,
+.page-btn-next {
+  font-size: 12px;
+  gap: 4px;
+  padding: 0 12px;
+  min-width: auto;
+}
+.page-btn-prev { margin-right: 4px; }
+.page-btn-next { margin-left: 4px; }
+.page-btn-prev:disabled,
+.page-btn-next:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .page-btn-text { display: none; }
+  .pagination { gap: 2px; }
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.footer {
+  padding: 64px 0 40px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+.footer-brand h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.footer-brand-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+.footer-brand p {
+  font-size: 14px;
+  color: var(--fg-muted);
+  max-width: 280px;
+  line-height: 1.6;
+}
+.footer-col h4 {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--fg-muted);
+  margin-bottom: 16px;
+}
+.footer-col a {
+  display: block;
+  font-size: 14px;
+  color: var(--fg-secondary);
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.footer-col a:hover { color: var(--fg); }
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+@media (max-width: 768px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .search-hero { padding: 32px 0 24px; }
+}
+@media (max-width: 480px) {
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  .filter-bar { gap: 6px; }
+  .search-hero { padding: 24px 0 16px; }
+  .search-bar-input { height: 48px; font-size: 14px; }
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.empty-state {
+  text-align: center;
+  padding: 64px 0;
+  color: var(--fg-muted);
+  display: none;
+}
+.empty-state svg { margin: 0 auto 24px; opacity: 0.3; }
+.empty-state h3 {
+  font-size: 1.25rem;
+  color: var(--fg);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="homepage.html" class="nav-logo">
+      <div class="nav-logo-mark">w</div>
+      <span>weeb.vip</span>
+    </a>
+
+    <div class="nav-search">
+      <svg class="nav-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search anime..." id="nav-search-input">
+    </div>
+
+    <nav class="nav-links">
+      <a href="homepage.html" class="nav-link">Home</a>
+      <a href="season.html" class="nav-link">Season</a>
+      <a href="airing.html" class="nav-link">Airing</a>
+      <a href="search.html" class="nav-link active">Browse</a>
+      <button class="nav-btn nav-btn-ghost">Log in</button>
+      <button class="nav-btn nav-btn-primary">Sign up</button>
+    </nav>
+
+    <button class="nav-mobile-toggle" onclick="document.getElementById('drawer').classList.add('open')" aria-label="Open menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-drawer" id="drawer">
+  <div class="mobile-drawer-overlay" onclick="this.parentElement.classList.remove('open')"></div>
+  <div class="mobile-drawer-panel">
+    <button class="mobile-drawer-close" onclick="document.getElementById('drawer').classList.remove('open')" aria-label="Close menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <nav>
+      <a href="homepage.html">Home</a>
+      <a href="season.html">Season</a>
+      <a href="airing.html">Airing</a>
+      <a href="search.html">Browse</a>
+      <a href="profile.html">Profile</a>
+      <a href="#">Log in</a>
+      <a href="#">Sign up</a>
+    </nav>
+  </div>
+</div>
+
+<main>
+  <div class="container">
+
+    <!-- SEARCH HERO -->
+    <div class="search-hero">
+      <h1>Browse Anime</h1>
+      <div class="search-bar-wrap" id="search-bar-wrap">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input
+          type="text"
+          class="search-bar-input"
+          id="main-search"
+          placeholder="Search by title, studio, genre..."
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <button class="search-bar-clear" id="search-clear" aria-label="Clear search" onclick="clearSearch()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-section">
+      <div class="filter-bar">
+        <span class="filter-label">Genres</span>
+        <div class="genre-scroll" id="genre-scroll"></div>
+
+        <div class="filter-divider"></div>
+
+        <!-- Status -->
+        <div class="filter-dropdown" id="status-dropdown">
+          <button class="filter-btn" id="status-btn" onclick="toggleDropdown('status')">
+            <span id="status-btn-label">Status</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="filter-panel" id="status-panel">
+            <div class="filter-panel-title">Airing Status</div>
+            <div class="status-options" id="status-options"></div>
+          </div>
+        </div>
+
+        <!-- Year -->
+        <div class="filter-dropdown" id="year-dropdown">
+          <button class="filter-btn" id="year-btn" onclick="toggleDropdown('year')">
+            <span id="year-btn-label">Year</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="filter-panel" id="year-panel" style="min-width:180px;">
+            <div class="filter-panel-title">Year</div>
+            <div class="filter-select-wrap">
+              <select class="filter-native-select" id="year-select" onchange="selectYear(this.value)">
+                <option value="">All years</option>
+              </select>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sort -->
+        <div class="filter-dropdown" id="sort-dropdown">
+          <button class="filter-btn has-value" id="sort-btn" onclick="toggleDropdown('sort')">
+            <span id="sort-btn-label">Score</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="filter-panel" id="sort-panel" style="min-width:180px;">
+            <div class="filter-panel-title">Sort by</div>
+            <div class="sort-options" id="sort-options"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE FILTERS -->
+    <div class="active-filters-section" id="active-filters-section" style="display:none;">
+      <div class="active-filters" id="active-filters"></div>
+    </div>
+
+    <!-- RESULTS HEADER -->
+    <div class="results-header">
+      <p class="results-count" id="results-count"><strong>128</strong> results for 'action'</p>
+      <div class="view-toggle" role="group" aria-label="View mode">
+        <button class="view-toggle-btn active" id="grid-view-btn" title="Grid view" onclick="setView('grid')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+        <button class="view-toggle-btn" id="list-view-btn" title="List view" onclick="setView('list')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULTS GRID -->
+    <div class="results-grid" id="results-grid"></div>
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state" id="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <h3>No results found</h3>
+      <p>Try adjusting your filters or search term.</p>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination-section">
+      <nav class="pagination" id="pagination" aria-label="Page navigation"></nav>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3><span class="footer-brand-mark">w</span> weeb.vip</h3>
+        <p>A curated anime database for people who care about what they watch. Track, discover, and never miss an episode.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Browse</h4>
+        <a href="search.html">All Anime</a>
+        <a href="season.html">This Season</a>
+        <a href="airing.html">Currently Airing</a>
+        <a href="airing.html">Airing Calendar</a>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <a href="profile.html">Profile</a>
+        <a href="profile.html">My Anime List</a>
+        <a href="profile.html">Settings</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="#">About weeb.vip</a>
+        <a href="#">API</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 weeb.vip</span>
+      <span>Made for anime fans.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ============================================
+// DATA
+// ============================================
+const GENRES = [
+  'Action','Adventure','Comedy','Drama','Fantasy',
+  'Horror','Mystery','Romance','Sci-Fi','Slice of Life',
+  'Sports','Supernatural','Thriller'
+];
+
+const STATUSES = ['All', 'Airing', 'Finished', 'Upcoming'];
+const SORT_OPTIONS = [
+  { key: 'Score', label: 'Score' },
+  { key: 'Newest', label: 'Newest' },
+  { key: 'Title', label: 'A-Z' },
+  { key: 'Popularity', label: 'Popularity' }
+];
+
+const ANIME_DATA = [
+  { title: 'Fullmetal Alchemist: Brotherhood', rating: 9.1, eps: 64, status: 'finished', tags: ['Action', 'Fantasy'], year: 2009, studio: 'Bones', synopsis: 'Two brothers search for a Philosopher\'s Stone after an pointless attempt to bring their mother back to life through alchemy goes horribly wrong.', gradient: '150deg, oklch(22% 0.06 275), oklch(30% 0.10 260)' },
+  { title: 'Steins;Gate', rating: 9.0, eps: 24, status: 'finished', tags: ['Sci-Fi', 'Thriller'], year: 2011, studio: 'White Fox', synopsis: 'A self-proclaimed mad scientist discovers time travel capabilities through a modified microwave. The consequences spiral beyond control.', gradient: '150deg, oklch(20% 0.05 295), oklch(30% 0.12 280)' },
+  { title: 'Hunter x Hunter (2011)', rating: 9.0, eps: 148, status: 'finished', tags: ['Action', 'Adventure'], year: 2011, studio: 'Madhouse', synopsis: 'Gon Freecss sets out on an adventure to find his absent father, becoming a licensed Hunter and facing incredible challenges along the way.', gradient: '150deg, oklch(20% 0.04 260), oklch(28% 0.08 270)' },
+  { title: 'Frieren: Beyond Journey\'s End', rating: 8.9, eps: 28, status: 'finished', tags: ['Adventure', 'Fantasy'], year: 2023, studio: 'Madhouse', synopsis: 'After the hero\'s party defeats the Demon King, the elven mage Frieren begins a journey to understand what it means to know someone.', gradient: '150deg, oklch(24% 0.08 298), oklch(34% 0.10 285)' },
+  { title: 'Vinland Saga', rating: 8.8, eps: 48, status: 'finished', tags: ['Action', 'Drama'], year: 2019, studio: 'Wit Studio', synopsis: 'Thorfinn, a young Viking, seeks revenge against the man who killed his father while questioning the cycle of violence around him.', gradient: '150deg, oklch(18% 0.04 278), oklch(27% 0.08 265)' },
+  { title: 'Attack on Titan: The Final Season', rating: 8.8, eps: 28, status: 'finished', tags: ['Action', 'Drama'], year: 2020, studio: 'MAPPA', synopsis: 'As war looms between Marley and Eldia, Eren pursues a catastrophic plan that will determine the fate of the entire world.', gradient: '150deg, oklch(17% 0.04 280), oklch(26% 0.07 270)' },
+  { title: 'Jujutsu Kaisen', rating: 8.7, eps: 24, status: 'finished', tags: ['Action', 'Supernatural'], year: 2020, studio: 'MAPPA', synopsis: 'Yuji Itadori joins a secret organization of sorcerers to eliminate powerful curses after swallowing a rotting finger of the King of Curses.', gradient: '150deg, oklch(22% 0.08 288), oklch(33% 0.10 275)' },
+  { title: 'Demon Slayer: Kimetsu no Yaiba', rating: 8.7, eps: 26, status: 'finished', tags: ['Action', 'Supernatural'], year: 2019, studio: 'Ufotable', synopsis: 'After his family is slaughtered by demons, Tanjiro Kamado sets out to become a demon slayer and cure his sister who was turned into one.', gradient: '150deg, oklch(24% 0.07 292), oklch(35% 0.09 278)' },
+  { title: 'Spy x Family', rating: 8.5, eps: 25, status: 'finished', tags: ['Comedy', 'Action'], year: 2022, studio: 'Wit Studio', synopsis: 'A spy must build a fake family for a mission, unaware his adopted daughter is a telepath and his wife is an assassin.', gradient: '150deg, oklch(26% 0.06 280), oklch(38% 0.08 268)' },
+  { title: 'Chainsaw Man', rating: 8.5, eps: 12, status: 'finished', tags: ['Action', 'Horror'], year: 2022, studio: 'MAPPA', synopsis: 'Denji, a young man fused with his pet devil dog, becomes a Devil Hunter for the government in exchange for a normal life.', gradient: '150deg, oklch(19% 0.07 286), oklch(29% 0.10 273)' },
+  { title: 'Solo Leveling Season 2', rating: 8.3, eps: 13, status: 'airing', tags: ['Action', 'Fantasy'], year: 2025, studio: 'A-1 Pictures', synopsis: 'Sung Jinwoo continues his ascent as the Shadow Monarch, facing increasingly powerful foes from other dimensions.', gradient: '150deg, oklch(22% 0.09 294), oklch(34% 0.11 280)' },
+  { title: 'Dandadan Season 2', rating: 8.3, eps: 12, status: 'airing', tags: ['Action', 'Supernatural'], year: 2025, studio: 'Science SARU', synopsis: 'Momo and Okarun face new supernatural threats while navigating their feelings for each other in increasingly chaotic battles.', gradient: '150deg, oklch(23% 0.07 290), oklch(35% 0.10 276)' },
+];
+
+// ============================================
+// STATE
+// ============================================
+const state = {
+  searchQuery: '',
+  selectedGenres: [],
+  selectedStatus: 'All',
+  selectedYear: '',
+  selectedSort: 'Score',
+  currentPage: 1,
+  viewMode: 'grid',
+};
+
+// ============================================
+// INIT
+// ============================================
+function initFilters() {
+  // Genre tags
+  const genreScroll = document.getElementById('genre-scroll');
+  genreScroll.innerHTML = GENRES.map(g =>
+    '<button class="genre-tag" data-genre="' + g + '" onclick="toggleGenre(\'' + g + '\')">' + g + '</button>'
+  ).join('');
+
+  // Status options
+  const statusOpts = document.getElementById('status-options');
+  statusOpts.innerHTML = STATUSES.map(s =>
+    '<div class="status-option ' + (s === state.selectedStatus ? 'selected' : '') + '" onclick="selectStatus(\'' + s + '\')">' +
+    '<div class="status-radio"></div><span>' + s + '</span></div>'
+  ).join('');
+
+  // Year select
+  const yearSelect = document.getElementById('year-select');
+  const years = [];
+  for (let y = 2026; y >= 1990; y--) years.push(y);
+  yearSelect.innerHTML = '<option value="">All years</option>' +
+    years.map(y => '<option value="' + y + '">' + y + '</option>').join('');
+
+  // Sort options
+  const sortOpts = document.getElementById('sort-options');
+  sortOpts.innerHTML = SORT_OPTIONS.map(s =>
+    '<div class="sort-option ' + (s.key === state.selectedSort ? 'selected' : '') + '" onclick="selectSort(\'' + s.key + '\')">' +
+    s.label + '</div>'
+  ).join('');
+}
+
+// ============================================
+// DROPDOWN LOGIC
+// ============================================
+const dropdowns = ['status', 'year', 'sort'];
+
+function toggleDropdown(name) {
+  const panel = document.getElementById(name + '-panel');
+  const btn = document.getElementById(name + '-btn');
+  const isOpen = panel.classList.contains('open');
+
+  dropdowns.forEach(d => {
+    document.getElementById(d + '-panel').classList.remove('open');
+    document.getElementById(d + '-btn').classList.remove('open');
+  });
+
+  if (!isOpen) {
+    panel.classList.add('open');
+    btn.classList.add('open');
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.filter-dropdown')) {
+    dropdowns.forEach(d => {
+      document.getElementById(d + '-panel').classList.remove('open');
+      document.getElementById(d + '-btn').classList.remove('open');
+    });
+  }
+});
+
+// ============================================
+// FILTER ACTIONS
+// ============================================
+function toggleGenre(genre) {
+  const idx = state.selectedGenres.indexOf(genre);
+  if (idx === -1) {
+    state.selectedGenres.push(genre);
+  } else {
+    state.selectedGenres.splice(idx, 1);
+  }
+  updateGenreChips();
+  updateActivePills();
+  renderResults();
+}
+
+function updateGenreChips() {
+  document.querySelectorAll('.genre-tag').forEach(chip => {
+    const g = chip.dataset.genre;
+    chip.classList.toggle('selected', state.selectedGenres.includes(g));
+  });
+}
+
+function selectStatus(status) {
+  state.selectedStatus = status;
+  document.querySelectorAll('.status-option').forEach(el => {
+    el.classList.toggle('selected', el.textContent.trim() === status);
+  });
+  const btn = document.getElementById('status-btn');
+  const label = document.getElementById('status-btn-label');
+  if (status === 'All') {
+    btn.classList.remove('has-value');
+    label.textContent = 'Status';
+  } else {
+    btn.classList.add('has-value');
+    label.textContent = status;
+  }
+  updateActivePills();
+  renderResults();
+}
+
+function selectYear(year) {
+  state.selectedYear = year;
+  const btn = document.getElementById('year-btn');
+  const label = document.getElementById('year-btn-label');
+  if (!year) {
+    btn.classList.remove('has-value');
+    label.textContent = 'Year';
+  } else {
+    btn.classList.add('has-value');
+    label.textContent = year;
+  }
+  updateActivePills();
+  renderResults();
+  document.getElementById('year-panel').classList.remove('open');
+  document.getElementById('year-btn').classList.remove('open');
+}
+
+function selectSort(sort) {
+  state.selectedSort = sort;
+  const sortObj = SORT_OPTIONS.find(s => s.key === sort);
+  document.querySelectorAll('.sort-option').forEach(el => {
+    el.classList.toggle('selected', el.textContent.trim() === sortObj.label);
+  });
+  document.getElementById('sort-btn-label').textContent = sortObj.label;
+  renderResults();
+  document.getElementById('sort-panel').classList.remove('open');
+  document.getElementById('sort-btn').classList.remove('open');
+}
+
+// ============================================
+// ACTIVE PILLS
+// ============================================
+function updateActivePills() {
+  const pills = [];
+
+  state.selectedGenres.forEach(g => {
+    pills.push({ label: g, key: 'genre', value: g });
+  });
+  if (state.selectedStatus && state.selectedStatus !== 'All') {
+    pills.push({ label: state.selectedStatus, key: 'status', value: state.selectedStatus });
+  }
+  if (state.selectedYear) {
+    pills.push({ label: state.selectedYear, key: 'year', value: state.selectedYear });
+  }
+
+  const section = document.getElementById('active-filters-section');
+  const container = document.getElementById('active-filters');
+
+  if (pills.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  container.innerHTML = '<span class="active-filters-label">Active filters:</span>' +
+    pills.map(p =>
+      '<button class="filter-pill" onclick="removePill(\'' + p.key + '\', \'' + p.value + '\')">' +
+      p.label +
+      '<span class="filter-pill-remove"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M18 6 6 18M6 6l12 12"/></svg></span>' +
+      '</button>'
+    ).join('') +
+    '<button class="clear-all-btn" onclick="clearAllFilters()">Clear all</button>';
+}
+
+function removePill(key, value) {
+  if (key === 'genre') {
+    state.selectedGenres = state.selectedGenres.filter(g => g !== value);
+    updateGenreChips();
+  } else if (key === 'status') {
+    selectStatus('All');
+    return;
+  } else if (key === 'year') {
+    state.selectedYear = '';
+    document.getElementById('year-select').value = '';
+    document.getElementById('year-btn').classList.remove('has-value');
+    document.getElementById('year-btn-label').textContent = 'Year';
+  }
+  updateActivePills();
+  renderResults();
+}
+
+function clearAllFilters() {
+  state.selectedGenres = [];
+  state.selectedStatus = 'All';
+  state.selectedYear = '';
+
+  updateGenreChips();
+  selectStatus('All');
+  document.getElementById('year-select').value = '';
+  document.getElementById('year-btn').classList.remove('has-value');
+  document.getElementById('year-btn-label').textContent = 'Year';
+
+  updateActivePills();
+  renderResults();
+}
+
+// ============================================
+// SEARCH BAR
+// ============================================
+const mainSearch = document.getElementById('main-search');
+const searchClear = document.getElementById('search-clear');
+const searchWrap = document.getElementById('search-bar-wrap');
+
+mainSearch.addEventListener('input', (e) => {
+  state.searchQuery = e.target.value;
+  searchClear.classList.toggle('visible', e.target.value.length > 0);
+  renderResults();
+});
+
+mainSearch.addEventListener('focus', () => searchWrap.classList.add('focused'));
+mainSearch.addEventListener('blur', () => searchWrap.classList.remove('focused'));
+
+document.getElementById('nav-search-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    mainSearch.value = e.target.value.trim();
+    state.searchQuery = mainSearch.value;
+    searchClear.classList.add('visible');
+    mainSearch.focus();
+    renderResults();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+});
+
+function clearSearch() {
+  mainSearch.value = '';
+  state.searchQuery = '';
+  searchClear.classList.remove('visible');
+  renderResults();
+  mainSearch.focus();
+}
+
+// ============================================
+// VIEW TOGGLE
+// ============================================
+function setView(mode) {
+  state.viewMode = mode;
+  const grid = document.getElementById('results-grid');
+  const gridBtn = document.getElementById('grid-view-btn');
+  const listBtn = document.getElementById('list-view-btn');
+
+  if (mode === 'grid') {
+    grid.classList.remove('list-view');
+    gridBtn.classList.add('active');
+    listBtn.classList.remove('active');
+  } else {
+    grid.classList.add('list-view');
+    listBtn.classList.add('active');
+    gridBtn.classList.remove('active');
+  }
+}
+
+// ============================================
+// RENDER
+// ============================================
+function getFilteredData() {
+  let data = [...ANIME_DATA];
+
+  if (state.searchQuery) {
+    const q = state.searchQuery.toLowerCase();
+    data = data.filter(a =>
+      a.title.toLowerCase().includes(q) ||
+      a.studio.toLowerCase().includes(q) ||
+      a.tags.some(t => t.toLowerCase().includes(q))
+    );
+  }
+  if (state.selectedGenres.length > 0) {
+    data = data.filter(a =>
+      state.selectedGenres.some(g => a.tags.includes(g))
+    );
+  }
+  if (state.selectedStatus && state.selectedStatus !== 'All') {
+    data = data.filter(a => a.status === state.selectedStatus.toLowerCase());
+  }
+  if (state.selectedYear) {
+    data = data.filter(a => a.year === parseInt(state.selectedYear));
+  }
+
+  // Sort
+  if (state.selectedSort === 'Score') {
+    data.sort((a, b) => b.rating - a.rating);
+  } else if (state.selectedSort === 'Popularity') {
+    data.sort((a, b) => b.eps - a.eps);
+  } else if (state.selectedSort === 'Newest') {
+    data.sort((a, b) => b.year - a.year);
+  } else if (state.selectedSort === 'Title') {
+    data.sort((a, b) => a.title.localeCompare(b.title));
+  }
+
+  return data;
+}
+
+function renderResults() {
+  const filtered = getFilteredData();
+  const grid = document.getElementById('results-grid');
+  const countEl = document.getElementById('results-count');
+  const emptyState = document.getElementById('empty-state');
+  const paginationSection = document.querySelector('.pagination-section');
+
+  // Build results-count text
+  const hasFilters = state.searchQuery || state.selectedGenres.length > 0 || state.selectedStatus !== 'All' || state.selectedYear;
+  const displayCount = filtered.length === ANIME_DATA.length && !hasFilters ? 128 : filtered.length;
+
+  let countText = '<strong>' + displayCount + '</strong> result' + (displayCount !== 1 ? 's' : '');
+  if (state.searchQuery) {
+    countText += " for '" + state.searchQuery + "'";
+  }
+  countEl.innerHTML = countText;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    emptyState.style.display = 'block';
+    paginationSection.style.display = 'none';
+    return;
+  }
+
+  emptyState.style.display = 'none';
+  paginationSection.style.display = 'flex';
+
+  grid.innerHTML = filtered.map(anime => createCard(anime)).join('');
+
+  const totalPages = filtered.length === ANIME_DATA.length && !hasFilters ? 11 : Math.max(1, Math.ceil(filtered.length / 12));
+  renderPagination(totalPages, state.currentPage);
+}
+
+function createCard(anime) {
+  const badgeClass = anime.status === 'airing' ? 'badge-airing' : anime.status === 'upcoming' ? 'badge-upcoming' : 'badge-finished';
+  const badgeLabel = anime.status === 'airing' ? 'Airing' : anime.status === 'upcoming' ? 'Upcoming' : 'Finished';
+  const dotClass = anime.status === 'airing' ? 'dot-airing' : anime.status === 'upcoming' ? 'dot-upcoming' : 'dot-finished';
+
+  return '<a class="anime-card" href="anime-detail.html" title="' + anime.title + '">' +
+    '<div class="anime-card-poster">' +
+      '<div class="anime-card-poster-placeholder" style="background: linear-gradient(' + anime.gradient + ')">' +
+        '<span>' + anime.title + '</span>' +
+      '</div>' +
+      '<span class="anime-card-badge ' + badgeClass + '">' + badgeLabel + '</span>' +
+      '<span class="anime-card-score">' + anime.rating + '</span>' +
+      '<span class="anime-card-status-dot ' + dotClass + '"></span>' +
+    '</div>' +
+    '<div class="anime-card-info">' +
+      '<div class="anime-card-title">' + anime.title + '</div>' +
+      '<div class="list-meta-row">' +
+        '<div class="anime-card-meta">' +
+          '<span class="anime-card-eps">' + anime.eps + ' eps</span>' +
+          '<span class="anime-card-studio">' + anime.studio + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="anime-card-synopsis">' + anime.synopsis + '</div>' +
+    '</div>' +
+  '</a>';
+}
+
+// ============================================
+// PAGINATION
+// ============================================
+function renderPagination(totalPages, currentPage) {
+  const nav = document.getElementById('pagination');
+  if (totalPages <= 1) {
+    nav.innerHTML = '';
+    return;
+  }
+
+  let pages = [];
+  pages.push({ type: 'prev', disabled: currentPage === 1 });
+  pages.push({ type: 'page', num: 1 });
+
+  if (currentPage > 3) {
+    pages.push({ type: 'ellipsis' });
+  }
+
+  for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+    pages.push({ type: 'page', num: i });
+  }
+
+  if (currentPage < totalPages - 2) {
+    pages.push({ type: 'ellipsis' });
+  }
+
+  if (totalPages > 1) {
+    pages.push({ type: 'page', num: totalPages });
+  }
+
+  pages.push({ type: 'next', disabled: currentPage === totalPages });
+
+  nav.innerHTML = pages.map(p => {
+    if (p.type === 'prev') {
+      return '<button class="page-btn page-btn-prev" ' + (p.disabled ? 'disabled' : '') + ' onclick="goToPage(' + (currentPage - 1) + ')">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>' +
+        '<span class="page-btn-text">Previous</span></button>';
+    }
+    if (p.type === 'next') {
+      return '<button class="page-btn page-btn-next" ' + (p.disabled ? 'disabled' : '') + ' onclick="goToPage(' + (currentPage + 1) + ')">' +
+        '<span class="page-btn-text">Next</span>' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg></button>';
+    }
+    if (p.type === 'ellipsis') {
+      return '<span class="page-btn ellipsis">&hellip;</span>';
+    }
+    return '<button class="page-btn ' + (p.num === currentPage ? 'active' : '') + '" onclick="goToPage(' + p.num + ')">' + p.num + '</button>';
+  }).join('');
+}
+
+function goToPage(page) {
+  state.currentPage = page;
+  const hasFilters = state.searchQuery || state.selectedGenres.length || state.selectedStatus !== 'All' || state.selectedYear;
+  const totalPages = hasFilters ? Math.max(1, Math.ceil(getFilteredData().length / 12)) : 11;
+  renderPagination(totalPages, page);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================
+// BOOT
+// ============================================
+initFilters();
+renderResults();
+</script>
+</body>
+</html>

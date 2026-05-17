@@ -48,14 +48,14 @@
     <div class="fixed inset-0 z-50 overflow-y-auto">
       <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
         <div
-          class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 {className}"
+          class="relative transform overflow-hidden rounded-lg bg-weeb-surface px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 {className}"
           on:click|stopPropagation
         >
           {#if showCloseButton}
             <!-- Close button -->
             <button
               type="button"
-              class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              class="absolute right-4 top-4 text-weeb-fg-muted hover:text-weeb-fg-muted hover:text-weeb-fg-secondary transition-colors"
               on:click={closeModal}
               aria-label="Close modal"
             >

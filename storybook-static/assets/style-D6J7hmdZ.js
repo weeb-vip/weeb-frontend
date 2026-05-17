@@ -1,0 +1,1 @@
+import{t as l}from"./class-CJmGtk23.js";import{i as r}from"./iframe-BBy3qS7V.js";function n(s,t,o,i){var f=s[r];if(f!==t){var e=l(t);e==null?s.removeAttribute("style"):s.style.cssText=e,s[r]=t}return i}export{n as s};

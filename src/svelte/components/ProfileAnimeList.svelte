@@ -184,14 +184,14 @@
   <div class="flex flex-col space-y-6 max-w-screen-2xl mx-auto px-4">
     <div class="flex flex-wrap gap-2 py-4">
       {#each Array(5) as _}
-        <div class="h-10 w-24 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse"></div>
+        <div class="h-10 w-24 bg-weeb-surface-hover bg-weeb-surface-hover rounded-full animate-pulse"></div>
       {/each}
     </div>
     <div>
-      <div class="h-8 bg-gray-300 dark:bg-gray-600 rounded w-48 mb-4 animate-pulse"></div>
+      <div class="h-8 bg-weeb-surface-hover bg-weeb-surface-hover rounded w-48 mb-4 animate-pulse"></div>
       <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-4 gap-y-6 py-4">
         {#each Array(8) as _}
-          <div class="bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse h-64"></div>
+          <div class="bg-weeb-surface rounded-lg animate-pulse h-64"></div>
         {/each}
       </div>
     </div>
@@ -204,8 +204,8 @@
         <button
           on:click={() => handleStatusChange(status)}
           class="px-4 py-2 rounded-full text-sm border transition-colors duration-300 {selectedStatus === status
-            ? 'bg-blue-600 text-white border-blue-600'
-            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'}"
+            ? 'bg-weeb-accent text-white border-weeb-accent'
+            : 'bg-weeb-surface text-weeb-fg-secondary border-weeb-border hover:bg-weeb-surface-hover'}"
         >
           {statusLabels[status]}
         </button>
@@ -214,7 +214,7 @@
 
     <!-- Anime List -->
     <div>
-      <h2 class="text-xl font-semibold capitalize mb-4 text-gray-900 dark:text-gray-100">
+      <h2 class="text-xl font-semibold capitalize mb-4 text-weeb-fg">
         {statusLabels[selectedStatus]}
       </h2>
 
@@ -222,15 +222,15 @@
         <!-- Empty state -->
         <div class="text-center py-12">
           <div class="text-6xl mb-4">📺</div>
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          <h3 class="text-xl font-semibold text-weeb-fg mb-2">
             No anime in {statusLabels[selectedStatus].toLowerCase()}
           </h3>
-          <p class="text-gray-600 dark:text-gray-400 mb-6">
+          <p class="text-weeb-fg-muted mb-6">
             Start building your anime list by discovering new shows.
           </p>
           <a
             href="/"
-            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+            class="inline-flex items-center gap-2 bg-weeb-accent hover:bg-weeb-accent-hover text-white px-6 py-3 rounded-lg transition-colors"
           >
             Explore Anime →
           </a>
@@ -272,19 +272,19 @@
             <button
               on:click={handlePreviousPage}
               disabled={page === 0}
-              class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-300"
+              class="px-4 py-2 rounded bg-weeb-surface text-weeb-fg hover:bg-weeb-surface-hover disabled:opacity-50 transition-colors duration-300"
             >
               Previous
             </button>
 
-            <span class="text-sm text-gray-600 dark:text-gray-400">
+            <span class="text-sm text-weeb-fg-muted">
               Page {page + 1} of {totalPages}
             </span>
 
             <button
               on:click={handleNextPage}
               disabled={page + 1 >= totalPages}
-              class="px-4 py-2 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors duration-300"
+              class="px-4 py-2 rounded bg-weeb-surface text-weeb-fg hover:bg-weeb-surface-hover disabled:opacity-50 transition-colors duration-300"
             >
               Next
             </button>
