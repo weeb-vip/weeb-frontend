@@ -1,16 +1,21 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { configStore } from '../stores/config';
+  import { loggedInStore } from '../stores/auth';
   import PosterCard from './PosterCard.svelte';
   import SafeImage from './SafeImage.svelte';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageFromAnime } from '../../services/utils';
   import { navigateWithTransition } from '../../utils/astro-navigation';
-
+  import { AuthStorage } from '../../utils/auth-storage';
+  import { Status } from '../../gql/graphql';
   let searchQuery = '';
   let results: any[] = [];
   let isLoading = false;
   let hasSearched = false;
   let totalResults = 0;
+
+  // User anime lookup map (animeId -> status)
+  let userAnimeMap: Map<string, string> = new Map();
 
   // Filters
   let selectedGenres: string[] = [];
@@ -25,11 +30,31 @@
   let searchClient: any = null;
   let algoliaIndex: string = 'anime-staging';
 
-  const GENRES = [
-    'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy',
-    'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Slice of Life',
-    'Sports', 'Supernatural', 'Thriller', 'Music', 'Mecha'
-  ];
+  // Parse JSON string fields from Algolia (genres, studios, licensors come as JSON strings)
+  function parseJsonField(val: any): string[] {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+      try { return JSON.parse(val); } catch { return []; }
+    }
+    return [];
+  }
+
+  // Normalize an Algolia hit into consistent field names
+  function normalizeHit(hit: any): any {
+    return {
+      ...hit,
+      // Algolia field -> our field
+      description: hit.synopsis || hit.description || '',
+      tags: parseJsonField(hit.genres || hit.tags),
+      studiosList: parseJsonField(hit.studios),
+      episodeCount: hit.episodes || hit.episode_count || null,
+      ratingNum: hit.rating ? parseFloat(hit.rating) : null,
+      yearNum: hit.year || (hit.start_date ? new Date(hit.start_date).getFullYear() : null),
+    };
+  }
+
+  // Genres extracted dynamically from search results
+  let allGenres: string[] = [];
 
   const STATUSES = [
     { value: '', label: 'All' },
@@ -45,12 +70,50 @@
     { value: 'title', label: 'A-Z' },
   ];
 
+  async function fetchUserAnimeMap() {
+    if (!AuthStorage.isLoggedIn()) return;
+    try {
+      const { ensureConfigLoaded } = await import('../../services/config-loader');
+      await ensureConfigLoaded();
+      const { AuthenticatedClient } = await import('../../services/queries');
+      const { queryUserAnimes } = await import('../../services/api/graphql/queries');
+      const client = await AuthenticatedClient();
+
+      // Fetch all statuses in parallel
+      const statuses = [Status.Watching, Status.Completed, Status.Plantowatch, Status.Dropped, Status.Onhold];
+      const responses = await Promise.all(
+        statuses.map(status =>
+          client.request(queryUserAnimes, { input: { status, limit: 1000, page: 1 } })
+            .then(r => r.UserAnimes?.animes || [])
+            .catch(() => [])
+        )
+      );
+
+      const map = new Map<string, string>();
+      responses.forEach((animes, i) => {
+        const statusStr = statuses[i];
+        animes.forEach((entry: any) => {
+          if (entry.anime?.id) {
+            map.set(entry.anime.id, statusStr);
+          }
+        });
+      });
+
+      userAnimeMap = map;
+    } catch (e) {
+      console.error('Failed to fetch user anime map:', e);
+    }
+  }
+
   onMount(async () => {
     try {
       await configStore.init();
     } catch (e) {
       console.error('Config init failed:', e);
     }
+
+    // Fetch user anime list in parallel with Algolia init
+    fetchUserAnimeMap();
 
     try {
       const algoliasearchModule = await import('algoliasearch/lite');
@@ -90,13 +153,28 @@
     hasSearched = true;
 
     try {
-      const index = searchClient.initIndex(algoliaIndex);
-      const response = await index.search(searchQuery.trim(), {
-        hitsPerPage: 100,
+      const response = await searchClient.search({
+        requests: [{
+          indexName: algoliaIndex,
+          query: searchQuery.trim(),
+          hitsPerPage: 100,
+        }]
       });
 
-      results = response.hits || [];
-      totalResults = response.nbHits || results.length;
+      // Algolia v5 response may have results at different paths
+      const firstResult = response.results?.[0] || response;
+      const rawHits = firstResult?.hits || [];
+      totalResults = firstResult?.nbHits ?? firstResult?.totalHits ?? rawHits.length;
+
+      // Normalize all hits — parse JSON string fields, unify field names
+      results = rawHits.map(normalizeHit);
+
+      // Extract unique genres dynamically from results
+      const genreSet = new Set<string>();
+      results.forEach(r => r.tags?.forEach((t: string) => {
+        if (t && t !== 'None found' && t !== ' add some') genreSet.add(t);
+      }));
+      allGenres = Array.from(genreSet).sort();
     } catch (e) {
       console.error('Search failed:', e);
       results = [];
@@ -161,27 +239,22 @@
     if (selectedGenres.length > 0) {
       filtered = filtered.filter(item =>
         item.tags && selectedGenres.some(g =>
-          item.tags.some((t: string) => t.toLowerCase().includes(g.toLowerCase()))
+          item.tags.some((t: string) => t.toLowerCase() === g.toLowerCase())
         )
       );
     }
 
     if (selectedStatus) {
-      filtered = filtered.filter(item =>
-        item.anime_status === selectedStatus || item.status === selectedStatus
-      );
+      filtered = filtered.filter(item => item.status === selectedStatus);
     }
 
     if (selectedYear) {
-      filtered = filtered.filter(item => {
-        const year = item.start_date ? new Date(item.start_date).getFullYear() : null;
-        return year === parseInt(selectedYear);
-      });
+      filtered = filtered.filter(item => item.yearNum === parseInt(selectedYear));
     }
 
     // Sort
     if (sortBy === 'score') {
-      filtered.sort((a, b) => (b.score || 0) - (a.score || 0));
+      filtered.sort((a, b) => (b.ratingNum || 0) - (a.ratingNum || 0));
     } else if (sortBy === 'newest') {
       filtered.sort((a, b) => {
         const da = a.start_date ? new Date(a.start_date).getTime() : 0;
@@ -197,7 +270,7 @@
 
   $: hasActiveFilters = selectedGenres.length > 0 || selectedStatus !== '' || selectedYear !== '';
 
-  $: visibleGenres = showAllGenres ? GENRES : GENRES.slice(0, 10);
+  $: visibleGenres = showAllGenres ? allGenres : allGenres.slice(0, 10);
 
   // Generate year options
   $: yearOptions = (() => {
@@ -240,7 +313,7 @@
 
   <!-- Filter Bar -->
   <section class="filter-section">
-    <div class="filter-bar">
+    <div class="filter-row filter-row--genres">
       <span class="filter-label">Genres</span>
       <div class="genre-scroll">
         {#each visibleGenres as genre}
@@ -250,15 +323,15 @@
             on:click={() => toggleGenre(genre)}
           >{genre}</button>
         {/each}
-        {#if !showAllGenres && GENRES.length > 10}
+        {#if !showAllGenres && allGenres.length > 10}
           <button class="genre-tag genre-tag--more" on:click={() => showAllGenres = true}>
-            +{GENRES.length - 10} more
+            +{allGenres.length - 10} more
           </button>
         {/if}
       </div>
+    </div>
 
-      <div class="filter-divider"></div>
-
+    <div class="filter-row filter-row--controls">
       <!-- Status -->
       <select class="filter-select" bind:value={selectedStatus} on:change={performSearch}>
         {#each STATUSES as status}
@@ -369,26 +442,18 @@
     {#if viewMode === 'grid'}
       <div class="results-grid">
         {#each filteredResults as item (item.objectID)}
-          <a class="result-card" href="/show/{item.id ? encodeURIComponent(item.id) : ''}" on:click|preventDefault={() => navigateToShow(item)}>
-            <div class="result-poster">
-              <SafeImage
-                src={GetImageFromAnime(item)}
-                alt={item.title_en || ''}
-                fallbackSrc="/assets/not found.jpg"
-                className="result-poster-img"
-              />
-              {#if item.score}
-                <span class="result-score">{item.score?.toFixed?.(1) || item.score}</span>
-              {/if}
-            </div>
-            <div class="result-info">
-              <div class="result-title">{item.title_en || item.title_jp || ''}</div>
-              <div class="result-meta">
-                {#if getYearUTC(item.start_date)}{getYearUTC(item.start_date)}{/if}
-                {#if item.episode_count} · {item.episode_count} eps{/if}
-              </div>
-            </div>
-          </a>
+          <PosterCard
+            id={item.id || ''}
+            title={item.title_en || item.title_jp || ''}
+            image={GetImageFromAnime(item)}
+            score={item.ratingNum}
+            status={item.status || null}
+            sub={[item.yearNum, item.studiosList?.[0]].filter(Boolean).join(' · ')}
+            genres={item.tags || []}
+            description={item.description || ''}
+            episodeCount={item.episodeCount}
+            onList={userAnimeMap.get(item.id) || null}
+          />
         {/each}
       </div>
     {:else}
@@ -408,20 +473,42 @@
             <div class="list-info">
               <div class="list-title">{item.title_en || item.title_jp || ''}</div>
               <div class="list-sub">
-                {#if getYearUTC(item.start_date)}{getYearUTC(item.start_date)}{/if}
-                {#if item.episode_count} · {item.episode_count} episodes{/if}
-                {#if item.studios?.[0]} · {item.studios[0]}{/if}
+                {#if item.yearNum}{item.yearNum}{/if}
+                {#if item.episodeCount} · {item.episodeCount} episodes{/if}
+                {#if item.studiosList?.[0]} · {item.studiosList[0]}{/if}
               </div>
               {#if item.description}
-                <div class="list-desc">{@html item.description?.slice(0, 180)}{item.description?.length > 180 ? '...' : ''}</div>
+                {@const desc = item.description.replace(/<[^>]*>/g, '')}
+                <div class="list-desc">{desc.slice(0, 180)}{desc.length > 180 ? '...' : ''}</div>
+              {/if}
+              {#if item.tags?.length > 0}
+                <div class="list-tags">
+                  {#each item.tags.slice(0, 4) as tag}
+                    <span class="list-tag">{tag}</span>
+                  {/each}
+                </div>
               {/if}
             </div>
-            {#if item.score}
-              <div class="list-score">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                {item.score?.toFixed?.(1) || item.score}
-              </div>
-            {/if}
+            <div class="list-badges">
+              {#if userAnimeMap.get(item.id)}
+                {@const listStatus = userAnimeMap.get(item.id)}
+                <span class="list-status-badge"
+                  class:watching={listStatus === 'WATCHING'}
+                  class:completed={listStatus === 'COMPLETED'}
+                  class:plan={listStatus === 'PLANTOWATCH'}
+                  class:dropped={listStatus === 'DROPPED'}
+                  class:onhold={listStatus === 'ONHOLD'}
+                >
+                  {listStatus === 'WATCHING' ? 'Watching' : listStatus === 'COMPLETED' ? 'Completed' : listStatus === 'PLANTOWATCH' ? 'Plan to Watch' : listStatus === 'DROPPED' ? 'Dropped' : listStatus === 'ONHOLD' ? 'On Hold' : ''}
+                </span>
+              {/if}
+              {#if item.ratingNum}
+                <div class="list-score">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  {item.ratingNum.toFixed(1)}
+                </div>
+              {/if}
+            </div>
           </a>
         {/each}
       </div>
@@ -514,12 +601,15 @@
   }
 
   /* Filter Section */
-  .filter-section { padding: 16px 0 0; }
-  .filter-bar {
+  .filter-section { padding: 16px 0 0; display: flex; flex-direction: column; gap: 12px; }
+  .filter-row {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+  }
+  .filter-row--controls {
+    gap: 10px;
   }
   .filter-label {
     font-size: 12px;
@@ -565,13 +655,6 @@
   .genre-tag--more {
     border-style: dashed;
     color: var(--weeb-fg-muted);
-  }
-  .filter-divider {
-    width: 1px;
-    height: 24px;
-    background: var(--weeb-border);
-    flex-shrink: 0;
-    margin: 0 4px;
   }
   .filter-select {
     height: 32px;
@@ -709,60 +792,9 @@
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 20px;
   }
-  .result-card {
-    text-decoration: none;
-    color: inherit;
-    cursor: pointer;
-    transition: transform 0.2s;
+  .results-grid :global(.poster-card) {
+    max-width: 200px;
   }
-  .result-card:hover { transform: translateY(-4px); }
-  .result-poster {
-    width: 100%;
-    aspect-ratio: 2 / 3;
-    border-radius: var(--weeb-radius-lg);
-    overflow: hidden;
-    position: relative;
-    background: var(--weeb-surface);
-  }
-  .result-poster :global(.result-poster-img) {
-    width: 100%;
-    height: 100%;
-  }
-  .result-poster :global(.result-poster-img img) {
-    object-fit: cover;
-  }
-  .result-score {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-family: var(--weeb-font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    background: oklch(14% 0.015 275 / 0.85);
-    color: var(--weeb-amber);
-    backdrop-filter: blur(8px);
-  }
-  .result-info { padding: 10px 2px 0; }
-  .result-title {
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    color: var(--weeb-fg);
-    min-height: calc(2 * 1.3em);
-  }
-  .result-card:hover .result-title { color: var(--weeb-accent); }
-  .result-meta {
-    font-size: 12px;
-    color: var(--weeb-fg-muted);
-    margin-top: 4px;
-  }
-
   /* Results List */
   .results-list {
     display: flex;
@@ -823,6 +855,44 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  .list-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .list-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: var(--weeb-radius-full, 9999px);
+    background: oklch(55% 0.15 280 / 0.1);
+    color: var(--weeb-fg-secondary);
+    border: 1px solid oklch(55% 0.15 280 / 0.15);
+  }
+  .list-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  .list-status-badge {
+    font-family: var(--weeb-font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: var(--weeb-radius-full, 999px);
+    border: 1px solid var(--weeb-border);
+    color: var(--weeb-fg-secondary);
+    background: var(--weeb-surface);
+  }
+  .list-status-badge.watching { color: var(--weeb-green); border-color: var(--weeb-green); background: color-mix(in oklch, var(--weeb-green) 8%, transparent); }
+  .list-status-badge.completed { color: var(--weeb-accent); border-color: var(--weeb-accent); background: color-mix(in oklch, var(--weeb-accent) 8%, transparent); }
+  .list-status-badge.plan { color: var(--weeb-amber); border-color: var(--weeb-amber); background: color-mix(in oklch, var(--weeb-amber) 8%, transparent); }
+  .list-status-badge.dropped { color: var(--weeb-red); border-color: var(--weeb-red); background: color-mix(in oklch, var(--weeb-red) 8%, transparent); }
+  .list-status-badge.onhold { color: var(--weeb-fg-muted); border-color: var(--weeb-fg-muted); background: color-mix(in oklch, var(--weeb-fg-muted) 8%, transparent); }
   .list-score {
     display: flex;
     align-items: center;
@@ -832,7 +902,6 @@
     font-weight: 600;
     color: var(--weeb-amber);
     flex-shrink: 0;
-    align-self: center;
   }
 
   /* Skeleton */
@@ -888,8 +957,8 @@
   @media (max-width: 768px) {
     .search-page { padding: 0 16px; }
     .search-hero { padding: 32px 0 24px; }
-    .filter-bar { gap: 6px; }
-    .filter-divider { display: none; }
+    .filter-row { gap: 6px; }
+    .filter-row--controls { flex-wrap: wrap; }
     .results-grid { gap: 12px; }
   }
   @media (max-width: 480px) {
