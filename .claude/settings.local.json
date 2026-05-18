@@ -15,7 +15,15 @@
       "Bash(git push:*)",
       "Bash(gh pr:*)",
       "Bash(gh run:*)",
-      "Bash(grep -E \"^\\\\S.*Error:|failed$|spec\\\\.ts:\\\\d+:\\\\d+.*›\")"
+      "Bash(grep -E \"^\\\\S.*Error:|failed$|spec\\\\.ts:\\\\d+:\\\\d+.*›\")",
+      "Bash(APP_CONFIG=staging PLAYWRIGHT=true yarn preview *)",
+      "Bash(tee /tmp/e2e-output.log)",
+      "Bash(npx playwright *)",
+      "Bash(echo \"Exit:$?\")",
+      "Bash(netstat -tlnp)",
+      "Bash(tee /tmp/e2e_run.log)",
+      "Bash(node_modules/.bin/playwright --version)",
+      "Bash(node_modules/.bin/playwright test *)"
     ]
   }
 }
