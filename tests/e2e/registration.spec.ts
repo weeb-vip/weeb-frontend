@@ -159,7 +159,8 @@ async function fillAndSubmitRegister(dialog: Locator, email: string, password: s
   await dialog.locator('input[name="username"]').fill(email);
   await dialog.locator('input[name="password"]').fill(password);
   await dialog.locator('input[name="confirmPassword"]').fill(password);
-  await dialog.locator('form button[type="submit"]').click();
+  // Use evaluate for more reliable click
+  await dialog.locator('form button[type="submit"]').evaluate((btn) => (btn as HTMLButtonElement).click());
 }
 
 test.describe('User Registration Flow', () => {

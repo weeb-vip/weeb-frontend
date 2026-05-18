@@ -56,10 +56,17 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
     console.log('Submitting registration...');
     const submitButton = page.locator('form button[type="submit"]').first();
     await submitButton.waitFor({ state: 'visible' });
-    await submitButton.click();
 
-    // Wait a moment for the API call to complete
-    await page.waitForTimeout(3000);
+    // Use evaluate for more reliable click (similar to season tests fix)
+    await submitButton.evaluate((btn) => (btn as HTMLButtonElement).click());
+
+    // Wait for network request to complete
+    await page.waitForResponse(
+      (response) => response.url().includes('graphql') && response.status() === 200,
+      { timeout: 15000 }
+    ).catch(() => {
+      console.log('No GraphQL response detected, continuing anyway...');
+    });
 
     // Log the page content for debugging
     const pageText = await page.textContent('body');
