@@ -9,7 +9,7 @@ import EmailVerificationSkeleton from '../../svelte/components/EmailVerification
   description="Verify your email address to complete your WeebVIP account setup."
   noIndex={true}
 >
-  <EmailVerificationPage client:visible>
+  <EmailVerificationPage client:load>
     <EmailVerificationSkeleton slot="fallback" />
   </EmailVerificationPage>
 </SvelteLayout>

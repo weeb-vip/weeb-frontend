@@ -6,15 +6,15 @@ test.describe('Season page', () => {
     await page.waitForLoadState('networkidle');
 
     // Heading renders
-    await expect(page.getByRole('heading', { name: 'Spring 2026 Anime' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
 
-    // Nav links render
-    await expect(page.getByRole('link', { name: /Winter 2026/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Summer 2026/ })).toBeVisible();
+    // Season tabs render (now icon + season name, no year)
+    await expect(page.getByRole('button', { name: /Winter$/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Summer$/ })).toBeVisible();
 
     // Page shows either anime cards or empty state (depends on API availability)
     const animeCards = page.locator('a[href^="/show/"]');
-    const emptyState = page.locator('text=No anime found for this season');
+    const emptyState = page.locator('text=No anime found');
     await expect(animeCards.first().or(emptyState)).toBeVisible({ timeout: 10000 });
   });
 
@@ -22,34 +22,26 @@ test.describe('Season page', () => {
     await page.goto('/season/SPRING_2026');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByRole('heading', { name: 'Spring 2026 Anime' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
 
-    // Click next season
-    await page.getByRole('link', { name: /Summer 2026/ }).click();
+    // Click the "Next season" arrow (Spring -> Summer)
+    await page.getByRole('button', { name: 'Next season' }).click();
     await page.waitForURL('**/season/SUMMER_2026', { timeout: 10000 });
 
     // Heading should update
-    await expect(page.getByRole('heading', { name: 'Summer 2026 Anime' })).toBeVisible({ timeout: 10000 });
-
-    // Nav links should update
-    await expect(page.getByRole('link', { name: /Spring 2026/ }).first()).toBeVisible();
-    await expect(page.getByRole('link', { name: /Fall 2026/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Summer 2026', level: 1 })).toBeVisible({ timeout: 10000 });
   });
 
   test('clicking previous season navigates and updates page', async ({ page }) => {
     await page.goto('/season/SPRING_2026');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByRole('heading', { name: 'Spring 2026 Anime' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
 
-    // Click previous season
-    await page.getByRole('link', { name: /Winter 2026/ }).click();
+    // Click the "Previous season" arrow (Spring -> Winter)
+    await page.getByRole('button', { name: 'Previous season' }).click();
     await page.waitForURL('**/season/WINTER_2026', { timeout: 10000 });
 
-    await expect(page.getByRole('heading', { name: 'Winter 2026 Anime' })).toBeVisible({ timeout: 10000 });
-
-    // Nav links should update
-    await expect(page.getByRole('link', { name: /Fall 2025/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Spring 2026/ }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Winter 2026', level: 1 })).toBeVisible({ timeout: 10000 });
   });
 });
