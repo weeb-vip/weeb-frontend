@@ -53,7 +53,9 @@
       "Bash(rm -rf algolia-sync)",
       "Bash(go build *)",
       "Bash(grep -v \"^$\")",
-      "Bash(kubectl get secrets *)"
+      "Bash(kubectl get secrets *)",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_console_messages"
     ]
   }
 }
