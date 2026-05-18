@@ -3,6 +3,7 @@
   import SafeImage from './SafeImage.svelte';
   import ScrollingText from './ScrollingText.svelte';
   import ScrollingTags from './ScrollingTags.svelte';
+  import { STATUS_LABELS } from '../utils/status';
   import { analytics } from '../../utils/analytics';
 
   export let style: 'default' | 'hover-transparent' | 'hover' | 'transparent' | 'long' | 'detail' | 'episode' = 'default';
@@ -30,14 +31,7 @@
   // Tags/genres for card display
   export let tags: string[] = [];
 
-  // Status labels mapping
-  const statusLabels: Record<string, string> = {
-    'COMPLETED': "Completed",
-    'DROPPED': "Dropped",
-    'ONHOLD': "On Hold",
-    'PLANTOWATCH': "Watchlist",
-    'WATCHING': "Watching",
-  };
+  const statusLabels = STATUS_LABELS;
 
   const cardStyles = {
     default: `w-48 h-72`,

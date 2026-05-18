@@ -806,7 +806,7 @@
     pointer-events: none;
   }
   .shows-grid > :global(*) {
-    max-width: 220px;
+    max-width: 200px;
   }
 
   /* ── Skeleton cards ── */

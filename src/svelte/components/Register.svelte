@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { faUser, faLock, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-  import Fa from 'svelte-fa';
   import FormInput from './FormInput.svelte';
   import type { RegisterInput } from '../../gql/graphql';
   import debug from '../../utils/debug';

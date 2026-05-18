@@ -1,6 +1,7 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
   import { analytics } from '../../utils/analytics';
+  import { normalizeStatus, type AnimeStatus } from '../utils/status';
 
   export let id: string;
   export let title: string;
@@ -12,7 +13,9 @@
   export let genres: string[] = [];
   export let description: string = '';
   export let episodeCount: number | null = null;
-  export let onList: string | null = null; // userAnime.status: 'watching', 'completed', 'plan_to_watch', etc.
+  export let onList: string | null = null;
+
+  $: normalizedStatus = normalizeStatus(onList);
 </script>
 
 <a
@@ -30,24 +33,24 @@
     {#if score}
       <span class="score-badge">{typeof score === 'number' ? score.toFixed(1) : score}</span>
     {/if}
-    {#if !onList}
+    {#if !normalizedStatus}
       {#if status === 'CURRENTLY_AIRING' || status === 'airing'}
         <span class="status-dot airing"></span>
       {:else if status === 'upcoming' || status === 'NOT_YET_RELEASED'}
         <span class="status-dot upcoming"></span>
       {/if}
     {/if}
-    {#if onList}
-      <span class="on-list-tab" class:watching={onList === 'watching'} class:completed={onList === 'completed'} class:plan={onList === 'plan_to_watch'} class:dropped={onList === 'dropped'} class:on-hold={onList === 'on_hold'}>
+    {#if normalizedStatus}
+      <span class="on-list-tab" class:watching={normalizedStatus === 'WATCHING'} class:completed={normalizedStatus === 'COMPLETED'} class:plan={normalizedStatus === 'PLANTOWATCH'} class:dropped={normalizedStatus === 'DROPPED'} class:on-hold={normalizedStatus === 'ONHOLD'}>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          {#if onList === 'watching'}
+          {#if normalizedStatus === 'WATCHING'}
             <polygon points="5,3 19,12 5,21" />
-          {:else if onList === 'completed'}
+          {:else if normalizedStatus === 'COMPLETED'}
             <polyline points="4,12 10,18 20,6" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
-          {:else if onList === 'dropped'}
+          {:else if normalizedStatus === 'DROPPED'}
             <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
             <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-          {:else if onList === 'on_hold'}
+          {:else if normalizedStatus === 'ONHOLD'}
             <rect x="5" y="4" width="4" height="16" rx="1" />
             <rect x="15" y="4" width="4" height="16" rx="1" />
           {:else}

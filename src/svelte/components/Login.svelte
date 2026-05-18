@@ -1,8 +1,5 @@
 <script lang="ts">
-  import { faUser, faLock, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-  import Fa from 'svelte-fa';
   import FormInput from './FormInput.svelte';
-  import Button from './Button.svelte';
   import type { LoginInput } from '../../gql/graphql';
   import debug from '../../utils/debug';
   import { useLogin } from '../services/queries';
@@ -136,14 +133,12 @@
         </div>
 
         <!-- Submit button -->
-        <Button
-          color="blue"
-          label="Log in"
-          onClick={() => {}}
-          showLabel={true}
-          status={isLoading ? 'loading' : 'idle'}
-          className="btn-submit"
-        />
+        <button type="submit" class="btn-primary" class:loading={isLoading} disabled={isLoading}>
+          <span class="btn-label">Log in</span>
+          {#if isLoading}
+            <span class="spinner" aria-hidden="true"></span>
+          {/if}
+        </button>
 
       </form>
 
@@ -340,19 +335,42 @@
     text-decoration: underline;
   }
 
-  /* --- Submit button override --- */
-  .login-form :global(.btn-submit) {
+  /* --- Submit button --- */
+  .btn-primary {
     width: 100%;
     height: 46px;
     margin-top: 4px;
+    background: var(--weeb-accent);
+    color: white;
     font-size: 15px;
     font-weight: 600;
     letter-spacing: 0.01em;
+    border: none;
     border-radius: var(--weeb-radius);
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
   }
+  .btn-primary:hover:not(:disabled) { background: var(--weeb-accent-hover); }
+  .btn-primary:active:not(:disabled) { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary.loading .btn-label { opacity: 0; }
+  .spinner {
+    display: block;
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid oklch(100% 0 0 / 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* --- Divider --- */
   .divider {

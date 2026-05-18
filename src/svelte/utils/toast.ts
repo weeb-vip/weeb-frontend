@@ -1,4 +1,5 @@
 import { toastStore, type ToastData } from '../stores/toast';
+import { getStatusLabel } from './status';
 
 // Utility functions to show different types of toasts
 export const showToast = {
@@ -56,18 +57,12 @@ export const showToast = {
 
   animeStatusChanged: (animeTitle: string, newStatus: string, anime: ToastData['anime']) => {
     const isMobile = typeof window !== 'undefined' ? window.innerWidth < 1024 : false;
-    const statusLabels: Record<string, string> = {
-      'COMPLETED': 'Completed',
-      'DROPPED': 'Dropped',
-      'ONHOLD': 'On Hold',
-      'PLANTOWATCH': 'Watchlist',
-      'WATCHING': 'Watching',
-    };
+    // Use shared status utility
 
     toastStore.showToast({
       type: 'success',
       title: 'Status Updated',
-      message: `${animeTitle} moved to ${statusLabels[newStatus] || newStatus}`,
+      message: `${animeTitle} moved to ${getStatusLabel(newStatus) || newStatus}`,
       anime,
       duration: 6000
     }, isMobile);

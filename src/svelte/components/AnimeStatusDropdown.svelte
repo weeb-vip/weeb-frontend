@@ -2,6 +2,7 @@
   import { onMount, createEventDispatcher } from 'svelte';
   import { fade, scale } from 'svelte/transition';
   import { initializeQueryClient } from '../services/query-client';
+  import { STATUS_LABELS, STATUS_OPTIONS } from '../utils/status';
   import '@fortawesome/fontawesome-free/css/all.min.css';
 
   export let entry: {
@@ -42,15 +43,8 @@
     };
   }
 
-  const statusLabels: Record<string, string> = {
-    'COMPLETED': "Completed",
-    'DROPPED': "Dropped",
-    'ONHOLD': "On Hold",
-    'PLANTOWATCH': "Watchlist",
-    'WATCHING': "Watching",
-  };
-
-  const statusOptions = ['WATCHING', 'COMPLETED', 'ONHOLD', 'DROPPED', 'PLANTOWATCH'];
+  const statusLabels = STATUS_LABELS;
+  const statusOptions = STATUS_OPTIONS;
 
   onMount(async () => {
     try {

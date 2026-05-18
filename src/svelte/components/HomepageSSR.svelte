@@ -322,6 +322,7 @@
         status: null,
         airingInfo: {
           ...anime,
+          userAnime: anime.userAnime || null,
           airTimeDisplay: airTimeInfo,
           nextEpisodeDate: nextEpisodeAirTime,
           nextEpisode: {
@@ -484,6 +485,9 @@
 
   <!-- Top Rated -->
   {#if ($homeDataQuery.data || homeData)?.topRatedAnime}
+    {@const _dbgTopRated = ($homeDataQuery.data || homeData).topRatedAnime}
+    {console.log("[TOPRATED", ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 14))}
+    {(() => { if (typeof window !== 'undefined' && _dbgTopRated?.length) console.log('[WATCHLIST]', 'topRated[0].userAnime:', _dbgTopRated[0]?.userAnime, 'status:', _dbgTopRated[0]?.userAnime?.status, 'all userAnimes:', _dbgTopRated.map(a => ({ title: a.titleEn?.slice(0,20), ua: a.userAnime?.status || 'NONE' }))); return ''; })()}
     <section class="section">
       <SectionHeader title="Top Rated" href="/search" linkText="See all →" />
       <div class="poster-row">
@@ -610,7 +614,7 @@
     gap: 16px;
   }
   .poster-row :global(> *) {
-    max-width: 220px;
+    max-width: 200px;
   }
 
   /* --- AIRING STRIP --- */

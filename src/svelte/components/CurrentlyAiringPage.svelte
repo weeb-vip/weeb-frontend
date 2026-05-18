@@ -364,13 +364,38 @@
   $: scheduleDayGroups = allScheduleDayGroups.slice(0, scheduleVisibleDays);
   $: hasMoreScheduleDays = allScheduleDayGroups.length > scheduleVisibleDays;
   $: remainingScheduleDays = allScheduleDayGroups.length - scheduleVisibleDays;
-  function loadMoreSchedule() { scheduleVisibleDays += 7; }
+  function loadMoreSchedule() {
+    scheduleVisibleDays += 7;
+    // After Svelte renders the new day groups, re-apply the myListOnly filter
+    if (myListOnly) {
+      setTimeout(() => rebuildScheduleVisibility(), 0);
+    }
+  }
 
   // Season display
   $: currentSeasonLabel = getSeasonDisplayName(getCurrentSeason());
 
   // View toggle: schedule vs calendar
   let activeView: 'schedule' | 'calendar' = 'schedule';
+
+  function switchView(view: 'schedule' | 'calendar') {
+    activeView = view;
+    // Bypass Svelte reactivity — directly toggle DOM visibility
+    const scheduleEl = document.querySelector('[data-view="schedule"]') as HTMLElement;
+    const calendarEl = document.querySelector('[data-view="calendar"]') as HTMLElement;
+    const scheduleBtnEl = document.querySelector('[data-view-btn="schedule"]') as HTMLElement;
+    const calendarBtnEl = document.querySelector('[data-view-btn="calendar"]') as HTMLElement;
+    if (scheduleEl) scheduleEl.style.display = view === 'schedule' ? '' : 'none';
+    if (calendarEl) calendarEl.style.display = view === 'calendar' ? '' : 'none';
+    if (scheduleBtnEl) {
+      scheduleBtnEl.classList.toggle('active', view === 'schedule');
+      scheduleBtnEl.setAttribute('aria-selected', String(view === 'schedule'));
+    }
+    if (calendarBtnEl) {
+      calendarBtnEl.classList.toggle('active', view === 'calendar');
+      calendarBtnEl.setAttribute('aria-selected', String(view === 'calendar'));
+    }
+  }
 
   // Timezone
   const TIMEZONES = [
@@ -385,6 +410,53 @@
 
   // My list only toggle
   let myListOnly = false;
+
+  function toggleMyListOnly() {
+    myListOnly = !myListOnly;
+    // Update DOM directly for ViewTransition reliability
+    const toggleEl = document.querySelector('[data-toggle="my-list"]');
+    if (toggleEl) {
+      if (myListOnly) {
+        toggleEl.classList.add('on');
+      } else {
+        toggleEl.classList.remove('on');
+      }
+    }
+    // Force re-render of schedule view by rebuilding day groups DOM
+    rebuildScheduleVisibility();
+  }
+
+  function rebuildScheduleVisibility() {
+    // Find all day groups and toggle visibility based on filtered entries
+    const dayGroupEls = document.querySelectorAll('[data-day-group]');
+    dayGroupEls.forEach(el => {
+      const dayId = el.getAttribute('data-day-group');
+      const group = dayGroups.find(g => g.id === dayId);
+      if (group) {
+        const filtered = myListOnly
+          ? group.entries.filter(e => e.airingInfo.userAnime != null)
+          : group.entries;
+        // Show/hide the group
+        (el as HTMLElement).style.display = filtered.length > 0 ? '' : 'none';
+        // Show/hide individual cards within the group
+        const cards = el.querySelectorAll('[data-anime-id]');
+        cards.forEach(card => {
+          const animeId = card.getAttribute('data-anime-id');
+          const entry = group.entries.find(e => e.airingInfo.id === animeId);
+          if (entry) {
+            const isInList = entry.airingInfo.userAnime != null;
+            (card as HTMLElement).style.display = (myListOnly && !isInList) ? 'none' : '';
+          }
+        });
+      }
+    });
+    // Handle empty state
+    const emptyState = document.querySelector('[data-empty-state="schedule"]');
+    if (emptyState) {
+      const hasVisibleGroups = Array.from(dayGroupEls).some(el => (el as HTMLElement).style.display !== 'none');
+      (emptyState as HTMLElement).style.display = (!hasVisibleGroups && myListOnly) ? '' : 'none';
+    }
+  }
 
   // Calendar state
   let calYear = new Date().getFullYear();
@@ -506,11 +578,11 @@
 
       <div class="page-header-controls">
         <div class="view-tabs" role="tablist">
-          <button class="view-tab" class:active={activeView === 'schedule'} role="tab" aria-selected={activeView === 'schedule'} on:click={() => activeView = 'schedule'}>
+          <button class="view-tab active" data-view-btn="schedule" role="tab" aria-selected="true" on:click={() => switchView('schedule')}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Schedule
           </button>
-          <button class="view-tab" class:active={activeView === 'calendar'} role="tab" aria-selected={activeView === 'calendar'} on:click={() => activeView = 'calendar'}>
+          <button class="view-tab" data-view-btn="calendar" role="tab" aria-selected="false" on:click={() => switchView('calendar')}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             Calendar
           </button>
@@ -523,7 +595,7 @@
         </select>
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <label class="toggle-wrap" class:on={myListOnly} on:click={() => myListOnly = !myListOnly} role="switch" aria-checked={myListOnly} tabindex="0">
+        <label class="toggle-wrap" class:on={myListOnly} data-toggle="my-list" on:click={toggleMyListOnly} role="switch" aria-checked={myListOnly} tabindex="0">
           <span class="toggle-switch"></span>
           My list only
         </label>
@@ -532,8 +604,7 @@
   </div>
 
   <!-- Schedule View -->
-  {#if activeView === 'schedule'}
-  <div class="schedule-view">
+  <div class="schedule-view" data-view="schedule">
     {#if $currentlyAiringQuery.isLoading}
       {#each Array(3) as _, i}
         <div class="day-section">
@@ -560,9 +631,7 @@
       </div>
     {:else}
       {#each scheduleDayGroups as group (group.id)}
-        {@const filteredEntries = myListOnly ? group.entries.filter(e => e.airingInfo.userAnime != null) : group.entries}
-        {#if filteredEntries.length > 0}
-        <div class="day-section" class:collapsed={collapsedDays[group.id]}>
+        <div class="day-section" data-day-group={group.id} class:collapsed={collapsedDays[group.id]}>
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <div class="day-section-header" on:click={() => toggleDay(group.id)} role="button" tabindex="0">
             <span class="day-name">{group.dayName}</span>
@@ -575,13 +644,13 @@
                 Today
               </span>
             {/if}
-            <span class="day-count">{filteredEntries.length} show{filteredEntries.length !== 1 ? 's' : ''}</span>
+            <span class="day-count" data-day-count>{group.entries.length} show{group.entries.length !== 1 ? 's' : ''}</span>
             <svg class="day-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </div>
 
           {#if !collapsedDays[group.id]}
             <div class="day-cards">
-              {#each filteredEntries as entry (entry.id)}
+              {#each group.entries as entry (entry.id)}
                 {@const countdown = getCountdownText(entry)}
                 {@const airTime = entry.airingInfo.nextEpisodeDate}
                 {@const title = getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
@@ -589,7 +658,7 @@
                 {@const timeStr = format(airTime, 'HH:mm')}
                 {@const isInList = entry.airingInfo.userAnime != null}
 
-                <a href="/show/{entry.airingInfo.id}" class="show-card" on:click|preventDefault={() => navigateToShow(entry.airingInfo.id)}>
+                <a href="/show/{entry.airingInfo.id}" class="show-card" data-anime-id={entry.airingInfo.id} data-in-list={entry.airingInfo.userAnime != null ? 'true' : 'false'} on:click|preventDefault={() => navigateToShow(entry.airingInfo.id)}>
                   <div class="show-poster">
                     <img
                       src={`https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(GetImageFromAnime(entry.airingInfo))}`}
@@ -621,15 +690,12 @@
             </div>
           {/if}
         </div>
-        {/if}
       {/each}
 
-      {#if myListOnly && scheduleDayGroups.every(g => g.entries.filter(e => e.airingInfo.userAnime != null).length === 0)}
-        <div class="empty-state">
-          <p>No anime from your list are airing in this period.</p>
-          <button class="empty-state-btn" on:click={() => myListOnly = false}>Show all anime</button>
-        </div>
-      {/if}
+      <div class="empty-state" data-empty-state="schedule" style="display: none;">
+        <p>No anime from your list are airing in this period.</p>
+        <button class="empty-state-btn" on:click={() => { if (myListOnly) toggleMyListOnly(); }}>Show all anime</button>
+      </div>
     {/if}
 
     {#if hasMoreScheduleDays}
@@ -640,11 +706,9 @@
       </button>
     {/if}
   </div>
-  {/if}
 
   <!-- Calendar View -->
-  {#if activeView === 'calendar'}
-  <div class="calendar-view">
+  <div class="calendar-view" data-view="calendar" style="display: none;">
     <div class="calendar-layout">
       <div class="calendar-card" class:loading={calendarLoading}>
         <div class="calendar-nav">
@@ -734,7 +798,6 @@
       </div>
     </div>
   </div>
-  {/if}
 </div>
 
 <style>
@@ -951,6 +1014,7 @@
     display: flex;
     gap: 10px;
     overflow-x: auto;
+    overflow-y: hidden;
     padding-bottom: 4px;
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
@@ -973,7 +1037,11 @@
     scroll-snap-align: start;
     text-decoration: none;
     color: inherit;
+    overflow: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+  .show-card::-webkit-scrollbar { display: none; }
   .show-card:hover {
     background: var(--weeb-surface-hover);
     border-color: oklch(34% 0.02 275);

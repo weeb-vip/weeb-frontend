@@ -60,16 +60,8 @@
         <LoginRegisterModal closeFn={closeModal} />
       </svelte:component>
     {:else}
-      <!-- Fallback without TanStack Query -->
-      <div class="w-[360px] sm:w-[400px] mx-auto p-8 sm:p-10">
-        <h2 class="text-2xl font-bold mb-6 text-weeb-fg text-center">
-          Login
-        </h2>
-        <div class="mb-4 flex items-center">
-          <div class="w-full p-3 bg-weeb-amber/10 border border-weeb-amber/30 rounded-full">
-            <p class="text-weeb-amber text-sm text-center">Loading authentication...</p>
-          </div>
-        </div>
+      <div style="padding: 36px; text-align: center;">
+        <p style="font-size: 14px; color: var(--weeb-fg-muted);">Loading...</p>
       </div>
     {/if}
   </Modal>

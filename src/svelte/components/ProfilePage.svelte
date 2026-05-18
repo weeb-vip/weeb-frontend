@@ -357,9 +357,9 @@
     return {
       watching: watching.length,
       planToWatch: planToWatch.length,
-      completed: $completedQuery.data?.total || 0,
-      dropped: $droppedQuery.data?.total || 0,
-      onHold: $onHoldQuery.data?.total || 0,
+      completed: $completedQuery.data?.animes?.length || 0,
+      dropped: $droppedQuery.data?.animes?.length || 0,
+      onHold: $onHoldQuery.data?.animes?.length || 0,
       airingSoon: airingSoon.slice(0, 12),
       recentlyAired: recentlyAired.slice(0, 6),
       currentlyWatching,
@@ -372,126 +372,100 @@
   }
 </script>
 
-<div class="profile-page">
+<!-- Profile Banner -->
+<div class="profile-banner"></div>
+
+<!-- Profile Header (overlaps banner) -->
+<header class="profile-header">
+  <div class="profile-header-inner">
   {#if !mounted || !userQuery || (userQuery && $userQuery.isLoading)}
     <!-- Loading skeleton -->
-    <div class="profile-header skeleton-pulse">
-      <div class="profile-avatar skeleton-block"></div>
-      <div class="profile-info">
-        <div class="skeleton-line skeleton-line--lg"></div>
-        <div class="skeleton-line skeleton-line--sm"></div>
-        <div class="profile-stats">
-          {#each Array(5) as _}
-            <div class="skeleton-line skeleton-line--xs"></div>
-          {/each}
-        </div>
-      </div>
-    </div>
-
-    <div class="stats-cards">
-      {#each Array(4) as _}
-        <div class="stats-card skeleton-pulse">
-          <div class="skeleton-line skeleton-line--lg"></div>
-          <div class="skeleton-line skeleton-line--sm"></div>
-        </div>
-      {/each}
+    <div class="profile-avatar skeleton-pulse"></div>
+    <div class="profile-info">
+      <div class="skeleton-line" style="width:40%;height:24px;margin-bottom:8px"></div>
+      <div class="skeleton-line" style="width:60%;height:14px"></div>
     </div>
   {:else if userQuery && $userQuery.data}
-    <!-- Profile Header -->
-    <header class="profile-header">
-      <div class="profile-avatar-wrap">
-        <div class="profile-avatar">
-          {#if $userQuery.data.profileImageUrl}
-            <img
-              src={getProfileImageUrl($userQuery.data.profileImageUrl)}
-              alt={$userQuery.data.username}
-              class="profile-avatar-img"
-            />
-          {:else}
-            <span class="profile-avatar-letter">
-              {$userQuery.data.username.charAt(0).toUpperCase()}
-            </span>
-          {/if}
-        </div>
-        <button
-          on:click={() => showUploadModal = true}
-          class="profile-avatar-overlay"
-          aria-label="Change profile picture"
-        >
-          <span>Change</span>
-        </button>
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar">
+        {#if $userQuery.data.profileImageUrl}
+          <img
+            src={getProfileImageUrl($userQuery.data.profileImageUrl)}
+            alt={$userQuery.data.username}
+            class="profile-avatar-img"
+          />
+        {:else}
+          <span class="profile-avatar-letter">
+            {$userQuery.data.username.charAt(0).toUpperCase()}
+          </span>
+        {/if}
       </div>
-      <div class="profile-info">
-        <h1 class="profile-name">{$userQuery.data.username}</h1>
-        <p class="profile-meta">
-          {#if $userQuery.data.firstname || $userQuery.data.lastname}
-            {$userQuery.data.firstname} {$userQuery.data.lastname}
-          {/if}
-        </p>
-        <div class="profile-stats">
-          <div class="stat-item">
-            <span class="stat-dot" style="background:var(--weeb-green)"></span>
-            <span class="stat-label">Watching</span>
-            <span class="stat-count">{watchlistAnalysis.watching}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-dot" style="background:var(--weeb-accent)"></span>
-            <span class="stat-label">Completed</span>
-            <span class="stat-count">{watchlistAnalysis.completed}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-dot" style="background:var(--weeb-fg-muted)"></span>
-            <span class="stat-label">Plan to Watch</span>
-            <span class="stat-count">{watchlistAnalysis.planToWatch}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-dot" style="background:var(--weeb-amber)"></span>
-            <span class="stat-label">On Hold</span>
-            <span class="stat-count">{watchlistAnalysis.onHold}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-dot" style="background:var(--weeb-red)"></span>
-            <span class="stat-label">Dropped</span>
-            <span class="stat-count">{watchlistAnalysis.dropped}</span>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Stats Cards -->
-    <div class="stats-cards">
-      <div class="stats-card">
-        <div class="stats-card-number">
-          {watchlistAnalysis.watching + watchlistAnalysis.completed + watchlistAnalysis.planToWatch + watchlistAnalysis.onHold + watchlistAnalysis.dropped}
-        </div>
-        <div class="stats-card-label">Total Anime</div>
-      </div>
-      <div class="stats-card">
-        <div class="stats-card-number">
-          {($watchingQuery && $watchingQuery.data?.total) || 0}
-        </div>
-        <div class="stats-card-label">Watching</div>
-      </div>
-      <div class="stats-card">
-        <div class="stats-card-number">
-          {watchlistAnalysis.airingSoon.length}
-        </div>
-        <div class="stats-card-label">Airing This Week</div>
-      </div>
-      <div class="stats-card">
-        <div class="stats-card-number">
-          {watchlistAnalysis.recentlyAired.length}
-        </div>
-        <div class="stats-card-label">Recent Episodes</div>
+      <button
+        on:click={() => showUploadModal = true}
+        class="profile-avatar-overlay"
+        aria-label="Change profile picture"
+      >
+        <span>Change</span>
+      </button>
+    </div>
+    <div class="profile-info">
+      <h1 class="profile-name">{$userQuery.data.username}</h1>
+      <div class="profile-meta">
+        {#if $userQuery.data.firstname || $userQuery.data.lastname}
+          <span>{$userQuery.data.firstname} {$userQuery.data.lastname}</span>
+          <span class="profile-meta-dot"></span>
+        {/if}
+        <span>Member</span>
       </div>
     </div>
+    <div class="profile-actions">
+      <a href="/settings" class="btn-settings">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        Settings
+      </a>
+    </div>
   {/if}
+  </div>
+</header>
 
+<!-- Stats Strip -->
+<div class="stats-strip">
+  <a href="/profile/anime" class="stat-cell stat-cell--active">
+    <div class="stat-number">{watchlistAnalysis.watching + watchlistAnalysis.completed + watchlistAnalysis.planToWatch + watchlistAnalysis.onHold + watchlistAnalysis.dropped}</div>
+    <div class="stat-label">Total</div>
+  </a>
+  <a href="/profile/anime?status=WATCHING" class="stat-cell">
+    <div class="stat-number" style="color:var(--weeb-green)">{watchlistAnalysis.watching}</div>
+    <div class="stat-label"><span class="stat-dot" style="background:var(--weeb-green)"></span>Watching</div>
+  </a>
+  <a href="/profile/anime?status=COMPLETED" class="stat-cell">
+    <div class="stat-number" style="color:var(--weeb-accent)">{watchlistAnalysis.completed}</div>
+    <div class="stat-label"><span class="stat-dot" style="background:var(--weeb-accent)"></span>Completed</div>
+  </a>
+  <a href="/profile/anime?status=PLANTOWATCH" class="stat-cell">
+    <div class="stat-number" style="color:var(--weeb-fg-secondary)">{watchlistAnalysis.planToWatch}</div>
+    <div class="stat-label"><span class="stat-dot" style="background:var(--weeb-fg-muted)"></span>Plan to Watch</div>
+  </a>
+  <a href="/profile/anime?status=ONHOLD" class="stat-cell">
+    <div class="stat-number" style="color:var(--weeb-amber)">{watchlistAnalysis.onHold}</div>
+    <div class="stat-label"><span class="stat-dot" style="background:var(--weeb-amber)"></span>On Hold</div>
+  </a>
+  <a href="/profile/anime?status=DROPPED" class="stat-cell">
+    <div class="stat-number" style="color:var(--weeb-red)">{watchlistAnalysis.dropped}</div>
+    <div class="stat-label"><span class="stat-dot" style="background:var(--weeb-red)"></span>Dropped</div>
+  </a>
+</div>
+
+<!-- Content Sections -->
+<div class="profile-content">
   <!-- Currently Watching Section -->
   <section class="profile-section">
     <div class="section-header">
       <div class="section-header-left">
-        <i class="fas fa-play section-icon section-icon--accent"></i>
+        <svg width="18" height="18" fill="none" stroke="var(--weeb-accent)" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         <h2 class="section-title">Currently Watching</h2>
         {#if !watchlistAnalysis.isLoading && watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
           <span class="section-count section-count--accent">
@@ -536,7 +510,7 @@
       </div>
     {:else}
       <div class="empty-state">
-        <i class="fas fa-tv empty-state-icon"></i>
+        <svg class="empty-state-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M17 2l-5 5-5-5"/></svg>
         <p class="empty-state-text">You're not currently watching any anime</p>
         <p class="empty-state-sub">Start watching something new from your plan to watch list</p>
       </div>
@@ -546,7 +520,7 @@
   <!-- Empty State -->
   {#if watchlistAnalysis.airingSoon.length === 0 && watchlistAnalysis.recentlyAired.length === 0 && (!watchlistAnalysis.currentlyWatching || watchlistAnalysis.currentlyWatching.length === 0)}
     <div class="empty-state empty-state--hero">
-      <i class="fas fa-bookmark empty-state-icon empty-state-icon--lg"></i>
+      <svg class="empty-state-icon empty-state-icon--lg" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
       <h3 class="empty-state-heading">Your watchlist is empty</h3>
       <p class="empty-state-text">
         Start adding anime to your watchlist to see personalized recommendations and airing schedules.
@@ -559,7 +533,7 @@
   <section class="profile-section">
     <div class="section-header">
       <div class="section-header-left">
-        <i class="fas fa-play section-icon section-icon--red"></i>
+        <svg width="18" height="18" fill="none" stroke="var(--weeb-red)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
         <h2 class="section-title">Airing This Week</h2>
         {#if !watchlistAnalysis.isLoading && watchlistAnalysis.airingSoon.length > 0}
           <span class="section-count section-count--red">
@@ -601,7 +575,7 @@
       </div>
     {:else}
       <div class="empty-state">
-        <i class="fas fa-calendar-xmark empty-state-icon"></i>
+        <svg class="empty-state-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M15 14l-6 6M9 14l6 6"/></svg>
         <p class="empty-state-text">No episodes airing this week from your watchlist</p>
         <p class="empty-state-sub">Check back later or add more anime to your watchlist</p>
       </div>
@@ -612,7 +586,7 @@
   <section class="profile-section">
     <div class="section-header">
       <div class="section-header-left">
-        <i class="fas fa-calendar-days section-icon section-icon--green"></i>
+        <svg width="18" height="18" fill="none" stroke="var(--weeb-green)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         <h2 class="section-title">Recently Aired Episodes</h2>
         {#if !watchlistAnalysis.isLoading && watchlistAnalysis.recentlyAired.length > 0}
           <span class="section-count section-count--green">
@@ -654,13 +628,13 @@
       </div>
     {:else}
       <div class="empty-state">
-        <i class="fas fa-clock-rotate-left empty-state-icon"></i>
+        <svg class="empty-state-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l-3 3"/></svg>
         <p class="empty-state-text">No recent episodes from your watchlist</p>
         <p class="empty-state-sub">Episodes you've watched will appear here</p>
       </div>
     {/if}
   </section>
-</div>
+</div> <!-- .profile-content -->
 
 <!-- Profile Image Upload Modal -->
 <ProfileImageUpload
@@ -671,167 +645,167 @@
 />
 
 <style>
-  /* ── Page container ──────────────────────────────────────────── */
-  .profile-page {
-    width: 100%;
-    padding: 48px var(--weeb-section-px, 48px) 64px;
+  /* ── Profile Banner ────────────────────────────────────────── */
+  .profile-banner {
+    position: relative;
+    height: 200px;
+    background: linear-gradient(135deg,
+      color-mix(in oklch, var(--weeb-surface) 80%, var(--weeb-accent)) 0%,
+      color-mix(in oklch, var(--weeb-bg-elevated) 70%, var(--weeb-violet, var(--weeb-accent-hover))) 50%,
+      color-mix(in oklch, var(--weeb-bg) 80%, var(--weeb-accent)) 100%
+    );
+    overflow: hidden;
+  }
+  .profile-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(color-mix(in oklch, var(--weeb-fg) 3%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklch, var(--weeb-fg) 3%, transparent) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0;
+  }
+  .profile-banner::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, var(--weeb-bg) 100%);
+    z-index: 1;
   }
 
-  /* ── Profile header ──────────────────────────────────────────── */
+  /* ── Profile Header (overlaps banner) ──────────────────────── */
   .profile-header {
+    position: relative;
+    margin-top: -64px;
+    padding: 0 var(--weeb-section-px, 48px);
+    z-index: 2;
+  }
+  .profile-header-inner {
     display: flex;
-    align-items: flex-start;
-    gap: 32px;
-    padding-bottom: 40px;
-    border-bottom: 1px solid var(--weeb-border);
-    margin-bottom: 32px;
+    align-items: flex-end;
+    gap: 24px;
   }
 
   .profile-avatar-wrap {
     position: relative;
     flex-shrink: 0;
   }
-
   .profile-avatar {
-    width: 88px;
-    height: 88px;
+    width: 120px; height: 120px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--weeb-accent) 0%, var(--weeb-violet, var(--weeb-accent-hover)) 50%, var(--weeb-accent) 100%);
+    border: 4px solid var(--weeb-bg);
+    background: linear-gradient(135deg,
+      var(--weeb-accent) 0%,
+      var(--weeb-violet, var(--weeb-accent-hover)) 50%,
+      color-mix(in oklch, var(--weeb-violet, var(--weeb-accent-hover)) 60%, var(--weeb-accent)) 100%
+    );
     flex-shrink: 0;
-    box-shadow: 0 4px 24px color-mix(in oklch, var(--weeb-accent) 30%, transparent);
+    box-shadow: 0 8px 32px color-mix(in oklch, black 50%, transparent);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-
-  .profile-avatar-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .profile-avatar-letter {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #fff;
-  }
-
+  .profile-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-avatar-letter { font-size: 2.5rem; font-weight: 700; color: #fff; }
   .profile-avatar-overlay {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5);
-    opacity: 0;
-    transition: opacity 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border: none;
+    background: color-mix(in oklch, black 50%, transparent);
+    opacity: 0; transition: opacity 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border: none;
     color: #fff;
-    font-size: 0.8rem;
-    font-weight: 600;
   }
-
-  .profile-avatar-wrap:hover .profile-avatar-overlay {
-    opacity: 1;
-  }
+  .profile-avatar-wrap:hover .profile-avatar-overlay { opacity: 1; }
 
   .profile-info {
-    flex: 1;
-    min-width: 0;
+    flex: 1; min-width: 0;
+    padding-bottom: 4px;
   }
-
   .profile-name {
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.03em;
+    font-size: 1.75rem; font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1.2;
     color: var(--weeb-fg);
-    line-height: 1.2;
     margin-bottom: 4px;
   }
-
   .profile-meta {
-    font-size: 0.85rem;
-    color: var(--weeb-fg-muted);
-    margin-bottom: 20px;
+    font-size: 0.8rem; color: var(--weeb-fg-muted);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .profile-meta-dot {
+    width: 3px; height: 3px; border-radius: 50%;
+    background: var(--weeb-fg-muted);
   }
 
-  .profile-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    align-items: center;
+  .profile-actions {
+    display: flex; gap: 8px; flex-shrink: 0;
+    padding-bottom: 8px;
   }
-
-  .stat-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.875rem;
+  .btn-settings {
+    height: 34px; padding: 0 16px;
+    background: var(--weeb-surface); border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius, 8px); color: var(--weeb-fg-secondary);
+    font-size: 0.8rem; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: border-color 0.15s, color 0.15s;
+    text-decoration: none;
+    font-family: inherit;
   }
+  .btn-settings:hover { border-color: var(--weeb-accent); color: var(--weeb-fg); }
 
-  .stat-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .stat-label {
-    color: var(--weeb-fg-muted);
-  }
-
-  .stat-count {
-    font-weight: 600;
-    color: var(--weeb-fg);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ── Stats cards ─────────────────────────────────────────────── */
-  .stats-cards {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-
-  .stats-card {
-    background: var(--weeb-surface);
+  /* ── Stats strip ───────────────────────────────────────────── */
+  .stats-strip {
+    display: flex; gap: 0;
+    margin: 24px var(--weeb-section-px, 48px) 0;
     border: 1px solid var(--weeb-border);
-    border-radius: 12px;
-    padding: 20px 24px;
+    border-radius: var(--weeb-radius-lg, 12px);
+    overflow: hidden;
+  }
+  .stat-cell {
+    flex: 1;
+    padding: 16px 12px;
     text-align: center;
-    transition: border-color 0.15s;
+    background: var(--weeb-surface);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+    text-decoration: none;
+    color: inherit;
   }
-
-  .stats-card:hover {
-    border-color: var(--weeb-accent);
+  .stat-cell + .stat-cell { border-left: 1px solid var(--weeb-border); }
+  .stat-cell:hover { background: var(--weeb-surface-hover); }
+  .stat-cell--active {
+    background: color-mix(in oklch, var(--weeb-accent) 8%, transparent);
   }
-
-  .stats-card-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--weeb-fg);
+  .stat-cell--active::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--weeb-accent);
+  }
+  .stat-number {
+    font-size: 1.5rem; font-weight: 700;
     font-variant-numeric: tabular-nums;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.02em; line-height: 1.2;
+    color: var(--weeb-fg);
+  }
+  .stat-label {
+    font-size: 0.7rem; color: var(--weeb-fg-muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    font-weight: 500; margin-top: 2px;
+  }
+  .stat-dot {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    margin-right: 4px; vertical-align: middle;
   }
 
-  .stats-card-label {
-    font-size: 0.8rem;
-    color: var(--weeb-fg-muted);
-    margin-top: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 500;
+  /* ── Content area ─────────────────────────────────────────── */
+  .profile-content {
+    padding: 32px var(--weeb-section-px, 48px) 64px;
   }
 
-  /* ── Section layout ──────────────────────────────────────────── */
-  .profile-section {
-    margin-bottom: 40px;
-  }
+  .profile-section { margin-bottom: 40px; }
 
   .section-header {
     display: flex;
@@ -839,260 +813,141 @@
     justify-content: space-between;
     margin-bottom: 20px;
   }
-
   .section-header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    display: flex; align-items: center; gap: 10px;
   }
-
-  .section-icon {
-    font-size: 1.15rem;
-  }
-
-  .section-icon--accent {
-    color: var(--weeb-accent);
-  }
-
-  .section-icon--red {
-    color: var(--weeb-red);
-  }
-
-  .section-icon--green {
-    color: var(--weeb-green);
-  }
-
   .section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--weeb-fg);
-    letter-spacing: -0.01em;
+    font-size: 1.25rem; font-weight: 600;
+    color: var(--weeb-fg); letter-spacing: -0.01em;
   }
-
   .section-count {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 99px;
+    font-size: 0.75rem; font-weight: 600;
+    padding: 2px 8px; border-radius: 99px;
     font-variant-numeric: tabular-nums;
   }
-
   .section-count--accent {
     background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
     color: var(--weeb-accent);
   }
-
   .section-count--red {
     background: color-mix(in oklch, var(--weeb-red) 15%, transparent);
     color: var(--weeb-red);
   }
-
   .section-count--green {
     background: color-mix(in oklch, var(--weeb-green) 15%, transparent);
     color: var(--weeb-green);
   }
-
   .section-link {
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.85rem; font-weight: 500;
     color: var(--weeb-accent);
-    text-decoration: none;
-    transition: color 0.15s;
+    text-decoration: none; transition: color 0.15s;
   }
+  .section-link:hover { color: var(--weeb-accent-hover); }
 
-  .section-link:hover {
-    color: var(--weeb-accent-hover);
-  }
-
-  /* ── Anime grid ──────────────────────────────────────────────── */
-  .anime-grid {
-    display: grid;
-    gap: 16px;
-  }
-
+  /* ── Anime grid ─────────────────────────────────────────────── */
+  .anime-grid { display: grid; gap: 16px; }
   .anime-grid--3col {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
+  .anime-grid--3col > :global(*) { max-width: 200px; }
 
-  .anime-grid--3col > :global(*) {
-    max-width: 220px;
-  }
-
-  /* ── Empty state ─────────────────────────────────────────────── */
+  /* ── Empty state ────────────────────────────────────────────── */
   .empty-state {
     background: var(--weeb-bg-elevated, var(--weeb-surface));
     border: 1px solid var(--weeb-border);
-    border-radius: 12px;
-    padding: 40px 24px;
-    text-align: center;
+    border-radius: var(--weeb-radius-lg, 12px);
+    padding: 40px 24px; text-align: center;
   }
-
-  .empty-state--hero {
-    padding: 64px 24px;
-    margin-bottom: 40px;
-  }
-
+  .empty-state--hero { padding: 64px 24px; margin-bottom: 40px; }
   .empty-state-icon {
-    font-size: 2.5rem;
     color: var(--weeb-fg-muted);
-    display: block;
-    margin-bottom: 12px;
+    display: block; margin: 0 auto 12px;
   }
-
-  .empty-state-icon--lg {
-    font-size: 3.5rem;
-    margin-bottom: 16px;
-  }
-
+  .empty-state-icon--lg { margin-bottom: 16px; }
   .empty-state-heading {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--weeb-fg);
-    margin-bottom: 8px;
+    font-size: 1.25rem; font-weight: 600;
+    color: var(--weeb-fg); margin-bottom: 8px;
   }
-
-  .empty-state-text {
-    font-size: 0.9rem;
-    color: var(--weeb-fg-muted);
-  }
-
-  .empty-state-sub {
-    font-size: 0.8rem;
-    color: var(--weeb-fg-muted);
-    margin-top: 8px;
-  }
-
+  .empty-state-text { font-size: 0.9rem; color: var(--weeb-fg-muted); }
+  .empty-state-sub { font-size: 0.8rem; color: var(--weeb-fg-muted); margin-top: 8px; }
   .empty-state-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 20px;
-    padding: 10px 24px;
-    background: var(--weeb-accent);
-    color: #fff;
-    font-size: 0.875rem;
-    font-weight: 600;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: background 0.15s;
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 20px; padding: 10px 24px;
+    background: var(--weeb-accent); color: #fff;
+    font-size: 0.875rem; font-weight: 600;
+    border-radius: var(--weeb-radius, 8px);
+    text-decoration: none; transition: background 0.15s;
   }
+  .empty-state-cta:hover { background: var(--weeb-accent-hover); }
 
-  .empty-state-cta:hover {
-    background: var(--weeb-accent-hover);
-  }
-
-  /* ── Skeleton loading ────────────────────────────────────────── */
-  .skeleton-pulse {
-    animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  }
-
-  @keyframes skeleton-shimmer {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  .skeleton-block {
-    background: var(--weeb-surface-hover, var(--weeb-surface));
-    border-radius: 50%;
-  }
-
+  /* ── Skeleton loading ───────────────────────────────────────── */
+  .skeleton-pulse { animation: skeleton-shimmer 1.5s ease-in-out infinite; }
+  @keyframes skeleton-shimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
   .skeleton-line {
     background: var(--weeb-surface-hover, var(--weeb-surface));
     border-radius: 6px;
     height: 14px;
   }
-
-  .skeleton-line--lg {
-    width: 60%;
-    height: 20px;
-    margin-bottom: 8px;
-  }
-
-  .skeleton-line--md {
-    width: 75%;
-    height: 14px;
-    margin-bottom: 6px;
-  }
-
-  .skeleton-line--sm {
-    width: 40%;
-    height: 12px;
-    margin-bottom: 6px;
-  }
-
-  .skeleton-line--xs {
-    width: 60px;
-    height: 12px;
-  }
-
+  .skeleton-line--lg { width: 60%; height: 20px; margin-bottom: 8px; }
+  .skeleton-line--md { width: 75%; height: 14px; margin-bottom: 6px; }
+  .skeleton-line--sm { width: 40%; height: 12px; margin-bottom: 6px; }
+  .skeleton-line--xs { width: 60px; height: 12px; }
   .skeleton-card {
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: 12px;
+    border-radius: var(--weeb-radius-lg, 12px);
     overflow: hidden;
   }
-
   .skeleton-poster {
     width: 100%;
-    height: 80px;
+    aspect-ratio: 2 / 3;
     background: var(--weeb-surface-hover, var(--weeb-surface));
   }
+  .skeleton-card-body { padding: 14px; }
 
-  .skeleton-card-body {
-    padding: 14px;
-  }
-
-  /* ── Responsive ──────────────────────────────────────────────── */
+  /* ── Responsive: 1024px ────────────────────────────────────── */
   @media (max-width: 1024px) {
     .anime-grid--3col {
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     }
   }
 
+  /* ── Responsive: 768px ─────────────────────────────────────── */
   @media (max-width: 768px) {
-    .profile-page {
-      padding: 24px 16px 48px;
-    }
-
-    .profile-header {
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .profile-avatar {
-      width: 64px;
-      height: 64px;
-    }
-
-    .profile-name {
-      font-size: 1.5rem;
-    }
-
-    .stats-cards {
-      grid-template-columns: repeat(2, 1fr);
+    .profile-banner { height: 140px; }
+    .profile-header { margin-top: -48px; padding: 0 16px; }
+    .profile-header-inner { gap: 16px; }
+    .profile-avatar { width: 88px; height: 88px; border-width: 3px; }
+    .profile-avatar-letter { font-size: 2rem; }
+    .profile-name { font-size: 1.35rem; }
+    .profile-actions { display: none; }
+    .stats-strip { margin: 16px 16px 0; }
+    .stat-cell { padding: 12px 8px; }
+    .stat-number { font-size: 1.1rem; }
+    .stat-label { font-size: 0.6rem; }
+    .profile-content { padding: 24px 16px 48px; }
+    .profile-section { margin-bottom: 24px; }
+    .anime-grid--3col {
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
       gap: 10px;
     }
-
-    .stats-card {
-      padding: 14px 16px;
-    }
-
-    .stats-card-number {
-      font-size: 1.5rem;
-    }
-
-    .anime-grid--3col {
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    }
   }
 
+  /* ── Responsive: 480px ─────────────────────────────────────── */
   @media (max-width: 480px) {
-    .profile-stats {
-      gap: 12px;
-    }
-
-    .stats-cards {
-      grid-template-columns: repeat(2, 1fr);
+    .profile-banner { height: 120px; }
+    .profile-header { margin-top: -40px; }
+    .profile-avatar { width: 72px; height: 72px; }
+    .profile-avatar-letter { font-size: 1.5rem; }
+    .profile-name { font-size: 1.15rem; }
+    .stats-strip { flex-wrap: wrap; }
+    .stat-cell { flex: 1 1 33.33%; min-width: 0; }
+    .stat-cell:nth-child(4),
+    .stat-cell:nth-child(5),
+    .stat-cell:nth-child(6) { border-top: 1px solid var(--weeb-border); }
+    .anime-grid--3col {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
     }
   }
 </style>

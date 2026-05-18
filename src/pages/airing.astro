@@ -10,14 +10,20 @@ export const prerender = false;
 const { auth, config } = Astro.locals;
 
 // Create authenticated GraphQL client for SSR
+const cookieHeader = Astro.request.headers.get('cookie');
+console.log('[SSR] Airing page forwarding cookies:', cookieHeader ? 'Present' : 'Missing');
+
 function createSSRGraphQLClient(authToken: string | undefined) {
   console.log('🌐 SSR Airing GraphQL URL:', config.graphql_host);
   return new GraphQLClient(config.graphql_host, {
-    
     fetch: (input: RequestInfo | URL, init?: RequestInit) => {
       return fetch(input, {
         ...init,
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          ...init?.headers,
+          ...(cookieHeader && { 'Cookie': cookieHeader })
+        }
       });
     }
   });
