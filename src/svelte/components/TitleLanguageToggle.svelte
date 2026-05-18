@@ -11,7 +11,7 @@
 
 <button
   on:click={handleToggle}
-  class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+  class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-weeb-fg-secondary hover:text-weeb-fg hover:bg-weeb-surface-hover rounded-lg transition-colors duration-200"
   title="Switch between English and Japanese titles"
   aria-label="Toggle title language"
 >

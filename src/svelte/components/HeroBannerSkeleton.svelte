@@ -1,64 +1,103 @@
-<div class="relative w-full h-[600px] sm:h-[650px] md:h-[700px] animate-pulse overflow-hidden md:rounded-lg xs:rounded-none md:shadow-xl">
-  <!-- Background skeleton -->
-  <div class="absolute inset-0 overflow-hidden bg-gray-300 dark:bg-gray-700 rounded-lg sm:rounded-lg xs:rounded-none md:shadow-xl">
-    <!-- Shimmer effect -->
-    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-gray-600/20 to-transparent animate-shimmer"></div>
-  </div>
+<div class="hero-skeleton">
+  <!-- Background -->
+  <div class="hero-skeleton-bg"></div>
 
-  <!-- overlays -->
-  <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent"></div>
-  <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+  <!-- Overlay gradients -->
+  <div class="hero-skeleton-overlay"></div>
 
-  <!-- Foreground content skeleton -->
-  <div class="relative z-10 h-full flex items-end px-4 sm:px-8 lg:px-16">
-    <div class="max-w-3xl text-white py-12">
-      <!-- Status badge skeleton -->
-      <div class="inline-flex items-center px-4 py-3 rounded-full bg-red-600 text-sm font-semibold mb-4 animate-pulse">
-        <div class="w-2 h-2 bg-white rounded-full mr-2"></div>
-        <div class="w-24 h-4 bg-white/60 rounded"></div>
-        <div class="ml-2 px-2 py-1 bg-black/25 rounded w-12 h-4 bg-white/40"></div>
-      </div>
+  <!-- Content -->
+  <div class="hero-skeleton-content">
+    <!-- Badge -->
+    <div class="skeleton-badge">
+      <div class="skeleton-dot"></div>
+      <div class="skeleton-line" style="width: 96px; height: 16px;"></div>
+    </div>
 
-      <!-- Title skeleton -->
-      <div class="mb-4 sm:mb-6">
-        <div class="w-80 h-9 sm:h-11 lg:h-14 bg-gray-600 rounded animate-pulse"></div>
-      </div>
+    <!-- Title -->
+    <div class="skeleton-line" style="width: 320px; height: 36px; margin-bottom: 16px;"></div>
 
-      <!-- Episode info skeleton -->
-      <div class="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
-        <!-- Episode title -->
-        <div class="w-44 h-5 sm:h-6 lg:h-7 bg-gray-600 rounded animate-pulse"></div>
+    <!-- Description lines -->
+    <div class="skeleton-line" style="width: 280px; height: 20px; margin-bottom: 8px;"></div>
+    <div class="skeleton-line" style="width: 200px; height: 20px; margin-bottom: 24px;"></div>
 
-        <!-- Air date and JST badge -->
-        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-          <div class="w-64 h-4 sm:h-5 bg-gray-600 rounded animate-pulse"></div>
-          <div class="px-2 py-1 bg-blue-600/20 rounded w-20 h-5 bg-blue-600/30 animate-pulse"></div>
-        </div>
-      </div>
+    <!-- Meta tags -->
+    <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+      <div class="skeleton-line" style="width: 60px; height: 24px; border-radius: 4px;"></div>
+      <div class="skeleton-line" style="width: 80px; height: 24px; border-radius: 4px;"></div>
+      <div class="skeleton-line" style="width: 70px; height: 24px; border-radius: 4px;"></div>
+    </div>
 
-      <!-- Buttons skeleton -->
-      <div class="flex flex-wrap gap-4 items-center">
-        <!-- More Info button -->
-        <div class="w-24 h-10 bg-blue-600/50 rounded animate-pulse"></div>
-
-        <!-- Add to List button -->
-        <div class="w-28 h-10 bg-gray-600/50 rounded animate-pulse"></div>
-      </div>
+    <!-- Buttons -->
+    <div style="display: flex; gap: 10px;">
+      <div class="skeleton-line" style="width: 120px; height: 40px; border-radius: var(--weeb-radius, 8px);"></div>
+      <div class="skeleton-line" style="width: 100px; height: 40px; border-radius: var(--weeb-radius, 8px);"></div>
     </div>
   </div>
 </div>
 
 <style>
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
+  .hero-skeleton {
+    position: relative;
+    width: 100%;
+    min-height: 720px;
+    overflow: hidden;
   }
-
-  .animate-shimmer {
-    animation: shimmer 2s infinite;
+  .hero-skeleton-bg {
+    position: absolute;
+    inset: 0;
+    background: var(--weeb-surface);
+    animation: shimmer 1.5s infinite;
+  }
+  .hero-skeleton-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, var(--weeb-bg) 0%, oklch(14% 0.015 275 / 0.85) 40%, oklch(14% 0.015 275 / 0.55) 70%, oklch(14% 0.015 275 / 0.3) 100%),
+      linear-gradient(to right, oklch(14% 0.015 275 / 0.7) 0%, transparent 60%);
+  }
+  .hero-skeleton-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+    min-height: 720px;
+    padding: 0 48px 48px;
+  }
+  .skeleton-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--weeb-surface-hover);
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+  .skeleton-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--weeb-surface-hover);
+  }
+  .skeleton-line {
+    background: var(--weeb-surface-hover);
+    border-radius: 6px;
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.8; }
+  }
+  @media (max-width: 1024px) {
+    .hero-skeleton-content { padding: 0 24px 32px; }
+  }
+  @media (max-width: 768px) {
+    .hero-skeleton, .hero-skeleton-content { min-height: 560px; }
+  }
+  @media (max-width: 480px) {
+    .hero-skeleton-content { padding: 0 16px 24px; }
+    .hero-skeleton, .hero-skeleton-content { min-height: 480px; }
   }
 </style>

@@ -4,13 +4,14 @@
   import { useUser } from '../services/queries';
   import ProfileDropdown from './ProfileDropdown.svelte';
   import ProfileAvatar from './ProfileAvatar.svelte';
+  import Button from './Button.svelte';
+  import { openMobileDrawer } from '../stores/mobileDrawer';
 
   export let isMobile: boolean = false;
   export let onProfileClick: (() => void) | null = null;
 
   let isLoggedIn = false;
   let userQuery: any = null;
-  let mobileDrawerOpen = false;
 
   // Subscribe to auth state
   onMount(() => {
@@ -42,7 +43,7 @@
   } : null;
 
   function handleMobileProfileClick() {
-    mobileDrawerOpen = true;
+    openMobileDrawer();
     if (onProfileClick) {
       onProfileClick();
     }
@@ -61,9 +62,9 @@
   {#if isLoading}
     <!-- Loading skeleton -->
     <div class="flex items-center space-x-2">
-      <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+      <div class="w-10 h-10 bg-weeb-surface rounded-full animate-pulse"></div>
       {#if !isMobile}
-        <div class="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        <div class="w-16 h-4 bg-weeb-surface rounded animate-pulse"></div>
       {/if}
     </div>
   {:else if user || fallbackUser}
@@ -86,9 +87,9 @@
   {:else}
     <!-- Still loading or no data yet - show loading skeleton -->
     <div class="flex items-center space-x-2">
-      <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+      <div class="w-10 h-10 bg-weeb-surface rounded-full animate-pulse"></div>
       {#if !isMobile}
-        <div class="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        <div class="w-16 h-4 bg-weeb-surface rounded animate-pulse"></div>
       {/if}
     </div>
   {/if}
@@ -97,38 +98,16 @@
   {#if isMobile}
     <!-- Mobile: Hamburger menu button -->
     <button class="p-4" aria-label="Open menu" on:click={handleMobileProfileClick}>
-      <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-6 h-6 text-weeb-fg-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
       </svg>
     </button>
   {:else}
     <!-- Desktop: Login/Register buttons -->
-    <div class="flex items-center space-x-4">
-      <button
-        class="px-4 py-2 relative rounded-full font-medium transition-colors duration-300 flex items-center justify-center whitespace-nowrap w-fit bg-blue-600 hover:bg-blue-700 text-white"
-        on:click={handleLoginClick}
-      >
-        Login
-      </button>
-
-      <button
-        class="px-4 py-2 relative rounded-full font-medium transition-colors duration-300 flex items-center justify-center whitespace-nowrap w-fit bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600"
-        on:click={handleRegisterClick}
-      >
-        Register
-      </button>
+    <div class="flex items-center space-x-3">
+      <Button color="blue" label="Login" onClick={handleLoginClick} />
+      <Button color="transparent" label="Register" onClick={handleRegisterClick} />
     </div>
   {/if}
 {/if}
 
-<!-- Mobile Drawer -->
-{#if isMobile}
-  {#await import('./MobileDrawer.svelte') then { default: MobileDrawer }}
-    <MobileDrawer
-      isOpen={mobileDrawerOpen}
-      onClose={() => mobileDrawerOpen = false}
-      {user}
-      {isLoggedIn}
-    />
-  {/await}
-{/if}

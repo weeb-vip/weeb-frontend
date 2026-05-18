@@ -2,13 +2,12 @@
   import { createQuery } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
   import { onMount } from 'svelte';
-  import AnimeCard from './AnimeCard.svelte';
-  import AnimeCardSkeleton from './AnimeCardSkeleton.svelte';
-  import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
-  import Button from './Button.svelte';
-  import CurrentlyAiringCard from './CurrentlyAiringCard.svelte';
   import HeroBanner from './HeroBanner.svelte';
   import HeroBannerSkeleton from './HeroBannerSkeleton.svelte';
+  import PosterCard from './PosterCard.svelte';
+  import AiringStripCard from './AiringStripCard.svelte';
+  import SectionHeader from './SectionHeader.svelte';
+  import GenrePills from './GenrePills.svelte';
   import { initializeQueryClient } from '../services/query-client';
   import {
     fetchHomePageData,
@@ -108,7 +107,7 @@
 
   // Create seasonal anime query for dynamic season changes
   $: seasonalAnimeQuery = createQuery({
-    ...fetchSeasonalAnime(selectedSeason),
+    ...fetchSeasonalAnime(selectedSeason, 14),
     enabled: true, // Always enable to respond to cache invalidation
     initialData: selectedSeason === currentSeason ? seasonalData : undefined,
     refetchOnWindowFocus: false,
@@ -314,7 +313,7 @@
           titleJp: anime.titleJp,
           description: anime.description || null,
           tags: anime.tags || [],
-          episodeCount: null,
+          episodeCount: (anime as any).episodeCount || null,
           duration: anime.duration,
           startDate: anime.startDate,
           imageUrl: anime.imageUrl,
@@ -323,6 +322,7 @@
         status: null,
         airingInfo: {
           ...anime,
+          userAnime: anime.userAnime || null,
           airTimeDisplay: airTimeInfo,
           nextEpisodeDate: nextEpisodeAirTime,
           nextEpisode: {
@@ -434,12 +434,10 @@
   }
 </script>
 
-<div class="flex flex-col max-w-screen-2xl px-4 lg:px-0" style="margin: 0 auto">
-
-
+<div class="homepage">
   <!-- Hero Banner Section -->
   {#if sortedCurrentlyAiring.length > 0}
-    <div class="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-auto md:right-auto md:ml-0 md:mr-0 h-[600px] sm:h-[650px] md:h-[700px] md:mt-8 mb-8 md:mx-0 md:rounded-lg md:shadow-xl bg-gray-200 dark:bg-gray-800">
+    <div class="hero-wrapper">
       {#if bannerAnime}
         {#key bannerAnime.id}
           <HeroBanner
@@ -450,268 +448,272 @@
         <HeroBannerSkeleton />
       {/if}
     </div>
+  {:else if ($homeDataQuery.data || homeData)?.topRatedAnime?.length > 0}
+    <div class="hero-wrapper">
+      {#if ($homeDataQuery.data || homeData).topRatedAnime[0]}
+        {@const fallbackAnime = ($homeDataQuery.data || homeData).topRatedAnime[0]}
+        <HeroBanner
+          anime={fallbackAnime}
+        />
+      {/if}
+    </div>
   {/if}
 
-  <!-- Currently Airing Section -->
-  <div class="w-full flex flex-col mb-12">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Currently Airing Anime</h1>
-      <a href="/airing" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">
-        See all →
-      </a>
-    </div>
-
-    <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
-      {#each sortedCurrentlyAiring.slice(0, 8) as entry, index}
-        <CurrentlyAiringCard
-          {entry}
-          {index}
-          {animeStatuses}
-          {handleAddAnime}
-          {hoveredAnime}
-          setHoveredAnime={(anime) => hoveredAnime = anime}
-          onDelete={clearAnimeStatus}
-          onStatusChange={handleStatusChange}
-        />
-      {/each}
-    </div>
-  </div>
-
-  <!-- Seasonal Anime Section -->
-  <div class="w-full flex flex-col mb-12">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-      <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{getSeasonDisplayName(selectedSeason)} Anime</h1>
-        <a href="/season/{selectedSeason}" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">
-          See all →
-        </a>
+  <!-- Airing This Week -->
+  {#if sortedCurrentlyAiring.length > 0}
+    <section class="section">
+      <SectionHeader title="Airing This Week" href="/airing" linkText="View schedule →" />
+      <div class="airing-strip">
+        {#each sortedCurrentlyAiring.slice(0, 8) as entry, index}
+          <AiringStripCard
+            id={entry.anime.id}
+            title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(entry.anime)}
+            episodeText={entry.airingInfo?.nextEpisode?.episodeNumber ? `Episode ${entry.airingInfo.nextEpisode.episodeNumber}` : ''}
+            localTime={entry.airingInfo?.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE h:mm a") : ''}
+            timeText={entry.airingInfo?.airTimeDisplay?.text || ''}
+            isLive={entry.airingInfo?.airTimeDisplay?.variant === 'airing'}
+            currentEpisode={entry.airingInfo?.nextEpisode?.episodeNumber || 0}
+            totalEpisodes={entry.anime.episodeCount || 0}
+            on:mouseenter={() => hoveredAnime = entry.airingInfo}
+            on:mouseleave={() => hoveredAnime = null}
+          />
+        {/each}
       </div>
+    </section>
+  {/if}
 
-      <!-- Desktop: Button layout -->
-      <div class="hidden sm:flex gap-2">
+  <!-- Top Rated -->
+  {#if ($homeDataQuery.data || homeData)?.topRatedAnime}
+    {@const _dbgTopRated = ($homeDataQuery.data || homeData).topRatedAnime}
+    {console.log("[TOPRATED", ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 14))}
+    {(() => { if (typeof window !== 'undefined' && _dbgTopRated?.length) console.log('[WATCHLIST]', 'topRated[0].userAnime:', _dbgTopRated[0]?.userAnime, 'status:', _dbgTopRated[0]?.userAnime?.status, 'all userAnimes:', _dbgTopRated.map(a => ({ title: a.titleEn?.slice(0,20), ua: a.userAnime?.status || 'NONE' }))); return ''; })()}
+    <section class="section">
+      <SectionHeader title="Top Rated" href="/search" linkText="See all →" />
+      <div class="poster-row">
+        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 14) as anime}
+          <PosterCard
+            id={anime.id}
+            title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(anime)}
+            score={anime.rating}
+            status={anime.status}
+            genres={anime.tags || []}
+            description={anime.description || ''}
+            episodeCount={anime.episodeCount}
+            sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            onList={anime.userAnime?.status || null}
+          />
+        {/each}
+      </div>
+    </section>
+  {/if}
+
+  <!-- Newest Anime -->
+  {#if ($homeDataQuery.data || homeData)?.newestAnime}
+    <section class="section">
+      <SectionHeader title="Newest Anime" href="/search" linkText="See all →" />
+      <div class="poster-row">
+        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, 14) as anime}
+          <PosterCard
+            id={anime.id}
+            title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(anime)}
+            score={anime.rating}
+            status={anime.status}
+            genres={anime.tags || []}
+            description={anime.description || ''}
+            episodeCount={anime.episodeCount}
+            sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            onList={anime.userAnime?.status || null}
+          />
+        {/each}
+      </div>
+    </section>
+  {/if}
+
+  <!-- Browse by Genre -->
+  <section class="section">
+    <SectionHeader title="Browse by Genre" />
+    <GenrePills />
+  </section>
+
+  <!-- Seasonal Highlights -->
+  <section class="section">
+    <div class="section-header-with-tabs">
+      <SectionHeader title="{getSeasonDisplayName(selectedSeason)} Highlights" href="/season/{selectedSeason}" linkText="Full season →" />
+      <div class="season-tabs">
         {#each seasonOptions as season}
           <button
             on:click={() => selectedSeason = season}
-            class="px-3 py-1 rounded text-sm font-medium transition-all duration-200 transform hover:scale-105 {selectedSeason === season
-              ? 'bg-blue-600 text-white shadow-lg'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-            }"
+            class="season-tab {selectedSeason === season ? 'active' : ''}"
           >
             {getSeasonDisplayName(season)}
           </button>
         {/each}
       </div>
-
-      <!-- Mobile: Dropdown layout -->
-      <div class="sm:hidden relative">
-        <button
-          on:click={() => isDropdownOpen = !isDropdownOpen}
-          class="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-gray-900 dark:text-gray-100 font-medium text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm"
-        >
-          <span class="truncate">{getSeasonDisplayName(selectedSeason)}</span>
-          <i class="fas fa-chevron-down w-3 h-3 ml-2 flex-shrink-0 transition-transform duration-200 {isDropdownOpen ? 'rotate-180' : ''}"></i>
-        </button>
-
-        {#if isDropdownOpen}
-          <div
-            class="fixed inset-0 z-10"
-            on:click={() => isDropdownOpen = false}
+    </div>
+    <div class="poster-row">
+      {#if $seasonalAnimeQuery.isLoading && selectedSeason !== currentSeason}
+        {#each Array(6) as _}
+          <div class="poster-card-skeleton">
+            <div class="poster-skeleton"></div>
+            <div class="title-skeleton"></div>
+            <div class="sub-skeleton"></div>
+          </div>
+        {/each}
+      {:else if currentSeasonalData?.animeBySeasons}
+        {#each currentSeasonalData.animeBySeasons.sort((a, b) => {
+          const getRating = (rating) => {
+            if (!rating || rating === 'N/A') return 0;
+            const parsed = parseFloat(rating);
+            return isNaN(parsed) ? 0 : parsed;
+          };
+          return getRating(b.rating) - getRating(a.rating);
+        }).slice(0, 14) as anime (anime.id)}
+          <PosterCard
+            id={anime.id}
+            title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(anime)}
+            score={anime.rating}
+            status={anime.status}
+            genres={anime.tags || []}
+            description={anime.description || ''}
+            episodeCount={anime.episodeCount}
+            sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            onList={anime.userAnime?.status || null}
           />
-
-          <div class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-20 py-1">
-            {#each seasonOptions as season}
-              <button
-                on:click={() => {
-                  selectedSeason = season;
-                  isDropdownOpen = false;
-                }}
-                class="w-full text-left px-3 py-2 text-sm transition-colors duration-200 {selectedSeason === season
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }"
-              >
-                {getSeasonDisplayName(season)}
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
-    </div>
-
-    <!-- Seasonal content with stable container -->
-    <div class="relative overflow-hidden">
-      <!-- Fixed grid container to prevent layout shifts -->
-      <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center min-h-[400px]">
-
-        {#if $seasonalAnimeQuery.isLoading && selectedSeason !== currentSeason}
-          <!-- Loading skeleton overlay -->
-          {#each Array(8) as _, index}
-            <div
-              class="{index >= 5 ? 'lg:hidden xl:block' : ''}"
-              in:fade={{ duration: 150 }}
-              out:fade={{ duration: 100 }}
-            >
-              <AnimeCardSkeleton style="detail" />
-            </div>
-          {/each}
-        {:else if currentSeasonalData && currentSeasonalData.animeBySeasons}
-          <!-- Actual content -->
-          {#each currentSeasonalData.animeBySeasons.sort((a, b) => {
-            const getRating = (rating) => {
-              if (!rating || rating === 'N/A') return 0;
-              const parsed = parseFloat(rating);
-              return isNaN(parsed) ? 0 : parsed;
-            };
-            const ratingA = getRating(a.rating);
-            const ratingB = getRating(b.rating);
-            return ratingB - ratingA;
-          }).slice(0, 8) as anime, index (anime.id)}
-            <div
-              class="{index >= 5 ? 'lg:hidden xl:block' : ''}"
-              in:fly={{ y: 15, duration: 200, delay: 50 + (index * 30) }}
-              out:send={{ key: anime.id }}
-            >
-              <AnimeCard
-              style="detail"
-              id={anime.id}
-              title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-              description={anime.description || ''}
-              tags={anime.tags || []}
-              episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
-              episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
-              year={getYearUTC(anime.startDate)}
-              image={GetImageFromAnime(anime)}
-              entry={anime.userAnime}
-            >
-              <div slot="options">
-                {#if !anime.userAnime}
-                  <Button
-                    color="blue"
-                    label="Add to list"
-                    showLabel={true}
-                    status={animeStatuses[`${selectedSeason.toLowerCase()}-${anime.id}`] || 'idle'}
-                    className="w-fit px-2 py-1 text-xs"
-                    onClick={() => handleAddAnime(`${selectedSeason.toLowerCase()}-${anime.id}`, anime.id)}
-                  />
-                {:else}
-                  <AnimeStatusDropdown
-                    entry={{
-                      ...anime.userAnime,
-                      anime
-                    }}
-                    variant="compact"
-                    on:statusChange={handleStatusChange}
-                    on:delete={handleDelete}
-                  />
-                {/if}
-              </div>
-            </AnimeCard>
-            </div>
-          {/each}
-        {/if}
-      </div>
-    </div>
-  </div>
-
-  <!-- Top Rated Anime Section -->
-  <div class="w-full flex flex-col">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Top Rated Anime</h1>
-    </div>
-
-    {#if ($homeDataQuery.data || homeData) && ($homeDataQuery.data || homeData).topRatedAnime}
-      <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
-        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 8) as anime, index}
-          <div class="{index >= 5 ? 'lg:hidden xl:block' : ''}">
-            <AnimeCard
-              style="detail"
-              id={anime.id}
-              title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-              description={anime.description || ''}
-              tags={anime.tags || []}
-              episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
-              episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
-              year={getYearUTC(anime.startDate)}
-              image={GetImageFromAnime(anime)}
-              entry={anime.userAnime}
-            >
-              <div slot="options">
-                {#if !anime.userAnime}
-                  <Button
-                    color="blue"
-                    label="Add to list"
-                    showLabel={true}
-                    status={animeStatuses[`top-rated-${anime.id}`] || 'idle'}
-                    className="w-fit px-2 py-1 text-xs"
-                    onClick={() => handleAddAnime(`top-rated-${anime.id}`, anime.id)}
-                  />
-                {:else}
-                  <AnimeStatusDropdown
-                    entry={{
-                      ...anime.userAnime,
-                      anime,
-                    }}
-                    variant="compact"
-                    on:statusChange={handleStatusChange}
-                    on:delete={handleDelete}
-                  />
-                {/if}
-              </div>
-            </AnimeCard>
-          </div>
         {/each}
-      </div>
-    {/if}
-  </div>
-
-  <!-- Newest Anime Section -->
-  <div class="w-full flex flex-col">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Newest Anime</h1>
+      {/if}
     </div>
-
-    {#if ($homeDataQuery.data || homeData) && ($homeDataQuery.data || homeData).newestAnime}
-      <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
-        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, 8) as anime, index}
-          <div class="{index >= 5 ? 'lg:hidden xl:block' : ''}">
-            <AnimeCard
-              style="detail"
-              id={anime.id}
-              title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-              description={anime.description || ''}
-              tags={anime.tags || []}
-              episodes={Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)}
-              episodeLength={anime.duration ? anime.duration.replace(/per.+?$|per/gm, '') : "?"}
-              year={getYearUTC(anime.startDate)}
-              image={GetImageFromAnime(anime)}
-              entry={anime.userAnime}
-            >
-              <div slot="options">
-                {#if !anime.userAnime}
-                  <Button
-                    color="blue"
-                    label="Add to list"
-                    showLabel={true}
-                    status={animeStatuses[`newest-anime-${anime.id}`] || 'idle'}
-                    className="w-fit px-2 py-1 text-xs"
-                    onClick={() => handleAddAnime(`newest-anime-${anime.id}`, anime.id)}
-                  />
-                {:else}
-                  <AnimeStatusDropdown
-                    entry={{
-                      ...anime.userAnime,
-                      anime
-                    }}
-                    variant="compact"
-                    on:statusChange={handleStatusChange}
-                    on:delete={handleDelete}
-                  />
-                {/if}
-              </div>
-            </AnimeCard>
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </div>
+  </section>
 </div>
+
+<style>
+  .homepage {
+    width: 100%;
+    overflow-x: clip;
+  }
+  .hero-wrapper {
+    width: 100%;
+    position: relative;
+  }
+
+  /* --- SECTIONS --- */
+  .section {
+    padding: 48px var(--weeb-section-px, 48px);
+  }
+  .section + .section {
+    border-top: 1px solid var(--weeb-border, oklch(28% 0.015 275));
+  }
+
+  /* --- POSTER GRID --- */
+  .poster-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+  }
+  .poster-row :global(> *) {
+    max-width: 200px;
+  }
+
+  /* --- AIRING STRIP --- */
+  .airing-strip {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--weeb-border) transparent;
+  }
+
+  /* --- SEASON TABS --- */
+  .section-header-with-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-header-with-tabs :global(.section-header) {
+    margin-bottom: 0;
+  }
+  .season-tabs {
+    display: flex;
+    gap: 6px;
+  }
+  .season-tab {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--weeb-fg-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    font-family: inherit;
+  }
+  .season-tab:hover {
+    color: var(--weeb-fg);
+    background: var(--weeb-surface);
+  }
+  .season-tab.active {
+    color: white;
+    background: var(--weeb-accent);
+  }
+
+  /* --- SKELETON --- */
+  .poster-card-skeleton {
+    display: flex;
+    flex-direction: column;
+  }
+  .poster-skeleton {
+    aspect-ratio: 2/3;
+    border-radius: var(--weeb-radius, 8px);
+    background: var(--weeb-surface);
+    animation: shimmer 1.5s infinite;
+  }
+  .title-skeleton {
+    margin-top: 8px;
+    height: 14px;
+    width: 80%;
+    border-radius: 4px;
+    background: var(--weeb-surface);
+    animation: shimmer 1.5s infinite;
+  }
+  .sub-skeleton {
+    margin-top: 4px;
+    height: 12px;
+    width: 60%;
+    border-radius: 4px;
+    background: var(--weeb-surface);
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.8; }
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 768px) {
+    .section {
+      padding: 28px 16px;
+    }
+    .poster-row {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+    }
+    .season-tabs {
+      flex-wrap: wrap;
+    }
+  }
+  @media (max-width: 400px) {
+    .section {
+      padding: 24px 12px;
+    }
+    .poster-row {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+    }
+  }
+</style>

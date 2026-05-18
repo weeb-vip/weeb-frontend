@@ -1,12 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { faUser, faLock } from '@fortawesome/free-solid-svg-icons';
   import type { LoginInput } from "../../gql/graphql";
   import { useLogin, useRegister } from '../services/queries';
   import { loggedInStore, loginModalStore } from '../stores/auth';
   import { navigateWithTransition } from '../../utils/astro-navigation';
   import FormInput from './FormInput.svelte';
-  import Button from './Button.svelte';
 
   export let closeFn: (() => void) | undefined = undefined;
 
@@ -138,108 +136,326 @@
   }
 </script>
 
-<div class="w-full max-w-[360px] sm:max-w-[400px] mx-auto p-6 sm:p-8 transition-colors duration-300">
-  <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100 text-center">
-    {!isRegisterState ? 'Login' : 'Register'}
-  </h2>
+<div class="auth-modal">
 
-  <div class="mb-4 flex items-center">
-    {#if errorMessage}
-      <div class="w-full p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-full transition-colors duration-300">
-        <p class="text-red-800 dark:text-red-200 text-sm text-center">{errorMessage}</p>
-      </div>
-    {/if}
-    {#if successMessage}
-      <div class="w-full p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-full transition-colors duration-300">
-        <p class="text-green-800 dark:text-green-200 text-sm text-center">{successMessage}</p>
-      </div>
-    {/if}
+  <!-- Header -->
+  <div class="modal-header">
+    <div class="logo-mark">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <path d="M4 5L8.5 16L11 10L13.5 16L18 5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="11" cy="11" r="1.2" fill="white" opacity="0.7"/>
+      </svg>
+    </div>
+    <h2 class="modal-title">{!isRegisterState ? 'Welcome back' : 'Create account'}</h2>
+    <p class="modal-subtitle">{!isRegisterState ? 'Sign in to your account' : 'Start tracking your anime'}</p>
   </div>
 
-  <form on:submit={handleSubmit} class="space-y-4">
-    <FormInput
-      id="username"
-      name="username"
-      type="text"
-      value={formData.username}
-      placeholder={!isRegisterState ? 'Enter your email' : 'Enter your email'}
-      label={!isRegisterState ? 'Email' : 'Email'}
-      icon={faUser}
-      error={validationErrors.username}
-      required={true}
-      on:input={(e) => handleChange('username', e.detail.value)}
-    />
-
-    <FormInput
-      id="password"
-      name="password"
-      type="password"
-      value={formData.password}
-      placeholder="Enter your password"
-      label="Password"
-      icon={faLock}
-      error={validationErrors.password}
-      required={true}
-      on:input={(e) => handleChange('password', e.detail.value)}
-    />
-
-    {#if isRegisterState}
-      <FormInput
-        id="confirmPassword"
-        name="confirmPassword"
-        type="password"
-        value={formData.confirmPassword}
-        placeholder="Enter your password again"
-        label="Confirm Password"
-        icon={faLock}
-        error={validationErrors.confirmPassword}
-        required={true}
-        on:input={(e) => handleChange('confirmPassword', e.detail.value)}
-      />
-    {/if}
-
-    <Button
-      color="blue"
-      label={!isRegisterState ? 'Login' : 'Register'}
-      onClick={() => {}}
-      showLabel={true}
-      status={isLoading ? 'loading' : 'idle'}
-      className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md mt-6"
-    />
-  </form>
-
-  <!-- Password Reset and Email Verification Links - Only show in login mode -->
-  {#if !isRegisterState}
-    <div class="mt-4 text-center space-y-2">
-      <div>
-        <a
-          href="/auth/password-reset-request"
-          on:click={() => handleLinkClick(closeFn)}
-          class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
-        >
-          Forgot your password?
-        </a>
-      </div>
-      <div>
-        <a
-          href="/auth/resend-verification"
-          on:click={() => handleLinkClick(closeFn)}
-          class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300 focus:outline-none focus:underline"
-        >
-          Resend email verification
-        </a>
-      </div>
+  <!-- Alerts -->
+  {#if errorMessage}
+    <div class="alert alert-error">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      <p>{errorMessage}</p>
+    </div>
+  {/if}
+  {#if successMessage}
+    <div class="alert alert-success">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 16 8 12"/></svg>
+      <p>{successMessage}</p>
     </div>
   {/if}
 
-  <div class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-    {!isRegisterState ? "Don't have an account?" : "Already have an account?"}{' '}
-    <button
-      type="button"
-      on:click={toggleMode}
-      class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors duration-300 focus:outline-none focus:underline"
-    >
-      {!isRegisterState ? 'Register' : 'Login'}
+  <!-- Form -->
+  <form on:submit={handleSubmit} class="auth-form">
+
+    <div class="form-group">
+      <FormInput
+        id="modal-username"
+        name="username"
+        type="text"
+        value={formData.username}
+        placeholder={!isRegisterState ? 'your_username' : 'you@example.com'}
+        label={!isRegisterState ? 'Username or email' : 'Email'}
+        error={validationErrors.username}
+        required={true}
+        on:input={(e) => handleChange('username', e.detail.value)}
+      />
+    </div>
+
+    <div class="form-group">
+      <FormInput
+        id="modal-password"
+        name="password"
+        type="password"
+        value={formData.password}
+        placeholder={!isRegisterState ? 'Enter your password' : 'At least 6 characters'}
+        label="Password"
+        error={validationErrors.password}
+        required={true}
+        showPasswordToggle={true}
+        on:input={(e) => handleChange('password', e.detail.value)}
+      />
+    </div>
+
+    {#if isRegisterState}
+      <div class="form-group">
+        <FormInput
+          id="modal-confirmPassword"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          placeholder="Re-enter your password"
+          label="Confirm password"
+          error={validationErrors.confirmPassword}
+          required={true}
+          showPasswordToggle={true}
+          on:input={(e) => handleChange('confirmPassword', e.detail.value)}
+        />
+      </div>
+    {/if}
+
+    <!-- Login-only: remember me + forgot password -->
+    {#if !isRegisterState}
+      <div class="field-row">
+        <label class="checkbox-wrap">
+          <input type="checkbox" name="remember" />
+          <span class="checkbox-label">Remember me</span>
+        </label>
+        <a href="/auth/password-reset-request" on:click={() => handleLinkClick(closeFn)} class="link-accent">Forgot password?</a>
+      </div>
+    {/if}
+
+    <!-- Submit -->
+    <button type="submit" class="btn-submit" class:loading={isLoading} disabled={isLoading}>
+      <span class="btn-label">{!isRegisterState ? 'Log in' : 'Create account'}</span>
+      {#if isLoading}
+        <span class="spinner" aria-hidden="true"></span>
+      {/if}
     </button>
+
+  </form>
+
+  <!-- Login-only: resend verification -->
+  {#if !isRegisterState}
+    <div class="resend-link">
+      <a href="/auth/resend-verification" on:click={() => handleLinkClick(closeFn)} class="link-accent">Resend email verification</a>
+    </div>
+  {/if}
+
+  <!-- Divider -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <span class="divider-text">or</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- Toggle mode -->
+  <div class="mode-toggle">
+    {!isRegisterState ? "Don't have an account?" : "Already have an account?"}
+    <button type="button" on:click={toggleMode} class="link-accent">{!isRegisterState ? 'Sign up' : 'Log in'}</button>
   </div>
 </div>
+
+<style>
+  .auth-modal {
+    padding: 36px;
+  }
+
+  /* Header */
+  .modal-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .logo-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--weeb-accent), var(--weeb-violet, oklch(62% 0.14 300)));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+  }
+  .modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--weeb-fg);
+    margin-bottom: 4px;
+  }
+  .modal-subtitle {
+    font-size: 14px;
+    color: var(--weeb-fg-muted);
+  }
+
+  /* Alerts */
+  .alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--weeb-radius, 8px);
+    border: 1px solid;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .alert svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .alert p {
+    margin: 0;
+    line-height: 1.4;
+  }
+  .alert-error {
+    color: var(--weeb-red);
+    background: oklch(20% 0.03 25 / 0.5);
+    border-color: oklch(60% 0.18 25 / 0.4);
+  }
+  .alert-success {
+    color: var(--weeb-green);
+    background: oklch(20% 0.03 155 / 0.5);
+    border-color: oklch(65% 0.15 155 / 0.4);
+  }
+
+  /* Form */
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Remember me / Forgot password row */
+  .field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .checkbox-wrap input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--weeb-accent);
+    cursor: pointer;
+  }
+  .checkbox-label {
+    font-size: 13px;
+    color: var(--weeb-fg-secondary);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* Accent links */
+  .link-accent {
+    font-size: 13px;
+    color: var(--weeb-accent);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.15s;
+    padding: 0;
+  }
+  .link-accent:hover {
+    color: var(--weeb-accent-hover, oklch(62% 0.16 280));
+    text-decoration: underline;
+  }
+
+  /* Submit button */
+  .btn-submit {
+    width: 100%;
+    height: 46px;
+    margin-top: 4px;
+    background: var(--weeb-accent);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: none;
+    border-radius: var(--weeb-radius, 8px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-submit:hover:not(:disabled) {
+    background: var(--weeb-accent-hover, oklch(62% 0.16 280));
+  }
+  .btn-submit:active:not(:disabled) {
+    transform: scale(0.99);
+  }
+  .btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-submit.loading .btn-label {
+    opacity: 0;
+  }
+  .spinner {
+    display: block;
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid oklch(100% 0 0 / 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Resend verification link */
+  .resend-link {
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0 16px;
+  }
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--weeb-border);
+  }
+  .divider-text {
+    font-size: 12px;
+    color: var(--weeb-fg-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* Mode toggle footer */
+  .mode-toggle {
+    text-align: center;
+    font-size: 14px;
+    color: var(--weeb-fg-muted);
+  }
+
+  @media (max-width: 480px) {
+    .auth-modal {
+      padding: 24px;
+    }
+    .modal-title {
+      font-size: 20px;
+    }
+  }
+</style>

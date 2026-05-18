@@ -1,0 +1,77 @@
+import{a5 as Se,a4 as n,Z as pe,P as e,w as k,_ as ke,ad as _,ag as i,V as F,ai as T,ae as b,J as z,k as p,a3 as Le,a0 as L,p as a,M as x,aj as g,r as tt,K as _e,y as at}from"./iframe-BBy3qS7V.js";import"./legacy-B5CYqdZO.js";import{s as We}from"./slot-ChEXTifl.js";import{s as de}from"./attributes-xFjJ3ZB0.js";import{s as h,c as De}from"./class-CJmGtk23.js";import{i as Ne}from"./lifecycle-CNU-NnhL.js";import{o as Ze,S as st,a as be}from"./analytics-DbPNl78_.js";import{s as Ae}from"./style-D6J7hmdZ.js";import{b as ge}from"./this-BJDsKDpM.js";import{e as Ee,i as je}from"./each-B7aOw8gM.js";import{S as it}from"./StoryContainer-CMj7yAIp.js";import"./preload-helper-D4nn9Y_6.js";var nt=x("<span> </span>"),rt=x('<div><span class="invisible absolute whitespace-nowrap svelte-x1ud6i"> </span> <span> </span> <!></div>');function Te(Z,s){Se(s,!1);let r=n(s,"text",8),j=n(s,"className",8,""),O=n(s,"maxWidth",8,"100%"),w=n(s,"scrollSpeed",8,50),d=L(),c=L(),m=L(!1),N=L(!1),B=L(3);function A(){if(!e(d)||!e(c))return;const u=e(d).offsetWidth,t=e(c).scrollWidth;if(e(m),_(m,t>u),e(m)){const l=t+32;_(B,l/w())}}Ze(()=>{setTimeout(A,100);const u=()=>{setTimeout(A,100)};return window.addEventListener("resize",u),()=>window.removeEventListener("resize",u)});function Q(){console.log("Mouse enter - text:",r(),"isOverflowing:",e(m)),_(N,!0)}function o(){console.log("Mouse leave"),_(N,!1)}pe(()=>(k(r()),e(d)),()=>{r()&&e(d)&&setTimeout(A,100)}),ke(),Ne();var v=rt(),q=a(v),X=a(q);ge(q,u=>_(c,u),()=>e(c));var R=i(q,2),C=a(R),Y=i(R,2);{var $=u=>{var t=nt(),l=a(t);T(()=>{h(t,1,`absolute top-0 left-0 inline-block whitespace-nowrap transition-opacity duration-200 ${e(N)?"opacity-100 animate-scroll":"opacity-0"}`,"svelte-x1ud6i"),Ae(t,`--scroll-duration: ${e(B)??""}s;`),b(l,r())}),p(u,t)};F(Y,u=>{e(m)&&u($)})}ge(v,u=>_(d,u),()=>e(d)),T(()=>{h(v,1,`overflow-hidden whitespace-nowrap relative ${j()??""}`,"svelte-x1ud6i"),Ae(v,`max-width: ${O()??""}`),b(X,r()),h(R,1,`inline-block truncate w-full transition-opacity duration-200 ${e(m)&&e(N)?"opacity-0":"opacity-100"}`,"svelte-x1ud6i"),b(C,r())}),z("mouseenter",v,Q),z("mouseleave",v,o),p(Z,v),Le()}var ot=x('<span class="text-xs px-1.5 py-0.5 bg-weeb-surface text-weeb-fg-secondary rounded inline-block svelte-18qw28g"> </span> ',1),lt=x('<span class="text-xs px-1.5 py-0.5 bg-weeb-surface text-weeb-fg-muted rounded inline-block svelte-18qw28g">No tags</span>'),dt=x('<span class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-weeb-surface to-transparent svelte-18qw28g"></span>'),ct=x('<span class="text-xs px-1.5 py-0.5 bg-weeb-surface text-weeb-fg-secondary rounded inline-block svelte-18qw28g"> </span> ',1),mt=x("<div></div>"),vt=x("<div><div><!></div> <!> <!></div>");function Ce(Z,s){Se(s,!1);let r=n(s,"tags",24,()=>[]),j=n(s,"className",8,""),O=n(s,"scrollSpeed",8,50),w=L(),d=L(),c=L(!1),m=L(!1),N=L(3);function B(){if(!e(w)||!e(d))return;const t=e(w).offsetWidth,l=e(d).scrollWidth;if(_(c,l>t),e(c)){const M=l+32;_(N,M/O())}}Ze(()=>{setTimeout(B,100);const t=()=>{setTimeout(B,100)};return window.addEventListener("resize",t),()=>window.removeEventListener("resize",t)});function A(){_(m,!0)}function Q(){_(m,!1)}pe(()=>(k(r()),e(w)),()=>{r()&&e(w)&&setTimeout(B,100)}),ke(),Ne();var o=vt(),v=a(o),q=a(v);{var X=t=>{var l=tt(),M=_e(l);Ee(M,1,r,je,(V,I)=>{var W=ot(),G=_e(W),J=a(G),he=i(G,1,!0);he.nodeValue=" ",T(()=>b(J,e(I))),p(V,W)}),p(t,l)},R=t=>{var l=lt();p(t,l)};F(q,t=>{k(r()),g(()=>r()&&r().length>0)?t(X):t(R,-1)})}ge(v,t=>_(d,t),()=>e(d));var C=i(v,2);{var Y=t=>{var l=dt();p(t,l)};F(C,t=>{e(c)&&!e(m)&&t(Y)})}var $=i(C,2);{var u=t=>{var l=mt();Ee(l,5,r,je,(M,V)=>{var I=ct(),W=_e(I),G=a(W),J=i(W,1,!0);J.nodeValue=" ",T(()=>b(G,e(V))),p(M,I)}),T(()=>{h(l,1,`absolute top-0 left-0 inline-block whitespace-nowrap transition-opacity duration-200 ${e(m)?"opacity-100 animate-scroll":"opacity-0"}`,"svelte-18qw28g"),Ae(l,`--scroll-duration: ${e(N)??""}s;`)}),p(t,l)};F($,t=>{e(c)&&t(u)})}ge(o,t=>_(w,t),()=>e(w)),T(()=>{h(o,1,`overflow-hidden whitespace-nowrap relative ${j()??""}`,"svelte-18qw28g"),h(v,1,`inline-block transition-opacity duration-200 ${e(c)&&e(m)?"opacity-0":"opacity-100"}`,"svelte-18qw28g")}),z("mouseenter",o,A),z("mouseleave",o,Q),p(Z,o),Le()}var ut=x('<div class="watchlist-badge svelte-1k9xv9o"><i class="fas fa-bookmark text-xs mr-1"></i> </div>'),ft=x('<div><i class="fas fa-broadcast-tower text-sm w-4 text-center mr-2"></i> <span class="text-xs font-medium"> </span></div>'),pt=x('<div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group"><a class="flex overflow-hidden flex-col w-full flex-grow"><!> <!> <div class="flex flex-col space-y-2 text-md font-normal mt-2 items-start text-weeb-fg-secondary"><div class="flex items-center"><i class="fas fa-tv text-sm w-4 text-center mr-2"></i> <span> </span></div> <div class="flex items-center"><i class="fas fa-clock text-sm w-4 text-center mr-2"></i> <span> </span></div> <div class="flex items-center"><i class="fas fa-calendar text-sm w-4 text-center mr-2"></i> <span> </span></div> <!></div></a> <div><!></div></div>'),gt=x('<div><i class="fas fa-broadcast-tower text-sm w-4 text-center mr-2"></i> <span class="text-xs font-medium"> </span></div>'),ht=x('<span class="flex-grow text-md text-base space-x-4 text-weeb-fg-muted"><span> </span></span>'),xt=x('<div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group"><a class="flex flex-col overflow-hidden w-full flex-grow"><!> <!> <!> <div class="flex flex-col w-full justify-between space-y-2"><span class="flex-grow text-md text-base space-x-4 text-weeb-fg-muted"><span> </span></span> <!></div></a> <div><!></div></div>'),wt=x('<div style="background: var(--weeb-surface);"><!> <a style="background: var(--weeb-surface);"><!></a> <!> <!></div>');function yt(Z,s){Se(s,!1);const r=L(),j=L();let O=n(s,"style",8,"default"),w=n(s,"forceListLayout",8,!1),d=n(s,"title",8);n(s,"description",8);let c=n(s,"episodes",8),m=n(s,"episodeLength",8),N=n(s,"year",8),B=n(s,"image",8),A=n(s,"id",8),Q=n(s,"className",8,""),o=n(s,"airTime",8,void 0),v=n(s,"entry",8,null),q=n(s,"airdate",8,""),X=n(s,"episodeTitle",8,""),R=n(s,"episodeNumber",8,""),C=n(s,"tags",24,()=>[]);const Y={COMPLETED:"Completed",DROPPED:"Dropped",ONHOLD:"On Hold",PLANTOWATCH:"Watchlist",WATCHING:"Watching"},$={default:"w-48 h-72","hover-transparent":"w-48 h-72 hover:bg-weeb-surface-hover",hover:"w-48 h-72 hover:bg-weeb-surface-hover hover:shadow-lg",transparent:"w-48 h-72 bg-transparent",long:"w-96 h-96",detail:"",episode:""};function u(f){switch(f){case"countdown":return"text-weeb-red";case"airing":return"text-weeb-amber";case"aired":return"text-weeb-green";default:return"text-weeb-accent"}}function t(){var y,H;return m()&&m()!=="Unknown"&&m()!==""?{value:m(),isEstimate:!1}:((y=C())==null?void 0:y.some(E=>E.toLowerCase().includes("short")||E.toLowerCase().includes("music")))?{value:"~12 min",isEstimate:!0}:((H=C())==null?void 0:H.some(E=>E.toLowerCase().includes("movie")))||c()===1||c()==="1"?{value:"~90 min",isEstimate:!0}:{value:"~24 min",isEstimate:!0}}function l(){return c()&&c()!==0&&c()!=="0"?{value:c(),isTBA:!1}:{value:"TBA",isTBA:!0}}pe(()=>{},()=>{_(r,t())}),pe(()=>{},()=>{_(j,l())}),ke(),Ne();var M=wt(),V=a(M);{var I=f=>{var S=ut(),y=i(a(S));T(()=>b(y,` ${k(v()),g(()=>Y[v().status]||"Unknown")??""}`)),p(f,S)};F(V,f=>{k(v()),g(()=>{var S;return(S=v())==null?void 0:S.status})&&f(I)})}var W=i(V,2),G=a(W);{let f=at(()=>w()?"object-cover h-full relative":"aspect-2/3 object-cover w-full h-full relative");st(G,{get src(){return B()},get alt(){return d()},get className(){return e(f)},fallbackSrc:"/assets/not found.jpg"})}var J=i(W,2);{var he=f=>{var S=pt(),y=a(S),H=a(y);Te(H,{get text(){return d()},className:"text-md font-bold text-weeb-fg",maxWidth:"100%"});var E=i(H,2);Ce(E,{get tags(){return C()},className:"mt-1"});var ne=i(E,2),re=a(ne),ee=i(a(re),2),xe=a(ee),te=i(re,2),oe=i(a(te),2),we=a(oe),le=i(te,2),ae=i(a(le),2),ye=a(ae),P=i(le,2);{var D=ie=>{var K=ft(),Ye=i(a(K),2),$e=a(Ye);T(et=>{h(K,1,`flex items-center ${et??""}`,"svelte-1k9xv9o"),b($e,(k(o()),g(()=>o().text)))},[()=>(k(o()),g(()=>u(o().variant)))]),p(ie,K)};F(P,ie=>{k(o()),g(()=>{var K;return(K=o())==null?void 0:K.show})&&ie(D)})}var U=i(y,2),se=a(U);We(se,s,"options",{}),T(()=>{de(y,"href",`/show/${A()??""}`),h(ee,1,De((e(j),g(()=>e(j).isTBA?"text-weeb-fg-muted":"")))),b(xe,(e(j),g(()=>e(j).value))),de(te,"title",(e(r),g(()=>e(r).isEstimate?"Estimated duration":""))),h(oe,1,(e(r),g(()=>e(r).isEstimate?"text-weeb-fg-muted italic":""))),b(we,(e(r),g(()=>e(r).value))),h(ae,1,De(N()==="TBA"||!N()?"text-weeb-fg-muted":"")),b(ye,N()||"TBA"),h(U,1,`flex flex-wrap gap-2 options w-full mt-auto pt-3 ${w()?"justify-start":"justify-center"}`)}),z("click",y,()=>be.animeViewed(A()||"",d())),p(f,S)};F(J,f=>{O()==="detail"&&f(he)})}var Qe=i(J,2);{var Xe=f=>{var S=xt(),y=a(S),H=a(y);Te(H,{get text(){return d()},className:"text-md font-bold text-weeb-fg",maxWidth:"100%"});var E=i(H,2);Ce(E,{get tags(){return C()},className:"mt-1"});var ne=i(E,2);Te(ne,{get text(){return X()},className:"text-md font-normal text-weeb-fg mt-1",maxWidth:"100%"});var re=i(ne,2),ee=a(re),xe=a(ee),te=a(xe),oe=i(ee,2);{var we=P=>{var D=gt(),U=i(a(D),2),se=a(U);T(ie=>{h(D,1,`flex items-center ${ie??""}`,"svelte-1k9xv9o"),b(se,(k(o()),g(()=>o().text)))},[()=>(k(o()),g(()=>u(o().variant)))]),p(P,D)},le=P=>{var D=ht(),U=a(D),se=a(U);T(()=>b(se,q())),p(P,D)};F(oe,P=>{k(o()),g(()=>{var D;return(D=o())==null?void 0:D.show})?P(we):P(le,-1)})}var ae=i(y,2),ye=a(ae);We(ye,s,"options",{}),T(()=>{de(y,"href",`/show/${A()??""}`),b(te,`episode ${R()??""}`),h(ae,1,`flex flex-wrap gap-2 options w-full mt-auto pt-3 ${w()?"justify-start":"justify-center"}`)}),z("click",y,()=>be.animeViewed(A()||"",d())),p(f,S)};F(Qe,f=>{O()==="episode"&&f(Xe)})}T(()=>{h(M,1,`flex ${w()?"flex-row":"sm:flex-row md:flex-col"} rounded-md shadow w-full justify-center transition-all duration-300 ${Q()??""} relative h-full`,"svelte-1k9xv9o"),de(W,"href",`/show/${A()??""}`),h(W,1,`flex flex-col ${k(O()),g(()=>$[O()])??""} overflow-hidden transition-colors duration-300 ${w()?"rounded-l-md h-full flex-shrink-0 flex-grow-0 w-32":"flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md"}`,"svelte-1k9xv9o")}),z("click",W,()=>be.animeViewed(A()||"",d())),p(Z,M),Le()}const Ct={title:"Design System/AnimeCard",component:yt,tags:["autodocs"],parameters:{layout:"centered"},decorators:[()=>({Component:it,props:{width:"320px"}})],argTypes:{style:{control:"select",options:["default","hover","hover-transparent","transparent","long","detail","episode"]}}},ce={args:{id:"154587",title:"Frieren: Beyond Journey's End",description:"The adventure is over but life goes on for an elf mage just beginning to learn what living is all about.",episodes:28,episodeLength:"24 min",year:"2023",image:"https://cdn.myanimelist.net/images/anime/1015/138006.jpg",style:"default",tags:["Adventure","Drama","Fantasy"]}},me={args:{id:"5114",title:"Fullmetal Alchemist: Brotherhood",description:"Two brothers search for a Philosopher's Stone after an pointless transmutation leaves them in damaged physical forms.",episodes:64,episodeLength:"24 min",year:"2009",image:"https://cdn.myanimelist.net/images/anime/1208/94745.jpg",style:"detail",tags:["Action","Adventure","Drama","Fantasy"]}},ve={args:{id:"52991",title:"Sousou no Frieren",description:"",episodes:28,episodeLength:"24 min",year:"2023",image:"https://cdn.myanimelist.net/images/anime/1015/138006.jpg",style:"episode",episodeTitle:"The Height of Magic",episodeNumber:"24",airdate:"Fri Mar 22nd",airTime:{show:!0,text:"Airing in 2h 30m",variant:"countdown"},tags:["Adventure","Drama","Fantasy"]}},ue={args:{id:"1735",title:"Naruto: Shippuuden",description:"",episodes:500,episodeLength:"24 min",year:"2007",image:"https://cdn.myanimelist.net/images/anime/1565/111305.jpg",style:"detail",entry:{status:"WATCHING"},tags:["Action","Adventure"]}},fe={args:{id:"21",title:"One Punch Man Season 3",description:"",episodes:0,episodeLength:"",year:"2025",image:"https://cdn.myanimelist.net/images/anime/1247/142erta.jpg",style:"detail",airTime:{show:!0,text:"Airing Now",variant:"airing"},tags:["Action","Comedy","Sci-Fi"]}};var Me,Fe,Oe;ce.parameters={...ce.parameters,docs:{...(Me=ce.parameters)==null?void 0:Me.docs,source:{originalSource:`{
+  args: {
+    id: '154587',
+    title: 'Frieren: Beyond Journey\\'s End',
+    description: 'The adventure is over but life goes on for an elf mage just beginning to learn what living is all about.',
+    episodes: 28,
+    episodeLength: '24 min',
+    year: '2023',
+    image: 'https://cdn.myanimelist.net/images/anime/1015/138006.jpg',
+    style: 'default',
+    tags: ['Adventure', 'Drama', 'Fantasy']
+  }
+}`,...(Oe=(Fe=ce.parameters)==null?void 0:Fe.docs)==null?void 0:Oe.source}}};var Be,He,Pe;me.parameters={...me.parameters,docs:{...(Be=me.parameters)==null?void 0:Be.docs,source:{originalSource:`{
+  args: {
+    id: '5114',
+    title: 'Fullmetal Alchemist: Brotherhood',
+    description: 'Two brothers search for a Philosopher\\'s Stone after an pointless transmutation leaves them in damaged physical forms.',
+    episodes: 64,
+    episodeLength: '24 min',
+    year: '2009',
+    image: 'https://cdn.myanimelist.net/images/anime/1208/94745.jpg',
+    style: 'detail',
+    tags: ['Action', 'Adventure', 'Drama', 'Fantasy']
+  }
+}`,...(Pe=(He=me.parameters)==null?void 0:He.docs)==null?void 0:Pe.source}}};var qe,Re,ze;ve.parameters={...ve.parameters,docs:{...(qe=ve.parameters)==null?void 0:qe.docs,source:{originalSource:`{
+  args: {
+    id: '52991',
+    title: 'Sousou no Frieren',
+    description: '',
+    episodes: 28,
+    episodeLength: '24 min',
+    year: '2023',
+    image: 'https://cdn.myanimelist.net/images/anime/1015/138006.jpg',
+    style: 'episode',
+    episodeTitle: 'The Height of Magic',
+    episodeNumber: '24',
+    airdate: 'Fri Mar 22nd',
+    airTime: {
+      show: true,
+      text: 'Airing in 2h 30m',
+      variant: 'countdown'
+    },
+    tags: ['Adventure', 'Drama', 'Fantasy']
+  }
+}`,...(ze=(Re=ve.parameters)==null?void 0:Re.docs)==null?void 0:ze.source}}};var Ve,Ie,Ge;ue.parameters={...ue.parameters,docs:{...(Ve=ue.parameters)==null?void 0:Ve.docs,source:{originalSource:`{
+  args: {
+    id: '1735',
+    title: 'Naruto: Shippuuden',
+    description: '',
+    episodes: 500,
+    episodeLength: '24 min',
+    year: '2007',
+    image: 'https://cdn.myanimelist.net/images/anime/1565/111305.jpg',
+    style: 'detail',
+    entry: {
+      status: 'WATCHING'
+    },
+    tags: ['Action', 'Adventure']
+  }
+}`,...(Ge=(Ie=ue.parameters)==null?void 0:Ie.docs)==null?void 0:Ge.source}}};var Je,Ue,Ke;fe.parameters={...fe.parameters,docs:{...(Je=fe.parameters)==null?void 0:Je.docs,source:{originalSource:`{
+  args: {
+    id: '21',
+    title: 'One Punch Man Season 3',
+    description: '',
+    episodes: 0,
+    episodeLength: '',
+    year: '2025',
+    image: 'https://cdn.myanimelist.net/images/anime/1247/142erta.jpg',
+    style: 'detail',
+    airTime: {
+      show: true,
+      text: 'Airing Now',
+      variant: 'airing'
+    },
+    tags: ['Action', 'Comedy', 'Sci-Fi']
+  }
+}`,...(Ke=(Ue=fe.parameters)==null?void 0:Ue.docs)==null?void 0:Ke.source}}};const Mt=["Default","DetailStyle","EpisodeStyle","WithWatchlistStatus","WithAiringBadge"];export{ce as Default,me as DetailStyle,ve as EpisodeStyle,fe as WithAiringBadge,ue as WithWatchlistStatus,Mt as __namedExportsOrder,Ct as default};

@@ -91,7 +91,7 @@
       showLabel={true}
       status={currentStatus}
       onClick={handleAddAnime}
-      className="px-4 py-2 text-base font-semibold text-white hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition {className}"
+      className="px-4 py-2 text-base font-semibold text-white hover:bg-weeb-surface hover:text-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition {className}"
     />
   {:else if variant === 'compact'}
     <Button

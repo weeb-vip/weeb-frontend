@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "weeb.vip — Redesign v2 (Dark Media-Forward)",
+  "entry": "weeb-vip-redesign-v2-index.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-05-16T17:31:05.423Z",
+  "updatedAt": "2026-05-16T17:31:05.435Z",
+  "metadata": {
+    "identifier": "weeb-vip-redesign-v2-index",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

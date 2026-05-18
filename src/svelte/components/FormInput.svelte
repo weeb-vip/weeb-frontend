@@ -39,18 +39,18 @@
   // Base classes for all inputs
   $: baseInputClasses = `
     w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300
-    bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+    bg-weeb-surface text-weeb-fg
     ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
   `.trim();
 
   // Error and normal state classes
   $: stateClasses = error
-    ? 'border-red-500 focus:ring-red-400'
-    : 'border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500';
+    ? 'border-weeb-red focus:ring-red-400'
+    : 'border-weeb-border focus:border-weeb-accent';
 
   // Label classes - show label if provided, otherwise use sr-only
   $: labelClasses = label
-    ? 'block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300'
+    ? 'block text-sm font-medium mb-2 text-weeb-fg-secondary'
     : 'sr-only';
 
   $: inputClasses = `
@@ -64,21 +64,21 @@
   $: inputType = showPasswordToggle && isPasswordVisible ? 'text' : type;
 </script>
 
-<div>
+<div class="form-field">
   {#if label}
     <label
       for={id}
-      class={labelClasses}
+      class="form-label"
     >
       {label}
     </label>
   {/if}
 
-  <div class="relative">
+  <div class="input-wrapper">
     <!-- Left icon -->
     {#if icon}
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <Fa {icon} class="h-5 w-5 text-gray-400" />
+      <div class="input-icon-left">
+        <Fa {icon} />
       </div>
     {/if}
 
@@ -92,7 +92,11 @@
       {placeholder}
       {required}
       {disabled}
-      class={inputClasses}
+      class="form-input {className}"
+      class:has-icon={icon}
+      class:has-toggle={showPasswordToggle}
+      class:has-error={error}
+      class:is-disabled={disabled}
       aria-describedby={error ? `${id}-error` : undefined}
     />
 
@@ -100,22 +104,123 @@
     {#if showPasswordToggle}
       <button
         type="button"
-        class="absolute inset-y-0 right-0 pr-3 flex items-center"
+        class="password-toggle"
         on:click={togglePasswordVisibility}
         tabindex="-1"
       >
-        <Fa
-          icon={isPasswordVisible ? faEyeSlash : faEye}
-          class="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-        />
+        <Fa icon={isPasswordVisible ? faEyeSlash : faEye} />
       </button>
     {/if}
   </div>
 
   <!-- Error message -->
   {#if error}
-    <p id="{id}-error" class="mt-1 text-sm text-red-600 dark:text-red-400">
+    <p id="{id}-error" class="form-error">
       {error}
     </p>
   {/if}
 </div>
+
+<style>
+  .form-field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--weeb-fg-secondary);
+    letter-spacing: 0.01em;
+    margin-bottom: 6px;
+  }
+
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .form-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px;
+    background: var(--weeb-surface);
+    border: 1.5px solid var(--weeb-border);
+    border-radius: var(--weeb-radius);
+    font-size: 15px;
+    color: var(--weeb-fg);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-input::placeholder {
+    color: var(--weeb-fg-muted);
+  }
+
+  .form-input:focus {
+    border-color: var(--weeb-accent);
+    box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.2);
+  }
+
+  .form-input.has-icon {
+    padding-left: 40px;
+  }
+
+  .form-input.has-toggle {
+    padding-right: 44px;
+  }
+
+  .form-input.has-error {
+    border-color: var(--weeb-red);
+    background: oklch(20% 0.03 25);
+  }
+
+  .form-input.has-error:focus {
+    border-color: var(--weeb-red);
+    box-shadow: 0 0 0 3px oklch(40% 0.1 25 / 0.2);
+  }
+
+  .form-input.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .input-icon-left {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    color: var(--weeb-fg-muted);
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--weeb-fg-muted);
+    transition: color 0.2s;
+    padding: 0;
+  }
+
+  .password-toggle:hover {
+    color: var(--weeb-fg-secondary);
+  }
+
+  .form-error {
+    font-size: 12px;
+    color: var(--weeb-red);
+    margin-top: 4px;
+  }
+</style>

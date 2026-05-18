@@ -1,0 +1,86 @@
+/*
+ * weeb.vip Design System — Single source of truth
+ *
+ * Usage in Svelte components:
+ *   color: var(--weeb-fg);
+ *   background: var(--weeb-surface);
+ *
+ * Usage in Tailwind:
+ *   class="bg-weeb-bg text-weeb-fg"
+ *   (Tailwind config references these same oklch values)
+ *
+ * All values are oklch() for perceptual uniformity.
+ * Do NOT hardcode oklch values in components — use these vars.
+ */
+
+:root {
+  /* ── Backgrounds ── */
+  --weeb-bg:             oklch(14% 0.015 275);
+  --weeb-bg-elevated:    oklch(18% 0.018 275);
+
+  /* ── Surfaces (cards, panels, inputs) ── */
+  --weeb-surface:        oklch(22% 0.02 275);
+  --weeb-surface-hover:  oklch(26% 0.022 275);
+
+  /* ── Borders ── */
+  --weeb-border:         oklch(28% 0.015 275);
+
+  /* ── Foreground / text ── */
+  --weeb-fg:             oklch(95% 0.005 265);
+  --weeb-fg-secondary:   oklch(70% 0.01 270);
+  --weeb-fg-muted:       oklch(55% 0.01 270);
+
+  /* ── Accent (primary action) ── */
+  --weeb-accent:         oklch(55% 0.15 280);
+  --weeb-accent-hover:   oklch(62% 0.16 280);
+
+  /* ── Secondary accent ── */
+  --weeb-violet:         oklch(62% 0.14 300);
+  --weeb-violet-muted:   oklch(45% 0.10 300);
+
+  /* ── Status colors ── */
+  --weeb-green:          oklch(65% 0.15 155);
+  --weeb-amber:          oklch(72% 0.14 85);
+  --weeb-red:            oklch(60% 0.18 25);
+
+  /* ── Typography ── */
+  --weeb-font:           -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --weeb-font-mono:      'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+  /* ── Radii ── */
+  --weeb-radius:         8px;
+  --weeb-radius-lg:      12px;
+  --weeb-radius-sm:      4px;
+  --weeb-radius-full:    9999px;
+
+  /* ── Shadows ── */
+  --weeb-shadow-card:    0 12px 32px oklch(0% 0 0 / 0.4);
+  --weeb-shadow-poster:  0 20px 60px oklch(0% 0 0 / 0.5);
+  --weeb-shadow-dropdown: 0 8px 24px oklch(0% 0 0 / 0.4);
+
+  /* ── Overlay / frosted glass ── */
+  --weeb-glass-bg:       oklch(14% 0.015 275 / 0.82);
+  --weeb-glass-blur:     blur(24px) saturate(1.4);
+
+  /* ── Spacing (section padding) ── */
+  --weeb-section-px:     48px;
+  --weeb-section-py:     40px;
+
+  /* ── Nav ── */
+  --weeb-nav-height:     60px;
+}
+
+/* Responsive overrides */
+@media (max-width: 1024px) {
+  :root {
+    --weeb-section-px: 24px;
+    --weeb-section-py: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --weeb-section-px: 16px;
+    --weeb-section-py: 24px;
+  }
+}

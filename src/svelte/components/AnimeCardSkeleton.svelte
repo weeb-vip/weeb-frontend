@@ -3,7 +3,7 @@
   export let forceListLayout: boolean = false;
 
   function getSkeletonLayout(style: string, forceListLayout: boolean) {
-    const bg = style === 'transparent' ? 'bg-transparent' : 'bg-white dark:bg-gray-800';
+    const bg = style === 'transparent' ? 'bg-transparent' : 'bg-weeb-surface';
 
     const base =
       `flex ${forceListLayout ? 'flex-row' : 'sm:flex-row md:flex-col'} ` +
@@ -49,20 +49,20 @@
 </script>
 
 <div class={layout.container}>
-  <div class="{layout.image} bg-gray-200 dark:bg-gray-700" />
+  <div class="{layout.image} bg-weeb-surface" />
   <div class="flex flex-col justify-between px-4 py-3 w-full h-full">
     <div class="space-y-2">
       <!-- Title line -->
-      <div class="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div class="w-full h-4 bg-weeb-surface rounded" />
 
       {#if layout.isEpisode}
-        <div class="w-2/3 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
-        <div class="w-1/2 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
-        <div class="w-2/3 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div class="w-2/3 h-3 bg-weeb-surface rounded" />
+        <div class="w-1/2 h-3 bg-weeb-surface rounded" />
+        <div class="w-2/3 h-3 bg-weeb-surface rounded" />
       {:else}
         {#each Array(layout.lines - 1) as _, i}
           <div
-            class="h-3 bg-gray-200 dark:bg-gray-700 rounded {i === 0 ? 'w-2/3' : i === 1 ? 'w-1/3' : 'w-1/4'}"
+            class="h-3 bg-weeb-surface rounded {i === 0 ? 'w-2/3' : i === 1 ? 'w-1/3' : 'w-1/4'}"
           />
         {/each}
       {/if}
@@ -72,8 +72,8 @@
     <div class="pt-3">
       <div
         class="h-8 rounded-full {style === 'transparent'
-          ? 'bg-gray-300/60 dark:bg-gray-600/60'
-          : 'bg-gray-300 dark:bg-gray-600'} {forceListLayout ? 'mx-0 w-24' : 'mx-auto w-24'}"
+          ? 'bg-weeb-surface-hover/60'
+          : 'bg-weeb-surface-hover'} {forceListLayout ? 'mx-0 w-24' : 'mx-auto w-24'}"
       />
     </div>
   </div>

@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 // instead of using the modal, in case the modal has issues
 
 test.describe('User Registration Flow (Direct Navigation)', () => {
+  // Run serially — these hit the shared staging API which can throttle parallel requests
+  test.describe.configure({ mode: 'serial' });
+
   let testEmail: string;
   const testPassword = 'Password1!';
 

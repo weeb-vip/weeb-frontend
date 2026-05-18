@@ -16,9 +16,9 @@
   let progressInterval: NodeJS.Timeout;
 
   $: typeStyles = {
-    warning: 'bg-orange-500',
-    info: 'bg-blue-500',
-    success: 'bg-green-500'
+    warning: 'bg-weeb-amber',
+    info: 'bg-weeb-accent',
+    success: 'bg-weeb-green'
   };
 
   $: iconClass = {
@@ -65,13 +65,13 @@
 
 {#if isVisible}
   <div
-    class="fixed right-4 z-50 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-600 overflow-hidden"
+    class="fixed right-4 z-50 w-80 mobile-toast overflow-hidden"
     style="top: calc(5rem + env(safe-area-inset-top, 0px));"
     in:slide={{ duration: 300 }}
     out:slide={{ duration: 300 }}
   >
     <!-- Progress bar -->
-    <div class="absolute top-0 left-0 h-1 bg-gray-200 dark:bg-gray-700 w-full">
+    <div class="absolute top-0 left-0 h-1 bg-weeb-surface w-full">
       <div
         class="h-full transition-all duration-75 ease-linear {typeStyles[toast.type]}"
         style="width: {progress}%"
@@ -82,22 +82,22 @@
       <div class="flex items-start">
         <!-- Icon -->
         <div class="flex-shrink-0">
-          <i class="fas {iconClass[toast.type]} text-lg {toast.type === 'warning' ? 'text-orange-500' : toast.type === 'info' ? 'text-blue-500' : 'text-green-500'}"></i>
+          <i class="fas {iconClass[toast.type]} text-lg {toast.type === 'warning' ? 'text-weeb-amber' : toast.type === 'info' ? 'text-weeb-accent' : 'text-weeb-green'}"></i>
         </div>
 
         <!-- Content -->
         <div class="ml-3 flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+          <p class="text-sm font-medium text-weeb-fg truncate">
             {toast.title}
           </p>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4;">
+          <p class="mt-1 text-sm text-weeb-fg-muted overflow-hidden" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4;">
             {toast.message}
           </p>
 
           <!-- Anime info if present -->
           {#if toast.anime}
             <div
-              class="mt-3 flex items-center space-x-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded-md transition-colors"
+              class="mt-3 flex items-center space-x-3 cursor-pointer hover:bg-weeb-surface-hover p-2 rounded-md transition-colors"
               on:click={handleAnimeClick}
               on:keydown={(e) => e.key === 'Enter' && handleAnimeClick()}
               role="button"
@@ -108,14 +108,14 @@
                   src={GetImageFromAnime(toast.anime)}
                   alt={getAnimeTitle(toast.anime, $preferencesStore.titleLanguage)}
                   className="w-8 h-8 rounded object-cover"
-                  fallbackClassName="w-8 h-8 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center"
+                  fallbackClassName="w-8 h-8 rounded bg-weeb-surface-hover bg-weeb-surface-hover flex items-center justify-center"
                 />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                <p class="text-sm font-medium text-weeb-fg truncate">
                   {getAnimeTitle(toast.anime, $preferencesStore.titleLanguage)}
                 </p>
-                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                <div class="flex items-center text-xs text-weeb-fg-muted">
                   <i class="fas fa-play mr-1"></i>
                   View Details
                 </div>
@@ -127,14 +127,38 @@
         <!-- Close button -->
         <div class="ml-4 flex-shrink-0">
           <button
-            class="bg-white dark:bg-gray-800 rounded-md inline-flex text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="mobile-toast-close"
             on:click={handleClose}
           >
             <span class="sr-only">Close</span>
-            <i class="fas fa-times text-sm"></i>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
       </div>
     </div>
   </div>
 {/if}
+
+<style>
+  .mobile-toast {
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius, 8px);
+    box-shadow: 0 8px 32px oklch(0% 0 0 / 0.4), 0 2px 8px oklch(0% 0 0 / 0.2);
+    backdrop-filter: blur(20px);
+  }
+  .mobile-toast-close {
+    background: none;
+    border: none;
+    color: var(--weeb-fg-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: inline-flex;
+    transition: color 0.15s, background 0.15s;
+  }
+  .mobile-toast-close:hover {
+    color: var(--weeb-fg);
+    background: var(--weeb-surface-hover);
+  }
+</style>

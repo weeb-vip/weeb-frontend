@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AnimeWatcher42 — weeb.vip</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: oklch(14% 0.015 275);
+      --bg-elevated: oklch(18% 0.018 275);
+      --surface: oklch(22% 0.02 275);
+      --surface-hover: oklch(26% 0.022 275);
+      --fg: oklch(95% 0.005 265);
+      --fg-secondary: oklch(70% 0.01 270);
+      --fg-muted: oklch(55% 0.01 270);
+      --border: oklch(28% 0.015 275);
+      --accent: oklch(55% 0.15 280);
+      --accent-hover: oklch(62% 0.16 280);
+      --violet: oklch(62% 0.14 300);
+      --green: oklch(65% 0.15 155);
+      --amber: oklch(72% 0.14 85);
+      --red: oklch(60% 0.18 25);
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --max-width: 1200px;
+    }
+
+    html { font-size: 15px; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── NAV ─────────────────────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: oklch(14% 0.015 275 / 0.82);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--violet));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #fff;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--fg); }
+
+    .nav-search {
+      flex: 1;
+      max-width: 320px;
+      position: relative;
+      margin-left: auto;
+    }
+
+    .nav-search input {
+      width: 100%;
+      height: 34px;
+      padding: 0 14px 0 36px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      color: var(--fg);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .nav-search input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.15);
+    }
+
+    .nav-search input::placeholder { color: var(--fg-muted); }
+
+    .nav-search svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--fg-muted);
+      pointer-events: none;
+    }
+
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .nav-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--violet));
+      flex-shrink: 0;
+    }
+
+    .nav-username {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    /* ── MAIN LAYOUT ─────────────────────────────────────────────── */
+    .page {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 48px 32px 64px;
+    }
+
+    /* ── PROFILE HEADER ──────────────────────────────────────────── */
+    .profile-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 32px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+
+    .profile-avatar {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--violet) 50%, oklch(65% 0.12 320) 100%);
+      flex-shrink: 0;
+      box-shadow: 0 4px 24px oklch(55% 0.15 280 / 0.3);
+    }
+
+    .profile-info { flex: 1; min-width: 0; }
+
+    .profile-name {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--fg);
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .profile-meta {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      margin-bottom: 20px;
+    }
+
+    .profile-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+    }
+
+    .stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .stat-label { color: var(--fg-muted); }
+    .stat-count { font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+
+    /* ── STATS CARDS ─────────────────────────────────────────────── */
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .stats-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      text-align: center;
+      transition: border-color 0.15s;
+    }
+
+    .stats-card:hover { border-color: var(--accent); }
+
+    .stats-card-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--fg);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .stats-card-label {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    /* ── STATUS TABS ─────────────────────────────────────────────── */
+    .list-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .status-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      flex: 1;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .status-tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover { color: var(--fg); }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-count {
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+      background: var(--surface);
+      color: var(--fg-muted);
+      padding: 1px 7px;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+
+    .tab-btn.active .tab-count {
+      background: oklch(55% 0.15 280 / 0.15);
+      color: var(--accent);
+    }
+
+    /* ── VIEW CONTROLS ───────────────────────────────────────────── */
+    .view-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .sort-select {
+      height: 34px;
+      padding: 0 32px 0 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--fg);
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color 0.15s;
+    }
+
+    .sort-select option { background: var(--surface); color: var(--fg); }
+    .sort-select:focus { border-color: var(--accent); }
+
+    .view-toggle {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .view-btn {
+      width: 34px;
+      height: 34px;
+      background: var(--surface);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-muted);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .view-btn + .view-btn { border-left: 1px solid var(--border); }
+
+    .view-btn.active {
+      background: oklch(55% 0.15 280 / 0.15);
+      color: var(--accent);
+    }
+
+    .view-btn:hover:not(.active) { background: var(--surface-hover); }
+
+    /* ── LIST VIEW ───────────────────────────────────────────────── */
+    .anime-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .anime-row {
+      display: grid;
+      grid-template-columns: 56px 1fr 50px 140px 60px 72px;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .anime-row:hover {
+      border-color: oklch(32% 0.02 275);
+      background: var(--surface-hover);
+    }
+
+    .row-poster {
+      width: 40px;
+      height: 56px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .poster-placeholder {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .row-main { min-width: 0; }
+
+    .row-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+
+    .row-title a { color: inherit; text-decoration: none; }
+    .row-title a:hover { color: var(--accent); }
+
+    .row-subtitle {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .row-type-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: oklch(28% 0.015 275);
+      color: var(--fg-secondary);
+    }
+
+    .row-score {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--fg);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .row-score.no-score { color: var(--fg-muted); font-weight: 400; }
+
+    .star-icon { color: var(--amber); }
+
+    .row-progress { min-width: 0; }
+
+    .progress-text {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+      margin-bottom: 4px;
+      white-space: nowrap;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: oklch(22% 0.015 275);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.3s ease;
+    }
+
+    .row-type {
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+      text-align: center;
+    }
+
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+
+    .action-btn {
+      width: 30px;
+      height: 30px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-muted);
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      border-color: var(--accent);
+      background: oklch(55% 0.15 280 / 0.1);
+      color: var(--accent);
+    }
+
+    .action-btn.remove-btn:hover {
+      border-color: var(--red);
+      background: oklch(60% 0.18 25 / 0.1);
+      color: var(--red);
+    }
+
+    /* ── GRID VIEW ───────────────────────────────────────────────── */
+    .anime-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .anime-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .anime-card:hover {
+      border-color: oklch(32% 0.02 275);
+      transform: translateY(-3px);
+    }
+
+    .card-poster {
+      width: 100%;
+      aspect-ratio: 2/3;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card-poster-placeholder {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .card-score-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: oklch(14% 0.015 275 / 0.85);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .card-status-badge {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: oklch(14% 0.015 275 / 0.85);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 3px 8px 3px 6px;
+      border-radius: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .card-body { padding: 14px; }
+
+    .card-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+      margin-bottom: 8px;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-progress { margin-bottom: 8px; }
+
+    .card-progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+      margin-bottom: 4px;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .card-type {
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    /* ── FOOTER ──────────────────────────────────────────────────── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      margin-top: 48px;
+    }
+
+    .footer-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--fg-muted);
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--fg); }
+
+    /* ── TOAST ───────────────────────────────────────────────────── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--fg);
+      color: var(--bg);
+      font-size: 0.8125rem;
+      font-family: var(--font-mono);
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 20px oklch(0% 0 0 / 0.4);
+      pointer-events: auto;
+      animation: slide-in 0.2s ease, fade-out 0.3s ease 2s forwards;
+    }
+
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateX(16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+
+    /* ── HIDDEN STATE ────────────────────────────────────────────── */
+    .view-panel { display: none; }
+    .view-panel.active { display: block; }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .anime-grid { grid-template-columns: repeat(4, 1fr); }
+      .anime-row { grid-template-columns: 56px 1fr 50px 120px 72px; }
+      .anime-row .row-type { display: none; }
+    }
+
+    @media (max-width: 768px) {
+      .nav-inner { padding: 0 16px; gap: 16px; }
+      .nav-links { display: none; }
+      .page { padding: 24px 16px 48px; }
+      .profile-header { flex-wrap: wrap; gap: 20px; }
+      .profile-avatar { width: 64px; height: 64px; }
+      .profile-name { font-size: 1.5rem; }
+      .stats-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stats-card { padding: 14px 16px; }
+      .stats-card-number { font-size: 1.5rem; }
+      .anime-row {
+        grid-template-columns: 48px 1fr 40px 72px;
+        gap: 10px;
+        padding: 10px 14px;
+      }
+      .anime-row .row-type { display: none; }
+      .anime-row .row-progress { display: none; }
+      .row-poster { width: 36px; height: 50px; }
+      .anime-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .list-controls { flex-direction: column; align-items: stretch; }
+      .view-controls { justify-content: flex-end; }
+      .footer-inner { flex-direction: column; gap: 12px; text-align: center; }
+    }
+
+    @media (max-width: 480px) {
+      .nav-search { display: none; }
+      .profile-stats { gap: 12px; }
+      .stats-cards { grid-template-columns: repeat(2, 1fr); }
+      .anime-grid { grid-template-columns: repeat(2, 1fr); }
+      .anime-row {
+        grid-template-columns: 1fr 40px 72px;
+      }
+      .anime-row .row-poster { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">w</a>
+
+      <ul class="nav-links">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Season</a></li>
+        <li><a href="#">Airing</a></li>
+        <li><a href="#">Browse</a></li>
+      </ul>
+
+      <div class="nav-search">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="search" placeholder="Search anime..." />
+      </div>
+
+      <div class="nav-user">
+        <div class="nav-avatar"></div>
+        <span class="nav-username">AnimeWatcher42</span>
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--fg-muted)">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PAGE -->
+  <main class="page">
+
+    <!-- Profile Header -->
+    <header class="profile-header">
+      <div class="profile-avatar"></div>
+      <div class="profile-info">
+        <h1 class="profile-name">AnimeWatcher42</h1>
+        <p class="profile-meta">Member since March 2022</p>
+        <div class="profile-stats">
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--green)"></span>
+            <span class="stat-label">Watching</span>
+            <span class="stat-count">12</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--accent)"></span>
+            <span class="stat-label">Completed</span>
+            <span class="stat-count">87</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--fg-muted)"></span>
+            <span class="stat-label">Plan to Watch</span>
+            <span class="stat-count">34</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--amber)"></span>
+            <span class="stat-label">On Hold</span>
+            <span class="stat-count">5</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--red)"></span>
+            <span class="stat-label">Dropped</span>
+            <span class="stat-count">3</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats Cards -->
+    <div class="stats-cards">
+      <div class="stats-card">
+        <div class="stats-card-number">141</div>
+        <div class="stats-card-label">Total Anime</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-card-number">2,847</div>
+        <div class="stats-card-label">Episodes Watched</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-card-number">7.8</div>
+        <div class="stats-card-label">Mean Score</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-card-number">42.3</div>
+        <div class="stats-card-label">Days Watched</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="list-controls">
+      <div class="status-tabs" role="tablist">
+        <button class="tab-btn active" data-filter="all" role="tab" aria-selected="true">All <span class="tab-count">141</span></button>
+        <button class="tab-btn" data-filter="watching" role="tab" aria-selected="false">Watching <span class="tab-count">12</span></button>
+        <button class="tab-btn" data-filter="completed" role="tab" aria-selected="false">Completed <span class="tab-count">87</span></button>
+        <button class="tab-btn" data-filter="plan" role="tab" aria-selected="false">Plan to Watch <span class="tab-count">34</span></button>
+        <button class="tab-btn" data-filter="on-hold" role="tab" aria-selected="false">On Hold <span class="tab-count">5</span></button>
+        <button class="tab-btn" data-filter="dropped" role="tab" aria-selected="false">Dropped <span class="tab-count">3</span></button>
+      </div>
+
+      <div class="view-controls">
+        <select class="sort-select" id="sortSelect">
+          <option value="title">Sort: Title</option>
+          <option value="score">Sort: Score</option>
+          <option value="updated">Sort: Last Updated</option>
+          <option value="progress">Sort: Progress</option>
+        </select>
+
+        <div class="view-toggle">
+          <button class="view-btn active" id="listViewBtn" title="List view">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <button class="view-btn" id="gridViewBtn" title="Grid view">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div class="view-panel active" id="listView">
+      <div class="anime-list" id="animeList"></div>
+    </div>
+
+    <!-- GRID VIEW -->
+    <div class="view-panel" id="gridView">
+      <div class="anime-grid" id="animeGrid"></div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>weeb.vip &mdash; Track your anime journey</span>
+      <ul class="footer-links">
+        <li><a href="#">About</a></li>
+        <li><a href="#">API</a></li>
+        <li><a href="#">Discord</a></li>
+        <li><a href="#">GitHub</a></li>
+        <li><a href="#">Privacy</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ── Anime data ──────────────────────────────────────────────────
+    const animeData = [
+      { title: "Frieren: Beyond Journey's End", status: "watching", score: 9.2, progress: 18, total: 28, type: "TV", updated: "2026-05-14", gradient: ["oklch(42% 0.20 280)", "oklch(60% 0.18 310)"], abbr: "Fr" },
+      { title: "Dungeon Meshi", status: "watching", score: 8.9, progress: 20, total: 24, type: "TV", updated: "2026-05-13", gradient: ["oklch(48% 0.16 160)", "oklch(62% 0.14 200)"], abbr: "DM" },
+      { title: "Solo Leveling: Arise from the Shadow", status: "watching", score: 8.1, progress: 6, total: 13, type: "TV", updated: "2026-05-15", gradient: ["oklch(25% 0.08 280)", "oklch(48% 0.20 290)"], abbr: "SL" },
+      { title: "Oshi no Ko Season 2", status: "completed", score: 8.7, progress: 13, total: 13, type: "TV", updated: "2026-03-20", gradient: ["oklch(58% 0.18 340)", "oklch(48% 0.14 320)"], abbr: "OK" },
+      { title: "Steins;Gate", status: "completed", score: 9.5, progress: 24, total: 24, type: "TV", updated: "2025-11-02", gradient: ["oklch(38% 0.10 160)", "oklch(52% 0.08 200)"], abbr: "SG" },
+      { title: "Violet Evergarden: The Movie", status: "completed", score: 9.0, progress: 1, total: 1, type: "Movie", updated: "2025-09-15", gradient: ["oklch(55% 0.16 280)", "oklch(65% 0.12 300)"], abbr: "VE" },
+      { title: "Chainsaw Man", status: "on-hold", score: 7.6, progress: 8, total: 12, type: "TV", updated: "2026-01-10", gradient: ["oklch(50% 0.18 30)", "oklch(42% 0.14 15)"], abbr: "CM" },
+      { title: "Spy x Family Season 2", status: "plan", score: null, progress: 0, total: 12, type: "TV", updated: "2026-04-01", gradient: ["oklch(55% 0.14 80)", "oklch(48% 0.16 60)"], abbr: "SF" },
+      { title: "Cowboy Bebop", status: "completed", score: 9.3, progress: 26, total: 26, type: "TV", updated: "2024-06-18", gradient: ["oklch(35% 0.08 50)", "oklch(52% 0.12 30)"], abbr: "CB" },
+      { title: "Neon Genesis Evangelion", status: "dropped", score: 5.0, progress: 14, total: 26, type: "TV", updated: "2025-07-22", gradient: ["oklch(45% 0.20 140)", "oklch(32% 0.12 160)"], abbr: "EV" },
+    ];
+
+    const statusColors = {
+      watching: 'var(--green)',
+      completed: 'var(--accent)',
+      'on-hold': 'var(--amber)',
+      dropped: 'var(--red)',
+      plan: 'var(--fg-muted)',
+    };
+
+    const statusLabels = {
+      watching: 'Watching',
+      completed: 'Completed',
+      'on-hold': 'On Hold',
+      dropped: 'Dropped',
+      plan: 'Plan to Watch',
+    };
+
+    // ── State ──────────────────────────────────────────────────────
+    let currentFilter = 'all';
+    let currentSort = 'title';
+    let currentView = 'list';
+
+    // ── Render functions ───────────────────────────────────────────
+    function getVisibleAnime() {
+      let list = [...animeData];
+      if (currentFilter !== 'all') {
+        list = list.filter(a => a.status === currentFilter);
+      }
+
+      list.sort((a, b) => {
+        switch (currentSort) {
+          case 'title': return a.title.localeCompare(b.title);
+          case 'score': return (b.score || 0) - (a.score || 0);
+          case 'updated': return new Date(b.updated) - new Date(a.updated);
+          case 'progress':
+            const pctA = a.total ? a.progress / a.total : 0;
+            const pctB = b.total ? b.progress / b.total : 0;
+            return pctB - pctA;
+          default: return 0;
+        }
+      });
+
+      return list;
+    }
+
+    function renderList() {
+      const container = document.getElementById('animeList');
+      const list = getVisibleAnime();
+      container.innerHTML = list.map((a, i) => {
+        const pct = a.total ? (a.progress / a.total * 100).toFixed(1) : 0;
+        const color = statusColors[a.status];
+        const scoreDisplay = a.score !== null
+          ? `<span class="star-icon">&#9733;</span> ${a.score}`
+          : '&mdash;';
+        const scoreClass = a.score !== null ? 'row-score' : 'row-score no-score';
+
+        return `
+          <div class="anime-row" data-index="${i}">
+            <div class="row-poster">
+              <svg class="poster-placeholder" viewBox="0 0 40 56" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="lg${i}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${a.gradient[0]}"/><stop offset="100%" stop-color="${a.gradient[1]}"/></linearGradient></defs>
+                <rect width="40" height="56" fill="url(#lg${i})"/>
+                <text x="20" y="32" text-anchor="middle" fill="white" fill-opacity="0.4" font-size="14" font-family="system-ui">${a.abbr}</text>
+              </svg>
+            </div>
+            <div class="row-main">
+              <div class="row-title"><a href="#">${a.title}</a></div>
+              <div class="row-subtitle">
+                <span class="status-dot" style="background:${color}"></span>
+                <span style="color:${color}">${statusLabels[a.status]}</span>
+              </div>
+            </div>
+            <div class="${scoreClass}">${scoreDisplay}</div>
+            <div class="row-progress">
+              <div class="progress-text">${a.progress} / ${a.total} ep${a.total !== 1 ? 's' : ''}</div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:${pct}%; background:${color}"></div>
+              </div>
+            </div>
+            <div class="row-type">${a.type}</div>
+            <div class="row-actions">
+              <button class="action-btn" title="Edit entry" onclick="showToast('Editing: ${a.title.replace(/'/g, "\\'")}')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/>
+                </svg>
+              </button>
+              <button class="action-btn remove-btn" title="Remove" onclick="showToast('Removed: ${a.title.replace(/'/g, "\\'")}')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderGrid() {
+      const container = document.getElementById('animeGrid');
+      const list = getVisibleAnime();
+      container.innerHTML = list.map((a, i) => {
+        const pct = a.total ? (a.progress / a.total * 100).toFixed(1) : 0;
+        const color = statusColors[a.status];
+
+        return `
+          <div class="anime-card" data-index="${i}">
+            <div class="card-poster">
+              <svg class="card-poster-placeholder" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                <defs><linearGradient id="cg${i}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${a.gradient[0]}"/><stop offset="100%" stop-color="${a.gradient[1]}"/></linearGradient></defs>
+                <rect width="200" height="300" fill="url(#cg${i})"/>
+                <text x="100" y="158" text-anchor="middle" fill="white" fill-opacity="0.3" font-size="56" font-family="system-ui">${a.abbr}</text>
+              </svg>
+              ${a.score !== null ? `<div class="card-score-badge"><span class="star-icon">&#9733;</span> ${a.score}</div>` : ''}
+              <div class="card-status-badge">
+                <span class="status-dot" style="background:${color}"></span>
+                ${statusLabels[a.status]}
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="card-title">${a.title}</div>
+              <div class="card-progress">
+                <div class="card-progress-text"><span>Progress</span><span>${a.progress} / ${a.total}</span></div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width:${pct}%; background:${color}"></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span class="card-type">${a.type}</span>
+                <div class="card-actions">
+                  <button class="action-btn" title="Edit" onclick="showToast('Editing: ${a.title.replace(/'/g, "\\'")}')">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn remove-btn" title="Remove" onclick="showToast('Removed: ${a.title.replace(/'/g, "\\'")}')">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function render() {
+      renderList();
+      renderGrid();
+    }
+
+    // ── Tab switching ──────────────────────────────────────────────
+    const tabs = document.querySelectorAll('.tab-btn');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        currentFilter = tab.dataset.filter;
+        render();
+      });
+    });
+
+    // ── View toggle ──────────────────────────────────────────────
+    const listViewBtn = document.getElementById('listViewBtn');
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listView = document.getElementById('listView');
+    const gridView = document.getElementById('gridView');
+
+    listViewBtn.addEventListener('click', () => {
+      currentView = 'list';
+      listViewBtn.classList.add('active');
+      gridViewBtn.classList.remove('active');
+      listView.classList.add('active');
+      gridView.classList.remove('active');
+    });
+
+    gridViewBtn.addEventListener('click', () => {
+      currentView = 'grid';
+      gridViewBtn.classList.add('active');
+      listViewBtn.classList.remove('active');
+      gridView.classList.add('active');
+      listView.classList.remove('active');
+    });
+
+    // ── Sort ─────────────────────────────────────────────────────
+    const sortSelect = document.getElementById('sortSelect');
+
+    sortSelect.addEventListener('change', () => {
+      currentSort = sortSelect.value;
+      render();
+    });
+
+    // ── Toast ────────────────────────────────────────────────────
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 2400);
+    }
+
+    // ── Initial render ───────────────────────────────────────────
+    render();
+  </script>
+</body>
+</html>

@@ -29,9 +29,9 @@
   }
 
   const colorClasses = {
-    blue: 'bg-blue-600 hover:bg-blue-700 text-white',
-    red: 'bg-red-600 hover:bg-red-700 text-white',
-    transparent: 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600',
+    blue: 'btn-accent',
+    red: 'btn-danger',
+    transparent: 'btn-ghost',
     '': ''
   };
 
@@ -46,7 +46,7 @@
   bind:this={buttonRef}
   on:click={handleClick}
   disabled={internalStatus === 'loading' || disabled}
-  class="px-4 py-2 relative rounded-full font-medium transition-colors duration-300 flex items-center justify-center whitespace-nowrap w-fit {colorClasses[color]} {className} {internalStatus === 'loading' ? 'cursor-not-allowed' : 'cursor-pointer'}"
+  class="btn {colorClasses[color]} {className} {internalStatus === 'loading' ? 'cursor-not-allowed' : 'cursor-pointer'}"
 >
   {#if internalStatus === 'loading'}
     <Fa icon={faSpinner} class="animate-spin" />
@@ -63,3 +63,49 @@
     {/if}
   {/if}
 </button>
+
+<style>
+  .btn {
+    padding: 7px 18px;
+    border-radius: var(--weeb-radius, 8px);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    width: fit-content;
+    position: relative;
+    border: none;
+    cursor: pointer;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-accent {
+    background: var(--weeb-accent);
+    color: white;
+  }
+  .btn-accent:hover:not(:disabled) {
+    background: var(--weeb-accent-hover);
+  }
+  .btn-danger {
+    background: var(--weeb-red);
+    color: white;
+  }
+  .btn-danger:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--weeb-fg-secondary);
+    border: 1px solid var(--weeb-border);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    color: var(--weeb-fg);
+    background: var(--weeb-surface);
+  }
+</style>

@@ -82,13 +82,13 @@
   bind:this={buttonRef}
   on:click={togglePopover}
   title="{getAnimeTitle(anime, $preferencesStore.titleLanguage)} (Ep {anime.episodes[0]?.episodeNumber || '?'}){airTimeText ? ` at ${airTimeText}` : ''}"
-  class="text-xs text-blue-700 dark:text-blue-300 text-left hover:bg-blue-100 dark:hover:bg-blue-800/50 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col"
+  class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col"
 >
   <span class="truncate">
     {getAnimeTitle(anime, $preferencesStore.titleLanguage)} (Ep {anime.episodes[0]?.episodeNumber || "?"})
   </span>
   {#if airTimeText}
-    <span class="text-gray-600 dark:text-gray-400 text-xs font-medium">
+    <span class="text-weeb-fg-muted text-xs font-medium">
       {airTimeText}
     </span>
   {/if}
@@ -105,7 +105,7 @@
 
   <div
     bind:this={popoverRef}
-    class="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 transition-colors duration-300
+    class="fixed z-50 bg-weeb-surface border border-weeb-border rounded-lg shadow-lg p-3 transition-colors duration-300
            max-h-[70vh] overflow-y-auto"
     style="top: {position.top}px; left: {position.left}px; width: {typeof window !== 'undefined' && window.innerWidth < 768 ? Math.min(window.innerWidth - 32, 350) : 420}px;"
   >

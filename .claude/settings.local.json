@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(APP_CONFIG=production yarn dev:*)",
+      "Bash(yarn install:*)",
+      "Bash(curl:*)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(len\\(data['data']['animeBySeasons']\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); fields=[f for f in data['data']['__type']['fields'] if 'season' in f['name'].lower\\(\\) or 'Season' in f['name']]; print\\(json.dumps\\(fields, indent=2\\)\\)\")",
+      "Bash(npx graphql-codegen:*)",
+      "Bash(npx playwright:*)",
+      "Bash(BASE_URL=http://localhost:4322 npx playwright:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh run:*)",
+      "Bash(grep -E \"^\\\\S.*Error:|failed$|spec\\\\.ts:\\\\d+:\\\\d+.*›\")",
+      "Bash(APP_CONFIG=staging PLAYWRIGHT=true yarn preview *)",
+      "Bash(tee /tmp/e2e-output.log)",
+      "Bash(npx playwright *)",
+      "Bash(echo \"Exit:$?\")",
+      "Bash(netstat -tlnp)",
+      "Bash(tee /tmp/e2e_run.log)",
+      "Bash(node_modules/.bin/playwright --version)",
+      "Bash(node_modules/.bin/playwright test *)"
+    ]
+  }
+}

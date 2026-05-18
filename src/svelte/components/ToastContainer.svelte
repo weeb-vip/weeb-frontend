@@ -37,7 +37,7 @@
   <!-- Queue indicator - show if there are more toasts waiting -->
   {#if mobileQueue.length > 1}
     <div class="fixed right-4 z-40" style="top: calc(8.5rem + env(safe-area-inset-top, 0px));">
-      <div class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full shadow-lg">
+      <div class="bg-weeb-surface0 text-white text-xs px-2 py-1 rounded-full shadow-lg">
         +{mobileQueue.length - 1} more
       </div>
     </div>

@@ -145,14 +145,14 @@
 {#if isDev}
   <!-- Desktop: Fixed position panel -->
   {#if !isMobile}
-    <div class="fixed bottom-4 left-4 z-50 bg-gray-900 text-white rounded-lg shadow-lg border border-gray-700 transition-all duration-300 {isOpen ? 'p-4' : 'p-3'}">
+    <div class="fixed bottom-4 left-4 z-50 bg-weeb-bg text-white rounded-lg shadow-lg border border-weeb-border transition-all duration-300 {isOpen ? 'p-4' : 'p-3'}">
       {#if isOpen}
         <!-- Full panel content -->
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-bold text-yellow-400">🛠️ Dev Testing Panel</h3>
+          <h3 class="text-sm font-bold text-weeb-amber">🛠️ Dev Testing Panel</h3>
           <button
             on:click={togglePanel}
-            class="text-gray-400 hover:text-white text-xs"
+            class="text-weeb-fg-muted hover:text-white text-xs"
           >
             <i class="fas fa-times"></i>
           </button>
@@ -160,29 +160,29 @@
 
         <!-- Standard Toasts -->
         <div class="mb-3">
-          <div class="text-xs text-gray-400 mb-2">Standard Toasts</div>
+          <div class="text-xs text-weeb-fg-muted mb-2">Standard Toasts</div>
           <div class="grid grid-cols-2 gap-2">
             <button
               on:click={testSuccessToast}
-              class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors"
+              class="px-3 py-1 bg-weeb-green hover:bg-weeb-green rounded text-xs transition-colors"
             >
               Success
             </button>
             <button
               on:click={testWarningToast}
-              class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-xs transition-colors"
+              class="px-3 py-1 bg-weeb-amber hover:bg-weeb-amber rounded text-xs transition-colors"
             >
               Warning
             </button>
             <button
               on:click={testInfoToast}
-              class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors"
+              class="px-3 py-1 bg-weeb-accent hover:bg-weeb-accent-hover rounded text-xs transition-colors"
             >
               Info
             </button>
             <button
               on:click={testErrorToast}
-              class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors"
+              class="px-3 py-1 bg-weeb-red hover:bg-weeb-red rounded text-xs transition-colors"
             >
               Error
             </button>
@@ -191,29 +191,29 @@
 
         <!-- Anime Toasts -->
         <div class="mb-3">
-          <div class="text-xs text-gray-400 mb-2">Anime Toasts</div>
+          <div class="text-xs text-weeb-fg-muted mb-2">Anime Toasts</div>
           <div class="grid grid-cols-2 gap-2">
             <button
               on:click={testAnimeAiringSoon}
-              class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors"
+              class="px-3 py-1 bg-weeb-accent hover:bg-weeb-accent-hover rounded text-xs transition-colors"
             >
               <i class="fas fa-clock mr-1"></i> Airing Soon
             </button>
             <button
               on:click={testAnimeWarning}
-              class="px-3 py-1 bg-orange-600 hover:bg-orange-700 rounded text-xs transition-colors"
+              class="px-3 py-1 bg-weeb-amber hover:bg-weeb-amber rounded text-xs transition-colors"
             >
               <i class="fas fa-bell mr-1"></i> Warning
             </button>
             <button
               on:click={testAnimeNowAiring}
-              class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors"
+              class="px-3 py-1 bg-weeb-green hover:bg-weeb-green rounded text-xs transition-colors"
             >
               <i class="fas fa-play-circle mr-1"></i> Now Airing
             </button>
             <button
               on:click={testAnimeFinished}
-              class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs transition-colors"
+              class="px-3 py-1 bg-weeb-violet hover:bg-weeb-violet rounded text-xs transition-colors"
             >
               <i class="fas fa-check-circle mr-1"></i> Finished
             </button>
@@ -222,7 +222,7 @@
 
         <!-- Auth Tools -->
         <div>
-          <div class="text-xs text-gray-400 mb-2">Auth Tools</div>
+          <div class="text-xs text-weeb-fg-muted mb-2">Auth Tools</div>
           <button
             on:click={testRefreshToken}
             class="w-full px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded text-xs transition-colors"
@@ -234,7 +234,7 @@
         <!-- Collapsed state -->
         <button
           on:click={togglePanel}
-          class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 text-sm font-bold transition-colors"
+          class="flex items-center gap-2 text-weeb-amber hover:text-yellow-300 text-sm font-bold transition-colors"
         >
           🛠️ <span class="hidden sm:inline">Dev Panel</span>
         </button>
@@ -242,15 +242,15 @@
     </div>
   {:else}
     <!-- Mobile: Sticky footer panel -->
-    <div class="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 text-white border-t border-gray-700 transition-all duration-300">
+    <div class="fixed bottom-0 left-0 right-0 z-50 bg-weeb-bg text-white border-t border-weeb-border transition-all duration-300">
       {#if isOpen}
         <!-- Full panel content for mobile -->
         <div class="p-4 max-h-[70vh] overflow-y-auto">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-bold text-yellow-400">🛠️ Dev Testing Panel</h3>
+            <h3 class="text-sm font-bold text-weeb-amber">🛠️ Dev Testing Panel</h3>
             <button
               on:click={togglePanel}
-              class="text-gray-400 hover:text-white text-sm"
+              class="text-weeb-fg-muted hover:text-white text-sm"
             >
               <i class="fas fa-chevron-down"></i>
             </button>
@@ -258,29 +258,29 @@
 
           <!-- Standard Toasts -->
           <div class="mb-4">
-            <div class="text-xs text-gray-400 mb-2">Standard Toasts</div>
+            <div class="text-xs text-weeb-fg-muted mb-2">Standard Toasts</div>
             <div class="grid grid-cols-2 gap-2">
               <button
                 on:click={testSuccessToast}
-                class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors"
+                class="px-3 py-2 bg-weeb-green hover:bg-weeb-green rounded text-xs transition-colors"
               >
                 Success
               </button>
               <button
                 on:click={testWarningToast}
-                class="px-3 py-2 bg-yellow-600 hover:bg-yellow-700 rounded text-xs transition-colors"
+                class="px-3 py-2 bg-weeb-amber hover:bg-weeb-amber rounded text-xs transition-colors"
               >
                 Warning
               </button>
               <button
                 on:click={testInfoToast}
-                class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors"
+                class="px-3 py-2 bg-weeb-accent hover:bg-weeb-accent-hover rounded text-xs transition-colors"
               >
                 Info
               </button>
               <button
                 on:click={testErrorToast}
-                class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors"
+                class="px-3 py-2 bg-weeb-red hover:bg-weeb-red rounded text-xs transition-colors"
               >
                 Error
               </button>
@@ -289,29 +289,29 @@
 
           <!-- Anime Toasts -->
           <div class="mb-4">
-            <div class="text-xs text-gray-400 mb-2">Anime Toasts</div>
+            <div class="text-xs text-weeb-fg-muted mb-2">Anime Toasts</div>
             <div class="grid grid-cols-1 gap-2">
               <button
                 on:click={testAnimeAiringSoon}
-                class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors flex items-center justify-center"
+                class="px-3 py-2 bg-weeb-accent hover:bg-weeb-accent-hover rounded text-xs transition-colors flex items-center justify-center"
               >
                 <i class="fas fa-clock mr-2"></i> Airing Soon
               </button>
               <button
                 on:click={testAnimeWarning}
-                class="px-3 py-2 bg-orange-600 hover:bg-orange-700 rounded text-xs transition-colors flex items-center justify-center"
+                class="px-3 py-2 bg-weeb-amber hover:bg-weeb-amber rounded text-xs transition-colors flex items-center justify-center"
               >
                 <i class="fas fa-bell mr-2"></i> Warning
               </button>
               <button
                 on:click={testAnimeNowAiring}
-                class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors flex items-center justify-center"
+                class="px-3 py-2 bg-weeb-green hover:bg-weeb-green rounded text-xs transition-colors flex items-center justify-center"
               >
                 <i class="fas fa-play-circle mr-2"></i> Now Airing
               </button>
               <button
                 on:click={testAnimeFinished}
-                class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-xs transition-colors flex items-center justify-center"
+                class="px-3 py-2 bg-weeb-violet hover:bg-weeb-violet rounded text-xs transition-colors flex items-center justify-center"
               >
                 <i class="fas fa-check-circle mr-2"></i> Finished
               </button>
@@ -320,7 +320,7 @@
 
           <!-- Auth Tools -->
           <div>
-            <div class="text-xs text-gray-400 mb-2">Auth Tools</div>
+            <div class="text-xs text-weeb-fg-muted mb-2">Auth Tools</div>
             <button
               on:click={testRefreshToken}
               class="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 rounded text-xs transition-colors flex items-center justify-center"
@@ -333,7 +333,7 @@
         <!-- Collapsed mobile footer -->
         <button
           on:click={togglePanel}
-          class="w-full p-3 flex items-center justify-center gap-2 text-yellow-400 hover:text-yellow-300 text-sm font-bold transition-colors border-t border-gray-600"
+          class="w-full p-3 flex items-center justify-center gap-2 text-weeb-amber hover:text-yellow-300 text-sm font-bold transition-colors border-t border-weeb-border"
         >
           <i class="fas fa-chevron-up"></i>
           🛠️ Dev Testing Panel

@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>weeb.vip — Home</title>
+<style>
+:root {
+  --bg: oklch(14% 0.015 275);
+  --bg-elevated: oklch(18% 0.018 275);
+  --surface: oklch(22% 0.02 275);
+  --surface-hover: oklch(26% 0.022 275);
+  --fg: oklch(95% 0.005 265);
+  --fg-secondary: oklch(70% 0.01 270);
+  --fg-muted: oklch(55% 0.01 270);
+  --border: oklch(28% 0.015 275);
+  --accent: oklch(55% 0.15 280);
+  --accent-hover: oklch(62% 0.16 280);
+  --violet: oklch(62% 0.14 300);
+  --green: oklch(65% 0.15 155);
+  --amber: oklch(72% 0.14 85);
+  --red: oklch(60% 0.18 25);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-family: var(--font); color: var(--fg); background: var(--bg); -webkit-font-smoothing: antialiased; }
+body { min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+img { display: block; }
+button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; }
+
+/* --- NAV --- */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 24px; height: 60px;
+  background: oklch(14% 0.015 275 / 0.85);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 18px; letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+.nav-logo-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: white;
+}
+.nav-links {
+  display: flex; gap: 4px; margin-left: 24px;
+}
+.nav-links a {
+  padding: 6px 14px; border-radius: 6px;
+  font-size: 14px; font-weight: 500; color: var(--fg-secondary);
+  transition: color 0.15s, background 0.15s;
+}
+.nav-links a:hover, .nav-links a.active {
+  color: var(--fg); background: var(--surface);
+}
+.nav-search {
+  margin-left: auto; position: relative;
+}
+.nav-search input {
+  width: 260px; padding: 8px 12px 8px 36px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--fg); font-size: 14px;
+  outline: none; transition: border-color 0.15s, width 0.2s;
+}
+.nav-search input:focus { border-color: var(--accent); width: 320px; }
+.nav-search input::placeholder { color: var(--fg-muted); }
+.nav-search-icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--fg-muted); font-size: 14px; pointer-events: none;
+}
+.nav-auth {
+  display: flex; gap: 8px; margin-left: 16px;
+}
+.btn-ghost {
+  padding: 7px 16px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; color: var(--fg-secondary);
+  transition: color 0.15s, background 0.15s;
+}
+.btn-ghost:hover { color: var(--fg); background: var(--surface); }
+.btn-primary {
+  padding: 7px 18px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 600;
+  background: var(--accent); color: white;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+/* --- HERO --- */
+.hero {
+  position: relative; height: 500px; overflow: hidden;
+  display: flex; align-items: flex-end;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, oklch(22% 0.04 280), oklch(14% 0.02 260), oklch(16% 0.03 300));
+  background-size: 400% 400%;
+  animation: heroShift 20s ease infinite;
+}
+@keyframes heroShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, var(--bg) 0%, oklch(14% 0.015 275 / 0.4) 50%, transparent 100%);
+}
+.hero-content {
+  position: relative; z-index: 2;
+  padding: 0 48px 48px; max-width: 640px;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  background: var(--accent); color: white;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 16px;
+}
+.hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.hero h1 {
+  font-size: clamp(28px, 4vw, 44px); font-weight: 700;
+  letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 12px;
+}
+.hero p {
+  font-size: 15px; color: var(--fg-secondary); line-height: 1.6;
+  max-width: 480px; margin-bottom: 16px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.hero-meta {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-size: 13px; color: var(--fg-muted);
+}
+.hero-meta .tag {
+  padding: 3px 8px; border-radius: 4px; background: var(--surface); font-size: 12px; color: var(--fg-secondary);
+}
+.hero-actions { display: flex; gap: 10px; margin-top: 20px; }
+.hero-poster {
+  position: absolute; right: 48px; bottom: 48px; z-index: 2;
+  width: 200px; height: 290px; border-radius: var(--radius-lg);
+  background: var(--surface); border: 1px solid var(--border);
+  overflow: hidden; box-shadow: 0 20px 60px oklch(0% 0 0 / 0.5);
+}
+.hero-poster .poster-placeholder {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, oklch(28% 0.06 280), oklch(18% 0.04 300));
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fg-muted); font-size: 13px;
+}
+
+/* --- SECTIONS --- */
+.section { padding: 40px 48px; }
+.section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+}
+.section-header h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+.section-header a { font-size: 13px; color: var(--accent); font-weight: 500; }
+.section-header a:hover { color: var(--accent-hover); }
+
+/* --- POSTER GRID --- */
+.poster-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 16px;
+}
+.poster-card { display: flex; flex-direction: column; cursor: pointer; }
+.poster-card .poster {
+  aspect-ratio: 2/3; border-radius: var(--radius);
+  background: var(--surface); overflow: hidden; position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.poster-card:hover .poster {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px oklch(0% 0 0 / 0.4);
+}
+.poster .poster-img {
+  width: 100%; height: 100%; object-fit: cover;
+  background: linear-gradient(145deg, oklch(25% 0.03 280), oklch(20% 0.025 300));
+}
+.poster .score-badge {
+  position: absolute; top: 8px; left: 8px;
+  padding: 2px 7px; border-radius: 4px;
+  background: oklch(0% 0 0 / 0.7); backdrop-filter: blur(8px);
+  font-size: 12px; font-weight: 700; color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+.poster .status-dot {
+  position: absolute; top: 8px; right: 8px;
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.status-dot.airing { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.status-dot.upcoming { background: var(--amber); }
+.poster-card .poster-title {
+  margin-top: 8px; font-size: 13px; font-weight: 500; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.poster-card .poster-sub { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
+
+/* --- AIRING STRIP --- */
+.airing-strip {
+  display: flex; gap: 12px; overflow-x: auto;
+  padding-bottom: 8px; scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.airing-card {
+  flex-shrink: 0; width: 300px;
+  display: flex; gap: 12px; padding: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.airing-card:hover { border-color: var(--accent); background: var(--surface-hover); }
+.airing-card .airing-poster {
+  width: 56px; height: 80px; border-radius: 6px; flex-shrink: 0;
+  background: linear-gradient(135deg, oklch(28% 0.03 280), oklch(22% 0.025 300));
+}
+.airing-card .airing-info { flex: 1; min-width: 0; }
+.airing-card .airing-title {
+  font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.airing-card .airing-ep { font-size: 12px; color: var(--fg-muted); margin-top: 4px; }
+.airing-card .airing-time {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 8px; padding: 3px 8px; border-radius: 4px;
+  background: oklch(55% 0.15 280 / 0.15); color: var(--accent);
+  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.airing-card .airing-time .live { color: var(--green); font-weight: 700; }
+
+/* --- GENRE PILLS --- */
+.genre-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.genre-pill {
+  padding: 8px 16px; border-radius: 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 13px; font-weight: 500; color: var(--fg-secondary);
+  cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.genre-pill:hover { border-color: var(--accent); color: var(--fg); background: var(--surface-hover); }
+
+/* --- FOOTER --- */
+.footer {
+  padding: 40px 48px; margin-top: 40px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; color: var(--fg-muted);
+}
+.footer-links { display: flex; gap: 20px; }
+.footer-links a { color: var(--fg-secondary); transition: color 0.15s; }
+.footer-links a:hover { color: var(--fg); }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+  .hero-poster { display: none; }
+  .section { padding: 32px 24px; }
+  .hero-content { padding: 0 24px 32px; }
+  .footer { padding: 32px 24px; }
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-search input { width: 180px; }
+  .nav-search input:focus { width: 220px; }
+  .hero { height: 400px; }
+  .hero h1 { font-size: 24px; }
+  .poster-row { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+  .airing-card { width: 260px; }
+  .footer { flex-direction: column; gap: 16px; text-align: center; }
+}
+@media (max-width: 480px) {
+  .nav { padding: 0 16px; }
+  .nav-auth { display: none; }
+  .nav-search input { width: 140px; }
+  .nav-search input:focus { width: 180px; }
+  .section { padding: 24px 16px; }
+  .hero-content { padding: 0 16px 24px; }
+  .hero { height: 360px; }
+  .poster-row { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .footer { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <span class="nav-logo-icon">w</span>
+    <span>weeb.vip</span>
+  </a>
+  <div class="nav-links">
+    <a href="homepage.html" class="active">Home</a>
+    <a href="season.html">Season</a>
+    <a href="airing.html">Airing</a>
+    <a href="search.html">Browse</a>
+  </div>
+  <div class="nav-search">
+    <span class="nav-search-icon">&#x1F50D;</span>
+    <input type="text" placeholder="Search anime..." id="search-input">
+  </div>
+  <div class="nav-auth">
+    <a href="login.html" class="btn-ghost">Log in</a>
+    <a href="register.html" class="btn-primary">Sign up</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span> Airing Now</div>
+    <h1>Frieren: Beyond Journey's End</h1>
+    <p>After the party of heroes defeated the Demon King, the centuries-old elf mage Frieren is left to reflect on her time with her former companions and the nature of human connection.</p>
+    <div class="hero-meta">
+      <span class="tag">Fantasy</span>
+      <span class="tag">Adventure</span>
+      <span>28 Episodes</span>
+      <span>MADHOUSE</span>
+    </div>
+    <div class="hero-actions">
+      <a href="anime-detail.html" class="btn-primary" style="padding:10px 24px; font-size:14px;">View Details</a>
+      <button class="btn-ghost" style="border:1px solid var(--border);">+ Add to List</button>
+    </div>
+  </div>
+  <div class="hero-poster">
+    <div class="poster-placeholder">Poster Art</div>
+  </div>
+</section>
+
+<!-- AIRING THIS WEEK -->
+<section class="section">
+  <div class="section-header">
+    <h2>Airing This Week</h2>
+    <a href="airing.html">View schedule &rarr;</a>
+  </div>
+  <div class="airing-strip" id="airing-strip"></div>
+</section>
+
+<!-- TOP RATED -->
+<section class="section">
+  <div class="section-header">
+    <h2>Top Rated</h2>
+    <a href="search.html">See all &rarr;</a>
+  </div>
+  <div class="poster-row" id="top-rated"></div>
+</section>
+
+<!-- NEWEST -->
+<section class="section">
+  <div class="section-header">
+    <h2>Newest Anime</h2>
+    <a href="search.html">See all &rarr;</a>
+  </div>
+  <div class="poster-row" id="newest"></div>
+</section>
+
+<!-- BROWSE BY GENRE -->
+<section class="section">
+  <div class="section-header">
+    <h2>Browse by Genre</h2>
+  </div>
+  <div class="genre-row" id="genres"></div>
+</section>
+
+<!-- SEASONAL PICKS -->
+<section class="section">
+  <div class="section-header">
+    <h2>Spring 2026 Highlights</h2>
+    <a href="season.html">Full season &rarr;</a>
+  </div>
+  <div class="poster-row" id="seasonal"></div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <span>&copy; 2026 weeb.vip</span>
+  <div class="footer-links">
+    <a href="#">About</a>
+    <a href="#">API</a>
+    <a href="#">GitHub</a>
+  </div>
+</footer>
+
+<script>
+const topRated = [
+  { title: 'Fullmetal Alchemist: Brotherhood', score: 9.1, eps: 64, studio: 'Bones', status: 'finished' },
+  { title: 'Steins;Gate', score: 9.1, eps: 24, studio: 'White Fox', status: 'finished' },
+  { title: 'Gintama: The Final', score: 9.0, eps: 1, studio: 'Bandai Namco', status: 'finished' },
+  { title: 'Hunter x Hunter (2011)', score: 9.0, eps: 148, studio: 'Madhouse', status: 'finished' },
+  { title: 'Frieren: Beyond Journey\'s End', score: 9.0, eps: 28, studio: 'Madhouse', status: 'airing' },
+  { title: 'March Comes in Like a Lion S2', score: 9.0, eps: 22, studio: 'Shaft', status: 'finished' },
+  { title: 'Clannad: After Story', score: 8.9, eps: 24, studio: 'Kyoto Animation', status: 'finished' },
+  { title: 'Monster', score: 8.9, eps: 74, studio: 'Madhouse', status: 'finished' },
+];
+const newest = [
+  { title: 'Dandadan', score: 8.7, eps: 12, studio: 'Science SARU', status: 'airing' },
+  { title: 'Solo Leveling Season 2', score: 8.5, eps: 13, studio: 'A-1 Pictures', status: 'airing' },
+  { title: 'Sakamoto Days', score: 8.4, eps: 11, studio: 'TMS Entertainment', status: 'airing' },
+  { title: 'Fire Force Season 3', score: 8.3, eps: 24, studio: 'David Production', status: 'airing' },
+  { title: 'Dr. Stone: Science Future', score: 8.6, eps: 11, studio: 'TMS Entertainment', status: 'finished' },
+  { title: 'Kaiju No. 8', score: 8.1, eps: 12, studio: 'Production I.G', status: 'finished' },
+  { title: 'Wind Breaker', score: 8.2, eps: 13, studio: 'CloverWorks', status: 'finished' },
+  { title: 'Oshi no Ko Season 2', score: 8.3, eps: 13, studio: 'Doga Kobo', status: 'finished' },
+];
+const seasonal = [
+  { title: 'My Hero Academia: Final', score: 8.4, eps: 25, studio: 'Bones', status: 'airing' },
+  { title: 'Re:Zero Season 3 Part 2', score: 8.6, eps: 12, studio: 'White Fox', status: 'upcoming' },
+  { title: 'Blue Lock Season 2', score: 8.1, eps: 14, studio: '8bit', status: 'airing' },
+  { title: 'Chainsaw Man Season 2', score: 8.8, eps: 12, studio: 'MAPPA', status: 'upcoming' },
+  { title: 'Mob Psycho 100 Movie', score: 8.5, eps: 1, studio: 'Bones', status: 'upcoming' },
+  { title: 'Jujutsu Kaisen: Hidden Inventory', score: 8.7, eps: 12, studio: 'MAPPA', status: 'airing' },
+];
+const airingData = [
+  { title: 'Dandadan', ep: 'Episode 18', time: 'Tomorrow 23:00', live: false },
+  { title: 'Solo Leveling S2', ep: 'Episode 8', time: 'In 2 hours', live: true },
+  { title: 'Frieren S2', ep: 'Episode 5', time: 'Saturday 00:30', live: false },
+  { title: 'Sakamoto Days', ep: 'Episode 15', time: 'Sunday 17:00', live: false },
+  { title: 'Fire Force S3', ep: 'Episode 20', time: 'Friday 01:30', live: false },
+  { title: 'Blue Lock S2', ep: 'Episode 11', time: 'Saturday 19:30', live: false },
+];
+const genres = ['Action','Adventure','Comedy','Drama','Fantasy','Horror','Mecha','Music','Mystery','Psychological','Romance','Sci-Fi','Slice of Life','Sports','Supernatural','Thriller'];
+
+function renderPosterCard(a) {
+  const sc = a.status === 'airing' ? 'airing' : a.status === 'upcoming' ? 'upcoming' : '';
+  return `<div class="poster-card">
+    <div class="poster">
+      <div class="poster-img"></div>
+      ${a.score ? `<span class="score-badge">${a.score.toFixed(1)}</span>` : ''}
+      ${sc ? `<span class="status-dot ${sc}"></span>` : ''}
+    </div>
+    <div class="poster-title">${a.title}</div>
+    <div class="poster-sub">${a.eps} ep &middot; ${a.studio}</div>
+  </div>`;
+}
+function renderAiringCard(a) {
+  return `<div class="airing-card">
+    <div class="airing-poster"></div>
+    <div class="airing-info">
+      <div class="airing-title">${a.title}</div>
+      <div class="airing-ep">${a.ep}</div>
+      <div class="airing-time">${a.live ? '<span class="live">LIVE</span>' : ''} ${a.time}</div>
+    </div>
+  </div>`;
+}
+
+document.getElementById('top-rated').innerHTML = topRated.map(renderPosterCard).join('');
+document.getElementById('newest').innerHTML = newest.map(renderPosterCard).join('');
+document.getElementById('seasonal').innerHTML = seasonal.map(renderPosterCard).join('');
+document.getElementById('airing-strip').innerHTML = airingData.map(renderAiringCard).join('');
+document.getElementById('genres').innerHTML = genres.map(g => `<div class="genre-pill">${g}</div>`).join('');
+</script>
+</body>
+</html>

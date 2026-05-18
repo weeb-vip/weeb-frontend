@@ -38,7 +38,7 @@
     imageError = true;
   }
 
-  $: avatarClasses = `${sizeClasses[size]} rounded-full flex items-center justify-center font-semibold cursor-pointer transition-all duration-300 hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 dark:hover:ring-offset-gray-900 ${className}`;
+  $: avatarClasses = `${sizeClasses[size]} rounded-full flex items-center justify-center font-semibold cursor-pointer transition-all duration-300 hover:ring-2 hover:ring-weeb-accent hover:ring-offset-2 ${className}`;
 </script>
 
 {#if linkToProfile}

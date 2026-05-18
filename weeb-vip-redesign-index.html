@@ -1,0 +1,218 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>weeb.vip — Redesign Prototype</title>
+<style>
+:root {
+  --bg:      oklch(98% 0.003 265);
+  --surface: oklch(100% 0 0);
+  --fg:      oklch(18% 0.025 275);
+  --muted:   oklch(50% 0.015 270);
+  --border:  oklch(92% 0.005 265);
+  --accent:  oklch(38% 0.12 280);
+  --accent-light: oklch(94% 0.03 280);
+  --violet:  oklch(55% 0.10 300);
+  --font-display: 'Iowan Old Style', 'Charter', 'Georgia', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  font-family: var(--font-body);
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 24px 60px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.logo-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 12px;
+}
+.subtitle {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 460px;
+  line-height: 1.6;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  max-width: 960px;
+  width: 100%;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.card-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.card h2 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+.card p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+  flex: 1;
+}
+.card-route {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.footer {
+  margin-top: 64px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">w</div>
+    <span class="logo-text">weeb.vip</span>
+  </div>
+  <h1>Redesign Prototype</h1>
+  <p class="subtitle">Complete screen-by-screen redesign. Editorial direction with cool indigo palette adapted from the brand logo. Click any screen to explore.</p>
+</div>
+
+<div class="grid">
+  <a href="homepage.html" class="card">
+    <span class="card-label">01 &mdash; Discovery</span>
+    <h2>Homepage</h2>
+    <p>Hero banner, top rated, airing this week, newest anime, seasonal editorial picks.</p>
+    <div class="card-route">/</div>
+  </a>
+
+  <a href="anime-detail.html" class="card">
+    <span class="card-label">02 &mdash; Detail</span>
+    <h2>Anime Detail</h2>
+    <p>Full metadata, synopsis, episode list, characters &amp; staff, tracking controls, related anime.</p>
+    <div class="card-route">/show/:id</div>
+  </a>
+
+  <a href="search.html" class="card">
+    <span class="card-label">03 &mdash; Browse</span>
+    <h2>Search &amp; Browse</h2>
+    <p>Full-text search, genre/status/year filters, sortable results grid with pagination.</p>
+    <div class="card-route">/search</div>
+  </a>
+
+  <a href="season.html" class="card">
+    <span class="card-label">04 &mdash; Seasonal</span>
+    <h2>Season Listing</h2>
+    <p>Season selector, featured picks, full seasonal anime grid with status badges.</p>
+    <div class="card-route">/season/:season</div>
+  </a>
+
+  <a href="airing.html" class="card">
+    <span class="card-label">05 &mdash; Schedule</span>
+    <h2>Currently Airing</h2>
+    <p>Weekly schedule view and monthly calendar. Countdowns, timezone selector, episode tracking.</p>
+    <div class="card-route">/airing</div>
+  </a>
+
+  <a href="profile.html" class="card">
+    <span class="card-label">06 &mdash; Profile</span>
+    <h2>Profile &amp; Anime List</h2>
+    <p>User stats, status-filtered anime list with grid/list toggle, progress tracking, quick actions.</p>
+    <div class="card-route">/profile</div>
+  </a>
+
+  <a href="login.html" class="card">
+    <span class="card-label">07 &mdash; Auth</span>
+    <h2>Login</h2>
+    <p>Clean centered login form with validation and password toggle.</p>
+    <div class="card-route">/auth/login</div>
+  </a>
+
+  <a href="register.html" class="card">
+    <span class="card-label">08 &mdash; Auth</span>
+    <h2>Register</h2>
+    <p>Account creation with password strength indicator and field validation.</p>
+    <div class="card-route">/auth/register</div>
+  </a>
+</div>
+
+<div class="footer">
+  <p>weeb.vip redesign &mdash; editorial-monocle direction &times; indigo palette &mdash; 2026</p>
+</div>
+
+</body>
+</html>

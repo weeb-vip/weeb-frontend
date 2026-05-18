@@ -1,27 +1,25 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
 
 // Helper function to check Mailhog for emails
 async function getLatestEmail(recipientEmail: string, retries = 15, delay = 3000) {
   console.log(`Looking for email for ${recipientEmail}...`);
-  
+
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fetch('https://mailhog.staging.weeb.vip/api/v2/messages');
       const data = await response.json();
-      
+
       console.log(`Attempt ${i + 1}: Found ${data.items?.length || 0} total emails in Mailhog`);
-      
+
       if (data.items && data.items.length > 0) {
-        // Log all recipients for debugging
         const recipients = data.items.map((item: any) => item.Content?.Headers?.To?.[0]).filter(Boolean);
         console.log(`Recipients found: ${recipients.join(', ')}`);
-        
-        // Find email for our recipient (check both with and without brackets)
+
         const email = data.items.find((item: any) => {
           const toHeader = item.Content?.Headers?.To;
           return toHeader && (
-            toHeader.includes(recipientEmail) || 
+            toHeader.includes(recipientEmail) ||
             toHeader.includes(`<${recipientEmail}>`)
           );
         });
@@ -35,42 +33,33 @@ async function getLatestEmail(recipientEmail: string, retries = 15, delay = 3000
       console.log(`Attempt ${i + 1} failed:`, error instanceof Error ? error.message : String(error));
     }
 
-    // Wait before retrying
     await new Promise(resolve => setTimeout(resolve, delay));
   }
 
   throw new Error(`No email found for ${recipientEmail} after ${retries} attempts`);
 }
 
-// Helper to extract verification link from email
 function extractVerificationLink(emailContent: string, baseUrl: string): string | null {
-  // First, decode quoted-printable encoding
   let decodedContent = emailContent
-    .replace(/=\r?\n/g, '') // Remove soft line breaks
-    .replace(/=3D/g, '=')    // Decode equals signs
-    .replace(/=20/g, ' ')    // Decode spaces
-    .replace(/=2F/g, '/')    // Decode forward slashes
-    .replace(/=3A/g, ':')    // Decode colons
-    .replace(/=40/g, '@');   // Decode @ signs
-  
-  // Look for an anchor tag with href containing 'verification?email='
-  // Handle both regular quotes and escaped quotes
+    .replace(/=\r?\n/g, '')
+    .replace(/=3D/g, '=')
+    .replace(/=20/g, ' ')
+    .replace(/=2F/g, '/')
+    .replace(/=3A/g, ':')
+    .replace(/=40/g, '@');
+
   const linkPattern = /<a[^>]+href\s*=\s*(?:3D)?\\?["']([^"']*verification\?email=[^"']*)/gi;
   const match = linkPattern.exec(decodedContent);
-  
+
   if (match && match[1]) {
     let link = match[1];
-    
-    // Clean up any remaining HTML entities
     link = link.replace(/&amp;/g, '&');
     link = link.replace(/&#x3D;/g, '=');
-    link = link.replace(/\\/g, ''); // Remove backslashes
-    
-    // If it's a relative URL, make it absolute using the test's base URL
+    link = link.replace(/\\/g, '');
+
     if (!link.startsWith('http')) {
       link = `${baseUrl}${link.startsWith('/') ? '' : '/'}${link}`;
     } else {
-      // Replace the domain in the link with the test's base URL
       const url = new URL(link);
       const testUrl = new URL(baseUrl);
       url.protocol = testUrl.protocol;
@@ -78,26 +67,24 @@ function extractVerificationLink(emailContent: string, baseUrl: string): string 
       url.port = testUrl.port;
       link = url.toString();
     }
-    
+
     console.log(`Found verification link in email: ${link}`);
     return link;
   }
 
-  // Fallback: look for the URL pattern directly (not in href)
   const directUrlPattern = /https?:\/\/[^\/\s]+\/auth\/verification\?email=[^&\s]+&token=[^&\s"]+/gi;
   const directMatch = directUrlPattern.exec(decodedContent);
   if (directMatch) {
     let link = directMatch[0];
     link = link.replace(/&amp;/g, '&');
-    
-    // Replace the domain with the test's base URL
+
     const url = new URL(link);
     const testUrl = new URL(baseUrl);
     url.protocol = testUrl.protocol;
     url.host = testUrl.host;
     url.port = testUrl.port;
     link = url.toString();
-    
+
     console.log(`Found verification link (direct pattern): ${link}`);
     return link;
   }
@@ -105,35 +92,27 @@ function extractVerificationLink(emailContent: string, baseUrl: string): string 
   return null;
 }
 
-// Helper to delete emails from Mailhog for cleanup
 async function deleteEmailsForRecipient(recipientEmail: string) {
   let deletedCount = 0;
   try {
     while (true) {
-      // Get all messages and find ones for our recipient
       const response = await fetch('https://mailhog.staging.weeb.vip/api/v2/messages');
       const data = await response.json();
-      
+
       if (!data.items || data.items.length === 0) {
         break;
       }
-      
-      // Find email for our recipient
+
       const email = data.items.find((item: any) =>
         item.Content?.Headers?.To?.includes(recipientEmail)
       );
-      
-      if (!email) {
-        break; // No more emails for this recipient
-      }
-      
-      // Delete this email
-      await fetch(`https://mailhog.staging.weeb.vip/api/v1/messages/${email.ID}`, {
-        method: 'DELETE'
-      });
+
+      if (!email) break;
+
+      await fetch(`https://mailhog.staging.weeb.vip/api/v1/messages/${email.ID}`, { method: 'DELETE' });
       deletedCount++;
     }
-    
+
     if (deletedCount > 0) {
       console.log(`Cleaned up ${deletedCount} emails for ${recipientEmail}`);
     }
@@ -142,598 +121,157 @@ async function deleteEmailsForRecipient(recipientEmail: string) {
   }
 }
 
+// Opens the auth modal in register mode and returns the dialog locator.
+// Handles both desktop (direct header button) and mobile (drawer) flows.
+async function openRegisterModal(page: Page): Promise<Locator> {
+  const dialog = page.getByRole('dialog');
+
+  const mobileMenu = page.getByRole('button', { name: 'Open menu' });
+  const isMobile = await mobileMenu.isVisible().catch(() => false);
+
+  if (isMobile) {
+    console.log('Opening mobile drawer');
+    await mobileMenu.click();
+    // Drawer uses a fly transition; wait for it to settle
+    const drawerRegister = page.getByRole('button', { name: 'Register', exact: true });
+    await drawerRegister.waitFor({ state: 'visible', timeout: 5000 });
+    await drawerRegister.click();
+  } else {
+    console.log('Clicking desktop header Register');
+    await page.locator('nav').getByRole('button', { name: 'Register', exact: true }).click();
+  }
+
+  await dialog.waitFor({ state: 'visible', timeout: 10000 });
+
+  // Auth state can race — if the modal opened in login mode, click "Sign up" to switch.
+  const createAccountHeading = dialog.getByRole('heading', { name: 'Create account' });
+  if (!(await createAccountHeading.isVisible().catch(() => false))) {
+    console.log('Modal opened in login mode — switching to register');
+    await dialog.getByRole('button', { name: 'Sign up' }).click();
+  }
+
+  await expect(createAccountHeading).toBeVisible({ timeout: 10000 });
+  return dialog;
+}
+
+async function fillAndSubmitRegister(dialog: Locator, email: string, password: string) {
+  await dialog.locator('input[name="username"]').fill(email);
+  await dialog.locator('input[name="password"]').fill(password);
+  await dialog.locator('input[name="confirmPassword"]').fill(password);
+  await dialog.locator('form button[type="submit"]').click();
+}
+
 test.describe('User Registration Flow', () => {
+  // Run tests serially within this file — they all hit shared staging Mailhog
+  // and can race when running in parallel.
+  test.describe.configure({ mode: 'serial' });
+
   let testEmail: string;
   const testPassword = 'Password1!';
 
   test.beforeEach(async () => {
-    // Generate unique email for this test run
     testEmail = `${uuidv4()}@weeb.vip`;
     console.log(`Testing with email: ${testEmail}`);
   });
 
   test.afterEach(async () => {
-    // Clean up emails after test
     await deleteEmailsForRecipient(testEmail);
   });
 
-  test('complete registration and email verification flow', async ({ page, context }) => {
-    // Step 1: Navigate to registration page
+  test('complete registration and email verification flow', async ({ page }) => {
     await page.goto('/');
-
-    // Wait for page to load
     await page.waitForLoadState('networkidle');
 
-    // Check if we need to open hamburger menu (mobile)
-    const hamburgerMenu = page.locator('[aria-label*="menu" i], button:has(svg.hamburger), button:has(.hamburger), [data-testid="mobile-menu"], button[aria-label="Open menu"]');
-    let isMobile = false;
-    if (await hamburgerMenu.isVisible()) {
-      console.log('Opening hamburger menu (mobile view)');
-      await hamburgerMenu.click();
-      await page.waitForTimeout(500);
-      isMobile = true;
-    }
-    
-    // Open modal - use different selectors for mobile menu
-    let loginButton;
-    if (isMobile) {
-      // In mobile menu, look for links/buttons within the opened menu
-      loginButton = page.locator('[data-testid="mobile-menu-content"] a:has-text("Login"), nav a:has-text("Login"), .mobile-menu a:has-text("Login"), [role="menu"] a:has-text("Login")').first();
-      if (await loginButton.count() === 0) {
-        // Fallback to any visible login button
-        loginButton = page.locator('button:has-text("Login"), a:has-text("Login")').locator('visible=true').first();
-      }
-    } else {
-      // Desktop - use original selector
-      loginButton = page.locator('button:has-text("Login"), a:has-text("Login")').first();
-    }
-    
-    if (await loginButton.count() > 0) {
-      console.log(`Clicking login button (mobile: ${isMobile})`);
-      await loginButton.click();
-      await page.waitForTimeout(1000);
-    } else {
-      console.log('No login button found after menu interaction');
-    }
+    const dialog = await openRegisterModal(page);
+    await fillAndSubmitRegister(dialog, testEmail, testPassword);
 
-    // Check if we're now on a login page or if modal opened
-    const currentUrl = page.url();
-    console.log(`Current URL after login click: ${currentUrl}`);
-    
-    if (currentUrl.includes('/login')) {
-      // Mobile redirected to login page instead of opening modal
-      console.log('Redirected to login page, navigating to register page');
-      await page.goto('/register');
-      await page.waitForLoadState('networkidle');
-      
-      // Skip modal steps and go directly to form filling
-    } else {
-      // Wait for modal to be visible (desktop behavior)
-      const modal = page.locator('[id="headlessui-dialog-panel-:r2b:"]');
-      try {
-        await modal.waitFor({ state: 'visible', timeout: 5000 });
-        
-        // Switch to register mode - look for the register button/link in the modal
-        const registerLink = modal.locator('button:has-text("Register")').first();
-        if (await registerLink.count() > 0) {
-          await registerLink.click();
-          await page.waitForTimeout(1000); // Wait for form to switch
-        }
-      } catch (error) {
-        console.log('Modal not found, trying direct navigation to register page');
-        await page.goto('/auth/register');
-        await page.waitForLoadState('networkidle');
-      }
-    }
-
-    // Wait for client-side hydration if we navigated to /auth/register
-    const pageUrl = page.url();
-    if (pageUrl.includes('/auth/register')) {
-      console.log('Waiting for Svelte client hydration...');
-      await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
-      await page.waitForTimeout(2000); // Wait for query client init
-    }
-
-    // Step 2: Fill registration form - be more specific with selectors
-    const emailInput = page.locator('input[name="username"], input[type="email"], input[placeholder*="email" i]').first();
-    await emailInput.waitFor({ state: 'visible' });
-    await emailInput.fill(testEmail);
-
-    const passwordInput = page.locator('input[name="password"]').first();
-    await passwordInput.fill(testPassword);
-
-    // Fill confirm password if it exists
-    const confirmPasswordInput = page.locator('input[name="confirmPassword"], input[id="confirmPassword"]');
-    if (await confirmPasswordInput.count() > 0) {
-      await confirmPasswordInput.fill(testPassword);
-    }
-
-    // Step 3: Submit registration - use multiple strategies to find submit button
-    console.log('Looking for registration submit button...');
-    
-    // Debug: Log all buttons on the page for troubleshooting
-    const allButtons = await page.locator('button').all();
-    console.log(`Found ${allButtons.length} buttons on page:`);
-    for (let i = 0; i < Math.min(allButtons.length, 10); i++) {
-      const text = await allButtons[i].textContent();
-      const type = await allButtons[i].getAttribute('type');
-      const visible = await allButtons[i].isVisible();
-      console.log(`  Button ${i}: "${text?.trim()}" (type: ${type}, visible: ${visible})`);
-    }
-    
-    // Give forms a moment to fully load
-    await page.waitForTimeout(1000);
-    
-    // Strategy 1: Try form submit button first (most reliable)
-    let submitButton = page.locator('form button[type="submit"]').first();
-    let buttonFound = await submitButton.count() > 0;
-    
-    if (!buttonFound) {
-      console.log('Form submit button not found, trying any submit button...');
-      // Strategy 2: Try any submit button
-      submitButton = page.locator('button[type="submit"]').first();
-      buttonFound = await submitButton.count() > 0;
-    }
-    
-    if (!buttonFound) {
-      console.log('No submit button found, trying form register button...');
-      // Strategy 3: Try form register button specifically
-      submitButton = page.locator('form button:has-text("Register")').first();
-      buttonFound = await submitButton.count() > 0;
-    }
-
-    if (!buttonFound) {
-      console.log('Form register button not found, trying main area register button...');
-      // Strategy 4: Try main area register button
-      submitButton = page.locator('main button:has-text("Register")').first();
-      buttonFound = await submitButton.count() > 0;
-    }
-    
-    if (!buttonFound) {
-      console.log('No register button found, trying text-based search...');
-      // Strategy 5: Try text-based button search
-      submitButton = page.locator('button:has-text("Register")').first();
-      buttonFound = await submitButton.count() > 0;
-    }
-    
-    if (buttonFound) {
-      console.log('Submit button found, checking if visible...');
-      
-      // Ensure button is visible before clicking
-      try {
-        await submitButton.waitFor({ state: 'visible', timeout: 10000 });
-        
-        // Wait a bit more to ensure form is fully ready
-        await page.waitForTimeout(500);
-        
-        console.log('Clicking submit button...');
-        await submitButton.click({ force: true });
-      } catch (visibilityError) {
-        console.log('Button found but not visible, trying to scroll to it...');
-        await submitButton.scrollIntoViewIfNeeded();
-        await page.waitForTimeout(500);
-        await submitButton.click({ force: true });
-      }
-    } else {
-      // Final debug: screenshot and page content
-      await page.screenshot({ path: 'debug-registration-form.png' });
-      const pageContent = await page.textContent('body');
-      console.log('Page content when no button found:', pageContent?.slice(0, 1000));
-      throw new Error('No registration submit button found with any strategy');
-    }
-
-    // Step 4: Check for success message
-    // Check for success message with more specific patterns
-    const successMessages = [
-      page.locator('text=/registration.*successful/i'),
-      page.locator('text=/check.*email/i'),
-      page.locator('text=/verify.*email/i'),
-      page.locator('text=/email.*sent/i'),
-      page.locator('text=/success/i'),
-      page.locator('[data-testid="success-message"]'),
-      page.locator('.success-message'),
-      page.locator('.alert-success')
-    ];
-
-    let foundSuccess = false;
-    for (const selector of successMessages) {
-      if (await selector.count() > 0 && await selector.first().isVisible()) {
-        foundSuccess = true;
-        console.log(`Found success message: ${await selector.first().textContent()}`);
-        break;
-      }
-    }
-
-    if (!foundSuccess) {
-      // If no success message, check if we've been redirected to a confirmation page
-      const url = page.url();
-      if (url.includes('/confirmation') || url.includes('/verify') || url.includes('/check-email')) {
-        foundSuccess = true;
-        console.log('Success inferred from URL redirect:', url);
-      } else {
-        // Final fallback: check page content for any indication of success
-        const pageText = await page.textContent('body');
-        if (pageText && /email|verification|sent|check/i.test(pageText)) {
-          foundSuccess = true;
-          console.log('Success inferred from page content containing email-related text');
-        }
-      }
-    }
-
-    expect(foundSuccess).toBeTruthy();
+    // Success message is rendered inside the modal
+    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
     console.log('Registration successful, checking for verification email...');
 
-    // Step 5: Wait for and retrieve verification email from Mailhog
     const email = await getLatestEmail(testEmail);
     expect(email).toBeTruthy();
     console.log('Verification email received');
 
-    // Step 6: Extract verification link from email
     const emailBody = email.Content?.Body || '';
-    console.log(`Email body content: ${emailBody.slice(0, 500)}...`);
-    
-    // Get the base URL from the current test context
-    const baseUrl = page.url().match(/^https?:\/\/[^\/]+/)?.[0] || 'http://localhost:8083';
-    console.log(`Using base URL for verification: ${baseUrl}`);
-    
+    const baseUrl = page.url().match(/^https?:\/\/[^\/]+/)?.[0] || 'http://localhost:4321';
     const verificationLink = extractVerificationLink(emailBody, baseUrl);
     expect(verificationLink).toBeTruthy();
     console.log(`Verification link found: ${verificationLink}`);
 
-    // Step 7: Visit verification link
-    if (verificationLink) {
-      await page.goto(verificationLink);
-      
-      // Wait for page to load
-      await page.waitForLoadState('networkidle');
-      
-      // Debug: log what's on the page
-      const pageText = await page.textContent('body');
-      console.log('Verification page content:', pageText?.slice(0, 500));
+    await page.goto(verificationLink!);
+    await page.waitForLoadState('networkidle');
 
-      // Wait for verification to complete - try multiple possible selectors
-      const successSelectors = [
-        page.locator('text=/verified|success|confirmed/i'),
-        page.locator('text=/email.*verified/i'),
-        page.locator('text=/verification.*complete/i'),
-        page.locator('text=/account.*verified/i'),
-        page.locator(':text-is("Email Verified")'),
-        page.locator(':text-is("Verification Successful")'),
-        page.locator('h1, h2, h3').filter({ hasText: /verif/i })
-      ];
-      
-      let found = false;
-      for (const selector of successSelectors) {
-        if (await selector.count() > 0) {
-          await expect(selector.first()).toBeVisible({ timeout: 5000 });
-          found = true;
-          break;
-        }
-      }
-      
-      if (!found) {
-        // If no success message found, just check we're on the verification page
-        // and not showing an error
-        const hasError = await page.locator('text=/error|invalid|expired/i').count() > 0;
-        if (hasError) {
-          throw new Error('Verification failed - error message shown');
-        }
-        console.log('Warning: Could not find explicit success message, but no error shown');
-      }
-      
-      console.log('Email verification successful');
-    }
+    // Wait for the verification page to render and resolve
+    await expect(page.getByRole('heading', { name: /Email Verification/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/verified successfully|verification failed/i).first())
+      .toBeVisible({ timeout: 15000 });
+    console.log('Email verification page loaded');
 
-    // Step 8: Try to login with verified account
+    // Try to login with verified account on /auth/login
     await page.goto('/auth/login');
     await page.waitForLoadState('networkidle');
+    await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
 
-    // Wait for client-side hydration
-    await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
-    await page.waitForTimeout(2000); // Wait for query client init
-
-    await page.fill('input[name="username"], input[type="email"]', testEmail);
+    await page.fill('input[name="username"]', testEmail);
     await page.fill('input[name="password"]', testPassword);
+    await page.locator('form button[type="submit"]').first().click();
 
-    const loginSubmitButton = page.locator('button[type="submit"], button:has-text("Sign In"), button:has-text("Login")').last();
-    await loginSubmitButton.click();
-
-    // Step 9: Verify successful login
-    // Wait for navigation after login
-    await page.waitForLoadState('networkidle');
-    
-    // Debug: log what's on the page after login
-    const loginUrl = page.url();
-    console.log('Current URL after login:', loginUrl);
-    const pageContent = await page.textContent('body');
-    console.log('Page content after login:', pageContent?.slice(0, 300));
-    
-    // Check for various signs of successful login
-    const authIndicators = [
-      page.locator('[data-testid="user-menu"]'),
-      page.locator('.user-menu'),
-      page.locator('a[href="/profile"]'),
-      page.locator('button:has-text("Logout")'),
-      page.locator('button:has-text("Sign Out")'),
-      page.locator('text="My Profile"'),
-      page.locator('text="Settings"'),
-      page.locator('[aria-label*="user"]'),
-      page.locator('[aria-label*="profile"]')
-    ];
-    
-    let loggedIn = false;
-    for (const indicator of authIndicators) {
-      if (await indicator.count() > 0) {
-        console.log(`Found auth indicator: ${await indicator.first().textContent()}`);
-        loggedIn = true;
-        break;
-      }
-    }
-    
-    // Alternative: Check if we're redirected away from login page
-    if (!loggedIn && !pageUrl.includes('/login')) {
-      console.log('Redirected away from login page - assuming successful login');
-      loggedIn = true;
-    }
-    
-    // Alternative: Check if there's no login button visible
-    if (!loggedIn) {
-      const loginButton = await page.locator('button:has-text("Login"), a:has-text("Login")').count();
-      if (loginButton === 0) {
-        console.log('No login button found - assuming user is logged in');
-        loggedIn = true;
-      }
-    }
-    
-    expect(loggedIn).toBeTruthy();
+    // On success, Login.svelte navigates to '/'. Wait for that (staging can be slow under load).
+    await page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 30000 });
     console.log('Login successful - registration flow complete!');
   });
 
   test('resend verification email', async ({ page }) => {
-    // Use the email from beforeEach - don't create a new one
-
-    // Navigate to registration
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Check if we need to open hamburger menu (mobile)
-    const hamburgerMenu = page.locator('[aria-label*="menu" i], button:has(svg.hamburger), button:has(.hamburger), [data-testid="mobile-menu"], button[aria-label="Open menu"]');
-    let isMobile = false;
-    if (await hamburgerMenu.isVisible()) {
-      console.log('Opening hamburger menu (mobile view)');
-      await hamburgerMenu.click();
-      await page.waitForTimeout(500);
-      isMobile = true;
-    }
-    
-    // Open modal - use different selectors for mobile menu
-    let loginButton;
-    if (isMobile) {
-      // In mobile menu, look for links/buttons within the opened menu
-      loginButton = page.locator('[data-testid="mobile-menu-content"] a:has-text("Login"), nav a:has-text("Login"), .mobile-menu a:has-text("Login"), [role="menu"] a:has-text("Login")').first();
-      if (await loginButton.count() === 0) {
-        // Fallback to any visible login button
-        loginButton = page.locator('button:has-text("Login"), a:has-text("Login")').locator('visible=true').first();
-      }
-    } else {
-      // Desktop - use original selector
-      loginButton = page.locator('button:has-text("Login"), a:has-text("Login")').first();
-    }
-    
-    if (await loginButton.count() > 0) {
-      console.log(`Clicking login button (mobile: ${isMobile})`);
-      await loginButton.click();
-      await page.waitForTimeout(1000);
-    } else {
-      console.log('No login button found after menu interaction');
-    }
+    const dialog = await openRegisterModal(page);
+    await fillAndSubmitRegister(dialog, testEmail, testPassword);
 
-    // Wait for the input form to be visible
-    const usernameInput = page.locator('input[name="username"], input[type="email"]').first();
-    await usernameInput.waitFor({ state: 'visible', timeout: 5000 });
-
-    // Switch to register - use force click to bypass modal overlay
-    const registerLink = page.locator('button:has-text("Register")').first();
-    if (await registerLink.count() > 0) {
-      await registerLink.click({ force: true });
-      await page.waitForTimeout(1000);
-    }
-
-    // Register
-    const emailInput = page.locator('input[name="username"], input[type="email"], input[placeholder*="email" i]').first();
-    await emailInput.waitFor({ state: 'visible' });
-    await emailInput.fill(testEmail);
-
-    await page.fill('input[name="password"]', testPassword);
-
-    const confirmPasswordInput = page.locator('input[name="confirmPassword"], input[id="confirmPassword"]');
-    if (await confirmPasswordInput.count() > 0) {
-      await confirmPasswordInput.fill(testPassword);
-    }
-
-    const submitButton = page.locator('button:has-text("Register")').first();
-    await submitButton.waitFor({ state: 'visible', timeout: 5000 });
-    await submitButton.click({ force: true });
-
-    // Check for success message with more specific patterns
-    const successMessages = [
-      page.locator('text=/registration.*successful/i'),
-      page.locator('text=/check.*email/i'),
-      page.locator('text=/verify.*email/i'),
-      page.locator('text=/email.*sent/i'),
-      page.locator('text=/success/i'),
-      page.locator('[data-testid="success-message"]'),
-      page.locator('.success-message'),
-      page.locator('.alert-success')
-    ];
-
-    let foundSuccess = false;
-    for (const selector of successMessages) {
-      if (await selector.count() > 0 && await selector.first().isVisible()) {
-        foundSuccess = true;
-        console.log(`Found success message: ${await selector.first().textContent()}`);
-        break;
-      }
-    }
-
-    if (!foundSuccess) {
-      // If no success message, check if we've been redirected to a confirmation page
-      const url = page.url();
-      if (url.includes('/confirmation') || url.includes('/verify') || url.includes('/check-email')) {
-        foundSuccess = true;
-        console.log('Success inferred from URL redirect:', url);
-      } else {
-        // Final fallback: check page content for any indication of success
-        const pageText = await page.textContent('body');
-        if (pageText && /email|verification|sent|check/i.test(pageText)) {
-          foundSuccess = true;
-          console.log('Success inferred from page content containing email-related text');
-        }
-      }
-    }
-
-    expect(foundSuccess).toBeTruthy();
+    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
 
     // Navigate to resend verification page
     await page.goto('/auth/resend-verification');
+    await page.waitForLoadState('networkidle');
+    await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
 
-    // Fill in email
     await page.fill('input[name="username"], input[type="email"]', testEmail);
+    await page.getByRole('button', { name: /send verification email/i }).click();
 
-    // Submit resend request
-    const resendButton = page.locator('button:has-text("Send Verification Email"), button[type="submit"]').last();
-    await resendButton.click();
-
-    // Check for success message
-    await expect(page.locator('text=/sent|check.*inbox/i')).toBeVisible({ timeout: 10000 });
+    // The resend page shows: "Verification email sent! Please check your inbox and spam folder."
+    await expect(page.getByText(/verification email sent|check your inbox/i).first())
+      .toBeVisible({ timeout: 10000 });
     console.log('Resend verification email successful');
 
-    // Verify email was received in Mailhog
     const email = await getLatestEmail(testEmail);
     expect(email).toBeTruthy();
     console.log('Resent verification email received');
   });
 
   test('prevent login before email verification', async ({ page }) => {
-    // Register but don't verify - use email from beforeEach
-
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Check if we need to open hamburger menu (mobile)
-    const hamburgerMenu = page.locator('[aria-label*="menu" i], button:has(svg.hamburger), button:has(.hamburger), [data-testid="mobile-menu"], button[aria-label="Open menu"]');
-    let isMobile = false;
-    if (await hamburgerMenu.isVisible()) {
-      console.log('Opening hamburger menu (mobile view)');
-      await hamburgerMenu.click();
-      await page.waitForTimeout(500);
-      isMobile = true;
-    }
-    
-    // Open modal - use different selectors for mobile menu
-    let loginButton;
-    if (isMobile) {
-      // In mobile menu, look for links/buttons within the opened menu
-      loginButton = page.locator('[data-testid="mobile-menu-content"] a:has-text("Login"), nav a:has-text("Login"), .mobile-menu a:has-text("Login"), [role="menu"] a:has-text("Login")').first();
-      if (await loginButton.count() === 0) {
-        // Fallback to any visible login button
-        loginButton = page.locator('button:has-text("Login"), a:has-text("Login")').locator('visible=true').first();
-      }
-    } else {
-      // Desktop - use original selector
-      loginButton = page.locator('button:has-text("Login"), a:has-text("Login")').first();
-    }
-    
-    if (await loginButton.count() > 0) {
-      console.log(`Clicking login button (mobile: ${isMobile})`);
-      await loginButton.click();
-      await page.waitForTimeout(1000);
-    } else {
-      console.log('No login button found after menu interaction');
-    }
+    const dialog = await openRegisterModal(page);
+    await fillAndSubmitRegister(dialog, testEmail, testPassword);
 
-    // Wait for the input form to be visible
-    const usernameInput = page.locator('input[name="username"], input[type="email"]').first();
-    await usernameInput.waitFor({ state: 'visible', timeout: 5000 });
-
-    // Switch to register - use force click to bypass modal overlay
-    const registerLink = page.locator('button:has-text("Register")').first();
-    if (await registerLink.count() > 0) {
-      await registerLink.click({ force: true });
-      await page.waitForTimeout(1000);
-    }
-
-    // Fill registration
-    const emailInput = page.locator('input[name="username"], input[type="email"], input[placeholder*="email" i]').first();
-    await emailInput.waitFor({ state: 'visible' });
-    await emailInput.fill(testEmail);
-
-    await page.fill('input[name="password"]', testPassword);
-
-    const confirmPasswordInput = page.locator('input[name="confirmPassword"], input[id="confirmPassword"]');
-    if (await confirmPasswordInput.count() > 0) {
-      await confirmPasswordInput.fill(testPassword);
-    }
-
-    const submitButton = page.locator('button:has-text("Register")').first();
-    await submitButton.waitFor({ state: 'visible', timeout: 5000 });
-    await submitButton.click({ force: true });
-
-    // Check for success message with more specific patterns
-    const successMessages = [
-      page.locator('text=/registration.*successful/i'),
-      page.locator('text=/check.*email/i'),
-      page.locator('text=/verify.*email/i'),
-      page.locator('text=/email.*sent/i'),
-      page.locator('text=/success/i'),
-      page.locator('[data-testid="success-message"]'),
-      page.locator('.success-message'),
-      page.locator('.alert-success')
-    ];
-
-    let foundSuccess = false;
-    for (const selector of successMessages) {
-      if (await selector.count() > 0 && await selector.first().isVisible()) {
-        foundSuccess = true;
-        console.log(`Found success message: ${await selector.first().textContent()}`);
-        break;
-      }
-    }
-
-    if (!foundSuccess) {
-      // If no success message, check if we've been redirected to a confirmation page
-      const url = page.url();
-      if (url.includes('/confirmation') || url.includes('/verify') || url.includes('/check-email')) {
-        foundSuccess = true;
-        console.log('Success inferred from URL redirect:', url);
-      } else {
-        // Final fallback: check page content for any indication of success
-        const pageText = await page.textContent('body');
-        if (pageText && /email|verification|sent|check/i.test(pageText)) {
-          foundSuccess = true;
-          console.log('Success inferred from page content containing email-related text');
-        }
-      }
-    }
-
-    expect(foundSuccess).toBeTruthy();
+    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
 
     // Try to login without verification
     await page.goto('/auth/login');
     await page.waitForLoadState('networkidle');
+    await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
 
-    // Wait for client-side hydration
-    await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
-    await page.waitForTimeout(2000); // Wait for query client init
-
-    await page.fill('input[name="username"], input[type="email"]', testEmail);
+    await page.fill('input[name="username"]', testEmail);
     await page.fill('input[name="password"]', testPassword);
+    await page.locator('form button[type="submit"]').first().click();
 
-    const loginSubmitButton = page.locator('button[type="submit"], button:has-text("Sign In"), button:has-text("Login")').last();
-    await loginSubmitButton.click();
-
-    // Should see error about email verification
-    await expect(page.locator('text=/verify|verification|not.*verified/i')).toBeVisible({ timeout: 10000 });
+    // Login should fail. The login form shows a generic credential error.
+    // Verify we did NOT navigate away from /auth/login AND an error banner is shown.
+    await expect(page.getByText(/unable to sign in|check your credentials/i).first())
+      .toBeVisible({ timeout: 10000 });
+    expect(page.url()).toContain('/auth/login');
     console.log('Login correctly blocked for unverified email');
   });
 });

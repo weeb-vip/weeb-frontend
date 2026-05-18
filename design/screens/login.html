@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log in — weeb.vip</title>
+  <style>
+    :root {
+      --bg: oklch(14% 0.015 275);
+      --bg-elevated: oklch(18% 0.018 275);
+      --surface: oklch(22% 0.02 275);
+      --surface-hover: oklch(26% 0.022 275);
+      --fg: oklch(95% 0.005 265);
+      --fg-secondary: oklch(70% 0.01 270);
+      --fg-muted: oklch(55% 0.01 270);
+      --border: oklch(28% 0.015 275);
+      --accent: oklch(55% 0.15 280);
+      --accent-hover: oklch(62% 0.16 280);
+      --violet: oklch(62% 0.14 300);
+      --green: oklch(65% 0.15 155);
+      --amber: oklch(72% 0.14 85);
+      --red: oklch(60% 0.18 25);
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-family: var(--font); color: var(--fg); background: var(--bg); -webkit-font-smoothing: antialiased; }
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; }
+
+    /* --- NAV --- */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 24px; height: 60px;
+      background: oklch(14% 0.015 275 / 0.85);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 700; font-size: 18px; letter-spacing: -0.02em;
+      flex-shrink: 0;
+    }
+    .nav-logo-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--violet));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: white;
+    }
+    .nav-links {
+      display: flex; gap: 4px; margin-left: 24px;
+    }
+    .nav-links a {
+      padding: 6px 14px; border-radius: 6px;
+      font-size: 14px; font-weight: 500; color: var(--fg-secondary);
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--fg); background: var(--surface);
+    }
+    .nav-search {
+      margin-left: auto; position: relative;
+    }
+    .nav-search input {
+      width: 260px; padding: 8px 12px 8px 36px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--fg); font-size: 14px;
+      outline: none; transition: border-color 0.15s, width 0.2s;
+    }
+    .nav-search input:focus { border-color: var(--accent); width: 320px; }
+    .nav-search input::placeholder { color: var(--fg-muted); }
+    .nav-search-icon {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      color: var(--fg-muted); pointer-events: none;
+    }
+    .nav-auth {
+      display: flex; gap: 8px; margin-left: 16px;
+    }
+    .btn-ghost-nav {
+      padding: 7px 16px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500; color: var(--fg-secondary);
+      transition: color 0.15s, background 0.15s;
+    }
+    .btn-ghost-nav:hover { color: var(--fg); background: var(--surface); }
+    .btn-primary-nav {
+      padding: 7px 18px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 600;
+      background: var(--accent); color: white;
+      transition: background 0.15s;
+    }
+    .btn-primary-nav:hover { background: var(--accent-hover); }
+
+    /* --- ANIMATED BG --- */
+    .page-bg {
+      position: fixed; inset: 0; z-index: -1;
+      background: linear-gradient(135deg, oklch(16% 0.025 280), oklch(14% 0.015 270), oklch(15% 0.02 295));
+      background-size: 400% 400%;
+      animation: bgShift 30s ease infinite;
+    }
+    @keyframes bgShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* --- MAIN CONTENT --- */
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 16px 40px;
+    }
+
+    .auth-wrapper {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+
+    /* --- LOGO --- */
+    .logo-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--violet));
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-wordmark {
+      font-family: var(--font-mono);
+      font-size: 15px; font-weight: 600;
+      letter-spacing: 0.04em; color: var(--fg);
+    }
+
+    /* --- CARD --- */
+    .card {
+      width: 100%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      box-shadow: 0 4px 24px oklch(0% 0 0 / 0.3), 0 1px 3px oklch(0% 0 0 / 0.2);
+    }
+
+    .card-header {
+      margin-bottom: 28px;
+      text-align: center;
+    }
+    .card-title {
+      font-size: 24px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--fg);
+      margin-bottom: 4px;
+    }
+    .card-subtitle {
+      font-size: 14px; color: var(--fg-muted);
+    }
+
+    /* --- FORM --- */
+    form {
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    .field {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    label {
+      font-size: 13px; font-weight: 500; color: var(--fg-secondary);
+      letter-spacing: 0.01em;
+    }
+    .input-wrap {
+      position: relative;
+    }
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+      width: 100%; height: 44px;
+      padding: 0 16px;
+      font-family: var(--font); font-size: 15px;
+      color: var(--fg);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+      -webkit-appearance: none;
+    }
+    input::placeholder { color: var(--fg-muted); }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.2);
+    }
+    input.has-toggle { padding-right: 46px; }
+
+    input.state-error {
+      border-color: var(--red);
+      background: oklch(20% 0.03 25);
+    }
+    input.state-error:focus {
+      box-shadow: 0 0 0 3px oklch(60% 0.18 25 / 0.2);
+    }
+    input.state-success {
+      border-color: var(--green);
+    }
+    input.state-success:focus {
+      box-shadow: 0 0 0 3px oklch(65% 0.15 155 / 0.2);
+    }
+
+    /* --- PASSWORD TOGGLE --- */
+    .toggle-btn {
+      position: absolute; right: 0; top: 0;
+      height: 44px; width: 44px;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: none; cursor: pointer;
+      color: var(--fg-muted);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      transition: color 0.15s;
+    }
+    .toggle-btn:hover { color: var(--fg); }
+
+    /* --- FIELD ERROR --- */
+    .field-error {
+      font-size: 12px; color: var(--red);
+      display: none;
+    }
+    .field-error.visible { display: block; }
+
+    /* --- REMEMBER / FORGOT ROW --- */
+    .field-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .checkbox-wrap {
+      display: flex; align-items: center; gap: 8px; cursor: pointer;
+    }
+    .checkbox-wrap input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .checkbox-label {
+      font-size: 13px; color: var(--fg-secondary); cursor: pointer;
+      user-select: none;
+    }
+    .link-muted {
+      font-size: 13px; color: var(--accent); text-decoration: none;
+      transition: color 0.15s;
+    }
+    .link-muted:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    /* --- SUBMIT BUTTON --- */
+    .btn-primary {
+      width: 100%; height: 46px;
+      margin-top: 4px;
+      background: var(--accent); color: white;
+      font-family: var(--font); font-size: 15px; font-weight: 600;
+      letter-spacing: 0.01em;
+      border: none; border-radius: var(--radius);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background 0.15s, transform 0.1s;
+      position: relative; overflow: hidden;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-primary:active:not(:disabled) { transform: scale(0.99); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary.loading .btn-label { opacity: 0; }
+    .btn-primary .spinner {
+      display: none; position: absolute;
+      width: 18px; height: 18px;
+      border: 2px solid oklch(100% 0 0 / 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .btn-primary.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* --- DIVIDER --- */
+    .divider {
+      display: flex; align-items: center; gap: 16px;
+      margin: 8px 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text {
+      font-size: 12px; color: var(--fg-muted);
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    /* --- CARD FOOTER --- */
+    .card-footer {
+      text-align: center; font-size: 14px; color: var(--fg-muted);
+    }
+    .card-footer a {
+      color: var(--accent); text-decoration: none; font-weight: 500;
+      transition: color 0.15s;
+    }
+    .card-footer a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    /* --- FOOTER --- */
+    .footer {
+      padding: 40px 48px; margin-top: auto;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; color: var(--fg-muted);
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--fg-secondary); transition: color 0.15s; }
+    .footer-links a:hover { color: var(--fg); }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 1024px) {
+      .footer { padding: 32px 24px; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-search input { width: 180px; }
+      .nav-search input:focus { width: 220px; }
+      .footer { flex-direction: column; gap: 16px; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .nav { padding: 0 16px; }
+      .nav-auth { display: none; }
+      .nav-search input { width: 140px; }
+      .nav-search input:focus { width: 180px; }
+      .main { padding: 40px 16px 24px; }
+      .card { padding: 24px; }
+      .card-title { font-size: 20px; }
+      .footer { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ANIMATED BG -->
+<div class="page-bg"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="homepage.html" class="nav-logo">
+    <span class="nav-logo-icon">w</span>
+    <span>weeb.vip</span>
+  </a>
+  <div class="nav-links">
+    <a href="homepage.html">Home</a>
+    <a href="season.html">Season</a>
+    <a href="airing.html">Airing</a>
+    <a href="search.html">Browse</a>
+  </div>
+  <div class="nav-search">
+    <svg class="nav-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Search anime...">
+  </div>
+  <div class="nav-auth">
+    <a href="login.html" class="btn-ghost-nav">Log in</a>
+    <a href="register.html" class="btn-primary-nav">Sign up</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="auth-wrapper">
+
+    <!-- Logo -->
+    <a href="homepage.html" class="logo-block" aria-label="weeb.vip - back to homepage">
+      <div class="logo-mark">
+        <svg width="24" height="24" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+          <path d="M4 5L8.5 16L11 10L13.5 16L18 5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="11" cy="11" r="1.2" fill="white" opacity="0.7"/>
+        </svg>
+      </div>
+      <span class="logo-wordmark">weeb.vip</span>
+    </a>
+
+    <!-- Card -->
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Welcome back</h1>
+        <p class="card-subtitle">Sign in to your account</p>
+      </div>
+
+      <form id="login-form" novalidate>
+
+        <!-- Username / Email -->
+        <div class="field" id="field-username">
+          <label for="username">Username or email</label>
+          <div class="input-wrap">
+            <input
+              type="text"
+              id="username"
+              name="username"
+              autocomplete="username"
+              placeholder="your_username"
+              spellcheck="false"
+            />
+          </div>
+          <span class="field-error" id="error-username">Please enter your username or email.</span>
+        </div>
+
+        <!-- Password -->
+        <div class="field" id="field-password">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              autocomplete="current-password"
+              placeholder="Enter your password"
+              class="has-toggle"
+            />
+            <button type="button" class="toggle-btn" id="toggle-password" aria-label="Show password" aria-pressed="false">
+              <svg id="icon-eye-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 12s3.636-7 10-7 10 7 10 7-3.636 7-10 7S2 12 2 12z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg id="icon-eye-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+          <span class="field-error" id="error-password">Please enter your password.</span>
+        </div>
+
+        <!-- Remember me + Forgot -->
+        <div class="field-row">
+          <label class="checkbox-wrap">
+            <input type="checkbox" id="remember" name="remember" />
+            <span class="checkbox-label">Remember me</span>
+          </label>
+          <a href="#" class="link-muted">Forgot password?</a>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primary" id="submit-btn">
+          <span class="btn-label">Log in</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+
+      </form>
+
+      <!-- Divider -->
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span class="divider-text">or</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- Footer -->
+      <div class="card-footer">
+        Don't have an account? <a href="register.html">Sign up</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <span>&copy; 2026 weeb.vip</span>
+  <div class="footer-links">
+    <a href="#">About</a>
+    <a href="#">API</a>
+    <a href="#">GitHub</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var form       = document.getElementById('login-form');
+  var usernameEl = document.getElementById('username');
+  var passwordEl = document.getElementById('password');
+  var toggleBtn  = document.getElementById('toggle-password');
+  var iconShow   = document.getElementById('icon-eye-show');
+  var iconHide   = document.getElementById('icon-eye-hide');
+  var submitBtn  = document.getElementById('submit-btn');
+
+  /* -- Password toggle -- */
+  toggleBtn.addEventListener('click', function () {
+    var isHidden = passwordEl.type === 'password';
+    passwordEl.type = isHidden ? 'text' : 'password';
+    iconShow.style.display = isHidden ? 'none' : '';
+    iconHide.style.display = isHidden ? '' : 'none';
+    toggleBtn.setAttribute('aria-pressed', String(isHidden));
+    toggleBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    passwordEl.focus();
+  });
+
+  /* -- Validation helpers -- */
+  function setError(inputEl, errorId, message) {
+    var errorEl = document.getElementById(errorId);
+    inputEl.classList.add('state-error');
+    inputEl.classList.remove('state-success');
+    if (message) errorEl.textContent = message;
+    errorEl.classList.add('visible');
+    inputEl.setAttribute('aria-invalid', 'true');
+  }
+
+  function clearError(inputEl, errorId) {
+    var errorEl = document.getElementById(errorId);
+    inputEl.classList.remove('state-error');
+    errorEl.classList.remove('visible');
+    inputEl.removeAttribute('aria-invalid');
+  }
+
+  function setSuccess(inputEl) {
+    inputEl.classList.add('state-success');
+    inputEl.classList.remove('state-error');
+  }
+
+  function validateUsername() {
+    var val = usernameEl.value.trim();
+    if (!val) {
+      setError(usernameEl, 'error-username', 'Please enter your username or email.');
+      return false;
+    }
+    clearError(usernameEl, 'error-username');
+    setSuccess(usernameEl);
+    return true;
+  }
+
+  function validatePassword() {
+    var val = passwordEl.value;
+    if (!val) {
+      setError(passwordEl, 'error-password', 'Please enter your password.');
+      return false;
+    }
+    clearError(passwordEl, 'error-password');
+    setSuccess(passwordEl);
+    return true;
+  }
+
+  /* -- Live validation on blur -- */
+  usernameEl.addEventListener('blur', function () {
+    if (usernameEl.value) validateUsername();
+  });
+  passwordEl.addEventListener('blur', function () {
+    if (passwordEl.value) validatePassword();
+  });
+
+  /* -- Clear error on input -- */
+  usernameEl.addEventListener('input', function () {
+    if (usernameEl.classList.contains('state-error')) clearError(usernameEl, 'error-username');
+  });
+  passwordEl.addEventListener('input', function () {
+    if (passwordEl.classList.contains('state-error')) clearError(passwordEl, 'error-password');
+  });
+
+  /* -- Submit -- */
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    var usernameOk = validateUsername();
+    var passwordOk = validatePassword();
+
+    if (!usernameOk) { usernameEl.focus(); return; }
+    if (!passwordOk) { passwordEl.focus(); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+
+    setTimeout(function () {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('loading');
+    }, 1800);
+  });
+
+})();
+</script>
+</body>
+</html>

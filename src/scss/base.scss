@@ -3,35 +3,56 @@
 @tailwind utilities;
 
 html {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: var(--weeb-font, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif);
   font-size: 16px;
-  background: #F4F4F4;
-  color: #333;
+  background: var(--weeb-bg, #111827);
+  color: var(--weeb-fg, #f3f4f6);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 body {
   padding: 0;
   margin: 0;
+  background: var(--weeb-bg, #111827);
+  color: var(--weeb-fg, #f3f4f6);
+  max-width: 100vw;
 }
 
 mark {
-  background: #F4F4F4;
+  background: var(--weeb-accent, #6366f1);
+  color: var(--weeb-fg, #f3f4f6);
   font-style: normal;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--weeb-bg, #111827);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--weeb-border, #374151);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--weeb-fg-muted, #6b7280);
 }
 
 /* Mobile page transition optimizations */
 @media (max-width: 640px) {
   /* Prevent flash of unstyled content during transitions */
   main {
-    overflow-x: hidden;
     position: relative;
   }
-  
+
   /* Improve scroll behavior during transitions */
   html, body {
     overscroll-behavior-x: none;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   /* Hardware acceleration for smoother animations */
   [data-page-wrapper] {
     transform: translateZ(0);

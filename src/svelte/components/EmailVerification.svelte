@@ -67,7 +67,7 @@
   }
 </script>
 
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-weeb-bg-elevated flex flex-col justify-center py-12 sm:px-6 lg:px-8">
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <div class="flex justify-center">
       <img
@@ -79,22 +79,22 @@
         }}
       />
     </div>
-    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+    <h2 class="mt-6 text-center text-3xl font-extrabold text-weeb-fg text-weeb-fg">
       Email Verification
     </h2>
     {#if email}
-      <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+      <p class="mt-2 text-center text-sm text-weeb-fg-muted">
         Verifying email address: <span class="font-medium">{decodeURIComponent(email)}</span>
       </p>
     {/if}
   </div>
 
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-    <div class="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+    <div class="bg-weeb-surface py-8 px-4 shadow sm:rounded-lg sm:px-10">
       {#if state.loading}
         <div class="text-center">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-weeb-accent"></div>
+          <p class="mt-4 text-sm text-weeb-fg-muted">
             Verifying your email address...
           </p>
         </div>
@@ -102,9 +102,9 @@
 
       {#if state.success}
         <div class="text-center">
-          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-weeb-green/15">
             <svg
-              class="h-6 w-6 text-green-600 dark:text-green-400"
+              class="h-6 w-6 text-weeb-green"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -117,16 +117,16 @@
               />
             </svg>
           </div>
-          <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+          <h3 class="mt-4 text-lg font-medium text-weeb-fg text-weeb-fg">
             Email Verified Successfully!
           </h3>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p class="mt-2 text-sm text-weeb-fg-muted">
             Your email address has been verified. You can now log in to your account.
           </p>
           <div class="mt-6">
             <a
               href="/auth/login"
-              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-weeb-accent hover:bg-weeb-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-weeb-accent transition-colors duration-200"
             >
               Go to Login
             </a>
@@ -136,9 +136,9 @@
 
       {#if state.error}
         <div class="text-center">
-          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-weeb-red/15">
             <svg
-              class="h-6 w-6 text-red-600 dark:text-red-400"
+              class="h-6 w-6 text-weeb-red"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -151,24 +151,24 @@
               />
             </svg>
           </div>
-          <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+          <h3 class="mt-4 text-lg font-medium text-weeb-fg text-weeb-fg">
             Verification Failed
           </h3>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p class="mt-2 text-sm text-weeb-fg-muted">
             {state.error}
           </p>
           <div class="mt-6 space-y-3">
             {#if token}
               <button
                 on:click={handleRetry}
-                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-weeb-accent hover:bg-weeb-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-weeb-accent transition-colors duration-200"
               >
                 Try Again
               </button>
             {/if}
             <a
               href="/auth/login"
-              class="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              class="w-full flex justify-center py-2 px-4 border border-weeb-border rounded-md shadow-sm text-sm font-medium text-weeb-fg-secondary bg-weeb-surface hover:bg-weeb-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-weeb-accent transition-colors duration-200"
             >
               Back to Login
             </a>
