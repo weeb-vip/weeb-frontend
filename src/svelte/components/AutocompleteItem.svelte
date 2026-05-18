@@ -7,7 +7,7 @@
 </script>
 
 <li
-  class="aa-Item px-4 py-3 flex flex-row hover:bg-weeb-bg-elevated/80 hover:bg-weeb-surface-hover/60 transition-all duration-200 cursor-pointer group border-b border-weeb-border border-weeb-border last:border-b-0"
+  class="autocomplete-item"
   data-autocomplete-item
   on:click={onClick}
   on:keypress={(e) => { if (e.key === 'Enter') onClick(); }}
@@ -15,23 +15,83 @@
   aria-selected="false"
   tabindex="0"
 >
-  <div class="flex-shrink-0 mr-3">
+  <div class="poster">
     <SafeImage
       src={GetImageFromAnime(item)}
       alt={item.title_en || item.name || ''}
       fallbackSrc="/assets/not found.jpg"
-      style="height: 50px"
-      className="aspect-2/3 rounded-md shadow-sm group-hover:shadow-md transition-shadow duration-200 object-cover"
-      width="33"
-      height="50"
+      className="poster-img"
+      width="37"
+      height="56"
     />
   </div>
-  <div class="flex flex-col justify-center flex-1 min-w-0">
-    <span class="text-weeb-fg font-medium text-sm truncate group-hover:text-weeb-accent transition-colors duration-200">
+  <div class="info">
+    <span class="title">
       {item.title_en || ''}
     </span>
-    <span class="text-weeb-fg-muted text-xs">
+    <span class="subtitle">
       {getYearUTC(item.start_date)}
     </span>
   </div>
 </li>
+
+<style>
+  .autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--weeb-border);
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .autocomplete-item:last-child {
+    border-bottom: none;
+  }
+
+  .autocomplete-item:hover {
+    background: var(--weeb-surface);
+  }
+
+  .poster {
+    width: 37px;
+    height: 56px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .poster :global(.poster-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--weeb-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .autocomplete-item:hover .title {
+    color: var(--weeb-accent);
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: var(--weeb-fg-muted);
+  }
+</style>
