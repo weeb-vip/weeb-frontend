@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
+import { waitForHomepage, waitForAuthForm, waitForPageReady } from './helpers';
 
 // Helper function to check Mailhog for emails
 async function getLatestEmail(recipientEmail: string, retries = 15, delay = 3000) {
@@ -180,7 +181,7 @@ test.describe('User Registration Flow', () => {
 
   test('complete registration and email verification flow', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
     await fillAndSubmitRegister(dialog, testEmail, testPassword);
@@ -200,7 +201,7 @@ test.describe('User Registration Flow', () => {
     console.log(`Verification link found: ${verificationLink}`);
 
     await page.goto(verificationLink!);
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
 
     // Wait for the verification page to render and resolve
     await expect(page.getByRole('heading', { name: /Email Verification/i })).toBeVisible({ timeout: 15000 });
@@ -210,8 +211,7 @@ test.describe('User Registration Flow', () => {
 
     // Try to login with verified account on /auth/login
     await page.goto('/auth/login');
-    await page.waitForLoadState('networkidle');
-    await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
+    await waitForAuthForm(page);
 
     await page.fill('input[name="username"]', testEmail);
     await page.fill('input[name="password"]', testPassword);
@@ -224,7 +224,7 @@ test.describe('User Registration Flow', () => {
 
   test('resend verification email', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
     await fillAndSubmitRegister(dialog, testEmail, testPassword);
@@ -233,8 +233,7 @@ test.describe('User Registration Flow', () => {
 
     // Navigate to resend verification page
     await page.goto('/auth/resend-verification');
-    await page.waitForLoadState('networkidle');
-    await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
+    await waitForAuthForm(page);
 
     await page.fill('input[name="username"], input[type="email"]', testEmail);
     await page.getByRole('button', { name: /send verification email/i }).click();
@@ -251,7 +250,7 @@ test.describe('User Registration Flow', () => {
 
   test('prevent login before email verification', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
     await fillAndSubmitRegister(dialog, testEmail, testPassword);
@@ -260,8 +259,7 @@ test.describe('User Registration Flow', () => {
 
     // Try to login without verification
     await page.goto('/auth/login');
-    await page.waitForLoadState('networkidle');
-    await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
+    await waitForAuthForm(page);
 
     await page.fill('input[name="username"]', testEmail);
     await page.fill('input[name="password"]', testPassword);

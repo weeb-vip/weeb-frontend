@@ -1,0 +1,423 @@
+- generic [ref=e1]:
+  - navigation [ref=e3]:
+    - link "weeb.vip weeb.vip" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e5]
+      - generic [ref=e6]: weeb.vip
+    - generic [ref=e7]:
+      - link "Home" [ref=e8] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e9] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e10] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e11] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e14]:
+      - img
+      - searchbox [ref=e15]
+      - generic: /
+    - generic [ref=e16]:
+      - button "Toggle title language" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e21]: EN
+      - generic [ref=e23]:
+        - button "Login" [ref=e24] [cursor=pointer]:
+          - generic [ref=e25]: Login
+        - button "Register" [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: Register
+  - main [ref=e28]:
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - heading "Browse Anime" [level=1] [ref=e32]
+        - generic [ref=e33]:
+          - img
+          - textbox "Search by title, studio, genre..." [ref=e34]: Comedy
+          - button "Clear search" [ref=e123] [cursor=pointer]:
+            - img [ref=e124]
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - generic [ref=e37]: Genres
+          - generic [ref=e95]:
+            - button "Comedy 5,122" [active] [ref=e96] [cursor=pointer]:
+              - text: Comedy
+              - generic [ref=e97]: 5,122
+            - button "Action 4,964" [ref=e98] [cursor=pointer]:
+              - text: Action
+              - generic [ref=e99]: 4,964
+            - button "Fantasy 4,609" [ref=e100] [cursor=pointer]:
+              - text: Fantasy
+              - generic [ref=e101]: 4,609
+            - button "Adventure 4,005" [ref=e102] [cursor=pointer]:
+              - text: Adventure
+              - generic [ref=e103]: 4,005
+            - button "Sci-Fi 3,064" [ref=e104] [cursor=pointer]:
+              - text: Sci-Fi
+              - generic [ref=e105]: 3,064
+            - button "Drama 2,322" [ref=e106] [cursor=pointer]:
+              - text: Drama
+              - generic [ref=e107]: 2,322
+            - button "Romance 1,910" [ref=e108] [cursor=pointer]:
+              - text: Romance
+              - generic [ref=e109]: 1,910
+            - button "Supernatural 1,415" [ref=e110] [cursor=pointer]:
+              - text: Supernatural
+              - generic [ref=e111]: 1,415
+            - button "Mystery 922" [ref=e112] [cursor=pointer]:
+              - text: Mystery
+              - generic [ref=e113]: "922"
+            - button "Ecchi 776" [ref=e114] [cursor=pointer]:
+              - text: Ecchi
+              - generic [ref=e115]: "776"
+            - button "Slice of Life 765" [ref=e116] [cursor=pointer]:
+              - text: Slice of Life
+              - generic [ref=e117]: "765"
+            - button "Horror 514" [ref=e118] [cursor=pointer]:
+              - text: Horror
+              - generic [ref=e119]: "514"
+            - button "+14 more" [ref=e120] [cursor=pointer]
+        - generic [ref=e47]:
+          - combobox [ref=e48] [cursor=pointer]:
+            - option "All" [selected]
+            - option "Airing"
+            - option "Finished"
+            - option "Upcoming"
+          - combobox [ref=e49] [cursor=pointer]:
+            - option "All years" [selected]
+            - option "2027"
+            - option "2026"
+            - option "2025"
+            - option "2024"
+            - option "2023"
+            - option "2022"
+            - option "2021"
+            - option "2020"
+            - option "2019"
+            - option "2018"
+            - option "2017"
+            - option "2016"
+            - option "2015"
+            - option "2014"
+            - option "2013"
+            - option "2012"
+            - option "2011"
+            - option "2010"
+            - option "2009"
+            - option "2008"
+            - option "2007"
+            - option "2006"
+            - option "2005"
+            - option "2004"
+            - option "2003"
+            - option "2002"
+            - option "2001"
+            - option "2000"
+            - option "1999"
+            - option "1998"
+            - option "1997"
+            - option "1996"
+            - option "1995"
+            - option "1994"
+            - option "1993"
+            - option "1992"
+            - option "1991"
+            - option "1990"
+          - combobox [ref=e50] [cursor=pointer]:
+            - option "Relevance" [selected]
+            - option "Score"
+            - option "Newest"
+            - option "A-Z"
+      - generic [ref=e127]:
+        - generic [ref=e128]: "Active filters:"
+        - button "Comedy" [ref=e129] [cursor=pointer]:
+          - text: Comedy
+          - img [ref=e131]
+        - button "Clear all" [ref=e133] [cursor=pointer]
+      - generic [ref=e134]:
+        - paragraph [ref=e135]:
+          - strong [ref=e136]: "15"
+          - text: results for 'Comedy'
+        - group "View mode" [ref=e137]:
+          - button "Grid view" [ref=e138] [cursor=pointer]:
+            - img [ref=e139]
+          - button "List view" [ref=e144] [cursor=pointer]:
+            - img [ref=e145]
+      - generic [ref=e146]:
+        - link "My Teen Romantic Comedy SNAFU TOO! OVA 8.0 After accepting a weekend invitation, Hachiman Hikigaya accompanies Isshiki Iroha around the Chiba Prefecture to brainst... 1 episodes ★ 8.0 Comedy Romance My Teen Romantic Comedy SNAFU TOO! OVA 2016 · feel." [ref=e147] [cursor=pointer]:
+          - /url: /show/dbf77f43-6bba-4298-97c8-54465704c03a
+          - generic [ref=e148]:
+            - img "My Teen Romantic Comedy SNAFU TOO! OVA" [ref=e150]
+            - generic [ref=e151]: "8.0"
+            - generic:
+              - generic:
+                - paragraph: After accepting a weekend invitation, Hachiman Hikigaya accompanies Isshiki Iroha around the Chiba Prefecture to brainst...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 8.0
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e152]: My Teen Romantic Comedy SNAFU TOO! OVA
+          - generic [ref=e153]: 2016 · feel.
+        - link "Osananajimi to wa Love Comedy ni Naranai High schooler Eiyuu has a dilemma—his two childhood friends, Shio and Akari, have grown up to be almost too cute! Even t... Comedy Romance Osananajimi to wa Love Comedy ni Naranai 2026 · Tezuka Productions" [ref=e154] [cursor=pointer]:
+          - /url: /show/ca146b9b-ed96-4b4e-8386-13e7af04d95e
+          - generic [ref=e155]:
+            - img "Osananajimi to wa Love Comedy ni Naranai" [ref=e157]
+            - generic:
+              - generic:
+                - paragraph: High schooler Eiyuu has a dilemma—his two childhood friends, Shio and Akari, have grown up to be almost too cute! Even t...
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e158]: Osananajimi to wa Love Comedy ni Naranai
+          - generic [ref=e159]: 2026 · Tezuka Productions
+        - 'link "My Teen Romantic Comedy SNAFU Climax! OVA 7.8 Yahari Ore no Seishun Love Comedy wa Machigatteiru. Kan: Dakara, Shishunki wa Owarazu ni, Seishun wa Tsuzuiteiku. adapts... 1 episodes ★ 7.8 Comedy Romance My Teen Romantic Comedy SNAFU Climax! OVA 2023 · feel." [ref=e160] [cursor=pointer]':
+          - /url: /show/8e1d41ff-1ba5-48b2-9c2a-0b6db88013d5
+          - generic [ref=e161]:
+            - img "My Teen Romantic Comedy SNAFU Climax! OVA" [ref=e163]
+            - generic [ref=e164]: "7.8"
+            - generic:
+              - generic:
+                - paragraph: "Yahari Ore no Seishun Love Comedy wa Machigatteiru. Kan: Dakara, Shishunki wa Owarazu ni, Seishun wa Tsuzuiteiku. adapts..."
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.8
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e165]: My Teen Romantic Comedy SNAFU Climax! OVA
+          - generic [ref=e166]: 2023 · feel.
+        - link "My Teen Romantic Comedy SNAFU TOO! 8.2 With the Volunteer Service Club now firmly established, it is receiving more requests from students in search of solutio... 13 episodes ★ 8.2 Comedy Romance My Teen Romantic Comedy SNAFU TOO! 2015 · feel." [ref=e167] [cursor=pointer]:
+          - /url: /show/57be8c3f-baed-40ac-a02e-9f030f8f845e
+          - generic [ref=e168]:
+            - img "My Teen Romantic Comedy SNAFU TOO!" [ref=e170]
+            - generic [ref=e171]: "8.2"
+            - generic:
+              - generic:
+                - paragraph: With the Volunteer Service Club now firmly established, it is receiving more requests from students in search of solutio...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 8.2
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e172]: My Teen Romantic Comedy SNAFU TOO!
+          - generic [ref=e173]: 2015 · feel.
+        - link "My Teen Romantic Comedy SNAFU Climax! 8.3 Resolved to become a more independent person, Yukino Yukinoshita decides to smoothen things out with her parents, and th... 12 episodes ★ 8.3 Comedy Romance My Teen Romantic Comedy SNAFU Climax! 2020 · feel." [ref=e174] [cursor=pointer]:
+          - /url: /show/540846fc-a22a-4a2d-b93a-6c4c7f1bd938
+          - generic [ref=e175]:
+            - img "My Teen Romantic Comedy SNAFU Climax!" [ref=e177]
+            - generic [ref=e178]: "8.3"
+            - generic:
+              - generic:
+                - paragraph: Resolved to become a more independent person, Yukino Yukinoshita decides to smoothen things out with her parents, and th...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 8.3
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e179]: My Teen Romantic Comedy SNAFU Climax!
+          - generic [ref=e180]: 2020 · feel.
+        - link "My Teen Romantic Comedy SNAFU OVA 7.6 One morning, Hachiman Hikigaya contemplates the superfluous nature of marriage and its misleading image of happiness. Ho... 1 episodes ★ 7.6 Comedy Romance My Teen Romantic Comedy SNAFU OVA 2013 · Brain's Base" [ref=e181] [cursor=pointer]:
+          - /url: /show/4838689d-3cf0-4800-aa56-f80449e37b93
+          - generic [ref=e182]:
+            - img "My Teen Romantic Comedy SNAFU OVA" [ref=e184]
+            - generic [ref=e185]: "7.6"
+            - generic:
+              - generic:
+                - paragraph: One morning, Hachiman Hikigaya contemplates the superfluous nature of marriage and its misleading image of happiness. Ho...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.6
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e186]: My Teen Romantic Comedy SNAFU OVA
+          - generic [ref=e187]: 2013 · Brain's Base
+        - link "My Mental Choices Are Completely Interfering With My School Romantic Comedy 7.1 For Kanade Amakusa, life as a high schooler should have been normal, and it would have been—if he wasn't living with the... 10 episodes ★ 7.1 Comedy Romance My Mental Choices Are Completely Interfering With My School Romantic Comedy 2013 · Diomedéa" [ref=e188] [cursor=pointer]:
+          - /url: /show/3f10106c-a987-40f3-95a9-d035ed7e8a53
+          - generic [ref=e189]:
+            - img "My Mental Choices Are Completely Interfering With My School Romantic Comedy" [ref=e191]
+            - generic [ref=e192]: "7.1"
+            - generic:
+              - generic:
+                - paragraph: For Kanade Amakusa, life as a high schooler should have been normal, and it would have been—if he wasn't living with the...
+                - generic:
+                  - generic: 10 episodes
+                  - generic: ★ 7.1
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e193]: My Mental Choices Are Completely Interfering With My School Romantic Comedy
+          - generic [ref=e194]: 2013 · Diomedéa
+        - link "My Mental Choices Are Completely Interfering With My School Romantic Comedy OVA 7.1 Unaired TV episode bundled with the light novel's volume eight. 1 episodes ★ 7.1 Comedy Romance My Mental Choices Are Completely Interfering With My School Romantic Comedy OVA 2014 · Diomedéa" [ref=e195] [cursor=pointer]:
+          - /url: /show/33f22f8d-cd8a-4404-a0de-42f43526bebd
+          - generic [ref=e196]:
+            - img "My Mental Choices Are Completely Interfering With My School Romantic Comedy OVA" [ref=e198]
+            - generic [ref=e199]: "7.1"
+            - generic:
+              - generic:
+                - paragraph: Unaired TV episode bundled with the light novel's volume eight.
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.1
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e200]: My Mental Choices Are Completely Interfering With My School Romantic Comedy OVA
+          - generic [ref=e201]: 2014 · Diomedéa
+        - link "Sexy and Stupid Water Polo Comedy!! 5.1 Hamaji Youhei, a high school freshman, lives his life aimlessly, lazing around all day. He can't keep up with his studie... 3 episodes ★ 5.1 Comedy Romance Sports Sexy and Stupid Water Polo Comedy!! 2015 · Hoods Entertainment" [ref=e202] [cursor=pointer]:
+          - /url: /show/16ca34b4-bae1-4c3d-9a73-af9bcd9bae40
+          - generic [ref=e203]:
+            - img "Sexy and Stupid Water Polo Comedy!!" [ref=e205]
+            - generic [ref=e206]: "5.1"
+            - generic:
+              - generic:
+                - paragraph: Hamaji Youhei, a high school freshman, lives his life aimlessly, lazing around all day. He can't keep up with his studie...
+                - generic:
+                  - generic: 3 episodes
+                  - generic: ★ 5.1
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+                  - generic: Sports
+          - generic [ref=e207]: Sexy and Stupid Water Polo Comedy!!
+          - generic [ref=e208]: 2015 · Hoods Entertainment
+        - link "My Teen Romantic Comedy SNAFU 8.0 Hachiman Hikigaya is an apathetic high school student with narcissistic and semi-nihilistic tendencies. He firmly believ... 13 episodes ★ 8.0 Comedy Romance My Teen Romantic Comedy SNAFU 2013 · Brain's Base" [ref=e209] [cursor=pointer]:
+          - /url: /show/0d5c11f3-923a-4d97-bed4-095b8b9f8319
+          - generic [ref=e210]:
+            - img "My Teen Romantic Comedy SNAFU" [ref=e212]
+            - generic [ref=e213]: "8.0"
+            - generic:
+              - generic:
+                - paragraph: Hachiman Hikigaya is an apathetic high school student with narcissistic and semi-nihilistic tendencies. He firmly believ...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 8.0
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e214]: My Teen Romantic Comedy SNAFU
+          - generic [ref=e215]: 2013 · Brain's Base
+        - link "Sobakasu Pucchi A kids adventure and comedy series. Each 5 minute episode aired Monday through Saturday in a continuing story which comp... 162 episodes Adventure Comedy Sobakasu Pucchi 1969 · None found" [ref=e216] [cursor=pointer]:
+          - /url: /show/ff12aab9-3a24-4d5f-a6f4-69c796abb8fb
+          - generic [ref=e217]:
+            - img "Sobakasu Pucchi" [ref=e219]
+            - generic:
+              - generic:
+                - paragraph: A kids adventure and comedy series. Each 5 minute episode aired Monday through Saturday in a continuing story which comp...
+                - generic:
+                  - generic: 162 episodes
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e220]: Sobakasu Pucchi
+          - generic [ref=e221]: 1969 · None found
+        - link "Ninjaman Ippei 6.0 Way out in the sticks, the fourth-graders of the local school in Tokio village all have their own superpowers of doubtfu... 13 episodes ★ 6.0 Action Comedy Slice of Life Ninjaman Ippei 1982 · None found" [ref=e222] [cursor=pointer]:
+          - /url: /show/fb6996d3-3706-4721-bf7b-2d857bad81a3
+          - generic [ref=e223]:
+            - img "Ninjaman Ippei" [ref=e225]
+            - generic [ref=e226]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: Way out in the sticks, the fourth-graders of the local school in Tokio village all have their own superpowers of doubtfu...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 6.0
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e227]: Ninjaman Ippei
+          - generic [ref=e228]: 1982 · None found
+        - link "Kamiina Botan, Yoeru Sugata wa Yuri no Hana Kamiina Botan is a 20-year-old college student. At the welcome party for the dorm she was assigned to, the dorm leader I... Comedy Girls Love Gourmet Kamiina Botan, Yoeru Sugata wa Yuri no Hana 1969 · Soigne" [ref=e229] [cursor=pointer]:
+          - /url: /show/f8a12ae2-dfb8-4b58-94d4-4f3deb8c6359
+          - generic [ref=e230]:
+            - img "Kamiina Botan, Yoeru Sugata wa Yuri no Hana" [ref=e232]
+            - generic:
+              - generic:
+                - paragraph: Kamiina Botan is a 20-year-old college student. At the welcome party for the dorm she was assigned to, the dorm leader I...
+                - generic:
+                  - generic: Comedy
+                  - generic: Girls Love
+                  - generic: Gourmet
+          - generic [ref=e233]: Kamiina Botan, Yoeru Sugata wa Yuri no Hana
+          - generic [ref=e234]: 1969 · Soigne
+        - link "Samurai Champloo 8.5 Fuu Kasumi is a young and clumsy waitress who spends her days peacefully working in a small teahouse. That is, until she... 26 episodes ★ 8.5 Action Adventure Comedy Samurai Champloo 2004 · Manglobe" [ref=e235] [cursor=pointer]:
+          - /url: /show/f5cae2ac-e13b-4ace-acac-82ec41063c93
+          - generic [ref=e236]:
+            - img "Samurai Champloo" [ref=e238]
+            - generic [ref=e239]: "8.5"
+            - generic:
+              - generic:
+                - paragraph: Fuu Kasumi is a young and clumsy waitress who spends her days peacefully working in a small teahouse. That is, until she...
+                - generic:
+                  - generic: 26 episodes
+                  - generic: ★ 8.5
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e240]: Samurai Champloo
+          - generic [ref=e241]: 2004 · Manglobe
+        - 'link "Kaminari Boy Pikkari★bee A comedy about a mischievous boy. Each episode contains 2 stories. Based on a manga by Murotani Tsunezou. (Source: Ani... 53 episodes Adventure Comedy Kaminari Boy Pikkari★bee 1967 · None found" [ref=e242] [cursor=pointer]':
+          - /url: /show/f53cbfda-7f0e-4495-8f5f-45bdd77901a1
+          - generic [ref=e243]:
+            - img "Kaminari Boy Pikkari★bee" [ref=e245]
+            - generic:
+              - generic:
+                - paragraph: "A comedy about a mischievous boy. Each episode contains 2 stories. Based on a manga by Murotani Tsunezou. (Source: Ani..."
+                - generic:
+                  - generic: 53 episodes
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e246]: Kaminari Boy Pikkari★bee
+          - generic [ref=e247]: 1967 · None found
+      - navigation "Search results pages" [ref=e248]:
+        - button "Prev" [disabled] [ref=e249]:
+          - img [ref=e250]
+          - text: Prev
+        - generic [ref=e252]:
+          - button "1" [ref=e253] [cursor=pointer]
+          - button "2" [ref=e254] [cursor=pointer]
+          - button "3" [ref=e255] [cursor=pointer]
+          - button "4" [ref=e256] [cursor=pointer]
+          - button "5" [ref=e257] [cursor=pointer]
+          - generic [ref=e258]: …
+          - button "16" [ref=e259] [cursor=pointer]
+        - button "Next" [ref=e260] [cursor=pointer]:
+          - text: Next
+          - img [ref=e261]
+  - contentinfo [ref=e58]:
+    - generic [ref=e59]: © 2026 weeb.vip
+    - generic [ref=e60]:
+      - link "About" [ref=e61] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e62] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e63] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e64]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"
+  - button "🛠️ Dev Panel" [ref=e67] [cursor=pointer]:
+    - text: 🛠️
+    - generic [ref=e68]: Dev Panel
+  - generic [ref=e71]:
+    - button "Menu" [ref=e72]:
+      - img [ref=e74]
+      - generic: Menu
+    - button "Inspect" [ref=e78]:
+      - img [ref=e80]
+      - generic: Inspect
+    - button "Audit" [ref=e82]:
+      - generic [ref=e83]:
+        - img [ref=e84]
+        - img [ref=e263]
+      - generic: Audit
+    - button "Settings" [ref=e90]:
+      - img [ref=e92]
+      - generic: Settings

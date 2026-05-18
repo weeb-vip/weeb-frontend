@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
+import { waitForAuthForm } from './helpers';
 
 // This is an alternative test that navigates directly to the login page
 // instead of using the modal, in case the modal has issues
@@ -20,7 +21,7 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
   test('register user via direct navigation', async ({ page }) => {
     // Navigate directly to register page
     await page.goto('/auth/register');
-    await page.waitForLoadState('networkidle');
+    await waitForAuthForm(page);
 
     // Wait for client-side hydration and form to be ready
     // The form might not be immediately visible due to Svelte client:load hydration
@@ -83,10 +84,7 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
   test('verify resend verification page works', async ({ page }) => {
     // Navigate directly to resend verification page
     await page.goto('/auth/resend-verification');
-    await page.waitForLoadState('networkidle');
-
-    // Wait for client-side hydration
-    await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
+    await waitForAuthForm(page);
     await page.waitForTimeout(2000);
 
     // Check page loaded correctly

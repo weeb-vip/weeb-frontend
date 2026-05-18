@@ -555,7 +555,7 @@
     </div>
     <div class="poster-row">
       {#if $seasonalAnimeQuery.isLoading && selectedSeason !== currentSeason}
-        {#each Array(6) as _}
+        {#each Array(14) as _}
           <div class="poster-card-skeleton">
             <div class="poster-skeleton"></div>
             <div class="title-skeleton"></div>
@@ -610,11 +610,31 @@
   /* --- POSTER GRID --- */
   .poster-row {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 16px;
   }
   .poster-row :global(> *) {
-    max-width: 200px;
+    max-width: 220px;
+    justify-self: center;
+  }
+
+  /* On wider screens, allow cards to grow larger and fill space */
+  @media (min-width: 1400px) {
+    .poster-row {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    .poster-row :global(> *) {
+      max-width: 240px;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .poster-row {
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    }
+    .poster-row :global(> *) {
+      max-width: 260px;
+    }
   }
 
   /* --- AIRING STRIP --- */

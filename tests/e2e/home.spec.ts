@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { waitForHomepage } from './helpers';
 
 test('homepage loads correctly', async ({ page }) => {
   await page.goto('/');
-  
+
   // Check if the page title is correct
   await expect(page).toHaveTitle(/weeb/i);
-  
+
   // Check if main content is visible
   await expect(page.locator('body')).toBeVisible();
 });
@@ -13,8 +14,8 @@ test('homepage loads correctly', async ({ page }) => {
 test('navigation works', async ({ page }) => {
   await page.goto('/');
 
-  // Wait for the page to load
-  await page.waitForLoadState('networkidle');
+  // Wait for page hydration
+  await waitForHomepage(page);
 
   // Check if navigation elements are present
   // Use first() to get the main header since there might be multiple headers on the page

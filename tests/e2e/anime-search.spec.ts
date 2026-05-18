@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { waitForHomepage, waitForShowPage } from './helpers';
 
 test('anime search functionality', async ({ page }) => {
   await page.goto('/');
-  await page.waitForLoadState('networkidle');
+  await waitForHomepage(page);
   
   // Look for search input (adjust selector based on actual implementation)
   const searchInput = page.locator('input[type="search"], input[placeholder*="search" i], [data-testid="search-input"]').first();
@@ -72,7 +73,7 @@ test('show detail page', async ({ page }) => {
   const response = await page.goto('/show/1');
 
   // Wait for page to load
-  await page.waitForLoadState('networkidle');
+  await waitForShowPage(page);
 
   // Check if page loaded successfully (not 404)
   if (response && response.status() === 404) {

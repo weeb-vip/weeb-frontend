@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { waitForSeasonPage } from './helpers';
 
 test.describe('Season page', () => {
   test('loads season page with heading and navigation', async ({ page }) => {
     await page.goto('/season/SPRING_2026');
-    await page.waitForLoadState('networkidle');
+    await waitForSeasonPage(page);
 
     // Heading renders
     await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
@@ -20,7 +21,7 @@ test.describe('Season page', () => {
 
   test('clicking next season navigates and updates page', async ({ page }) => {
     await page.goto('/season/SPRING_2026');
-    await page.waitForLoadState('networkidle');
+    await waitForSeasonPage(page);
 
     await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
 
@@ -34,7 +35,7 @@ test.describe('Season page', () => {
 
   test('clicking previous season navigates and updates page', async ({ page }) => {
     await page.goto('/season/SPRING_2026');
-    await page.waitForLoadState('networkidle');
+    await waitForSeasonPage(page);
 
     await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
 
