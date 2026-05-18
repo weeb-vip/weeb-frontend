@@ -7,7 +7,7 @@
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { getAirTimeDisplay, findNextEpisode, getCurrentTime, parseAirTime } from '../../services/airTimeUtils';
   import Button from './Button.svelte';
-  import AnimeCard from './AnimeCard.svelte';
+  import PosterCard from './PosterCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
   import ProfileImageUpload from './ProfileImageUpload.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -372,390 +372,294 @@
   }
 </script>
 
-<div class="max-w-screen-2xl mx-auto px-4 py-8">
+<div class="profile-page">
   {#if !mounted || !userQuery || (userQuery && $userQuery.isLoading)}
     <!-- Loading skeleton -->
-    <div class="bg-weeb-surface shadow rounded-lg p-6 mb-8 animate-pulse">
-      <div class="flex items-center space-x-4 mb-4">
-        <div class="w-20 h-20 bg-weeb-surface-hover bg-weeb-surface-hover rounded-full"></div>
-        <div class="h-6 bg-weeb-surface-hover bg-weeb-surface-hover rounded w-32"></div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {#each Array(4) as _}
-          <div>
-            <div class="h-4 bg-weeb-surface rounded w-20 mb-2"></div>
-            <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded w-32"></div>
-          </div>
-        {/each}
+    <div class="profile-header skeleton-pulse">
+      <div class="profile-avatar skeleton-block"></div>
+      <div class="profile-info">
+        <div class="skeleton-line skeleton-line--lg"></div>
+        <div class="skeleton-line skeleton-line--sm"></div>
+        <div class="profile-stats">
+          {#each Array(5) as _}
+            <div class="skeleton-line skeleton-line--xs"></div>
+          {/each}
+        </div>
       </div>
     </div>
+
+    <div class="stats-cards">
+      {#each Array(4) as _}
+        <div class="stats-card skeleton-pulse">
+          <div class="skeleton-line skeleton-line--lg"></div>
+          <div class="skeleton-line skeleton-line--sm"></div>
+        </div>
+      {/each}
+    </div>
   {:else if userQuery && $userQuery.data}
-    <!-- User Info Section -->
-    <div class="bg-weeb-surface shadow rounded-lg p-6 mb-8 transition-colors duration-300">
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center space-x-4">
-          <div class="relative group">
-            <div class="w-20 h-20 rounded-full overflow-hidden bg-weeb-surface">
-              {#if $userQuery.data.profileImageUrl}
-                <img
-                  src={getProfileImageUrl($userQuery.data.profileImageUrl)}
-                  alt={$userQuery.data.username}
-                  class="w-full h-full object-cover"
-                />
-              {:else}
-                <div class="w-full h-full flex items-center justify-center text-2xl font-semibold text-weeb-fg-muted">
-                  {$userQuery.data.username.charAt(0).toUpperCase()}
-                </div>
-              {/if}
-            </div>
-            <button
-              on:click={() => showUploadModal = true}
-              class="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center"
-              aria-label="Change profile picture"
-            >
-              <span class="text-white text-sm font-medium">Change</span>
-            </button>
-          </div>
-          <h2 class="text-xl font-semibold text-weeb-fg">Profile</h2>
+    <!-- Profile Header -->
+    <header class="profile-header">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar">
+          {#if $userQuery.data.profileImageUrl}
+            <img
+              src={getProfileImageUrl($userQuery.data.profileImageUrl)}
+              alt={$userQuery.data.username}
+              class="profile-avatar-img"
+            />
+          {:else}
+            <span class="profile-avatar-letter">
+              {$userQuery.data.username.charAt(0).toUpperCase()}
+            </span>
+          {/if}
         </div>
-        <a
-          href="/profile/settings"
-          class="text-weeb-accent hover:underline transition-colors duration-300 text-sm"
+        <button
+          on:click={() => showUploadModal = true}
+          class="profile-avatar-overlay"
+          aria-label="Change profile picture"
         >
-          Settings
-        </a>
+          <span>Change</span>
+        </button>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        <div>
-          <p class="text-weeb-fg-muted">Name</p>
-          <p class="text-weeb-fg font-medium">
+      <div class="profile-info">
+        <h1 class="profile-name">{$userQuery.data.username}</h1>
+        <p class="profile-meta">
+          {#if $userQuery.data.firstname || $userQuery.data.lastname}
             {$userQuery.data.firstname} {$userQuery.data.lastname}
-          </p>
+          {/if}
+        </p>
+        <div class="profile-stats">
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--weeb-green)"></span>
+            <span class="stat-label">Watching</span>
+            <span class="stat-count">{watchlistAnalysis.watching}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--weeb-accent)"></span>
+            <span class="stat-label">Completed</span>
+            <span class="stat-count">{watchlistAnalysis.completed}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--weeb-fg-muted)"></span>
+            <span class="stat-label">Plan to Watch</span>
+            <span class="stat-count">{watchlistAnalysis.planToWatch}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--weeb-amber)"></span>
+            <span class="stat-label">On Hold</span>
+            <span class="stat-count">{watchlistAnalysis.onHold}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot" style="background:var(--weeb-red)"></span>
+            <span class="stat-label">Dropped</span>
+            <span class="stat-count">{watchlistAnalysis.dropped}</span>
+          </div>
         </div>
-        <div>
-          <p class="text-weeb-fg-muted">Username</p>
-          <p class="text-weeb-fg font-medium">{$userQuery.data.username}</p>
+      </div>
+    </header>
+
+    <!-- Stats Cards -->
+    <div class="stats-cards">
+      <div class="stats-card">
+        <div class="stats-card-number">
+          {watchlistAnalysis.watching + watchlistAnalysis.completed + watchlistAnalysis.planToWatch + watchlistAnalysis.onHold + watchlistAnalysis.dropped}
         </div>
-        <div>
-          <p class="text-weeb-fg-muted">Email</p>
-          <p class="text-weeb-fg font-medium">
-            {$userQuery.data.email || "Not provided"}
-          </p>
+        <div class="stats-card-label">Total Anime</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-card-number">
+          {($watchingQuery && $watchingQuery.data?.total) || 0}
         </div>
-        <div>
-          <p class="text-weeb-fg-muted">Language</p>
-          <p class="text-weeb-fg font-medium">{$userQuery.data.language}</p>
+        <div class="stats-card-label">Watching</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-card-number">
+          {watchlistAnalysis.airingSoon.length}
         </div>
+        <div class="stats-card-label">Airing This Week</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-card-number">
+          {watchlistAnalysis.recentlyAired.length}
+        </div>
+        <div class="stats-card-label">Recent Episodes</div>
       </div>
     </div>
   {/if}
 
-  <!-- Dashboard Section -->
-  <div class="space-y-8">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <h1 class="text-3xl font-bold text-weeb-fg">Dashboard</h1>
-      <a
-        href="/profile/anime"
-        class="flex items-center gap-2 text-weeb-accent hover:text-weeb-accent-hover transition-colors"
-      >
-        <i class="fas fa-bookmark"></i> View All Lists →
-      </a>
-    </div>
-    <!-- Currently Watching Section -->
-    <section>
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-          <i class="fas fa-play text-weeb-accent text-xl"></i>
-          <h2 class="text-xl font-semibold text-weeb-fg">
-            Currently Watching
-          </h2>
-          {#if !watchlistAnalysis.isLoading && watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
-            <span class="bg-weeb-accent/15 text-weeb-accent text-sm font-medium px-2 py-1 rounded-full">
-              {watchlistAnalysis.currentlyWatching.length}
-            </span>
-          {/if}
-        </div>
-        {#if !watchlistAnalysis.isLoading && watchlistAnalysis.watching > 0}
-          <a
-            href="/profile/anime"
-            class="text-weeb-accent hover:text-weeb-accent-hover transition-colors text-sm flex items-center gap-1"
-          >
-            View All →
-          </a>
+  <!-- Currently Watching Section -->
+  <section class="profile-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <i class="fas fa-play section-icon section-icon--accent"></i>
+        <h2 class="section-title">Currently Watching</h2>
+        {#if !watchlistAnalysis.isLoading && watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
+          <span class="section-count section-count--accent">
+            {watchlistAnalysis.currentlyWatching.length}
+          </span>
         {/if}
       </div>
-
-      {#if watchlistAnalysis.isLoading}
-        <!-- Loading skeleton for Currently Watching -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {#each Array(6) as _}
-            <div class="bg-weeb-surface rounded-lg shadow-sm p-4 animate-pulse">
-              <div class="flex gap-3">
-                <div class="w-16 h-24 bg-weeb-surface-hover bg-weeb-surface-hover rounded"></div>
-                <div class="flex-1">
-                  <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded mb-2"></div>
-                  <div class="h-3 bg-weeb-surface rounded w-3/4 mb-2"></div>
-                  <div class="h-3 bg-weeb-surface rounded w-1/2"></div>
-                </div>
-              </div>
-            </div>
-          {/each}
-        </div>
-      {:else if watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {#each watchlistAnalysis.currentlyWatching as entry}
-            <AnimeCard
-              forceListLayout={true}
-              id={entry.anime?.id}
-              style="detail"
-              title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
-              description={entry.anime?.description || ""}
-              episodes={entry.anime?.episodeCount || 0}
-              episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
-              image={GetImageFromAnime(entry.anime)}
-              onClick={() => navigateToAnime(entry.anime?.id)}
-              year=""
-              tags={entry.anime?.tags || []}
-              airTime={entry.airTimeDisplay}
-              showWatchingFallback={true}
-              nextEpisode={entry.nextEpisode}
-              broadcast={entry.anime?.broadcast}
-            >
-              <div slot="options">
-                <AnimeStatusDropdown
-                  entry={entry}
-                  variant="compact"
-                />
-              </div>
-            </AnimeCard>
-          {/each}
-        </div>
-      {:else}
-        <!-- Empty state for Currently Watching -->
-        <div class="bg-weeb-bg-elevated rounded-lg p-6 text-center">
-          <i class="fas fa-tv text-4xl text-weeb-fg-muted mb-3 block"></i>
-          <p class="text-weeb-fg-muted">
-            You're not currently watching any anime
-          </p>
-          <p class="text-sm text-weeb-fg-muted mt-2">
-            Start watching something new from your plan to watch list
-          </p>
-        </div>
+      {#if !watchlistAnalysis.isLoading && watchlistAnalysis.watching > 0}
+        <a href="/profile/anime" class="section-link">View All</a>
       {/if}
-    </section>
+    </div>
 
-    <!-- Quick Stats -->
-    <section class="bg-weeb-surface rounded-lg p-6 shadow-sm transition-colors duration-300">
-      <h3 class="text-lg font-semibold text-weeb-fg mb-4">Quick Stats</h3>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="text-center">
-          <div class="text-2xl font-bold text-weeb-accent">
-            {($watchingQuery && $watchingQuery.data?.total) || 0}
+    {#if watchlistAnalysis.isLoading}
+      <div class="anime-grid anime-grid--3col">
+        {#each Array(6) as _}
+          <div class="skeleton-card skeleton-pulse">
+            <div class="skeleton-poster"></div>
+            <div class="skeleton-card-body">
+              <div class="skeleton-line skeleton-line--lg"></div>
+              <div class="skeleton-line skeleton-line--md"></div>
+              <div class="skeleton-line skeleton-line--sm"></div>
+            </div>
           </div>
-          <div class="text-sm text-weeb-fg-muted">Watching</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-weeb-green">
-            {($planToWatchQuery && $planToWatchQuery.data?.total) || 0}
-          </div>
-          <div class="text-sm text-weeb-fg-muted">Plan to Watch</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-weeb-red">
-            {watchlistAnalysis.airingSoon.length}
-          </div>
-          <div class="text-sm text-weeb-fg-muted">This Week</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-weeb-amber">
-            {watchlistAnalysis.recentlyAired.length}
-          </div>
-          <div class="text-sm text-weeb-fg-muted">Recent Episodes</div>
-        </div>
+        {/each}
       </div>
-    </section>
-
-    <!-- Empty State -->
-    {#if watchlistAnalysis.airingSoon.length === 0 && watchlistAnalysis.recentlyAired.length === 0 && (!watchlistAnalysis.currentlyWatching || watchlistAnalysis.currentlyWatching.length === 0)}
-      <div class="text-center py-12">
-        <i class="fas fa-bookmark text-6xl text-weeb-fg-muted mb-4 block"></i>
-        <h3 class="text-xl font-semibold text-weeb-fg mb-2">
-          Your watchlist is empty
-        </h3>
-        <p class="text-weeb-fg-muted mb-6">
-          Start adding anime to your watchlist to see personalized recommendations and airing schedules.
-        </p>
-        <a
-          href="/"
-          class="inline-flex items-center gap-2 bg-weeb-accent hover:bg-weeb-accent-hover text-white px-6 py-3 rounded-lg transition-colors"
-        >
-          Explore Anime →
-        </a>
+    {:else if watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
+      <div class="anime-grid anime-grid--3col">
+        {#each watchlistAnalysis.currentlyWatching as entry}
+          <PosterCard
+            id={entry.anime?.id}
+            title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(entry.anime)}
+            score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
+            status={entry.anime?.status || null}
+            sub={entry.anime?.episodeCount ? `${entry.anime.episodeCount} episodes` : ''}
+            genres={entry.anime?.tags || []}
+            description={entry.anime?.description || ''}
+            episodeCount={entry.anime?.episodeCount}
+            onList={entry.status || 'watching'}
+          />
+        {/each}
+      </div>
+    {:else}
+      <div class="empty-state">
+        <i class="fas fa-tv empty-state-icon"></i>
+        <p class="empty-state-text">You're not currently watching any anime</p>
+        <p class="empty-state-sub">Start watching something new from your plan to watch list</p>
       </div>
     {/if}
+  </section>
 
-    <!-- Airing This Week Section -->
-    <section>
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-          <i class="fas fa-play text-weeb-red text-xl"></i>
-          <h2 class="text-xl font-semibold text-weeb-fg">
-            Airing This Week
-          </h2>
-          {#if !watchlistAnalysis.isLoading && watchlistAnalysis.airingSoon.length > 0}
-            <span class="bg-weeb-red/15 text-weeb-red text-sm font-medium px-2 py-1 rounded-full">
-              {watchlistAnalysis.airingSoon.length}
-            </span>
-          {/if}
-        </div>
+  <!-- Empty State -->
+  {#if watchlistAnalysis.airingSoon.length === 0 && watchlistAnalysis.recentlyAired.length === 0 && (!watchlistAnalysis.currentlyWatching || watchlistAnalysis.currentlyWatching.length === 0)}
+    <div class="empty-state empty-state--hero">
+      <i class="fas fa-bookmark empty-state-icon empty-state-icon--lg"></i>
+      <h3 class="empty-state-heading">Your watchlist is empty</h3>
+      <p class="empty-state-text">
+        Start adding anime to your watchlist to see personalized recommendations and airing schedules.
+      </p>
+      <a href="/" class="empty-state-cta">Explore Anime</a>
+    </div>
+  {/if}
+
+  <!-- Airing This Week Section -->
+  <section class="profile-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <i class="fas fa-play section-icon section-icon--red"></i>
+        <h2 class="section-title">Airing This Week</h2>
+        {#if !watchlistAnalysis.isLoading && watchlistAnalysis.airingSoon.length > 0}
+          <span class="section-count section-count--red">
+            {watchlistAnalysis.airingSoon.length}
+          </span>
+        {/if}
       </div>
+    </div>
 
-      {#if watchlistAnalysis.isLoading}
-        <!-- Loading skeleton for Airing This Week -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {#each Array(3) as _}
-            <div class="bg-weeb-surface rounded-lg shadow-sm p-4 animate-pulse">
-              <div class="flex gap-3">
-                <div class="w-16 h-24 bg-weeb-surface-hover bg-weeb-surface-hover rounded"></div>
-                <div class="flex-1">
-                  <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded mb-2"></div>
-                  <div class="h-3 bg-weeb-surface rounded w-3/4 mb-2"></div>
-                  <div class="h-3 bg-weeb-surface rounded w-1/2"></div>
-                </div>
-              </div>
+    {#if watchlistAnalysis.isLoading}
+      <div class="anime-grid anime-grid--3col">
+        {#each Array(3) as _}
+          <div class="skeleton-card skeleton-pulse">
+            <div class="skeleton-poster"></div>
+            <div class="skeleton-card-body">
+              <div class="skeleton-line skeleton-line--lg"></div>
+              <div class="skeleton-line skeleton-line--md"></div>
+              <div class="skeleton-line skeleton-line--sm"></div>
             </div>
-          {/each}
-        </div>
-      {:else if watchlistAnalysis.airingSoon.length > 0}
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {#each watchlistAnalysis.airingSoon as entry}
-            <AnimeCard
-              forceListLayout={true}
-              id={entry.anime?.id || entry.airingInfo?.id}
-              style="episode"
-              title={getAnimeTitle(entry.anime || entry.airingInfo, $preferencesStore.titleLanguage)}
-              episodeTitle={entry.airingInfo.nextEpisode?.titleEn || entry.airingInfo.nextEpisode?.titleJp || "Unknown"}
-              description={entry.anime?.description || ""}
-              episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
-              episodeNumber={entry.airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown"}
-              className="hover:cursor-pointer"
-              year={getYearUTC(entry.anime?.startDate)}
-              image={GetImageFromAnime(entry.anime || entry.airingInfo)}
-              airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do") : "Unknown"}
-              airTime={entry.airingInfo.airTimeDisplay}
-              tags={entry.anime?.tags || entry.airingInfo?.tags || []}
-              onClick={() => navigateToAnime(entry.anime?.id || entry.airingInfo?.id)}
-              episodes={entry.anime?.episodeCount || 0}
-            >
-              <div slot="options">
-                {#if entry.airingInfo?.isInWatchlist && entry.anime && entry.status}
-                  <AnimeStatusDropdown
-                    entry={entry}
-                    variant="compact"
-                  />
-                {:else}
-                  <Button
-                    color="blue"
-                    label="Add to list"
-                    status="idle"
-                    onClick={() => navigateToAnime(entry.anime?.id || entry.airingInfo?.id)}
-                  />
-                {/if}
-              </div>
-            </AnimeCard>
-          {/each}
-        </div>
-      {:else}
-        <!-- Empty state for Airing This Week -->
-        <div class="bg-weeb-bg-elevated rounded-lg p-6 text-center">
-          <i class="fas fa-calendar-xmark text-4xl text-weeb-fg-muted mb-3 block"></i>
-          <p class="text-weeb-fg-muted">
-            No episodes airing this week from your watchlist
-          </p>
-          <p class="text-sm text-weeb-fg-muted mt-2">
-            Check back later or add more anime to your watchlist
-          </p>
-        </div>
-      {/if}
-    </section>
-
-    <!-- Recently Aired Episodes Section -->
-    <section>
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-          <i class="fas fa-calendar-days text-weeb-green text-xl"></i>
-          <h2 class="text-xl font-semibold text-weeb-fg">
-            Recently Aired Episodes
-          </h2>
-          {#if !watchlistAnalysis.isLoading && watchlistAnalysis.recentlyAired.length > 0}
-            <span class="bg-weeb-green/15 text-weeb-green text-sm font-medium px-2 py-1 rounded-full">
-              {watchlistAnalysis.recentlyAired.length}
-            </span>
-          {/if}
-        </div>
+          </div>
+        {/each}
       </div>
+    {:else if watchlistAnalysis.airingSoon.length > 0}
+      <div class="anime-grid anime-grid--3col">
+        {#each watchlistAnalysis.airingSoon as entry}
+          <PosterCard
+            id={entry.anime?.id || entry.airingInfo?.id}
+            title={getAnimeTitle(entry.anime || entry.airingInfo, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(entry.anime || entry.airingInfo)}
+            score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
+            status={entry.anime?.status || null}
+            sub={entry.anime?.episodeCount ? `${entry.anime.episodeCount} episodes` : ''}
+            genres={entry.anime?.tags || entry.airingInfo?.tags || []}
+            description={entry.anime?.description || ''}
+            episodeCount={entry.anime?.episodeCount}
+            onList={entry.status || 'watching'}
+          />
+        {/each}
+      </div>
+    {:else}
+      <div class="empty-state">
+        <i class="fas fa-calendar-xmark empty-state-icon"></i>
+        <p class="empty-state-text">No episodes airing this week from your watchlist</p>
+        <p class="empty-state-sub">Check back later or add more anime to your watchlist</p>
+      </div>
+    {/if}
+  </section>
 
-      {#if watchlistAnalysis.isLoading}
-        <!-- Loading skeleton for Recently Aired -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {#each Array(3) as _}
-            <div class="bg-weeb-surface rounded-lg shadow-sm p-4 animate-pulse">
-              <div class="flex gap-3">
-                <div class="w-16 h-24 bg-weeb-surface-hover bg-weeb-surface-hover rounded"></div>
-                <div class="flex-1">
-                  <div class="h-4 bg-weeb-surface-hover bg-weeb-surface-hover rounded mb-2"></div>
-                  <div class="h-3 bg-weeb-surface rounded w-3/4 mb-2"></div>
-                  <div class="h-3 bg-weeb-surface rounded w-1/2"></div>
-                </div>
-              </div>
+  <!-- Recently Aired Episodes Section -->
+  <section class="profile-section">
+    <div class="section-header">
+      <div class="section-header-left">
+        <i class="fas fa-calendar-days section-icon section-icon--green"></i>
+        <h2 class="section-title">Recently Aired Episodes</h2>
+        {#if !watchlistAnalysis.isLoading && watchlistAnalysis.recentlyAired.length > 0}
+          <span class="section-count section-count--green">
+            {watchlistAnalysis.recentlyAired.length}
+          </span>
+        {/if}
+      </div>
+    </div>
+
+    {#if watchlistAnalysis.isLoading}
+      <div class="anime-grid anime-grid--3col">
+        {#each Array(3) as _}
+          <div class="skeleton-card skeleton-pulse">
+            <div class="skeleton-poster"></div>
+            <div class="skeleton-card-body">
+              <div class="skeleton-line skeleton-line--lg"></div>
+              <div class="skeleton-line skeleton-line--md"></div>
+              <div class="skeleton-line skeleton-line--sm"></div>
             </div>
-          {/each}
-        </div>
-      {:else if watchlistAnalysis.recentlyAired.length > 0}
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {#each watchlistAnalysis.recentlyAired as entry}
-            <AnimeCard
-              forceListLayout={true}
-              id={entry.anime?.id || entry.airingInfo?.id}
-              style="episode"
-              title={getAnimeTitle(entry.anime || entry.airingInfo, $preferencesStore.titleLanguage)}
-              episodeTitle={entry.airingInfo.recentEpisode?.titleEn || entry.airingInfo.recentEpisode?.titleJp || "Unknown"}
-              description={entry.anime?.description || ""}
-              episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
-              episodeNumber={entry.airingInfo.recentEpisode?.episodeNumber?.toString() || "Unknown"}
-              className="hover:cursor-pointer"
-              year={getYearUTC(entry.anime?.startDate)}
-              image={GetImageFromAnime(entry.anime || entry.airingInfo)}
-              airdate={entry.airingInfo.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE MMM do") : "Unknown"}
-              airTime={entry.airingInfo.airTimeDisplay}
-              tags={entry.anime?.tags || entry.airingInfo?.tags || []}
-              onClick={() => navigateToAnime(entry.anime?.id || entry.airingInfo?.id)}
-              episodes={entry.anime?.episodeCount || 0}
-            >
-              <div slot="options">
-                <AnimeStatusDropdown
-                  entry={entry}
-                  variant="compact"
-                />
-              </div>
-            </AnimeCard>
-          {/each}
-        </div>
-      {:else}
-        <!-- Empty state for Recently Aired -->
-        <div class="bg-weeb-bg-elevated rounded-lg p-6 text-center">
-          <i class="fas fa-clock-rotate-left text-4xl text-weeb-fg-muted mb-3 block"></i>
-          <p class="text-weeb-fg-muted">
-            No recent episodes from your watchlist
-          </p>
-          <p class="text-sm text-weeb-fg-muted mt-2">
-            Episodes you've watched will appear here
-          </p>
-        </div>
-      {/if}
-    </section>
-  </div>
+          </div>
+        {/each}
+      </div>
+    {:else if watchlistAnalysis.recentlyAired.length > 0}
+      <div class="anime-grid anime-grid--3col">
+        {#each watchlistAnalysis.recentlyAired as entry}
+          <PosterCard
+            id={entry.anime?.id || entry.airingInfo?.id}
+            title={getAnimeTitle(entry.anime || entry.airingInfo, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(entry.anime || entry.airingInfo)}
+            score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
+            status={entry.anime?.status || null}
+            sub={entry.anime?.episodeCount ? `${entry.anime.episodeCount} episodes` : ''}
+            genres={entry.anime?.tags || entry.airingInfo?.tags || []}
+            description={entry.anime?.description || ''}
+            episodeCount={entry.anime?.episodeCount}
+            onList={entry.status || 'watching'}
+          />
+        {/each}
+      </div>
+    {:else}
+      <div class="empty-state">
+        <i class="fas fa-clock-rotate-left empty-state-icon"></i>
+        <p class="empty-state-text">No recent episodes from your watchlist</p>
+        <p class="empty-state-sub">Episodes you've watched will appear here</p>
+      </div>
+    {/if}
+  </section>
 </div>
 
 <!-- Profile Image Upload Modal -->
@@ -765,3 +669,430 @@
   {queryClient}
   on:close={() => showUploadModal = false}
 />
+
+<style>
+  /* ── Page container ──────────────────────────────────────────── */
+  .profile-page {
+    width: 100%;
+    padding: 48px var(--weeb-section-px, 48px) 64px;
+  }
+
+  /* ── Profile header ──────────────────────────────────────────── */
+  .profile-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--weeb-border);
+    margin-bottom: 32px;
+  }
+
+  .profile-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .profile-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--weeb-accent) 0%, var(--weeb-violet, var(--weeb-accent-hover)) 50%, var(--weeb-accent) 100%);
+    flex-shrink: 0;
+    box-shadow: 0 4px 24px color-mix(in oklch, var(--weeb-accent) 30%, transparent);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-avatar-letter {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .profile-avatar-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .profile-avatar-wrap:hover .profile-avatar-overlay {
+    opacity: 1;
+  }
+
+  .profile-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .profile-name {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--weeb-fg);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .profile-meta {
+    font-size: 0.85rem;
+    color: var(--weeb-fg-muted);
+    margin-bottom: 20px;
+  }
+
+  .profile-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+  }
+
+  .stat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .stat-label {
+    color: var(--weeb-fg-muted);
+  }
+
+  .stat-count {
+    font-weight: 600;
+    color: var(--weeb-fg);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Stats cards ─────────────────────────────────────────────── */
+  .stats-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .stats-card {
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    text-align: center;
+    transition: border-color 0.15s;
+  }
+
+  .stats-card:hover {
+    border-color: var(--weeb-accent);
+  }
+
+  .stats-card-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--weeb-fg);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .stats-card-label {
+    font-size: 0.8rem;
+    color: var(--weeb-fg-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+
+  /* ── Section layout ──────────────────────────────────────────── */
+  .profile-section {
+    margin-bottom: 40px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-icon {
+    font-size: 1.15rem;
+  }
+
+  .section-icon--accent {
+    color: var(--weeb-accent);
+  }
+
+  .section-icon--red {
+    color: var(--weeb-red);
+  }
+
+  .section-icon--green {
+    color: var(--weeb-green);
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--weeb-fg);
+    letter-spacing: -0.01em;
+  }
+
+  .section-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .section-count--accent {
+    background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
+    color: var(--weeb-accent);
+  }
+
+  .section-count--red {
+    background: color-mix(in oklch, var(--weeb-red) 15%, transparent);
+    color: var(--weeb-red);
+  }
+
+  .section-count--green {
+    background: color-mix(in oklch, var(--weeb-green) 15%, transparent);
+    color: var(--weeb-green);
+  }
+
+  .section-link {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--weeb-accent);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .section-link:hover {
+    color: var(--weeb-accent-hover);
+  }
+
+  /* ── Anime grid ──────────────────────────────────────────────── */
+  .anime-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .anime-grid--3col {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .anime-grid--3col > :global(*) {
+    max-width: 220px;
+  }
+
+  /* ── Empty state ─────────────────────────────────────────────── */
+  .empty-state {
+    background: var(--weeb-bg-elevated, var(--weeb-surface));
+    border: 1px solid var(--weeb-border);
+    border-radius: 12px;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .empty-state--hero {
+    padding: 64px 24px;
+    margin-bottom: 40px;
+  }
+
+  .empty-state-icon {
+    font-size: 2.5rem;
+    color: var(--weeb-fg-muted);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .empty-state-icon--lg {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+  }
+
+  .empty-state-heading {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--weeb-fg);
+    margin-bottom: 8px;
+  }
+
+  .empty-state-text {
+    font-size: 0.9rem;
+    color: var(--weeb-fg-muted);
+  }
+
+  .empty-state-sub {
+    font-size: 0.8rem;
+    color: var(--weeb-fg-muted);
+    margin-top: 8px;
+  }
+
+  .empty-state-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: var(--weeb-accent);
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  .empty-state-cta:hover {
+    background: var(--weeb-accent-hover);
+  }
+
+  /* ── Skeleton loading ────────────────────────────────────────── */
+  .skeleton-pulse {
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-shimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .skeleton-block {
+    background: var(--weeb-surface-hover, var(--weeb-surface));
+    border-radius: 50%;
+  }
+
+  .skeleton-line {
+    background: var(--weeb-surface-hover, var(--weeb-surface));
+    border-radius: 6px;
+    height: 14px;
+  }
+
+  .skeleton-line--lg {
+    width: 60%;
+    height: 20px;
+    margin-bottom: 8px;
+  }
+
+  .skeleton-line--md {
+    width: 75%;
+    height: 14px;
+    margin-bottom: 6px;
+  }
+
+  .skeleton-line--sm {
+    width: 40%;
+    height: 12px;
+    margin-bottom: 6px;
+  }
+
+  .skeleton-line--xs {
+    width: 60px;
+    height: 12px;
+  }
+
+  .skeleton-card {
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .skeleton-poster {
+    width: 100%;
+    height: 80px;
+    background: var(--weeb-surface-hover, var(--weeb-surface));
+  }
+
+  .skeleton-card-body {
+    padding: 14px;
+  }
+
+  /* ── Responsive ──────────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .anime-grid--3col {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .profile-page {
+      padding: 24px 16px 48px;
+    }
+
+    .profile-header {
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+    }
+
+    .profile-name {
+      font-size: 1.5rem;
+    }
+
+    .stats-cards {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stats-card {
+      padding: 14px 16px;
+    }
+
+    .stats-card-number {
+      font-size: 1.5rem;
+    }
+
+    .anime-grid--3col {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+  }
+
+  @media (max-width: 480px) {
+    .profile-stats {
+      gap: 12px;
+    }
+
+    .stats-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

@@ -2,7 +2,7 @@
 import SvelteLayout from '../layouts/SvelteLayout.astro';
 import CurrentlyAiringPage from '../svelte/components/CurrentlyAiringPage.svelte';
 import { GraphQLClient } from 'graphql-request';
-import { getCurrentlyAiringWithDates } from '../services/api/graphql/queries';
+import { getCurrentlyAiringWithDatesAndEpisodes } from '../services/api/graphql/queries';
 
 export const prerender = false;
 
@@ -93,14 +93,16 @@ try {
     }
   }
 
-  // Prepare request parameters for currently airing (same as client-side)
-  const defaultStartDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  // Prepare request parameters — fetch from start of current month to end of next month
+  // This gives both schedule view (next 7 days) and calendar view (full month) their data
+  const now = new Date();
+  const defaultStartDate = new Date(now.getFullYear(), now.getMonth(), 1); // 1st of current month
+  const defaultEndDate = new Date(now.getFullYear(), now.getMonth() + 2, 0); // Last day of next month
 
-  // Fetch currently airing data
-  currentlyAiringData = await fetchWithFallback(getCurrentlyAiringWithDates, {
+  // Fetch currently airing data with wide range for calendar
+  currentlyAiringData = await fetchWithFallback(getCurrentlyAiringWithDatesAndEpisodes, {
     input: { startDate: defaultStartDate, endDate: defaultEndDate },
-    limit: 25
+    limit: 100
   }, 'currently airing data');
 
   console.log('[SSR] Airing page data result:', {

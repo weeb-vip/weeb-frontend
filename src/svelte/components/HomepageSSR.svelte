@@ -498,6 +498,7 @@
             description={anime.description || ''}
             episodeCount={anime.episodeCount}
             sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            onList={anime.userAnime?.status || null}
           />
         {/each}
       </div>
@@ -520,6 +521,7 @@
             description={anime.description || ''}
             episodeCount={anime.episodeCount}
             sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            onList={anime.userAnime?.status || null}
           />
         {/each}
       </div>
@@ -575,6 +577,7 @@
             description={anime.description || ''}
             episodeCount={anime.episodeCount}
             sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            onList={anime.userAnime?.status || null}
           />
         {/each}
       {/if}
@@ -585,6 +588,7 @@
 <style>
   .homepage {
     width: 100%;
+    overflow-x: clip;
   }
   .hero-wrapper {
     width: 100%;

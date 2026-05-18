@@ -7,7 +7,7 @@
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { navigateWithTransition } from '../../utils/astro-navigation';
   import { initializeQueryClient } from '../services/query-client';
-  import AnimeCard from './AnimeCard.svelte';
+  import PosterCard from './PosterCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
@@ -181,7 +181,7 @@
 
 {#if !mounted || isLoading}
   <!-- Loading skeleton -->
-  <div class="flex flex-col space-y-6 max-w-screen-2xl mx-auto px-4">
+  <div class="flex flex-col space-y-6 max-w-screen-2xl mx-auto px-4 lg:px-12">
     <div class="flex flex-wrap gap-2 py-4">
       {#each Array(5) as _}
         <div class="h-10 w-24 bg-weeb-surface-hover bg-weeb-surface-hover rounded-full animate-pulse"></div>
@@ -197,7 +197,7 @@
     </div>
   </div>
 {:else}
-  <div class="flex flex-col space-y-6 max-w-screen-2xl mx-auto px-4">
+  <div class="flex flex-col space-y-6 max-w-screen-2xl mx-auto px-4 lg:px-12">
     <!-- Status Filter Buttons -->
     <div class="flex flex-wrap gap-2 py-4">
       {#each Object.values(Status) as status}
@@ -237,32 +237,20 @@
         </div>
       {:else}
         <!-- Anime Grid -->
-        <div class="w-full lg:w-fit grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-4 gap-y-6 py-4 justify-center">
+        <div class="anime-grid py-4">
           {#each userAnimes as entry}
-            <AnimeCard
-              style="detail"
+            <PosterCard
               id={entry.anime?.id}
               title={getAnimeTitle(entry.anime, preferences.titleLanguage)}
-              description={entry.anime?.description || ""}
-              episodes={entry.anime?.episodeCount || 0}
-              episodeLength={entry.anime?.duration?.replace(/per.+?$|per/gm, '') || "?"}
               image={GetImageFromAnime(entry.anime)}
-              className="hover:cursor-pointer"
-              year={getYearUTC(entry.anime?.startDate)}
-              tags={entry.anime?.tags || []}
-              entry={entry}
-              on:click={() => navigateToAnime(entry.anime?.id)}
-
-            >
-              <div slot="options">
-                <AnimeStatusDropdown
-                  {entry}
-                  variant="compact"
-                  on:statusChange={handleDropdownStatusChange}
-                  on:delete={handleDelete}
-                />
-              </div>
-            </AnimeCard>
+              score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
+              status={entry.anime?.status || null}
+              sub={entry.anime?.episodeCount ? `${entry.anime.episodeCount} episodes` : ''}
+              genres={entry.anime?.tags || []}
+              description={entry.anime?.description || ''}
+              episodeCount={entry.anime?.episodeCount}
+              onList={entry.status || null}
+            />
           {/each}
         </div>
 
@@ -294,3 +282,15 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .anime-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem 1rem;
+    width: 100%;
+  }
+  .anime-grid > :global(*) {
+    max-width: 220px;
+  }
+</style>

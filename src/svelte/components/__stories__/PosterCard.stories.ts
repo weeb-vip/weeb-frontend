@@ -20,6 +20,10 @@ const meta = {
       control: 'select',
       options: ['airing', 'upcoming', null],
     },
+    onList: {
+      control: 'select',
+      options: ['watching', 'completed', 'plan_to_watch', 'dropped', 'on_hold', null],
+    },
   },
 } satisfies Meta<PosterCard>;
 
@@ -68,5 +72,49 @@ export const WithGenres: Story = {
     episodeCount: 64,
     sub: '64 ep \u00B7 Bones',
     href: '#',
+  },
+};
+
+export const Watching: Story = {
+  args: {
+    ...Default.args,
+    onList: 'watching',
+  },
+};
+
+export const Completed: Story = {
+  args: {
+    id: '5114',
+    title: 'Fullmetal Alchemist: Brotherhood',
+    image: 'https://cdn.myanimelist.net/images/anime/1208/94745.jpg',
+    score: 9.1,
+    status: null,
+    sub: '64 ep \u00B7 Bones',
+    href: '#',
+    onList: 'completed',
+  },
+};
+
+export const PlanToWatch: Story = {
+  args: {
+    ...Default.args,
+    title: 'Chainsaw Man Season 2',
+    onList: 'plan_to_watch',
+  },
+};
+
+export const Dropped: Story = {
+  args: {
+    ...Default.args,
+    title: 'Some Dropped Anime',
+    onList: 'dropped',
+  },
+};
+
+export const OnHold: Story = {
+  args: {
+    ...Default.args,
+    title: 'On Hold Anime',
+    onList: 'on_hold',
   },
 };

@@ -254,61 +254,51 @@
   }
 </script>
 
-<div class="flex flex-col">
+<div class="tabs-container">
   <!-- Spacer to prevent content jump when tabs become sticky -->
   {#if isSticky}
-    <div class="sm:hidden h-16"></div>
+    <div class="tabs-spacer"></div>
   {/if}
 
   <!-- Mobile: Dropdown + Navigation -->
   <div
     bind:this={tabsRef}
     use:assignStickyRef
-    class="sm:hidden transition-all duration-200 {isSticky
-      ? 'fixed left-0 right-0 z-10 bg-weeb-surface border-b border-weeb-border px-4 py-2 pt-6 shadow-sm'
-      : ''}"
-    style={isSticky ? 'top: 10.5rem' : ''}
+    class="tabs-mobile {isSticky ? 'tabs-mobile--sticky' : ''}"
+    style={isSticky ? 'top: var(--weeb-nav-height, 60px)' : ''}
   >
-    <!-- Compact navigation with chevrons flanking dropdown -->
-    <div class="flex items-center justify-center space-x-3">
+    <div class="tabs-mobile-nav">
       <!-- Left chevron -->
       <button
         on:click={goToPrevious}
         disabled={activeIndex === 0}
-        class="p-1.5 rounded-full transition-colors duration-200 {activeIndex === 0
-          ? 'text-weeb-fg-muted cursor-not-allowed'
-          : 'text-weeb-fg-muted hover:text-weeb-fg hover:text-weeb-fg hover:bg-weeb-surface-hover'}"
+        class="tabs-nav-btn"
+        class:tabs-nav-btn--disabled={activeIndex === 0}
       >
-        <i class="fas fa-chevron-left w-3 h-3"></i>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
 
-      <!-- Dropdown for quick navigation -->
-      <div class="relative flex-1 max-w-xs">
+      <!-- Dropdown -->
+      <div class="tabs-dropdown-wrap">
         <button
           on:click={() => isDropdownOpen = !isDropdownOpen}
-          class="w-full flex items-center justify-between px-3 py-2 bg-weeb-surface border border-weeb-border rounded-lg shadow-sm text-weeb-fg font-medium text-left hover:bg-weeb-surface-hover transition-colors duration-200 text-sm"
+          class="tabs-dropdown-btn"
         >
-          <span class="truncate">{activeTab}</span>
-          <i class="fas fa-chevron-down w-3 h-3 ml-2 flex-shrink-0 transition-transform duration-200 {isDropdownOpen ? 'rotate-180' : ''}"></i>
+          <span class="tabs-dropdown-label">{activeTab}</span>
+          <svg class="tabs-dropdown-chevron" class:tabs-dropdown-chevron--open={isDropdownOpen} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
 
         {#if isDropdownOpen}
-          <!-- Backdrop -->
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-no-static-element-interactions -->
-          <div
-            class="fixed inset-0 z-10"
-            on:click={() => isDropdownOpen = false}
-          ></div>
+          <div class="tabs-dropdown-backdrop" on:click={() => isDropdownOpen = false}></div>
 
-          <!-- Dropdown menu -->
-          <div class="absolute top-full left-0 right-0 mt-1 bg-weeb-surface border border-weeb-border rounded-lg shadow-lg z-20 py-1">
+          <div class="tabs-dropdown-menu">
             {#each tabs as tab}
               <button
                 on:click={() => selectTab(tab)}
-                class="w-full text-left px-3 py-2 text-sm transition-colors duration-200 {activeTab === tab
-                  ? 'bg-weeb-surface text-weeb-accent font-medium'
-                  : 'text-weeb-fg-secondary hover:bg-weeb-surface-hover'}"
+                class="tabs-dropdown-item"
+                class:tabs-dropdown-item--active={activeTab === tab}
               >
                 {tab}
               </button>
@@ -321,59 +311,54 @@
       <button
         on:click={goToNext}
         disabled={activeIndex === tabs.length - 1}
-        class="p-1.5 rounded-full transition-colors duration-200 {activeIndex === tabs.length - 1
-          ? 'text-weeb-fg-muted cursor-not-allowed'
-          : 'text-weeb-fg-muted hover:text-weeb-fg hover:text-weeb-fg hover:bg-weeb-surface-hover'}"
+        class="tabs-nav-btn"
+        class:tabs-nav-btn--disabled={activeIndex === tabs.length - 1}
       >
-        <i class="fas fa-chevron-right w-3 h-3"></i>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
 
     <!-- Page indicators -->
-    <div class="flex items-center justify-center space-x-1.5 mt-2">
+    <div class="tabs-dots">
       {#each tabs as _, index}
         <div
-          class="w-1.5 h-1.5 rounded-full transition-colors duration-200 {index === activeIndex
-            ? 'bg-weeb-accent'
-            : 'bg-weeb-surface-hover bg-weeb-surface-hover'}"
+          class="tabs-dot"
+          class:tabs-dot--active={index === activeIndex}
         ></div>
       {/each}
     </div>
   </div>
 
   <!-- Desktop: Traditional tabs -->
-  <div class="hidden sm:block">
-    <div class="border-b border-weeb-border">
-      <nav class="flex space-x-8">
-        {#each tabs as tab}
-          <button
-            class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 {activeTab === tab
-              ? 'border-weeb-accent text-weeb-accent'
-              : 'border-transparent text-weeb-fg-muted hover:text-weeb-fg-secondary hover:text-weeb-fg-secondary hover:border-weeb-border'}"
-            on:click={() => selectTab(tab)}
-          >
-            {tab}
-          </button>
-        {/each}
-      </nav>
-    </div>
+  <div class="tabs-desktop">
+    <nav class="tabs-desktop-nav">
+      {#each tabs as tab}
+        <button
+          class="tabs-desktop-btn"
+          class:tabs-desktop-btn--active={activeTab === tab}
+          on:click={() => selectTab(tab)}
+        >
+          {tab}
+        </button>
+      {/each}
+    </nav>
   </div>
 
   <!-- Content with swipe detection -->
-  <div class="py-6 sm:py-8">
+  <div class="tabs-content">
     <!-- Mobile: Swipeable content -->
-    <div class="sm:hidden overflow-hidden">
+    <div class="tabs-swipe-container">
       <div
         bind:this={contentRef}
-        class="flex {isTransitioning ? 'transition-transform duration-300 ease-out' : ''}"
+        class="tabs-swipe-track {isTransitioning ? 'tabs-swipe-track--transitioning' : ''}"
         style="transform: translateX({-activeIndex * (100 / tabs.length) + currentX}%); width: {tabs.length * 100}%"
         on:touchstart={onTouchStart}
         on:touchmove={onTouchMove}
         on:touchend={onTouchEnd}
       >
         {#each tabs as tab, index}
-          <div class="w-full flex-shrink-0 px-4" style="width: {100 / tabs.length}%">
-            <div class="w-full">
+          <div class="tabs-swipe-panel" style="width: {100 / tabs.length}%">
+            <div class="tabs-swipe-panel-inner">
               {#if activeTab === tab}
                 {#if tab === 'Episodes'}
                   <slot name="Episodes" />
@@ -392,7 +377,7 @@
     </div>
 
     <!-- Desktop: Traditional single content -->
-    <div class="hidden sm:block">
+    <div class="tabs-desktop-content">
       {#if activeTab === 'Episodes'}
         <slot name="Episodes" />
       {:else if activeTab === 'Characters'}
@@ -405,3 +390,262 @@
     </div>
   </div>
 </div>
+
+<style>
+  .tabs-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tabs-spacer {
+    height: 64px;
+  }
+
+  /* ===== Mobile tabs ===== */
+  .tabs-mobile {
+    transition: all 0.2s;
+  }
+
+  .tabs-mobile--sticky {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: var(--weeb-surface);
+    border-bottom: 1px solid var(--weeb-border);
+    padding: 12px 16px 8px;
+    box-shadow: 0 4px 12px oklch(0% 0 0 / 0.3);
+  }
+
+  .tabs-mobile-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .tabs-nav-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--weeb-radius, 8px);
+    border: 1px solid var(--weeb-border);
+    background: transparent;
+    color: var(--weeb-fg-secondary);
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .tabs-nav-btn:hover:not(.tabs-nav-btn--disabled) {
+    background: var(--weeb-surface-hover);
+    color: var(--weeb-fg);
+    border-color: var(--weeb-accent);
+  }
+
+  .tabs-nav-btn--disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Dropdown */
+  .tabs-dropdown-wrap {
+    position: relative;
+    flex: 1;
+    max-width: 260px;
+  }
+
+  .tabs-dropdown-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    background: var(--weeb-bg-elevated);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius, 8px);
+    color: var(--weeb-fg);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    transition: border-color 0.15s;
+  }
+
+  .tabs-dropdown-btn:hover {
+    border-color: var(--weeb-accent);
+  }
+
+  .tabs-dropdown-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tabs-dropdown-chevron {
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    color: var(--weeb-fg-muted);
+  }
+
+  .tabs-dropdown-chevron--open {
+    transform: rotate(180deg);
+  }
+
+  .tabs-dropdown-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+  }
+
+  .tabs-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius, 8px);
+    box-shadow: 0 8px 24px oklch(0% 0 0 / 0.4);
+    z-index: 20;
+    overflow: hidden;
+  }
+
+  .tabs-dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--weeb-fg-secondary);
+    background: none;
+    border: none;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .tabs-dropdown-item:hover {
+    background: var(--weeb-surface-hover);
+    color: var(--weeb-fg);
+  }
+
+  .tabs-dropdown-item--active {
+    background: oklch(25% 0.04 280 / 0.5);
+    color: var(--weeb-accent);
+    font-weight: 600;
+  }
+
+  /* Dots */
+  .tabs-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .tabs-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--weeb-border);
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .tabs-dot--active {
+    background: var(--weeb-accent);
+    transform: scale(1.3);
+  }
+
+  /* ===== Desktop tabs ===== */
+  .tabs-desktop {
+    display: none;
+  }
+
+  .tabs-desktop-nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--weeb-border);
+  }
+
+  .tabs-desktop-btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--weeb-fg-muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    transition: color 0.15s, border-color 0.15s;
+    cursor: pointer;
+  }
+
+  .tabs-desktop-btn:hover {
+    color: var(--weeb-fg-secondary);
+    border-bottom-color: var(--weeb-border);
+  }
+
+  .tabs-desktop-btn--active {
+    color: var(--weeb-accent);
+    border-bottom-color: var(--weeb-accent);
+    font-weight: 600;
+  }
+
+  /* ===== Content ===== */
+  .tabs-content {
+    padding: 24px 0;
+  }
+
+  .tabs-swipe-container {
+    overflow: hidden;
+  }
+
+  .tabs-swipe-track {
+    display: flex;
+  }
+
+  .tabs-swipe-track--transitioning {
+    transition: transform 0.3s ease-out;
+  }
+
+  .tabs-swipe-panel {
+    width: 100%;
+    flex-shrink: 0;
+    padding: 0 16px;
+  }
+
+  .tabs-swipe-panel-inner {
+    width: 100%;
+  }
+
+  .tabs-desktop-content {
+    display: none;
+  }
+
+  /* ===== Responsive ===== */
+  @media (min-width: 640px) {
+    .tabs-mobile {
+      display: none;
+    }
+
+    .tabs-spacer {
+      display: none;
+    }
+
+    .tabs-desktop {
+      display: block;
+    }
+
+    .tabs-swipe-container {
+      display: none;
+    }
+
+    .tabs-desktop-content {
+      display: block;
+    }
+
+    .tabs-content {
+      padding: 32px 0;
+    }
+  }
+</style>

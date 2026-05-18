@@ -4,7 +4,6 @@
   import { createQuery } from '@tanstack/svelte-query';
   import SafeImage from './SafeImage.svelte';
   import AnimeActions from './AnimeActions.svelte';
-  import Tabs from './Tabs.svelte';
   import Tag from './Tag.svelte';
   import Episodes from './Episodes.svelte';
   import CharactersWithStaff from './CharactersWithStaff.svelte';
@@ -30,6 +29,48 @@
   let supportsWebP = false;
   let useFallback = false;
   let previousAnimeId: string | null = null; // Track anime ID changes
+
+  // DOM refs
+  let tabBarEl: HTMLElement;
+
+  // Floating tab bar state
+  let activeTab = 'synopsis';
+  let showTabBar = false;
+  let synopsisEl: HTMLElement;
+  let episodesEl: HTMLElement;
+  let charactersEl: HTMLElement;
+
+  function scrollToSection(id: string) {
+    const el = id === 'synopsis' ? synopsisEl : id === 'episodes' ? episodesEl : charactersEl;
+    if (el) {
+      const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--weeb-nav-height') || '60');
+      const stickyOffset = showStickyHeader ? 72 : 0;
+      const tabBarHeight = 48;
+      const top = el.getBoundingClientRect().top + window.scrollY - navHeight - stickyOffset - tabBarHeight - 8;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  }
+
+  function handleTabScroll() {
+    const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--weeb-nav-height') || '60');
+    const offset = navHeight + 60;
+
+    // Sticky header visibility
+    handleStickyHeader();
+
+    // On mobile: always show tab bar; on desktop: show after scrolling past hero
+    const isMobile = window.innerWidth < 768;
+    showTabBar = isMobile || window.scrollY > 400;
+
+    // Determine active tab based on scroll position
+    if (charactersEl && charactersEl.getBoundingClientRect().top < offset + 100) {
+      activeTab = 'characters';
+    } else if (episodesEl && episodesEl.getBoundingClientRect().top < offset + 100) {
+      activeTab = 'episodes';
+    } else {
+      activeTab = 'synopsis';
+    }
+  }
 
   // Data state variables
   let showQueryStore: any = null;
@@ -66,10 +107,15 @@
   // Subscribe to query changes
   showQuery = $showQueryStore;
 
-  // Update local state from query
+  // Update local state from query — preserve userAnime from SSR to prevent flicker
   $: if ($showQueryStore.data) {
     show = $showQueryStore.data;
-    anime = show?.anime;
+    const newAnime = show?.anime;
+    // If SSR gave us userAnime but the client refetch didn't, keep the SSR value
+    if (newAnime && anime?.userAnime && !newAnime.userAnime) {
+      newAnime.userAnime = anime.userAnime;
+    }
+    anime = newAnime;
     // Only update loading/error if we don't have SSR data
     if (!ssrAnimeData) {
       isLoading = $showQueryStore.isLoading;
@@ -86,13 +132,72 @@
     });
   }
 
-  onMount(async () => {
-    console.log('ShowContent onMount called with animeId:', animeId);
+  let scrollListenerAttached = false;
 
-    // Check WebP support
-    supportsWebP = await checkWebPSupport();
-    console.log('🖼️ WebP support:', supportsWebP);
+  function attachScrollListeners() {
+    if (scrollListenerAttached) return;
+    scrollListenerAttached = true;
+    handleTabScroll();
+    window.addEventListener('scroll', handleTabScroll, { passive: true });
+    window.addEventListener('resize', handleTabScroll, { passive: true });
+  }
+
+  function detachScrollListeners() {
+    if (!scrollListenerAttached) return;
+    scrollListenerAttached = false;
+    window.removeEventListener('scroll', handleTabScroll);
+    window.removeEventListener('resize', handleTabScroll);
+  }
+
+  onMount(() => {
+    // Check WebP support (async, but don't block cleanup return)
+    checkWebPSupport().then(result => {
+      supportsWebP = result;
+    });
+
+    // Attach scroll listeners
+    attachScrollListeners();
+
+    // Listen for Astro ViewTransition page loads
+    function onPageLoad() {
+      setTimeout(() => {
+        attachScrollListeners();
+        handleTabScroll();
+      }, 100);
+    }
+    document.addEventListener('astro:page-load', onPageLoad);
+
+    // Cleanup
+    return () => {
+      detachScrollListeners();
+      document.removeEventListener('astro:page-load', onPageLoad);
+    };
   });
+
+  // Reactive failsafe: when anime data changes (new page), ensure listeners are attached
+  $: if (anime && typeof window !== 'undefined') {
+    setTimeout(() => {
+      if (!scrollListenerAttached) {
+        attachScrollListeners();
+      }
+    }, 200);
+  }
+
+  // Svelte action to portal element to body (survives ViewTransitions because
+  // portal physically moves the DOM node out of the component tree)
+  function portal(node: HTMLElement) {
+    document.body.appendChild(node);
+    return {
+      destroy() {
+        if (node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      }
+    };
+  }
+
+  // Get the first image source for sticky header background
+  $: firstSource = imageSources.length > 0 ? imageSources[0] : '';
 
   // Generate ordered list of image sources to try
   function generateImageSources(): string[] {
@@ -161,9 +266,6 @@
     console.log('🖼️ bgLoaded set to true, wrapper should be visible now');
   }
 
-  // Get the first source for sticky header background
-  $: firstSource = imageSources.length > 0 ? imageSources[0] : null;
-
   // Find next episode
   const now = getCurrentTime();
   $: nextEpisodeResult = anime?.episodes && anime.broadcast
@@ -211,34 +313,20 @@
   $: status = airTimeDisplay?.variant || 'scheduled';
   $: config = statusConfig[status] || statusConfig.scheduled;
 
-  // Handle scroll for sticky header
-  // Svelte action to portal element to body
-  function portal(node: HTMLElement) {
-    // Move element to body
-    document.body.appendChild(node);
+  // Sticky header visibility — only tracks state for scrollToSection offset calculation.
+  // The actual DOM element + scroll toggle lives in [id].astro (pure vanilla JS, survives ViewTransitions).
+  function handleStickyHeader() {
+    const shouldShow = window.scrollY > 350;
+    showStickyHeader = shouldShow;
 
-    return {
-      destroy() {
-        // Remove from body when component is destroyed
-        if (node.parentNode) {
-          node.parentNode.removeChild(node);
-        }
-      }
-    };
+    // Directly update tab bar top offset via vanilla JS (Svelte reactivity unreliable after ViewTransitions)
+    const tabBar = document.querySelector('[data-tab-bar]') as HTMLElement;
+    if (tabBar) {
+      const stickyEl = document.querySelector('[data-sticky-header]') as HTMLElement || document.querySelector('.fixed.z-\\[90\\]') as HTMLElement;
+      const stickyHeaderHeight = shouldShow && stickyEl ? stickyEl.offsetHeight : 0;
+      tabBar.style.top = `calc(var(--weeb-nav-height, 60px) + ${stickyHeaderHeight-1}px)`;
+    }
   }
-
-  onMount(() => {
-    const handleScroll = () => {
-      const scrollThreshold = 400;
-      showStickyHeader = window.scrollY > scrollThreshold;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  });
 
 
   function renderField(label: string, value: string | string[] | null | undefined): { label: string; value: string | string[] } | null {
@@ -250,58 +338,58 @@
 {#if isLoading}
   <ShowContentSkeleton />
 {:else if isError || !anime}
-  <div class="min-h-screen bg-weeb-surface flex items-center justify-center">
-    <p class="text-weeb-fg-muted">Failed to load anime details</p>
+  <div class="show-error">
+    <p>Failed to load anime details</p>
   </div>
 {:else}
-  <div class="min-h-screen bg-weeb-surface relative transition-colors duration-300">
-    <!-- Sticky Header -->
-    <div use:portal class="fixed top-24 left-0 right-0 z-20 transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}" style="pointer-events: {showStickyHeader ? 'auto' : 'none'};">
+  <div class="show-root">
+    <!-- Sticky Header (portalled to body) -->
+    <div use:portal data-sticky-header class="fixed left-0 right-0 z-[90] transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}" style="pointer-events: {showStickyHeader ? 'auto' : 'none'}; top: var(--weeb-nav-height, 60px);">
       <!-- Background container with overflow hidden -->
-      <div class="relative overflow-hidden border-b border-weeb-border px-4 py-4 shadow-md">
+      <div class="relative overflow-hidden border-b border-weeb-border shadow-lg" style="padding: 8px 24px;">
         <!-- Background with blur -->
         <div
           class="absolute inset-0 bg-cover bg-center"
-          style="background-image: {firstSource ? `url(${firstSource})` : 'none'}; filter: blur(8px); transform: scale(1.1);"
+          style="background-image: {firstSource ? `url(${firstSource})` : 'none'}; filter: blur(12px) brightness(0.6); transform: scale(1.2);"
         ></div>
-        <div class="absolute inset-0 bg-weeb-surface/90 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 backdrop-blur-md" style="background: oklch(14% 0.015 275 / 0.75);"></div>
         <div class="max-w-screen-2xl mx-auto relative z-10">
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
             <SafeImage
               src={GetImageFromAnime(anime)}
               alt={anime.titleEn || ""}
-              className="w-8 h-12 object-cover rounded flex-shrink-0"
+              className="w-9 h-14 object-cover rounded flex-shrink-0"
               fallbackSrc="/assets/not found.jpg"
             />
-            <div class="min-w-0 flex-1 pr-16">
-              <h1 class="text-xl font-bold text-weeb-fg text-weeb-fg truncate">
+            <div class="min-w-0 flex-1">
+              <h1 class="text-base font-semibold text-weeb-fg truncate">
                 {animeTitle}
               </h1>
-              <p class="text-sm text-weeb-fg-muted text-weeb-fg truncate">
+              <p class="text-xs text-weeb-fg-secondary truncate">
                 {getYearUTC(anime.startDate)} • {anime.endDate ? "Finished" : "Ongoing"}
+                {#if anime.studios && anime.studios.length > 0}
+                  • {anime.studios[0]}
+                {/if}
               </p>
+            </div>
+            <div class="flex-shrink-0">
+              <AnimeActions
+                {anime}
+                variant="compact"
+              />
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Floating button outside the overflow container -->
-      <div class="absolute top-1/2 -translate-y-1/2 right-4 flex items-center z-20">
-        <AnimeActions
-          {anime}
-          variant="icon-only"
-        />
-      </div>
     </div>
 
-    <!-- Hero Background -->
-    <div class="relative bg-weeb-surface h-[600px] transition-all duration-300 overflow-hidden">
-      <div class="absolute block inset-0 bg-weeb-surface w-full h-full transition-colors duration-300"></div>
-
+    <!-- Hero Banner -->
+    <section class="hero-banner" aria-label="Anime overview">
+      <!-- Background image layer -->
       {#if imageSources.length > 0}
         <div
-          class="absolute inset-0 w-full h-full"
-          style="opacity: {bgLoaded ? 1 : 0}; transition: opacity 300ms;"
+          class="hero-banner__bg"
+          style="opacity: {bgLoaded ? 1 : 0};"
         >
           <SafeImage
             sources={imageSources}
@@ -310,285 +398,992 @@
             priority={true}
             fallbackSrc="/assets/not found.jpg"
             perTryTimeoutMs={3000}
-            className="absolute w-full h-full object-cover transition-all duration-300"
+            className="hero-banner__bg-img"
             style=""
             on:chosen={handleImageChosen}
           />
         </div>
       {/if}
-    </div>
 
-    <!-- Main Content -->
-    <div class="bg-weeb-surface bg-weeb-bg -mt-[350px] lg:-mt-[200px] transition-colors duration-300">
-      <div class="relative z-10 flex justify-center pt-20">
-        <div class="flex flex-col lg:flex-row items-start max-w-screen-2xl w-full mx-4 lg:mx-auto p-6 text-white backdrop-blur-lg bg-black/50 rounded-md shadow-md">
+      <div class="hero-inner">
+        <!-- Poster -->
+        <div class="hero-poster">
           <SafeImage
             src={GetImageFromAnime(anime)}
             alt={anime.titleEn || ""}
-            className="h-48 w-32 lg:h-64 lg:w-48 object-cover rounded-md"
+            className="hero-poster__img"
             fallbackSrc="/assets/not found.jpg"
           />
-          <div class="lg:ml-10 mt-4 lg:mt-0 space-y-4 w-full">
-            <h1 class="text-3xl font-bold">{animeTitle}</h1>
-            <p class="text-sm leading-relaxed text-neutral-200">{anime.description}</p>
-            <div class="flex flex-wrap gap-4 text-sm text-neutral-300">
-              <span>{getYearUTC(anime.startDate)}</span>
-              <span>{anime.broadcast || "unknown"}</span>
-              <span>{anime.endDate ? "Finished" : "Ongoing"}</span>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              {#each anime.tags || [] as tag}
-                <Tag {tag} />
-              {/each}
-            </div>
-            <div class="flex flex-wrap gap-2 mt-4">
-              <AnimeActions {anime} variant="default" />
-            </div>
-          </div>
         </div>
-      </div>
 
-      <div class="bg-weeb-surface bg-weeb-bg py-8 px-4 sm:px-8 lg:px-16 transition-colors duration-300">
-        <div class="max-w-screen-2xl mx-auto flex flex-col gap-8">
-          <!-- Next Episode Info -->
-          {#if nextEpisode || animeNextEpisodeInfo || hasTimingData}
-            <div class="bg-weeb-surface rounded-lg shadow-sm border-weeb-border p-4 transition-colors duration-300">
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                  <!-- Status badge -->
-                  {#if hasTimingData && currentlyAiring}
-                    <div class="relative inline-flex items-center px-3 py-1 rounded-full bg-weeb-amber text-xs font-semibold overflow-hidden text-white w-fit">
-                      {#if progress !== undefined}
-                        <div
-                          class="absolute inset-0 bg-weeb-amber transition-all duration-1000 ease-out"
-                          style="width: {progress}%"
-                        ></div>
-                      {/if}
-                      <span class="relative z-10 w-1.5 h-1.5 bg-weeb-surface rounded-full mr-2 animate-pulse"></span>
-                      <span class="relative z-10">AIRING NOW</span>
-                    </div>
-                  {:else if hasTimingData && !currentlyAiring && !alreadyAired}
-                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-weeb-red text-xs font-semibold text-white w-fit">
-                      <span class="w-1.5 h-1.5 bg-weeb-surface rounded-full mr-2 animate-pulse"></span>
-                      {countdown === "JUST AIRED" ? "JUST AIRED" : "AIRING SOON"}
-                      {#if countdown && !countdown.includes("JUST AIRED") && !countdown.includes("AIRING NOW")}
-                        <span class="ml-2 px-1.5 py-0.5 bg-black/25 rounded text-xs font-medium">
-                          in {countdown}
-                        </span>
-                      {/if}
-                    </div>
-                  {:else}
-                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-weeb-accent text-xs font-semibold text-white w-fit">
-                      <i class="fas fa-calendar w-3 h-3 mr-2"></i>
-                      NEXT EPISODE
-                    </div>
-                  {/if}
+        <!-- Meta -->
+        <div class="hero-meta">
+          <p class="hero-eyebrow">
+            {anime.type || "TV"} Series &middot; {getYearUTC(anime.startDate)}
+            {#if anime.studios && anime.studios.length > 0}
+              &middot; {Array.isArray(anime.studios) ? anime.studios[0] : anime.studios}
+            {/if}
+          </p>
 
-                  <!-- Episode info -->
-                  <div class="min-w-0 flex-1">
-                    <span class="font-bold text-weeb-fg">
-                      {#if episode}
-                        Episode {episode.episodeNumber}
-                      {:else if animeNextEpisodeInfo}
-                        Episode {animeNextEpisodeInfo?.episode.episodeNumber || "TBA"}
-                      {/if}
-                    </span>
-                    <span class="text-weeb-fg-muted ml-2 block sm:inline truncate">
-                      {#if episode}
-                        {episodeTitle}
-                      {:else if animeNextEpisodeInfo}
-                        {animeNextEpisodeInfo?.episode.titleEn || animeNextEpisodeInfo?.episode.titleJp || "TBA"}
-                      {/if}
-                    </span>
-                  </div>
+          <h1 class="hero-title">{animeTitle}</h1>
+          {#if anime.titleJp}
+            <p class="hero-title-jp">{anime.titleJp}</p>
+          {/if}
+
+          <!-- Ranking -->
+          {#if anime.ranking}
+            <div class="hero-score-row">
+              <span class="hero-score-big" aria-label="Ranked #{anime.ranking}">#{anime.ranking}</span>
+              <div class="hero-score-details">
+                <div class="hero-score-stars" aria-hidden="true">
+                  <svg class="rank-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M8 1l2.35 4.76 5.25.77-3.8 3.7.9 5.24L8 12.93l-4.7 2.54.9-5.24-3.8-3.7 5.25-.77z"/>
+                  </svg>
                 </div>
-
-                <!-- Air time info -->
-                <div class="flex items-center gap-2 text-weeb-fg-secondary flex-shrink-0 self-start sm:self-center">
-                  <i class="fas fa-clock text-xs"></i>
-                  <span class="text-sm font-medium">
-                    {airDateTime || (airTimeAndDate && getAirDateTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast)) || "TBA"}
-                  </span>
-                  {#if anime.broadcast}
-                    <div class="relative">
-                      <span
-                        class="px-2 py-1 bg-weeb-accent/20 text-weeb-accent rounded text-xs font-medium cursor-help"
-                        on:mouseenter={() => showJstPopover = true}
-                        on:mouseleave={() => showJstPopover = false}
-                      >
-                        JST
-                      </span>
-                      {#if showJstPopover}
-                        <div class="absolute bottom-full right-0 mb-2 z-50">
-                          <div class="bg-weeb-surface text-weeb-fg text-weeb-fg text-sm rounded-lg p-3 w-72 sm:w-80 max-w-[calc(100vw-2rem)]" style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);">
-                            <div class="text-center">
-                              <p class="text-weeb-fg-secondary">
-                                Japanese TV broadcast time (in local time). Streaming services usually release with 3 hours after show ends.
-                              </p>
-                            </div>
-                            <div class="absolute top-full right-4 border-8 border-transparent border-t-weeb-surface"></div>
-                          </div>
-                        </div>
-                      {/if}
-                    </div>
-                  {/if}
-                </div>
+                <span class="hero-score-label">overall ranking</span>
               </div>
             </div>
           {/if}
 
-          <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Details Panel -->
-            <div class="bg-weeb-surface p-4 rounded-md shadow-md text-sm text-weeb-fg space-y-6 w-full lg:max-w-xs transition-colors duration-300">
-              <div class="space-y-3">
-                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Titles</h2>
-                {#if renderField("Japanese", anime.titleJp)}
-                  {@const field = renderField("Japanese", anime.titleJp)}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    <p class="text-weeb-fg-secondary">{field.value}</p>
-                  </div>
-                {/if}
-                {#if renderField("Romaji", anime.titleRomaji)}
-                  {@const field = renderField("Romaji", anime.titleRomaji)}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    <p class="text-weeb-fg-secondary">{field.value}</p>
-                  </div>
-                {/if}
-                {#if renderField("Kanji", anime.titleKanji)}
-                  {@const field = renderField("Kanji", anime.titleKanji)}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    <p class="text-weeb-fg-secondary">{field.value}</p>
-                  </div>
-                {/if}
-                {#if anime.titleSynonyms && anime.titleSynonyms.length > 0}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">Synonyms</h3>
-                    <p class="text-weeb-fg-secondary">{anime.titleSynonyms.join(", ")}</p>
-                  </div>
-                {/if}
-              </div>
-
-              <div class="space-y-3">
-                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Production</h2>
-                {#if renderField("Studios", anime.studios)}
-                  {@const field = renderField("Studios", anime.studios)}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    {#if Array.isArray(field.value)}
-                      <ul class="list-disc pl-5">
-                        {#each field.value as item}
-                          <li class="text-weeb-fg-secondary">{item}</li>
-                        {/each}
-                      </ul>
-                    {:else}
-                      <p class="text-weeb-fg-secondary">{field.value}</p>
-                    {/if}
-                  </div>
-                {/if}
-                {#if renderField("Source", anime.source)}
-                  {@const field = renderField("Source", anime.source)}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    <p class="text-weeb-fg-secondary">{field.value}</p>
-                  </div>
-                {/if}
-                {#if renderField("Licensors", anime.licensors)}
-                  {@const field = renderField("Licensors", anime.licensors)}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    {#if Array.isArray(field.value)}
-                      <ul class="list-disc pl-5">
-                        {#each field.value as item}
-                          <li class="text-weeb-fg-secondary">{item}</li>
-                        {/each}
-                      </ul>
-                    {:else}
-                      <p class="text-weeb-fg-secondary">{field.value}</p>
-                    {/if}
-                  </div>
-                {/if}
-              </div>
-
-              <div class="space-y-3">
-                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Ranking/Rating</h2>
-                {#if renderField("Rating", anime.rating)}
-                  {@const field = renderField("Rating", anime.rating)}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    <p class="text-weeb-fg-secondary">{field.value}</p>
-                  </div>
-                {/if}
-                {#if renderField("Ranking", anime.ranking?.toString())}
-                  {@const field = renderField("Ranking", anime.ranking?.toString())}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    <p class="text-weeb-fg-secondary">{field.value}</p>
-                  </div>
-                {/if}
-              </div>
-
-              <div class="space-y-3">
-                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Other Info</h2>
-                {#if renderField("Broadcast", anime.broadcast || "Unknown")}
-                  {@const field = renderField("Broadcast", anime.broadcast || "Unknown")}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    <p class="text-weeb-fg-secondary">{field.value}</p>
-                  </div>
-                {/if}
-              </div>
-
-              <div class="space-y-3">
-                <h2 class="font-bold text-weeb-fg-secondary border-b border-weeb-border pb-1">Aired</h2>
-                {#if renderField("Start Date", formatDateUTC(anime.startDate, "Unknown"))}
-                  {@const field = renderField("Start Date", formatDateUTC(anime.startDate, "Unknown"))}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    <p class="text-weeb-fg-secondary">{field.value}</p>
-                  </div>
-                {/if}
-                {#if renderField("End Date", formatDateUTC(anime.endDate, "Ongoing"))}
-                  {@const field = renderField("End Date", formatDateUTC(anime.endDate, "Ongoing"))}
-                  <div>
-                    <h3 class="font-semibold text-weeb-fg mb-1">{field.label}</h3>
-                    <p class="text-weeb-fg-secondary">{field.value}</p>
-                  </div>
-                {/if}
-              </div>
+          <!-- Genre tags -->
+          {#if anime.tags && anime.tags.length > 0}
+            <div class="hero-tags" role="list" aria-label="Genres">
+              {#each anime.tags as tag}
+                <span class="hero-tag" role="listitem">{tag}</span>
+              {/each}
             </div>
+          {/if}
 
-            <!-- Tabs Section -->
-            <div class="w-full">
-              <Tabs tabs={["Episodes", "Characters", "Trailers", "Artworks"]} defaultTab="Episodes">
-                <div slot="Episodes">
-                  {#if anime.episodes}
-                    <Episodes episodes={anime.episodes} broadcast={anime.broadcast} />
-                  {/if}
-                </div>
-                <div slot="Characters">
-                  <CharactersWithStaff animeId={anime.id} ssrCharactersData={charactersData} />
-                </div>
-                <div slot="Trailers">
-                  <!-- TODO: Add Trailers component -->
-                </div>
-                <div slot="Artworks">
-                  <!-- TODO: Add Artworks component -->
-                </div>
-              </Tabs>
-            </div>
+          <!-- Details grid -->
+          <dl class="hero-details">
+            {#if anime.endDate}
+              <dt class="hero-detail-key">Status</dt>
+              <dd class="hero-detail-val">Finished</dd>
+            {:else}
+              <dt class="hero-detail-key">Status</dt>
+              <dd class="hero-detail-val hero-detail-val--green">{anime.endDate ? "Finished" : "Airing"}</dd>
+            {/if}
+
+            {#if anime.episodes && anime.episodes.length > 0}
+              <dt class="hero-detail-key">Episodes</dt>
+              <dd class="hero-detail-val">{anime.episodes.length}</dd>
+            {/if}
+
+            {#if anime.duration}
+              <dt class="hero-detail-key">Duration</dt>
+              <dd class="hero-detail-val">{anime.duration}</dd>
+            {/if}
+
+            {#if anime.studios}
+              <dt class="hero-detail-key">Studio</dt>
+              <dd class="hero-detail-val">{Array.isArray(anime.studios) ? anime.studios.join(', ') : anime.studios}</dd>
+            {/if}
+
+            {#if anime.source}
+              <dt class="hero-detail-key">Source</dt>
+              <dd class="hero-detail-val">{anime.source}</dd>
+            {/if}
+
+            <dt class="hero-detail-key">Aired</dt>
+            <dd class="hero-detail-val">
+              {formatDateUTC(anime.startDate, "Unknown")} &ndash; {formatDateUTC(anime.endDate, "Ongoing")}
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Info Bar — stats + tracking in one clean strip -->
+    <div class="quick-info">
+      <div class="quick-info__inner">
+        <!-- Stats row — horizontal chips -->
+        <div class="quick-info__stats">
+          {#if anime.ranking}
+            <span class="qi-chip qi-chip--accent">
+              <svg class="qi-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l2.35 4.76 5.25.77-3.8 3.7.9 5.24L8 12.93l-4.7 2.54.9-5.24-3.8-3.7 5.25-.77z"/></svg>
+              #{anime.ranking}
+            </span>
+          {/if}
+          <span class="qi-chip {anime.endDate ? '' : 'qi-chip--green'}">
+            <span class="qi-dot {anime.endDate ? '' : 'qi-dot--green'}"></span>
+            {anime.endDate ? "Finished" : "Airing"}
+          </span>
+          {#if anime.episodes}
+            <span class="qi-chip">{anime.episodes.length} ep</span>
+          {/if}
+          {#if anime.duration}
+            <span class="qi-chip">{anime.duration}</span>
+          {/if}
+          {#if anime.studios}
+            <span class="qi-chip">{Array.isArray(anime.studios) ? anime.studios[0] : anime.studios}</span>
+          {/if}
+          {#if anime.rating}
+            <span class="qi-chip">{anime.rating}</span>
+          {/if}
+
+          <!-- Next episode chip -->
+          {#if nextEpisode || animeNextEpisodeInfo || hasTimingData}
+            <span class="qi-chip qi-chip--next">
+              {#if hasTimingData && currentlyAiring}
+                <span class="qi-dot qi-dot--green qi-dot--pulse"></span>
+                NOW
+              {:else if hasTimingData && !currentlyAiring && !alreadyAired}
+                {#if countdown && !countdown.includes("JUST AIRED") && !countdown.includes("AIRING NOW")}
+                  Next in {countdown}
+                {:else if countdown === "JUST AIRED"}
+                  Just aired
+                {:else}
+                  Next soon
+                {/if}
+              {:else if episode}
+                Next: Ep {episode.episodeNumber}
+              {:else if animeNextEpisodeInfo}
+                Next: Ep {animeNextEpisodeInfo?.episode.episodeNumber || "TBA"}
+              {/if}
+            </span>
+          {/if}
+        </div>
+
+        <!-- Tracking controls — right side -->
+        <div class="quick-info__tracking">
+          <AnimeActions {anime} variant="default" />
+
+          <div class="qi-score">
+            <select class="qi-select" aria-label="Your score"
+              value={anime.userAnime?.score || ''}
+              disabled={!anime.userAnime}
+            >
+              <option value="">Score</option>
+              {#each [10,9,8,7,6,5,4,3,2,1] as s}
+                <option value={s}>{s}</option>
+              {/each}
+            </select>
           </div>
 
-          <!-- Footer -->
-          <div class="flex justify-end mt-8">
-            <p class="text-sm text-weeb-fg-muted">
-              Last updated: {anime.updatedAt ? format(new Date(anime.updatedAt), "dd MMM yyyy") : "Unknown"}
-            </p>
+          <div class="qi-progress">
+            <button class="qi-ep-btn" aria-label="Decrease episodes"
+              disabled={!anime.userAnime || (anime.userAnime.episodesWatched || 0) <= 0}
+            >−</button>
+            <span class="qi-ep-count">
+              {anime.userAnime?.episodesWatched || 0}/{anime.episodeCount || anime.episodes?.length || '?'}
+            </span>
+            <button class="qi-ep-btn" aria-label="Increase episodes"
+              disabled={!anime.userAnime}
+            >+</button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Sticky Header is now in the Astro page ([id].astro) — outside Svelte to survive ViewTransitions -->
+
+    <!-- Floating Tab Bar — ALL styles inline to survive ViewTransition CSS loss -->
+    <nav data-tab-bar bind:this={tabBarEl} aria-label="Section navigation"
+      style="position:sticky; top:var(--weeb-nav-height,60px); z-index:50; background:oklch(14% 0.015 275 / 0.95); border-bottom:1px solid oklch(28% 0.015 275); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); transition:top 0.3s ease;"
+    >
+      <div style="max-width:1280px; margin:0 auto; padding:0 48px; display:flex; align-items:center; gap:0;">
+        <button
+          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'synopsis' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'synopsis' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+          on:click={() => scrollToSection('synopsis')}
+        >Synopsis</button>
+        {#if anime.episodes && anime.episodes.length > 0}
+          <button
+            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'episodes' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'episodes' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+            on:click={() => scrollToSection('episodes')}
+          >Episodes <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:oklch(55% 0.15 280 / 0.15); color:oklch(55% 0.15 280); font-weight:600;">{anime.episodes.length}</span></button>
+        {/if}
+        <button
+          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'characters' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'characters' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+          on:click={() => scrollToSection('characters')}
+        >Characters</button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content-single">
+        <!-- Synopsis -->
+        <section class="content-section" bind:this={synopsisEl} aria-labelledby="synopsis-heading">
+          <h2 class="section-heading" id="synopsis-heading">Synopsis</h2>
+          {#if anime.description}
+            <div class="synopsis-text">
+              <p>{anime.description}</p>
+            </div>
+          {:else}
+            <p class="synopsis-empty">No synopsis available.</p>
+          {/if}
+        </section>
+
+        <!-- Episodes Section -->
+        {#if anime.episodes && anime.episodes.length > 0}
+          <section class="content-section" bind:this={episodesEl} aria-labelledby="episodes-heading">
+            <h2 class="section-heading" id="episodes-heading">Episodes</h2>
+            <Episodes episodes={anime.episodes} broadcast={anime.broadcast} />
+          </section>
+        {/if}
+
+        <!-- Characters Section -->
+        <section class="content-section" bind:this={charactersEl} aria-labelledby="characters-heading">
+          <h2 class="section-heading" id="characters-heading">Characters & Staff</h2>
+          <CharactersWithStaff animeId={anime.id} ssrCharactersData={charactersData} />
+        </section>
+
+        <!-- Additional Info -->
+        <section class="content-section" aria-labelledby="info-heading">
+          <h2 class="section-heading" id="info-heading">Information</h2>
+          <div class="info-grid">
+            {#if anime.titleJp}
+              <div class="info-item">
+                <span class="info-label">Japanese</span>
+                <span class="info-value">{anime.titleJp}</span>
+              </div>
+            {/if}
+            {#if anime.titleRomaji}
+              <div class="info-item">
+                <span class="info-label">Romaji</span>
+                <span class="info-value">{anime.titleRomaji}</span>
+              </div>
+            {/if}
+            {#if anime.studios}
+              <div class="info-item">
+                <span class="info-label">Studios</span>
+                <span class="info-value">{Array.isArray(anime.studios) ? anime.studios.join(', ') : anime.studios}</span>
+              </div>
+            {/if}
+            {#if anime.source}
+              <div class="info-item">
+                <span class="info-label">Source</span>
+                <span class="info-value">{anime.source}</span>
+              </div>
+            {/if}
+            {#if anime.licensors && anime.licensors.length > 0}
+              <div class="info-item">
+                <span class="info-label">Licensors</span>
+                <span class="info-value">{Array.isArray(anime.licensors) ? anime.licensors.join(', ') : anime.licensors}</span>
+              </div>
+            {/if}
+            {#if anime.rating}
+              <div class="info-item">
+                <span class="info-label">Rating</span>
+                <span class="info-value">{anime.rating}</span>
+              </div>
+            {/if}
+            {#if anime.broadcast}
+              <div class="info-item">
+                <span class="info-label">Broadcast</span>
+                <span class="info-value">{anime.broadcast}</span>
+              </div>
+            {/if}
+            <div class="info-item">
+              <span class="info-label">Aired</span>
+              <span class="info-value">{formatDateUTC(anime.startDate, "Unknown")} &ndash; {formatDateUTC(anime.endDate, "Ongoing")}</span>
+            </div>
+            {#if anime.titleSynonyms && anime.titleSynonyms.length > 0}
+              <div class="info-item info-item--full">
+                <span class="info-label">Synonyms</span>
+                <span class="info-value">{anime.titleSynonyms.join(", ")}</span>
+              </div>
+            {/if}
+          </div>
+        </section>
+      </div>
+
+      <!-- Footer -->
+      <footer class="show-footer">
+        <p>
+          Last updated: {anime.updatedAt ? format(new Date(anime.updatedAt), "dd MMM yyyy") : "Unknown"}
+        </p>
+      </footer>
+    </main>
   </div>
 {/if}
+
+<style>
+  /* ===========================
+     ROOT & ERROR
+  =========================== */
+  .show-root {
+    min-height: 100vh;
+    background: var(--weeb-bg);
+    position: relative;
+  }
+
+  .show-error {
+    min-height: 100vh;
+    background: var(--weeb-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .show-error p {
+    color: var(--weeb-fg-muted);
+  }
+
+  /* ===========================
+     HERO BANNER
+  =========================== */
+  .hero-banner {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--weeb-border);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--weeb-bg-elevated), var(--weeb-accent) 12%) 0%,
+      color-mix(in oklch, var(--weeb-bg), var(--weeb-accent) 4%) 60%,
+      var(--weeb-bg) 100%
+    );
+  }
+
+  .hero-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 30% 20%, color-mix(in oklch, var(--weeb-accent), transparent 75%), transparent),
+      radial-gradient(ellipse 60% 50% at 70% 60%, color-mix(in oklch, var(--weeb-violet), transparent 85%), transparent);
+    pointer-events: none;
+  }
+
+  .hero-banner__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transition: opacity 0.3s ease;
+  }
+
+  :global(.hero-banner__bg-img) {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 60%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 60%, transparent 100%);
+  }
+
+  .hero-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 48px 40px 40px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 48px;
+    align-items: start;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-poster {
+    width: 240px;
+    height: 340px;
+    flex-shrink: 0;
+    border-radius: var(--weeb-radius-lg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  :global(.hero-poster__img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .hero-meta {
+    padding-top: 4px;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--weeb-font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--weeb-fg-muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .hero-title {
+    font-family: var(--weeb-font);
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    color: var(--weeb-fg);
+    margin-bottom: 6px;
+  }
+
+  .hero-title-jp {
+    font-size: 15px;
+    color: var(--weeb-fg-muted);
+    margin-bottom: 24px;
+    font-weight: 400;
+  }
+
+  .hero-score-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .hero-score-big {
+    font-family: var(--weeb-font-mono);
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--weeb-accent);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .hero-score-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .hero-score-label {
+    font-size: 12px;
+    color: var(--weeb-fg-muted);
+  }
+
+  .hero-score-stars {
+    display: flex;
+    gap: 2px;
+  }
+
+  .rank-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--weeb-amber);
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .hero-tag {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border: 1px solid var(--weeb-border);
+    border-radius: 20px;
+    color: var(--weeb-fg-secondary);
+    background: color-mix(in oklch, var(--weeb-bg-elevated), transparent 40%);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    cursor: pointer;
+  }
+
+  .hero-tag:hover {
+    border-color: var(--weeb-accent);
+    color: var(--weeb-accent);
+    background: color-mix(in oklch, var(--weeb-accent), transparent 85%);
+  }
+
+  .hero-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 32px;
+  }
+
+  .hero-detail-key {
+    font-family: var(--weeb-font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--weeb-fg-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .hero-detail-val {
+    font-size: 13px;
+    color: var(--weeb-fg-secondary);
+  }
+
+  .hero-detail-val--green {
+    color: var(--weeb-green);
+    font-weight: 600;
+  }
+
+  /* ===========================
+     QUICK INFO BAR
+  =========================== */
+  .quick-info {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 var(--weeb-section-px, 48px);
+    position: relative;
+    z-index: 2;
+    margin-top: -16px;
+  }
+
+  .quick-info__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 20px;
+    background: var(--weeb-bg-elevated);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius-lg);
+    overflow: visible;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Stats — left side: horizontal scrollable chips */
+  .quick-info__stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    flex: 1;
+    min-width: 0;
+  }
+  .quick-info__stats::-webkit-scrollbar { display: none; }
+
+  .qi-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--weeb-fg-secondary);
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius-full, 9999px);
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .qi-chip--accent {
+    color: var(--weeb-accent);
+    border-color: color-mix(in oklch, var(--weeb-accent), transparent 70%);
+    background: color-mix(in oklch, var(--weeb-accent), transparent 90%);
+  }
+
+  .qi-chip--green {
+    color: var(--weeb-green);
+    border-color: color-mix(in oklch, var(--weeb-green), transparent 70%);
+  }
+
+  .qi-chip--next {
+    color: var(--weeb-amber);
+    border-color: color-mix(in oklch, var(--weeb-amber), transparent 70%);
+    background: color-mix(in oklch, var(--weeb-amber), transparent 90%);
+    font-family: var(--weeb-font-mono);
+    font-weight: 700;
+  }
+
+  .qi-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  .qi-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--weeb-fg-muted);
+    flex-shrink: 0;
+  }
+  .qi-dot--green {
+    background: var(--weeb-green);
+  }
+  .qi-dot--pulse {
+    animation: dotPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes dotPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Tracking — right side */
+  .quick-info__tracking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .qi-select {
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius);
+    background: var(--weeb-surface);
+    color: var(--weeb-fg);
+    font-family: var(--weeb-font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    min-width: 60px;
+    appearance: auto;
+  }
+  .qi-select:focus { border-color: var(--weeb-accent); }
+  .qi-select:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .qi-progress {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius);
+    overflow: hidden;
+    height: 32px;
+  }
+
+  .qi-ep-btn {
+    width: 28px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--weeb-surface);
+    border: none;
+    color: var(--weeb-fg-muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+  }
+  .qi-ep-btn:hover { background: var(--weeb-surface-hover); color: var(--weeb-fg); }
+  .qi-ep-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .qi-ep-count {
+    padding: 0 8px;
+    font-family: var(--weeb-font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--weeb-fg);
+    border-left: 1px solid var(--weeb-border);
+    border-right: 1px solid var(--weeb-border);
+    background: var(--weeb-surface);
+    height: 32px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===========================
+     STICKY HEADER — now in [id].astro (outside Svelte)
+  =========================== */
+
+  /* ===========================
+     FLOATING TAB BAR
+  =========================== */
+  .tab-bar {
+    position: sticky;
+    top: var(--weeb-nav-height, 60px);
+    z-index: 80;
+    background: oklch(14% 0.015 275 / 0.95);
+    border-bottom: 1px solid var(--weeb-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: top 0.3s ease;
+  }
+
+  .tab-bar__inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 var(--weeb-section-px, 48px);
+    display: flex;
+    gap: 0;
+  }
+
+  .tab-bar__tab {
+    background: none;
+    border: none;
+    color: var(--weeb-fg-muted);
+    font-family: var(--weeb-font);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 14px 20px;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .tab-bar__tab:hover {
+    color: var(--weeb-fg-secondary);
+  }
+
+  .tab-bar__tab--active {
+    color: var(--weeb-fg);
+  }
+
+  .tab-bar__tab--active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+    height: 2px;
+    background: var(--weeb-accent);
+    border-radius: 1px;
+  }
+
+  .tab-bar__count {
+    font-size: 11px;
+    font-family: var(--weeb-font-mono);
+    background: var(--weeb-surface);
+    color: var(--weeb-fg-secondary);
+    padding: 1px 6px;
+    border-radius: var(--weeb-radius-full, 9999px);
+    border: 1px solid var(--weeb-border);
+  }
+
+  @media (max-width: 768px) {
+    .tab-bar {
+      /* Always visible on mobile */
+    }
+    .tab-bar__inner {
+      padding: 0 16px;
+      justify-content: stretch;
+    }
+    .tab-bar__tab {
+      padding: 12px 8px;
+      font-size: 12px;
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  /* ===========================
+     NEXT EPISODE BANNER
+  =========================== */
+  /* next-ep-banner and tracking-bar styles removed — now using quick-info */
+
+  /* ===========================
+     MAIN CONTENT
+  =========================== */
+  .main-content {
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 0 var(--weeb-section-px, 48px);
+  }
+
+  .content-single {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding: 40px 0 20px;
+  }
+
+  .content-section {
+    /* Each section is a clean block */
+  }
+
+  /* ===========================
+     SECTION HEADINGS
+  =========================== */
+  .section-heading {
+    font-family: var(--weeb-font);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--weeb-fg);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--weeb-border);
+  }
+
+  /* ===========================
+     SYNOPSIS
+  =========================== */
+  .synopsis-text {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--weeb-fg-secondary);
+    max-width: 80ch;
+  }
+
+  .synopsis-empty {
+    font-size: 14px;
+    color: var(--weeb-fg-muted);
+    font-style: italic;
+  }
+
+  /* ===========================
+     TRACKING CARD
+  =========================== */
+  /* ===========================
+     INFO GRID
+  =========================== */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0;
+    background: var(--weeb-bg-elevated);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius-lg);
+    overflow: hidden;
+  }
+
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--weeb-border);
+    border-right: 1px solid var(--weeb-border);
+  }
+
+  .info-item--full {
+    grid-column: 1 / -1;
+    border-right: none;
+  }
+
+  .info-label {
+    font-family: var(--weeb-font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--weeb-fg-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .info-value {
+    font-size: 13px;
+    color: var(--weeb-fg-secondary);
+    text-align: right;
+    line-height: 1.4;
+  }
+
+  /* ===========================
+     FOOTER
+  =========================== */
+  .show-footer {
+    border-top: 1px solid var(--weeb-border);
+    padding: 32px 0;
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .show-footer p {
+    font-size: 12px;
+    color: var(--weeb-fg-muted);
+  }
+
+  /* ===========================
+     RESPONSIVE -- 1024px
+  =========================== */
+  @media (max-width: 1024px) {
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .info-item {
+      border-right: none;
+    }
+
+  }
+
+  /* ===========================
+     RESPONSIVE -- 768px
+  =========================== */
+  @media (max-width: 768px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      padding: 32px 20px;
+    }
+
+    .hero-poster {
+      width: 180px;
+      height: 256px;
+      margin: 0 auto;
+    }
+
+    .hero-meta {
+      text-align: center;
+    }
+
+    .hero-tags {
+      justify-content: center;
+    }
+
+    .hero-details {
+      justify-content: center;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .hero-score-row {
+      justify-content: center;
+    }
+
+    .main-content {
+      padding: 0 16px;
+    }
+
+    .quick-info {
+      padding: 0 16px;
+    }
+    .quick-info__inner {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 12px 14px;
+    }
+    .quick-info__tracking {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .content-single {
+      gap: 32px;
+      padding: 28px 0 16px;
+    }
+  }
+
+  /* ===========================
+     RESPONSIVE -- 480px
+  =========================== */
+  @media (max-width: 480px) {
+    .hero-title {
+      font-size: 24px;
+    }
+
+    .hero-score-big {
+      font-size: 36px;
+    }
+
+    .hero-poster {
+      width: 160px;
+      height: 228px;
+    }
+
+    .quick-info {
+      margin-top: -8px;
+    }
+  }
+</style>

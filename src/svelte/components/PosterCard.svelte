@@ -12,6 +12,7 @@
   export let genres: string[] = [];
   export let description: string = '';
   export let episodeCount: number | null = null;
+  export let onList: string | null = null; // userAnime.status: 'watching', 'completed', 'plan_to_watch', etc.
 </script>
 
 <a
@@ -29,10 +30,31 @@
     {#if score}
       <span class="score-badge">{typeof score === 'number' ? score.toFixed(1) : score}</span>
     {/if}
-    {#if status === 'CURRENTLY_AIRING' || status === 'airing'}
-      <span class="status-dot airing"></span>
-    {:else if status === 'upcoming' || status === 'NOT_YET_RELEASED'}
-      <span class="status-dot upcoming"></span>
+    {#if !onList}
+      {#if status === 'CURRENTLY_AIRING' || status === 'airing'}
+        <span class="status-dot airing"></span>
+      {:else if status === 'upcoming' || status === 'NOT_YET_RELEASED'}
+        <span class="status-dot upcoming"></span>
+      {/if}
+    {/if}
+    {#if onList}
+      <span class="on-list-tab" class:watching={onList === 'watching'} class:completed={onList === 'completed'} class:plan={onList === 'plan_to_watch'} class:dropped={onList === 'dropped'} class:on-hold={onList === 'on_hold'}>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          {#if onList === 'watching'}
+            <polygon points="5,3 19,12 5,21" />
+          {:else if onList === 'completed'}
+            <polyline points="4,12 10,18 20,6" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+          {:else if onList === 'dropped'}
+            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+          {:else if onList === 'on_hold'}
+            <rect x="5" y="4" width="4" height="16" rx="1" />
+            <rect x="15" y="4" width="4" height="16" rx="1" />
+          {:else}
+            <path d="M5 3h14a1 1 0 011 1v16.5a.5.5 0 01-.8.4L12 16l-6.2 4.9A.5.5 0 015 20.5V4a1 1 0 011-1z" />
+          {/if}
+        </svg>
+      </span>
     {/if}
     <div class="hover-overlay">
       <div class="hover-content">
@@ -123,6 +145,37 @@
   }
   .status-dot.upcoming {
     background: var(--weeb-amber);
+  }
+  .on-list-tab {
+    position: absolute;
+    top: 0;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    padding: 4px 0 8px;
+    background: var(--weeb-accent);
+    color: white;
+    font-size: 10px;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  }
+  .on-list-tab.watching {
+    background: var(--weeb-green);
+  }
+  .on-list-tab.completed {
+    background: var(--weeb-accent);
+  }
+  .on-list-tab.plan {
+    background: var(--weeb-amber);
+  }
+  .on-list-tab.dropped {
+    background: var(--weeb-red);
+  }
+  .on-list-tab.on-hold {
+    background: oklch(55% 0.01 270);
   }
   .hover-overlay {
     position: absolute;

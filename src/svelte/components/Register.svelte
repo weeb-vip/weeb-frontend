@@ -114,119 +114,394 @@
   $: isLoading = $registerMutation.isPending;
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <div>
-      <div class="flex justify-center">
-        <img
-          class="h-12 w-auto"
-          src="/assets/icons/logo6-rev-sm_sm.png"
-          alt="Weeb VIP"
-          on:error={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
-        />
+<!-- Animated background -->
+<div class="page-bg"></div>
+
+<main class="main">
+  <div class="auth-wrapper">
+
+    <!-- Logo block -->
+    <a href="/" class="logo-block" aria-label="weeb.vip - back to homepage">
+      <div class="logo-mark">
+        <svg width="24" height="24" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+          <path d="M4 5L8.5 16L11 10L13.5 16L18 5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="11" cy="11" r="1.2" fill="white" opacity="0.7"/>
+        </svg>
       </div>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-weeb-fg text-weeb-fg">
-        Create your account
-      </h2>
-      <p class="mt-2 text-center text-sm text-weeb-fg-muted">
-        Join Weeb VIP to track your anime journey
-      </p>
-    </div>
+      <span class="logo-wordmark">weeb.vip</span>
+    </a>
 
-    <form class="mt-8 space-y-6" on:submit={handleSubmit}>
-      <div class="space-y-4">
-        <FormInput
-          id="username"
-          name="username"
-          type="email"
-          value={formData.username}
-          on:input={handleInputChange}
-          placeholder="Email address"
-          label="Email address"
-          icon={faUser}
-          error={validationErrors.username}
-          required
-        />
-
-        <FormInput
-          id="password"
-          name="password"
-          type="password"
-          value={formData.password}
-          on:input={handleInputChange}
-          placeholder="Password"
-          label="Password"
-          icon={faLock}
-          error={validationErrors.password}
-          required
-        />
-
-        <FormInput
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          value={formData.confirmPassword}
-          on:input={handleInputChange}
-          placeholder="Confirm password"
-          label="Confirm password"
-          icon={faLock}
-          error={validationErrors.confirmPassword}
-          required
-        />
+    <!-- Card -->
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Create account</h1>
+        <p class="card-subtitle">Join the community</p>
       </div>
 
-      {#if errorMessage}
-        <div class="bg-weeb-red/10 border border-weeb-red/30 rounded-md p-3">
-          <p class="text-sm text-weeb-red">{errorMessage}</p>
-        </div>
-      {/if}
+      <form on:submit={handleSubmit} novalidate>
 
-      {#if successMessage}
-        <div class="bg-weeb-green/10 border border-weeb-green rounded-md p-3">
-          <p class="text-sm text-weeb-green">{successMessage}</p>
+        <!-- Email -->
+        <div class="field">
+          <FormInput
+            id="username"
+            name="username"
+            type="email"
+            value={formData.username}
+            on:input={handleInputChange}
+            placeholder="you@example.com"
+            label="Email"
+            error={validationErrors.username}
+            required
+          />
         </div>
-      {/if}
 
-      <div>
+        <!-- Password -->
+        <div class="field">
+          <FormInput
+            id="password"
+            name="password"
+            type="password"
+            value={formData.password}
+            on:input={handleInputChange}
+            placeholder="At least 6 characters"
+            label="Password"
+            error={validationErrors.password}
+            required
+            showPasswordToggle={true}
+          />
+
+          <!-- Password strength indicator -->
+          {#if formData.password.length > 0}
+            {@const strength = formData.password.length >= 12 && /[A-Z]/.test(formData.password) && /[0-9]/.test(formData.password) && /[^A-Za-z0-9]/.test(formData.password) ? 'strong' : formData.password.length >= 8 && /[A-Z]/.test(formData.password) ? 'medium' : formData.password.length >= 6 ? 'weak' : 'none'}
+            <div class="strength-wrap" data-level={strength} aria-live="polite">
+              <div class="strength-bars">
+                <div class="strength-bar"></div>
+                <div class="strength-bar"></div>
+                <div class="strength-bar"></div>
+                <div class="strength-bar"></div>
+              </div>
+              <span class="strength-label">
+                {#if strength === 'weak'}Weak{:else if strength === 'medium'}Medium{:else if strength === 'strong'}Strong{/if}
+              </span>
+            </div>
+          {/if}
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="field">
+          <FormInput
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            on:input={handleInputChange}
+            placeholder="Re-enter your password"
+            label="Confirm password"
+            error={validationErrors.confirmPassword}
+            required
+            showPasswordToggle={true}
+          />
+        </div>
+
+        {#if errorMessage}
+          <div class="alert alert-error">
+            <p>{errorMessage}</p>
+          </div>
+        {/if}
+
+        {#if successMessage}
+          <div class="alert alert-success">
+            <p>{successMessage}</p>
+          </div>
+        {/if}
+
+        <!-- Submit -->
         <button
           type="submit"
+          class="btn-primary"
+          class:loading={isLoading}
           disabled={isLoading}
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-weeb-accent hover:bg-weeb-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-weeb-accent disabled:opacity-50 disabled:cursor-not-allowed"
         >
+          <span class="btn-label">Create account</span>
           {#if isLoading}
-            <span class="flex items-center">
-              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Creating account...
-            </span>
-          {:else}
-            Register
+            <span class="spinner" aria-hidden="true"></span>
           {/if}
         </button>
-      </div>
 
-      <div class="text-center space-y-2">
-        <p class="text-sm text-weeb-fg-muted">
-          Already have an account?{' '}
-          <a
-            href="/auth/login"
-            class="text-weeb-accent hover:text-weeb-accent transition-colors"
-          >
-            Sign in here
-          </a>
-        </p>
-        <a
-          href="/"
-          class="text-sm text-weeb-fg-muted hover:text-weeb-fg transition-colors inline-flex items-center"
-        >
-          <Fa icon={faArrowLeft} class="mr-2" />
-          Back to Home
-        </a>
+      </form>
+
+      <!-- Card footer -->
+      <div class="card-footer">
+        Already have an account? <a href="/auth/login">Log in</a>
       </div>
-    </form>
+    </div>
+
   </div>
-</div>
+</main>
+
+<style>
+  /* --- Animated background --- */
+  .page-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(135deg,
+      oklch(16% 0.025 280),
+      oklch(14% 0.015 270),
+      oklch(15% 0.02 295));
+    background-size: 400% 400%;
+    animation: bgShift 30s ease infinite;
+  }
+
+  @keyframes bgShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* --- Main layout --- */
+  .main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 16px 40px;
+  }
+
+  .auth-wrapper {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  /* --- Logo block --- */
+  .logo-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .logo-mark {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--weeb-accent), var(--weeb-violet, oklch(62% 0.14 300)));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-wordmark {
+    font-family: ui-monospace, 'JetBrains Mono', Menlo, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--weeb-fg);
+  }
+
+  /* --- Card --- */
+  .card {
+    width: 100%;
+    background: var(--weeb-bg-elevated);
+    border: 1px solid var(--weeb-border);
+    border-radius: 12px;
+    padding: 36px;
+    box-shadow: 0 4px 24px oklch(0% 0 0 / 0.3), 0 1px 3px oklch(0% 0 0 / 0.2);
+  }
+
+  .card-header {
+    margin-bottom: 28px;
+    text-align: center;
+  }
+
+  .card-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--weeb-fg);
+    margin-bottom: 4px;
+  }
+
+  .card-subtitle {
+    font-size: 14px;
+    color: var(--weeb-fg-muted);
+  }
+
+  /* --- Form layout --- */
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* --- Password strength indicator --- */
+  .strength-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .strength-bars {
+    display: flex;
+    gap: 4px;
+  }
+
+  .strength-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--weeb-border);
+    border-radius: 99px;
+    transition: background 0.25s;
+  }
+
+  .strength-label {
+    font-size: 11px;
+    color: var(--weeb-fg-muted);
+    font-family: ui-monospace, 'JetBrains Mono', Menlo, monospace;
+    letter-spacing: 0.04em;
+  }
+
+  /* Strength levels */
+  .strength-wrap[data-level="weak"] .strength-bar:nth-child(1) {
+    background: var(--weeb-red);
+  }
+  .strength-wrap[data-level="weak"] .strength-label {
+    color: var(--weeb-red);
+  }
+
+  .strength-wrap[data-level="medium"] .strength-bar:nth-child(1),
+  .strength-wrap[data-level="medium"] .strength-bar:nth-child(2) {
+    background: var(--weeb-amber, oklch(72% 0.14 85));
+  }
+  .strength-wrap[data-level="medium"] .strength-label {
+    color: var(--weeb-amber, oklch(72% 0.14 85));
+  }
+
+  .strength-wrap[data-level="strong"] .strength-bar:nth-child(1),
+  .strength-wrap[data-level="strong"] .strength-bar:nth-child(2),
+  .strength-wrap[data-level="strong"] .strength-bar:nth-child(3) {
+    background: var(--weeb-green);
+  }
+  .strength-wrap[data-level="strong"] .strength-label {
+    color: var(--weeb-green);
+  }
+
+  /* --- Alert messages --- */
+  .alert {
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid;
+  }
+
+  .alert-error {
+    color: var(--weeb-red);
+    background: oklch(20% 0.03 25 / 0.5);
+    border-color: var(--weeb-red, oklch(60% 0.18 25));
+  }
+
+  .alert-success {
+    color: var(--weeb-green);
+    background: oklch(20% 0.03 155 / 0.5);
+    border-color: var(--weeb-green);
+  }
+
+  /* --- Submit button --- */
+  .btn-primary {
+    width: 100%;
+    height: 46px;
+    margin-top: 4px;
+    background: var(--weeb-accent);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--weeb-accent-hover);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: scale(0.99);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary.loading .btn-label {
+    opacity: 0;
+  }
+
+  .spinner {
+    display: block;
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid oklch(100% 0 0 / 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* --- Card footer --- */
+  .card-footer {
+    text-align: center;
+    font-size: 14px;
+    color: var(--weeb-fg-muted);
+    margin-top: 20px;
+  }
+
+  .card-footer a {
+    color: var(--weeb-accent);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+
+  .card-footer a:hover {
+    color: var(--weeb-accent-hover);
+    text-decoration: underline;
+  }
+
+  /* --- Responsive --- */
+  @media (max-width: 480px) {
+    .main {
+      padding: 40px 16px 24px;
+    }
+    .card {
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 20px;
+    }
+  }
+</style>

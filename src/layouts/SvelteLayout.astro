@@ -36,7 +36,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
     <meta name="generator" content={Astro.generator}/>
 
     <!-- Disable Cloudflare Rocket Loader to prevent script conflicts -->
@@ -228,16 +228,10 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <!-- Header -->
     <HeaderHybrid/>
 
-    <!-- Main content with conditional styling based on variant -->
-    {variant === 'fullwidth' ? (
-        <main class="w-full bg-weeb-bg text-weeb-fg min-h-screen">
-            <slot />
-        </main>
-    ) : (
-        <main class="w-full pb-8 px-4 lg:px-16 bg-weeb-bg text-weeb-fg min-h-screen">
-            <slot />
-        </main>
-    )}
+    <!-- Main content — always full width, components handle their own padding -->
+    <main class="w-full bg-weeb-bg text-weeb-fg min-h-screen">
+        <slot />
+    </main>
 
     <!-- Footer (persisted across navigation) -->
     <div transition:persist="footer">
