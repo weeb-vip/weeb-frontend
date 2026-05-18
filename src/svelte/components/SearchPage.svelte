@@ -13,6 +13,9 @@
   let isLoading = false;
   let hasSearched = false;
   let totalResults = 0;
+  let currentPage = 0;
+  let perPage = 24;
+  const PAGE_SIZE_OPTIONS = [24, 48, 72, 100];
 
   // User anime lookup map (animeId -> status)
   let userAnimeMap: Map<string, string> = new Map();
@@ -69,6 +72,163 @@
     { value: 'newest', label: 'Newest' },
     { value: 'title', label: 'A-Z' },
   ];
+
+  // Genre metadata for icons and colors (used to enhance dynamically fetched genres)
+  const GENRE_META: Record<string, { icon: string; hue: number }> = {
+    'Action': { icon: '⚔️', hue: 25 },
+    'Adventure': { icon: '🗺️', hue: 85 },
+    'Comedy': { icon: '😂', hue: 60 },
+    'Drama': { icon: '🎭', hue: 320 },
+    'Fantasy': { icon: '✨', hue: 280 },
+    'Horror': { icon: '👻', hue: 0 },
+    'Mystery': { icon: '🔍', hue: 240 },
+    'Romance': { icon: '💕', hue: 350 },
+    'Sci-Fi': { icon: '🚀', hue: 200 },
+    'Slice of Life': { icon: '☀️', hue: 45 },
+    'Sports': { icon: '⚽', hue: 155 },
+    'Supernatural': { icon: '👁️', hue: 270 },
+    'Thriller': { icon: '🔪', hue: 15 },
+    'Mecha': { icon: '🤖', hue: 180 },
+    'Music': { icon: '🎵', hue: 300 },
+    'Psychological': { icon: '🧠', hue: 260 },
+    'Ecchi': { icon: '🔥', hue: 350 },
+    'Seinen': { icon: '👔', hue: 220 },
+    'Shounen': { icon: '💪', hue: 40 },
+    'Shoujo': { icon: '🌸', hue: 330 },
+    'Josei': { icon: '👠', hue: 310 },
+    'Kids': { icon: '🧸', hue: 50 },
+    'Isekai': { icon: '🌀', hue: 190 },
+    'Harem': { icon: '💝', hue: 340 },
+    'School': { icon: '🏫', hue: 100 },
+    'Military': { icon: '🎖️', hue: 120 },
+    'Historical': { icon: '📜', hue: 35 },
+    'Parody': { icon: '🎪', hue: 55 },
+    'Dementia': { icon: '🌀', hue: 275 },
+    'Game': { icon: '🎮', hue: 160 },
+    'Hentai': { icon: '🔞', hue: 5 },
+    'Samurai': { icon: '⚔️', hue: 30 },
+    'Vampire': { icon: '🧛', hue: 355 },
+    'Martial Arts': { icon: '🥋', hue: 20 },
+    'Space': { icon: '🌌', hue: 250 },
+    'Super Power': { icon: '⚡', hue: 65 },
+    'Police': { icon: '🚔', hue: 210 },
+    'Magic': { icon: '🪄', hue: 285 },
+    'Demons': { icon: '👿', hue: 10 },
+    'Cars': { icon: '🏎️', hue: 15 },
+    'Avant Garde': { icon: '🎨', hue: 290 },
+    'Suspense': { icon: '😰', hue: 30 },
+    'Gourmet': { icon: '🍳', hue: 40 },
+    'Award Winning': { icon: '🏆', hue: 50 },
+    'Boys Love': { icon: '👬', hue: 195 },
+    'Girls Love': { icon: '👭', hue: 335 },
+    'Erotica': { icon: '💋', hue: 345 },
+    'Adult Cast': { icon: '👔', hue: 215 },
+    'Childcare': { icon: '👶', hue: 55 },
+    'Combat Sports': { icon: '🥊', hue: 20 },
+    'Delinquents': { icon: '😎', hue: 25 },
+    'Detective': { icon: '🕵️', hue: 235 },
+    'Educational': { icon: '📚', hue: 110 },
+    'Gag Humor': { icon: '🤪', hue: 65 },
+    'Gore': { icon: '🩸', hue: 5 },
+    'High Stakes Game': { icon: '🎰', hue: 145 },
+    'Idols (Female)': { icon: '👩‍🎤', hue: 325 },
+    'Idols (Male)': { icon: '👨‍🎤', hue: 205 },
+    'Iyashikei': { icon: '🌿', hue: 135 },
+    'Love Polygon': { icon: '💔', hue: 355 },
+    'Mahou Shoujo': { icon: '🪄', hue: 315 },
+    'Medical': { icon: '🏥', hue: 175 },
+    'Memoir': { icon: '📖', hue: 45 },
+    'Organized Crime': { icon: '🔫', hue: 15 },
+    'Otaku Culture': { icon: '🎌', hue: 0 },
+    'Performing Arts': { icon: '🎭', hue: 305 },
+    'Pets': { icon: '🐾', hue: 35 },
+    'Racing': { icon: '🏁', hue: 10 },
+    'Reincarnation': { icon: '🔄', hue: 265 },
+    'Reverse Harem': { icon: '💖', hue: 330 },
+    'Romantic Subtext': { icon: '💕', hue: 345 },
+    'Showbiz': { icon: '⭐', hue: 55 },
+    'Strategy Game': { icon: '♟️', hue: 225 },
+    'Survival': { icon: '🏕️', hue: 125 },
+    'Team Sports': { icon: '🏀', hue: 25 },
+    'Time Travel': { icon: '⏰', hue: 185 },
+    'Video Game': { icon: '🎮', hue: 165 },
+    'Visual Arts': { icon: '🖼️', hue: 295 },
+    'Workplace': { icon: '💼', hue: 220 },
+    'Mythology': { icon: '⚡', hue: 70 },
+    'Shounen Ai': { icon: '💙', hue: 200 },
+    'Shoujo Ai': { icon: '💗', hue: 340 },
+    'Yaoi': { icon: '💙', hue: 200 },
+    'Yuri': { icon: '💗', hue: 340 },
+  };
+
+  // Dynamically fetched genres from Algolia
+  let browseGenres: { name: string; count: number }[] = [];
+  let isLoadingGenres = true;
+  let showAllBrowseGenres = false;
+  const INITIAL_GENRE_COUNT = 16;
+
+  async function fetchBrowseGenres() {
+    if (!searchClient) return;
+
+    isLoadingGenres = true;
+    try {
+      // Use Algolia facets to get all genres with accurate counts
+      const response = await searchClient.search({
+        requests: [{
+          indexName: algoliaIndex,
+          query: '',
+          hitsPerPage: 0,
+          facets: ['genres'],
+        }]
+      });
+
+      const facets = response.results?.[0]?.facets?.genres || {};
+
+      // Convert facets to array
+      browseGenres = Object.entries(facets)
+        .filter(([name]) => {
+          // Filter out invalid genres
+          if (!name || name === 'None found' || name.trim() === '' || name === ' add some') return false;
+          // Filter out duplicate/malformed genres (e.g., "FantasyFantasy")
+          const len = name.length;
+          const half = Math.floor(len / 2);
+          if (len > 2 && len % 2 === 0 && name.slice(0, half) === name.slice(half)) return false;
+          return true;
+        })
+        .map(([name, count]) => ({
+          name,
+          count: count as number,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+    } catch (e) {
+      console.error('Failed to fetch genres:', e);
+      browseGenres = [];
+    }
+    isLoadingGenres = false;
+  }
+
+  function browseGenre(genreName: string) {
+    // Toggle genre selection
+    const idx = selectedGenres.indexOf(genreName);
+    if (idx === -1) {
+      selectedGenres = [genreName]; // Single select for now
+    } else {
+      selectedGenres = [];
+    }
+    // Update URL
+    const url = new URL(window.location.href);
+    if (selectedGenres.length > 0) {
+      url.searchParams.set('genre', genreName);
+    } else {
+      url.searchParams.delete('genre');
+    }
+    if (!searchQuery) {
+      url.searchParams.delete('query');
+    }
+    history.pushState({}, '', url.toString());
+    performSearch();
+  }
 
   async function fetchUserAnimeMap() {
     if (!AuthStorage.isLoggedIn()) return;
@@ -127,11 +287,23 @@
       algoliaIndex = config?.algolia_index || 'anime-staging';
       searchClient = algoliasearch("A2HF2P5C6X", "45216ed5ac3f9e0a478d3c354d353d58");
 
-      // Check URL params for initial query
+      // Fetch browse genres in the background
+      fetchBrowseGenres();
+
+      // Check URL params for initial query and genre
       const params = new URLSearchParams(window.location.search);
       const q = params.get('query');
+      const genre = params.get('genre');
+
+      if (genre) {
+        selectedGenres = [genre];
+      }
+
       if (q) {
         searchQuery = q;
+      }
+      // Perform search if we have a query or genre filter
+      if (q || genre) {
         performSearch();
       }
     } catch (e) {
@@ -139,25 +311,36 @@
     }
   });
 
-  async function performSearch() {
-    if (!searchClient || !searchQuery.trim()) {
-      if (!searchQuery.trim()) {
-        results = [];
-        hasSearched = false;
-        totalResults = 0;
-      }
+  async function performSearch(resetPage = true) {
+    // Allow search if we have a query OR selected genres
+    if (!searchClient || (!searchQuery.trim() && selectedGenres.length === 0)) {
+      results = [];
+      hasSearched = false;
+      totalResults = 0;
+      currentPage = 0;
       return;
+    }
+
+    if (resetPage) {
+      currentPage = 0;
     }
 
     isLoading = true;
     hasSearched = true;
 
     try {
+      // Build filters for selected genres
+      const filters = selectedGenres.length > 0
+        ? selectedGenres.map(g => `genres:"${g}"`).join(' OR ')
+        : undefined;
+
       const response = await searchClient.search({
         requests: [{
           indexName: algoliaIndex,
           query: searchQuery.trim(),
-          hitsPerPage: 100,
+          hitsPerPage: perPage,
+          page: currentPage,
+          filters,
         }]
       });
 
@@ -184,6 +367,15 @@
     isLoading = false;
   }
 
+  function goToPage(page: number) {
+    currentPage = page;
+    performSearch(false);
+    // Scroll to top of results
+    document.querySelector('.results-header')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  $: totalPages = Math.ceil(totalResults / perPage);
+
   function handleSearchInput(e: Event) {
     searchQuery = (e.target as HTMLInputElement).value;
   }
@@ -205,11 +397,14 @@
 
   function clearSearch() {
     searchQuery = '';
+    selectedGenres = [];
     results = [];
     hasSearched = false;
     totalResults = 0;
+    // Clear all URL params
     const url = new URL(window.location.href);
     url.searchParams.delete('query');
+    url.searchParams.delete('genre');
     history.pushState({}, '', url.toString());
   }
 
@@ -219,13 +414,41 @@
       selectedGenres = [...selectedGenres, genre];
     } else {
       selectedGenres = selectedGenres.filter(g => g !== genre);
+      // If removing the last genre and no search query, reset to browse state
+      if (selectedGenres.length === 0 && !searchQuery) {
+        results = [];
+        hasSearched = false;
+        totalResults = 0;
+        const url = new URL(window.location.href);
+        url.searchParams.delete('genre');
+        url.searchParams.delete('query');
+        history.pushState({}, '', url.toString());
+        return;
+      }
     }
+    // Update URL with current genre selection
+    const url = new URL(window.location.href);
+    if (selectedGenres.length > 0) {
+      url.searchParams.set('genre', selectedGenres[0]);
+    } else {
+      url.searchParams.delete('genre');
+    }
+    history.pushState({}, '', url.toString());
   }
 
   function clearAllFilters() {
+    searchQuery = '';
     selectedGenres = [];
     selectedStatus = '';
     selectedYear = '';
+    results = [];
+    hasSearched = false;
+    totalResults = 0;
+    // Clear URL params
+    const url = new URL(window.location.href);
+    url.searchParams.delete('query');
+    url.searchParams.delete('genre');
+    history.pushState({}, '', url.toString());
   }
 
   function navigateToShow(item: any) {
@@ -315,20 +538,32 @@
   <section class="filter-section">
     <div class="filter-row filter-row--genres">
       <span class="filter-label">Genres</span>
-      <div class="genre-scroll">
-        {#each visibleGenres as genre}
-          <button
-            class="genre-tag"
-            class:selected={selectedGenres.includes(genre)}
-            on:click={() => toggleGenre(genre)}
-          >{genre}</button>
-        {/each}
-        {#if !showAllGenres && allGenres.length > 10}
-          <button class="genre-tag genre-tag--more" on:click={() => showAllGenres = true}>
-            +{allGenres.length - 10} more
-          </button>
-        {/if}
-      </div>
+      {#if isLoadingGenres}
+        <div class="genre-scroll">
+          {#each Array(8) as _}
+            <div class="genre-tag-skeleton"></div>
+          {/each}
+        </div>
+      {:else if browseGenres.length > 0}
+        {@const visibleBrowseGenres = showAllBrowseGenres ? browseGenres : browseGenres.slice(0, 12)}
+        <div class="genre-scroll">
+          {#each visibleBrowseGenres as genre}
+            <button
+              class="genre-tag"
+              class:selected={selectedGenres.includes(genre.name)}
+              on:click={() => browseGenre(genre.name)}
+            >
+              {genre.name}
+              <span class="genre-tag-count">{genre.count.toLocaleString()}</span>
+            </button>
+          {/each}
+          {#if browseGenres.length > 12 && !showAllBrowseGenres}
+            <button class="genre-tag genre-tag--more" on:click={() => showAllBrowseGenres = true}>
+              +{browseGenres.length - 12} more
+            </button>
+          {/if}
+        </div>
+      {/if}
     </div>
 
     <div class="filter-row filter-row--controls">
@@ -394,9 +629,10 @@
   {#if hasSearched}
     <div class="results-header">
       <p class="results-count">
-        <strong>{filteredResults.length}</strong>
-        {filteredResults.length === 1 ? 'result' : 'results'}
+        <strong>{totalResults.toLocaleString()}</strong>
+        {totalResults === 1 ? 'result' : 'results'}
         {#if searchQuery}for '{searchQuery}'{/if}
+        {#if selectedGenres.length > 0 && !searchQuery}in {selectedGenres.join(', ')}{/if}
       </p>
       <div class="view-toggle" role="group" aria-label="View mode">
         <button
@@ -513,15 +749,58 @@
         {/each}
       </div>
     {/if}
+
+    <!-- Pagination -->
+    {#if totalPages > 1}
+      <div class="pagination">
+        <div class="pagination-left">
+          <button
+            class="page-btn"
+            disabled={currentPage === 0}
+            on:click={() => goToPage(currentPage - 1)}
+          >
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            <span class="page-btn-label">Previous</span>
+          </button>
+
+          <span class="page-info">
+            Page {currentPage + 1} of {totalPages.toLocaleString()}
+          </span>
+
+          <button
+            class="page-btn"
+            disabled={currentPage >= totalPages - 1}
+            on:click={() => goToPage(currentPage + 1)}
+          >
+            <span class="page-btn-label">Next</span>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="pagination-right">
+          <label class="per-page-label" for="search-per-page">Show</label>
+          <select id="search-per-page" class="per-page-select" bind:value={perPage} on:change={() => { currentPage = 0; performSearch(false); }}>
+            {#each PAGE_SIZE_OPTIONS as opt}
+              <option value={opt}>{opt}</option>
+            {/each}
+          </select>
+          <span class="per-page-label">per page</span>
+        </div>
+      </div>
+    {/if}
   {:else}
-    <!-- Initial state — no search yet -->
-    <div class="initial-state">
+    <!-- Empty state — shown when no search yet -->
+    <section class="empty-state">
       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
       </svg>
-      <h3>Search for anime</h3>
-      <p>Type a title, studio, or genre to get started.</p>
-    </div>
+      <h3>Browse anime</h3>
+      <p>Search by title or click a genre above to explore.</p>
+    </section>
   {/if}
 </div>
 
@@ -601,7 +880,7 @@
   }
 
   /* Filter Section */
-  .filter-section { padding: 16px 0 0; display: flex; flex-direction: column; gap: 12px; }
+  .filter-section { padding: 16px 0 8px; display: flex; flex-direction: column; gap: 12px; }
   .filter-row {
     display: flex;
     align-items: center;
@@ -655,6 +934,28 @@
   .genre-tag--more {
     border-style: dashed;
     color: var(--weeb-fg-muted);
+  }
+  .genre-tag-count {
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--weeb-fg-muted);
+    opacity: 0.7;
+  }
+  .genre-tag.selected .genre-tag-count {
+    color: var(--weeb-accent);
+    opacity: 0.8;
+  }
+  .genre-tag-skeleton {
+    width: 80px;
+    height: 32px;
+    border-radius: 16px;
+    background: var(--weeb-surface);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
   }
   .filter-select {
     height: 32px;
@@ -743,6 +1044,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 20px 0 24px;
+    margin-top: 16px;
     border-top: 1px solid var(--weeb-border);
   }
   .results-count {
@@ -953,6 +1255,147 @@
     50% { opacity: 0.7; }
   }
 
+  /* Genre Browser */
+  .genre-browser {
+    padding: 32px 0 48px;
+  }
+  .genre-browser-header {
+    margin-bottom: 20px;
+  }
+  .genre-browser-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+    color: var(--weeb-fg);
+  }
+  .genre-pills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .genre-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--weeb-fg-secondary);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    font-family: var(--weeb-font);
+  }
+  .genre-pill-btn:hover {
+    border-color: var(--weeb-accent);
+    color: var(--weeb-fg);
+    background: var(--weeb-surface-hover);
+  }
+  .genre-pill-btn--more {
+    border-style: dashed;
+    color: var(--weeb-fg-muted);
+  }
+  .genre-pill-count {
+    font-family: var(--weeb-font-mono);
+    font-size: 11px;
+    color: var(--weeb-fg-muted);
+    background: var(--weeb-bg);
+    padding: 2px 6px;
+    border-radius: 10px;
+  }
+
+  /* Genre pill skeleton */
+  .genre-pill-skeleton {
+    width: 90px;
+    height: 36px;
+    border-radius: 20px;
+    background: var(--weeb-surface);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 24px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .pagination-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pagination-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .page-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 14px;
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius, 8px);
+    color: var(--weeb-fg-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    font-family: var(--weeb-font);
+  }
+  .page-btn:hover:not(:disabled) {
+    border-color: var(--weeb-accent);
+    color: var(--weeb-fg);
+    background: var(--weeb-surface-hover);
+  }
+  .page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .page-btn-label {
+    display: inline;
+  }
+  .page-info {
+    font-size: 0.8rem;
+    color: var(--weeb-fg-muted);
+    font-variant-numeric: tabular-nums;
+    font-family: var(--weeb-font-mono, monospace);
+  }
+  .per-page-label {
+    font-size: 0.75rem;
+    color: var(--weeb-fg-muted);
+  }
+  .per-page-select {
+    height: 32px;
+    padding: 0 28px 0 10px;
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius, 8px);
+    color: var(--weeb-fg);
+    font-size: 0.8rem;
+    font-family: var(--weeb-font-mono, monospace);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    transition: border-color 0.15s;
+  }
+  .per-page-select:focus {
+    outline: none;
+    border-color: var(--weeb-accent);
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .search-page { padding: 0 16px; }
@@ -960,10 +1403,20 @@
     .filter-row { gap: 6px; }
     .filter-row--controls { flex-wrap: wrap; }
     .results-grid { gap: 12px; }
+    .genre-pills-row { gap: 6px; }
+    .genre-pill-btn { padding: 6px 12px; font-size: 12px; }
+  }
+  @media (max-width: 768px) {
+    .pagination { flex-direction: column; align-items: stretch; }
+    .pagination-left { justify-content: center; }
+    .pagination-right { justify-content: center; }
+    .page-btn-label { display: none; }
   }
   @media (max-width: 480px) {
     .search-page { padding: 0 12px; }
     .search-hero { padding: 24px 0 16px; }
+    .genre-pill-btn { padding: 6px 10px; font-size: 11px; }
+    .genre-pill-count { font-size: 10px; padding: 1px 5px; }
     .search-bar-input { height: 48px; font-size: 14px; border-radius: 24px; padding: 0 48px 0 48px; }
     .search-icon { left: 18px; }
     .search-bar-clear { right: 14px; }
