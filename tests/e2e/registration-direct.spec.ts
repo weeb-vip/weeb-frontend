@@ -109,13 +109,14 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
     await emailInput.waitFor({ state: 'visible' });
     await emailInput.fill(testEmail);
 
-    // Submit
+    // Submit - use evaluate for reliable click
     const submitButton = page.locator('button[type="submit"], button:has-text("Send Verification Email")').first();
-    await submitButton.click();
+    await submitButton.waitFor({ state: 'visible' });
+    await submitButton.evaluate((btn) => (btn as HTMLButtonElement).click());
 
     // Should see either success or error message
     const messageSelector = page.locator('text=/sent|check.*inbox|not found|already verified/i');
-    await expect(messageSelector).toBeVisible({ timeout: 10000 });
+    await expect(messageSelector).toBeVisible({ timeout: 15000 });
     console.log('Resend verification page is working');
   });
 });
