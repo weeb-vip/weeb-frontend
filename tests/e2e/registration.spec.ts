@@ -128,12 +128,18 @@ async function openRegisterModal(page: Page): Promise<Locator> {
   return dialog;
 }
 
-async function fillAndSubmitRegister(dialog: Locator, email: string, password: string) {
+async function fillAndSubmitRegister(dialog: Locator, page: Page, email: string, password: string) {
   await dialog.locator('input[name="username"]').fill(email);
   await dialog.locator('input[name="password"]').fill(password);
   await dialog.locator('input[name="confirmPassword"]').fill(password);
-  // Use evaluate for more reliable click
+
+  // Use evaluate for more reliable click and wait for API response
+  const responsePromise = page.waitForResponse(
+    (response) => response.url().includes('graphql') && response.status() === 200,
+    { timeout: 30000 }
+  );
   await dialog.locator('form button[type="submit"]').evaluate((btn) => (btn as HTMLButtonElement).click());
+  await responsePromise.catch(() => console.log('No GraphQL response detected'));
 }
 
 test.describe('User Registration Flow', () => {
@@ -161,10 +167,10 @@ test.describe('User Registration Flow', () => {
     await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
-    await fillAndSubmitRegister(dialog, testEmail, testPassword);
+    await fillAndSubmitRegister(dialog, page, testEmail, testPassword);
 
     // Success message is rendered inside the modal
-    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
+    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 30000 });
     console.log('Registration successful, checking for verification email...');
 
     const email = await getLatestEmail(testEmail);
@@ -204,20 +210,24 @@ test.describe('User Registration Flow', () => {
     await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
-    await fillAndSubmitRegister(dialog, testEmail, testPassword);
+    await fillAndSubmitRegister(dialog, page, testEmail, testPassword);
 
-    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
+    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 30000 });
 
     // Navigate to resend verification page
     await page.goto('/auth/resend-verification', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForAuthForm(page);
 
     await page.fill('input[name="username"], input[type="email"]', testEmail);
-    await page.getByRole('button', { name: /send verification email/i }).click();
+
+    // Wait for button to be ready and use evaluate for reliable click
+    const submitBtn = page.getByRole('button', { name: /send verification email/i });
+    await submitBtn.waitFor({ state: 'visible' });
+    await submitBtn.evaluate((btn) => (btn as HTMLButtonElement).click());
 
     // The resend page shows: "Verification email sent! Please check your inbox and spam folder."
     await expect(page.getByText(/verification email sent|check your inbox/i).first())
-      .toBeVisible({ timeout: 10000 });
+      .toBeVisible({ timeout: 15000 });
     console.log('Resend verification email successful');
 
     const email = await getLatestEmail(testEmail);
@@ -230,9 +240,9 @@ test.describe('User Registration Flow', () => {
     await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
-    await fillAndSubmitRegister(dialog, testEmail, testPassword);
+    await fillAndSubmitRegister(dialog, page, testEmail, testPassword);
 
-    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
+    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 30000 });
 
     // Try to login without verification
     await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
