@@ -137,7 +137,7 @@ try {
       input: { startDate: defaultStartDate, endDate: null, daysInFuture: 7 },
       limit: 10
     }, 'currently airing data'),
-    fetchWithFallback(getSeasonalAnime, { season: currentSeason }, 'seasonal data')
+    fetchWithFallback(getSeasonalAnime, { season: currentSeason, limit: 14 }, 'seasonal data')
   ]);
 
   // Extract results

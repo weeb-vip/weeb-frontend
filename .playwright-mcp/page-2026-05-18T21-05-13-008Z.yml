@@ -1,0 +1,840 @@
+- generic [ref=e1]:
+  - navigation [ref=e3]:
+    - link "weeb.vip weeb.vip" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e5]
+      - generic [ref=e6]: weeb.vip
+    - generic [ref=e7]:
+      - link "Home" [ref=e8] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e9] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e10] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e11] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e14]:
+      - img
+      - searchbox [ref=e15]
+      - generic: /
+    - generic [ref=e16]:
+      - button "Toggle title language" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e21]: EN
+      - generic [ref=e23]:
+        - button "Login" [ref=e24] [cursor=pointer]:
+          - generic [ref=e25]: Login
+        - button "Register" [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: Register
+  - main [ref=e28]:
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - paragraph [ref=e32]: Seasonal Anime
+        - heading "Summer 2026" [level=1] [ref=e1367]
+      - generic [ref=e34]:
+        - tablist [ref=e35]:
+          - button "❄ Winter" [ref=e36] [cursor=pointer]:
+            - generic [ref=e37]: ❄
+            - text: Winter
+          - button "⚘ Spring" [ref=e38] [cursor=pointer]:
+            - generic [ref=e39]: ⚘
+            - text: Spring
+          - button "☀ Summer" [ref=e40] [cursor=pointer]:
+            - generic [ref=e41]: ☀
+            - text: Summer
+          - button "🍂 Fall" [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]: 🍂
+            - text: Fall
+        - generic [ref=e44]:
+          - button "Previous season" [ref=e45] [cursor=pointer]:
+            - img [ref=e46]
+          - generic [ref=e48]:
+            - button "2025" [ref=e49] [cursor=pointer]
+            - button "2026" [ref=e50] [cursor=pointer]
+            - button "2027" [ref=e51] [cursor=pointer]
+          - button "Next season" [active] [ref=e52] [cursor=pointer]:
+            - img [ref=e53]
+      - generic [ref=e55]:
+        - generic [ref=e56]: Showing 60 titles
+        - button "Jump to current season" [ref=e1369] [cursor=pointer]
+      - generic [ref=e57]:
+        - generic [ref=e58]: TOP THIS SEASON
+        - generic [ref=e59]:
+          - link "#1 \"Kimi wo Aisuru Ki wa Nai\" to Itta Jiki Koushaku-sama ga Nazeka Dekiai shitekimasu \"Kimi wo Aisuru Ki wa Nai\" to Itta Jiki Koushaku-sama ga Nazeka Dekiai shitekimasu" [ref=e1370] [cursor=pointer]:
+            - /url: /show/04198d0e-c06b-4541-b3e1-899983cfba78
+            - generic [ref=e61]: "#1"
+            - img "\"Kimi wo Aisuru Ki wa Nai\" to Itta Jiki Koushaku-sama ga Nazeka Dekiai shitekimasu" [ref=e1371]
+            - generic [ref=e67]: "\"Kimi wo Aisuru Ki wa Nai\" to Itta Jiki Koushaku-sama ga Nazeka Dekiai shitekimasu"
+          - 'link "#2 Azur Lane: Slow Ahead! Season 2 Azur Lane: Slow Ahead! Season 2" [ref=e1372] [cursor=pointer]':
+            - /url: /show/9cbb14b6-48c4-40a3-8bf5-778443c2b866
+            - generic [ref=e70]: "#2"
+            - 'img "Azur Lane: Slow Ahead! Season 2" [ref=e1373]'
+            - generic [ref=e76]: "Azur Lane: Slow Ahead! Season 2"
+          - link "#3 BanG Dream! Yume∞Mita BanG Dream! Yume∞Mita" [ref=e1374] [cursor=pointer]:
+            - /url: /show/84bc82c9-1b5c-4741-9fdc-e41a0722ac56
+            - generic [ref=e79]: "#3"
+            - img "BanG Dream! Yume∞Mita" [ref=e1375]
+            - generic [ref=e85]: BanG Dream! Yume∞Mita
+          - link "#4 Behind the Supermarket, Smoking with You. Behind the Supermarket, Smoking with You." [ref=e1376] [cursor=pointer]:
+            - /url: /show/a131b68c-5317-4fbc-95e9-946630c0fabb
+            - generic [ref=e88]: "#4"
+            - img "Behind the Supermarket, Smoking with You." [ref=e1377]
+            - generic [ref=e93]: Behind the Supermarket, Smoking with You.
+          - link "#5 Black Torch Black Torch" [ref=e1378] [cursor=pointer]:
+            - /url: /show/e6d7b4b0-a646-4f4b-9868-573bb6b25e67
+            - generic [ref=e96]: "#5"
+            - img "Black Torch" [ref=e1379]
+            - generic [ref=e102]: Black Torch
+      - generic [ref=e104]:
+        - heading "All Shows" [level=2] [ref=e105]
+        - generic [ref=e106]: 60 titles
+      - generic [ref=e108]:
+        - button "Fantasy 22" [ref=e1380] [cursor=pointer]:
+          - text: Fantasy
+          - generic [ref=e110]: "22"
+        - button "Action 16" [ref=e1381] [cursor=pointer]:
+          - text: Action
+          - generic [ref=e112]: "16"
+        - button "Romance 15" [ref=e1382] [cursor=pointer]:
+          - text: Romance
+          - generic [ref=e114]: "15"
+        - button "Comedy 13" [ref=e1383] [cursor=pointer]:
+          - text: Comedy
+          - generic [ref=e116]: "13"
+        - button "Adventure 12" [ref=e117] [cursor=pointer]:
+          - text: Adventure
+          - generic [ref=e118]: "12"
+        - button "Supernatural 8" [ref=e1384] [cursor=pointer]:
+          - text: Supernatural
+          - generic [ref=e120]: "8"
+        - button "Drama 4" [ref=e1385] [cursor=pointer]:
+          - text: Drama
+          - generic [ref=e122]: "4"
+        - button "Sci-Fi 3" [ref=e1386] [cursor=pointer]:
+          - text: Sci-Fi
+          - generic [ref=e124]: "3"
+        - button "Girls Love 2" [ref=e1387] [cursor=pointer]:
+          - text: Girls Love
+          - generic [ref=e126]: "2"
+        - button "Mystery 2" [ref=e1388] [cursor=pointer]:
+          - text: Mystery
+          - generic [ref=e128]: "2"
+        - button "Sports 1" [ref=e1389] [cursor=pointer]:
+          - text: Sports
+          - generic [ref=e130]: "1"
+        - button "Ecchi 1" [ref=e1390] [cursor=pointer]:
+          - text: Ecchi
+          - generic [ref=e132]: "1"
+        - button "+2 more" [ref=e1391] [cursor=pointer]
+      - generic [ref=e134]:
+        - link "\"Kimi wo Aisuru Ki wa Nai\" to Itta Jiki Koushaku-sama ga Nazeka Dekiai shitekimasu Elsa, daughter of a fallen aristocrat, receives a marriage proposal from Julius, an elite aristocrat. \"Why would such a ... Fantasy Romance \"Kimi wo Aisuru Ki wa Nai\" to Itta Jiki Koushaku-sama ga Nazeka Dekiai shitekimasu 2026 · ? ep" [ref=e1393] [cursor=pointer]:
+          - /url: /show/04198d0e-c06b-4541-b3e1-899983cfba78
+          - generic [ref=e1394]:
+            - img "\"Kimi wo Aisuru Ki wa Nai\" to Itta Jiki Koushaku-sama ga Nazeka Dekiai shitekimasu" [ref=e1396]
+            - generic:
+              - generic:
+                - paragraph: Elsa, daughter of a fallen aristocrat, receives a marriage proposal from Julius, an elite aristocrat. "Why would such a ...
+                - generic:
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e1397]: "\"Kimi wo Aisuru Ki wa Nai\" to Itta Jiki Koushaku-sama ga Nazeka Dekiai shitekimasu"
+          - generic [ref=e1398]: 2026 · ? ep
+        - 'link "Azur Lane: Slow Ahead! Season 2 Second season of Azur Lane: Bisoku Zenshin!. Comedy Sci-Fi Azur Lane: Slow Ahead! Season 2 2026 · ? ep" [ref=e1400] [cursor=pointer]':
+          - /url: /show/9cbb14b6-48c4-40a3-8bf5-778443c2b866
+          - generic [ref=e1401]:
+            - 'img "Azur Lane: Slow Ahead! Season 2" [ref=e1403]'
+            - generic:
+              - generic:
+                - paragraph: "Second season of Azur Lane: Bisoku Zenshin!."
+                - generic:
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e1404]: "Azur Lane: Slow Ahead! Season 2"
+          - generic [ref=e1405]: 2026 · ? ep
+        - link "BanG Dream! Yume∞Mita New BanG Dream! series featuring a virtual all-girl band, Mugendai Mewtype. BanG Dream! Yume∞Mita 2026 · ? ep" [ref=e1407] [cursor=pointer]:
+          - /url: /show/84bc82c9-1b5c-4741-9fdc-e41a0722ac56
+          - generic [ref=e1408]:
+            - img "BanG Dream! Yume∞Mita" [ref=e1410]
+            - generic:
+              - generic:
+                - paragraph: New BanG Dream! series featuring a virtual all-girl band, Mugendai Mewtype.
+          - generic [ref=e1411]: BanG Dream! Yume∞Mita
+          - generic [ref=e1412]: 2026 · ? ep
+        - link "Behind the Supermarket, Smoking with You. The sole thing that gets the middle-aged Sasaki through his soul-sucking job is a cheerful smile from Yamada—the young w... Behind the Supermarket, Smoking with You. 2026 · ? ep" [ref=e1414] [cursor=pointer]:
+          - /url: /show/a131b68c-5317-4fbc-95e9-946630c0fabb
+          - generic [ref=e1415]:
+            - img "Behind the Supermarket, Smoking with You." [ref=e1417]
+            - generic:
+              - generic:
+                - paragraph: The sole thing that gets the middle-aged Sasaki through his soul-sucking job is a cheerful smile from Yamada—the young w...
+          - generic [ref=e1418]: Behind the Supermarket, Smoking with You.
+          - generic [ref=e1419]: 2026 · ? ep
+        - link "Black Torch Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with... Action Supernatural Black Torch 2026 · ? ep" [ref=e1421] [cursor=pointer]:
+          - /url: /show/e6d7b4b0-a646-4f4b-9868-573bb6b25e67
+          - generic [ref=e1422]:
+            - img "Black Torch" [ref=e1424]
+            - generic:
+              - generic:
+                - paragraph: Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with...
+                - generic:
+                  - generic: Action
+                  - generic: Supernatural
+          - generic [ref=e1425]: Black Torch
+          - generic [ref=e1426]: 2026 · ? ep
+        - 'link "Bleach: Thousand-Year Blood War - The Calamity Final part of Bleach: Sennen Kessen-hen. Action Adventure Supernatural Bleach: Thousand-Year Blood War - The Calamity 2026 · ? ep" [ref=e1428] [cursor=pointer]':
+          - /url: /show/cedf49fa-8421-4701-b25f-f6545c566a2d
+          - generic [ref=e1429]:
+            - 'img "Bleach: Thousand-Year Blood War - The Calamity" [ref=e1431]'
+            - generic:
+              - generic:
+                - paragraph: "Final part of Bleach: Sennen Kessen-hen."
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Supernatural
+          - generic [ref=e1432]: "Bleach: Thousand-Year Blood War - The Calamity"
+          - generic [ref=e1433]: 2026 · ? ep
+        - link "Buchigire Reijou wa Houfuku wo Chikaimashita. Madousho no Chikara de Sokoku wo Tatakitsubushimasu Elizabeth Leiston, the daughter of Haldoria's powerful prime minister, is the picture of a refined noble lady and the pe... Drama Fantasy Buchigire Reijou wa Houfuku wo Chikaimashita. Madousho no Chikara de Sokoku wo Tatakitsubushimasu 2026 · ? ep" [ref=e1435] [cursor=pointer]:
+          - /url: /show/681df776-3bf0-4314-83ca-35fb447c5fa8
+          - generic [ref=e1436]:
+            - img "Buchigire Reijou wa Houfuku wo Chikaimashita. Madousho no Chikara de Sokoku wo Tatakitsubushimasu" [ref=e1438]
+            - generic:
+              - generic:
+                - paragraph: Elizabeth Leiston, the daughter of Haldoria's powerful prime minister, is the picture of a refined noble lady and the pe...
+                - generic:
+                  - generic: Drama
+                  - generic: Fantasy
+          - generic [ref=e1439]: Buchigire Reijou wa Houfuku wo Chikaimashita. Madousho no Chikara de Sokoku wo Tatakitsubushimasu
+          - generic [ref=e1440]: 2026 · ? ep
+        - link "Clevatess Season 2 Second season of Clevatess. Action Fantasy Clevatess Season 2 2026 · ? ep" [ref=e1442] [cursor=pointer]:
+          - /url: /show/57882d5f-d334-4957-bdd2-26f0cd5bee98
+          - generic [ref=e1443]:
+            - img "Clevatess Season 2" [ref=e1445]
+            - generic:
+              - generic:
+                - paragraph: Second season of Clevatess.
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+          - generic [ref=e1446]: Clevatess Season 2
+          - generic [ref=e1447]: 2026 · ? ep
+        - link "Draw This, Then Die! Ai Yasumi, a first-year high school student living on Izu-Oshima, loves manga more than anything. When she learns that h... Draw This, Then Die! 2026 · ? ep" [ref=e1449] [cursor=pointer]:
+          - /url: /show/0df8ca44-afbc-4754-8b38-e36479271010
+          - generic [ref=e1450]:
+            - img "Draw This, Then Die!" [ref=e1452]
+            - generic:
+              - generic:
+                - paragraph: Ai Yasumi, a first-year high school student living on Izu-Oshima, loves manga more than anything. When she learns that h...
+          - generic [ref=e1453]: Draw This, Then Die!
+          - generic [ref=e1454]: 2026 · ? ep
+        - link "From Old Country Bumpkin to Master Swordsman Season 2 Second season of Katainaka no Ossan, Kensei ni Naru. Action Fantasy From Old Country Bumpkin to Master Swordsman Season 2 2026 · ? ep" [ref=e1456] [cursor=pointer]:
+          - /url: /show/ca5f1bd1-56e3-4e42-b3a1-e48f2c8c642c
+          - generic [ref=e1457]:
+            - img "From Old Country Bumpkin to Master Swordsman Season 2" [ref=e1459]
+            - generic:
+              - generic:
+                - paragraph: Second season of Katainaka no Ossan, Kensei ni Naru.
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+          - generic [ref=e1460]: From Old Country Bumpkin to Master Swordsman Season 2
+          - generic [ref=e1461]: 2026 · ? ep
+        - 'link "Futsutsuka na Akujo dewa Gozaimasu ga: Suuguu Chouso Torikae Den Within the Kingdom of Ei''s opulent inner court is the thriving Maiden Court, where the empress and the four imperial con... Fantasy Romance Futsutsuka na Akujo dewa Gozaimasu ga: Suuguu Chouso Torikae Den 2026 · ? ep" [ref=e1463] [cursor=pointer]':
+          - /url: /show/58226867-905d-4914-872e-b68936a19510
+          - generic [ref=e1464]:
+            - 'img "Futsutsuka na Akujo dewa Gozaimasu ga: Suuguu Chouso Torikae Den" [ref=e1466]'
+            - generic:
+              - generic:
+                - paragraph: Within the Kingdom of Ei's opulent inner court is the thriving Maiden Court, where the empress and the four imperial con...
+                - generic:
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e1467]: "Futsutsuka na Akujo dewa Gozaimasu ga: Suuguu Chouso Torikae Den"
+          - generic [ref=e1468]: 2026 · ? ep
+        - link "Goodbye, Lara A new original anime inspired by The Little Mermaid follows the story of a mermaid who wishes to be loved by a human but... Fantasy Romance Goodbye, Lara 2026 · ? ep" [ref=e1470] [cursor=pointer]:
+          - /url: /show/0ac74c29-1e84-477d-b1ed-458306f6737c
+          - generic [ref=e1471]:
+            - img "Goodbye, Lara" [ref=e1473]
+            - generic:
+              - generic:
+                - paragraph: A new original anime inspired by The Little Mermaid follows the story of a mermaid who wishes to be loved by a human but...
+                - generic:
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e1474]: Goodbye, Lara
+          - generic [ref=e1475]: 2026 · ? ep
+        - link "Grand Blue Dreaming Season 3 Third season of Grand Blue. Grand Blue Dreaming Season 3 2026 · ? ep" [ref=e1477] [cursor=pointer]:
+          - /url: /show/84fa7ac5-6c3f-45e0-84ce-19ae10e085e4
+          - generic [ref=e1478]:
+            - img "Grand Blue Dreaming Season 3" [ref=e1480]
+            - generic:
+              - generic:
+                - paragraph: Third season of Grand Blue.
+          - generic [ref=e1481]: Grand Blue Dreaming Season 3
+          - generic [ref=e1482]: 2026 · ? ep
+        - 'link "Grow Up Show: Sunflower Circus In Japan during the height of its economic boom in the mid-1950s, the circus was a form of entertainment that became a c... Grow Up Show: Sunflower Circus 2026 · ? ep" [ref=e1484] [cursor=pointer]':
+          - /url: /show/0ca04727-68c9-4390-83ce-1357763c6aa5
+          - generic [ref=e1485]:
+            - 'img "Grow Up Show: Sunflower Circus" [ref=e1487]'
+            - generic:
+              - generic:
+                - paragraph: In Japan during the height of its economic boom in the mid-1950s, the circus was a form of entertainment that became a c...
+          - generic [ref=e1488]: "Grow Up Show: Sunflower Circus"
+          - generic [ref=e1489]: 2026 · ? ep
+        - link "Hanaori-san Wants to Have a Fight Even If She Reincarnates Narukami Ryusei is your typical NEET. He spends his days shut in his room playing video games without a care in the worl... Comedy Fantasy Romance Hanaori-san Wants to Have a Fight Even If She Reincarnates 2026 · ? ep" [ref=e1491] [cursor=pointer]:
+          - /url: /show/c30ab488-0218-47ac-b847-50c0bc89d515
+          - generic [ref=e1492]:
+            - img "Hanaori-san Wants to Have a Fight Even If She Reincarnates" [ref=e1494]
+            - generic:
+              - generic:
+                - paragraph: Narukami Ryusei is your typical NEET. He spends his days shut in his room playing video games without a care in the worl...
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e1495]: Hanaori-san Wants to Have a Fight Even If She Reincarnates
+          - generic [ref=e1496]: 2026 · ? ep
+        - 'link "Hell Mode: The Hardcore Gamer Dominates in Another World with Garbage Balancing Season 2 Second season of Hell Mode: Yarikomizuki no Gamer wa Hai Settei no Isekai de Musou suru. Action Adventure Fantasy Hell Mode: The Hardcore Gamer Dominates in Another World with Garbage Balancing Season 2 2026 · ? ep" [ref=e1498] [cursor=pointer]':
+          - /url: /show/f5b8ab10-9c40-4e1d-87a8-2dd5e2d0a436
+          - generic [ref=e1499]:
+            - 'img "Hell Mode: The Hardcore Gamer Dominates in Another World with Garbage Balancing Season 2" [ref=e1501]'
+            - generic:
+              - generic:
+                - paragraph: "Second season of Hell Mode: Yarikomizuki no Gamer wa Hai Settei no Isekai de Musou suru."
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1502]: "Hell Mode: The Hardcore Gamer Dominates in Another World with Garbage Balancing Season 2"
+          - generic [ref=e1503]: 2026 · ? ep
+        - link "Heroine? Saint? No, I'm an All-Works Maid (And Proud of It)! \"I will become the world's most wonderful maid!\" With her skirt fluttering in black and white, the girl shouted. Her nam... Heroine? Saint? No, I'm an All-Works Maid (And Proud of It)! 2026 · ? ep" [ref=e1505] [cursor=pointer]:
+          - /url: /show/b89f6054-87f8-454c-b3b3-c7e3b8e9a598
+          - generic [ref=e1506]:
+            - img "Heroine? Saint? No, I'm an All-Works Maid (And Proud of It)!" [ref=e1508]
+            - generic:
+              - generic:
+                - paragraph: "\"I will become the world's most wonderful maid!\" With her skirt fluttering in black and white, the girl shouted. Her nam..."
+          - generic [ref=e1509]: Heroine? Saint? No, I'm an All-Works Maid (And Proud of It)!
+          - generic [ref=e1510]: 2026 · ? ep
+        - 'link "Honoo no Toukyuujo: Dodge Danko No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Comedy Sports Honoo no Toukyuujo: Dodge Danko 2026 · ? ep" [ref=e1512] [cursor=pointer]':
+          - /url: /show/070fc2dd-f3d6-4cdd-8ba5-fc69dedb7e9b
+          - generic [ref=e1513]:
+            - 'img "Honoo no Toukyuujo: Dodge Danko" [ref=e1515]'
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+                - generic:
+                  - generic: Comedy
+                  - generic: Sports
+          - generic [ref=e1516]: "Honoo no Toukyuujo: Dodge Danko"
+          - generic [ref=e1517]: 2026 · ? ep
+        - link "I Became a Legend After My 10 Year-Long Last Stand. The sorcerer Luck believes this to be the end. Besieged by powerful demons, he makes the noble sacrifice of holding back... Action Adventure Fantasy I Became a Legend After My 10 Year-Long Last Stand. 2026 · ? ep" [ref=e1519] [cursor=pointer]:
+          - /url: /show/bd4134c1-1f0e-40be-96a5-e286a121cbe2
+          - generic [ref=e1520]:
+            - img "I Became a Legend After My 10 Year-Long Last Stand." [ref=e1522]
+            - generic:
+              - generic:
+                - paragraph: The sorcerer Luck believes this to be the end. Besieged by powerful demons, he makes the noble sacrifice of holding back...
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1523]: I Became a Legend After My 10 Year-Long Last Stand.
+          - generic [ref=e1524]: 2026 · ? ep
+        - link "I Want to Love You Till Your Dying Day The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In ... Fantasy Girls Love I Want to Love You Till Your Dying Day 2026 · ? ep" [ref=e1526] [cursor=pointer]:
+          - /url: /show/f8ca519a-c4cf-4971-a293-8b227bd3bef8
+          - generic [ref=e1527]:
+            - img "I Want to Love You Till Your Dying Day" [ref=e1529]
+            - generic:
+              - generic:
+                - paragraph: The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In ...
+                - generic:
+                  - generic: Fantasy
+                  - generic: Girls Love
+          - generic [ref=e1530]: I Want to Love You Till Your Dying Day
+          - generic [ref=e1531]: 2026 · ? ep
+        - link "Iwamoto-senpai no Suisen The 1910s. Iwamoto Kodo, a student at Suho Junior High School under direct command of the army, is investigating paranor... Iwamoto-senpai no Suisen 2026 · ? ep" [ref=e1533] [cursor=pointer]:
+          - /url: /show/3d523055-b69a-462d-a707-3d33d4e5835f
+          - generic [ref=e1534]:
+            - img "Iwamoto-senpai no Suisen" [ref=e1536]
+            - generic:
+              - generic:
+                - paragraph: The 1910s. Iwamoto Kodo, a student at Suho Junior High School under direct command of the army, is investigating paranor...
+          - generic [ref=e1537]: Iwamoto-senpai no Suisen
+          - generic [ref=e1538]: 2026 · ? ep
+        - 'link "Jaadugar: A Witch in Mongolia In the harem of the Khan, wisdom is beauty. The time: the thirteenth century. The place: Yeke Mongol Ulus, the greatest ... Jaadugar: A Witch in Mongolia 2026 · ? ep" [ref=e1540] [cursor=pointer]':
+          - /url: /show/ff9731c0-833a-48e8-86af-bfd05fdca9b7
+          - generic [ref=e1541]:
+            - 'img "Jaadugar: A Witch in Mongolia" [ref=e1543]'
+            - generic:
+              - generic:
+                - paragraph: "In the harem of the Khan, wisdom is beauty. The time: the thirteenth century. The place: Yeke Mongol Ulus, the greatest ..."
+          - generic [ref=e1544]: "Jaadugar: A Witch in Mongolia"
+          - generic [ref=e1545]: 2026 · ? ep
+        - link "Let's Go Kaiki-gumi The story of Let's Go Kaiki-gumi follows a nameless protagonist who is six times more vulnerable to spiritual phenomena ... Comedy Supernatural Let's Go Kaiki-gumi 2026 · ? ep" [ref=e1547] [cursor=pointer]:
+          - /url: /show/031d7676-6235-4f71-9523-21332e3664b5
+          - generic [ref=e1548]:
+            - img "Let's Go Kaiki-gumi" [ref=e1550]
+            - generic:
+              - generic:
+                - paragraph: The story of Let's Go Kaiki-gumi follows a nameless protagonist who is six times more vulnerable to spiritual phenomena ...
+                - generic:
+                  - generic: Comedy
+                  - generic: Supernatural
+          - generic [ref=e1551]: Let's Go Kaiki-gumi
+          - generic [ref=e1552]: 2026 · ? ep
+        - link "Magilumiere Magical Girls Inc. Season 2 Second season of Kabushikigaisha Magi-Lumière. Magilumiere Magical Girls Inc. Season 2 2026 · ? ep" [ref=e1554] [cursor=pointer]:
+          - /url: /show/8a7301e5-f1c7-46ee-adad-ed6a80901dc3
+          - generic [ref=e1555]:
+            - img "Magilumiere Magical Girls Inc. Season 2" [ref=e1557]
+            - generic:
+              - generic:
+                - paragraph: Second season of Kabushikigaisha Magi-Lumière.
+          - generic [ref=e1558]: Magilumiere Magical Girls Inc. Season 2
+          - generic [ref=e1559]: 2026 · ? ep
+        - 'link "Mahou Shoujo Lyrical Nanoha EXCEEDS: Gun Blaze Vengeance Thirty years ago, the sudden appearance of unknown invasive alien lifeforms nearly brought about the end of the world. ... Mahou Shoujo Lyrical Nanoha EXCEEDS: Gun Blaze Vengeance 2026 · ? ep" [ref=e1561] [cursor=pointer]':
+          - /url: /show/b575f67b-aeff-480a-83c0-2655cb5b6544
+          - generic [ref=e1562]:
+            - 'img "Mahou Shoujo Lyrical Nanoha EXCEEDS: Gun Blaze Vengeance" [ref=e1564]'
+            - generic:
+              - generic:
+                - paragraph: Thirty years ago, the sudden appearance of unknown invasive alien lifeforms nearly brought about the end of the world. ...
+          - generic [ref=e1565]: "Mahou Shoujo Lyrical Nanoha EXCEEDS: Gun Blaze Vengeance"
+          - generic [ref=e1566]: 2026 · ? ep
+        - link "Migawari Reijou wo Sukutta no wa Reikoku Mujihi na Koori no Ouji no Ai deshita As the illegitimate daughter of a count and his maid, Katrina was born into miserable circumstances. And now that she's ... Fantasy Romance Migawari Reijou wo Sukutta no wa Reikoku Mujihi na Koori no Ouji no Ai deshita 2026 · ? ep" [ref=e1568] [cursor=pointer]:
+          - /url: /show/65372482-6763-4c12-89ad-3b3c1dc1dc10
+          - generic [ref=e1569]:
+            - img "Migawari Reijou wo Sukutta no wa Reikoku Mujihi na Koori no Ouji no Ai deshita" [ref=e1571]
+            - generic:
+              - generic:
+                - paragraph: As the illegitimate daughter of a count and his maid, Katrina was born into miserable circumstances. And now that she's ...
+                - generic:
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e1572]: Migawari Reijou wo Sukutta no wa Reikoku Mujihi na Koori no Ouji no Ai deshita
+          - generic [ref=e1573]: 2026 · ? ep
+        - 'link "Mushoku Tensei: Jobless Reincarnation Season 3 Third season of Mushoku Tensei: Isekai Ittara Honki Dasu. Adventure Drama Fantasy Mushoku Tensei: Jobless Reincarnation Season 3 2026 · ? ep" [ref=e1575] [cursor=pointer]':
+          - /url: /show/89fc2b17-91e5-4f47-a34e-fbd20f26762b
+          - generic [ref=e1576]:
+            - 'img "Mushoku Tensei: Jobless Reincarnation Season 3" [ref=e1578]'
+            - generic:
+              - generic:
+                - paragraph: "Third season of Mushoku Tensei: Isekai Ittara Honki Dasu."
+                - generic:
+                  - generic: Adventure
+                  - generic: Drama
+                  - generic: Fantasy
+          - generic [ref=e1579]: "Mushoku Tensei: Jobless Reincarnation Season 3"
+          - generic [ref=e1580]: 2026 · ? ep
+        - link "My Mother-in-Law and Sister-in-Law Who Don't Bully Me. Miya is the illegitimate child of a certain prominent family. When her mother dies, she's convinced she knows what await... My Mother-in-Law and Sister-in-Law Who Don't Bully Me. 2026 · ? ep" [ref=e1582] [cursor=pointer]:
+          - /url: /show/359df669-ce93-4532-94ec-0ddcf7913e56
+          - generic [ref=e1583]:
+            - img "My Mother-in-Law and Sister-in-Law Who Don't Bully Me." [ref=e1585]
+            - generic:
+              - generic:
+                - paragraph: Miya is the illegitimate child of a certain prominent family. When her mother dies, she's convinced she knows what await...
+          - generic [ref=e1586]: My Mother-in-Law and Sister-in-Law Who Don't Bully Me.
+          - generic [ref=e1587]: 2026 · ? ep
+        - link "Oni no Hanayome \"You're the bride I've been searching for all this time.\" A Japanese-style ayakashi Cinderella story! The ayakashi and ... Fantasy Romance Oni no Hanayome 2026 · ? ep" [ref=e1589] [cursor=pointer]:
+          - /url: /show/12ae81a9-5db7-4708-ac2f-f2ba994be882
+          - generic [ref=e1590]:
+            - img "Oni no Hanayome" [ref=e1592]
+            - generic:
+              - generic:
+                - paragraph: "\"You're the bride I've been searching for all this time.\" A Japanese-style ayakashi Cinderella story! The ayakashi and ..."
+                - generic:
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e1593]: Oni no Hanayome
+          - generic [ref=e1594]: 2026 · ? ep
+        - link "Otome Kaijuu Caraméliser Kuroe Akaishi is an introverted, quiet, and seemingly normal high school girl. Though accustomed to being alone, her dre... Romance Supernatural Otome Kaijuu Caraméliser 2026 · ? ep" [ref=e1596] [cursor=pointer]:
+          - /url: /show/397b1b84-9f69-48dc-9b8a-e71660c6b353
+          - generic [ref=e1597]:
+            - img "Otome Kaijuu Caraméliser" [ref=e1599]
+            - generic:
+              - generic:
+                - paragraph: Kuroe Akaishi is an introverted, quiet, and seemingly normal high school girl. Though accustomed to being alone, her dre...
+                - generic:
+                  - generic: Romance
+                  - generic: Supernatural
+          - generic [ref=e1600]: Otome Kaijuu Caraméliser
+          - generic [ref=e1601]: 2026 · ? ep
+        - link "Planosaurus Gachi Koseibutsu-bu No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Planosaurus Gachi Koseibutsu-bu 2026 · ? ep" [ref=e1603] [cursor=pointer]:
+          - /url: /show/86acf84c-0ae3-4590-beb0-73ee1f1c61c6
+          - generic [ref=e1604]:
+            - img "Planosaurus Gachi Koseibutsu-bu" [ref=e1606]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+          - generic [ref=e1607]: Planosaurus Gachi Koseibutsu-bu
+          - generic [ref=e1608]: 2026 · ? ep
+        - link "Reiwa no Dara-san Clouds blacken the sky and sheets of rain turn the mountain forest into a treacherous maze... A landslide crushes a razo... Comedy Supernatural Reiwa no Dara-san 2026 · ? ep" [ref=e1610] [cursor=pointer]:
+          - /url: /show/6f115e7d-5eb3-4eb6-a295-0f2fb25b0a76
+          - generic [ref=e1611]:
+            - img "Reiwa no Dara-san" [ref=e1613]
+            - generic:
+              - generic:
+                - paragraph: Clouds blacken the sky and sheets of rain turn the mountain forest into a treacherous maze... A landslide crushes a razo...
+                - generic:
+                  - generic: Comedy
+                  - generic: Supernatural
+          - generic [ref=e1614]: Reiwa no Dara-san
+          - generic [ref=e1615]: 2026 · ? ep
+        - link "Saga of Tanya the Evil II Second season of Youjo Senki. Action Fantasy Saga of Tanya the Evil II 2026 · ? ep" [ref=e1617] [cursor=pointer]:
+          - /url: /show/328c6b3f-ef48-42d9-8dc7-a8a9cfa6dcd4
+          - generic [ref=e1618]:
+            - img "Saga of Tanya the Evil II" [ref=e1620]
+            - generic:
+              - generic:
+                - paragraph: Second season of Youjo Senki.
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+          - generic [ref=e1621]: Saga of Tanya the Evil II
+          - generic [ref=e1622]: 2026 · ? ep
+        - 'link "Saijo no Osewa: Takane no Hanadarake na Meimonkou de, Gakuin Ichi no Ojousama (Seikatsu Nouryoku Kaimu) wo Kagenagara Osewa suru Koto ni Narimashita A high school boy, Itsuki Tomonari, gets involved in a kidnapping and ends up taking care of Hinako Konohana, a young la... Comedy Romance Saijo no Osewa: Takane no Hanadarake na Meimonkou de, Gakuin Ichi no Ojousama (Seikatsu Nouryoku Kaimu) wo Kagenagara Osewa suru Koto ni Narimashita 2026 · ? ep" [ref=e1624] [cursor=pointer]':
+          - /url: /show/51cdd8a4-b85e-43cf-9462-37d9800978af
+          - generic [ref=e1625]:
+            - 'img "Saijo no Osewa: Takane no Hanadarake na Meimonkou de, Gakuin Ichi no Ojousama (Seikatsu Nouryoku Kaimu) wo Kagenagara Osewa suru Koto ni Narimashita" [ref=e1627]'
+            - generic:
+              - generic:
+                - paragraph: A high school boy, Itsuki Tomonari, gets involved in a kidnapping and ends up taking care of Hinako Konohana, a young la...
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1628]: "Saijo no Osewa: Takane no Hanadarake na Meimonkou de, Gakuin Ichi no Ojousama (Seikatsu Nouryoku Kaimu) wo Kagenagara Osewa suru Koto ni Narimashita"
+          - generic [ref=e1629]: 2026 · ? ep
+        - 'link "Sekai Saikyou no Kouei: Meikyuukoku no Shinjin Tansakusha Corporate slave Arihito Atobe''s death in a freak bus accident marks the beginning of his new life as a kind of adventure... Action Adventure Fantasy Sekai Saikyou no Kouei: Meikyuukoku no Shinjin Tansakusha 2026 · ? ep" [ref=e1631] [cursor=pointer]':
+          - /url: /show/d8792025-76ec-4e1d-89d0-375579f29860
+          - generic [ref=e1632]:
+            - 'img "Sekai Saikyou no Kouei: Meikyuukoku no Shinjin Tansakusha" [ref=e1634]'
+            - generic:
+              - generic:
+                - paragraph: Corporate slave Arihito Atobe's death in a freak bus accident marks the beginning of his new life as a kind of adventure...
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1635]: "Sekai Saikyou no Kouei: Meikyuukoku no Shinjin Tansakusha"
+          - generic [ref=e1636]: 2026 · ? ep
+        - link "Skeleton Knight in Another World II Second season of Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu. Action Adventure Fantasy Skeleton Knight in Another World II 2026 · ? ep" [ref=e1638] [cursor=pointer]:
+          - /url: /show/5325668c-e65c-45f0-a523-6322c3df5d68
+          - generic [ref=e1639]:
+            - img "Skeleton Knight in Another World II" [ref=e1641]
+            - generic:
+              - generic:
+                - paragraph: Second season of Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu.
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1642]: Skeleton Knight in Another World II
+          - generic [ref=e1643]: 2026 · ? ep
+        - link "Sora wa Akai Kawa no Hotori Yuri, a pretty Japanese girl, is ecstatic after passing her college entrance exam and having her first kiss with her chi... Action Adventure Drama Sora wa Akai Kawa no Hotori 2026 · ? ep" [ref=e1645] [cursor=pointer]:
+          - /url: /show/b0222210-651a-4444-bfbd-7dd697341630
+          - generic [ref=e1646]:
+            - img "Sora wa Akai Kawa no Hotori" [ref=e1648]
+            - generic:
+              - generic:
+                - paragraph: Yuri, a pretty Japanese girl, is ecstatic after passing her college entrance exam and having her first kiss with her chi...
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Drama
+          - generic [ref=e1649]: Sora wa Akai Kawa no Hotori
+          - generic [ref=e1650]: 2026 · ? ep
+        - link "Sparks of Tomorrow In an alternate version of the early 20th century where technological progress evolved along a different path shaped by ... Sparks of Tomorrow 2026 · ? ep" [ref=e1652] [cursor=pointer]:
+          - /url: /show/a9cdda44-228c-4b12-8ba1-9a72b05b82a4
+          - generic [ref=e1653]:
+            - img "Sparks of Tomorrow" [ref=e1655]
+            - generic:
+              - generic:
+                - paragraph: In an alternate version of the early 20th century where technological progress evolved along a different path shaped by ...
+          - generic [ref=e1656]: Sparks of Tomorrow
+          - generic [ref=e1657]: 2026 · ? ep
+        - link "Tefuda ga Oome no Victoria In an age when spies act behind the scenes in every land, Chloe spends her days successfully carrying out even the most ... Tefuda ga Oome no Victoria 2026 · ? ep" [ref=e1659] [cursor=pointer]:
+          - /url: /show/60555551-75bf-4504-b90b-543fbf65d0c0
+          - generic [ref=e1660]:
+            - img "Tefuda ga Oome no Victoria" [ref=e1662]
+            - generic:
+              - generic:
+                - paragraph: In an age when spies act behind the scenes in every land, Chloe spends her days successfully carrying out even the most ...
+          - generic [ref=e1663]: Tefuda ga Oome no Victoria
+          - generic [ref=e1664]: 2026 · ? ep
+        - link "Tenkou-saki no Seiso Karen na Bishoujo ga, Mukashi Danshi to Omotte Issho ni Asonda Osananajimi Datta Ken I met my childhood friend again, and she had become a beautiful and innocent girl. \"It's been a while, Hayato.\" \"Haruki... Comedy Romance Tenkou-saki no Seiso Karen na Bishoujo ga, Mukashi Danshi to Omotte Issho ni Asonda Osananajimi Datta Ken 2026 · ? ep" [ref=e1666] [cursor=pointer]:
+          - /url: /show/f3450266-1eaf-4d9e-8d31-8724a113c8bf
+          - generic [ref=e1667]:
+            - img "Tenkou-saki no Seiso Karen na Bishoujo ga, Mukashi Danshi to Omotte Issho ni Asonda Osananajimi Datta Ken" [ref=e1669]
+            - generic:
+              - generic:
+                - paragraph: I met my childhood friend again, and she had become a beautiful and innocent girl. "It's been a while, Hayato." "Haruki...
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1670]: Tenkou-saki no Seiso Karen na Bishoujo ga, Mukashi Danshi to Omotte Issho ni Asonda Osananajimi Datta Ken
+          - generic [ref=e1671]: 2026 · ? ep
+        - link "The 100 Girlfriends Who Really, Really, Really, Really, Really Love You Season 3 Third season of Kimi no Koto ga Daidaidaidaidaisuki na 100-nin no Kanojo. Comedy Romance The 100 Girlfriends Who Really, Really, Really, Really, Really Love You Season 3 2026 · ? ep" [ref=e1673] [cursor=pointer]:
+          - /url: /show/6e2ec647-1a18-457d-9ef2-49a7c5152793
+          - generic [ref=e1674]:
+            - img "The 100 Girlfriends Who Really, Really, Really, Really, Really Love You Season 3" [ref=e1676]
+            - generic:
+              - generic:
+                - paragraph: Third season of Kimi no Koto ga Daidaidaidaidaisuki na 100-nin no Kanojo.
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1677]: The 100 Girlfriends Who Really, Really, Really, Really, Really Love You Season 3
+          - generic [ref=e1678]: 2026 · ? ep
+        - link "The Cat and the Dragon Deep in the forest where ferocious beasts and magical creatures dwell, a cat takes in an orphaned baby dragon as one of ... The Cat and the Dragon 2026 · ? ep" [ref=e1680] [cursor=pointer]:
+          - /url: /show/24fba79f-f753-479d-bb02-346b9f259732
+          - generic [ref=e1681]:
+            - img "The Cat and the Dragon" [ref=e1683]
+            - generic:
+              - generic:
+                - paragraph: Deep in the forest where ferocious beasts and magical creatures dwell, a cat takes in an orphaned baby dragon as one of ...
+          - generic [ref=e1684]: The Cat and the Dragon
+          - generic [ref=e1685]: 2026 · ? ep
+        - link "The Elusive Samurai Season 2 Second season of Nige Jouzu no Wakagimi. Adventure Comedy The Elusive Samurai Season 2 2026 · ? ep" [ref=e1687] [cursor=pointer]:
+          - /url: /show/cdcc9aee-7bf2-4189-88bc-eb0bfe0bf615
+          - generic [ref=e1688]:
+            - img "The Elusive Samurai Season 2" [ref=e1690]
+            - generic:
+              - generic:
+                - paragraph: Second season of Nige Jouzu no Wakagimi.
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e1691]: The Elusive Samurai Season 2
+          - generic [ref=e1692]: 2026 · ? ep
+        - link "The Exiled Heavy Knight Knows How to Game the System \"You useless son of mine! You were supposed to pull master swordsman, but I never thought it would be this tragic!\" The... Action Adventure Fantasy The Exiled Heavy Knight Knows How to Game the System 2026 · ? ep" [ref=e1694] [cursor=pointer]:
+          - /url: /show/b3f0065b-d054-48af-895c-81d87e12edaf
+          - generic [ref=e1695]:
+            - img "The Exiled Heavy Knight Knows How to Game the System" [ref=e1697]
+            - generic:
+              - generic:
+                - paragraph: "\"You useless son of mine! You were supposed to pull master swordsman, but I never thought it would be this tragic!\" The..."
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1698]: The Exiled Heavy Knight Knows How to Game the System
+          - generic [ref=e1699]: 2026 · ? ep
+        - link "The Failed Sage's Academy Domination The Sage of Wind, Ephtal is a reincarnated human, coming from modern Earth. Reincarnated in a new world where magic is r... Action Adventure Fantasy The Failed Sage's Academy Domination 2026 · ? ep" [ref=e1701] [cursor=pointer]:
+          - /url: /show/275dbd76-d60d-4cca-818a-e0a1335e62e5
+          - generic [ref=e1702]:
+            - img "The Failed Sage's Academy Domination" [ref=e1704]
+            - generic:
+              - generic:
+                - paragraph: The Sage of Wind, Ephtal is a reincarnated human, coming from modern Earth. Reincarnated in a new world where magic is r...
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1705]: The Failed Sage's Academy Domination
+          - generic [ref=e1706]: 2026 · ? ep
+        - link "The Frontier Lord Begins with Zero Subjects Dias finally returns home after decades of war. He's hailed a hero and promptly rewarded with his own domain...which tur... The Frontier Lord Begins with Zero Subjects 2026 · ? ep" [ref=e1708] [cursor=pointer]:
+          - /url: /show/31fa551e-1b65-4518-bf3c-5b0f4ee2ee4f
+          - generic [ref=e1709]:
+            - img "The Frontier Lord Begins with Zero Subjects" [ref=e1711]
+            - generic:
+              - generic:
+                - paragraph: Dias finally returns home after decades of war. He's hailed a hero and promptly rewarded with his own domain...which tur...
+          - generic [ref=e1712]: The Frontier Lord Begins with Zero Subjects
+          - generic [ref=e1713]: 2026 · ? ep
+        - link "The Ghost in the Shell In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetic... Action Mystery Sci-Fi The Ghost in the Shell 2026 · ? ep" [ref=e1715] [cursor=pointer]:
+          - /url: /show/25726551-5d5a-4198-8439-9bb875f62c0a
+          - generic [ref=e1716]:
+            - img "The Ghost in the Shell" [ref=e1718]
+            - generic:
+              - generic:
+                - paragraph: In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetic...
+                - generic:
+                  - generic: Action
+                  - generic: Mystery
+                  - generic: Sci-Fi
+          - generic [ref=e1719]: The Ghost in the Shell
+          - generic [ref=e1720]: 2026 · ? ep
+        - link "The Insipid Prince's Furtive Grab for The Throne The Adrasia empire on the Vogel continent. There is a battle over the throne of such an empire that possesses powerful m... Action Adventure Fantasy The Insipid Prince's Furtive Grab for The Throne 2026 · ? ep" [ref=e1722] [cursor=pointer]:
+          - /url: /show/182a85f3-6478-45bb-b8f8-fe8ea82bd45a
+          - generic [ref=e1723]:
+            - img "The Insipid Prince's Furtive Grab for The Throne" [ref=e1725]
+            - generic:
+              - generic:
+                - paragraph: The Adrasia empire on the Vogel continent. There is a battle over the throne of such an empire that possesses powerful m...
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1726]: The Insipid Prince's Furtive Grab for The Throne
+          - generic [ref=e1727]: 2026 · ? ep
+        - link "The Oblivious Saint Can't Contain Her Power Lady Carolina, the overlooked daughter of a powerful duke, has always believed herself to be the black sheep amid her il... Fantasy Romance The Oblivious Saint Can't Contain Her Power 2026 · ? ep" [ref=e1729] [cursor=pointer]:
+          - /url: /show/5ce55b3a-8b71-456d-b428-30b4ce44db7b
+          - generic [ref=e1730]:
+            - img "The Oblivious Saint Can't Contain Her Power" [ref=e1732]
+            - generic:
+              - generic:
+                - paragraph: Lady Carolina, the overlooked daughter of a powerful duke, has always believed herself to be the black sheep amid her il...
+                - generic:
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e1733]: The Oblivious Saint Can't Contain Her Power
+          - generic [ref=e1734]: 2026 · ? ep
+        - link "The Villager of Level 999 In this world, the concept of levels exist. Other than those who live off defeating monsters, most people are only aroun... The Villager of Level 999 2026 · ? ep" [ref=e1736] [cursor=pointer]:
+          - /url: /show/58d9b1de-d624-4167-b892-e1ae42dec0da
+          - generic [ref=e1737]:
+            - img "The Villager of Level 999" [ref=e1739]
+            - generic:
+              - generic:
+                - paragraph: In this world, the concept of levels exist. Other than those who live off defeating monsters, most people are only aroun...
+          - generic [ref=e1740]: The Villager of Level 999
+          - generic [ref=e1741]: 2026 · ? ep
+        - link "The World Is Dancing One does not need dance to live. In 1374, during the turbulent age when the Northern and Southern Courts were locked in... The World Is Dancing 2026 · ? ep" [ref=e1743] [cursor=pointer]:
+          - /url: /show/36c8690d-5191-4b0d-ac4a-3d3bc617f065
+          - generic [ref=e1744]:
+            - img "The World Is Dancing" [ref=e1746]
+            - generic:
+              - generic:
+                - paragraph: One does not need dance to live. In 1374, during the turbulent age when the Northern and Southern Courts were locked in...
+          - generic [ref=e1747]: The World Is Dancing
+          - generic [ref=e1748]: 2026 · ? ep
+        - link "Thunder 3 Three ordinary schoolboys come into possession of a DVD that supposedly opens a gateway to a parallel universe, but when... Mystery Sci-Fi Supernatural Thunder 3 2026 · ? ep" [ref=e1750] [cursor=pointer]:
+          - /url: /show/dc0db578-163f-4875-8f41-61062366c625
+          - generic [ref=e1751]:
+            - img "Thunder 3" [ref=e1753]
+            - generic:
+              - generic:
+                - paragraph: Three ordinary schoolboys come into possession of a DVD that supposedly opens a gateway to a parallel universe, but when...
+                - generic:
+                  - generic: Mystery
+                  - generic: Sci-Fi
+                  - generic: Supernatural
+          - generic [ref=e1754]: Thunder 3
+          - generic [ref=e1755]: 2026 · ? ep
+        - link "Tomb Raider King Undercover behind enemy lines, Jooheon's newest plan to torment TKBM will involve taking them down from the inside! Stea... Action Adventure Fantasy Tomb Raider King 2026 · ? ep" [ref=e1757] [cursor=pointer]:
+          - /url: /show/25b9f4be-579d-4143-bea0-246e8258cf96
+          - generic [ref=e1758]:
+            - img "Tomb Raider King" [ref=e1760]
+            - generic:
+              - generic:
+                - paragraph: Undercover behind enemy lines, Jooheon's newest plan to torment TKBM will involve taking them down from the inside! Stea...
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1761]: Tomb Raider King
+          - generic [ref=e1762]: 2026 · ? ep
+        - link "Toumei na Yoru ni Kakeru Kimi to, Me ni Mienai Koi wo Shita. On an April night in Tokyo, still too early for fireworks, university student Kakeru Mano meets a woman named Koharu Fuy... Drama Romance Toumei na Yoru ni Kakeru Kimi to, Me ni Mienai Koi wo Shita. 2026 · ? ep" [ref=e1764] [cursor=pointer]:
+          - /url: /show/657cbab9-383c-4f86-a632-fb58e9996547
+          - generic [ref=e1765]:
+            - img "Toumei na Yoru ni Kakeru Kimi to, Me ni Mienai Koi wo Shita." [ref=e1767]
+            - generic:
+              - generic:
+                - paragraph: On an April night in Tokyo, still too early for fireworks, university student Kakeru Mano meets a woman named Koharu Fuy...
+                - generic:
+                  - generic: Drama
+                  - generic: Romance
+          - generic [ref=e1768]: Toumei na Yoru ni Kakeru Kimi to, Me ni Mienai Koi wo Shita.
+          - generic [ref=e1769]: 2026 · ? ep
+        - link "Uchi no Otouto-domo ga Sumimasen During spring break at the end of her first year of high school, Ito learns she has to move because her mother is gettin... Comedy Romance Uchi no Otouto-domo ga Sumimasen 2026 · ? ep" [ref=e1771] [cursor=pointer]:
+          - /url: /show/d0cfc01b-8772-4505-bbdb-661a05f7c1af
+          - generic [ref=e1772]:
+            - img "Uchi no Otouto-domo ga Sumimasen" [ref=e1774]
+            - generic:
+              - generic:
+                - paragraph: During spring break at the end of her first year of high school, Ito learns she has to move because her mother is gettin...
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1775]: Uchi no Otouto-domo ga Sumimasen
+          - generic [ref=e1776]: 2026 · ? ep
+        - link "Ushiro no Shoumen Kamui-san Shizuka is a normal high school girl with the ability to see ghosts. Due to her peculiar tendency to attract ghosts, she... Comedy Supernatural Erotica Ushiro no Shoumen Kamui-san 2026 · ? ep" [ref=e1778] [cursor=pointer]:
+          - /url: /show/d717a424-9d17-4227-9630-19eb885056a5
+          - generic [ref=e1779]:
+            - img "Ushiro no Shoumen Kamui-san" [ref=e1781]
+            - generic:
+              - generic:
+                - paragraph: Shizuka is a normal high school girl with the ability to see ghosts. Due to her peculiar tendency to attract ghosts, she...
+                - generic:
+                  - generic: Comedy
+                  - generic: Supernatural
+                  - generic: Erotica
+          - generic [ref=e1782]: Ushiro no Shoumen Kamui-san
+          - generic [ref=e1783]: 2026 · ? ep
+        - link "Yani Neko Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is litte... 1 episodes Yani Neko 2026 · 1 ep" [ref=e1785] [cursor=pointer]:
+          - /url: /show/a8f45313-b080-4f5a-8d53-5d04e7d2a315
+          - generic [ref=e1786]:
+            - img "Yani Neko" [ref=e1788]
+            - generic:
+              - generic:
+                - paragraph: Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is litte...
+                - generic:
+                  - generic: 1 episodes
+          - generic [ref=e1789]: Yani Neko
+          - generic [ref=e1790]: 2026 · 1 ep
+        - link "Yoroi Shin Den Samurai Troopers Part 2 Second part of Yoroi Shin Den Samurai Troopers. Action Fantasy Yoroi Shin Den Samurai Troopers Part 2 2026 · ? ep" [ref=e1792] [cursor=pointer]:
+          - /url: /show/b354c802-36e6-4912-90d2-ad42db9be94d
+          - generic [ref=e1793]:
+            - img "Yoroi Shin Den Samurai Troopers Part 2" [ref=e1795]
+            - generic:
+              - generic:
+                - paragraph: Second part of Yoroi Shin Den Samurai Troopers.
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+          - generic [ref=e1796]: Yoroi Shin Den Samurai Troopers Part 2
+          - generic [ref=e1797]: 2026 · ? ep
+        - link "You and I Are Polar Opposites Season 2 Second season of Seihantai na Kimi to Boku. Comedy Romance You and I Are Polar Opposites Season 2 2026 · ? ep" [ref=e1799] [cursor=pointer]:
+          - /url: /show/69b9cd41-94b6-4358-84be-befbaf8193d9
+          - generic [ref=e1800]:
+            - img "You and I Are Polar Opposites Season 2" [ref=e1802]
+            - generic:
+              - generic:
+                - paragraph: Second season of Seihantai na Kimi to Boku.
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1803]: You and I Are Polar Opposites Season 2
+          - generic [ref=e1804]: 2026 · ? ep
+        - link "Young Ladies Don't Play Fighting Games A hot fighting game played at the girls' school!! Aya transferred into Kuromi Girls Academy a month ago with the goal o... Comedy Girls Love Young Ladies Don't Play Fighting Games 2026 · ? ep" [ref=e1806] [cursor=pointer]:
+          - /url: /show/c7e45e8d-0e13-47c9-81da-e0d6bc5f4ef7
+          - generic [ref=e1807]:
+            - img "Young Ladies Don't Play Fighting Games" [ref=e1809]
+            - generic:
+              - generic:
+                - paragraph: A hot fighting game played at the girls' school!! Aya transferred into Kuromi Girls Academy a month ago with the goal o...
+                - generic:
+                  - generic: Comedy
+                  - generic: Girls Love
+          - generic [ref=e1810]: Young Ladies Don't Play Fighting Games
+          - generic [ref=e1811]: 2026 · ? ep
+  - contentinfo [ref=e1128]:
+    - generic [ref=e1129]: © 2026 weeb.vip
+    - generic [ref=e1130]:
+      - link "About" [ref=e1131] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e1132] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e1133] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e1134]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"
+  - button "🛠️ Dev Panel" [ref=e1137] [cursor=pointer]:
+    - text: 🛠️
+    - generic [ref=e1138]: Dev Panel
+  - generic [ref=e1141]:
+    - button "Menu" [ref=e1142]:
+      - img [ref=e1144]
+      - generic: Menu
+    - button "Inspect" [ref=e1148]:
+      - img [ref=e1150]
+      - generic: Inspect
+    - button "Audit" [ref=e1152]:
+      - generic [ref=e1153]:
+        - img [ref=e1154]
+        - img [ref=e1812]
+      - generic: Audit
+    - button "Settings" [ref=e1160]:
+      - img [ref=e1162]
+      - generic: Settings

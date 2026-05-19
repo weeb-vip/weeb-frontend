@@ -1,0 +1,900 @@
+- generic [active] [ref=e646]:
+  - navigation [ref=e648]:
+    - link "weeb.vip weeb.vip" [ref=e649] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e650]
+      - generic [ref=e651]: weeb.vip
+    - generic [ref=e652]:
+      - link "Home" [ref=e653] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e654] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e655] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e656] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e659]:
+      - img
+      - searchbox [ref=e660]
+      - generic: /
+    - generic [ref=e661]:
+      - button "Toggle title language" [ref=e663] [cursor=pointer]:
+        - img [ref=e664]
+        - generic [ref=e666]: EN
+      - generic [ref=e668]:
+        - button "Login" [ref=e669] [cursor=pointer]:
+          - generic [ref=e670]: Login
+        - button "Register" [ref=e671] [cursor=pointer]:
+          - generic [ref=e672]: Register
+  - main [ref=e673]:
+    - generic [ref=e675]:
+      - generic [ref=e676]:
+        - heading "Browse Anime" [level=1] [ref=e677]
+        - generic [ref=e678]:
+          - img
+          - textbox "Search by title, studio, genre..." [ref=e679]: Comedy
+          - button "Clear search" [ref=e680] [cursor=pointer]:
+            - img [ref=e681]
+      - generic [ref=e683]:
+        - generic [ref=e684]:
+          - generic [ref=e685]: Genres
+          - generic [ref=e686]:
+            - button "SportsSports" [ref=e687] [cursor=pointer]
+            - button "Action" [ref=e688] [cursor=pointer]
+            - button "Adventure" [ref=e689] [cursor=pointer]
+            - button "Comedy" [ref=e690] [cursor=pointer]
+            - button "ComedyComedy" [ref=e691] [cursor=pointer]
+            - button "Drama" [ref=e692] [cursor=pointer]
+            - button "Ecchi" [ref=e693] [cursor=pointer]
+            - button "Fantasy" [ref=e694] [cursor=pointer]
+            - button "Girls Love" [ref=e695] [cursor=pointer]
+            - button "Gourmet" [ref=e696] [cursor=pointer]
+            - button "+7 more" [ref=e697] [cursor=pointer]
+        - generic [ref=e698]:
+          - combobox [ref=e699] [cursor=pointer]:
+            - option "All" [selected]
+            - option "Airing"
+            - option "Finished"
+            - option "Upcoming"
+          - combobox [ref=e700] [cursor=pointer]:
+            - option "All years" [selected]
+            - option "2027"
+            - option "2026"
+            - option "2025"
+            - option "2024"
+            - option "2023"
+            - option "2022"
+            - option "2021"
+            - option "2020"
+            - option "2019"
+            - option "2018"
+            - option "2017"
+            - option "2016"
+            - option "2015"
+            - option "2014"
+            - option "2013"
+            - option "2012"
+            - option "2011"
+            - option "2010"
+            - option "2009"
+            - option "2008"
+            - option "2007"
+            - option "2006"
+            - option "2005"
+            - option "2004"
+            - option "2003"
+            - option "2002"
+            - option "2001"
+            - option "2000"
+            - option "1999"
+            - option "1998"
+            - option "1997"
+            - option "1996"
+            - option "1995"
+            - option "1994"
+            - option "1993"
+            - option "1992"
+            - option "1991"
+            - option "1990"
+          - combobox [ref=e701] [cursor=pointer]:
+            - option "Relevance" [selected]
+            - option "Score"
+            - option "Newest"
+            - option "A-Z"
+      - generic [ref=e703]:
+        - generic [ref=e704]: "Active filters:"
+        - button "Comedy" [ref=e705] [cursor=pointer]:
+          - text: Comedy
+          - img [ref=e707]
+        - button "Clear all" [ref=e709] [cursor=pointer]
+      - generic [ref=e710]:
+        - paragraph [ref=e711]:
+          - strong [ref=e712]: "47"
+          - text: results for 'Comedy'
+        - group "View mode" [ref=e713]:
+          - button "Grid view" [ref=e714] [cursor=pointer]:
+            - img [ref=e715]
+          - button "List view" [ref=e720] [cursor=pointer]:
+            - img [ref=e721]
+      - generic [ref=e722]:
+        - link "My Teen Romantic Comedy SNAFU TOO! OVA 8.0 After accepting a weekend invitation, Hachiman Hikigaya accompanies Isshiki Iroha around the Chiba Prefecture to brainst... 1 episodes ★ 8.0 Comedy Romance My Teen Romantic Comedy SNAFU TOO! OVA 2016 · feel." [ref=e723] [cursor=pointer]:
+          - /url: /show/dbf77f43-6bba-4298-97c8-54465704c03a
+          - generic [ref=e724]:
+            - img "My Teen Romantic Comedy SNAFU TOO! OVA" [ref=e726]
+            - generic [ref=e727]: "8.0"
+            - generic:
+              - generic:
+                - paragraph: After accepting a weekend invitation, Hachiman Hikigaya accompanies Isshiki Iroha around the Chiba Prefecture to brainst...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 8.0
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e728]: My Teen Romantic Comedy SNAFU TOO! OVA
+          - generic [ref=e729]: 2016 · feel.
+        - link "Osananajimi to wa Love Comedy ni Naranai High schooler Eiyuu has a dilemma—his two childhood friends, Shio and Akari, have grown up to be almost too cute! Even t... Comedy Romance Osananajimi to wa Love Comedy ni Naranai 2026 · Tezuka Productions" [ref=e730] [cursor=pointer]:
+          - /url: /show/ca146b9b-ed96-4b4e-8386-13e7af04d95e
+          - generic [ref=e731]:
+            - img "Osananajimi to wa Love Comedy ni Naranai" [ref=e733]
+            - generic:
+              - generic:
+                - paragraph: High schooler Eiyuu has a dilemma—his two childhood friends, Shio and Akari, have grown up to be almost too cute! Even t...
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e734]: Osananajimi to wa Love Comedy ni Naranai
+          - generic [ref=e735]: 2026 · Tezuka Productions
+        - 'link "My Teen Romantic Comedy SNAFU Climax! OVA 7.8 Yahari Ore no Seishun Love Comedy wa Machigatteiru. Kan: Dakara, Shishunki wa Owarazu ni, Seishun wa Tsuzuiteiku. adapts... 1 episodes ★ 7.8 Comedy Romance My Teen Romantic Comedy SNAFU Climax! OVA 2023 · feel." [ref=e736] [cursor=pointer]':
+          - /url: /show/8e1d41ff-1ba5-48b2-9c2a-0b6db88013d5
+          - generic [ref=e737]:
+            - img "My Teen Romantic Comedy SNAFU Climax! OVA" [ref=e739]
+            - generic [ref=e740]: "7.8"
+            - generic:
+              - generic:
+                - paragraph: "Yahari Ore no Seishun Love Comedy wa Machigatteiru. Kan: Dakara, Shishunki wa Owarazu ni, Seishun wa Tsuzuiteiku. adapts..."
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.8
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e741]: My Teen Romantic Comedy SNAFU Climax! OVA
+          - generic [ref=e742]: 2023 · feel.
+        - link "My Teen Romantic Comedy SNAFU TOO! 8.2 With the Volunteer Service Club now firmly established, it is receiving more requests from students in search of solutio... 13 episodes ★ 8.2 Comedy Romance My Teen Romantic Comedy SNAFU TOO! 2015 · feel." [ref=e743] [cursor=pointer]:
+          - /url: /show/57be8c3f-baed-40ac-a02e-9f030f8f845e
+          - generic [ref=e744]:
+            - img "My Teen Romantic Comedy SNAFU TOO!" [ref=e746]
+            - generic [ref=e747]: "8.2"
+            - generic:
+              - generic:
+                - paragraph: With the Volunteer Service Club now firmly established, it is receiving more requests from students in search of solutio...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 8.2
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e748]: My Teen Romantic Comedy SNAFU TOO!
+          - generic [ref=e749]: 2015 · feel.
+        - link "My Teen Romantic Comedy SNAFU Climax! 8.3 Resolved to become a more independent person, Yukino Yukinoshita decides to smoothen things out with her parents, and th... 12 episodes ★ 8.3 Comedy Romance My Teen Romantic Comedy SNAFU Climax! 2020 · feel." [ref=e750] [cursor=pointer]:
+          - /url: /show/540846fc-a22a-4a2d-b93a-6c4c7f1bd938
+          - generic [ref=e751]:
+            - img "My Teen Romantic Comedy SNAFU Climax!" [ref=e753]
+            - generic [ref=e754]: "8.3"
+            - generic:
+              - generic:
+                - paragraph: Resolved to become a more independent person, Yukino Yukinoshita decides to smoothen things out with her parents, and th...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 8.3
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e755]: My Teen Romantic Comedy SNAFU Climax!
+          - generic [ref=e756]: 2020 · feel.
+        - link "My Teen Romantic Comedy SNAFU OVA 7.6 One morning, Hachiman Hikigaya contemplates the superfluous nature of marriage and its misleading image of happiness. Ho... 1 episodes ★ 7.6 Comedy Romance My Teen Romantic Comedy SNAFU OVA 2013 · Brain's Base" [ref=e757] [cursor=pointer]:
+          - /url: /show/4838689d-3cf0-4800-aa56-f80449e37b93
+          - generic [ref=e758]:
+            - img "My Teen Romantic Comedy SNAFU OVA" [ref=e760]
+            - generic [ref=e761]: "7.6"
+            - generic:
+              - generic:
+                - paragraph: One morning, Hachiman Hikigaya contemplates the superfluous nature of marriage and its misleading image of happiness. Ho...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.6
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e762]: My Teen Romantic Comedy SNAFU OVA
+          - generic [ref=e763]: 2013 · Brain's Base
+        - link "My Mental Choices Are Completely Interfering With My School Romantic Comedy 7.1 For Kanade Amakusa, life as a high schooler should have been normal, and it would have been—if he wasn't living with the... 10 episodes ★ 7.1 Comedy Romance My Mental Choices Are Completely Interfering With My School Romantic Comedy 2013 · Diomedéa" [ref=e764] [cursor=pointer]:
+          - /url: /show/3f10106c-a987-40f3-95a9-d035ed7e8a53
+          - generic [ref=e765]:
+            - img "My Mental Choices Are Completely Interfering With My School Romantic Comedy" [ref=e767]
+            - generic [ref=e768]: "7.1"
+            - generic:
+              - generic:
+                - paragraph: For Kanade Amakusa, life as a high schooler should have been normal, and it would have been—if he wasn't living with the...
+                - generic:
+                  - generic: 10 episodes
+                  - generic: ★ 7.1
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e769]: My Mental Choices Are Completely Interfering With My School Romantic Comedy
+          - generic [ref=e770]: 2013 · Diomedéa
+        - link "My Mental Choices Are Completely Interfering With My School Romantic Comedy OVA 7.1 Unaired TV episode bundled with the light novel's volume eight. 1 episodes ★ 7.1 Comedy Romance My Mental Choices Are Completely Interfering With My School Romantic Comedy OVA 2014 · Diomedéa" [ref=e771] [cursor=pointer]:
+          - /url: /show/33f22f8d-cd8a-4404-a0de-42f43526bebd
+          - generic [ref=e772]:
+            - img "My Mental Choices Are Completely Interfering With My School Romantic Comedy OVA" [ref=e774]
+            - generic [ref=e775]: "7.1"
+            - generic:
+              - generic:
+                - paragraph: Unaired TV episode bundled with the light novel's volume eight.
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.1
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e776]: My Mental Choices Are Completely Interfering With My School Romantic Comedy OVA
+          - generic [ref=e777]: 2014 · Diomedéa
+        - link "Sexy and Stupid Water Polo Comedy!! 5.1 Hamaji Youhei, a high school freshman, lives his life aimlessly, lazing around all day. He can't keep up with his studie... 3 episodes ★ 5.1 Comedy Romance Sports Sexy and Stupid Water Polo Comedy!! 2015 · Hoods Entertainment" [ref=e778] [cursor=pointer]:
+          - /url: /show/16ca34b4-bae1-4c3d-9a73-af9bcd9bae40
+          - generic [ref=e779]:
+            - img "Sexy and Stupid Water Polo Comedy!!" [ref=e781]
+            - generic [ref=e782]: "5.1"
+            - generic:
+              - generic:
+                - paragraph: Hamaji Youhei, a high school freshman, lives his life aimlessly, lazing around all day. He can't keep up with his studie...
+                - generic:
+                  - generic: 3 episodes
+                  - generic: ★ 5.1
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+                  - generic: Sports
+          - generic [ref=e783]: Sexy and Stupid Water Polo Comedy!!
+          - generic [ref=e784]: 2015 · Hoods Entertainment
+        - link "My Teen Romantic Comedy SNAFU 8.0 Hachiman Hikigaya is an apathetic high school student with narcissistic and semi-nihilistic tendencies. He firmly believ... 13 episodes ★ 8.0 Comedy Romance My Teen Romantic Comedy SNAFU 2013 · Brain's Base" [ref=e785] [cursor=pointer]:
+          - /url: /show/0d5c11f3-923a-4d97-bed4-095b8b9f8319
+          - generic [ref=e786]:
+            - img "My Teen Romantic Comedy SNAFU" [ref=e788]
+            - generic [ref=e789]: "8.0"
+            - generic:
+              - generic:
+                - paragraph: Hachiman Hikigaya is an apathetic high school student with narcissistic and semi-nihilistic tendencies. He firmly believ...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 8.0
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e790]: My Teen Romantic Comedy SNAFU
+          - generic [ref=e791]: 2013 · Brain's Base
+        - link "Sobakasu Pucchi A kids adventure and comedy series. Each 5 minute episode aired Monday through Saturday in a continuing story which comp... 162 episodes Adventure Comedy Sobakasu Pucchi 1969 · None found" [ref=e792] [cursor=pointer]:
+          - /url: /show/ff12aab9-3a24-4d5f-a6f4-69c796abb8fb
+          - generic [ref=e793]:
+            - img "Sobakasu Pucchi" [ref=e795]
+            - generic:
+              - generic:
+                - paragraph: A kids adventure and comedy series. Each 5 minute episode aired Monday through Saturday in a continuing story which comp...
+                - generic:
+                  - generic: 162 episodes
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e796]: Sobakasu Pucchi
+          - generic [ref=e797]: 1969 · None found
+        - link "Ninjaman Ippei 6.0 Way out in the sticks, the fourth-graders of the local school in Tokio village all have their own superpowers of doubtfu... 13 episodes ★ 6.0 Action Comedy Slice of Life Ninjaman Ippei 1982 · None found" [ref=e798] [cursor=pointer]:
+          - /url: /show/fb6996d3-3706-4721-bf7b-2d857bad81a3
+          - generic [ref=e799]:
+            - img "Ninjaman Ippei" [ref=e801]
+            - generic [ref=e802]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: Way out in the sticks, the fourth-graders of the local school in Tokio village all have their own superpowers of doubtfu...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 6.0
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e803]: Ninjaman Ippei
+          - generic [ref=e804]: 1982 · None found
+        - link "Kamiina Botan, Yoeru Sugata wa Yuri no Hana Kamiina Botan is a 20-year-old college student. At the welcome party for the dorm she was assigned to, the dorm leader I... Comedy Girls Love Gourmet Kamiina Botan, Yoeru Sugata wa Yuri no Hana 1969 · Soigne" [ref=e805] [cursor=pointer]:
+          - /url: /show/f8a12ae2-dfb8-4b58-94d4-4f3deb8c6359
+          - generic [ref=e806]:
+            - img "Kamiina Botan, Yoeru Sugata wa Yuri no Hana" [ref=e808]
+            - generic:
+              - generic:
+                - paragraph: Kamiina Botan is a 20-year-old college student. At the welcome party for the dorm she was assigned to, the dorm leader I...
+                - generic:
+                  - generic: Comedy
+                  - generic: Girls Love
+                  - generic: Gourmet
+          - generic [ref=e809]: Kamiina Botan, Yoeru Sugata wa Yuri no Hana
+          - generic [ref=e810]: 1969 · Soigne
+        - link "Samurai Champloo 8.5 Fuu Kasumi is a young and clumsy waitress who spends her days peacefully working in a small teahouse. That is, until she... 26 episodes ★ 8.5 Action Adventure Comedy Samurai Champloo 2004 · Manglobe" [ref=e811] [cursor=pointer]:
+          - /url: /show/f5cae2ac-e13b-4ace-acac-82ec41063c93
+          - generic [ref=e812]:
+            - img "Samurai Champloo" [ref=e814]
+            - generic [ref=e815]: "8.5"
+            - generic:
+              - generic:
+                - paragraph: Fuu Kasumi is a young and clumsy waitress who spends her days peacefully working in a small teahouse. That is, until she...
+                - generic:
+                  - generic: 26 episodes
+                  - generic: ★ 8.5
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e816]: Samurai Champloo
+          - generic [ref=e817]: 2004 · Manglobe
+        - 'link "Kaminari Boy Pikkari★bee A comedy about a mischievous boy. Each episode contains 2 stories. Based on a manga by Murotani Tsunezou. (Source: Ani... 53 episodes Adventure Comedy Kaminari Boy Pikkari★bee 1967 · None found" [ref=e818] [cursor=pointer]':
+          - /url: /show/f53cbfda-7f0e-4495-8f5f-45bdd77901a1
+          - generic [ref=e819]:
+            - img "Kaminari Boy Pikkari★bee" [ref=e821]
+            - generic:
+              - generic:
+                - paragraph: "A comedy about a mischievous boy. Each episode contains 2 stories. Based on a manga by Murotani Tsunezou. (Source: Ani..."
+                - generic:
+                  - generic: 53 episodes
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e822]: Kaminari Boy Pikkari★bee
+          - generic [ref=e823]: 1967 · None found
+        - 'link "Karuizawa Syndrome 5.5 It is an action comedy about a young man''s persistent sexual fantasies. It has 4 distinct art styles: a manga style, a ... 1 episodes ★ 5.5 Comedy Drama Romance Karuizawa Syndrome 1986 · Kitty Film Mitaka Studio" [ref=e824] [cursor=pointer]':
+          - /url: /show/f486f859-15b8-4abd-b55b-e0fb09d231f6
+          - generic [ref=e825]:
+            - img "Karuizawa Syndrome" [ref=e827]
+            - generic [ref=e828]: "5.5"
+            - generic:
+              - generic:
+                - paragraph: "It is an action comedy about a young man's persistent sexual fantasies. It has 4 distinct art styles: a manga style, a ..."
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 5.5
+                - generic:
+                  - generic: Comedy
+                  - generic: Drama
+                  - generic: Romance
+          - generic [ref=e829]: Karuizawa Syndrome
+          - generic [ref=e830]: 1986 · Kitty Film Mitaka Studio
+        - 'link "Peeping Life: The Perfect Evolution 5.3 Another iteration in the Peeping Life franchise, The Perfect Evolution features 10 new animated versions of improvised c... 10 episodes ★ 5.3 Comedy Slice of Life Peeping Life: The Perfect Evolution 2011 · CoMix Wave Films" [ref=e831] [cursor=pointer]':
+          - /url: /show/ee1615af-6a68-4e8f-ae21-54857f98a4b9
+          - generic [ref=e832]:
+            - 'img "Peeping Life: The Perfect Evolution" [ref=e834]'
+            - generic [ref=e835]: "5.3"
+            - generic:
+              - generic:
+                - paragraph: Another iteration in the Peeping Life franchise, The Perfect Evolution features 10 new animated versions of improvised c...
+                - generic:
+                  - generic: 10 episodes
+                  - generic: ★ 5.3
+                - generic:
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e836]: "Peeping Life: The Perfect Evolution"
+          - generic [ref=e837]: 2011 · CoMix Wave Films
+        - link "Heisei Tensai Bakabon 6.0 A comedy about a former genius who has now become very eccentric and senile. His family deals with all the crazy problem... 46 episodes ★ 6.0 Comedy Slice of Life Heisei Tensai Bakabon 1990 · Pierrot" [ref=e838] [cursor=pointer]:
+          - /url: /show/ed76c498-ffce-41d5-960b-5be1db5cebae
+          - generic [ref=e839]:
+            - img "Heisei Tensai Bakabon" [ref=e841]
+            - generic [ref=e842]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: A comedy about a former genius who has now become very eccentric and senile. His family deals with all the crazy problem...
+                - generic:
+                  - generic: 46 episodes
+                  - generic: ★ 6.0
+                - generic:
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e843]: Heisei Tensai Bakabon
+          - generic [ref=e844]: 1990 · Pierrot
+        - link "Mrs. Warabi The dark comedy follows Mrs. Warabi's family, who are unable to suppress their desires and tend to repeat the same mista... 20 episodes Comedy Slice of Life Mrs. Warabi 2021 · Oddjob" [ref=e845] [cursor=pointer]:
+          - /url: /show/ed634e14-acde-45ac-9fe0-fd0b151e4691
+          - generic [ref=e846]:
+            - img "Mrs. Warabi" [ref=e848]
+            - generic:
+              - generic:
+                - paragraph: The dark comedy follows Mrs. Warabi's family, who are unable to suppress their desires and tend to repeat the same mista...
+                - generic:
+                  - generic: 20 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e849]: Mrs. Warabi
+          - generic [ref=e850]: 2021 · Oddjob
+        - link "C³ - CubexCursedxCurious 6.6 From the light novel series written by Minase Hazuki, comes a story of love, action, and comedy. Yachi Haruaki is a high... 12 episodes ★ 6.6 Action Comedy Supernatural C³ - CubexCursedxCurious 2011 · SILVER LINK." [ref=e851] [cursor=pointer]:
+          - /url: /show/ebecf7a2-3dad-47cc-9758-e49fbf5d1b65
+          - generic [ref=e852]:
+            - img "C³ - CubexCursedxCurious" [ref=e854]
+            - generic [ref=e855]: "6.6"
+            - generic:
+              - generic:
+                - paragraph: From the light novel series written by Minase Hazuki, comes a story of love, action, and comedy. Yachi Haruaki is a high...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.6
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+                  - generic: Supernatural
+          - generic [ref=e856]: C³ - CubexCursedxCurious
+          - generic [ref=e857]: 2011 · SILVER LINK.
+        - link "Tondemo Senshi Muteking 6.3 Twelve-year-old Linn Youki loyally supported his father when the world laughed at the scientist for saying that Earth wa... 56 episodes ★ 6.3 Action Comedy Sci-Fi Tondemo Senshi Muteking 1980 · Tatsunoko Production" [ref=e858] [cursor=pointer]:
+          - /url: /show/e8f1673f-9c5d-4aa4-98a7-acab711ea069
+          - generic [ref=e859]:
+            - img "Tondemo Senshi Muteking" [ref=e861]
+            - generic [ref=e862]: "6.3"
+            - generic:
+              - generic:
+                - paragraph: Twelve-year-old Linn Youki loyally supported his father when the world laughed at the scientist for saying that Earth wa...
+                - generic:
+                  - generic: 56 episodes
+                  - generic: ★ 6.3
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e863]: Tondemo Senshi Muteking
+          - generic [ref=e864]: 1980 · Tatsunoko Production
+        - link "Kamiusagi Rope x Wacoal Collaboration episodes between the undergarment brand Wacoal and the comedy anime franchise Kamiusagi Rope. 6 episodes Comedy Slice of Life Kamiusagi Rope x Wacoal 2016 · None found" [ref=e865] [cursor=pointer]:
+          - /url: /show/e8ee416b-ee13-46ce-a15a-acb7a00d97b1
+          - generic [ref=e866]:
+            - img "Kamiusagi Rope x Wacoal" [ref=e868]
+            - generic:
+              - generic:
+                - paragraph: Collaboration episodes between the undergarment brand Wacoal and the comedy anime franchise Kamiusagi Rope.
+                - generic:
+                  - generic: 6 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e869]: Kamiusagi Rope x Wacoal
+          - generic [ref=e870]: 2016 · None found
+        - link "Haramasete Seiryuu-kun! 6.5 It seems that everyone is fighting over the main character Seiryu-kun's genes!! They've even made a competition out of i... 2 episodes ★ 6.5 Comedy Hentai Haramasete Seiryuu-kun! 2011 · Horannabi" [ref=e871] [cursor=pointer]:
+          - /url: /show/e85f77e2-0d48-4cd1-b7dc-fa2875e3ff69
+          - generic [ref=e872]:
+            - img "Haramasete Seiryuu-kun!" [ref=e874]
+            - generic [ref=e875]: "6.5"
+            - generic:
+              - generic:
+                - paragraph: It seems that everyone is fighting over the main character Seiryu-kun's genes!! They've even made a competition out of i...
+                - generic:
+                  - generic: 2 episodes
+                  - generic: ★ 6.5
+                - generic:
+                  - generic: Comedy
+                  - generic: Hentai
+          - generic [ref=e876]: Haramasete Seiryuu-kun!
+          - generic [ref=e877]: 2011 · Horannabi
+        - link "Pooky's Charming but Surreal. Scary but Adorable. Pooky's is a \"Cool and Stylish\" animation comedy full of cute & unique ghost c... 1 episodes Comedy Supernatural Pooky's 2007 · Spooky graphic" [ref=e878] [cursor=pointer]:
+          - /url: /show/e6b8266c-6f9f-45a3-9de4-6fbb68c51aba
+          - generic [ref=e879]:
+            - img "Pooky's" [ref=e881]
+            - generic:
+              - generic:
+                - paragraph: Charming but Surreal. Scary but Adorable. Pooky's is a "Cool and Stylish" animation comedy full of cute & unique ghost c...
+                - generic:
+                  - generic: 1 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Supernatural
+          - generic [ref=e882]: Pooky's
+          - generic [ref=e883]: 2007 · Spooky graphic
+        - link "Makina-san's a Love Bot?! 5.6 Makina Agatsuma, the school idol, moves into the home of Eita Akutsu, an introverted mechanical otaku. Eita, who has sec... 12 episodes ★ 5.6 Comedy Romance Sci-Fi Makina-san's a Love Bot?! 2025 · BloomZ" [ref=e884] [cursor=pointer]:
+          - /url: /show/e5b31b92-0064-46ff-8a33-299617003715
+          - generic [ref=e885]:
+            - img "Makina-san's a Love Bot?!" [ref=e887]
+            - generic [ref=e888]: "5.6"
+            - generic:
+              - generic:
+                - paragraph: Makina Agatsuma, the school idol, moves into the home of Eita Akutsu, an introverted mechanical otaku. Eita, who has sec...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 5.6
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+                  - generic: Sci-Fi
+          - generic [ref=e889]: Makina-san's a Love Bot?!
+          - generic [ref=e890]: 2025 · BloomZ
+        - link "CLAMP School Detectives Shorts 5.9 DVD short specials featuring characters from the original series as well as Gakuen Tokukei Duklyon and 20 Mensou ni Oneg... 13 episodes ★ 5.9 Comedy Mystery CLAMP School Detectives Shorts 2005 · Pierrot" [ref=e891] [cursor=pointer]:
+          - /url: /show/e47ce175-f9fb-4bd7-85ed-a626f90271be
+          - generic [ref=e892]:
+            - img "CLAMP School Detectives Shorts" [ref=e894]
+            - generic [ref=e895]: "5.9"
+            - generic:
+              - generic:
+                - paragraph: DVD short specials featuring characters from the original series as well as Gakuen Tokukei Duklyon and 20 Mensou ni Oneg...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 5.9
+                - generic:
+                  - generic: Comedy
+                  - generic: Mystery
+          - generic [ref=e896]: CLAMP School Detectives Shorts
+          - generic [ref=e897]: 2005 · Pierrot
+        - 'link "Indie Anibox: Selma''s Protein Coffee 5.9 The 2008 animated omnibus Indie Anibox: Selma''s Protein Coffee consists of three inventive short films from up-and-comin... 1 episodes ★ 5.9 Comedy Drama Romance Indie Anibox: Selma''s Protein Coffee 2008 · Studio Dadashow" [ref=e898] [cursor=pointer]':
+          - /url: /show/e40eac86-8d18-44c2-a626-b7acd59901ac
+          - generic [ref=e899]:
+            - 'img "Indie Anibox: Selma''s Protein Coffee" [ref=e901]'
+            - generic [ref=e902]: "5.9"
+            - generic:
+              - generic:
+                - paragraph: "The 2008 animated omnibus Indie Anibox: Selma's Protein Coffee consists of three inventive short films from up-and-comin..."
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 5.9
+                - generic:
+                  - generic: Comedy
+                  - generic: Drama
+                  - generic: Romance
+          - generic [ref=e903]: "Indie Anibox: Selma's Protein Coffee"
+          - generic [ref=e904]: 2008 · Studio Dadashow
+        - 'link "Wagaya no Oinari-sama.: Kuu-chan no Omake Gekijou 6.6 Short comedy sketches involving Tenko & Kou. 12 episodes ★ 6.6 Comedy Supernatural Wagaya no Oinari-sama.: Kuu-chan no Omake Gekijou 2008 · None found" [ref=e905] [cursor=pointer]':
+          - /url: /show/dfee6734-da14-4767-97c1-2080cdbde1aa
+          - generic [ref=e906]:
+            - 'img "Wagaya no Oinari-sama.: Kuu-chan no Omake Gekijou" [ref=e908]'
+            - generic [ref=e909]: "6.6"
+            - generic:
+              - generic:
+                - paragraph: Short comedy sketches involving Tenko & Kou.
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.6
+                - generic:
+                  - generic: Comedy
+                  - generic: Supernatural
+          - generic [ref=e910]: "Wagaya no Oinari-sama.: Kuu-chan no Omake Gekijou"
+          - generic [ref=e911]: 2008 · None found
+        - link "Squishy! Black Clover 6.5 SD Black Clover short comedy specials released exclusively on dTV. 8 episodes ★ 6.5 Comedy Fantasy Squishy! Black Clover 2019 · DLE" [ref=e912] [cursor=pointer]:
+          - /url: /show/df570c5c-58ee-4401-8f0f-2c6dd32592be
+          - generic [ref=e913]:
+            - img "Squishy! Black Clover" [ref=e915]
+            - generic [ref=e916]: "6.5"
+            - generic:
+              - generic:
+                - paragraph: SD Black Clover short comedy specials released exclusively on dTV.
+                - generic:
+                  - generic: 8 episodes
+                  - generic: ★ 6.5
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e917]: Squishy! Black Clover
+          - generic [ref=e918]: 2019 · DLE
+        - link "Chie the Brat 7.0 Jarinko Chie is a movie directed by Takahata in 1981. Based on the very popular manga by Etsumi HARUKI, it is about ten ... 1 episodes ★ 7.0 Comedy Drama Chie the Brat 1981 · Tokyo Movie Shinsha" [ref=e919] [cursor=pointer]:
+          - /url: /show/da35116a-940c-441a-aa47-a17fc72b7cfc
+          - generic [ref=e920]:
+            - img "Chie the Brat" [ref=e922]
+            - generic [ref=e923]: "7.0"
+            - generic:
+              - generic:
+                - paragraph: Jarinko Chie is a movie directed by Takahata in 1981. Based on the very popular manga by Etsumi HARUKI, it is about ten ...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.0
+                - generic:
+                  - generic: Comedy
+                  - generic: Drama
+          - generic [ref=e924]: Chie the Brat
+          - generic [ref=e925]: 1981 · Tokyo Movie Shinsha
+        - 'link "Peeping Life: The Perfect Emotion 5.3 A sequel to Peeping Life comedy anthology, The Perfect Emotion features 10 new animated versions of improvised comedy sk... 10 episodes ★ 5.3 Comedy Slice of Life Peeping Life: The Perfect Emotion 2010 · CoMix Wave Films" [ref=e926] [cursor=pointer]':
+          - /url: /show/d0458f46-54a2-4cd6-adec-a64e7b8cdb85
+          - generic [ref=e927]:
+            - 'img "Peeping Life: The Perfect Emotion" [ref=e929]'
+            - generic [ref=e930]: "5.3"
+            - generic:
+              - generic:
+                - paragraph: A sequel to Peeping Life comedy anthology, The Perfect Emotion features 10 new animated versions of improvised comedy sk...
+                - generic:
+                  - generic: 10 episodes
+                  - generic: ★ 5.3
+                - generic:
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e931]: "Peeping Life: The Perfect Emotion"
+          - generic [ref=e932]: 2010 · CoMix Wave Films
+        - link "To Love Ru 7.0 Timid 16-year-old Rito Yuuki has yet to profess his love to Haruna Sairenji—a classmate and object of his infatuation si... 26 episodes ★ 7.0 Comedy Romance Sci-Fi To Love Ru 2008 · Xebec" [ref=e933] [cursor=pointer]:
+          - /url: /show/cf3463f1-a694-405e-9294-c2f652c2c8a6
+          - generic [ref=e934]:
+            - img "To Love Ru" [ref=e936]
+            - generic [ref=e937]: "7.0"
+            - generic:
+              - generic:
+                - paragraph: Timid 16-year-old Rito Yuuki has yet to profess his love to Haruna Sairenji—a classmate and object of his infatuation si...
+                - generic:
+                  - generic: 26 episodes
+                  - generic: ★ 7.0
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+                  - generic: Sci-Fi
+          - generic [ref=e938]: To Love Ru
+          - generic [ref=e939]: 2008 · Xebec
+        - link "Maarui Kanojo to Zannen na Kareshi 5.9 The romantic comedy follows Mariko, a plus-sized nurse who loves to eat. Having no love experience, she thinks her life ... 6 episodes ★ 5.9 Comedy Romance Maarui Kanojo to Zannen na Kareshi 2024 · Imageworks Studio" [ref=e940] [cursor=pointer]:
+          - /url: /show/cd9d2de3-de53-4ea5-b79d-03a8d8c40bd4
+          - generic [ref=e941]:
+            - img "Maarui Kanojo to Zannen na Kareshi" [ref=e943]
+            - generic [ref=e944]: "5.9"
+            - generic:
+              - generic:
+                - paragraph: The romantic comedy follows Mariko, a plus-sized nurse who loves to eat. Having no love experience, she thinks her life ...
+                - generic:
+                  - generic: 6 episodes
+                  - generic: ★ 5.9
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e945]: Maarui Kanojo to Zannen na Kareshi
+          - generic [ref=e946]: 2024 · Imageworks Studio
+        - link "Copihan 5.4 A school comedy taking place in Tokyo in 2034. Copihan is a joint project of Gonzo and Kei, the illustrator of the manga... 7 episodes ★ 5.4 Comedy Sci-Fi Copihan 2011 · Gonzo" [ref=e947] [cursor=pointer]:
+          - /url: /show/ca12c20b-2ada-4c51-b139-dbd394ea4f23
+          - generic [ref=e948]:
+            - img "Copihan" [ref=e950]
+            - generic [ref=e951]: "5.4"
+            - generic:
+              - generic:
+                - paragraph: A school comedy taking place in Tokyo in 2034. Copihan is a joint project of Gonzo and Kei, the illustrator of the manga...
+                - generic:
+                  - generic: 7 episodes
+                  - generic: ★ 5.4
+                - generic:
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e952]: Copihan
+          - generic [ref=e953]: 2011 · Gonzo
+        - link "Softenni! the Animation 6.5 The tennis comedy centers around the members of a female middle school soft tennis team and the twists and turns that th... 12 episodes ★ 6.5 Comedy Sports Ecchi Softenni! the Animation 2011 · Xebec" [ref=e954] [cursor=pointer]:
+          - /url: /show/c153b6e4-604b-49b5-8a6a-99a595825e79
+          - generic [ref=e955]:
+            - img "Softenni! the Animation" [ref=e957]
+            - generic [ref=e958]: "6.5"
+            - generic:
+              - generic:
+                - paragraph: The tennis comedy centers around the members of a female middle school soft tennis team and the twists and turns that th...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.5
+                - generic:
+                  - generic: Comedy
+                  - generic: Sports
+                  - generic: Ecchi
+          - generic [ref=e959]: Softenni! the Animation
+          - generic [ref=e960]: 2011 · Xebec
+        - link "Welcome To Pia Carrot 2 6.1 Yusuke (from the first Pia Carrot series) returns as the manager with a whole new cast. So the new male lead is Maeda Ko... 3 episodes ★ 6.1 Comedy Hentai Welcome To Pia Carrot 2 1998 · Triple X" [ref=e961] [cursor=pointer]:
+          - /url: /show/c0bf15ae-e0c6-406f-b419-cf1f017b249d
+          - generic [ref=e962]:
+            - img "Welcome To Pia Carrot 2" [ref=e964]
+            - generic [ref=e965]: "6.1"
+            - generic:
+              - generic:
+                - paragraph: Yusuke (from the first Pia Carrot series) returns as the manager with a whole new cast. So the new male lead is Maeda Ko...
+                - generic:
+                  - generic: 3 episodes
+                  - generic: ★ 6.1
+                - generic:
+                  - generic: Comedy
+                  - generic: Hentai
+          - generic [ref=e966]: Welcome To Pia Carrot 2
+          - generic [ref=e967]: 1998 · Triple X
+        - 'link "Crayon Shin-chan Gaiden: Alien vs. Shinnosuke 6.7 Unlike the main television anime series which is mostly set in modern-day Japan, the new series will be a \"sealed room\" ... 13 episodes ★ 6.7 Comedy Sci-Fi Ecchi Crayon Shin-chan Gaiden: Alien vs. Shinnosuke 2016 · Shin-Ei Animation" [ref=e968] [cursor=pointer]':
+          - /url: /show/b9922cca-da3c-4c97-acd5-28911b99ed7c
+          - generic [ref=e969]:
+            - 'img "Crayon Shin-chan Gaiden: Alien vs. Shinnosuke" [ref=e971]'
+            - generic [ref=e972]: "6.7"
+            - generic:
+              - generic:
+                - paragraph: Unlike the main television anime series which is mostly set in modern-day Japan, the new series will be a "sealed room" ...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 6.7
+                - generic:
+                  - generic: Comedy
+                  - generic: Sci-Fi
+                  - generic: Ecchi
+          - generic [ref=e973]: "Crayon Shin-chan Gaiden: Alien vs. Shinnosuke"
+          - generic [ref=e974]: 2016 · Shin-Ei Animation
+        - link "Jing-Ju Cats Jing-Ju Cats is a series filled with comedy, magic and Kung-Fu, set in the fictional cat kingdom of Purpetua. Once known... 60 episodes Action Adventure Comedy Jing-Ju Cats 2015 · Dazzling Star" [ref=e975] [cursor=pointer]:
+          - /url: /show/b67aeb5c-176e-4bbe-9638-dbf1ec6dd23d
+          - generic [ref=e976]:
+            - img "Jing-Ju Cats" [ref=e978]
+            - generic:
+              - generic:
+                - paragraph: Jing-Ju Cats is a series filled with comedy, magic and Kung-Fu, set in the fictional cat kingdom of Purpetua. Once known...
+                - generic:
+                  - generic: 60 episodes
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e979]: Jing-Ju Cats
+          - generic [ref=e980]: 2015 · Dazzling Star
+        - link "Muteking the Dancing Hero 5.8 Set in a city modeled after San Francisco in the 1980s, the protagonist has transformed into the hero Muteking and is fi... 12 episodes ★ 5.8 Action Comedy Sci-Fi Muteking the Dancing Hero 2021 · Tatsunoko Production" [ref=e981] [cursor=pointer]:
+          - /url: /show/b60feb2d-bce0-4efd-a041-552dc56d9432
+          - generic [ref=e982]:
+            - img "Muteking the Dancing Hero" [ref=e984]
+            - generic [ref=e985]: "5.8"
+            - generic:
+              - generic:
+                - paragraph: Set in a city modeled after San Francisco in the 1980s, the protagonist has transformed into the hero Muteking and is fi...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 5.8
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e986]: Muteking the Dancing Hero
+          - generic [ref=e987]: 2021 · Tatsunoko Production
+        - 'link "Robo to Shoujo (Kari): Oshirase Gekijou (Kari) 5.2 Special comedy shorts promoting DVD of Robo to Shoujo (Kari). 5 episodes ★ 5.2 Comedy Sci-Fi Robo to Shoujo (Kari): Oshirase Gekijou (Kari) 2011 · None found" [ref=e988] [cursor=pointer]':
+          - /url: /show/b5223874-4f1a-4680-8ae1-565b5263d22c
+          - generic [ref=e989]:
+            - 'img "Robo to Shoujo (Kari): Oshirase Gekijou (Kari)" [ref=e991]'
+            - generic [ref=e992]: "5.2"
+            - generic:
+              - generic:
+                - paragraph: Special comedy shorts promoting DVD of Robo to Shoujo (Kari).
+                - generic:
+                  - generic: 5 episodes
+                  - generic: ★ 5.2
+                - generic:
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e993]: "Robo to Shoujo (Kari): Oshirase Gekijou (Kari)"
+          - generic [ref=e994]: 2011 · None found
+        - 'link "Crayon Shin-chan Movie 13: Densetsu wo Yobu Buriburi 3-pun Dai Shingeki 6.7 An action comedy including parodies of tokusatsu monster/hero genre, such as \"Godzilla\" and \"Ultraman.\" A time-space con... 1 episodes ★ 6.7 Comedy Ecchi Crayon Shin-chan Movie 13: Densetsu wo Yobu Buriburi 3-pun Dai Shingeki 2005 · Shin-Ei Animation" [ref=e995] [cursor=pointer]':
+          - /url: /show/b48b2bff-988d-4841-ae37-8539d4ada618
+          - generic [ref=e996]:
+            - 'img "Crayon Shin-chan Movie 13: Densetsu wo Yobu Buriburi 3-pun Dai Shingeki" [ref=e998]'
+            - generic [ref=e999]: "6.7"
+            - generic:
+              - generic:
+                - paragraph: An action comedy including parodies of tokusatsu monster/hero genre, such as "Godzilla" and "Ultraman." A time-space con...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.7
+                - generic:
+                  - generic: Comedy
+                  - generic: Ecchi
+          - generic [ref=e1000]: "Crayon Shin-chan Movie 13: Densetsu wo Yobu Buriburi 3-pun Dai Shingeki"
+          - generic [ref=e1001]: 2005 · Shin-Ei Animation
+        - link "The Irresponsible Galaxy☆Tylor 3.9 Taking place in a very distant in future, the adventure begins when a boy meets a certain girl. The Pan Galaxy Republic ... 12 episodes ★ 3.9 Comedy Sci-Fi The Irresponsible Galaxy☆Tylor 2017 · Seven" [ref=e1002] [cursor=pointer]:
+          - /url: /show/b1168c14-5c67-40d6-b1a3-b5b2f33443ac
+          - generic [ref=e1003]:
+            - img "The Irresponsible Galaxy☆Tylor" [ref=e1005]
+            - generic [ref=e1006]: "3.9"
+            - generic:
+              - generic:
+                - paragraph: Taking place in a very distant in future, the adventure begins when a boy meets a certain girl. The Pan Galaxy Republic ...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 3.9
+                - generic:
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e1007]: The Irresponsible Galaxy☆Tylor
+          - generic [ref=e1008]: 2017 · Seven
+        - link "Magical★Taruruuto-kun 6.9 Magical Taruruto-kun is a magical boy, fighting, and comedy TV show based on the manga of the same name by Tatsuya Egawa... 87 episodes ★ 6.9 Adventure Comedy Fantasy Magical★Taruruuto-kun 1990 · Toei Animation" [ref=e1009] [cursor=pointer]:
+          - /url: /show/b013067b-e08a-4a81-a5ef-df72964a1a83
+          - generic [ref=e1010]:
+            - img "Magical★Taruruuto-kun" [ref=e1012]
+            - generic [ref=e1013]: "6.9"
+            - generic:
+              - generic:
+                - paragraph: Magical Taruruto-kun is a magical boy, fighting, and comedy TV show based on the manga of the same name by Tatsuya Egawa...
+                - generic:
+                  - generic: 87 episodes
+                  - generic: ★ 6.9
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e1014]: Magical★Taruruuto-kun
+          - generic [ref=e1015]: 1990 · Toei Animation
+        - link "Youkai Watch ♪ 6.5 The new show will feature unique and returning Yo-kai. The comedy will also center on the original series' main characte... 98 episodes ★ 6.5 Comedy Supernatural Youkai Watch ♪ 2021 · OLM" [ref=e1016] [cursor=pointer]:
+          - /url: /show/ad97d016-1e5d-4da7-8575-9097cabde5d5
+          - generic [ref=e1017]:
+            - img "Youkai Watch ♪" [ref=e1019]
+            - generic [ref=e1020]: "6.5"
+            - generic:
+              - generic:
+                - paragraph: The new show will feature unique and returning Yo-kai. The comedy will also center on the original series' main characte...
+                - generic:
+                  - generic: 98 episodes
+                  - generic: ★ 6.5
+                - generic:
+                  - generic: Comedy
+                  - generic: Supernatural
+          - generic [ref=e1021]: Youkai Watch ♪
+          - generic [ref=e1022]: 2021 · OLM
+        - link "Armor Shop for Ladies & Gentlemen 5.6 Kautz was looking for a job and suddenly he gets hired by an armor shop. But it's not your run of the mill armor shop, i... 12 episodes ★ 5.6 Comedy Fantasy Ecchi Armor Shop for Ladies & Gentlemen 2018 · IMAGICA Lab." [ref=e1023] [cursor=pointer]:
+          - /url: /show/ab198a0b-e4e1-47b8-bbdd-7b6a9f5447cf
+          - generic [ref=e1024]:
+            - img "Armor Shop for Ladies & Gentlemen" [ref=e1026]
+            - generic [ref=e1027]: "5.6"
+            - generic:
+              - generic:
+                - paragraph: Kautz was looking for a job and suddenly he gets hired by an armor shop. But it's not your run of the mill armor shop, i...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 5.6
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+                  - generic: Ecchi
+          - generic [ref=e1028]: Armor Shop for Ladies & Gentlemen
+          - generic [ref=e1029]: 2018 · IMAGICA Lab.
+        - 'link "Peeping Life: The Perfect Edition 5.2 Slice of life comedy about pitfalls of Japanese society. 10 episodes ★ 5.2 Comedy Slice of Life Peeping Life: The Perfect Edition 2009 · None found" [ref=e1030] [cursor=pointer]':
+          - /url: /show/aa5aea53-313c-43b9-80cf-c50a97759e9a
+          - generic [ref=e1031]:
+            - 'img "Peeping Life: The Perfect Edition" [ref=e1033]'
+            - generic [ref=e1034]: "5.2"
+            - generic:
+              - generic:
+                - paragraph: Slice of life comedy about pitfalls of Japanese society.
+                - generic:
+                  - generic: 10 episodes
+                  - generic: ★ 5.2
+                - generic:
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e1035]: "Peeping Life: The Perfect Edition"
+          - generic [ref=e1036]: 2009 · None found
+        - link "Star Cat Fullhouse 5.9 This slapstick comedy is about three pretty girls struggling to earn a living as pilots of the Iron Goblin delivery vess... 4 episodes ★ 5.9 Comedy Romance Sci-Fi Star Cat Fullhouse 1989 · Artland" [ref=e1037] [cursor=pointer]:
+          - /url: /show/a6640863-9173-4c04-85c1-4a89f81cdc90
+          - generic [ref=e1038]:
+            - img "Star Cat Fullhouse" [ref=e1040]
+            - generic [ref=e1041]: "5.9"
+            - generic:
+              - generic:
+                - paragraph: This slapstick comedy is about three pretty girls struggling to earn a living as pilots of the Iron Goblin delivery vess...
+                - generic:
+                  - generic: 4 episodes
+                  - generic: ★ 5.9
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+                  - generic: Sci-Fi
+          - generic [ref=e1042]: Star Cat Fullhouse
+          - generic [ref=e1043]: 1989 · Artland
+  - contentinfo [ref=e495]:
+    - generic [ref=e496]: © 2026 weeb.vip
+    - generic [ref=e497]:
+      - link "About" [ref=e498] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e499] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e500] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e501]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"
+  - button "🛠️ Dev Panel" [ref=e504] [cursor=pointer]:
+    - text: 🛠️
+    - generic [ref=e505]: Dev Panel
+  - generic [ref=e508]:
+    - button "Menu" [ref=e509]:
+      - img [ref=e511]
+      - generic: Menu
+    - button "Inspect" [ref=e515]:
+      - img [ref=e517]
+      - generic: Inspect
+    - button "Audit" [ref=e519]:
+      - generic [ref=e520]:
+        - img [ref=e521]
+        - img [ref=e1044]
+      - generic: Audit
+    - button "Settings" [ref=e524]:
+      - img [ref=e526]
+      - generic: Settings
+  - generic [ref=e1046]: Browse Anime — weeb.vip | WeebVIP

@@ -1,0 +1,568 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e3]:
+    - link "weeb.vip weeb.vip" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e5]
+      - generic [ref=e6]: weeb.vip
+    - generic [ref=e7]:
+      - link "Home" [ref=e8] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e9] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e10] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e11] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e14]:
+      - img
+      - searchbox [ref=e15]
+      - generic: /
+    - generic [ref=e16]:
+      - button "Toggle title language" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e21]: EN
+      - generic [ref=e23]:
+        - button "Login" [ref=e24] [cursor=pointer]:
+          - generic [ref=e25]: Login
+        - button "Register" [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: Register
+  - main [ref=e28]:
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - heading "Browse Anime" [level=1] [ref=e32]
+        - generic [ref=e33]:
+          - img
+          - textbox "Search by title, studio, genre..." [ref=e34]
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - generic [ref=e37]: Genres
+          - generic [ref=e38]:
+            - button "Comedy 5,122" [ref=e39] [cursor=pointer]:
+              - text: Comedy
+              - generic [ref=e40]: 5,122
+            - button "Action 4,964" [ref=e41] [cursor=pointer]:
+              - text: Action
+              - generic [ref=e42]: 4,964
+            - button "Fantasy 4,609" [ref=e43] [cursor=pointer]:
+              - text: Fantasy
+              - generic [ref=e44]: 4,609
+            - button "Adventure 4,005" [ref=e45] [cursor=pointer]:
+              - text: Adventure
+              - generic [ref=e46]: 4,005
+            - button "Sci-Fi 3,064" [ref=e47] [cursor=pointer]:
+              - text: Sci-Fi
+              - generic [ref=e48]: 3,064
+            - button "Drama 2,322" [ref=e49] [cursor=pointer]:
+              - text: Drama
+              - generic [ref=e50]: 2,322
+            - button "Romance 1,910" [ref=e51] [cursor=pointer]:
+              - text: Romance
+              - generic [ref=e52]: 1,910
+            - button "Supernatural 1,415" [ref=e53] [cursor=pointer]:
+              - text: Supernatural
+              - generic [ref=e54]: 1,415
+            - button "Mystery 922" [ref=e55] [cursor=pointer]:
+              - text: Mystery
+              - generic [ref=e56]: "922"
+            - button "Ecchi 776" [ref=e57] [cursor=pointer]:
+              - text: Ecchi
+              - generic [ref=e58]: "776"
+            - button "Slice of Life 765" [ref=e59] [cursor=pointer]:
+              - text: Slice of Life
+              - generic [ref=e60]: "765"
+            - button "Horror 514" [ref=e61] [cursor=pointer]:
+              - text: Horror
+              - generic [ref=e62]: "514"
+            - button "+14 more" [ref=e63] [cursor=pointer]
+        - generic [ref=e64]:
+          - combobox [ref=e65] [cursor=pointer]:
+            - option "All" [selected]
+            - option "Airing"
+            - option "Finished"
+            - option "Upcoming"
+          - combobox [ref=e66] [cursor=pointer]:
+            - option "All years" [selected]
+            - option "2027"
+            - option "2026"
+            - option "2025"
+            - option "2024"
+            - option "2023"
+            - option "2022"
+            - option "2021"
+            - option "2020"
+            - option "2019"
+            - option "2018"
+            - option "2017"
+            - option "2016"
+            - option "2015"
+            - option "2014"
+            - option "2013"
+            - option "2012"
+            - option "2011"
+            - option "2010"
+            - option "2009"
+            - option "2008"
+            - option "2007"
+            - option "2006"
+            - option "2005"
+            - option "2004"
+            - option "2003"
+            - option "2002"
+            - option "2001"
+            - option "2000"
+            - option "1999"
+            - option "1998"
+            - option "1997"
+            - option "1996"
+            - option "1995"
+            - option "1994"
+            - option "1993"
+            - option "1992"
+            - option "1991"
+            - option "1990"
+          - combobox [ref=e67] [cursor=pointer]:
+            - option "Relevance" [selected]
+            - option "Score"
+            - option "Newest"
+            - option "A-Z"
+      - generic [ref=e69]:
+        - generic [ref=e70]: "Active filters:"
+        - button "Comedy" [ref=e71] [cursor=pointer]:
+          - text: Comedy
+          - img [ref=e73]
+        - button "Clear all" [ref=e75] [cursor=pointer]
+      - generic [ref=e76]:
+        - paragraph [ref=e77]:
+          - strong [ref=e78]: 5,122
+          - text: results in Comedy
+        - group "View mode" [ref=e79]:
+          - button "Grid view" [ref=e80] [cursor=pointer]:
+            - img [ref=e81]
+          - button "List view" [ref=e86] [cursor=pointer]:
+            - img [ref=e87]
+      - generic [ref=e88]:
+        - 'link "The Familiar of Zero: Rondo of Princesses Picture Drama 6.9 Picture Drama episodes included in each DVD volumes of Zero no Tsukaima: Princesses no Rondo. Episode Titles: vol.1 「Ma... 7 episodes ★ 6.9 Action Adventure Comedy The Familiar of Zero: Rondo of Princesses Picture Drama 2008 · J.C.Staff" [ref=e89] [cursor=pointer]':
+          - /url: /show/fff2fb91-dd81-4c17-9ba1-49e04be6593e
+          - generic [ref=e90]:
+            - 'img "The Familiar of Zero: Rondo of Princesses Picture Drama" [ref=e92]'
+            - generic [ref=e93]: "6.9"
+            - generic:
+              - generic:
+                - paragraph: "Picture Drama episodes included in each DVD volumes of Zero no Tsukaima: Princesses no Rondo. Episode Titles: vol.1 「Ma..."
+                - generic:
+                  - generic: 7 episodes
+                  - generic: ★ 6.9
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e94]: "The Familiar of Zero: Rondo of Princesses Picture Drama"
+          - generic [ref=e95]: 2008 · J.C.Staff
+        - 'link "Pokémon: Pikachu''s Summer Bridge Story 6.2 Satoshi (Ash)''s Pikachu and friends visit a town with a huge draw bridge, but problems arise when they come across Satos... 1 episodes ★ 6.2 Adventure Comedy Fantasy Pokémon: Pikachu''s Summer Bridge Story 2011 · OLM" [ref=e96] [cursor=pointer]':
+          - /url: /show/ffebf6a2-4da5-4037-ba40-a893db403dcf
+          - generic [ref=e97]:
+            - 'img "Pokémon: Pikachu''s Summer Bridge Story" [ref=e99]'
+            - generic [ref=e100]: "6.2"
+            - generic:
+              - generic:
+                - paragraph: Satoshi (Ash)'s Pikachu and friends visit a town with a huge draw bridge, but problems arise when they come across Satos...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.2
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e101]: "Pokémon: Pikachu's Summer Bridge Story"
+          - generic [ref=e102]: 2011 · OLM
+        - link "Chillin' in My 30s after Getting Fired from the Demon King's Army Mini Anime 6.0 Mini anime for Kaiko sareta Ankoku Heishi (30-dai) no Slow na Second Life released on Twitter and YouTube. 12 episodes ★ 6.0 Comedy Fantasy Chillin' in My 30s after Getting Fired from the Demon King's Army Mini Anime 2023 · AQUA ARIS" [ref=e103] [cursor=pointer]:
+          - /url: /show/ffeb140b-6061-42ff-9f1d-89a1a5e3fb21
+          - generic [ref=e104]:
+            - img "Chillin' in My 30s after Getting Fired from the Demon King's Army Mini Anime" [ref=e106]
+            - generic [ref=e107]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: Mini anime for Kaiko sareta Ankoku Heishi (30-dai) no Slow na Second Life released on Twitter and YouTube.
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.0
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e108]: Chillin' in My 30s after Getting Fired from the Demon King's Army Mini Anime
+          - generic [ref=e109]: 2023 · AQUA ARIS
+        - link "Oh, Suddenly Egyptian God 6.6 During the day, the Egyptian gods take their jobs very seriously. However, in their spare time, the deities enjoy themse... 10 episodes ★ 6.6 Comedy Fantasy Oh, Suddenly Egyptian God 2020 · Typhoon Graphics" [ref=e110] [cursor=pointer]:
+          - /url: /show/ffdcdbe3-5092-4708-8024-8dbc0141858c
+          - generic [ref=e111]:
+            - img "Oh, Suddenly Egyptian God" [ref=e113]
+            - generic [ref=e114]: "6.6"
+            - generic:
+              - generic:
+                - paragraph: During the day, the Egyptian gods take their jobs very seriously. However, in their spare time, the deities enjoy themse...
+                - generic:
+                  - generic: 10 episodes
+                  - generic: ★ 6.6
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e115]: Oh, Suddenly Egyptian God
+          - generic [ref=e116]: 2020 · Typhoon Graphics
+        - 'link "Dibetagurashi: Ahiru no Seikatsu 5.7 The story follows the daily life of a group of birds, including a duck, an old nihilistic great grey owl, and a gluttono... 39 episodes ★ 5.7 Comedy Slice of Life Dibetagurashi: Ahiru no Seikatsu 2013 · None found" [ref=e117] [cursor=pointer]':
+          - /url: /show/ffc6b2b2-dac0-46fd-9197-9970def7c2c2
+          - generic [ref=e118]:
+            - 'img "Dibetagurashi: Ahiru no Seikatsu" [ref=e120]'
+            - generic [ref=e121]: "5.7"
+            - generic:
+              - generic:
+                - paragraph: The story follows the daily life of a group of birds, including a duck, an old nihilistic great grey owl, and a gluttono...
+                - generic:
+                  - generic: 39 episodes
+                  - generic: ★ 5.7
+                - generic:
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e122]: "Dibetagurashi: Ahiru no Seikatsu"
+          - generic [ref=e123]: 2013 · None found
+        - link "Salted Fish 7.2 Xian Yu Ge is a salted fish who boarded at his aunt's house and hangs around idly all day long. However, due to his uniq... 16 episodes ★ 7.2 Comedy Fantasy Salted Fish 2021 · 717 Animation Studio" [ref=e124] [cursor=pointer]:
+          - /url: /show/ffc1ef1b-cd7e-4a4e-b934-03f7e7fa009e
+          - generic [ref=e125]:
+            - img "Salted Fish" [ref=e127]
+            - generic [ref=e128]: "7.2"
+            - generic:
+              - generic:
+                - paragraph: Xian Yu Ge is a salted fish who boarded at his aunt's house and hangs around idly all day long. However, due to his uniq...
+                - generic:
+                  - generic: 16 episodes
+                  - generic: ★ 7.2
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e129]: Salted Fish
+          - generic [ref=e130]: 2021 · 717 Animation Studio
+        - 'link "Jian Wang 3: Xia Gan Yi Dan Shen Jianxin 2nd Season 6.5 No synopsis information has been added to this title. Help improve our database by adding a synopsis here. 12 episodes ★ 6.5 Action Adventure Comedy Jian Wang 3: Xia Gan Yi Dan Shen Jianxin 2nd Season 2019 · Shengying Animation" [ref=e131] [cursor=pointer]':
+          - /url: /show/ffa40472-32bd-4648-9ae2-04cc223a7fdf
+          - generic [ref=e132]:
+            - 'img "Jian Wang 3: Xia Gan Yi Dan Shen Jianxin 2nd Season" [ref=e134]'
+            - generic [ref=e135]: "6.5"
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.5
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e136]: "Jian Wang 3: Xia Gan Yi Dan Shen Jianxin 2nd Season"
+          - generic [ref=e137]: 2019 · Shengying Animation
+        - 'link "Da Erduo Tu Tu: Meishi Kuangxiangqu Hu Tutu, a confused and greedy kindergarten kid, has an unparalleled obsession with \"eating\". His dream is to eat delici... 1 episodes Comedy Gourmet Da Erduo Tu Tu: Meishi Kuangxiangqu 2017 · None found" [ref=e138] [cursor=pointer]':
+          - /url: /show/ff904b85-6e1b-4e20-8a55-648354e10055
+          - generic [ref=e139]:
+            - 'img "Da Erduo Tu Tu: Meishi Kuangxiangqu" [ref=e141]'
+            - generic:
+              - generic:
+                - paragraph: Hu Tutu, a confused and greedy kindergarten kid, has an unparalleled obsession with "eating". His dream is to eat delici...
+                - generic:
+                  - generic: 1 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Gourmet
+          - generic [ref=e142]: "Da Erduo Tu Tu: Meishi Kuangxiangqu"
+          - generic [ref=e143]: 2017 · None found
+        - link "Lovedol ~Lovely Idol~ 6.0 This is a special episode of Lovedol. It's also called episode 13 of the series. Lovedol, or Lovely Idol, is a girl gro... 1 episodes ★ 6.0 Comedy Drama Ecchi Lovedol ~Lovely Idol~ 2007 · AIC ASTA" [ref=e144] [cursor=pointer]:
+          - /url: /show/ff818495-6507-4235-ac6c-c041afb1ac61
+          - generic [ref=e145]:
+            - img "Lovedol ~Lovely Idol~" [ref=e147]
+            - generic [ref=e148]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: This is a special episode of Lovedol. It's also called episode 13 of the series. Lovedol, or Lovely Idol, is a girl gro...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.0
+                - generic:
+                  - generic: Comedy
+                  - generic: Drama
+                  - generic: Ecchi
+          - generic [ref=e149]: Lovedol ~Lovely Idol~
+          - generic [ref=e150]: 2007 · AIC ASTA
+        - link "Kagaku x Bouken Survival! 2nd Season Second season of Kagaku x Bouken Survival!. Action Comedy Kagaku x Bouken Survival! 2nd Season 2025 · None found" [ref=e151] [cursor=pointer]:
+          - /url: /show/ff765e51-bdec-4afa-aec9-0a2259749b31
+          - generic [ref=e152]:
+            - img "Kagaku x Bouken Survival! 2nd Season" [ref=e154]
+            - generic:
+              - generic:
+                - paragraph: Second season of Kagaku x Bouken Survival!.
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+          - generic [ref=e155]: Kagaku x Bouken Survival! 2nd Season
+          - generic [ref=e156]: 2025 · None found
+        - 'link "Oshiri Tantei: Cosmic Front Educational collaboration specials between Oshiri Tantei and the documentary show Cosmic Front. Mikku will help the But... 2 episodes Comedy Fantasy Mystery Oshiri Tantei: Cosmic Front 2023 · Toei Animation" [ref=e157] [cursor=pointer]':
+          - /url: /show/ff6ec7e1-a18a-4d96-bfed-61d5e54ccdb9
+          - generic [ref=e158]:
+            - 'img "Oshiri Tantei: Cosmic Front" [ref=e160]'
+            - generic:
+              - generic:
+                - paragraph: Educational collaboration specials between Oshiri Tantei and the documentary show Cosmic Front. Mikku will help the But...
+                - generic:
+                  - generic: 2 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+                  - generic: Mystery
+          - generic [ref=e161]: "Oshiri Tantei: Cosmic Front"
+          - generic [ref=e162]: 2023 · Toei Animation
+        - link "Himegoto 5.9 Constantly on the run from loan sharks, Hime Arikawa has to deal with the debt left over from his parents' lousy spendin... 13 episodes ★ 5.9 Comedy Ecchi Himegoto 2014 · Asahi Production" [ref=e163] [cursor=pointer]:
+          - /url: /show/ff5ef3b7-0608-452f-8923-89f10f5e62f2
+          - generic [ref=e164]:
+            - img "Himegoto" [ref=e166]
+            - generic [ref=e167]: "5.9"
+            - generic:
+              - generic:
+                - paragraph: Constantly on the run from loan sharks, Hime Arikawa has to deal with the debt left over from his parents' lousy spendin...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 5.9
+                - generic:
+                  - generic: Comedy
+                  - generic: Ecchi
+          - generic [ref=e168]: Himegoto
+          - generic [ref=e169]: 2014 · Asahi Production
+        - link "Sukkiri!! x Eiga Himitsu no Akko-chan Special flash anime shorts made to promote the 2012 live-action movie of Himitsu no Akko-chan, featuring the grown-up ch... 10 episodes Comedy Slice of Life Sukkiri!! x Eiga Himitsu no Akko-chan 2012 · Oddjob" [ref=e170] [cursor=pointer]:
+          - /url: /show/ff506fe8-335d-4661-ab70-770f838f7e47
+          - generic [ref=e171]:
+            - img "Sukkiri!! x Eiga Himitsu no Akko-chan" [ref=e173]
+            - generic:
+              - generic:
+                - paragraph: Special flash anime shorts made to promote the 2012 live-action movie of Himitsu no Akko-chan, featuring the grown-up ch...
+                - generic:
+                  - generic: 10 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Slice of Life
+          - generic [ref=e174]: Sukkiri!! x Eiga Himitsu no Akko-chan
+          - generic [ref=e175]: 2012 · Oddjob
+        - link "Rokudenashi Blues 1993 6.2 Sequel to the Rokudenashi Blues movie. 1 episodes ★ 6.2 Comedy Drama Sports Rokudenashi Blues 1993 1993 · Toei Animation" [ref=e176] [cursor=pointer]:
+          - /url: /show/ff476fdb-03e1-4544-b46e-638f29fc2ef0
+          - generic [ref=e177]:
+            - img "Rokudenashi Blues 1993" [ref=e179]
+            - generic [ref=e180]: "6.2"
+            - generic:
+              - generic:
+                - paragraph: Sequel to the Rokudenashi Blues movie.
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.2
+                - generic:
+                  - generic: Comedy
+                  - generic: Drama
+                  - generic: Sports
+          - generic [ref=e181]: Rokudenashi Blues 1993
+          - generic [ref=e182]: 1993 · Toei Animation
+        - 'link "Bouken Shite mo Ii Koro 5.5 Follow a cast that makes pornographic movies. The loves and loyalty it creates and the friction it causes. (Source: Ani... 3 episodes ★ 5.5 Comedy Romance Ecchi Bouken Shite mo Ii Koro 1989 · Knack Productions" [ref=e183] [cursor=pointer]':
+          - /url: /show/ff326cfd-4ec0-44ed-b7b1-fee8c848ed75
+          - generic [ref=e184]:
+            - img "Bouken Shite mo Ii Koro" [ref=e186]
+            - generic [ref=e187]: "5.5"
+            - generic:
+              - generic:
+                - paragraph: "Follow a cast that makes pornographic movies. The loves and loyalty it creates and the friction it causes. (Source: Ani..."
+                - generic:
+                  - generic: 3 episodes
+                  - generic: ★ 5.5
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+                  - generic: Ecchi
+          - generic [ref=e188]: Bouken Shite mo Ii Koro
+          - generic [ref=e189]: 1989 · Knack Productions
+        - link "Bread Barbershop 3 No synopsis information has been added to this title. Help improve our database by adding a synopsis here. 25 episodes Comedy Fantasy Bread Barbershop 3 2021 · None found" [ref=e190] [cursor=pointer]:
+          - /url: /show/ff265a80-a473-4df4-aa37-d7a5d45cb28d
+          - generic [ref=e191]:
+            - img "Bread Barbershop 3" [ref=e193]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+                - generic:
+                  - generic: 25 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e194]: Bread Barbershop 3
+          - generic [ref=e195]: 2021 · None found
+        - link "The Duke of Death and His Maid 7.6 As the elegant, frail flower petals wither away into lifeless ashes, the young duke is tragically reminded of the despic... 12 episodes ★ 7.6 Comedy Fantasy Romance The Duke of Death and His Maid 2021 · J.C.Staff" [ref=e196] [cursor=pointer]:
+          - /url: /show/ff211c95-0d4f-408d-a069-ab294d579d6d
+          - generic [ref=e197]:
+            - img "The Duke of Death and His Maid" [ref=e199]
+            - generic [ref=e200]: "7.6"
+            - generic:
+              - generic:
+                - paragraph: As the elegant, frail flower petals wither away into lifeless ashes, the young duke is tragically reminded of the despic...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 7.6
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e201]: The Duke of Death and His Maid
+          - generic [ref=e202]: 2021 · J.C.Staff
+        - link "Sobakasu Pucchi A kids adventure and comedy series. Each 5 minute episode aired Monday through Saturday in a continuing story which comp... 162 episodes Adventure Comedy Sobakasu Pucchi 1969 · None found" [ref=e203] [cursor=pointer]:
+          - /url: /show/ff12aab9-3a24-4d5f-a6f4-69c796abb8fb
+          - generic [ref=e204]:
+            - img "Sobakasu Pucchi" [ref=e206]
+            - generic:
+              - generic:
+                - paragraph: A kids adventure and comedy series. Each 5 minute episode aired Monday through Saturday in a continuing story which comp...
+                - generic:
+                  - generic: 162 episodes
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e207]: Sobakasu Pucchi
+          - generic [ref=e208]: 1969 · None found
+        - link "Noel's Fantastic Trip 5.5 The film is centered around Noel, a young girl and her dog, Pup, who both live on the Planet Noel. While relaxing, Noel ... 1 episodes ★ 5.5 Adventure Comedy Fantasy Noel's Fantastic Trip 1983 · Group TAC" [ref=e209] [cursor=pointer]:
+          - /url: /show/ff1017e3-95aa-4125-9496-0a88d43486b3
+          - generic [ref=e210]:
+            - img "Noel's Fantastic Trip" [ref=e212]
+            - generic [ref=e213]: "5.5"
+            - generic:
+              - generic:
+                - paragraph: The film is centered around Noel, a young girl and her dog, Pup, who both live on the Planet Noel. While relaxing, Noel ...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 5.5
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e214]: Noel's Fantastic Trip
+          - generic [ref=e215]: 1983 · Group TAC
+        - link "Six Gates Faraway Mon Colle Knights 6.4 Two mad scientists, Professor Hiiragi and Count Collection, simultaneously manage to open a dream hole to an alternate w... 51 episodes ★ 6.4 Adventure Comedy Fantasy Six Gates Faraway Mon Colle Knights 2000 · Studio Deen" [ref=e216] [cursor=pointer]:
+          - /url: /show/ff0aa3c6-605a-4bd2-982b-5dd254eab8e2
+          - generic [ref=e217]:
+            - img "Six Gates Faraway Mon Colle Knights" [ref=e219]
+            - generic [ref=e220]: "6.4"
+            - generic:
+              - generic:
+                - paragraph: Two mad scientists, Professor Hiiragi and Count Collection, simultaneously manage to open a dream hole to an alternate w...
+                - generic:
+                  - generic: 51 episodes
+                  - generic: ★ 6.4
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e221]: Six Gates Faraway Mon Colle Knights
+          - generic [ref=e222]: 2000 · Studio Deen
+        - link "Cat Soup 7.3 The main character, a cat named Nyatto, embarks upon a journey to save his sister's soul, which was ripped in two when N... 1 episodes ★ 7.3 Avant Garde Award Winning Comedy Cat Soup 2001 · J.C.Staff" [ref=e223] [cursor=pointer]:
+          - /url: /show/ff041ccf-6524-4abb-8826-86b9c6e9a5b6
+          - generic [ref=e224]:
+            - img "Cat Soup" [ref=e226]
+            - generic [ref=e227]: "7.3"
+            - generic:
+              - generic:
+                - paragraph: The main character, a cat named Nyatto, embarks upon a journey to save his sister's soul, which was ripped in two when N...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.3
+                - generic:
+                  - generic: Avant Garde
+                  - generic: Award Winning
+                  - generic: Comedy
+          - generic [ref=e228]: Cat Soup
+          - generic [ref=e229]: 2001 · J.C.Staff
+        - 'link "Naniwa Yuukyouden: Nekketsu!! Bakushou Mankai-hen In the 3rd series continues as the gang hits up a karaoke bar at night only to cause a ruckus with their less than desir... 1 episodes Action Comedy Naniwa Yuukyouden: Nekketsu!! Bakushou Mankai-hen 1992 · Toei Animation" [ref=e230] [cursor=pointer]':
+          - /url: /show/fee814db-8c5b-4109-96c7-870e56ba1e71
+          - generic [ref=e231]:
+            - 'img "Naniwa Yuukyouden: Nekketsu!! Bakushou Mankai-hen" [ref=e233]'
+            - generic:
+              - generic:
+                - paragraph: In the 3rd series continues as the gang hits up a karaoke bar at night only to cause a ruckus with their less than desir...
+                - generic:
+                  - generic: 1 episodes
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+          - generic [ref=e234]: "Naniwa Yuukyouden: Nekketsu!! Bakushou Mankai-hen"
+          - generic [ref=e235]: 1992 · Toei Animation
+        - link "Katana Maidens ~ Mini Toji – Katana Maidens Quickening Arc 205-Second Introduction Special! 5.5 Episode 0 of Mini Toji. Kanami and Mihono are self-aware that they are in an anime and introduce/recap the Toji no Miko ... 1 episodes ★ 5.5 Action Comedy Katana Maidens ~ Mini Toji – Katana Maidens Quickening Arc 205-Second Introduction Special! 2019 · Project No.9" [ref=e236] [cursor=pointer]:
+          - /url: /show/fed9274c-401f-485a-9bb3-492066fd32e5
+          - generic [ref=e237]:
+            - img "Katana Maidens ~ Mini Toji – Katana Maidens Quickening Arc 205-Second Introduction Special!" [ref=e239]
+            - generic [ref=e240]: "5.5"
+            - generic:
+              - generic:
+                - paragraph: Episode 0 of Mini Toji. Kanami and Mihono are self-aware that they are in an anime and introduce/recap the Toji no Miko ...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 5.5
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+          - generic [ref=e241]: Katana Maidens ~ Mini Toji – Katana Maidens Quickening Arc 205-Second Introduction Special!
+          - generic [ref=e242]: 2019 · Project No.9
+        - link "Wagnaria!!2 7.8 The exciting antics of Wagnaria return as more ridiculous incidents occur, friendships are deepened, and new feelings ar... 13 episodes ★ 7.8 Comedy Romance Wagnaria!!2 2011 · A-1 Pictures" [ref=e243] [cursor=pointer]:
+          - /url: /show/fed74a06-606c-476c-af4e-3b8fc8a1cb3b
+          - generic [ref=e244]:
+            - img "Wagnaria!!2" [ref=e246]
+            - generic [ref=e247]: "7.8"
+            - generic:
+              - generic:
+                - paragraph: The exciting antics of Wagnaria return as more ridiculous incidents occur, friendships are deepened, and new feelings ar...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 7.8
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e248]: Wagnaria!!2
+          - generic [ref=e249]: 2011 · A-1 Pictures
+      - navigation "Search results pages" [ref=e250]:
+        - button "Prev" [disabled] [ref=e251]:
+          - img [ref=e252]
+          - text: Prev
+        - generic [ref=e254]:
+          - button "1" [ref=e255] [cursor=pointer]
+          - button "2" [ref=e256] [cursor=pointer]
+          - button "3" [ref=e257] [cursor=pointer]
+          - button "4" [ref=e258] [cursor=pointer]
+          - button "5" [ref=e259] [cursor=pointer]
+          - generic [ref=e260]: …
+          - button "214" [ref=e261] [cursor=pointer]
+        - button "Next" [ref=e262] [cursor=pointer]:
+          - text: Next
+          - img [ref=e263]
+  - contentinfo [ref=e266]:
+    - generic [ref=e267]: © 2026 weeb.vip
+    - generic [ref=e268]:
+      - link "About" [ref=e269] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e270] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e271] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e272]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"
+  - button "🛠️ Dev Panel" [ref=e275] [cursor=pointer]:
+    - text: 🛠️
+    - generic [ref=e276]: Dev Panel
+  - generic [ref=e279]:
+    - button "Menu" [ref=e280]:
+      - img [ref=e282]
+      - generic: Menu
+    - button "Inspect" [ref=e286]:
+      - img [ref=e288]
+      - generic: Inspect
+    - button "Audit" [ref=e290]:
+      - generic [ref=e291]:
+        - img [ref=e292]
+        - img [ref=e295]
+      - generic: Audit
+    - button "Settings" [ref=e298]:
+      - img [ref=e300]
+      - generic: Settings

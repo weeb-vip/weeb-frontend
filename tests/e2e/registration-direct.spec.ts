@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
+import { waitForAuthForm, deleteEmailsForRecipient } from './helpers';
 
 // This is an alternative test that navigates directly to the login page
 // instead of using the modal, in case the modal has issues
@@ -7,6 +8,9 @@ import { v4 as uuidv4 } from 'uuid';
 test.describe('User Registration Flow (Direct Navigation)', () => {
   // Run serially — these hit the shared staging API which can throttle parallel requests
   test.describe.configure({ mode: 'serial' });
+
+  // Increase timeout for CI where network to staging is slower
+  test.setTimeout(90000);
 
   let testEmail: string;
   const testPassword = 'Password1!';
@@ -17,10 +21,14 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
     console.log(`Testing with email: ${testEmail}`);
   });
 
+  test.afterEach(async () => {
+    await deleteEmailsForRecipient(testEmail);
+  });
+
   test('register user via direct navigation', async ({ page }) => {
     // Navigate directly to register page
-    await page.goto('/auth/register');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/auth/register', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForAuthForm(page);
 
     // Wait for client-side hydration and form to be ready
     // The form might not be immediately visible due to Svelte client:load hydration
@@ -55,10 +63,17 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
     console.log('Submitting registration...');
     const submitButton = page.locator('form button[type="submit"]').first();
     await submitButton.waitFor({ state: 'visible' });
-    await submitButton.click();
 
-    // Wait a moment for the API call to complete
-    await page.waitForTimeout(3000);
+    // Use evaluate for more reliable click (similar to season tests fix)
+    await submitButton.evaluate((btn) => (btn as HTMLButtonElement).click());
+
+    // Wait for network request to complete
+    await page.waitForResponse(
+      (response) => response.url().includes('graphql') && response.status() === 200,
+      { timeout: 15000 }
+    ).catch(() => {
+      console.log('No GraphQL response detected, continuing anyway...');
+    });
 
     // Log the page content for debugging
     const pageText = await page.textContent('body');
@@ -82,11 +97,8 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
 
   test('verify resend verification page works', async ({ page }) => {
     // Navigate directly to resend verification page
-    await page.goto('/auth/resend-verification');
-    await page.waitForLoadState('networkidle');
-
-    // Wait for client-side hydration
-    await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
+    await page.goto('/auth/resend-verification', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForAuthForm(page);
     await page.waitForTimeout(2000);
 
     // Check page loaded correctly

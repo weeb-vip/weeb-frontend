@@ -1,0 +1,236 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e3]:
+    - link "weeb.vip weeb.vip" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e5]
+      - generic [ref=e6]: weeb.vip
+    - generic [ref=e7]:
+      - link "Home" [ref=e8] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e9] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e10] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e11] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e85]:
+      - img
+      - searchbox [ref=e86]
+      - generic: /
+    - generic [ref=e18]:
+      - button "Toggle title language" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - generic [ref=e23]: EN
+      - generic [ref=e87]:
+        - button "Login" [ref=e88] [cursor=pointer]:
+          - generic [ref=e89]: Login
+        - button "Register" [ref=e90] [cursor=pointer]:
+          - generic [ref=e91]: Register
+  - main [ref=e28]:
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - heading "Browse Anime" [level=1] [ref=e32]
+        - generic [ref=e33]:
+          - img
+          - textbox "Search by title, studio, genre..." [ref=e34]
+      - generic [ref=e35]:
+        - generic [ref=e37]: Genres
+        - generic [ref=e38]:
+          - combobox [ref=e39] [cursor=pointer]:
+            - option "All" [selected]
+            - option "Airing"
+            - option "Finished"
+            - option "Upcoming"
+          - combobox [ref=e40] [cursor=pointer]:
+            - option "All years" [selected]
+            - option "2027"
+            - option "2026"
+            - option "2025"
+            - option "2024"
+            - option "2023"
+            - option "2022"
+            - option "2021"
+            - option "2020"
+            - option "2019"
+            - option "2018"
+            - option "2017"
+            - option "2016"
+            - option "2015"
+            - option "2014"
+            - option "2013"
+            - option "2012"
+            - option "2011"
+            - option "2010"
+            - option "2009"
+            - option "2008"
+            - option "2007"
+            - option "2006"
+            - option "2005"
+            - option "2004"
+            - option "2003"
+            - option "2002"
+            - option "2001"
+            - option "2000"
+            - option "1999"
+            - option "1998"
+            - option "1997"
+            - option "1996"
+            - option "1995"
+            - option "1994"
+            - option "1993"
+            - option "1992"
+            - option "1991"
+            - option "1990"
+          - combobox [ref=e41] [cursor=pointer]:
+            - option "Relevance" [selected]
+            - option "Score"
+            - option "Newest"
+            - option "A-Z"
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - heading "Browse by Genre" [level=2] [ref=e44]
+          - paragraph [ref=e45]: Explore anime by category
+        - generic [ref=e92]:
+          - button "😂 Comedy 91" [ref=e93] [cursor=pointer]:
+            - generic [ref=e94]: 😂
+            - generic [ref=e95]: Comedy
+            - generic [ref=e96]: "91"
+          - button "✨ Fantasy 79" [ref=e97] [cursor=pointer]:
+            - generic [ref=e98]: ✨
+            - generic [ref=e99]: Fantasy
+            - generic [ref=e100]: "79"
+          - button "⚔️ Action 79" [ref=e101] [cursor=pointer]:
+            - generic [ref=e102]: ⚔️
+            - generic [ref=e103]: Action
+            - generic [ref=e104]: "79"
+          - button "🗺️ Adventure 73" [ref=e105] [cursor=pointer]:
+            - generic [ref=e106]: 🗺️
+            - generic [ref=e107]: Adventure
+            - generic [ref=e108]: "73"
+          - button "🚀 Sci-Fi 59" [ref=e109] [cursor=pointer]:
+            - generic [ref=e110]: 🚀
+            - generic [ref=e111]: Sci-Fi
+            - generic [ref=e112]: "59"
+          - button "🎭 Drama 48" [ref=e113] [cursor=pointer]:
+            - generic [ref=e114]: 🎭
+            - generic [ref=e115]: Drama
+            - generic [ref=e116]: "48"
+          - button "💕 Romance 33" [ref=e117] [cursor=pointer]:
+            - generic [ref=e118]: 💕
+            - generic [ref=e119]: Romance
+            - generic [ref=e120]: "33"
+          - button "🔍 Mystery 19" [ref=e121] [cursor=pointer]:
+            - generic [ref=e122]: 🔍
+            - generic [ref=e123]: Mystery
+            - generic [ref=e124]: "19"
+          - button "👁️ Supernatural 19" [ref=e125] [cursor=pointer]:
+            - generic [ref=e126]: 👁️
+            - generic [ref=e127]: Supernatural
+            - generic [ref=e128]: "19"
+          - button "🔥 Ecchi 11" [ref=e129] [cursor=pointer]:
+            - generic [ref=e130]: 🔥
+            - generic [ref=e131]: Ecchi
+            - generic [ref=e132]: "11"
+          - button "☀️ Slice of Life 8" [ref=e133] [cursor=pointer]:
+            - generic [ref=e134]: ☀️
+            - generic [ref=e135]: Slice of Life
+            - generic [ref=e136]: "8"
+          - button "👻 Horror 8" [ref=e137] [cursor=pointer]:
+            - generic [ref=e138]: 👻
+            - generic [ref=e139]: Horror
+            - generic [ref=e140]: "8"
+          - button "🔞 Hentai 8" [ref=e141] [cursor=pointer]:
+            - generic [ref=e142]: 🔞
+            - generic [ref=e143]: Hentai
+            - generic [ref=e144]: "8"
+          - button "⚽ Sports 7" [ref=e145] [cursor=pointer]:
+            - generic [ref=e146]: ⚽
+            - generic [ref=e147]: Sports
+            - generic [ref=e148]: "7"
+          - button "🎨 Avant Garde 7" [ref=e149] [cursor=pointer]:
+            - generic [ref=e150]: 🎨
+            - generic [ref=e151]: Avant Garde
+            - generic [ref=e152]: "7"
+          - button "😰 Suspense 6" [ref=e153] [cursor=pointer]:
+            - generic [ref=e154]: 😰
+            - generic [ref=e155]: Suspense
+            - generic [ref=e156]: "6"
+          - button "📺 FantasyFantasy 5" [ref=e157] [cursor=pointer]:
+            - generic [ref=e158]: 📺
+            - generic [ref=e159]: FantasyFantasy
+            - generic [ref=e160]: "5"
+          - button "🍳 Gourmet 5" [ref=e161] [cursor=pointer]:
+            - generic [ref=e162]: 🍳
+            - generic [ref=e163]: Gourmet
+            - generic [ref=e164]: "5"
+          - button "📺 RomanceRomance 4" [ref=e165] [cursor=pointer]:
+            - generic [ref=e166]: 📺
+            - generic [ref=e167]: RomanceRomance
+            - generic [ref=e168]: "4"
+          - button "🏆 Award Winning 4" [ref=e169] [cursor=pointer]:
+            - generic [ref=e170]: 🏆
+            - generic [ref=e171]: Award Winning
+            - generic [ref=e172]: "4"
+          - button "👬 Boys Love 4" [ref=e173] [cursor=pointer]:
+            - generic [ref=e174]: 👬
+            - generic [ref=e175]: Boys Love
+            - generic [ref=e176]: "4"
+          - button "📺 Sci-FiSci-Fi 3" [ref=e177] [cursor=pointer]:
+            - generic [ref=e178]: 📺
+            - generic [ref=e179]: Sci-FiSci-Fi
+            - generic [ref=e180]: "3"
+          - button "👭 Girls Love 3" [ref=e181] [cursor=pointer]:
+            - generic [ref=e182]: 👭
+            - generic [ref=e183]: Girls Love
+            - generic [ref=e184]: "3"
+          - button "📺 DramaDrama 2" [ref=e185] [cursor=pointer]:
+            - generic [ref=e186]: 📺
+            - generic [ref=e187]: DramaDrama
+            - generic [ref=e188]: "2"
+          - button "💋 Erotica 2" [ref=e189] [cursor=pointer]:
+            - generic [ref=e190]: 💋
+            - generic [ref=e191]: Erotica
+            - generic [ref=e192]: "2"
+          - button "📺 EcchiEcchi 1" [ref=e193] [cursor=pointer]:
+            - generic [ref=e194]: 📺
+            - generic [ref=e195]: EcchiEcchi
+            - generic [ref=e196]: "1"
+          - button "📺 ComedyComedy 1" [ref=e197] [cursor=pointer]:
+            - generic [ref=e198]: 📺
+            - generic [ref=e199]: ComedyComedy
+            - generic [ref=e200]: "1"
+          - button "📺 AdventureAdventure 1" [ref=e201] [cursor=pointer]:
+            - generic [ref=e202]: 📺
+            - generic [ref=e203]: AdventureAdventure
+            - generic [ref=e204]: "1"
+  - contentinfo [ref=e48]:
+    - generic [ref=e49]: © 2026 weeb.vip
+    - generic [ref=e50]:
+      - link "About" [ref=e51] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e52] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e53] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e54]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"
+  - button "🛠️ Dev Panel" [ref=e57] [cursor=pointer]:
+    - text: 🛠️
+    - generic [ref=e58]: Dev Panel
+  - generic [ref=e61]:
+    - button "Menu" [ref=e62]:
+      - img [ref=e64]
+      - generic: Menu
+    - button "Inspect" [ref=e68]:
+      - img [ref=e70]
+      - generic: Inspect
+    - button "Audit" [ref=e72]:
+      - generic [ref=e73]:
+        - img [ref=e74]
+        - img [ref=e205]
+      - generic: Audit
+    - button "Settings" [ref=e80]:
+      - img [ref=e82]
+      - generic: Settings

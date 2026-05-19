@@ -1,0 +1,680 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e3]:
+    - link "weeb.vip weeb.vip" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e5]
+      - generic [ref=e6]: weeb.vip
+    - generic [ref=e7]:
+      - link "Home" [ref=e8] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e9] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e10] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e11] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e14]:
+      - img
+      - searchbox [ref=e15]
+      - generic: /
+    - generic [ref=e16]:
+      - button "Toggle title language" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e21]: EN
+      - generic [ref=e80]:
+        - button "Login" [ref=e81] [cursor=pointer]:
+          - generic [ref=e82]: Login
+        - button "Register" [ref=e83] [cursor=pointer]:
+          - generic [ref=e84]: Register
+  - main [ref=e26]:
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - heading "Browse Anime" [level=1] [ref=e30]
+        - generic [ref=e31]:
+          - img
+          - textbox "Search by title, studio, genre..." [ref=e32]: Action
+          - button "Clear search" [ref=e149] [cursor=pointer]:
+            - img [ref=e150]
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - generic [ref=e35]: Genres
+          - generic [ref=e152]:
+            - button "AdventureAdventure" [ref=e153] [cursor=pointer]
+            - button "ComedyComedy" [ref=e154] [cursor=pointer]
+            - button "EcchiEcchi" [ref=e155] [cursor=pointer]
+            - button "FantasyFantasy" [ref=e156] [cursor=pointer]
+            - button "MysteryMystery" [ref=e157] [cursor=pointer]
+            - button "RomanceRomance" [ref=e158] [cursor=pointer]
+            - button "Sci-FiSci-Fi" [ref=e159] [cursor=pointer]
+            - button "Action" [ref=e160] [cursor=pointer]
+            - button "ActionAction" [ref=e161] [cursor=pointer]
+            - button "Adventure" [ref=e162] [cursor=pointer]
+            - button "+15 more" [ref=e163] [cursor=pointer]
+        - generic [ref=e36]:
+          - combobox [ref=e37] [cursor=pointer]:
+            - option "All" [selected]
+            - option "Airing"
+            - option "Finished"
+            - option "Upcoming"
+          - combobox [ref=e38] [cursor=pointer]:
+            - option "All years" [selected]
+            - option "2027"
+            - option "2026"
+            - option "2025"
+            - option "2024"
+            - option "2023"
+            - option "2022"
+            - option "2021"
+            - option "2020"
+            - option "2019"
+            - option "2018"
+            - option "2017"
+            - option "2016"
+            - option "2015"
+            - option "2014"
+            - option "2013"
+            - option "2012"
+            - option "2011"
+            - option "2010"
+            - option "2009"
+            - option "2008"
+            - option "2007"
+            - option "2006"
+            - option "2005"
+            - option "2004"
+            - option "2003"
+            - option "2002"
+            - option "2001"
+            - option "2000"
+            - option "1999"
+            - option "1998"
+            - option "1997"
+            - option "1996"
+            - option "1995"
+            - option "1994"
+            - option "1993"
+            - option "1992"
+            - option "1991"
+            - option "1990"
+          - combobox [ref=e39] [cursor=pointer]:
+            - option "Relevance" [selected]
+            - option "Score"
+            - option "Newest"
+            - option "A-Z"
+      - generic [ref=e165]:
+        - generic [ref=e166]: "Active filters:"
+        - button "Action" [ref=e167] [cursor=pointer]:
+          - text: Action
+          - img [ref=e169]
+        - button "Clear all" [ref=e171] [cursor=pointer]
+      - generic [ref=e172]:
+        - paragraph [ref=e173]:
+          - strong [ref=e174]: "32"
+          - text: results for 'Action'
+        - group "View mode" [ref=e175]:
+          - button "Grid view" [ref=e176] [cursor=pointer]:
+            - img [ref=e177]
+          - button "List view" [ref=e182] [cursor=pointer]:
+            - img [ref=e183]
+      - generic [ref=e184]:
+        - 'link "Crayon Shin-chan Movie 01: Action Kamen vs. Haigure Maou 7.0 By finding a rare Action Kamen card, Shinnosuke Nohara and his family end up being chosen to go to a parallel world and ... 1 episodes ★ 7.0 Action Adventure Comedy Crayon Shin-chan Movie 01: Action Kamen vs. Haigure Maou 1993 · Shin-Ei Animation" [ref=e185] [cursor=pointer]':
+          - /url: /show/3259d28c-6829-457d-83e3-ce62df125632
+          - generic [ref=e186]:
+            - 'img "Crayon Shin-chan Movie 01: Action Kamen vs. Haigure Maou" [ref=e188]'
+            - generic [ref=e189]: "7.0"
+            - generic:
+              - generic:
+                - paragraph: By finding a rare Action Kamen card, Shinnosuke Nohara and his family end up being chosen to go to a parallel world and ...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.0
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e190]: "Crayon Shin-chan Movie 01: Action Kamen vs. Haigure Maou"
+          - generic [ref=e191]: 1993 · Shin-Ei Animation
+        - link "Sanda The story starts with Sanda, a second year middle school student, getting attacked with a kitchen knife by his classmate... Action Mystery Sanda 2025 · Science SARU" [ref=e192] [cursor=pointer]:
+          - /url: /show/feebff32-948d-4215-8715-8c9dbbc5548b
+          - generic [ref=e193]:
+            - img "Sanda" [ref=e195]
+            - generic:
+              - generic:
+                - paragraph: The story starts with Sanda, a second year middle school student, getting attacked with a kitchen knife by his classmate...
+                - generic:
+                  - generic: Action
+                  - generic: Mystery
+          - generic [ref=e196]: Sanda
+          - generic [ref=e197]: 2025 · Science SARU
+        - 'link "Shikizakura 5.8 Shikizakura: where cherry blossoms are in full bloom while trees are colored with autumn leaves. In this special place, ... 12 episodes ★ 5.8 Action Drama Sci-Fi Shikizakura 2021 · Sublimation" [ref=e198] [cursor=pointer]':
+          - /url: /show/fc14d04e-a6bc-4586-982e-4b4aeb2f0818
+          - generic [ref=e199]:
+            - img "Shikizakura" [ref=e201]
+            - generic [ref=e202]: "5.8"
+            - generic:
+              - generic:
+                - paragraph: "Shikizakura: where cherry blossoms are in full bloom while trees are colored with autumn leaves. In this special place, ..."
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 5.8
+                - generic:
+                  - generic: Action
+                  - generic: Drama
+                  - generic: Sci-Fi
+          - generic [ref=e203]: Shikizakura
+          - generic [ref=e204]: 2021 · Sublimation
+        - 'link "The Seven Deadly Sins the Movie 2: Cursed By Light 7.1 Meliodas and his friends jump back into action, when the new era of peace is threatened by a powerful magical alliance t... 1 episodes ★ 7.1 Action Adventure Fantasy The Seven Deadly Sins the Movie 2: Cursed By Light 2021 · Studio Deen" [ref=e205] [cursor=pointer]':
+          - /url: /show/fb9299c6-d9ec-4e8d-b5e7-3b92bc84adfe
+          - generic [ref=e206]:
+            - 'img "The Seven Deadly Sins the Movie 2: Cursed By Light" [ref=e208]'
+            - generic [ref=e209]: "7.1"
+            - generic:
+              - generic:
+                - paragraph: Meliodas and his friends jump back into action, when the new era of peace is threatened by a powerful magical alliance t...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.1
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e210]: "The Seven Deadly Sins the Movie 2: Cursed By Light"
+          - generic [ref=e211]: 2021 · Studio Deen
+        - link "Battle Girl High School 5.8 Based on COLOPL's school action role-playing game. Set in the year 2045. The world has been contaminated by Irousu (myst... 12 episodes ★ 5.8 Action Sci-Fi Battle Girl High School 2017 · SILVER LINK." [ref=e212] [cursor=pointer]:
+          - /url: /show/f8c192df-20c4-4396-92de-924c9ac21565
+          - generic [ref=e213]:
+            - img "Battle Girl High School" [ref=e215]
+            - generic [ref=e216]: "5.8"
+            - generic:
+              - generic:
+                - paragraph: Based on COLOPL's school action role-playing game. Set in the year 2045. The world has been contaminated by Irousu (myst...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 5.8
+                - generic:
+                  - generic: Action
+                  - generic: Sci-Fi
+          - generic [ref=e217]: Battle Girl High School
+          - generic [ref=e218]: 2017 · SILVER LINK.
+        - link "Samurai Champloo 8.5 Fuu Kasumi is a young and clumsy waitress who spends her days peacefully working in a small teahouse. That is, until she... 26 episodes ★ 8.5 Action Adventure Comedy Samurai Champloo 2004 · Manglobe" [ref=e219] [cursor=pointer]:
+          - /url: /show/f5cae2ac-e13b-4ace-acac-82ec41063c93
+          - generic [ref=e220]:
+            - img "Samurai Champloo" [ref=e222]
+            - generic [ref=e223]: "8.5"
+            - generic:
+              - generic:
+                - paragraph: Fuu Kasumi is a young and clumsy waitress who spends her days peacefully working in a small teahouse. That is, until she...
+                - generic:
+                  - generic: 26 episodes
+                  - generic: ★ 8.5
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e224]: Samurai Champloo
+          - generic [ref=e225]: 2004 · Manglobe
+        - link "GATE 7.7 Off-duty Japan Self-Defense Forces (JSDF) officer and otaku Youji Itami is on his way to attend a doujin convention in G... 12 episodes ★ 7.7 Action Adventure Fantasy GATE 2015 · A-1 Pictures" [ref=e226] [cursor=pointer]:
+          - /url: /show/f5aac547-6e7a-4aa2-9b14-33252139c806
+          - generic [ref=e227]:
+            - img "GATE" [ref=e229]
+            - generic [ref=e230]: "7.7"
+            - generic:
+              - generic:
+                - paragraph: Off-duty Japan Self-Defense Forces (JSDF) officer and otaku Youji Itami is on his way to attend a doujin convention in G...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 7.7
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e231]: GATE
+          - generic [ref=e232]: 2015 · A-1 Pictures
+        - 'link "Deadman Wonderland: The Red Knife Wielder 6.9 Two years after the catastrophic tidal wave that swept over Japan, police officer Kiyomasa Senji is trying to make the w... 1 episodes ★ 6.9 Action Horror Sci-Fi Deadman Wonderland: The Red Knife Wielder 2011 · Manglobe" [ref=e233] [cursor=pointer]':
+          - /url: /show/f36ce375-5965-42b6-9f4c-bba8b8987ed5
+          - generic [ref=e234]:
+            - 'img "Deadman Wonderland: The Red Knife Wielder" [ref=e236]'
+            - generic [ref=e237]: "6.9"
+            - generic:
+              - generic:
+                - paragraph: Two years after the catastrophic tidal wave that swept over Japan, police officer Kiyomasa Senji is trying to make the w...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.9
+                - generic:
+                  - generic: Action
+                  - generic: Horror
+                  - generic: Sci-Fi
+          - generic [ref=e238]: "Deadman Wonderland: The Red Knife Wielder"
+          - generic [ref=e239]: 2011 · Manglobe
+        - link "Ali Baba to 40-hiki no Touzoku 5.5 A film produced for Toei's 20th anniversary. A boy who is the descendant of the leader of the theives who met a grisly f... 1 episodes ★ 5.5 Action Fantasy Ali Baba to 40-hiki no Touzoku 1971 · Toei Animation" [ref=e240] [cursor=pointer]:
+          - /url: /show/f209c75e-465f-4213-8c3b-8b56bd1bcf90
+          - generic [ref=e241]:
+            - img "Ali Baba to 40-hiki no Touzoku" [ref=e243]
+            - generic [ref=e244]: "5.5"
+            - generic:
+              - generic:
+                - paragraph: A film produced for Toei's 20th anniversary. A boy who is the descendant of the leader of the theives who met a grisly f...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 5.5
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+          - generic [ref=e245]: Ali Baba to 40-hiki no Touzoku
+          - generic [ref=e246]: 1971 · Toei Animation
+        - 'link "Bayonetta: Bloody Fate 6.6 Driven to recover her memories after waking in a coffin at the bottom of a lake 20 years ago, Bayonetta hunts down the f... 1 episodes ★ 6.6 Action Fantasy Bayonetta: Bloody Fate 2013 · Gonzo" [ref=e247] [cursor=pointer]':
+          - /url: /show/ee7d64ba-e227-464f-9e6d-142f5a4a116f
+          - generic [ref=e248]:
+            - 'img "Bayonetta: Bloody Fate" [ref=e250]'
+            - generic [ref=e251]: "6.6"
+            - generic:
+              - generic:
+                - paragraph: Driven to recover her memories after waking in a coffin at the bottom of a lake 20 years ago, Bayonetta hunts down the f...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.6
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+          - generic [ref=e252]: "Bayonetta: Bloody Fate"
+          - generic [ref=e253]: 2013 · Gonzo
+        - link "Throne of Seal 2nd Season 8.2 Revealing himself to be a Dual Knight, Long Hao Chen triumphs in his match within his temple and advances to the finals.... 182 episodes ★ 8.2 Action Adventure Fantasy Throne of Seal 2nd Season 2022 · Shenman Entertainment" [ref=e254] [cursor=pointer]:
+          - /url: /show/ed2178a3-70e4-441e-9fd6-5b0c8cc391c1
+          - generic [ref=e255]:
+            - img "Throne of Seal 2nd Season" [ref=e257]
+            - generic [ref=e258]: "8.2"
+            - generic:
+              - generic:
+                - paragraph: Revealing himself to be a Dual Knight, Long Hao Chen triumphs in his match within his temple and advances to the finals....
+                - generic:
+                  - generic: 182 episodes
+                  - generic: ★ 8.2
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e259]: Throne of Seal 2nd Season
+          - generic [ref=e260]: 2022 · Shenman Entertainment
+        - link "Gunslinger Stratos 6.0 Animated movie of the popular online multi-player double gun action game Gunslinger Stratos 2 which was streamed on the ... 1 episodes ★ 6.0 Action Sci-Fi Gunslinger Stratos 2014 · None found" [ref=e261] [cursor=pointer]:
+          - /url: /show/ecff9f7e-7764-48f0-9682-f8906e521f43
+          - generic [ref=e262]:
+            - img "Gunslinger Stratos" [ref=e264]
+            - generic [ref=e265]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: Animated movie of the popular online multi-player double gun action game Gunslinger Stratos 2 which was streamed on the ...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.0
+                - generic:
+                  - generic: Action
+                  - generic: Sci-Fi
+          - generic [ref=e266]: Gunslinger Stratos
+          - generic [ref=e267]: 2014 · None found
+        - link "C³ - CubexCursedxCurious 6.6 From the light novel series written by Minase Hazuki, comes a story of love, action, and comedy. Yachi Haruaki is a high... 12 episodes ★ 6.6 Action Comedy Supernatural C³ - CubexCursedxCurious 2011 · SILVER LINK." [ref=e268] [cursor=pointer]:
+          - /url: /show/ebecf7a2-3dad-47cc-9758-e49fbf5d1b65
+          - generic [ref=e269]:
+            - img "C³ - CubexCursedxCurious" [ref=e271]
+            - generic [ref=e272]: "6.6"
+            - generic:
+              - generic:
+                - paragraph: From the light novel series written by Minase Hazuki, comes a story of love, action, and comedy. Yachi Haruaki is a high...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.6
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+                  - generic: Supernatural
+          - generic [ref=e273]: C³ - CubexCursedxCurious
+          - generic [ref=e274]: 2011 · SILVER LINK.
+        - 'link "High & Low: G-Sword 4.8 Based on the High & Low live-action entertainment project. 5 episodes ★ 4.8 Action Drama High & Low: G-Sword 2017 · None found" [ref=e275] [cursor=pointer]':
+          - /url: /show/ebd0a67a-2b87-4a82-84a6-2e7329516a62
+          - generic [ref=e276]:
+            - 'img "High & Low: G-Sword" [ref=e278]'
+            - generic [ref=e279]: "4.8"
+            - generic:
+              - generic:
+                - paragraph: Based on the High & Low live-action entertainment project.
+                - generic:
+                  - generic: 5 episodes
+                  - generic: ★ 4.8
+                - generic:
+                  - generic: Action
+                  - generic: Drama
+          - generic [ref=e280]: "High & Low: G-Sword"
+          - generic [ref=e281]: 2017 · None found
+        - link "Blue Archive the Animation 7.0 Kivotos is a federal megalopolis comprising thousands of schools and is led by the General Student Council (GSC), which ... 12 episodes ★ 7.0 Action Fantasy Blue Archive the Animation 2024 · Yostar Pictures" [ref=e282] [cursor=pointer]:
+          - /url: /show/eb924e1a-3a77-463f-8a45-5c2602fc169a
+          - generic [ref=e283]:
+            - img "Blue Archive the Animation" [ref=e285]
+            - generic [ref=e286]: "7.0"
+            - generic:
+              - generic:
+                - paragraph: Kivotos is a federal megalopolis comprising thousands of schools and is led by the General Student Council (GSC), which ...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 7.0
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+          - generic [ref=e287]: Blue Archive the Animation
+          - generic [ref=e288]: 2024 · Yostar Pictures
+        - link "The Rising of the Shield Hero Season 3 7.1 Though he has successfully repelled the latest Wave of Catastrophe, Naofumi Iwatani—the Shield Hero—has no time to rest.... 12 episodes ★ 7.1 Action Adventure Drama The Rising of the Shield Hero Season 3 2023 · Kinema Citrus" [ref=e289] [cursor=pointer]:
+          - /url: /show/eb1de4ad-08d7-4b84-843b-d6ae1ac8fe86
+          - generic [ref=e290]:
+            - img "The Rising of the Shield Hero Season 3" [ref=e292]
+            - generic [ref=e293]: "7.1"
+            - generic:
+              - generic:
+                - paragraph: Though he has successfully repelled the latest Wave of Catastrophe, Naofumi Iwatani—the Shield Hero—has no time to rest....
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 7.1
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Drama
+          - generic [ref=e294]: The Rising of the Shield Hero Season 3
+          - generic [ref=e295]: 2023 · Kinema Citrus
+        - link "Tondemo Senshi Muteking 6.3 Twelve-year-old Linn Youki loyally supported his father when the world laughed at the scientist for saying that Earth wa... 56 episodes ★ 6.3 Action Comedy Sci-Fi Tondemo Senshi Muteking 1980 · Tatsunoko Production" [ref=e296] [cursor=pointer]:
+          - /url: /show/e8f1673f-9c5d-4aa4-98a7-acab711ea069
+          - generic [ref=e297]:
+            - img "Tondemo Senshi Muteking" [ref=e299]
+            - generic [ref=e300]: "6.3"
+            - generic:
+              - generic:
+                - paragraph: Twelve-year-old Linn Youki loyally supported his father when the world laughed at the scientist for saying that Earth wa...
+                - generic:
+                  - generic: 56 episodes
+                  - generic: ★ 6.3
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e301]: Tondemo Senshi Muteking
+          - generic [ref=e302]: 1980 · Tatsunoko Production
+        - link "Ten Little Gall Force 6.0 A super deformed parody which depicts the \"making of \" Eternal Story and Destruction. A very humorous behind-the-scenes ... 1 episodes ★ 6.0 Action Comedy Sci-Fi Ten Little Gall Force 1988 · AIC" [ref=e303] [cursor=pointer]:
+          - /url: /show/e80f5e5c-f8ba-4ea7-bd45-9d3c1ce7ab02
+          - generic [ref=e304]:
+            - img "Ten Little Gall Force" [ref=e306]
+            - generic [ref=e307]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: A super deformed parody which depicts the "making of " Eternal Story and Destruction. A very humorous behind-the-scenes ...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.0
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e308]: Ten Little Gall Force
+          - generic [ref=e309]: 1988 · AIC
+        - link "Overlord III 7.9 Following the horrific assault on the Re-Estize capital city, the Guardians of the Great Tomb of Nazarick return home to... 13 episodes ★ 7.9 Action Adventure Fantasy Overlord III 2018 · Madhouse" [ref=e310] [cursor=pointer]:
+          - /url: /show/e456565b-b016-4d1a-9ddb-124e9d082e87
+          - generic [ref=e311]:
+            - img "Overlord III" [ref=e313]
+            - generic [ref=e314]: "7.9"
+            - generic:
+              - generic:
+                - paragraph: Following the horrific assault on the Re-Estize capital city, the Guardians of the Great Tomb of Nazarick return home to...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 7.9
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e315]: Overlord III
+          - generic [ref=e316]: 2018 · Madhouse
+        - link "Golden Kamuy Season 3 8.4 After obtaining information about Asirpa from the foreteller Inkarmat, Saichi \"The Immortal\" Sugimoto, Genjirou Tanigaki... 12 episodes ★ 8.4 Action Adventure Golden Kamuy Season 3 2020 · Geno Studio" [ref=e317] [cursor=pointer]:
+          - /url: /show/df37703f-4fa4-4c83-bbfe-71dbdffa63ff
+          - generic [ref=e318]:
+            - img "Golden Kamuy Season 3" [ref=e320]
+            - generic [ref=e321]: "8.4"
+            - generic:
+              - generic:
+                - paragraph: After obtaining information about Asirpa from the foreteller Inkarmat, Saichi "The Immortal" Sugimoto, Genjirou Tanigaki...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 8.4
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+          - generic [ref=e322]: Golden Kamuy Season 3
+          - generic [ref=e323]: 2020 · Geno Studio
+        - link "Digimon Adventure tri. Determination 7.4 Infected Digimon—digital monsters who have begun acting in a berserk manner and experiencing a bizarre increase in power... 1 episodes ★ 7.4 Action Adventure Comedy Digimon Adventure tri. Determination 2016 · Toei Animation" [ref=e324] [cursor=pointer]:
+          - /url: /show/de34ffd9-c22a-490f-af62-50d7ca0e9710
+          - generic [ref=e325]:
+            - img "Digimon Adventure tri. Determination" [ref=e327]
+            - generic [ref=e328]: "7.4"
+            - generic:
+              - generic:
+                - paragraph: Infected Digimon—digital monsters who have begun acting in a berserk manner and experiencing a bizarre increase in power...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.4
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e329]: Digimon Adventure tri. Determination
+          - generic [ref=e330]: 2016 · Toei Animation
+        - link "Full Metal Panic! 7.6 Mithril, a covert military institution using state-of-the-art technology to combat terrorist operations, assigns a speci... 24 episodes ★ 7.6 Action Comedy Sci-Fi Full Metal Panic! 2002 · Gonzo" [ref=e331] [cursor=pointer]:
+          - /url: /show/de03549c-e4b0-4b01-a0ef-e3602f19300c
+          - generic [ref=e332]:
+            - img "Full Metal Panic!" [ref=e334]
+            - generic [ref=e335]: "7.6"
+            - generic:
+              - generic:
+                - paragraph: Mithril, a covert military institution using state-of-the-art technology to combat terrorist operations, assigns a speci...
+                - generic:
+                  - generic: 24 episodes
+                  - generic: ★ 7.6
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e336]: Full Metal Panic!
+          - generic [ref=e337]: 2002 · Gonzo
+        - link "Shin Mashin Eiyuuden Wataru Majinzan 6.2 Set a few months after the original series, Wataru is called into action once again! 2 episodes ★ 6.2 Action Adventure Comedy Shin Mashin Eiyuuden Wataru Majinzan 1989 · Sunrise" [ref=e338] [cursor=pointer]:
+          - /url: /show/dd649406-0603-409c-86c5-43021da31479
+          - generic [ref=e339]:
+            - img "Shin Mashin Eiyuuden Wataru Majinzan" [ref=e341]
+            - generic [ref=e342]: "6.2"
+            - generic:
+              - generic:
+                - paragraph: Set a few months after the original series, Wataru is called into action once again!
+                - generic:
+                  - generic: 2 episodes
+                  - generic: ★ 6.2
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e343]: Shin Mashin Eiyuuden Wataru Majinzan
+          - generic [ref=e344]: 1989 · Sunrise
+        - link "A Certain Magical Index II 7.5 As tensions between the world of magic and Academy City continues to rise, Touma Kamijou and his hand of negation must f... 24 episodes ★ 7.5 Action Fantasy Sci-Fi A Certain Magical Index II 2010 · J.C.Staff" [ref=e345] [cursor=pointer]:
+          - /url: /show/dd5b42e4-fc64-4455-bdf2-6b38c23ba787
+          - generic [ref=e346]:
+            - img "A Certain Magical Index II" [ref=e348]
+            - generic [ref=e349]: "7.5"
+            - generic:
+              - generic:
+                - paragraph: As tensions between the world of magic and Academy City continues to rise, Touma Kamijou and his hand of negation must f...
+                - generic:
+                  - generic: 24 episodes
+                  - generic: ★ 7.5
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+                  - generic: Sci-Fi
+          - generic [ref=e350]: A Certain Magical Index II
+          - generic [ref=e351]: 2010 · J.C.Staff
+        - link "Skeleton Knight in Another World 7.1 After falling asleep while playing an online game, a man wakes up and finds himself transported to that game's world as ... 12 episodes ★ 7.1 Action Adventure Fantasy Skeleton Knight in Another World 2022 · Studio Kai" [ref=e352] [cursor=pointer]:
+          - /url: /show/dc1c8078-923d-47be-a7ba-d8728a32951a
+          - generic [ref=e353]:
+            - img "Skeleton Knight in Another World" [ref=e355]
+            - generic [ref=e356]: "7.1"
+            - generic:
+              - generic:
+                - paragraph: After falling asleep while playing an online game, a man wakes up and finds himself transported to that game's world as ...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 7.1
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e357]: Skeleton Knight in Another World
+          - generic [ref=e358]: 2022 · Studio Kai
+        - link "Legend of the Galactic Heroes Gaiden (1999) 8.1 Ginga Eiyuu Densetsu Gaiden (1999) is the second of two OVA adaptations of side stories from the Ginga Eiyuu Densetsu no... 28 episodes ★ 8.1 Action Drama Sci-Fi Legend of the Galactic Heroes Gaiden (1999) 1999 · K-Factory" [ref=e359] [cursor=pointer]:
+          - /url: /show/db484bfa-9316-4f01-b729-81d9e754cd34
+          - generic [ref=e360]:
+            - img "Legend of the Galactic Heroes Gaiden (1999)" [ref=e362]
+            - generic [ref=e363]: "8.1"
+            - generic:
+              - generic:
+                - paragraph: Ginga Eiyuu Densetsu Gaiden (1999) is the second of two OVA adaptations of side stories from the Ginga Eiyuu Densetsu no...
+                - generic:
+                  - generic: 28 episodes
+                  - generic: ★ 8.1
+                - generic:
+                  - generic: Action
+                  - generic: Drama
+                  - generic: Sci-Fi
+          - generic [ref=e364]: Legend of the Galactic Heroes Gaiden (1999)
+          - generic [ref=e365]: 1999 · K-Factory
+        - link "Mobile Suit Gundam Unicorn RE:0096 7.7 By the year 0096 of the Universal Century, a fragile peace emerges from the ashes of conflict. Sixteen-year-old student ... 22 episodes ★ 7.7 Action Drama Sci-Fi Mobile Suit Gundam Unicorn RE:0096 2016 · Sunrise" [ref=e366] [cursor=pointer]:
+          - /url: /show/d75e5e47-ebaa-48ed-ab1d-a10aeae73f94
+          - generic [ref=e367]:
+            - img "Mobile Suit Gundam Unicorn RE:0096" [ref=e369]
+            - generic [ref=e370]: "7.7"
+            - generic:
+              - generic:
+                - paragraph: By the year 0096 of the Universal Century, a fragile peace emerges from the ashes of conflict. Sixteen-year-old student ...
+                - generic:
+                  - generic: 22 episodes
+                  - generic: ★ 7.7
+                - generic:
+                  - generic: Action
+                  - generic: Drama
+                  - generic: Sci-Fi
+          - generic [ref=e371]: Mobile Suit Gundam Unicorn RE:0096
+          - generic [ref=e372]: 2016 · Sunrise
+        - link "Aquarion Evol 7.1 12,000 years after the events in Genesis Aquarion, humans live on the star Vega under constant threat of trans-dimension... 26 episodes ★ 7.1 Action Fantasy Romance Aquarion Evol 2012 · Satelight" [ref=e373] [cursor=pointer]:
+          - /url: /show/d2d31ae3-3e91-4da3-830e-88319497be6a
+          - generic [ref=e374]:
+            - img "Aquarion Evol" [ref=e376]
+            - generic [ref=e377]: "7.1"
+            - generic:
+              - generic:
+                - paragraph: 12,000 years after the events in Genesis Aquarion, humans live on the star Vega under constant threat of trans-dimension...
+                - generic:
+                  - generic: 26 episodes
+                  - generic: ★ 7.1
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e378]: Aquarion Evol
+          - generic [ref=e379]: 2012 · Satelight
+        - 'link "Cowboy Bebop: The Movie 8.4 Another day, another bounty—such is the life of the often unlucky crew of the Bebop. However, this routine is interrupte... 1 episodes ★ 8.4 Action Sci-Fi Cowboy Bebop: The Movie 2001 · Bones" [ref=e380] [cursor=pointer]':
+          - /url: /show/d17f6114-0a15-406a-aa70-d6de0b4a120a
+          - generic [ref=e381]:
+            - 'img "Cowboy Bebop: The Movie" [ref=e383]'
+            - generic [ref=e384]: "8.4"
+            - generic:
+              - generic:
+                - paragraph: Another day, another bounty—such is the life of the often unlucky crew of the Bebop. However, this routine is interrupte...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 8.4
+                - generic:
+                  - generic: Action
+                  - generic: Sci-Fi
+          - generic [ref=e385]: "Cowboy Bebop: The Movie"
+          - generic [ref=e386]: 2001 · Bones
+        - 'link "Babel II: Beyond Infinity 5.7 Life seems simple for Kouichi, a young student, until he learns that he is the reincarnation of an alien protector who c... 13 episodes ★ 5.7 Action Adventure Mystery Babel II: Beyond Infinity 2001 · Vega Entertainment" [ref=e387] [cursor=pointer]':
+          - /url: /show/d02ac903-dcbc-4dce-8180-636703b19a8a
+          - generic [ref=e388]:
+            - 'img "Babel II: Beyond Infinity" [ref=e390]'
+            - generic [ref=e391]: "5.7"
+            - generic:
+              - generic:
+                - paragraph: Life seems simple for Kouichi, a young student, until he learns that he is the reincarnation of an alien protector who c...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 5.7
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Mystery
+          - generic [ref=e392]: "Babel II: Beyond Infinity"
+          - generic [ref=e393]: 2001 · Vega Entertainment
+        - 'link "Crayon Shin-chan Movie 08: Arashi wo Yobu Jungle 7.4 An adventure set in a south island. Shinnosuke with his parents and friends joined a tour with the preview of Action Kam... 1 episodes ★ 7.4 Action Adventure Comedy Crayon Shin-chan Movie 08: Arashi wo Yobu Jungle 2000 · Shin-Ei Animation" [ref=e394] [cursor=pointer]':
+          - /url: /show/ce56205e-f9b5-4a17-b603-5d150e42b761
+          - generic [ref=e395]:
+            - 'img "Crayon Shin-chan Movie 08: Arashi wo Yobu Jungle" [ref=e397]'
+            - generic [ref=e398]: "7.4"
+            - generic:
+              - generic:
+                - paragraph: An adventure set in a south island. Shinnosuke with his parents and friends joined a tour with the preview of Action Kam...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.4
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e399]: "Crayon Shin-chan Movie 08: Arashi wo Yobu Jungle"
+          - generic [ref=e400]: 2000 · Shin-Ei Animation
+        - 'link "First Squad: The Moment of Truth 5.9 As the Second World War rages on throughout Europe and the German forces advance closer to Moscow, the days of the Sovie... 1 episodes ★ 5.9 Action Supernatural First Squad: The Moment of Truth 2009 · Studio 4°C" [ref=e401] [cursor=pointer]':
+          - /url: /show/cd5db096-e827-4a02-bfb2-fdcaef3b5a49
+          - generic [ref=e402]:
+            - 'img "First Squad: The Moment of Truth" [ref=e404]'
+            - generic [ref=e405]: "5.9"
+            - generic:
+              - generic:
+                - paragraph: As the Second World War rages on throughout Europe and the German forces advance closer to Moscow, the days of the Sovie...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 5.9
+                - generic:
+                  - generic: Action
+                  - generic: Supernatural
+          - generic [ref=e406]: "First Squad: The Moment of Truth"
+          - generic [ref=e407]: 2009 · Studio 4°C
+  - contentinfo [ref=e46]:
+    - generic [ref=e47]: © 2026 weeb.vip
+    - generic [ref=e48]:
+      - link "About" [ref=e49] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e50] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e51] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e52]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"
+  - button "🛠️ Dev Panel" [ref=e55] [cursor=pointer]:
+    - text: 🛠️
+    - generic [ref=e56]: Dev Panel
+  - generic [ref=e59]:
+    - button "Menu" [ref=e60]:
+      - img [ref=e62]
+      - generic: Menu
+    - button "Inspect" [ref=e66]:
+      - img [ref=e68]
+      - generic: Inspect
+    - button "Audit" [ref=e70]:
+      - generic [ref=e71]:
+        - img [ref=e72]
+        - img [ref=e408]
+      - generic: Audit
+    - button "Settings" [ref=e75]:
+      - img [ref=e77]
+      - generic: Settings

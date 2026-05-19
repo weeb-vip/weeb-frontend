@@ -1,0 +1,550 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "logo WEEB VIP wordmark" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img "logo" [ref=e7]
+        - img "WEEB VIP wordmark" [ref=e8]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: WEEB
+            - generic [ref=e11]: ウィーブ
+          - generic [ref=e13]: VIP
+      - generic [ref=e25]:
+        - button "Toggle title language" [ref=e27] [cursor=pointer]:
+          - img [ref=e28]
+          - generic [ref=e30]: EN
+        - button "Toggle dark mode" [ref=e31] [cursor=pointer]:
+          - img [ref=e32]
+  - main [ref=e39]:
+    - generic [ref=e41]:
+      - generic [ref=e43]:
+        - status "Loading image" [ref=e47]:
+          - generic [ref=e48]: Loading...
+        - generic [ref=e52]:
+          - 'heading "The Most Heretical Last Boss Queen: From Villainess to Savior Season 2" [level=1] [ref=e53]'
+          - generic [ref=e54]:
+            - paragraph [ref=e55]: "Episode 7: The Cruel Queen and Alliance Negotiations"
+            - generic [ref=e56]:
+              - paragraph [ref=e57]: Airing Tue May 19th at 1:00 PM
+              - generic [ref=e58]:
+                - text: JST Broadcast
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Japanese TV broadcast time (in local time). Streaming services usually release with 3 hours after show ends.
+          - paragraph [ref=e59]: Second season of Higeki no Genkyou to Naru Saikyou Gedou Last Boss Joou wa Tami no Tame ni Tsukushimasu..
+          - generic [ref=e60]:
+            - link "More Info" [ref=e61] [cursor=pointer]:
+              - /url: /show/a244959d-a58f-4b39-8f16-31c13588063a
+              - button "More Info" [ref=e62]:
+                - generic [ref=e63]: More Info
+            - button "Add to List" [ref=e64] [cursor=pointer]:
+              - generic [ref=e65]: Add to List
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - heading "Currently Airing Anime" [level=1] [ref=e68]
+          - link "See all →" [ref=e69] [cursor=pointer]:
+            - /url: /airing
+        - generic [ref=e70]:
+          - generic [ref=e72]:
+            - link "Loading image" [ref=e73] [cursor=pointer]:
+              - /url: /show/a244959d-a58f-4b39-8f16-31c13588063a
+              - status "Loading image" [ref=e75]:
+                - generic [ref=e76]: Loading...
+            - generic [ref=e77]:
+              - 'link "The Most Heretical Last Boss Queen: From Villainess to Savior Season 2 No tags The Cruel Queen and Alliance Negotiations episode 7  Airing in 9h" [ref=e78] [cursor=pointer]':
+                - /url: /show/a244959d-a58f-4b39-8f16-31c13588063a
+                - generic [ref=e80]: "The Most Heretical Last Boss Queen: From Villainess to Savior Season 2"
+                - generic [ref=e83]: No tags
+                - generic [ref=e85]: The Cruel Queen and Alliance Negotiations
+                - generic [ref=e86]:
+                  - generic [ref=e87]: episode 7
+                  - generic [ref=e88]:
+                    - generic [ref=e89]: 
+                    - generic [ref=e90]: Airing in 9h
+              - button "Add to list" [ref=e93] [cursor=pointer]:
+                - generic [ref=e94]: Add to list
+          - generic [ref=e96]:
+            - link "Loading image" [ref=e97] [cursor=pointer]:
+              - /url: /show/bf2e1820-480e-4748-9430-6dd57b5ef63d
+              - status "Loading image" [ref=e99]:
+                - generic [ref=e100]: Loading...
+            - generic [ref=e101]:
+              - link "I Want to End this Love Game Comedy Romance My Childhood Friend Wants to Sleep Over episode 6  Airing in 10h" [ref=e102] [cursor=pointer]:
+                - /url: /show/bf2e1820-480e-4748-9430-6dd57b5ef63d
+                - generic [ref=e104]: I Want to End this Love Game
+                - generic [ref=e106]:
+                  - generic [ref=e107]: Comedy
+                  - generic [ref=e108]: Romance
+                - generic [ref=e110]: My Childhood Friend Wants to Sleep Over
+                - generic [ref=e111]:
+                  - generic [ref=e112]: episode 6
+                  - generic [ref=e113]:
+                    - generic [ref=e114]: 
+                    - generic [ref=e115]: Airing in 10h
+              - button "Add to list" [ref=e118] [cursor=pointer]:
+                - generic [ref=e119]: Add to list
+          - generic [ref=e121]:
+            - link "Loading image" [ref=e122] [cursor=pointer]:
+              - /url: /show/f7069875-124e-480f-adef-6fee26b0e9b0
+              - status "Loading image" [ref=e124]:
+                - generic [ref=e125]: Loading...
+            - generic [ref=e126]:
+              - link "Marriagetoxin No tags The Bug Master's Wedding episode 7  Airing in 10h" [ref=e127] [cursor=pointer]:
+                - /url: /show/f7069875-124e-480f-adef-6fee26b0e9b0
+                - generic [ref=e129]: Marriagetoxin
+                - generic [ref=e132]: No tags
+                - generic [ref=e134]: The Bug Master's Wedding
+                - generic [ref=e135]:
+                  - generic [ref=e136]: episode 7
+                  - generic [ref=e137]:
+                    - generic [ref=e138]: 
+                    - generic [ref=e139]: Airing in 10h
+              - button "Add to list" [ref=e142] [cursor=pointer]:
+                - generic [ref=e143]: Add to list
+          - generic [ref=e145]:
+            - link "Loading image" [ref=e146] [cursor=pointer]:
+              - /url: /show/2435721f-624e-43f3-b121-ad7813da12d0
+              - status "Loading image" [ref=e148]:
+                - generic [ref=e149]: Loading...
+            - generic [ref=e150]:
+              - link "I Made Friends with the Second Prettiest Girl in My Class No tags First Date With a Friend episode 7  Airing in 11h" [ref=e151] [cursor=pointer]:
+                - /url: /show/2435721f-624e-43f3-b121-ad7813da12d0
+                - generic [ref=e153]: I Made Friends with the Second Prettiest Girl in My Class
+                - generic [ref=e156]: No tags
+                - generic [ref=e158]: First Date With a Friend
+                - generic [ref=e159]:
+                  - generic [ref=e160]: episode 7
+                  - generic [ref=e161]:
+                    - generic [ref=e162]: 
+                    - generic [ref=e163]: Airing in 11h
+              - button "Add to list" [ref=e166] [cursor=pointer]:
+                - generic [ref=e167]: Add to list
+          - generic [ref=e169]:
+            - link "Loading image" [ref=e170] [cursor=pointer]:
+              - /url: /show/054a4aea-587d-41cf-a992-1e1499582ece
+              - status "Loading image" [ref=e172]:
+                - generic [ref=e173]: Loading...
+            - generic [ref=e174]:
+              - link "Even a Replica Can Fall in Love Drama Romance Supernatural レプリカは、探す。 episode 7  Airing in 11h" [ref=e175] [cursor=pointer]:
+                - /url: /show/054a4aea-587d-41cf-a992-1e1499582ece
+                - generic [ref=e177]: Even a Replica Can Fall in Love
+                - generic [ref=e179]:
+                  - generic [ref=e180]: Drama
+                  - generic [ref=e181]: Romance
+                  - generic [ref=e182]: Supernatural
+                - generic [ref=e184]: レプリカは、探す。
+                - generic [ref=e185]:
+                  - generic [ref=e186]: episode 7
+                  - generic [ref=e187]:
+                    - generic [ref=e188]: 
+                    - generic [ref=e189]: Airing in 11h
+              - button "Add to list" [ref=e192] [cursor=pointer]:
+                - generic [ref=e193]: Add to list
+          - text:   
+      - generic [ref=e194]:
+        - generic [ref=e195]:
+          - heading "Spring 2026 Anime" [level=1] [ref=e196]
+          - generic [ref=e197]:
+            - button "Spring 2026" [ref=e198] [cursor=pointer]
+            - button "Summer 2026" [ref=e199] [cursor=pointer]
+            - button "Fall 2026" [ref=e200] [cursor=pointer]
+          - text: 
+        - generic [ref=e202]:
+          - generic [ref=e204]:
+            - link "Loading image" [ref=e205] [cursor=pointer]:
+              - /url: /show/b192dd01-61bf-4d47-8410-02e6a8ad23f7
+              - status "Loading image" [ref=e207]:
+                - generic [ref=e208]: Loading...
+            - generic [ref=e209]:
+              - link "Ingoku Danchi Comedy Supernatural Erotica  12  3 min.  2026" [ref=e210] [cursor=pointer]:
+                - /url: /show/b192dd01-61bf-4d47-8410-02e6a8ad23f7
+                - generic [ref=e212]: Ingoku Danchi
+                - generic [ref=e214]:
+                  - generic [ref=e215]: Comedy
+                  - generic [ref=e216]: Supernatural
+                  - generic [ref=e217]: Erotica
+                - generic [ref=e218]:
+                  - generic [ref=e219]:
+                    - generic [ref=e220]: 
+                    - generic [ref=e221]: "12"
+                  - generic [ref=e222]:
+                    - generic [ref=e223]: 
+                    - generic [ref=e224]: 3 min.
+                  - generic [ref=e225]:
+                    - generic [ref=e226]: 
+                    - generic [ref=e227]: "2026"
+              - button "Add to list" [ref=e230] [cursor=pointer]:
+                - generic [ref=e231]: Add to list
+          - generic [ref=e233]:
+            - link "Loading image" [ref=e234] [cursor=pointer]:
+              - /url: /show/031e66c3-5d52-49d1-9cab-08fbea82cc7d
+              - status "Loading image" [ref=e236]:
+                - generic [ref=e237]: Loading...
+            - generic [ref=e238]:
+              - link "A Tale of the Secret Saint Action Adventure Fantasy  TBA  ~24 min  2026" [ref=e239] [cursor=pointer]:
+                - /url: /show/031e66c3-5d52-49d1-9cab-08fbea82cc7d
+                - generic [ref=e241]: A Tale of the Secret Saint
+                - generic [ref=e243]:
+                  - generic [ref=e244]: Action
+                  - generic [ref=e245]: Adventure
+                  - generic [ref=e246]: Fantasy
+                - generic [ref=e247]:
+                  - generic [ref=e248]:
+                    - generic [ref=e249]: 
+                    - generic [ref=e250]: TBA
+                  - generic "Estimated duration" [ref=e251]:
+                    - generic [ref=e252]: 
+                    - generic [ref=e253]: ~24 min
+                  - generic [ref=e254]:
+                    - generic [ref=e255]: 
+                    - generic [ref=e256]: "2026"
+              - button "Add to list" [ref=e259] [cursor=pointer]:
+                - generic [ref=e260]: Add to list
+          - generic [ref=e262]:
+            - link "Loading image" [ref=e263] [cursor=pointer]:
+              - /url: /show/f8a12ae2-dfb8-4b58-94d4-4f3deb8c6359
+              - status "Loading image" [ref=e265]:
+                - generic [ref=e266]: Loading...
+            - generic [ref=e267]:
+              - link "Botan Kamiina Fully Blossoms When Drunk Comedy Girls Love Gourmet  12  ~24 min  2026" [ref=e268] [cursor=pointer]:
+                - /url: /show/f8a12ae2-dfb8-4b58-94d4-4f3deb8c6359
+                - generic [ref=e270]: Botan Kamiina Fully Blossoms When Drunk
+                - generic [ref=e272]:
+                  - generic [ref=e273]: Comedy
+                  - generic [ref=e274]: Girls Love
+                  - generic [ref=e275]: Gourmet
+                - generic [ref=e276]:
+                  - generic [ref=e277]:
+                    - generic [ref=e278]: 
+                    - generic [ref=e279]: "12"
+                  - generic "Estimated duration" [ref=e280]:
+                    - generic [ref=e281]: 
+                    - generic [ref=e282]: ~24 min
+                  - generic [ref=e283]:
+                    - generic [ref=e284]: 
+                    - generic [ref=e285]: "2026"
+              - button "Add to list" [ref=e288] [cursor=pointer]:
+                - generic [ref=e289]: Add to list
+          - generic [ref=e291]:
+            - link "Loading image" [ref=e292] [cursor=pointer]:
+              - /url: /show/7c04dc99-4b6b-43c3-beea-c98b30b42cb3
+              - status "Loading image" [ref=e294]:
+                - generic [ref=e295]: Loading...
+            - generic [ref=e296]:
+              - link "Candy Caries Comedy Fantasy  5  ~24 min  2026" [ref=e297] [cursor=pointer]:
+                - /url: /show/7c04dc99-4b6b-43c3-beea-c98b30b42cb3
+                - generic [ref=e299]: Candy Caries
+                - generic [ref=e301]:
+                  - generic [ref=e302]: Comedy
+                  - generic [ref=e303]: Fantasy
+                - generic [ref=e304]:
+                  - generic [ref=e305]:
+                    - generic [ref=e306]: 
+                    - generic [ref=e307]: "5"
+                  - generic "Estimated duration" [ref=e308]:
+                    - generic [ref=e309]: 
+                    - generic [ref=e310]: ~24 min
+                  - generic [ref=e311]:
+                    - generic [ref=e312]: 
+                    - generic [ref=e313]: "2026"
+              - button "Add to list" [ref=e316] [cursor=pointer]:
+                - generic [ref=e317]: Add to list
+          - generic [ref=e319]:
+            - link "Loading image" [ref=e320] [cursor=pointer]:
+              - /url: /show/798bf757-0da3-40f1-be70-1a2791a9d35c
+              - status "Loading image" [ref=e322]:
+                - generic [ref=e323]: Loading...
+            - generic [ref=e324]:
+              - 'link "Hokuto no Ken: Fist of the North Star Action Drama Sci-Fi  12  ~24 min  2026" [ref=e325] [cursor=pointer]':
+                - /url: /show/798bf757-0da3-40f1-be70-1a2791a9d35c
+                - generic [ref=e327]: "Hokuto no Ken: Fist of the North Star"
+                - generic [ref=e329]:
+                  - generic [ref=e330]: Action
+                  - generic [ref=e331]: Drama
+                  - generic [ref=e332]: Sci-Fi
+                - generic [ref=e333]:
+                  - generic [ref=e334]:
+                    - generic [ref=e335]: 
+                    - generic [ref=e336]: "12"
+                  - generic "Estimated duration" [ref=e337]:
+                    - generic [ref=e338]: 
+                    - generic [ref=e339]: ~24 min
+                  - generic [ref=e340]:
+                    - generic [ref=e341]: 
+                    - generic [ref=e342]: "2026"
+              - button "Add to list" [ref=e345] [cursor=pointer]:
+                - generic [ref=e346]: Add to list
+          - text:         
+      - generic [ref=e347]:
+        - heading "Top Rated Anime" [level=1] [ref=e349]
+        - generic [ref=e350]:
+          - generic [ref=e352]:
+            - link "Loading image" [ref=e353] [cursor=pointer]:
+              - /url: /show/59ec38e9-fe14-41c9-a02c-e0b9dc8794b7
+              - status "Loading image" [ref=e355]:
+                - generic [ref=e356]: Loading...
+            - generic [ref=e357]:
+              - 'link "Frieren: Beyond Journey''s End Adventure Drama Fantasy  28  24 min.  2023" [ref=e358] [cursor=pointer]':
+                - /url: /show/59ec38e9-fe14-41c9-a02c-e0b9dc8794b7
+                - generic [ref=e360]: "Frieren: Beyond Journey's End"
+                - generic [ref=e362]:
+                  - generic [ref=e363]: Adventure
+                  - generic [ref=e364]: Drama
+                  - generic [ref=e365]: Fantasy
+                - generic [ref=e366]:
+                  - generic [ref=e367]:
+                    - generic [ref=e368]: 
+                    - generic [ref=e369]: "28"
+                  - generic [ref=e370]:
+                    - generic [ref=e371]: 
+                    - generic [ref=e372]: 24 min.
+                  - generic [ref=e373]:
+                    - generic [ref=e374]: 
+                    - generic [ref=e375]: "2023"
+              - button "Add to list" [ref=e378] [cursor=pointer]:
+                - generic [ref=e379]: Add to list
+          - generic [ref=e381]:
+            - link "Loading image" [ref=e382] [cursor=pointer]:
+              - /url: /show/0735ef04-8726-439f-9dee-8d9379440f77
+              - status "Loading image" [ref=e384]:
+                - generic [ref=e385]: Loading...
+            - generic [ref=e386]:
+              - 'link "Gintama: The Very Final Action Comedy Drama Sci-Fi  1  1 hr. 44 min.  2021" [ref=e387] [cursor=pointer]':
+                - /url: /show/0735ef04-8726-439f-9dee-8d9379440f77
+                - generic [ref=e389]: "Gintama: The Very Final"
+                - generic [ref=e391]:
+                  - generic [ref=e392]: Action
+                  - generic [ref=e393]: Comedy
+                  - generic [ref=e394]: Drama
+                  - generic [ref=e395]: Sci-Fi
+                - generic [ref=e396]:
+                  - generic [ref=e397]:
+                    - generic [ref=e398]: 
+                    - generic [ref=e399]: "1"
+                  - generic [ref=e400]:
+                    - generic [ref=e401]: 
+                    - generic [ref=e402]: 1 hr. 44 min.
+                  - generic [ref=e403]:
+                    - generic [ref=e404]: 
+                    - generic [ref=e405]: "2021"
+              - button "Add to list" [ref=e408] [cursor=pointer]:
+                - generic [ref=e409]: Add to list
+          - generic [ref=e411]:
+            - link "Loading image" [ref=e412] [cursor=pointer]:
+              - /url: /show/0ba03ecb-a713-4539-a67c-65be96a070b9
+              - status "Loading image" [ref=e414]:
+                - generic [ref=e415]: Loading...
+            - generic [ref=e416]:
+              - 'link "Fullmetal Alchemist: Brotherhood Action Adventure Drama Fantasy  64  24 min.  2009" [ref=e417] [cursor=pointer]':
+                - /url: /show/0ba03ecb-a713-4539-a67c-65be96a070b9
+                - generic [ref=e419]: "Fullmetal Alchemist: Brotherhood"
+                - generic [ref=e421]:
+                  - generic [ref=e422]: Action
+                  - generic [ref=e423]: Adventure
+                  - generic [ref=e424]: Drama
+                  - generic [ref=e425]: Fantasy
+                - generic [ref=e426]:
+                  - generic [ref=e427]:
+                    - generic [ref=e428]: 
+                    - generic [ref=e429]: "64"
+                  - generic [ref=e430]:
+                    - generic [ref=e431]: 
+                    - generic [ref=e432]: 24 min.
+                  - generic [ref=e433]:
+                    - generic [ref=e434]: 
+                    - generic [ref=e435]: "2009"
+              - button "Add to list" [ref=e438] [cursor=pointer]:
+                - generic [ref=e439]: Add to list
+          - generic [ref=e441]:
+            - link "Loading image" [ref=e442] [cursor=pointer]:
+              - /url: /show/14f27f0a-db27-443f-9a27-982c42575ce3
+              - status "Loading image" [ref=e444]:
+                - generic [ref=e445]: Loading...
+            - generic [ref=e446]:
+              - link "Steins;Gate Drama Sci-Fi Suspense  24  24 min.  2011" [ref=e447] [cursor=pointer]:
+                - /url: /show/14f27f0a-db27-443f-9a27-982c42575ce3
+                - generic [ref=e449]: Steins;Gate
+                - generic [ref=e451]:
+                  - generic [ref=e452]: Drama
+                  - generic [ref=e453]: Sci-Fi
+                  - generic [ref=e454]: Suspense
+                - generic [ref=e455]:
+                  - generic [ref=e456]:
+                    - generic [ref=e457]: 
+                    - generic [ref=e458]: "24"
+                  - generic [ref=e459]:
+                    - generic [ref=e460]: 
+                    - generic [ref=e461]: 24 min.
+                  - generic [ref=e462]:
+                    - generic [ref=e463]: 
+                    - generic [ref=e464]: "2011"
+              - button "Add to list" [ref=e467] [cursor=pointer]:
+                - generic [ref=e468]: Add to list
+          - generic [ref=e470]:
+            - link "Loading image" [ref=e471] [cursor=pointer]:
+              - /url: /show/6aa2615a-694a-4961-8ec6-c9a7836adacd
+              - status "Loading image" [ref=e473]:
+                - generic [ref=e474]: Loading...
+            - generic [ref=e475]:
+              - link "Gintama Season 4 Action Comedy Sci-Fi  51  24 min.  2015" [ref=e476] [cursor=pointer]:
+                - /url: /show/6aa2615a-694a-4961-8ec6-c9a7836adacd
+                - generic [ref=e478]: Gintama Season 4
+                - generic [ref=e480]:
+                  - generic [ref=e481]: Action
+                  - generic [ref=e482]: Comedy
+                  - generic [ref=e483]: Sci-Fi
+                - generic [ref=e484]:
+                  - generic [ref=e485]:
+                    - generic [ref=e486]: 
+                    - generic [ref=e487]: "51"
+                  - generic [ref=e488]:
+                    - generic [ref=e489]: 
+                    - generic [ref=e490]: 24 min.
+                  - generic [ref=e491]:
+                    - generic [ref=e492]: 
+                    - generic [ref=e493]: "2015"
+              - button "Add to list" [ref=e496] [cursor=pointer]:
+                - generic [ref=e497]: Add to list
+          - text:         
+      - generic [ref=e498]:
+        - heading "Newest Anime" [level=1] [ref=e500]
+        - generic [ref=e501]:
+          - generic [ref=e503]:
+            - link "Loading image" [ref=e504] [cursor=pointer]:
+              - /url: /show/6eb769f4-af47-4b02-b3c3-3ff570045519
+              - status "Loading image" [ref=e506]:
+                - generic [ref=e507]: Loading...
+            - generic [ref=e508]:
+              - link "The World Ends with You The Animation Action Mystery Suspense  12  23 min.  2021" [ref=e509] [cursor=pointer]:
+                - /url: /show/6eb769f4-af47-4b02-b3c3-3ff570045519
+                - generic [ref=e511]: The World Ends with You The Animation
+                - generic [ref=e513]:
+                  - generic [ref=e514]: Action
+                  - generic [ref=e515]: Mystery
+                  - generic [ref=e516]: Suspense
+                - generic [ref=e517]:
+                  - generic [ref=e518]:
+                    - generic [ref=e519]: 
+                    - generic [ref=e520]: "12"
+                  - generic [ref=e521]:
+                    - generic [ref=e522]: 
+                    - generic [ref=e523]: 23 min.
+                  - generic [ref=e524]:
+                    - generic [ref=e525]: 
+                    - generic [ref=e526]: "2021"
+              - button "Add to list" [ref=e529] [cursor=pointer]:
+                - generic [ref=e530]: Add to list
+          - generic [ref=e532]:
+            - link "Loading image" [ref=e533] [cursor=pointer]:
+              - /url: /show/706967f1-b5b9-443b-9614-7b6dc910d0aa
+              - status "Loading image" [ref=e535]:
+                - generic [ref=e536]: Loading...
+            - generic [ref=e537]:
+              - link "No Choice But to Betray the Earth! Comedy Drama Romance Sci-Fi  72  12 min.  2021" [ref=e538] [cursor=pointer]:
+                - /url: /show/706967f1-b5b9-443b-9614-7b6dc910d0aa
+                - generic [ref=e540]: No Choice But to Betray the Earth!
+                - generic [ref=e542]:
+                  - generic [ref=e543]: Comedy
+                  - generic [ref=e544]: Drama
+                  - generic [ref=e545]: Romance
+                  - generic [ref=e546]: Sci-Fi
+                - generic [ref=e547]:
+                  - generic [ref=e548]:
+                    - generic [ref=e549]: 
+                    - generic [ref=e550]: "72"
+                  - generic [ref=e551]:
+                    - generic [ref=e552]: 
+                    - generic [ref=e553]: 12 min.
+                  - generic [ref=e554]:
+                    - generic [ref=e555]: 
+                    - generic [ref=e556]: "2021"
+              - button "Add to list" [ref=e559] [cursor=pointer]:
+                - generic [ref=e560]: Add to list
+          - generic [ref=e562]:
+            - link "Loading image" [ref=e563] [cursor=pointer]:
+              - /url: /show/706b4895-66b6-4201-95a3-596de24ba020
+              - status "Loading image" [ref=e565]:
+                - generic [ref=e566]: Loading...
+            - generic [ref=e567]:
+              - link "World Peacekeepers Action Adventure Sci-Fi  52  24 min.  2014" [ref=e568] [cursor=pointer]:
+                - /url: /show/706b4895-66b6-4201-95a3-596de24ba020
+                - generic [ref=e570]: World Peacekeepers
+                - generic [ref=e572]:
+                  - generic [ref=e573]: Action
+                  - generic [ref=e574]: Adventure
+                  - generic [ref=e575]: Sci-Fi
+                - generic [ref=e576]:
+                  - generic [ref=e577]:
+                    - generic [ref=e578]: 
+                    - generic [ref=e579]: "52"
+                  - generic [ref=e580]:
+                    - generic [ref=e581]: 
+                    - generic [ref=e582]: 24 min.
+                  - generic [ref=e583]:
+                    - generic [ref=e584]: 
+                    - generic [ref=e585]: "2014"
+              - button "Add to list" [ref=e588] [cursor=pointer]:
+                - generic [ref=e589]: Add to list
+          - generic [ref=e591]:
+            - link "Loading image" [ref=e592] [cursor=pointer]:
+              - /url: /show/de30f3ec-3c07-495c-bc88-79cfe8d0d599
+              - status "Loading image" [ref=e594]:
+                - generic [ref=e595]: Loading...
+            - generic [ref=e596]:
+              - link "My One-Hit Kill Sister Comedy Fantasy  12  23 min.  2023" [ref=e597] [cursor=pointer]:
+                - /url: /show/de30f3ec-3c07-495c-bc88-79cfe8d0d599
+                - generic [ref=e599]: My One-Hit Kill Sister
+                - generic [ref=e601]:
+                  - generic [ref=e602]: Comedy
+                  - generic [ref=e603]: Fantasy
+                - generic [ref=e604]:
+                  - generic [ref=e605]:
+                    - generic [ref=e606]: 
+                    - generic [ref=e607]: "12"
+                  - generic [ref=e608]:
+                    - generic [ref=e609]: 
+                    - generic [ref=e610]: 23 min.
+                  - generic [ref=e611]:
+                    - generic [ref=e612]: 
+                    - generic [ref=e613]: "2023"
+              - button "Add to list" [ref=e616] [cursor=pointer]:
+                - generic [ref=e617]: Add to list
+          - generic [ref=e619]:
+            - link "Loading image" [ref=e620] [cursor=pointer]:
+              - /url: /show/e86a1905-a806-4a53-97df-651e480e2112
+              - status "Loading image" [ref=e622]:
+                - generic [ref=e623]: Loading...
+            - generic [ref=e624]:
+              - 'link "King of Prism All Stars: Prism Show☆Best Ten No tags  1  1 hr. 5 min.  2020" [ref=e625] [cursor=pointer]':
+                - /url: /show/e86a1905-a806-4a53-97df-651e480e2112
+                - generic [ref=e627]: "King of Prism All Stars: Prism Show☆Best Ten"
+                - generic [ref=e630]: No tags
+                - generic [ref=e631]:
+                  - generic [ref=e632]:
+                    - generic [ref=e633]: 
+                    - generic [ref=e634]: "1"
+                  - generic [ref=e635]:
+                    - generic [ref=e636]: 
+                    - generic [ref=e637]: 1 hr. 5 min.
+                  - generic [ref=e638]:
+                    - generic [ref=e639]: 
+                    - generic [ref=e640]: "2020"
+              - button "Add to list" [ref=e643] [cursor=pointer]:
+                - generic [ref=e644]: Add to list
+          - text:         
+  - contentinfo [ref=e646]:
+    - generic [ref=e648]:
+      - generic [ref=e649]:
+        - generic [ref=e650]: © 2024 WeebVIP
+        - generic [ref=e651]:
+          - link "About" [ref=e652] [cursor=pointer]:
+            - /url: "#"
+          - link "Privacy" [ref=e653] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=e654] [cursor=pointer]:
+            - /url: "#"
+      - generic [ref=e655]: Version v1.89.3
+  - generic:
+    - generic:
+      - region "Notifications alt+T"

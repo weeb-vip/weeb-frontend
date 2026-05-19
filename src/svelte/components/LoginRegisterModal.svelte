@@ -136,7 +136,7 @@
   }
 </script>
 
-<div class="auth-modal">
+<div class="weeb-auth-modal">
 
   <!-- Header -->
   <div class="modal-header">
@@ -256,16 +256,17 @@
 </div>
 
 <style>
-  .auth-modal {
+  /* Global styles for portal - rendered in document.body */
+  :global(.weeb-auth-modal) {
     padding: 36px;
   }
 
   /* Header */
-  .modal-header {
+  :global(.weeb-auth-modal .modal-header) {
     text-align: center;
     margin-bottom: 28px;
   }
-  .logo-mark {
+  :global(.weeb-auth-modal .logo-mark) {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -275,20 +276,20 @@
     justify-content: center;
     margin: 0 auto 12px;
   }
-  .modal-title {
+  :global(.weeb-auth-modal .modal-title) {
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--weeb-fg);
     margin-bottom: 4px;
   }
-  .modal-subtitle {
+  :global(.weeb-auth-modal .modal-subtitle) {
     font-size: 14px;
     color: var(--weeb-fg-muted);
   }
 
   /* Alerts */
-  .alert {
+  :global(.weeb-auth-modal .alert) {
     display: flex;
     align-items: flex-start;
     gap: 10px;
@@ -298,55 +299,55 @@
     font-size: 13px;
     margin-bottom: 20px;
   }
-  .alert svg {
+  :global(.weeb-auth-modal .alert svg) {
     flex-shrink: 0;
     margin-top: 1px;
   }
-  .alert p {
+  :global(.weeb-auth-modal .alert p) {
     margin: 0;
     line-height: 1.4;
   }
-  .alert-error {
+  :global(.weeb-auth-modal .alert-error) {
     color: var(--weeb-red);
     background: oklch(20% 0.03 25 / 0.5);
     border-color: oklch(60% 0.18 25 / 0.4);
   }
-  .alert-success {
+  :global(.weeb-auth-modal .alert-success) {
     color: var(--weeb-green);
     background: oklch(20% 0.03 155 / 0.5);
     border-color: oklch(65% 0.15 155 / 0.4);
   }
 
   /* Form */
-  .auth-form {
+  :global(.weeb-auth-modal .auth-form) {
     display: flex;
     flex-direction: column;
     gap: 18px;
   }
-  .form-group {
+  :global(.weeb-auth-modal .form-group) {
     display: flex;
     flex-direction: column;
   }
 
   /* Remember me / Forgot password row */
-  .field-row {
+  :global(.weeb-auth-modal .field-row) {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .checkbox-wrap {
+  :global(.weeb-auth-modal .checkbox-wrap) {
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
   }
-  .checkbox-wrap input[type="checkbox"] {
+  :global(.weeb-auth-modal .checkbox-wrap input[type="checkbox"]) {
     width: 16px;
     height: 16px;
     accent-color: var(--weeb-accent);
     cursor: pointer;
   }
-  .checkbox-label {
+  :global(.weeb-auth-modal .checkbox-label) {
     font-size: 13px;
     color: var(--weeb-fg-secondary);
     cursor: pointer;
@@ -354,7 +355,7 @@
   }
 
   /* Accent links */
-  .link-accent {
+  :global(.weeb-auth-modal .link-accent) {
     font-size: 13px;
     color: var(--weeb-accent);
     text-decoration: none;
@@ -365,13 +366,13 @@
     transition: color 0.15s;
     padding: 0;
   }
-  .link-accent:hover {
+  :global(.weeb-auth-modal .link-accent:hover) {
     color: var(--weeb-accent-hover, oklch(62% 0.16 280));
     text-decoration: underline;
   }
 
   /* Submit button */
-  .btn-submit {
+  :global(.weeb-auth-modal .btn-submit) {
     width: 100%;
     height: 46px;
     margin-top: 4px;
@@ -391,20 +392,20 @@
     position: relative;
     overflow: hidden;
   }
-  .btn-submit:hover:not(:disabled) {
+  :global(.weeb-auth-modal .btn-submit:hover:not(:disabled)) {
     background: var(--weeb-accent-hover, oklch(62% 0.16 280));
   }
-  .btn-submit:active:not(:disabled) {
+  :global(.weeb-auth-modal .btn-submit:active:not(:disabled)) {
     transform: scale(0.99);
   }
-  .btn-submit:disabled {
+  :global(.weeb-auth-modal .btn-submit:disabled) {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  .btn-submit.loading .btn-label {
+  :global(.weeb-auth-modal .btn-submit.loading .btn-label) {
     opacity: 0;
   }
-  .spinner {
+  :global(.weeb-auth-modal .spinner) {
     display: block;
     position: absolute;
     width: 18px;
@@ -412,31 +413,31 @@
     border: 2px solid oklch(100% 0 0 / 0.3);
     border-top-color: white;
     border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    animation: weeb-auth-spin 0.7s linear infinite;
   }
-  @keyframes spin {
+  @keyframes -global-weeb-auth-spin {
     to { transform: rotate(360deg); }
   }
 
   /* Resend verification link */
-  .resend-link {
+  :global(.weeb-auth-modal .resend-link) {
     text-align: center;
     margin-top: 12px;
   }
 
   /* Divider */
-  .divider {
+  :global(.weeb-auth-modal .divider) {
     display: flex;
     align-items: center;
     gap: 16px;
     margin: 20px 0 16px;
   }
-  .divider-line {
+  :global(.weeb-auth-modal .divider-line) {
     flex: 1;
     height: 1px;
     background: var(--weeb-border);
   }
-  .divider-text {
+  :global(.weeb-auth-modal .divider-text) {
     font-size: 12px;
     color: var(--weeb-fg-muted);
     letter-spacing: 0.06em;
@@ -444,17 +445,17 @@
   }
 
   /* Mode toggle footer */
-  .mode-toggle {
+  :global(.weeb-auth-modal .mode-toggle) {
     text-align: center;
     font-size: 14px;
     color: var(--weeb-fg-muted);
   }
 
   @media (max-width: 480px) {
-    .auth-modal {
+    :global(.weeb-auth-modal) {
       padding: 24px;
     }
-    .modal-title {
+    :global(.weeb-auth-modal .modal-title) {
       font-size: 20px;
     }
   }

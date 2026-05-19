@@ -1,0 +1,1819 @@
+- generic [ref=e1]:
+  - navigation [ref=e3]:
+    - link "weeb.vip weeb.vip" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e5]
+      - generic [ref=e6]: weeb.vip
+    - generic [ref=e7]:
+      - link "Home" [ref=e8] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e9] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e10] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e11] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e1187]:
+      - img
+      - searchbox [ref=e1188]
+      - generic: /
+    - generic [ref=e18]:
+      - button "Toggle title language" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - generic [ref=e23]: EN
+      - generic [ref=e1189]:
+        - button "Login" [ref=e1190] [cursor=pointer]:
+          - generic [ref=e1191]: Login
+        - button "Register" [ref=e1192] [cursor=pointer]:
+          - generic [ref=e1193]: Register
+  - main [ref=e28]:
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - paragraph [ref=e32]: Seasonal Anime
+        - heading "Winter 2026" [level=1] [ref=e1440]
+      - generic [ref=e34]:
+        - tablist [ref=e35]:
+          - button "❄ Winter" [ref=e36] [cursor=pointer]:
+            - generic [ref=e37]: ❄
+            - text: Winter
+          - button "⚘ Spring" [ref=e38] [cursor=pointer]:
+            - generic [ref=e39]: ⚘
+            - text: Spring
+          - button "☀ Summer" [ref=e40] [cursor=pointer]:
+            - generic [ref=e41]: ☀
+            - text: Summer
+          - button "🍂 Fall" [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]: 🍂
+            - text: Fall
+        - generic [ref=e44]:
+          - button "Previous season" [active] [ref=e45] [cursor=pointer]:
+            - img [ref=e46]
+          - generic [ref=e48]:
+            - button "2025" [ref=e49] [cursor=pointer]
+            - button "2026" [ref=e50] [cursor=pointer]
+            - button "2027" [ref=e51] [cursor=pointer]
+          - button "Next season" [ref=e52] [cursor=pointer]:
+            - img [ref=e53]
+      - generic [ref=e55]:
+        - generic [ref=e56]: Showing 127 titles
+        - button "Jump to current season" [ref=e1442] [cursor=pointer]
+      - generic [ref=e57]:
+        - generic [ref=e58]: TOP THIS SEASON
+        - generic [ref=e59]:
+          - link "#1 One Piece One Piece ★ 8.7" [ref=e1443] [cursor=pointer]:
+            - /url: /show/60802103-a053-4bb5-9650-2577995d0b81
+            - generic [ref=e61]: "#1"
+            - img "One Piece" [ref=e1444]
+            - generic [ref=e66]:
+              - generic [ref=e67]: One Piece
+              - generic [ref=e68]: ★ 8.7
+          - link "#2 Chiikawa Chiikawa ★ 8.6" [ref=e1445] [cursor=pointer]:
+            - /url: /show/5f26a95f-42fb-4d5a-9691-bf8684dcae99
+            - generic [ref=e70]: "#2"
+            - img "Chiikawa" [ref=e1446]
+            - generic [ref=e75]:
+              - generic [ref=e76]: Chiikawa
+              - generic [ref=e77]: ★ 8.6
+          - link "#3 Sentenced to Be a Hero Sentenced to Be a Hero ★ 8.5" [ref=e1447] [cursor=pointer]:
+            - /url: /show/7f0dd262-581e-443b-a1e5-44e416c24539
+            - generic [ref=e79]: "#3"
+            - img "Sentenced to Be a Hero" [ref=e1448]
+            - generic [ref=e84]:
+              - generic [ref=e85]: Sentenced to Be a Hero
+              - generic [ref=e86]: ★ 8.5
+          - link "#4 Fate/strange Fake Fate/strange Fake ★ 8.3" [ref=e1449] [cursor=pointer]:
+            - /url: /show/36e7afb0-672a-4c49-a521-34e5b7118462
+            - generic [ref=e88]: "#4"
+            - img "Fate/strange Fake" [ref=e1450]
+            - generic [ref=e93]:
+              - generic [ref=e94]: Fate/strange Fake
+              - generic [ref=e95]: ★ 8.3
+          - link "#5 Case Closed Case Closed ★ 8.2" [ref=e1451] [cursor=pointer]:
+            - /url: /show/69609138-7a41-4cc3-8435-4aba79481dc2
+            - generic [ref=e97]: "#5"
+            - img "Case Closed" [ref=e1452]
+            - generic [ref=e102]:
+              - generic [ref=e103]: Case Closed
+              - generic [ref=e104]: ★ 8.2
+      - generic [ref=e105]:
+        - heading "All Shows" [level=2] [ref=e106]
+        - generic [ref=e107]: 127 titles
+      - generic [ref=e109]:
+        - button "Fantasy 31" [ref=e1453] [cursor=pointer]:
+          - text: Fantasy
+          - generic [ref=e111]: "31"
+        - button "Action 24" [ref=e1454] [cursor=pointer]:
+          - text: Action
+          - generic [ref=e113]: "24"
+        - button "Adventure 24" [ref=e1455] [cursor=pointer]:
+          - text: Adventure
+          - generic [ref=e115]: "24"
+        - button "Comedy 23" [ref=e1456] [cursor=pointer]:
+          - text: Comedy
+          - generic [ref=e117]: "23"
+        - button "Romance 11" [ref=e1457] [cursor=pointer]:
+          - text: Romance
+          - generic [ref=e119]: "11"
+        - button "Supernatural 9" [ref=e120] [cursor=pointer]:
+          - text: Supernatural
+          - generic [ref=e121]: "9"
+        - button "Sci-Fi 8" [ref=e1458] [cursor=pointer]:
+          - text: Sci-Fi
+          - generic [ref=e123]: "8"
+        - button "Drama 6" [ref=e1459] [cursor=pointer]:
+          - text: Drama
+          - generic [ref=e125]: "6"
+        - button "Mystery 3" [ref=e1460] [cursor=pointer]:
+          - text: Mystery
+          - generic [ref=e127]: "3"
+        - button "Ecchi 2" [ref=e1461] [cursor=pointer]:
+          - text: Ecchi
+          - generic [ref=e129]: "2"
+        - button "Suspense 2" [ref=e1462] [cursor=pointer]:
+          - text: Suspense
+          - generic [ref=e131]: "2"
+        - button "Boys Love 2" [ref=e1463] [cursor=pointer]:
+          - text: Boys Love
+          - generic [ref=e133]: "2"
+        - button "+8 more" [ref=e1464] [cursor=pointer]
+      - generic [ref=e135]:
+        - link "One Piece 8.7 Barely surviving in a barrel after passing through a terrible whirlpool at sea, carefree Monkey D. Luffy ends up aboard ... 8 episodes ★ 8.7 Action Adventure Fantasy One Piece 1999 · 8 ep" [ref=e1208] [cursor=pointer]:
+          - /url: /show/60802103-a053-4bb5-9650-2577995d0b81
+          - generic [ref=e156]:
+            - img "One Piece" [ref=e1209]
+            - generic [ref=e160]: "8.7"
+            - generic:
+              - generic:
+                - paragraph: Barely surviving in a barrel after passing through a terrible whirlpool at sea, carefree Monkey D. Luffy ends up aboard ...
+                - generic:
+                  - generic: 8 episodes
+                  - generic: ★ 8.7
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e161]: One Piece
+          - generic [ref=e162]: 1999 · 8 ep
+        - link "Chiikawa 8.6 What's a Chiikawa? No one really knows, but everyone can see they're small, they're cute, and they're always having a fu... 344 episodes ★ 8.6 Chiikawa 2022 · 344 ep" [ref=e1210] [cursor=pointer]:
+          - /url: /show/5f26a95f-42fb-4d5a-9691-bf8684dcae99
+          - generic [ref=e165]:
+            - img "Chiikawa" [ref=e1211]
+            - generic [ref=e169]: "8.6"
+            - generic:
+              - generic:
+                - paragraph: What's a Chiikawa? No one really knows, but everyone can see they're small, they're cute, and they're always having a fu...
+                - generic:
+                  - generic: 344 episodes
+                  - generic: ★ 8.6
+          - generic [ref=e170]: Chiikawa
+          - generic [ref=e171]: 2022 · 344 ep
+        - link "Sentenced to Be a Hero 8.5 \"Hero\" is the worst punishment in the world. Those convicted of heinous crimes are sentenced to become \"Heroes\" and forc... 12 episodes ★ 8.5 Action Adventure Fantasy Sentenced to Be a Hero 2026 · 12 ep" [ref=e1466] [cursor=pointer]:
+          - /url: /show/7f0dd262-581e-443b-a1e5-44e416c24539
+          - generic [ref=e1467]:
+            - img "Sentenced to Be a Hero" [ref=e1469]
+            - generic [ref=e1470]: "8.5"
+            - generic:
+              - generic:
+                - paragraph: "\"Hero\" is the worst punishment in the world. Those convicted of heinous crimes are sentenced to become \"Heroes\" and forc..."
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 8.5
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1471]: Sentenced to Be a Hero
+          - generic [ref=e1472]: 2026 · 12 ep
+        - link "Fate/strange Fake 8.3 Fate/strange Fake centers around an imperfect copy of a Grail War based on the Third Holy Grail War in Fuyuki. Following... 1 episodes ★ 8.3 Action Fantasy Fate/strange Fake 2026 · 1 ep" [ref=e1474] [cursor=pointer]:
+          - /url: /show/36e7afb0-672a-4c49-a521-34e5b7118462
+          - generic [ref=e1475]:
+            - img "Fate/strange Fake" [ref=e1477]
+            - generic [ref=e1478]: "8.3"
+            - generic:
+              - generic:
+                - paragraph: Fate/strange Fake centers around an imperfect copy of a Grail War based on the Third Holy Grail War in Fuyuki. Following...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 8.3
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+          - generic [ref=e1479]: Fate/strange Fake
+          - generic [ref=e1480]: 2026 · 1 ep
+        - link "Case Closed 8.2 Shinichi Kudou, a high school student of astounding talent in detective work, is well known for having solved several ch... 28 episodes ★ 8.2 Adventure Comedy Mystery Case Closed 1996 · 28 ep" [ref=e1220] [cursor=pointer]:
+          - /url: /show/69609138-7a41-4cc3-8435-4aba79481dc2
+          - generic [ref=e210]:
+            - img "Case Closed" [ref=e1221]
+            - generic [ref=e214]: "8.2"
+            - generic:
+              - generic:
+                - paragraph: Shinichi Kudou, a high school student of astounding talent in detective work, is well known for having solved several ch...
+                - generic:
+                  - generic: 28 episodes
+                  - generic: ★ 8.2
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+                  - generic: Mystery
+          - generic [ref=e215]: Case Closed
+          - generic [ref=e216]: 1996 · 28 ep
+        - link "Golden Kamuy Final Season 8.0 Final chapter of Golden Kamuy. 13 episodes ★ 8.0 Action Adventure Golden Kamuy Final Season 2026 · 13 ep" [ref=e1482] [cursor=pointer]:
+          - /url: /show/2598e04f-b191-4fa9-a030-be0837632916
+          - generic [ref=e1483]:
+            - img "Golden Kamuy Final Season" [ref=e1485]
+            - generic [ref=e1486]: "8.0"
+            - generic:
+              - generic:
+                - paragraph: Final chapter of Golden Kamuy.
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 8.0
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+          - generic [ref=e1487]: Golden Kamuy Final Season
+          - generic [ref=e1488]: 2026 · 13 ep
+        - link "Tamon's B-Side 7.9 Idol group F/ACE has recently risen in popularity all thanks to Tamon Fukuhara—its handsome, wild, and talented leader. ... 13 episodes ★ 7.9 Comedy Romance Tamon's B-Side 2026 · 13 ep" [ref=e1490] [cursor=pointer]:
+          - /url: /show/16b15461-35da-4c4d-9efb-b711f2d8dbbd
+          - generic [ref=e1491]:
+            - img "Tamon's B-Side" [ref=e1493]
+            - generic [ref=e1494]: "7.9"
+            - generic:
+              - generic:
+                - paragraph: Idol group F/ACE has recently risen in popularity all thanks to Tamon Fukuhara—its handsome, wild, and talented leader. ...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 7.9
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1495]: Tamon's B-Side
+          - generic [ref=e1496]: 2026 · 13 ep
+        - link "MF Ghost Season 3 7.8 Third season of MF Ghost. ★ 7.8 MF Ghost Season 3 2026 · ? ep" [ref=e1498] [cursor=pointer]:
+          - /url: /show/6b85833c-3dd8-44df-be40-e3a81a26f627
+          - generic [ref=e1499]:
+            - img "MF Ghost Season 3" [ref=e1501]
+            - generic [ref=e1502]: "7.8"
+            - generic:
+              - generic:
+                - paragraph: Third season of MF Ghost.
+                - generic:
+                  - generic: ★ 7.8
+          - generic [ref=e1503]: MF Ghost Season 3
+          - generic [ref=e1504]: 2026 · ? ep
+        - link "Journal with Witch 7.8 Thirty-five-year-old novelist Makio Koudai never had a good relationship with her older sister Minori, who always berate... 13 episodes ★ 7.8 Journal with Witch 2026 · 13 ep" [ref=e1506] [cursor=pointer]:
+          - /url: /show/90c630f5-6950-4d00-a23a-897a00e93db2
+          - generic [ref=e1507]:
+            - img "Journal with Witch" [ref=e1509]
+            - generic [ref=e1510]: "7.8"
+            - generic:
+              - generic:
+                - paragraph: Thirty-five-year-old novelist Makio Koudai never had a good relationship with her older sister Minori, who always berate...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 7.8
+          - generic [ref=e1511]: Journal with Witch
+          - generic [ref=e1512]: 2026 · 13 ep
+        - link "Shin Chan 7.8 There is no such thing as an uneventful day in the life of kindergartener Shinnosuke \"Shin-chan\" Nohara. The five-year-o... 52 episodes ★ 7.8 Comedy Ecchi Shin Chan 1992 · 52 ep" [ref=e1234] [cursor=pointer]:
+          - /url: /show/df8ff372-f273-4d8e-98df-3a4eaffd5c9b
+          - generic [ref=e273]:
+            - img "Shin Chan" [ref=e1235]
+            - generic [ref=e277]: "7.8"
+            - generic:
+              - generic:
+                - paragraph: There is no such thing as an uneventful day in the life of kindergartener Shinnosuke "Shin-chan" Nohara. The five-year-o...
+                - generic:
+                  - generic: 52 episodes
+                  - generic: ★ 7.8
+                - generic:
+                  - generic: Comedy
+                  - generic: Ecchi
+          - generic [ref=e278]: Shin Chan
+          - generic [ref=e279]: 1992 · 52 ep
+        - link "Doraemon (2005) 7.8 Doraemon (2005) is the most recent anime series based on Fujiko Fujio's manga of the same name. It is the 2005 version ... ★ 7.8 Comedy Sci-Fi Doraemon (2005) 2005 · ? ep" [ref=e1240] [cursor=pointer]:
+          - /url: /show/5e888c84-4c84-4e1e-bfe9-b605ddf3c9bc
+          - generic [ref=e300]:
+            - img "Doraemon (2005)" [ref=e1241]
+            - generic [ref=e304]: "7.8"
+            - generic:
+              - generic:
+                - paragraph: Doraemon (2005) is the most recent anime series based on Fujiko Fujio's manga of the same name. It is the 2005 version ...
+                - generic:
+                  - generic: ★ 7.8
+                - generic:
+                  - generic: Comedy
+                  - generic: Sci-Fi
+          - generic [ref=e305]: Doraemon (2005)
+          - generic [ref=e306]: 2005 · ? ep
+        - link "To Your Eternity Season 3 7.8 Third season of Fumetsu no Anata e. 22 episodes ★ 7.8 Adventure Drama Supernatural To Your Eternity Season 3 2025 · 22 ep" [ref=e1514] [cursor=pointer]:
+          - /url: /show/ad0045c5-77b1-4ac5-ad39-ced1eef78ed2
+          - generic [ref=e1515]:
+            - img "To Your Eternity Season 3" [ref=e1517]
+            - generic [ref=e1518]: "7.8"
+            - generic:
+              - generic:
+                - paragraph: Third season of Fumetsu no Anata e.
+                - generic:
+                  - generic: 22 episodes
+                  - generic: ★ 7.8
+                - generic:
+                  - generic: Adventure
+                  - generic: Drama
+                  - generic: Supernatural
+          - generic [ref=e1519]: To Your Eternity Season 3
+          - generic [ref=e1520]: 2025 · 22 ep
+        - 'link "Shiboyugi: Playing Death Games to Put Food on the Table 7.8 Yuki wakes up to find herself in an unfamiliar manor, wearing a maid uniform and lying on a luxurious bed. Soon, she dis... 11 episodes ★ 7.8 Action Suspense Shiboyugi: Playing Death Games to Put Food on the Table 2026 · 11 ep" [ref=e1522] [cursor=pointer]':
+          - /url: /show/13cdfbf0-5383-46e5-8701-a85a2efc2b50
+          - generic [ref=e1523]:
+            - 'img "Shiboyugi: Playing Death Games to Put Food on the Table" [ref=e1525]'
+            - generic [ref=e1526]: "7.8"
+            - generic:
+              - generic:
+                - paragraph: Yuki wakes up to find herself in an unfamiliar manor, wearing a maid uniform and lying on a luxurious bed. Soon, she dis...
+                - generic:
+                  - generic: 11 episodes
+                  - generic: ★ 7.8
+                - generic:
+                  - generic: Action
+                  - generic: Suspense
+          - generic [ref=e1527]: "Shiboyugi: Playing Death Games to Put Food on the Table"
+          - generic [ref=e1528]: 2026 · 11 ep
+        - 'link "Tojima Wants to Be a Kamen Rider 7.6 Tanzaburou Toujima has spent his entire life chasing a dream: to become Kamen Rider. Now, at 40, reality has nearly caug... 11 episodes ★ 7.6 Action Comedy Tojima Wants to Be a Kamen Rider 2025 · 11 ep" [ref=e1530] [cursor=pointer]':
+          - /url: /show/4c8a1e77-eabb-4923-a675-5b566c158dc7
+          - generic [ref=e1531]:
+            - img "Tojima Wants to Be a Kamen Rider" [ref=e1533]
+            - generic [ref=e1534]: "7.6"
+            - generic:
+              - generic:
+                - paragraph: "Tanzaburou Toujima has spent his entire life chasing a dream: to become Kamen Rider. Now, at 40, reality has nearly caug..."
+                - generic:
+                  - generic: 11 episodes
+                  - generic: ★ 7.6
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+          - generic [ref=e1535]: Tojima Wants to Be a Kamen Rider
+          - generic [ref=e1536]: 2025 · 11 ep
+        - link "Koupen-chan 7.5 A baby emperor penguin, Koupen-chan, always makes sure everyone feels included. As it meets its newest friend, Koupen-ch... 58 episodes ★ 7.5 Koupen-chan 2025 · 58 ep" [ref=e1256] [cursor=pointer]:
+          - /url: /show/b977c2ab-b61f-4019-9e33-0d23ceb6c6f2
+          - generic [ref=e372]:
+            - img "Koupen-chan" [ref=e1257]
+            - generic [ref=e376]: "7.5"
+            - generic:
+              - generic:
+                - paragraph: A baby emperor penguin, Koupen-chan, always makes sure everyone feels included. As it meets its newest friend, Koupen-ch...
+                - generic:
+                  - generic: 58 episodes
+                  - generic: ★ 7.5
+          - generic [ref=e377]: Koupen-chan
+          - generic [ref=e378]: 2025 · 58 ep
+        - 'link "My Hero Academia: Vigilantes Season 2 7.5 Second season of Vigilante: Boku no Hero Academia Illegals. 13 episodes ★ 7.5 My Hero Academia: Vigilantes Season 2 2026 · 13 ep" [ref=e1538] [cursor=pointer]':
+          - /url: /show/8fa2001e-3a54-497f-93e2-3fe40c3a0f36
+          - generic [ref=e1539]:
+            - 'img "My Hero Academia: Vigilantes Season 2" [ref=e1541]'
+            - generic [ref=e1542]: "7.5"
+            - generic:
+              - generic:
+                - paragraph: "Second season of Vigilante: Boku no Hero Academia Illegals."
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 7.5
+          - generic [ref=e1543]: "My Hero Academia: Vigilantes Season 2"
+          - generic [ref=e1544]: 2026 · 13 ep
+        - link "Gnosia 7.5 Saddled with amnesia, Yuuri awakens on an interstellar cruiser drifting through space. Unfortunately, a lack of memories... 21 episodes ★ 7.5 Sci-Fi Suspense Gnosia 2025 · 21 ep" [ref=e1546] [cursor=pointer]:
+          - /url: /show/e7d397bd-e259-43ca-a099-3b37029e5461
+          - generic [ref=e1547]:
+            - img "Gnosia" [ref=e1549]
+            - generic [ref=e1550]: "7.5"
+            - generic:
+              - generic:
+                - paragraph: Saddled with amnesia, Yuuri awakens on an interstellar cruiser drifting through space. Unfortunately, a lack of memories...
+                - generic:
+                  - generic: 21 episodes
+                  - generic: ★ 7.5
+                - generic:
+                  - generic: Sci-Fi
+                  - generic: Suspense
+          - generic [ref=e1551]: Gnosia
+          - generic [ref=e1552]: 2025 · 21 ep
+        - link "Little Miss Maruko 7.5 Momoko Sakura is an elementary school student who likes popular idol Momoe Yamaguchi and mangas. She is often called \"Ch... ★ 7.5 Little Miss Maruko 1995 · ? ep" [ref=e1258] [cursor=pointer]:
+          - /url: /show/fda2522b-088f-4cf0-8fcf-0ddd91a3c78e
+          - generic [ref=e381]:
+            - img "Little Miss Maruko" [ref=e1259]
+            - generic [ref=e385]: "7.5"
+            - generic:
+              - generic:
+                - paragraph: Momoko Sakura is an elementary school student who likes popular idol Momoe Yamaguchi and mangas. She is often called "Ch...
+                - generic:
+                  - generic: ★ 7.5
+          - generic [ref=e386]: Little Miss Maruko
+          - generic [ref=e387]: 1995 · ? ep
+        - 'link "Pokémon Horizons: The Series 7.4 In a world filled with strange yet majestic creatures known as Pokémon, a new adventure begins! Hailing from the pristin... 132 episodes ★ 7.4 Action Adventure Comedy Pokémon Horizons: The Series 2023 · 132 ep" [ref=e1260] [cursor=pointer]':
+          - /url: /show/5bde9a92-ad7c-40c3-ba19-50879b9d3287
+          - generic [ref=e390]:
+            - 'img "Pokémon Horizons: The Series" [ref=e1261]'
+            - generic [ref=e394]: "7.4"
+            - generic:
+              - generic:
+                - paragraph: In a world filled with strange yet majestic creatures known as Pokémon, a new adventure begins! Hailing from the pristin...
+                - generic:
+                  - generic: 132 episodes
+                  - generic: ★ 7.4
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Comedy
+          - generic [ref=e395]: "Pokémon Horizons: The Series"
+          - generic [ref=e396]: 2023 · 132 ep
+        - link "Tune In to the Midnight Heart 7.3 When Arisu Yamabuki was all alone in bed at night, he was able to find solace in the voice of a radio host who went by \"... ★ 7.3 Comedy Romance Tune In to the Midnight Heart 2026 · ? ep" [ref=e1554] [cursor=pointer]:
+          - /url: /show/614f4c86-d952-4065-9991-8a8c2170d2a9
+          - generic [ref=e1555]:
+            - img "Tune In to the Midnight Heart" [ref=e1557]
+            - generic [ref=e1558]: "7.3"
+            - generic:
+              - generic:
+                - paragraph: When Arisu Yamabuki was all alone in bed at night, he was able to find solace in the voice of a radio host who went by "...
+                - generic:
+                  - generic: ★ 7.3
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1559]: Tune In to the Midnight Heart
+          - generic [ref=e1560]: 2026 · ? ep
+        - link "You and Idol Precure♪ 7.3 Uta Sakura is a lively and energetic middle school student who loves singing. One day, while walking her dog, she encoun... 49 episodes ★ 7.3 You and Idol Precure♪ 2025 · 49 ep" [ref=e1562] [cursor=pointer]:
+          - /url: /show/92badca7-fad1-40f9-bea5-acf73c6f920a
+          - generic [ref=e1563]:
+            - img "You and Idol Precure♪" [ref=e1565]
+            - generic [ref=e1566]: "7.3"
+            - generic:
+              - generic:
+                - paragraph: Uta Sakura is a lively and energetic middle school student who loves singing. One day, while walking her dog, she encoun...
+                - generic:
+                  - generic: 49 episodes
+                  - generic: ★ 7.3
+          - generic [ref=e1567]: You and Idol Precure♪
+          - generic [ref=e1568]: 2025 · 49 ep
+        - link "Chitose Is in the Ramune Bottle 7.2 Saku Chitose appears to lead an enviable high school life. Extraordinarily charismatic, tremendously confident, and effo... 14 episodes ★ 7.2 Comedy Romance Chitose Is in the Ramune Bottle 2025 · 14 ep" [ref=e1570] [cursor=pointer]:
+          - /url: /show/c85a94fe-122e-4291-a625-d626f5e2a8b3
+          - generic [ref=e1571]:
+            - img "Chitose Is in the Ramune Bottle" [ref=e1573]
+            - generic [ref=e1574]: "7.2"
+            - generic:
+              - generic:
+                - paragraph: Saku Chitose appears to lead an enviable high school life. Extraordinarily charismatic, tremendously confident, and effo...
+                - generic:
+                  - generic: 14 episodes
+                  - generic: ★ 7.2
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1575]: Chitose Is in the Ramune Bottle
+          - generic [ref=e1576]: 2025 · 14 ep
+        - link "Ao no Orchestra Season 2 7.2 Second season of Ao no Orchestra. 12 episodes ★ 7.2 Ao no Orchestra Season 2 2025 · 12 ep" [ref=e1578] [cursor=pointer]:
+          - /url: /show/ed6ea123-2f2c-42c8-a974-c6826babe9a6
+          - generic [ref=e1579]:
+            - img "Ao no Orchestra Season 2" [ref=e1581]
+            - generic [ref=e1582]: "7.2"
+            - generic:
+              - generic:
+                - paragraph: Second season of Ao no Orchestra.
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 7.2
+          - generic [ref=e1583]: Ao no Orchestra Season 2
+          - generic [ref=e1584]: 2025 · 12 ep
+        - 'link "The Demon King''s Daughter Is Too Kind!! 7.2 Demon King Ahriman has a problem: his daughter, Dou, loves everyone! Consequently, Ahriman had to halt his invasion of t... 12 episodes ★ 7.2 Comedy Fantasy The Demon King''s Daughter Is Too Kind!! 2026 · 12 ep" [ref=e1586] [cursor=pointer]':
+          - /url: /show/4b777bba-f261-4f3a-ab97-8e62687b2cb5
+          - generic [ref=e1587]:
+            - img "The Demon King's Daughter Is Too Kind!!" [ref=e1589]
+            - generic [ref=e1590]: "7.2"
+            - generic:
+              - generic:
+                - paragraph: "Demon King Ahriman has a problem: his daughter, Dou, loves everyone! Consequently, Ahriman had to halt his invasion of t..."
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 7.2
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e1591]: The Demon King's Daughter Is Too Kind!!
+          - generic [ref=e1592]: 2026 · 12 ep
+        - link "Digimon Beatbreak 7.2 Tomorou Tenma possesses a uniquely strong e-Pulse—the energy created by human thoughts and emotions that powers egg-shap... 35 episodes ★ 7.2 Action Fantasy Sci-Fi Digimon Beatbreak 2025 · 35 ep" [ref=e1274] [cursor=pointer]:
+          - /url: /show/ea07748b-4413-4306-9978-03b33e38a36a
+          - generic [ref=e453]:
+            - img "Digimon Beatbreak" [ref=e1275]
+            - generic [ref=e457]: "7.2"
+            - generic:
+              - generic:
+                - paragraph: Tomorou Tenma possesses a uniquely strong e-Pulse—the energy created by human thoughts and emotions that powers egg-shap...
+                - generic:
+                  - generic: 35 episodes
+                  - generic: ★ 7.2
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+                  - generic: Sci-Fi
+          - generic [ref=e458]: Digimon Beatbreak
+          - generic [ref=e459]: 2025 · 35 ep
+        - link "Ninjaboy Rantaro 7.1 Taking place in the Sengoku Period, Rantarou, Kirimaru and Shinbei are young students at Ninjutsu Academy, a school that... 95 episodes ★ 7.1 Ninjaboy Rantaro 1993 · 95 ep" [ref=e1278] [cursor=pointer]:
+          - /url: /show/b232c292-a613-45c2-8f71-f576e5638835
+          - generic [ref=e471]:
+            - img "Ninjaboy Rantaro" [ref=e1279]
+            - generic [ref=e475]: "7.1"
+            - generic:
+              - generic:
+                - paragraph: Taking place in the Sengoku Period, Rantarou, Kirimaru and Shinbei are young students at Ninjutsu Academy, a school that...
+                - generic:
+                  - generic: 95 episodes
+                  - generic: ★ 7.1
+          - generic [ref=e476]: Ninjaboy Rantaro
+          - generic [ref=e477]: 1993 · 95 ep
+        - 'link "Isekai Office Worker: The Other World''s Books Depend on the Bean Counter 7.0 Already at his wit''s end, 29-year-old corporate slave Seiichirou Kondou suddenly witnesses the ground opening up and swa... 12 episodes ★ 7.0 Boys Love Fantasy Isekai Office Worker: The Other World''s Books Depend on the Bean Counter 2026 · 12 ep" [ref=e1594] [cursor=pointer]':
+          - /url: /show/bd8860e1-bbb0-4556-aa01-5b55ad8fe447
+          - generic [ref=e1595]:
+            - 'img "Isekai Office Worker: The Other World''s Books Depend on the Bean Counter" [ref=e1597]'
+            - generic [ref=e1598]: "7.0"
+            - generic:
+              - generic:
+                - paragraph: Already at his wit's end, 29-year-old corporate slave Seiichirou Kondou suddenly witnesses the ground opening up and swa...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 7.0
+                - generic:
+                  - generic: Boys Love
+                  - generic: Fantasy
+          - generic [ref=e1599]: "Isekai Office Worker: The Other World's Books Depend on the Bean Counter"
+          - generic [ref=e1600]: 2026 · 12 ep
+        - link "Hana-Kimi 7.0 After seeing Izumi Sano at a high jump competition, Mizuki Ashiya became completely enamored by him—even moving from the... 12 episodes ★ 7.0 Hana-Kimi 2026 · 12 ep" [ref=e1602] [cursor=pointer]:
+          - /url: /show/efa58f3f-48be-4999-b825-8bcd02197ca9
+          - generic [ref=e1603]:
+            - img "Hana-Kimi" [ref=e1605]
+            - generic [ref=e1606]: "7.0"
+            - generic:
+              - generic:
+                - paragraph: After seeing Izumi Sano at a high jump competition, Mizuki Ashiya became completely enamored by him—even moving from the...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 7.0
+          - generic [ref=e1607]: Hana-Kimi
+          - generic [ref=e1608]: 2026 · 12 ep
+        - link "Wash It All Away 7.0 With an endearing protagonist and luscious art, this seaside slice-of-life story offers tranquility in the chaos of the ... 1 episodes ★ 7.0 Wash It All Away 2026 · 1 ep" [ref=e1610] [cursor=pointer]:
+          - /url: /show/cf9cb6f2-c470-4102-b9a9-1a02efdc2363
+          - generic [ref=e1611]:
+            - img "Wash It All Away" [ref=e1613]
+            - generic [ref=e1614]: "7.0"
+            - generic:
+              - generic:
+                - paragraph: With an endearing protagonist and luscious art, this seaside slice-of-life story offers tranquility in the chaos of the ...
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 7.0
+          - generic [ref=e1615]: Wash It All Away
+          - generic [ref=e1616]: 2026 · 1 ep
+        - link "The Darwin Incident 6.9 The Animal Liberation Alliance, an eco-terrorist organization, rescues a pregnant chimpanzee from an animal testing lab—... 13 episodes ★ 6.9 The Darwin Incident 2026 · 13 ep" [ref=e1618] [cursor=pointer]:
+          - /url: /show/fcc02ead-4116-4bd7-80eb-892e80ee0552
+          - generic [ref=e1619]:
+            - img "The Darwin Incident" [ref=e1621]
+            - generic [ref=e1622]: "6.9"
+            - generic:
+              - generic:
+                - paragraph: The Animal Liberation Alliance, an eco-terrorist organization, rescues a pregnant chimpanzee from an animal testing lab—...
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 6.9
+          - generic [ref=e1623]: The Darwin Incident
+          - generic [ref=e1624]: 2026 · 13 ep
+        - link "There was a Cute Girl in the Hero's Party, so I Tried Confessing to Her 6.9 Youki died in a traffic accident and was reborn in a fantasy world! However, instead of being the hero of legends, he en... ★ 6.9 Adventure Comedy Fantasy There was a Cute Girl in the Hero's Party, so I Tried Confessing to Her 2026 · ? ep" [ref=e1626] [cursor=pointer]:
+          - /url: /show/d552aa64-e1c6-49bb-8164-ba30d5dfbc50
+          - generic [ref=e1627]:
+            - img "There was a Cute Girl in the Hero's Party, so I Tried Confessing to Her" [ref=e1629]
+            - generic [ref=e1630]: "6.9"
+            - generic:
+              - generic:
+                - paragraph: Youki died in a traffic accident and was reborn in a fantasy world! However, instead of being the hero of legends, he en...
+                - generic:
+                  - generic: ★ 6.9
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e1631]: There was a Cute Girl in the Hero's Party, so I Tried Confessing to Her
+          - generic [ref=e1632]: 2026 · ? ep
+        - link "Blue Miburo Season 2 6.9 Second season of Ao no Miburo. 1 episodes ★ 6.9 Blue Miburo Season 2 2025 · 1 ep" [ref=e1634] [cursor=pointer]:
+          - /url: /show/dfd85587-62d8-47ea-adef-53a0f4b78b04
+          - generic [ref=e1635]:
+            - img "Blue Miburo Season 2" [ref=e1637]
+            - generic [ref=e1638]: "6.9"
+            - generic:
+              - generic:
+                - paragraph: Second season of Ao no Miburo.
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.9
+          - generic [ref=e1639]: Blue Miburo Season 2
+          - generic [ref=e1640]: 2025 · 1 ep
+        - 'link "Himitsu no AiPri: Ring-hen 6.9 Second season of Himitsu no AiPri. 51 episodes ★ 6.9 Himitsu no AiPri: Ring-hen 2025 · 51 ep" [ref=e1642] [cursor=pointer]':
+          - /url: /show/590a51b6-bb0c-497a-807f-09fbe6dced91
+          - generic [ref=e1643]:
+            - 'img "Himitsu no AiPri: Ring-hen" [ref=e1645]'
+            - generic [ref=e1646]: "6.9"
+            - generic:
+              - generic:
+                - paragraph: Second season of Himitsu no AiPri.
+                - generic:
+                  - generic: 51 episodes
+                  - generic: ★ 6.9
+          - generic [ref=e1647]: "Himitsu no AiPri: Ring-hen"
+          - generic [ref=e1648]: 2025 · 51 ep
+        - link "Beyblade X 6.9 At the heart of X City stands the impressive X Tower, an interconnected twin-skyscraper structure that symbolizes the pi... 127 episodes ★ 6.9 Adventure Sports Beyblade X 2023 · 127 ep" [ref=e1288] [cursor=pointer]:
+          - /url: /show/b0319944-d5b8-4685-affc-f26851d581f2
+          - generic [ref=e516]:
+            - img "Beyblade X" [ref=e1289]
+            - generic [ref=e520]: "6.9"
+            - generic:
+              - generic:
+                - paragraph: At the heart of X City stands the impressive X Tower, an interconnected twin-skyscraper structure that symbolizes the pi...
+                - generic:
+                  - generic: 127 episodes
+                  - generic: ★ 6.9
+                - generic:
+                  - generic: Adventure
+                  - generic: Sports
+          - generic [ref=e521]: Beyblade X
+          - generic [ref=e522]: 2023 · 127 ep
+        - link "Sore Ike! Anpanman 6.9 One night, a Star of Life falls down the chimney of a bakery nestled deep in the forest, causing the dough in the oven t... 76 episodes ★ 6.9 Comedy Fantasy Sore Ike! Anpanman 1988 · 76 ep" [ref=e1294] [cursor=pointer]:
+          - /url: /show/739f8d2d-97bc-4bcc-ad0f-1e076de4d889
+          - generic [ref=e543]:
+            - img "Sore Ike! Anpanman" [ref=e1295]
+            - generic [ref=e547]: "6.9"
+            - generic:
+              - generic:
+                - paragraph: One night, a Star of Life falls down the chimney of a bakery nestled deep in the forest, causing the dough in the oven t...
+                - generic:
+                  - generic: 76 episodes
+                  - generic: ★ 6.9
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e548]: Sore Ike! Anpanman
+          - generic [ref=e549]: 1988 · 76 ep
+        - link "Kunon the Sorcerer Can See 6.8 Born blind, Kunon aims to be the first person to use water magic to create new eyes for himself. After five months of st... ★ 6.8 Kunon the Sorcerer Can See 2026 · ? ep" [ref=e1650] [cursor=pointer]:
+          - /url: /show/70ce6595-5582-4c1c-9960-2e0041ccc377
+          - generic [ref=e1651]:
+            - img "Kunon the Sorcerer Can See" [ref=e1653]
+            - generic [ref=e1654]: "6.8"
+            - generic:
+              - generic:
+                - paragraph: Born blind, Kunon aims to be the first person to use water magic to create new eyes for himself. After five months of st...
+                - generic:
+                  - generic: ★ 6.8
+          - generic [ref=e1655]: Kunon the Sorcerer Can See
+          - generic [ref=e1656]: 2026 · ? ep
+        - link "Jack-of-All-Trades, Party of None 6.8 \"Orn Doula, today will be your last day in the party.\" Orn, once a skilled Swordsman, had adapted to the role of Enchan... 1 episodes ★ 6.8 Action Adventure Fantasy Jack-of-All-Trades, Party of None 2026 · 1 ep" [ref=e1658] [cursor=pointer]:
+          - /url: /show/cefd27e3-c6be-4e7f-96f2-f8e47d349616
+          - generic [ref=e1659]:
+            - img "Jack-of-All-Trades, Party of None" [ref=e1661]
+            - generic [ref=e1662]: "6.8"
+            - generic:
+              - generic:
+                - paragraph: "\"Orn Doula, today will be your last day in the party.\" Orn, once a skilled Swordsman, had adapted to the role of Enchan..."
+                - generic:
+                  - generic: 1 episodes
+                  - generic: ★ 6.8
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1663]: Jack-of-All-Trades, Party of None
+          - generic [ref=e1664]: 2026 · 1 ep
+        - link "Princession Orchestra 6.7 Alicepia Channel is a video sharing website exclusively for girls to share their singing, makeup, and dancing. Unbeknown... 48 episodes ★ 6.7 Action Fantasy Princession Orchestra 2025 · 48 ep" [ref=e1666] [cursor=pointer]:
+          - /url: /show/807ade25-dd90-46f4-8cca-d2509d2e7d8c
+          - generic [ref=e1667]:
+            - img "Princession Orchestra" [ref=e1669]
+            - generic [ref=e1670]: "6.7"
+            - generic:
+              - generic:
+                - paragraph: Alicepia Channel is a video sharing website exclusively for girls to share their singing, makeup, and dancing. Unbeknown...
+                - generic:
+                  - generic: 48 episodes
+                  - generic: ★ 6.7
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+          - generic [ref=e1671]: Princession Orchestra
+          - generic [ref=e1672]: 2025 · 48 ep
+        - link "A Gentle Noble's Vacation Recommendation 6.7 When Lizel mysteriously finds himself in a city that bears odd similarities to his own but clearly isn't, he quickly com... 12 episodes ★ 6.7 Adventure Fantasy Slice of Life A Gentle Noble's Vacation Recommendation 2026 · 12 ep" [ref=e1674] [cursor=pointer]:
+          - /url: /show/5a1695f2-138f-45d7-a591-7430e9782993
+          - generic [ref=e1675]:
+            - img "A Gentle Noble's Vacation Recommendation" [ref=e1677]
+            - generic [ref=e1678]: "6.7"
+            - generic:
+              - generic:
+                - paragraph: When Lizel mysteriously finds himself in a city that bears odd similarities to his own but clearly isn't, he quickly com...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.7
+                - generic:
+                  - generic: Adventure
+                  - generic: Fantasy
+                  - generic: Slice of Life
+          - generic [ref=e1679]: A Gentle Noble's Vacation Recommendation
+          - generic [ref=e1680]: 2026 · 12 ep
+        - link "You Can't Be In a Rom-Com with Your Childhood Friends! 6.7 High schooler Eiyuu has a dilemma—his two childhood friends, Shio and Akari, have grown up to be almost too cute! Even t... 12 episodes ★ 6.7 Comedy Romance You Can't Be In a Rom-Com with Your Childhood Friends! 2026 · 12 ep" [ref=e1682] [cursor=pointer]:
+          - /url: /show/ca146b9b-ed96-4b4e-8386-13e7af04d95e
+          - generic [ref=e1683]:
+            - img "You Can't Be In a Rom-Com with Your Childhood Friends!" [ref=e1685]
+            - generic [ref=e1686]: "6.7"
+            - generic:
+              - generic:
+                - paragraph: High schooler Eiyuu has a dilemma—his two childhood friends, Shio and Akari, have grown up to be almost too cute! Even t...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.7
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1687]: You Can't Be In a Rom-Com with Your Childhood Friends!
+          - generic [ref=e1688]: 2026 · 12 ep
+        - link "Yoroi-Shinden Samurai Troopers 6.7 Sequel to Yoroiden Samurai Troopers. 13 episodes ★ 6.7 Adventure Sci-Fi Yoroi-Shinden Samurai Troopers 2026 · 13 ep" [ref=e1690] [cursor=pointer]:
+          - /url: /show/98dbcfba-22b4-4787-af23-7db805fc12c0
+          - generic [ref=e1691]:
+            - img "Yoroi-Shinden Samurai Troopers" [ref=e1693]
+            - generic [ref=e1694]: "6.7"
+            - generic:
+              - generic:
+                - paragraph: Sequel to Yoroiden Samurai Troopers.
+                - generic:
+                  - generic: 13 episodes
+                  - generic: ★ 6.7
+                - generic:
+                  - generic: Adventure
+                  - generic: Sci-Fi
+          - generic [ref=e1695]: Yoroi-Shinden Samurai Troopers
+          - generic [ref=e1696]: 2026 · 13 ep
+        - link "Tom and Jerry 6.7 To celebrate \"Cheese Day,\" (November 11 in Japan), Cartoon Network Japan aired an anime spin on Tom and Jerry that combi... 25 episodes ★ 6.7 Tom and Jerry 2022 · 25 ep" [ref=e1300] [cursor=pointer]:
+          - /url: /show/b675e39b-cdec-485b-b0ad-116739711df0
+          - generic [ref=e570]:
+            - img "Tom and Jerry" [ref=e1301]
+            - generic [ref=e574]: "6.7"
+            - generic:
+              - generic:
+                - paragraph: To celebrate "Cheese Day," (November 11 in Japan), Cartoon Network Japan aired an anime spin on Tom and Jerry that combi...
+                - generic:
+                  - generic: 25 episodes
+                  - generic: ★ 6.7
+          - generic [ref=e575]: Tom and Jerry
+          - generic [ref=e576]: 2022 · 25 ep
+        - 'link "Noble Reincarnation: Born Blessed, So I''ll Obtain Ultimate Power 6.6 Noah, the world''s strongest six-year-old, holds the fortunate position of being the Thirteenth Prince of the emperor. Bo... ★ 6.6 Action Adventure Fantasy Noble Reincarnation: Born Blessed, So I''ll Obtain Ultimate Power 2026 · ? ep" [ref=e1698] [cursor=pointer]':
+          - /url: /show/04f26472-d43b-4681-8f55-3a43578a7f36
+          - generic [ref=e1699]:
+            - 'img "Noble Reincarnation: Born Blessed, So I''ll Obtain Ultimate Power" [ref=e1701]'
+            - generic [ref=e1702]: "6.6"
+            - generic:
+              - generic:
+                - paragraph: Noah, the world's strongest six-year-old, holds the fortunate position of being the Thirteenth Prince of the emperor. Bo...
+                - generic:
+                  - generic: ★ 6.6
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1703]: "Noble Reincarnation: Born Blessed, So I'll Obtain Ultimate Power"
+          - generic [ref=e1704]: 2026 · ? ep
+        - link "Scum of the Brave 6.6 By the mid-21st century, Tokyo's criminal underworld is ruled by Demon Lords—crime bosses who have undergone ether enhan... 24 episodes ★ 6.6 Scum of the Brave 2026 · 24 ep" [ref=e1310] [cursor=pointer]:
+          - /url: /show/f6d42ba2-f8ad-4a71-8af7-eb3157faac63
+          - generic [ref=e615]:
+            - img "Scum of the Brave" [ref=e1311]
+            - generic [ref=e619]: "6.6"
+            - generic:
+              - generic:
+                - paragraph: By the mid-21st century, Tokyo's criminal underworld is ruled by Demon Lords—crime bosses who have undergone ether enhan...
+                - generic:
+                  - generic: 24 episodes
+                  - generic: ★ 6.6
+          - generic [ref=e620]: Scum of the Brave
+          - generic [ref=e621]: 2026 · 24 ep
+        - link "The Case Book of Arne 6.5 Arne Neuntöte is a vampire detective who manipulates supernatural powers. Lynn Reinweiß is a nobleman's daughter who lov... 12 episodes ★ 6.5 Fantasy Mystery The Case Book of Arne 2026 · 12 ep" [ref=e1706] [cursor=pointer]:
+          - /url: /show/15f1ad65-3023-43fb-8848-e0708d4d272b
+          - generic [ref=e1707]:
+            - img "The Case Book of Arne" [ref=e1709]
+            - generic [ref=e1710]: "6.5"
+            - generic:
+              - generic:
+                - paragraph: Arne Neuntöte is a vampire detective who manipulates supernatural powers. Lynn Reinweiß is a nobleman's daughter who lov...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.5
+                - generic:
+                  - generic: Fantasy
+                  - generic: Mystery
+          - generic [ref=e1711]: The Case Book of Arne
+          - generic [ref=e1712]: 2026 · 12 ep
+        - link "An Adventurer's Daily Grind at Age 29 6.4 This story is about Shinonome Hajime, an adventurer of Silver Range. He's dedicated to fulfilling missions from the guil... 12 episodes ★ 6.4 Adventure Fantasy An Adventurer's Daily Grind at Age 29 2026 · 12 ep" [ref=e1714] [cursor=pointer]:
+          - /url: /show/dc5a5ebf-7846-46e6-a91b-97c1aab5cf0a
+          - generic [ref=e1715]:
+            - img "An Adventurer's Daily Grind at Age 29" [ref=e1717]
+            - generic [ref=e1718]: "6.4"
+            - generic:
+              - generic:
+                - paragraph: This story is about Shinonome Hajime, an adventurer of Silver Range. He's dedicated to fulfilling missions from the guil...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 6.4
+                - generic:
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1719]: An Adventurer's Daily Grind at Age 29
+          - generic [ref=e1720]: 2026 · 12 ep
+        - link "Bono Bono 6.4 Based on the original comic BONO BONO by Mikio Igarashi that has seen over 9,000,000 total copies printed, this is the d... 50 episodes ★ 6.4 Bono Bono 2016 · 50 ep" [ref=e1318] [cursor=pointer]:
+          - /url: /show/30228372-bfe9-4b82-838b-9d27c12cc4f2
+          - generic [ref=e651]:
+            - img "Bono Bono" [ref=e1319]
+            - generic [ref=e655]: "6.4"
+            - generic:
+              - generic:
+                - paragraph: Based on the original comic BONO BONO by Mikio Igarashi that has seen over 9,000,000 total copies printed, this is the d...
+                - generic:
+                  - generic: 50 episodes
+                  - generic: ★ 6.4
+          - generic [ref=e656]: Bono Bono
+          - generic [ref=e657]: 2016 · 50 ep
+        - link "Prince Mackaroo 6.4 In the Heian era, around 1000 years ago, a young boy of noble family named Ojarumaru is bored with his life of privilege... 90 episodes ★ 6.4 Adventure Award Winning Comedy Prince Mackaroo 1998 · 90 ep" [ref=e1320] [cursor=pointer]:
+          - /url: /show/78000b2e-f070-47bc-87fa-a86154d24182
+          - generic [ref=e660]:
+            - img "Prince Mackaroo" [ref=e1321]
+            - generic [ref=e664]: "6.4"
+            - generic:
+              - generic:
+                - paragraph: In the Heian era, around 1000 years ago, a young boy of noble family named Ojarumaru is bored with his life of privilege...
+                - generic:
+                  - generic: 90 episodes
+                  - generic: ★ 6.4
+                - generic:
+                  - generic: Adventure
+                  - generic: Award Winning
+                  - generic: Comedy
+          - generic [ref=e665]: Prince Mackaroo
+          - generic [ref=e666]: 1998 · 90 ep
+        - link "Puzzle & Dragon 6.3 The story is set in modern day Japan following the growth of the protagonist Taiga Akashi, an elementary school kid who ... 153 episodes ★ 6.3 Puzzle & Dragon 2018 · 153 ep" [ref=e1324] [cursor=pointer]:
+          - /url: /show/8441ec25-0c37-4f3b-9c41-2bb4f1748687
+          - generic [ref=e678]:
+            - img "Puzzle & Dragon" [ref=e1325]
+            - generic [ref=e682]: "6.3"
+            - generic:
+              - generic:
+                - paragraph: The story is set in modern day Japan following the growth of the protagonist Taiga Akashi, an elementary school kid who ...
+                - generic:
+                  - generic: 153 episodes
+                  - generic: ★ 6.3
+          - generic [ref=e683]: Puzzle & Dragon
+          - generic [ref=e684]: 2018 · 153 ep
+        - link "Mrs. Sazae 6.2 The main character is a mother named Sazae-san. She lives in a house with her husband, her kids and her parents. The sho... 52 episodes ★ 6.2 Mrs. Sazae 1969 · 52 ep" [ref=e1332] [cursor=pointer]:
+          - /url: /show/973aa6bd-5610-4006-b28c-dd807f84ab26
+          - generic [ref=e714]:
+            - img "Mrs. Sazae" [ref=e1333]
+            - generic [ref=e718]: "6.2"
+            - generic:
+              - generic:
+                - paragraph: The main character is a mother named Sazae-san. She lives in a house with her husband, her kids and her parents. The sho...
+                - generic:
+                  - generic: 52 episodes
+                  - generic: ★ 6.2
+          - generic [ref=e719]: Mrs. Sazae
+          - generic [ref=e720]: 1969 · 52 ep
+        - 'link "Nmeneko 6.1 Follows the funny and amusing daily lives of two cats who want to live life doing only fun things. (Source: ANN) 48 episodes ★ 6.1 Nmeneko 2025 · 48 ep" [ref=e1722] [cursor=pointer]':
+          - /url: /show/a6785cc0-f8e7-4477-bb0b-7343a70d8cca
+          - generic [ref=e1723]:
+            - img "Nmeneko" [ref=e1725]
+            - generic [ref=e1726]: "6.1"
+            - generic:
+              - generic:
+                - paragraph: "Follows the funny and amusing daily lives of two cats who want to live life doing only fun things. (Source: ANN)"
+                - generic:
+                  - generic: 48 episodes
+                  - generic: ★ 6.1
+          - generic [ref=e1727]: Nmeneko
+          - generic [ref=e1728]: 2025 · 48 ep
+        - 'link "Fushigi Dagashiya: Zenitendou 6.1 Zenitendo is a mysterious candy store that only lucky people can reach. All the candy recommended by Beniko, the owner o... 123 episodes ★ 6.1 Fushigi Dagashiya: Zenitendou 2020 · 123 ep" [ref=e1334] [cursor=pointer]':
+          - /url: /show/f38afd38-e0d4-4d37-ab36-984e3bbb5a7d
+          - generic [ref=e723]:
+            - 'img "Fushigi Dagashiya: Zenitendou" [ref=e1335]'
+            - generic [ref=e727]: "6.1"
+            - generic:
+              - generic:
+                - paragraph: Zenitendo is a mysterious candy store that only lucky people can reach. All the candy recommended by Beniko, the owner o...
+                - generic:
+                  - generic: 123 episodes
+                  - generic: ★ 6.1
+          - generic [ref=e728]: "Fushigi Dagashiya: Zenitendou"
+          - generic [ref=e729]: 2020 · 123 ep
+        - link "Ganglion 6.0 Early 2000s Tokyo. Isobe, a combatant for the evil corporation Ganglion, spends his days on the battlefield. Whether it'... 24 episodes ★ 6.0 Ganglion 2025 · 24 ep" [ref=e1730] [cursor=pointer]:
+          - /url: /show/a01280f9-be2b-432a-a073-84ce2d36f97d
+          - generic [ref=e1731]:
+            - img "Ganglion" [ref=e1733]
+            - generic [ref=e1734]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: Early 2000s Tokyo. Isobe, a combatant for the evil corporation Ganglion, spends his days on the battlefield. Whether it'...
+                - generic:
+                  - generic: 24 episodes
+                  - generic: ★ 6.0
+          - generic [ref=e1735]: Ganglion
+          - generic [ref=e1736]: 2025 · 24 ep
+        - 'link "SI-VIS: The Sound of Heroes 6.0 SI-VIS is a co-ed music group, led by Yosuke, shaking up the global music scene with their unmatched vocals and performa... 24 episodes ★ 6.0 SI-VIS: The Sound of Heroes 2025 · 24 ep" [ref=e1738] [cursor=pointer]':
+          - /url: /show/ca7380cd-c603-48fa-9d64-dd2515460ff4
+          - generic [ref=e1739]:
+            - 'img "SI-VIS: The Sound of Heroes" [ref=e1741]'
+            - generic [ref=e1742]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: SI-VIS is a co-ed music group, led by Yosuke, shaking up the global music scene with their unmatched vocals and performa...
+                - generic:
+                  - generic: 24 episodes
+                  - generic: ★ 6.0
+          - generic [ref=e1743]: "SI-VIS: The Sound of Heroes"
+          - generic [ref=e1744]: 2025 · 24 ep
+        - link "Hanakappa 6.0 Story about Kappa with flowers on their heads. 66 episodes ★ 6.0 Hanakappa 2010 · 66 ep" [ref=e1338] [cursor=pointer]:
+          - /url: /show/f0044764-2278-49d5-a78a-930aeaac13a8
+          - generic [ref=e741]:
+            - img "Hanakappa" [ref=e1339]
+            - generic [ref=e745]: "6.0"
+            - generic:
+              - generic:
+                - paragraph: Story about Kappa with flowers on their heads.
+                - generic:
+                  - generic: 66 episodes
+                  - generic: ★ 6.0
+          - generic [ref=e746]: Hanakappa
+          - generic [ref=e747]: 2010 · 66 ep
+        - link "Saioshi no Gikei wo Mederu Tame, Nagaiki shimasu! 5.8 Alba is reborn as the son of a poor nobleman. He is unable to use magic due to a disease and is destined to have a short... ★ 5.8 Boys Love Fantasy Saioshi no Gikei wo Mederu Tame, Nagaiki shimasu! 2026 · ? ep" [ref=e1746] [cursor=pointer]:
+          - /url: /show/0f19b1e4-a1b3-488d-b95a-0a9818adab69
+          - generic [ref=e1747]:
+            - img "Saioshi no Gikei wo Mederu Tame, Nagaiki shimasu!" [ref=e1749]
+            - generic [ref=e1750]: "5.8"
+            - generic:
+              - generic:
+                - paragraph: Alba is reborn as the son of a poor nobleman. He is unable to use magic due to a disease and is destined to have a short...
+                - generic:
+                  - generic: ★ 5.8
+                - generic:
+                  - generic: Boys Love
+                  - generic: Fantasy
+          - generic [ref=e1751]: Saioshi no Gikei wo Mederu Tame, Nagaiki shimasu!
+          - generic [ref=e1752]: 2026 · ? ep
+        - 'link "Kamiusagi Rope: Warau Asa ni wa Fukuraitaru tte Maji ssuka!? 5.8 Fourth season of Kamiusagi Rope, events occur after the feature film. Airs on Mezamashi TV instead of the theaters. ★ 5.8 Kamiusagi Rope: Warau Asa ni wa Fukuraitaru tte Maji ssuka!? 2012 · ? ep" [ref=e1344] [cursor=pointer]':
+          - /url: /show/7fcda893-24f3-4b05-8923-41e13b65935d
+          - generic [ref=e768]:
+            - 'img "Kamiusagi Rope: Warau Asa ni wa Fukuraitaru tte Maji ssuka!?" [ref=e1345]'
+            - generic [ref=e772]: "5.8"
+            - generic:
+              - generic:
+                - paragraph: Fourth season of Kamiusagi Rope, events occur after the feature film. Airs on Mezamashi TV instead of the theaters.
+                - generic:
+                  - generic: ★ 5.8
+          - generic [ref=e773]: "Kamiusagi Rope: Warau Asa ni wa Fukuraitaru tte Maji ssuka!?"
+          - generic [ref=e774]: 2012 · ? ep
+        - link "The Daily Life of a Part-time Torturer 5.7 This is a world where killing and torture are legalized. Sero, a part-time worker at a torture company, enjoys torturing... 12 episodes ★ 5.7 The Daily Life of a Part-time Torturer 2026 · 12 ep" [ref=e1754] [cursor=pointer]:
+          - /url: /show/f68fe7c4-73cb-4c9c-a6cf-ef3a1e81c8de
+          - generic [ref=e1755]:
+            - img "The Daily Life of a Part-time Torturer" [ref=e1757]
+            - generic [ref=e1758]: "5.7"
+            - generic:
+              - generic:
+                - paragraph: This is a world where killing and torture are legalized. Sero, a part-time worker at a torture company, enjoys torturing...
+                - generic:
+                  - generic: 12 episodes
+                  - generic: ★ 5.7
+          - generic [ref=e1759]: The Daily Life of a Part-time Torturer
+          - generic [ref=e1760]: 2026 · 12 ep
+        - link "Ninjala (TV) 5.6 The year is 20XX. The ninja, who once forged the history of Japan, were scattered across the country during the Meiji Re... 175 episodes ★ 5.6 Ninjala (TV) 2022 · 175 ep" [ref=e1352] [cursor=pointer]:
+          - /url: /show/1c3a9f64-4764-49da-ba64-2da87597ee2a
+          - generic [ref=e804]:
+            - img "Ninjala (TV)" [ref=e1353]
+            - generic [ref=e808]: "5.6"
+            - generic:
+              - generic:
+                - paragraph: The year is 20XX. The ninja, who once forged the history of Japan, were scattered across the country during the Meiji Re...
+                - generic:
+                  - generic: 175 episodes
+                  - generic: ★ 5.6
+          - generic [ref=e809]: Ninjala (TV)
+          - generic [ref=e810]: 2022 · 175 ep
+        - link "'Tis Time for \"Torture,\" Princess Season 2 Second season of Himesama \"Goumon\" no Jikan desu. 12 episodes Comedy Fantasy Gourmet 'Tis Time for \"Torture,\" Princess Season 2 2026 · 12 ep" [ref=e1762] [cursor=pointer]:
+          - /url: /show/78e0f5e7-8441-49e0-afbf-09817c5b1051
+          - generic [ref=e1763]:
+            - img "'Tis Time for \"Torture,\" Princess Season 2" [ref=e1765]
+            - generic:
+              - generic:
+                - paragraph: Second season of Himesama "Goumon" no Jikan desu.
+                - generic:
+                  - generic: 12 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+                  - generic: Gourmet
+          - generic [ref=e1766]: "'Tis Time for \"Torture,\" Princess Season 2"
+          - generic [ref=e1767]: 2026 · 12 ep
+        - link "[Oshi No Ko] Season 3 The story moves on to a new stage──half a year has passed since the release of \"POP IN 2.\" Thanks to Mem-cho's hard work... [Oshi No Ko] Season 3 2026 · ? ep" [ref=e1769] [cursor=pointer]:
+          - /url: /show/f94b74ed-6d5d-4614-a4bf-79e05ca0cdfb
+          - generic [ref=e1770]:
+            - img "[Oshi No Ko] Season 3" [ref=e1772]
+            - generic:
+              - generic:
+                - paragraph: The story moves on to a new stage──half a year has passed since the release of "POP IN 2." Thanks to Mem-cho's hard work...
+          - generic [ref=e1773]: "[Oshi No Ko] Season 3"
+          - generic [ref=e1774]: 2026 · ? ep
+        - link "A Misanthrope Teaches a Class for Demi-Humans I'm Rei Hitoma, a self-professed misanthrope thanks to some past trauma. Just when I thought my new teaching job in the ... 13 episodes Drama Supernatural A Misanthrope Teaches a Class for Demi-Humans 2026 · 13 ep" [ref=e1776] [cursor=pointer]:
+          - /url: /show/c03b17f8-1ce7-416c-8eab-f508d00efd52
+          - generic [ref=e1777]:
+            - img "A Misanthrope Teaches a Class for Demi-Humans" [ref=e1779]
+            - generic:
+              - generic:
+                - paragraph: I'm Rei Hitoma, a self-professed misanthrope thanks to some past trauma. Just when I thought my new teaching job in the ...
+                - generic:
+                  - generic: 13 episodes
+                - generic:
+                  - generic: Drama
+                  - generic: Supernatural
+          - generic [ref=e1780]: A Misanthrope Teaches a Class for Demi-Humans
+          - generic [ref=e1781]: 2026 · 13 ep
+        - link "Anyway, I'm Falling in Love with You. Season 2 Second season of Douse, Koishite Shimaunda.. Drama Romance Anyway, I'm Falling in Love with You. Season 2 2026 · ? ep" [ref=e1783] [cursor=pointer]:
+          - /url: /show/840d7417-c715-420a-8e6d-55f3b57c1fe3
+          - generic [ref=e1784]:
+            - img "Anyway, I'm Falling in Love with You. Season 2" [ref=e1786]
+            - generic:
+              - generic:
+                - paragraph: Second season of Douse, Koishite Shimaunda..
+                - generic:
+                  - generic: Drama
+                  - generic: Romance
+          - generic [ref=e1787]: Anyway, I'm Falling in Love with You. Season 2
+          - generic [ref=e1788]: 2026 · ? ep
+        - 'link "Cardfight!! Vanguard: Divinez Parallactic Clash Akina and his friends, having strayed into the Fantasma, find their path blocked by \"Fantôme Fighters\". The only ones w... Cardfight!! Vanguard: Divinez Parallactic Clash 2026 · ? ep" [ref=e1790] [cursor=pointer]':
+          - /url: /show/dc7cdd08-0f28-4ac6-98ac-4a2552c5adc7
+          - generic [ref=e1791]:
+            - 'img "Cardfight!! Vanguard: Divinez Parallactic Clash" [ref=e1793]'
+            - generic:
+              - generic:
+                - paragraph: Akina and his friends, having strayed into the Fantasma, find their path blocked by "Fantôme Fighters". The only ones w...
+          - generic [ref=e1794]: "Cardfight!! Vanguard: Divinez Parallactic Clash"
+          - generic [ref=e1795]: 2026 · ? ep
+        - link "Chained Soldier Season 2 Second season of Mato Seihei no Slave. Action Fantasy Ecchi Chained Soldier Season 2 2026 · ? ep" [ref=e1797] [cursor=pointer]:
+          - /url: /show/e954c42d-df9f-4c3d-9b8e-d93bfeaafc08
+          - generic [ref=e1798]:
+            - img "Chained Soldier Season 2" [ref=e1800]
+            - generic:
+              - generic:
+                - paragraph: Second season of Mato Seihei no Slave.
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+                  - generic: Ecchi
+          - generic [ref=e1801]: Chained Soldier Season 2
+          - generic [ref=e1802]: 2026 · ? ep
+        - link "Champignon Witch Deep within the Black Forest teeming with poisonous mushrooms, a witch named Luna lives alone. With skin that is poisono... 12 episodes Adventure Drama Fantasy Champignon Witch 2026 · 12 ep" [ref=e1804] [cursor=pointer]:
+          - /url: /show/1350ae7f-8002-4d15-89c8-6dd248fa780d
+          - generic [ref=e1805]:
+            - img "Champignon Witch" [ref=e1807]
+            - generic:
+              - generic:
+                - paragraph: Deep within the Black Forest teeming with poisonous mushrooms, a witch named Luna lives alone. With skin that is poisono...
+                - generic:
+                  - generic: 12 episodes
+                - generic:
+                  - generic: Adventure
+                  - generic: Drama
+                  - generic: Fantasy
+          - generic [ref=e1808]: Champignon Witch
+          - generic [ref=e1809]: 2026 · 12 ep
+        - 'link "Dark Moon: The Blood Altar Ever since she was a young girl, Sooha was told to hide her superhuman abilities to avoid getting mistaken for a vampire... Dark Moon: The Blood Altar 2026 · ? ep" [ref=e1811] [cursor=pointer]':
+          - /url: /show/1a765e9b-b430-4ca4-90e0-d98871c11de1
+          - generic [ref=e1812]:
+            - 'img "Dark Moon: The Blood Altar" [ref=e1814]'
+            - generic:
+              - generic:
+                - paragraph: Ever since she was a young girl, Sooha was told to hide her superhuman abilities to avoid getting mistaken for a vampire...
+          - generic [ref=e1815]: "Dark Moon: The Blood Altar"
+          - generic [ref=e1816]: 2026 · ? ep
+        - link "Dead Account Always ready for a fight! Destruction for destruction's sake! The online streamer Aoringo is a troll, making the worst o... 12 episodes Action Supernatural Dead Account 2026 · 12 ep" [ref=e1818] [cursor=pointer]:
+          - /url: /show/ac273deb-96b9-491f-a13d-bd47ed4184f3
+          - generic [ref=e1819]:
+            - img "Dead Account" [ref=e1821]
+            - generic:
+              - generic:
+                - paragraph: Always ready for a fight! Destruction for destruction's sake! The online streamer Aoringo is a troll, making the worst o...
+                - generic:
+                  - generic: 12 episodes
+                - generic:
+                  - generic: Action
+                  - generic: Supernatural
+          - generic [ref=e1822]: Dead Account
+          - generic [ref=e1823]: 2026 · 12 ep
+        - link "Does It Count If You Lose Your Innocence to an Android? Office Lady Tsuda Akane, age 28, seems like she's got it all together. Beautiful, brainy, and an indispensable office wo... 8 episodes Girls Love Sci-Fi Erotica Does It Count If You Lose Your Innocence to an Android? 2026 · 8 ep" [ref=e1825] [cursor=pointer]:
+          - /url: /show/3cffc748-f39c-4eed-8aca-8cd150aaebb0
+          - generic [ref=e1826]:
+            - img "Does It Count If You Lose Your Innocence to an Android?" [ref=e1828]
+            - generic:
+              - generic:
+                - paragraph: Office Lady Tsuda Akane, age 28, seems like she's got it all together. Beautiful, brainy, and an indispensable office wo...
+                - generic:
+                  - generic: 8 episodes
+                - generic:
+                  - generic: Girls Love
+                  - generic: Sci-Fi
+                  - generic: Erotica
+          - generic [ref=e1829]: Does It Count If You Lose Your Innocence to an Android?
+          - generic [ref=e1830]: 2026 · 8 ep
+        - 'link "Easygoing Territory Defense by the Optimistic Lord: Production Magic Turns a Nameless Village into the Strongest Fortified City Van, the fourth son of a powerful noble, is only two years old when he remembers his past life as a salaryman in Japan. ... Easygoing Territory Defense by the Optimistic Lord: Production Magic Turns a Nameless Village into the Strongest Fortified City 2026 · ? ep" [ref=e1832] [cursor=pointer]':
+          - /url: /show/4bd2055d-eec7-4a8c-80b7-36ece82ba73d
+          - generic [ref=e1833]:
+            - 'img "Easygoing Territory Defense by the Optimistic Lord: Production Magic Turns a Nameless Village into the Strongest Fortified City" [ref=e1835]'
+            - generic:
+              - generic:
+                - paragraph: Van, the fourth son of a powerful noble, is only two years old when he remembers his past life as a salaryman in Japan. ...
+          - generic [ref=e1836]: "Easygoing Territory Defense by the Optimistic Lord: Production Magic Turns a Nameless Village into the Strongest Fortified City"
+          - generic [ref=e1837]: 2026 · ? ep
+        - 'link "Loading image Fire Force Season 3 Part 2 Second part of Enen no Shouboutai: San no Shou. Action Fantasy Sci-Fi Fire Force Season 3 Part 2 2026 · ? ep" [ref=e1839] [cursor=pointer]':
+          - /url: /show/1fa135a4-e4e8-4f13-a985-00de47fa864a
+          - generic [ref=e1840]:
+            - generic [ref=e1841]:
+              - status "Loading image" [ref=e1842]:
+                - generic [ref=e1843]: Loading...
+              - img "Fire Force Season 3 Part 2" [ref=e1844]
+            - generic:
+              - generic:
+                - paragraph: "Second part of Enen no Shouboutai: San no Shou."
+                - generic:
+                  - generic: Action
+                  - generic: Fantasy
+                  - generic: Sci-Fi
+          - generic [ref=e1845]: Fire Force Season 3 Part 2
+          - generic [ref=e1846]: 2026 · ? ep
+        - 'link "Frieren: Beyond Journey''s End Season 2 Second season of Sousou no Frieren. 10 episodes Adventure Drama Fantasy Frieren: Beyond Journey''s End Season 2 2026 · 10 ep" [ref=e1848] [cursor=pointer]':
+          - /url: /show/3e34f9e1-5f9f-4485-ba9c-5e5db2337a5b
+          - generic [ref=e1849]:
+            - 'img "Frieren: Beyond Journey''s End Season 2" [ref=e1851]'
+            - generic:
+              - generic:
+                - paragraph: Second season of Sousou no Frieren.
+                - generic:
+                  - generic: 10 episodes
+                - generic:
+                  - generic: Adventure
+                  - generic: Drama
+                  - generic: Fantasy
+          - generic [ref=e1852]: "Frieren: Beyond Journey's End Season 2"
+          - generic [ref=e1853]: 2026 · 10 ep
+        - link "Gelpiyo Gelpiyo and and his friends contain the \"Alpha Gel\" quality that allow them to bounce back after any setback. They are s... Gelpiyo 2026 · ? ep" [ref=e1855] [cursor=pointer]:
+          - /url: /show/3544e273-12c7-4d2c-9283-3e893ed4bcb7
+          - generic [ref=e1856]:
+            - img "Gelpiyo" [ref=e1858]
+            - generic:
+              - generic:
+                - paragraph: Gelpiyo and and his friends contain the "Alpha Gel" quality that allow them to bounce back after any setback. They are s...
+          - generic [ref=e1859]: Gelpiyo
+          - generic [ref=e1860]: 2026 · ? ep
+        - 'link "Hell Mode: The Hardcore Gamer Dominates in Another World with Garbage Balancing \"Level up even while offline?! That''s not a game on ''easy mode''—that''s just an AFK game!\" The online game Kenichi Yamada... 13 episodes Action Adventure Fantasy Hell Mode: The Hardcore Gamer Dominates in Another World with Garbage Balancing 2026 · 13 ep" [ref=e1862] [cursor=pointer]':
+          - /url: /show/e05c3752-5a5d-4814-b787-df7f7d7a170a
+          - generic [ref=e1863]:
+            - 'img "Hell Mode: The Hardcore Gamer Dominates in Another World with Garbage Balancing" [ref=e1865]'
+            - generic:
+              - generic:
+                - paragraph: "\"Level up even while offline?! That's not a game on 'easy mode'—that's just an AFK game!\" The online game Kenichi Yamada..."
+                - generic:
+                  - generic: 13 episodes
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1866]: "Hell Mode: The Hardcore Gamer Dominates in Another World with Garbage Balancing"
+          - generic [ref=e1867]: 2026 · 13 ep
+        - link "Hell's Paradise Season 2 Second season of Jigokuraku. 12 episodes Action Adventure Supernatural Hell's Paradise Season 2 2026 · 12 ep" [ref=e1869] [cursor=pointer]:
+          - /url: /show/e6da2ccb-193d-4cd7-a848-7b2bb6026afd
+          - generic [ref=e1870]:
+            - img "Hell's Paradise Season 2" [ref=e1872]
+            - generic:
+              - generic:
+                - paragraph: Second season of Jigokuraku.
+                - generic:
+                  - generic: 12 episodes
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Supernatural
+          - generic [ref=e1873]: Hell's Paradise Season 2
+          - generic [ref=e1874]: 2026 · 12 ep
+        - link "High School! Kimengumi (2026) Rei Ichidou, Gou Reietsu, Kiyoshi Shusse, Jin Daima, and Dai Monohoshi are five mischievous boys attending Ichiou Junior... 12 episodes Comedy Romance High School! Kimengumi (2026) 2026 · 12 ep" [ref=e1876] [cursor=pointer]:
+          - /url: /show/5e7d7de2-9a13-42af-945f-b1ae3c3d4aab
+          - generic [ref=e1877]:
+            - img "High School! Kimengumi (2026)" [ref=e1879]
+            - generic:
+              - generic:
+                - paragraph: Rei Ichidou, Gou Reietsu, Kiyoshi Shusse, Jin Daima, and Dai Monohoshi are five mischievous boys attending Ichiou Junior...
+                - generic:
+                  - generic: 12 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1880]: High School! Kimengumi (2026)
+          - generic [ref=e1881]: 2026 · 12 ep
+        - 'link "Hoppe-chan: Sun Oukoku to Kuro Hoppe-dan no Himitsu No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Adventure Fantasy Hoppe-chan: Sun Oukoku to Kuro Hoppe-dan no Himitsu 2026 · ? ep" [ref=e1883] [cursor=pointer]':
+          - /url: /show/abc575c6-fed6-41be-bf2e-f89c382feda8
+          - generic [ref=e1884]:
+            - 'img "Hoppe-chan: Sun Oukoku to Kuro Hoppe-dan no Himitsu" [ref=e1886]'
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+                - generic:
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1887]: "Hoppe-chan: Sun Oukoku to Kuro Hoppe-dan no Himitsu"
+          - generic [ref=e1888]: 2026 · ? ep
+        - link "In the Clear Moonlit Dusk Every time Yoi Takiguchi so much as lets out a sigh, her female classmates squeal in admiration and awe. She has been du... 12 episodes In the Clear Moonlit Dusk 2026 · 12 ep" [ref=e1890] [cursor=pointer]:
+          - /url: /show/12990cf9-b9c3-4bcd-97b4-f36487dd4b20
+          - generic [ref=e1891]:
+            - img "In the Clear Moonlit Dusk" [ref=e1893]
+            - generic:
+              - generic:
+                - paragraph: Every time Yoi Takiguchi so much as lets out a sigh, her female classmates squeal in admiration and awe. She has been du...
+                - generic:
+                  - generic: 12 episodes
+          - generic [ref=e1894]: In the Clear Moonlit Dusk
+          - generic [ref=e1895]: 2026 · 12 ep
+        - link "Jujutsu Kaisen Season 3 Sequel to Jujutsu Kaisen 2nd Season. 12 episodes Action Supernatural Jujutsu Kaisen Season 3 2026 · 12 ep" [ref=e1897] [cursor=pointer]:
+          - /url: /show/c1428156-7239-4324-94d8-7aca280117de
+          - generic [ref=e1898]:
+            - img "Jujutsu Kaisen Season 3" [ref=e1900]
+            - generic:
+              - generic:
+                - paragraph: Sequel to Jujutsu Kaisen 2nd Season.
+                - generic:
+                  - generic: 12 episodes
+                - generic:
+                  - generic: Action
+                  - generic: Supernatural
+          - generic [ref=e1901]: Jujutsu Kaisen Season 3
+          - generic [ref=e1902]: 2026 · 12 ep
+        - 'link "Jujutsu Kaisen: The Culling Game Part 1 Sequel to Jujutsu Kaisen 2nd Season. Action Supernatural Jujutsu Kaisen: The Culling Game Part 1 2026 · ? ep" [ref=e1904] [cursor=pointer]':
+          - /url: /show/db2ec06f-55d3-428b-a197-954b53931e51
+          - generic [ref=e1905]:
+            - 'img "Jujutsu Kaisen: The Culling Game Part 1" [ref=e1907]'
+            - generic:
+              - generic:
+                - paragraph: Sequel to Jujutsu Kaisen 2nd Season.
+                - generic:
+                  - generic: Action
+                  - generic: Supernatural
+          - generic [ref=e1908]: "Jujutsu Kaisen: The Culling Game Part 1"
+          - generic [ref=e1909]: 2026 · ? ep
+        - link "Kaya-chan Isn't Scary Kaya-chan is infamous at kindergarten for being a troublemaker. But Ms. Chie, who's been assigned to look after her, soo... 12 episodes Kaya-chan Isn't Scary 2026 · 12 ep" [ref=e1911] [cursor=pointer]:
+          - /url: /show/da5c3b23-b019-4f17-ba9b-5a9c1c5c38dc
+          - generic [ref=e1912]:
+            - img "Kaya-chan Isn't Scary" [ref=e1914]
+            - generic:
+              - generic:
+                - paragraph: Kaya-chan is infamous at kindergarten for being a troublemaker. But Ms. Chie, who's been assigned to look after her, soo...
+                - generic:
+                  - generic: 12 episodes
+          - generic [ref=e1915]: Kaya-chan Isn't Scary
+          - generic [ref=e1916]: 2026 · 12 ep
+        - link "Medalist Season 2 Second season of Medalist. 9 episodes Drama Sports Medalist Season 2 2026 · 9 ep" [ref=e1918] [cursor=pointer]:
+          - /url: /show/de8183f1-8ac9-44fd-a552-2f0f1bf75bfb
+          - generic [ref=e1919]:
+            - img "Medalist Season 2" [ref=e1921]
+            - generic:
+              - generic:
+                - paragraph: Second season of Medalist.
+                - generic:
+                  - generic: 9 episodes
+                - generic:
+                  - generic: Drama
+                  - generic: Sports
+          - generic [ref=e1922]: Medalist Season 2
+          - generic [ref=e1923]: 2026 · 9 ep
+        - 'link "Oedo Fire Slayer: The Legend of Phoenix The fire extinguishing samurai who stopped the great fire was called \"The fire-eating bird\". Matsunaga Gengo, once known... 12 episodes Oedo Fire Slayer: The Legend of Phoenix 2026 · 12 ep" [ref=e1925] [cursor=pointer]':
+          - /url: /show/732b3329-c1de-42ff-9477-eac318909aff
+          - generic [ref=e1926]:
+            - 'img "Oedo Fire Slayer: The Legend of Phoenix" [ref=e1928]'
+            - generic:
+              - generic:
+                - paragraph: The fire extinguishing samurai who stopped the great fire was called "The fire-eating bird". Matsunaga Gengo, once known...
+                - generic:
+                  - generic: 12 episodes
+          - generic [ref=e1929]: "Oedo Fire Slayer: The Legend of Phoenix"
+          - generic [ref=e1930]: 2026 · 12 ep
+        - 'link "Omae wa Mada Gunma wo Shiranai: Reiwa-ban Nori Kamitsuki has recently moved to the Gunma prefecture from Chiba, following after Otoya Todoroki, a former friend wh... Omae wa Mada Gunma wo Shiranai: Reiwa-ban 2026 · ? ep" [ref=e1932] [cursor=pointer]':
+          - /url: /show/428120bf-0098-4993-9b32-168177ccacbd
+          - generic [ref=e1933]:
+            - 'img "Omae wa Mada Gunma wo Shiranai: Reiwa-ban" [ref=e1935]'
+            - generic:
+              - generic:
+                - paragraph: Nori Kamitsuki has recently moved to the Gunma prefecture from Chiba, following after Otoya Todoroki, a former friend wh...
+          - generic [ref=e1936]: "Omae wa Mada Gunma wo Shiranai: Reiwa-ban"
+          - generic [ref=e1937]: 2026 · ? ep
+        - link "Reincarnated as a Dragon Hatchling Our hero wakes up one day in a brand new world…but his new life doesn’t come with fighting skills or magic powers, or ev... Action Adventure Fantasy Reincarnated as a Dragon Hatchling 2026 · ? ep" [ref=e1939] [cursor=pointer]:
+          - /url: /show/14b5cdcd-b605-4a15-b6ea-bbb3f5a9b038
+          - generic [ref=e1940]:
+            - img "Reincarnated as a Dragon Hatchling" [ref=e1942]
+            - generic:
+              - generic:
+                - paragraph: Our hero wakes up one day in a brand new world…but his new life doesn’t come with fighting skills or magic powers, or ev...
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1943]: Reincarnated as a Dragon Hatchling
+          - generic [ref=e1944]: 2026 · ? ep
+        - link "Roll Over and Die Flum Apricot was never meant to be a hero. Despite zero stats across the board and a power she can't even use, she someh... Action Adventure Fantasy Roll Over and Die 2026 · ? ep" [ref=e1946] [cursor=pointer]:
+          - /url: /show/91a0977c-aeb9-495c-b55f-1c8d8bb1e526
+          - generic [ref=e1947]:
+            - img "Roll Over and Die" [ref=e1949]
+            - generic:
+              - generic:
+                - paragraph: Flum Apricot was never meant to be a hero. Despite zero stats across the board and a power she can't even use, she someh...
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Fantasy
+          - generic [ref=e1950]: Roll Over and Die
+          - generic [ref=e1951]: 2026 · ? ep
+        - link "Loading image The Holy Grail of Eris It is common knowledge that nobles will do anything for power; lying, manipulation, and extortion are the usual tactics.... 12 episodes Mystery Supernatural The Holy Grail of Eris 2026 · 12 ep" [ref=e1953] [cursor=pointer]:
+          - /url: /show/49c217f4-03c1-4395-9a39-6eed5661cb9b
+          - generic [ref=e1954]:
+            - generic [ref=e1955]:
+              - status "Loading image" [ref=e1956]:
+                - generic [ref=e1957]: Loading...
+              - img "The Holy Grail of Eris" [ref=e1958]
+            - generic:
+              - generic:
+                - paragraph: It is common knowledge that nobles will do anything for power; lying, manipulation, and extortion are the usual tactics....
+                - generic:
+                  - generic: 12 episodes
+                - generic:
+                  - generic: Mystery
+                  - generic: Supernatural
+          - generic [ref=e1959]: The Holy Grail of Eris
+          - generic [ref=e1960]: 2026 · 12 ep
+        - link "The Invisible Man and His Soon-to-Be Wife Yakou, a gentle human woman, works at a detective agency. Tounome is a smart and gentle invisible man. The invisible man... Fantasy Romance The Invisible Man and His Soon-to-Be Wife 2026 · ? ep" [ref=e1962] [cursor=pointer]:
+          - /url: /show/de550e32-4d15-4823-b0fb-98ead8c4dad1
+          - generic [ref=e1963]:
+            - img "The Invisible Man and His Soon-to-Be Wife" [ref=e1965]
+            - generic:
+              - generic:
+                - paragraph: Yakou, a gentle human woman, works at a detective agency. Tounome is a smart and gentle invisible man. The invisible man...
+                - generic:
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e1966]: The Invisible Man and His Soon-to-Be Wife
+          - generic [ref=e1967]: 2026 · ? ep
+        - link "The Villainess Is Adored by the Prince of the Neighbor Kingdom On the day before her downfall, Lady Tiararose Lapis Clementille recalls that she is in an otome game that she had once ... 12 episodes Fantasy Romance The Villainess Is Adored by the Prince of the Neighbor Kingdom 2026 · 12 ep" [ref=e1969] [cursor=pointer]:
+          - /url: /show/06052195-1244-4f11-80cb-9ddbbad58f3d
+          - generic [ref=e1970]:
+            - img "The Villainess Is Adored by the Prince of the Neighbor Kingdom" [ref=e1972]
+            - generic:
+              - generic:
+                - paragraph: On the day before her downfall, Lady Tiararose Lapis Clementille recalls that she is in an otome game that she had once ...
+                - generic:
+                  - generic: 12 episodes
+                - generic:
+                  - generic: Fantasy
+                  - generic: Romance
+          - generic [ref=e1973]: The Villainess Is Adored by the Prince of the Neighbor Kingdom
+          - generic [ref=e1974]: 2026 · 12 ep
+        - 'link "Theatre of Darkness: Yamishibai 16 Sixteenth season of Yami Shibai. Avant Garde Horror Supernatural Theatre of Darkness: Yamishibai 16 2026 · ? ep" [ref=e1976] [cursor=pointer]':
+          - /url: /show/106b90ee-bc1e-4ec8-af02-4f0a25cf4981
+          - generic [ref=e1977]:
+            - 'img "Theatre of Darkness: Yamishibai 16" [ref=e1979]'
+            - generic:
+              - generic:
+                - paragraph: Sixteenth season of Yami Shibai.
+                - generic:
+                  - generic: Avant Garde
+                  - generic: Horror
+                  - generic: Supernatural
+          - generic [ref=e1980]: "Theatre of Darkness: Yamishibai 16"
+          - generic [ref=e1981]: 2026 · ? ep
+        - link "Trigun Stargaze Two and a half years have passed since the Lost July incident, a catastrophe that reduced an entire city to ruins and se... Action Adventure Sci-Fi Trigun Stargaze 2026 · ? ep" [ref=e1983] [cursor=pointer]:
+          - /url: /show/6d57ed9f-4aa1-4c98-8e63-4f44149fb74b
+          - generic [ref=e1984]:
+            - img "Trigun Stargaze" [ref=e1986]
+            - generic:
+              - generic:
+                - paragraph: Two and a half years have passed since the Lost July incident, a catastrophe that reduced an entire city to ruins and se...
+                - generic:
+                  - generic: Action
+                  - generic: Adventure
+                  - generic: Sci-Fi
+          - generic [ref=e1987]: Trigun Stargaze
+          - generic [ref=e1988]: 2026 · ? ep
+        - link "You and I Are Polar Opposites Next to Miyu Suzuki, a trendy and bubbly high school girl, sits Yuusuke Tani, a quiet and frank boy. Their interactions ... 12 episodes Comedy Romance You and I Are Polar Opposites 2026 · 12 ep" [ref=e1990] [cursor=pointer]:
+          - /url: /show/86b9086d-5764-4186-91e0-31aab7de5816
+          - generic [ref=e1991]:
+            - img "You and I Are Polar Opposites" [ref=e1993]
+            - generic:
+              - generic:
+                - paragraph: Next to Miyu Suzuki, a trendy and bubbly high school girl, sits Yuusuke Tani, a quiet and frank boy. Their interactions ...
+                - generic:
+                  - generic: 12 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Romance
+          - generic [ref=e1994]: You and I Are Polar Opposites
+          - generic [ref=e1995]: 2026 · 12 ep
+        - 'link "Sai-Kyo-Oh! Zukan: The Ultimate Tournament Second season of Sai-Kyo-Oh! Zukan: The Ultimate Battles. 51 episodes Sai-Kyo-Oh! Zukan: The Ultimate Tournament 2025 · 51 ep" [ref=e1997] [cursor=pointer]':
+          - /url: /show/88cc60a3-e23b-41d8-ada6-765f32cd7a0d
+          - generic [ref=e1998]:
+            - 'img "Sai-Kyo-Oh! Zukan: The Ultimate Tournament" [ref=e2000]'
+            - generic:
+              - generic:
+                - paragraph: "Second season of Sai-Kyo-Oh! Zukan: The Ultimate Battles."
+                - generic:
+                  - generic: 51 episodes
+          - generic [ref=e2001]: "Sai-Kyo-Oh! Zukan: The Ultimate Tournament"
+          - generic [ref=e2002]: 2025 · 51 ep
+        - link "Anmari Yakunitatanai Nihonshi A historical variety show in which history-loving comedian Junpei of the duo Syrup delivers animated retellings of histo... Anmari Yakunitatanai Nihonshi 2025 · ? ep" [ref=e1386] [cursor=pointer]:
+          - /url: /show/465b0833-840c-4580-9d08-520a6b4e5efc
+          - generic [ref=e943]:
+            - img "Anmari Yakunitatanai Nihonshi" [ref=e1387]
+            - generic:
+              - generic:
+                - paragraph: A historical variety show in which history-loving comedian Junpei of the duo Syrup delivers animated retellings of histo...
+          - generic [ref=e947]: Anmari Yakunitatanai Nihonshi
+          - generic [ref=e948]: 2025 · ? ep
+        - link "TwinFizz Family No synopsis information has been added to this title. Help improve our database by adding a synopsis here. TwinFizz Family 2025 · ? ep" [ref=e1388] [cursor=pointer]:
+          - /url: /show/f7fb2c9e-f127-47b3-83d2-757e71b4e006
+          - generic [ref=e951]:
+            - img "TwinFizz Family" [ref=e1389]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+          - generic [ref=e955]: TwinFizz Family
+          - generic [ref=e956]: 2025 · ? ep
+        - link "Chibi Godzilla no Gyakushuu 3rd Season No synopsis information has been added to this title. Help improve our database by adding a synopsis here. 32 episodes Chibi Godzilla no Gyakushuu 3rd Season 2025 · 32 ep" [ref=e1390] [cursor=pointer]:
+          - /url: /show/4befa394-7e90-4992-80fe-b2052d670714
+          - generic [ref=e959]:
+            - img "Chibi Godzilla no Gyakushuu 3rd Season" [ref=e1391]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+                - generic:
+                  - generic: 32 episodes
+          - generic [ref=e963]: Chibi Godzilla no Gyakushuu 3rd Season
+          - generic [ref=e964]: 2025 · 32 ep
+        - link "Uso Tantei Tomanto The \"authentic mystery\" story follows Tomanto and friends as they solve mysteries using vegetable and fruit trivia. (So... 26 episodes Uso Tantei Tomanto 2025 · 26 ep" [ref=e2004] [cursor=pointer]:
+          - /url: /show/09bfe008-5566-40d9-9e07-dd61f543a820
+          - generic [ref=e2005]:
+            - img "Uso Tantei Tomanto" [ref=e2007]
+            - generic:
+              - generic:
+                - paragraph: The "authentic mystery" story follows Tomanto and friends as they solve mysteries using vegetable and fruit trivia. (So...
+                - generic:
+                  - generic: 26 episodes
+          - generic [ref=e2008]: Uso Tantei Tomanto
+          - generic [ref=e2009]: 2025 · 26 ep
+        - link "Gohan Kaijuu Pap A series of short, 30-second segments featuring Gohan Kaijuu Pap and various \"side dish\" monsters to produce delicious m... Action Comedy Gohan Kaijuu Pap 2011 · ? ep" [ref=e1392] [cursor=pointer]:
+          - /url: /show/c316f07a-1516-4728-9576-b728e26d1744
+          - generic [ref=e967]:
+            - img "Gohan Kaijuu Pap" [ref=e1393]
+            - generic:
+              - generic:
+                - paragraph: A series of short, 30-second segments featuring Gohan Kaijuu Pap and various "side dish" monsters to produce delicious m...
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+          - generic [ref=e971]: Gohan Kaijuu Pap
+          - generic [ref=e972]: 2011 · ? ep
+        - link "Yowamushi Monsters An NHK toddler's anime following cowardly creatures representing typical Halloween monsters like Dracula and a witch. Yowamushi Monsters 2012 · ? ep" [ref=e2011] [cursor=pointer]:
+          - /url: /show/1622b8cc-7c98-4a02-92dd-3fffed0c9777
+          - generic [ref=e2012]:
+            - img "Yowamushi Monsters" [ref=e2014]
+            - generic:
+              - generic:
+                - paragraph: An NHK toddler's anime following cowardly creatures representing typical Halloween monsters like Dracula and a witch.
+          - generic [ref=e2015]: Yowamushi Monsters
+          - generic [ref=e2016]: 2012 · ? ep
+        - link "I Love Me 2nd Season The second season of I Love Me. I Love Me 2nd Season 2022 · ? ep" [ref=e1394] [cursor=pointer]:
+          - /url: /show/0754cdde-ddad-4462-992b-489ba877a3e7
+          - generic [ref=e975]:
+            - img "I Love Me 2nd Season" [ref=e1395]
+            - generic:
+              - generic:
+                - paragraph: The second season of I Love Me.
+          - generic [ref=e979]: I Love Me 2nd Season
+          - generic [ref=e980]: 2022 · ? ep
+        - 'link "Hell Teacher: Jigoku Sensei Nube Part 2 Second part of Jigoku Sensei Nube (2025). 26 episodes Comedy Horror Supernatural Hell Teacher: Jigoku Sensei Nube Part 2 2026 · 26 ep" [ref=e2018] [cursor=pointer]':
+          - /url: /show/686d33d4-150e-4613-aaf2-df15bbd3c0e9
+          - generic [ref=e2019]:
+            - 'img "Hell Teacher: Jigoku Sensei Nube Part 2" [ref=e2021]'
+            - generic:
+              - generic:
+                - paragraph: Second part of Jigoku Sensei Nube (2025).
+                - generic:
+                  - generic: 26 episodes
+                - generic:
+                  - generic: Comedy
+                  - generic: Horror
+                  - generic: Supernatural
+          - generic [ref=e2022]: "Hell Teacher: Jigoku Sensei Nube Part 2"
+          - generic [ref=e2023]: 2026 · 26 ep
+        - link "Jochum Season 2 Second season of Jochum. Jochum Season 2 2025 · ? ep" [ref=e2025] [cursor=pointer]:
+          - /url: /show/a91539a9-bf89-4f56-b449-71f1141ae9ef
+          - generic [ref=e2026]:
+            - img "Jochum Season 2" [ref=e2028]
+            - generic:
+              - generic:
+                - paragraph: Second season of Jochum.
+          - generic [ref=e2029]: Jochum Season 2
+          - generic [ref=e2030]: 2025 · ? ep
+        - link "Kagaku x Bouken Survival! 2nd Season Second season of Kagaku x Bouken Survival!. 19 episodes Action Comedy Kagaku x Bouken Survival! 2nd Season 2025 · 19 ep" [ref=e2032] [cursor=pointer]:
+          - /url: /show/ff765e51-bdec-4afa-aec9-0a2259749b31
+          - generic [ref=e2033]:
+            - img "Kagaku x Bouken Survival! 2nd Season" [ref=e2035]
+            - generic:
+              - generic:
+                - paragraph: Second season of Kagaku x Bouken Survival!.
+                - generic:
+                  - generic: 19 episodes
+                - generic:
+                  - generic: Action
+                  - generic: Comedy
+          - generic [ref=e2036]: Kagaku x Bouken Survival! 2nd Season
+          - generic [ref=e2037]: 2025 · 19 ep
+        - link "Kaijuu Sekai Seifuku (TV) Following the chaotic and heartwarming daily lives of Kaijuu who have come to Earth to conquer the world and live with t... 50 episodes Kaijuu Sekai Seifuku (TV) 2025 · 50 ep" [ref=e2039] [cursor=pointer]:
+          - /url: /show/bd0125a9-4f63-4334-a2e7-e8665811fe10
+          - generic [ref=e2040]:
+            - img "Kaijuu Sekai Seifuku (TV)" [ref=e2042]
+            - generic:
+              - generic:
+                - paragraph: Following the chaotic and heartwarming daily lives of Kaijuu who have come to Earth to conquer the world and live with t...
+                - generic:
+                  - generic: 50 episodes
+          - generic [ref=e2043]: Kaijuu Sekai Seifuku (TV)
+          - generic [ref=e2044]: 2025 · 50 ep
+        - link "Manul no Yuube Within the nature \"Darwin Kita! Kikimono Shin Densetsu\" program on NHK1.5 airs the short Manul no Yuube, based on a web ... Manul no Yuube 2018 · ? ep" [ref=e1398] [cursor=pointer]:
+          - /url: /show/b8c3e2e1-33a0-4adf-b98c-13a127481ef1
+          - generic [ref=e991]:
+            - img "Manul no Yuube" [ref=e1399]
+            - generic:
+              - generic:
+                - paragraph: Within the nature "Darwin Kita! Kikimono Shin Densetsu" program on NHK1.5 airs the short Manul no Yuube, based on a web ...
+          - generic [ref=e995]: Manul no Yuube
+          - generic [ref=e996]: 2018 · ? ep
+        - link "Metal Cardbot W Shining friendship and strong claws! Metal Cardbot W! After the Speranza incident, humans and Metal Cardbots began to c... 26 episodes Action Sci-Fi Metal Cardbot W 2025 · 26 ep" [ref=e1400] [cursor=pointer]:
+          - /url: /show/58c0c2b2-f2da-4942-9b5d-226915726b5c
+          - generic [ref=e999]:
+            - img "Metal Cardbot W" [ref=e1401]
+            - generic:
+              - generic:
+                - paragraph: Shining friendship and strong claws! Metal Cardbot W! After the Speranza incident, humans and Metal Cardbots began to c...
+                - generic:
+                  - generic: 26 episodes
+                - generic:
+                  - generic: Action
+                  - generic: Sci-Fi
+          - generic [ref=e1003]: Metal Cardbot W
+          - generic [ref=e1004]: 2025 · 26 ep
+        - 'link "Mukashibanashi no Oheya: Tsutaetai Nihon Mukashibanashi No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Mukashibanashi no Oheya: Tsutaetai Nihon Mukashibanashi 2020 · ? ep" [ref=e1402] [cursor=pointer]':
+          - /url: /show/f9fed1fc-c7a7-4981-a70e-9642a8726fc2
+          - generic [ref=e1007]:
+            - 'img "Mukashibanashi no Oheya: Tsutaetai Nihon Mukashibanashi" [ref=e1403]'
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+          - generic [ref=e1011]: "Mukashibanashi no Oheya: Tsutaetai Nihon Mukashibanashi"
+          - generic [ref=e1012]: 2020 · ? ep
+        - link "Naui Bimilchingu Haechi No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Comedy Fantasy Naui Bimilchingu Haechi 2025 · ? ep" [ref=e1404] [cursor=pointer]:
+          - /url: /show/34cd25ae-b74c-4bc0-bbde-4735ff9873bb
+          - generic [ref=e1015]:
+            - img "Naui Bimilchingu Haechi" [ref=e1405]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e1019]: Naui Bimilchingu Haechi
+          - generic [ref=e1020]: 2025 · ? ep
+        - link "Muzik Tiger In the Forest 2nd Season Second season of Muzik Tiger In the Forest. Muzik Tiger In the Forest 2nd Season 2025 · ? ep" [ref=e2046] [cursor=pointer]:
+          - /url: /show/dc20c05e-0cbf-4724-9995-8d75641ae044
+          - generic [ref=e2047]:
+            - img "Muzik Tiger In the Forest 2nd Season" [ref=e2049]
+            - generic:
+              - generic:
+                - paragraph: Second season of Muzik Tiger In the Forest.
+          - generic [ref=e2050]: Muzik Tiger In the Forest 2nd Season
+          - generic [ref=e2051]: 2025 · ? ep
+        - link "Nyanchus Follows the daily lives of cats living in a spaceship above the cat planet Nyanko. Nyanchus 2024 · ? ep" [ref=e1408] [cursor=pointer]:
+          - /url: /show/c8989e62-dc10-4245-8545-1fb2caf3b6e7
+          - generic [ref=e1031]:
+            - img "Nyanchus" [ref=e1409]
+            - generic:
+              - generic:
+                - paragraph: Follows the daily lives of cats living in a spaceship above the cat planet Nyanko.
+          - generic [ref=e1035]: Nyanchus
+          - generic [ref=e1036]: 2024 · ? ep
+        - 'link "Neko Konogoro: Tenka Toitsu-hen Follows Nekotarou, a cat from Kagoshima who aims to unify the country. (Source: ANN) Neko Konogoro: Tenka Toitsu-hen 2025 · ? ep" [ref=e2053] [cursor=pointer]':
+          - /url: /show/48b1b56c-4552-448f-b3dc-aa395e99d479
+          - generic [ref=e2054]:
+            - 'img "Neko Konogoro: Tenka Toitsu-hen" [ref=e2056]'
+            - generic:
+              - generic:
+                - paragraph: "Follows Nekotarou, a cat from Kagoshima who aims to unify the country. (Source: ANN)"
+          - generic [ref=e2057]: "Neko Konogoro: Tenka Toitsu-hen"
+          - generic [ref=e2058]: 2025 · ? ep
+        - link "Origami Ninja Koyankinte Koyan, the Origami Ninja, came to Earth from his planet Origamio to find the magical stone \"Hapiton\" that has the abilit... Origami Ninja Koyankinte 2020 · ? ep" [ref=e1412] [cursor=pointer]:
+          - /url: /show/5b0e333b-e4e0-4641-96d0-0657f85a9804
+          - generic [ref=e1047]:
+            - img "Origami Ninja Koyankinte" [ref=e1413]
+            - generic:
+              - generic:
+                - paragraph: Koyan, the Origami Ninja, came to Earth from his planet Origamio to find the magical stone "Hapiton" that has the abilit...
+          - generic [ref=e1051]: Origami Ninja Koyankinte
+          - generic [ref=e1052]: 2020 · ? ep
+        - link "Pochars No synopsis information has been added to this title. Help improve our database by adding a synopsis here. 48 episodes Pochars 2024 · 48 ep" [ref=e1416] [cursor=pointer]:
+          - /url: /show/412aa89b-8e44-4add-a7bd-66949c2e32b1
+          - generic [ref=e1063]:
+            - img "Pochars" [ref=e1417]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+                - generic:
+                  - generic: 48 episodes
+          - generic [ref=e1067]: Pochars
+          - generic [ref=e1068]: 2024 · 48 ep
+        - link "Pakkororin A minute long children's anime that follows 3 siblings. Two brothers who are rectangular and circular shaped, and a sist... Pakkororin 2011 · ? ep" [ref=e2060] [cursor=pointer]:
+          - /url: /show/fb624157-a440-4f05-bf36-6bc20c6bd274
+          - generic [ref=e2061]:
+            - img "Pakkororin" [ref=e2063]
+            - generic:
+              - generic:
+                - paragraph: A minute long children's anime that follows 3 siblings. Two brothers who are rectangular and circular shaped, and a sist...
+          - generic [ref=e2064]: Pakkororin
+          - generic [ref=e2065]: 2011 · ? ep
+        - link "Princess Catch! Tiniping Sixth season of Catch! Tiniping. 26 episodes Princess Catch! Tiniping 2025 · 26 ep" [ref=e1418] [cursor=pointer]:
+          - /url: /show/001a5f74-bc27-4741-bc64-5bf89ce61234
+          - generic [ref=e1071]:
+            - img "Princess Catch! Tiniping" [ref=e1419]
+            - generic:
+              - generic:
+                - paragraph: Sixth season of Catch! Tiniping.
+                - generic:
+                  - generic: 26 episodes
+          - generic [ref=e1075]: Princess Catch! Tiniping
+          - generic [ref=e1076]: 2025 · 26 ep
+        - link "Pumeog No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Comedy Gourmet Pumeog 2024 · ? ep" [ref=e1420] [cursor=pointer]:
+          - /url: /show/257e9014-742d-41e0-8c1d-587f50c694e3
+          - generic [ref=e1079]:
+            - img "Pumeog" [ref=e1421]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+                - generic:
+                  - generic: Comedy
+                  - generic: Gourmet
+          - generic [ref=e1083]: Pumeog
+          - generic [ref=e1084]: 2024 · ? ep
+        - 'link "#Kanagawa ni Sunderu Elf 2 years ago, the elves who lived in the hidden forest lost their homes due to a forest fire, now they are living in the ... Comedy Fantasy #Kanagawa ni Sunderu Elf 2025 · ? ep" [ref=e2067] [cursor=pointer]':
+          - /url: /show/f886e039-5ab9-47e6-bebc-6341fa16f616
+          - generic [ref=e2068]:
+            - img "#Kanagawa ni Sunderu Elf" [ref=e2070]
+            - generic:
+              - generic:
+                - paragraph: 2 years ago, the elves who lived in the hidden forest lost their homes due to a forest fire, now they are living in the ...
+                - generic:
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e2071]: "#Kanagawa ni Sunderu Elf"
+          - generic [ref=e2072]: 2025 · ? ep
+        - link "Shiawase Haitatsu Taneko The story centers around a cat who answers people's wishes and delivers happiness. (\"Tane\" and \"neko\" are the Japanese w... Shiawase Haitatsu Taneko 2011 · ? ep" [ref=e1422] [cursor=pointer]:
+          - /url: /show/58cb81be-515f-49d5-b3f9-3bec561b6789
+          - generic [ref=e1087]:
+            - img "Shiawase Haitatsu Taneko" [ref=e1423]
+            - generic:
+              - generic:
+                - paragraph: The story centers around a cat who answers people's wishes and delivers happiness. ("Tane" and "neko" are the Japanese w...
+          - generic [ref=e1091]: Shiawase Haitatsu Taneko
+          - generic [ref=e1092]: 2011 · ? ep
+        - link "Shikaru Neko No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Shikaru Neko 2021 · ? ep" [ref=e1424] [cursor=pointer]:
+          - /url: /show/8e329dad-ecbc-4ea9-bb2f-bd62e0a6d632
+          - generic [ref=e1095]:
+            - img "Shikaru Neko" [ref=e1425]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+          - generic [ref=e1099]: Shikaru Neko
+          - generic [ref=e1100]: 2021 · ? ep
+        - link "Shimajirou no Wow! Fourth season of the Shimajirou children's television series. 174 episodes Adventure Comedy Fantasy Shimajirou no Wow! 2012 · 174 ep" [ref=e1426] [cursor=pointer]:
+          - /url: /show/ac14b70c-a28b-433b-87bb-ee20477c8b05
+          - generic [ref=e1103]:
+            - img "Shimajirou no Wow!" [ref=e1427]
+            - generic:
+              - generic:
+                - paragraph: Fourth season of the Shimajirou children's television series.
+                - generic:
+                  - generic: 174 episodes
+                - generic:
+                  - generic: Adventure
+                  - generic: Comedy
+                  - generic: Fantasy
+          - generic [ref=e1107]: Shimajirou no Wow!
+          - generic [ref=e1108]: 2012 · 174 ep
+        - link "Shin Nippon History No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Shin Nippon History 2020 · ? ep" [ref=e1428] [cursor=pointer]:
+          - /url: /show/dfc419fa-86c3-4d6b-912e-85363e24f309
+          - generic [ref=e1111]:
+            - img "Shin Nippon History" [ref=e1429]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+          - generic [ref=e1115]: Shin Nippon History
+          - generic [ref=e1116]: 2020 · ? ep
+        - link "Shuwawan! Shuwawan! chronicles the family life of real-life photographer and essayist Harumichi Saitou. Saitou and his wife are bo... Shuwawan! 2023 · ? ep" [ref=e1430] [cursor=pointer]:
+          - /url: /show/0a73c010-c8e6-4204-aebf-5ab8c2e9eed5
+          - generic [ref=e1119]:
+            - img "Shuwawan!" [ref=e1431]
+            - generic:
+              - generic:
+                - paragraph: Shuwawan! chronicles the family life of real-life photographer and essayist Harumichi Saitou. Saitou and his wife are bo...
+          - generic [ref=e1123]: Shuwawan!
+          - generic [ref=e1124]: 2023 · ? ep
+        - link "Tomica & Tom (TV) After you fall asleep or while you're out, what are Tomica and Tom doing? Are they sleeping peacefully in the toy box? A... 8 episodes Tomica & Tom (TV) 2025 · 8 ep" [ref=e1432] [cursor=pointer]:
+          - /url: /show/4b078ef4-1271-4a4f-9afc-3c6c3b2d1295
+          - generic [ref=e1127]:
+            - img "Tomica & Tom (TV)" [ref=e1433]
+            - generic:
+              - generic:
+                - paragraph: After you fall asleep or while you're out, what are Tomica and Tom doing? Are they sleeping peacefully in the toy box? A...
+                - generic:
+                  - generic: 8 episodes
+          - generic [ref=e1131]: Tomica & Tom (TV)
+          - generic [ref=e1132]: 2025 · 8 ep
+        - link "Dotoli Munhwasenteo No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Dotoli Munhwasenteo 2025 · ? ep" [ref=e2074] [cursor=pointer]:
+          - /url: /show/ebc31e78-2cad-445a-8d53-87a926bd4709
+          - generic [ref=e2075]:
+            - img "Dotoli Munhwasenteo" [ref=e2077]
+            - generic:
+              - generic:
+                - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+          - generic [ref=e2078]: Dotoli Munhwasenteo
+          - generic [ref=e2079]: 2025 · ? ep
+        - link "Warau Red List Endangered animals complain about humans! The animals' complaints reveal the relationship between nature and humans! (S... Warau Red List 2024 · ? ep" [ref=e1434] [cursor=pointer]:
+          - /url: /show/70513e5c-3ba2-459e-a6b3-0274bd1a9295
+          - generic [ref=e1135]:
+            - img "Warau Red List" [ref=e1435]
+            - generic:
+              - generic:
+                - paragraph: Endangered animals complain about humans! The animals' complaints reveal the relationship between nature and humans! (S...
+          - generic [ref=e1139]: Warau Red List
+          - generic [ref=e1140]: 2024 · ? ep
+        - 'link "Hokuto no Ken: Kenougun Zako-tachi no Banka A young man named Nobu, who is looking for a job in the post-apocalyptic world, ends up tricked into joining Raoh''s Army... Hokuto no Ken: Kenougun Zako-tachi no Banka 2026 · ? ep" [ref=e2081] [cursor=pointer]':
+          - /url: /show/fe77a6df-aee1-4c14-aa7a-4c8d2f5c4bae
+          - generic [ref=e2082]:
+            - 'img "Hokuto no Ken: Kenougun Zako-tachi no Banka" [ref=e2084]'
+            - generic:
+              - generic:
+                - paragraph: A young man named Nobu, who is looking for a job in the post-apocalyptic world, ends up tricked into joining Raoh's Army...
+          - generic [ref=e2085]: "Hokuto no Ken: Kenougun Zako-tachi no Banka"
+          - generic [ref=e2086]: 2026 · ? ep
+        - link "Youkoso Ninchishou Sekai e Travel through the words of people with dementia by seeing how they experience the everyday and problems they face. (So... Adventure Slice of Life Youkoso Ninchishou Sekai e 2022 · ? ep" [ref=e1436] [cursor=pointer]:
+          - /url: /show/7403bef9-171c-4f86-ba34-3a24e572b65e
+          - generic [ref=e1143]:
+            - img "Youkoso Ninchishou Sekai e" [ref=e1437]
+            - generic:
+              - generic:
+                - paragraph: Travel through the words of people with dementia by seeing how they experience the everyday and problems they face. (So...
+                - generic:
+                  - generic: Adventure
+                  - generic: Slice of Life
+          - generic [ref=e1147]: Youkoso Ninchishou Sekai e
+          - generic [ref=e1148]: 2022 · ? ep
+  - contentinfo [ref=e1150]:
+    - generic [ref=e1151]: © 2026 weeb.vip
+    - generic [ref=e1152]:
+      - link "About" [ref=e1153] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e1154] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e1155] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e1156]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"
+  - button "🛠️ Dev Panel" [ref=e1159] [cursor=pointer]:
+    - text: 🛠️
+    - generic [ref=e1160]: Dev Panel
+  - generic [ref=e1163]:
+    - button "Menu" [ref=e1164]:
+      - img [ref=e1166]
+      - generic: Menu
+    - button "Inspect" [ref=e1170]:
+      - img [ref=e1172]
+      - generic: Inspect
+    - button "Audit" [ref=e1174]:
+      - generic [ref=e1175]:
+        - img [ref=e1176]
+        - img [ref=e2087]
+      - generic: Audit
+    - button "Settings" [ref=e1182]:
+      - img [ref=e1184]
+      - generic: Settings

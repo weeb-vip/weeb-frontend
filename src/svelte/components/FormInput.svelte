@@ -64,20 +64,20 @@
   $: inputType = showPasswordToggle && isPasswordVisible ? 'text' : type;
 </script>
 
-<div class="form-field">
+<div class="weeb-form-field">
   {#if label}
     <label
       for={id}
-      class="form-label"
+      class="weeb-form-label"
     >
       {label}
     </label>
   {/if}
 
-  <div class="input-wrapper">
+  <div class="weeb-input-wrapper">
     <!-- Left icon -->
     {#if icon}
-      <div class="input-icon-left">
+      <div class="weeb-input-icon-left">
         <Fa {icon} />
       </div>
     {/if}
@@ -92,7 +92,7 @@
       {placeholder}
       {required}
       {disabled}
-      class="form-input {className}"
+      class="weeb-form-input {className}"
       class:has-icon={icon}
       class:has-toggle={showPasswordToggle}
       class:has-error={error}
@@ -104,7 +104,7 @@
     {#if showPasswordToggle}
       <button
         type="button"
-        class="password-toggle"
+        class="weeb-password-toggle"
         on:click={togglePasswordVisibility}
         tabindex="-1"
       >
@@ -115,19 +115,20 @@
 
   <!-- Error message -->
   {#if error}
-    <p id="{id}-error" class="form-error">
+    <p id="{id}-error" class="weeb-form-error">
       {error}
     </p>
   {/if}
 </div>
 
 <style>
-  .form-field {
+  /* Global styles for portal compatibility */
+  :global(.weeb-form-field) {
     display: flex;
     flex-direction: column;
   }
 
-  .form-label {
+  :global(.weeb-form-label) {
     font-size: 13px;
     font-weight: 500;
     color: var(--weeb-fg-secondary);
@@ -135,13 +136,13 @@
     margin-bottom: 6px;
   }
 
-  .input-wrapper {
+  :global(.weeb-input-wrapper) {
     position: relative;
     display: flex;
     align-items: center;
   }
 
-  .form-input {
+  :global(.weeb-form-input) {
     width: 100%;
     height: 44px;
     padding: 0 16px;
@@ -154,39 +155,39 @@
     transition: border-color 0.2s, box-shadow 0.2s;
   }
 
-  .form-input::placeholder {
+  :global(.weeb-form-input::placeholder) {
     color: var(--weeb-fg-muted);
   }
 
-  .form-input:focus {
+  :global(.weeb-form-input:focus) {
     border-color: var(--weeb-accent);
     box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.2);
   }
 
-  .form-input.has-icon {
+  :global(.weeb-form-input.has-icon) {
     padding-left: 40px;
   }
 
-  .form-input.has-toggle {
+  :global(.weeb-form-input.has-toggle) {
     padding-right: 44px;
   }
 
-  .form-input.has-error {
+  :global(.weeb-form-input.has-error) {
     border-color: var(--weeb-red);
     background: oklch(20% 0.03 25);
   }
 
-  .form-input.has-error:focus {
+  :global(.weeb-form-input.has-error:focus) {
     border-color: var(--weeb-red);
     box-shadow: 0 0 0 3px oklch(40% 0.1 25 / 0.2);
   }
 
-  .form-input.is-disabled {
+  :global(.weeb-form-input.is-disabled) {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
-  .input-icon-left {
+  :global(.weeb-input-icon-left) {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -197,7 +198,7 @@
     color: var(--weeb-fg-muted);
   }
 
-  .password-toggle {
+  :global(.weeb-password-toggle) {
     position: absolute;
     right: 0;
     top: 0;
@@ -214,11 +215,11 @@
     padding: 0;
   }
 
-  .password-toggle:hover {
+  :global(.weeb-password-toggle:hover) {
     color: var(--weeb-fg-secondary);
   }
 
-  .form-error {
+  :global(.weeb-form-error) {
     font-size: 12px;
     color: var(--weeb-red);
     margin-top: 4px;

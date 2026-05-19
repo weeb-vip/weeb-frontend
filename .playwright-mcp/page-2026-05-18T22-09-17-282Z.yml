@@ -1,0 +1,76 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e3]:
+    - link "weeb.vip weeb.vip" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e5]
+      - generic [ref=e6]: weeb.vip
+    - generic [ref=e7]:
+      - link "Home" [ref=e8] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e9] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e10] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e11] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e14]:
+      - img
+      - searchbox [ref=e15]
+      - generic: /
+    - generic [ref=e16]:
+      - button "Toggle title language" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e21]: EN
+      - generic [ref=e23]:
+        - button "Login" [ref=e24] [cursor=pointer]:
+          - generic [ref=e25]: Login
+        - button "Register" [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: Register
+  - main [ref=e28]:
+    - main [ref=e30]:
+      - generic [ref=e31]:
+        - link "weeb.vip - back to homepage" [ref=e32] [cursor=pointer]:
+          - /url: /
+          - img [ref=e34]
+          - text: weeb.vip
+        - generic [ref=e37]:
+          - generic [ref=e38]:
+            - heading "Create account" [level=1] [ref=e39]
+            - paragraph [ref=e40]: Join the community
+          - generic [ref=e41]:
+            - generic [ref=e43]:
+              - generic [ref=e44]: Email
+              - textbox "Email" [ref=e46]:
+                - /placeholder: you@example.com
+            - generic [ref=e48]:
+              - generic [ref=e49]: Password
+              - generic [ref=e50]:
+                - textbox "Password" [ref=e51]:
+                  - /placeholder: At least 6 characters
+                - button [ref=e52] [cursor=pointer]:
+                  - img [ref=e53]
+            - generic [ref=e58]:
+              - generic [ref=e59]: Confirm password
+              - generic [ref=e60]:
+                - textbox "Confirm password" [ref=e61]:
+                  - /placeholder: Re-enter your password
+                - button [ref=e62] [cursor=pointer]:
+                  - img [ref=e63]
+            - button "Create account" [ref=e67] [cursor=pointer]
+          - generic [ref=e68]:
+            - text: Already have an account?
+            - link "Log in" [ref=e69] [cursor=pointer]:
+              - /url: /auth/login
+  - contentinfo [ref=e71]:
+    - generic [ref=e72]: © 2026 weeb.vip
+    - generic [ref=e73]:
+      - link "About" [ref=e74] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e75] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e76] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e77]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"

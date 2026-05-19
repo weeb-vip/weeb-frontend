@@ -1,0 +1,136 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e3]:
+    - link "weeb.vip weeb.vip" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e5]
+      - generic [ref=e6]: weeb.vip
+    - generic [ref=e7]:
+      - link "Home" [ref=e8] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e9] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e10] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e11] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e14]:
+      - img
+      - searchbox [ref=e15]
+      - generic: /
+    - generic [ref=e16]:
+      - button "Toggle title language" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e21]: EN
+      - generic [ref=e23]:
+        - button "Login" [ref=e24] [cursor=pointer]:
+          - generic [ref=e25]: Login
+        - button "Register" [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: Register
+  - main [ref=e28]:
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - heading "Browse Anime" [level=1] [ref=e32]
+        - generic [ref=e33]:
+          - img
+          - textbox "Search by title, studio, genre..." [ref=e34]: Comedy
+          - button "Clear search" [ref=e35] [cursor=pointer]:
+            - img [ref=e36]
+      - generic [ref=e38]:
+        - generic [ref=e40]: Genres
+        - generic [ref=e50]:
+          - combobox [ref=e51] [cursor=pointer]:
+            - option "All" [selected]
+            - option "Airing"
+            - option "Finished"
+            - option "Upcoming"
+          - combobox [ref=e52] [cursor=pointer]:
+            - option "All years" [selected]
+            - option "2027"
+            - option "2026"
+            - option "2025"
+            - option "2024"
+            - option "2023"
+            - option "2022"
+            - option "2021"
+            - option "2020"
+            - option "2019"
+            - option "2018"
+            - option "2017"
+            - option "2016"
+            - option "2015"
+            - option "2014"
+            - option "2013"
+            - option "2012"
+            - option "2011"
+            - option "2010"
+            - option "2009"
+            - option "2008"
+            - option "2007"
+            - option "2006"
+            - option "2005"
+            - option "2004"
+            - option "2003"
+            - option "2002"
+            - option "2001"
+            - option "2000"
+            - option "1999"
+            - option "1998"
+            - option "1997"
+            - option "1996"
+            - option "1995"
+            - option "1994"
+            - option "1993"
+            - option "1992"
+            - option "1991"
+            - option "1990"
+          - combobox [ref=e53] [cursor=pointer]:
+            - option "Relevance" [selected]
+            - option "Score"
+            - option "Newest"
+            - option "A-Z"
+      - generic [ref=e55]:
+        - generic [ref=e56]: "Active filters:"
+        - button "Comedy" [ref=e57] [cursor=pointer]:
+          - text: Comedy
+          - img [ref=e59]
+        - button "Clear all" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - paragraph [ref=e63]:
+          - strong [ref=e64]: "0"
+          - text: results for 'Comedy'
+        - group "View mode" [ref=e65]:
+          - button "Grid view" [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+          - button "List view" [ref=e72] [cursor=pointer]:
+            - img [ref=e73]
+  - contentinfo [ref=e124]:
+    - generic [ref=e125]: © 2026 weeb.vip
+    - generic [ref=e126]:
+      - link "About" [ref=e127] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e128] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e129] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e130]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"
+  - button "🛠️ Dev Panel" [ref=e133] [cursor=pointer]:
+    - text: 🛠️
+    - generic [ref=e134]: Dev Panel
+  - generic [ref=e137]:
+    - button "Menu" [ref=e138]:
+      - img [ref=e140]
+      - generic: Menu
+    - button "Inspect" [ref=e144]:
+      - img [ref=e146]
+      - generic: Inspect
+    - button "Audit" [ref=e148]:
+      - generic [ref=e149]:
+        - img [ref=e150]
+        - img [ref=e153]
+      - generic: Audit
+    - button "Settings" [ref=e156]:
+      - img [ref=e158]
+      - generic: Settings

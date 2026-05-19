@@ -1,32 +1,35 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
+import { waitForHomepage, waitForAuthForm, waitForPageReady, deleteEmailsForRecipient } from './helpers';
 
-// Helper function to check Mailhog for emails
+// Helper function to check Mailpit for emails
 async function getLatestEmail(recipientEmail: string, retries = 15, delay = 3000) {
   console.log(`Looking for email for ${recipientEmail}...`);
 
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch('https://mailhog.staging.weeb.vip/api/v2/messages');
+      const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages');
       const data = await response.json();
 
-      console.log(`Attempt ${i + 1}: Found ${data.items?.length || 0} total emails in Mailhog`);
+      console.log(`Attempt ${i + 1}: Found ${data.messages?.length || 0} total emails in Mailpit`);
 
-      if (data.items && data.items.length > 0) {
-        const recipients = data.items.map((item: any) => item.Content?.Headers?.To?.[0]).filter(Boolean);
+      if (data.messages && data.messages.length > 0) {
+        const recipients = data.messages.map((msg: any) => msg.To?.[0]?.Address).filter(Boolean);
         console.log(`Recipients found: ${recipients.join(', ')}`);
 
-        const email = data.items.find((item: any) => {
-          const toHeader = item.Content?.Headers?.To;
-          return toHeader && (
-            toHeader.includes(recipientEmail) ||
-            toHeader.includes(`<${recipientEmail}>`)
+        const email = data.messages.find((msg: any) => {
+          const toAddresses = msg.To?.map((t: any) => t.Address) || [];
+          return toAddresses.some((addr: string) =>
+            addr === recipientEmail || addr === `<${recipientEmail}>`
           );
         });
 
         if (email) {
-          console.log(`Found email for ${recipientEmail}!`);
-          return email;
+          console.log(`Found email for ${recipientEmail}! Fetching full message...`);
+          // Fetch full message to get body content
+          const fullMsgResponse = await fetch(`https://mailhog.staging.weeb.vip/api/v1/message/${email.ID}`);
+          const fullMsg = await fullMsgResponse.json();
+          return fullMsg;
         }
       }
     } catch (error) {
@@ -92,35 +95,6 @@ function extractVerificationLink(emailContent: string, baseUrl: string): string 
   return null;
 }
 
-async function deleteEmailsForRecipient(recipientEmail: string) {
-  let deletedCount = 0;
-  try {
-    while (true) {
-      const response = await fetch('https://mailhog.staging.weeb.vip/api/v2/messages');
-      const data = await response.json();
-
-      if (!data.items || data.items.length === 0) {
-        break;
-      }
-
-      const email = data.items.find((item: any) =>
-        item.Content?.Headers?.To?.includes(recipientEmail)
-      );
-
-      if (!email) break;
-
-      await fetch(`https://mailhog.staging.weeb.vip/api/v1/messages/${email.ID}`, { method: 'DELETE' });
-      deletedCount++;
-    }
-
-    if (deletedCount > 0) {
-      console.log(`Cleaned up ${deletedCount} emails for ${recipientEmail}`);
-    }
-  } catch (error) {
-    console.log('Could not delete emails:', error);
-  }
-}
-
 // Opens the auth modal in register mode and returns the dialog locator.
 // Handles both desktop (direct header button) and mobile (drawer) flows.
 async function openRegisterModal(page: Page): Promise<Locator> {
@@ -158,13 +132,17 @@ async function fillAndSubmitRegister(dialog: Locator, email: string, password: s
   await dialog.locator('input[name="username"]').fill(email);
   await dialog.locator('input[name="password"]').fill(password);
   await dialog.locator('input[name="confirmPassword"]').fill(password);
-  await dialog.locator('form button[type="submit"]').click();
+  // Use evaluate for more reliable click
+  await dialog.locator('form button[type="submit"]').evaluate((btn) => (btn as HTMLButtonElement).click());
 }
 
 test.describe('User Registration Flow', () => {
   // Run tests serially within this file — they all hit shared staging Mailhog
   // and can race when running in parallel.
   test.describe.configure({ mode: 'serial' });
+
+  // Increase timeout for CI where network to staging is slower
+  test.setTimeout(90000);
 
   let testEmail: string;
   const testPassword = 'Password1!';
@@ -179,8 +157,8 @@ test.describe('User Registration Flow', () => {
   });
 
   test('complete registration and email verification flow', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
     await fillAndSubmitRegister(dialog, testEmail, testPassword);
@@ -193,14 +171,14 @@ test.describe('User Registration Flow', () => {
     expect(email).toBeTruthy();
     console.log('Verification email received');
 
-    const emailBody = email.Content?.Body || '';
+    const emailBody = email.HTML || email.Text || '';
     const baseUrl = page.url().match(/^https?:\/\/[^\/]+/)?.[0] || 'http://localhost:4321';
     const verificationLink = extractVerificationLink(emailBody, baseUrl);
     expect(verificationLink).toBeTruthy();
     console.log(`Verification link found: ${verificationLink}`);
 
-    await page.goto(verificationLink!);
-    await page.waitForLoadState('networkidle');
+    await page.goto(verificationLink!, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForPageReady(page);
 
     // Wait for the verification page to render and resolve
     await expect(page.getByRole('heading', { name: /Email Verification/i })).toBeVisible({ timeout: 15000 });
@@ -209,22 +187,21 @@ test.describe('User Registration Flow', () => {
     console.log('Email verification page loaded');
 
     // Try to login with verified account on /auth/login
-    await page.goto('/auth/login');
-    await page.waitForLoadState('networkidle');
-    await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
+    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForAuthForm(page);
 
     await page.fill('input[name="username"]', testEmail);
     await page.fill('input[name="password"]', testPassword);
     await page.locator('form button[type="submit"]').first().click();
 
     // On success, Login.svelte navigates to '/'. Wait for that (staging can be slow under load).
-    await page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 30000 });
+    await page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 60000 });
     console.log('Login successful - registration flow complete!');
   });
 
   test('resend verification email', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
     await fillAndSubmitRegister(dialog, testEmail, testPassword);
@@ -232,9 +209,8 @@ test.describe('User Registration Flow', () => {
     await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
 
     // Navigate to resend verification page
-    await page.goto('/auth/resend-verification');
-    await page.waitForLoadState('networkidle');
-    await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
+    await page.goto('/auth/resend-verification', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForAuthForm(page);
 
     await page.fill('input[name="username"], input[type="email"]', testEmail);
     await page.getByRole('button', { name: /send verification email/i }).click();
@@ -250,8 +226,8 @@ test.describe('User Registration Flow', () => {
   });
 
   test('prevent login before email verification', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
     await fillAndSubmitRegister(dialog, testEmail, testPassword);
@@ -259,9 +235,8 @@ test.describe('User Registration Flow', () => {
     await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
 
     // Try to login without verification
-    await page.goto('/auth/login');
-    await page.waitForLoadState('networkidle');
-    await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
+    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForAuthForm(page);
 
     await page.fill('input[name="username"]', testEmail);
     await page.fill('input[name="password"]', testPassword);
