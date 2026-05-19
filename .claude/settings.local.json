@@ -56,7 +56,9 @@
       "Bash(kubectl get secrets *)",
       "mcp__playwright__browser_fill_form",
       "mcp__playwright__browser_console_messages",
-      "Bash(kubectl logs *)"
+      "Bash(kubectl logs *)",
+      "Bash(APP_CONFIG=staging npx playwright test tests/e2e/registration.spec.ts --project=chromium)",
+      "Bash(PLAYWRIGHT_HTML_OPEN=never npx playwright *)"
     ]
   }
 }

@@ -96,28 +96,29 @@ function extractVerificationLink(emailContent: string, baseUrl: string): string 
 }
 
 async function deleteEmailsForRecipient(recipientEmail: string) {
-  let deletedCount = 0;
   try {
-    while (true) {
-      const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages');
-      const data = await response.json();
+    const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages');
+    const data = await response.json();
 
-      if (!data.messages || data.messages.length === 0) {
-        break;
-      }
-
-      const email = data.messages.find((msg: any) =>
-        msg.To?.some((t: any) => t.Address === recipientEmail)
-      );
-
-      if (!email) break;
-
-      await fetch(`https://mailhog.staging.weeb.vip/api/v1/messages/${email.ID}`, { method: 'DELETE' });
-      deletedCount++;
+    if (!data.messages || data.messages.length === 0) {
+      return;
     }
 
-    if (deletedCount > 0) {
-      console.log(`Cleaned up ${deletedCount} emails for ${recipientEmail}`);
+    const emailsToDelete = data.messages
+      .filter((msg: any) => {
+        const toMatch = msg.To?.some((t: any) => t.Address === recipientEmail);
+        const bccMatch = msg.Bcc?.some((t: any) => t.Address === recipientEmail);
+        return toMatch || bccMatch;
+      })
+      .map((msg: any) => msg.ID);
+
+    if (emailsToDelete.length > 0) {
+      await fetch('https://mailhog.staging.weeb.vip/api/v1/messages', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ IDs: emailsToDelete })
+      });
+      console.log(`Cleaned up ${emailsToDelete.length} emails for ${recipientEmail}`);
     }
   } catch (error) {
     console.log('Could not delete emails:', error);

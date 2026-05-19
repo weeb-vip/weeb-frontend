@@ -28,9 +28,9 @@ export default defineConfig({
   ],
 
   vite: {
-    server: {
-      allowedHosts: ['.ngrok-free.app']
-    },
+    // server: {
+    //   allowedHosts: ['.ngrok-free.app']
+    // },
     define: {
       __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || 'dev'),
       __ENABLE_DEV_FEATURES__: process.env.NODE_ENV === 'development'

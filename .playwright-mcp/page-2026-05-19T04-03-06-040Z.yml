@@ -1,0 +1,45 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "MailpitMailpit" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - img "Mailpit" [ref=e6]
+      - text: Mailpit
+    - generic [ref=e9]:
+      - textbox "Search" [ref=e11]:
+        - /placeholder: Search mailbox
+      - button "" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: 
+    - generic [ref=e14]:
+      - text: 
+      - combobox "The number of messages displayed per page" [disabled] [ref=e15]:
+        - option "25"
+        - option "50" [selected]
+        - option "100"
+        - option "200"
+      - generic [ref=e16]: 0 of 0
+      - button "" [disabled]:
+        - generic: 
+      - button "" [disabled]:
+        - generic: 
+  - text:      
+  - generic [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e20]:
+        - button " Inbox" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: 
+          - text: Inbox
+        - button " Mark all read" [disabled]:
+          - generic: 
+          - text: Mark all read
+        - button " Delete all" [disabled]:
+          - generic: 
+          - text: Delete all
+      - generic [ref=e23]:
+        - button " About" [ref=e24] [cursor=pointer]:
+          - generic [ref=e25]: 
+          - text: About
+        - button "" [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: 
+        - button "" [ref=e28] [cursor=pointer]:
+          - generic [ref=e29]: 
+    - paragraph [ref=e32]: No messages in your mailbox
