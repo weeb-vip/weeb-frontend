@@ -58,7 +58,10 @@
       "mcp__playwright__browser_console_messages",
       "Bash(kubectl logs *)",
       "Bash(APP_CONFIG=staging npx playwright test tests/e2e/registration.spec.ts --project=chromium)",
-      "Bash(PLAYWRIGHT_HTML_OPEN=never npx playwright *)"
+      "Bash(PLAYWRIGHT_HTML_OPEN=never npx playwright *)",
+      "Bash(kubectl get pods *)",
+      "Bash(kubectl top *)",
+      "Bash(kubectl get *)"
     ]
   }
 }
