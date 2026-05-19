@@ -141,6 +141,9 @@ test.describe('User Registration Flow', () => {
   // and can race when running in parallel.
   test.describe.configure({ mode: 'serial' });
 
+  // Increase timeout for CI where network to staging is slower
+  test.setTimeout(90000);
+
   let testEmail: string;
   const testPassword = 'Password1!';
 
@@ -154,7 +157,7 @@ test.describe('User Registration Flow', () => {
   });
 
   test('complete registration and email verification flow', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
@@ -174,7 +177,7 @@ test.describe('User Registration Flow', () => {
     expect(verificationLink).toBeTruthy();
     console.log(`Verification link found: ${verificationLink}`);
 
-    await page.goto(verificationLink!);
+    await page.goto(verificationLink!, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForPageReady(page);
 
     // Wait for the verification page to render and resolve
@@ -184,7 +187,7 @@ test.describe('User Registration Flow', () => {
     console.log('Email verification page loaded');
 
     // Try to login with verified account on /auth/login
-    await page.goto('/auth/login');
+    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForAuthForm(page);
 
     await page.fill('input[name="username"]', testEmail);
@@ -192,12 +195,12 @@ test.describe('User Registration Flow', () => {
     await page.locator('form button[type="submit"]').first().click();
 
     // On success, Login.svelte navigates to '/'. Wait for that (staging can be slow under load).
-    await page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 30000 });
+    await page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 60000 });
     console.log('Login successful - registration flow complete!');
   });
 
   test('resend verification email', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
@@ -206,7 +209,7 @@ test.describe('User Registration Flow', () => {
     await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
 
     // Navigate to resend verification page
-    await page.goto('/auth/resend-verification');
+    await page.goto('/auth/resend-verification', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForAuthForm(page);
 
     await page.fill('input[name="username"], input[type="email"]', testEmail);
@@ -223,7 +226,7 @@ test.describe('User Registration Flow', () => {
   });
 
   test('prevent login before email verification', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
@@ -232,7 +235,7 @@ test.describe('User Registration Flow', () => {
     await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 15000 });
 
     // Try to login without verification
-    await page.goto('/auth/login');
+    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForAuthForm(page);
 
     await page.fill('input[name="username"]', testEmail);

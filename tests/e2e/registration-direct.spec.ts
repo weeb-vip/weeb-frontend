@@ -9,6 +9,9 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
   // Run serially — these hit the shared staging API which can throttle parallel requests
   test.describe.configure({ mode: 'serial' });
 
+  // Increase timeout for CI where network to staging is slower
+  test.setTimeout(90000);
+
   let testEmail: string;
   const testPassword = 'Password1!';
 
@@ -24,7 +27,7 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
 
   test('register user via direct navigation', async ({ page }) => {
     // Navigate directly to register page
-    await page.goto('/auth/register');
+    await page.goto('/auth/register', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForAuthForm(page);
 
     // Wait for client-side hydration and form to be ready
@@ -94,7 +97,7 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
 
   test('verify resend verification page works', async ({ page }) => {
     // Navigate directly to resend verification page
-    await page.goto('/auth/resend-verification');
+    await page.goto('/auth/resend-verification', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForAuthForm(page);
     await page.waitForTimeout(2000);
 
