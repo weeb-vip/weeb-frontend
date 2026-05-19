@@ -57,11 +57,17 @@ export async function waitForShowPage(page: Page) {
  * Delete emails for a recipient from Mailpit (staging email server)
  */
 export async function deleteEmailsForRecipient(recipientEmail: string) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
   try {
-    const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages');
+    const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages', {
+      signal: controller.signal
+    });
     const data = await response.json();
 
     if (!data.messages || data.messages.length === 0) {
+      clearTimeout(timeoutId);
       return;
     }
 
@@ -77,11 +83,18 @@ export async function deleteEmailsForRecipient(recipientEmail: string) {
       await fetch('https://mailhog.staging.weeb.vip/api/v1/messages', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ IDs: emailsToDelete })
+        body: JSON.stringify({ IDs: emailsToDelete }),
+        signal: controller.signal
       });
       console.log(`Cleaned up ${emailsToDelete.length} emails for ${recipientEmail}`);
     }
+    clearTimeout(timeoutId);
   } catch (error) {
-    console.log('Could not delete emails:', error);
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.log('Email cleanup timed out, continuing...');
+    } else {
+      console.log('Could not delete emails:', error);
+    }
   }
 }
