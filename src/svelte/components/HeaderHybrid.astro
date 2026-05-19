@@ -62,8 +62,8 @@ function getCurrentSeason(): string {
 <!-- Auth State Initializer (Client-side) with SSR auth data -->
 <AuthInitializer client:idle ssrAuth={auth} />
 
-<!-- Login/Register Modal Handler (Client-side) -->
-<LoginModalHandler client:idle />
+<!-- Login/Register Modal Handler (Client-side) — client:load ensures styles load immediately -->
+<LoginModalHandler client:load />
 
 <script>
   // Logo morph interaction (kept from original)
