@@ -610,10 +610,12 @@
   /* --- POSTER GRID --- */
   .poster-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 16px;
+    align-items: start; /* Prevent vertical stretching of grid items */
   }
   .poster-row :global(> *) {
+    width: 100%;
     max-width: 220px;
     justify-self: center;
   }
@@ -621,7 +623,7 @@
   /* On wider screens, allow cards to grow larger and fill space */
   @media (min-width: 1400px) {
     .poster-row {
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     }
     .poster-row :global(> *) {
       max-width: 240px;
@@ -630,7 +632,7 @@
 
   @media (min-width: 1800px) {
     .poster-row {
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     }
     .poster-row :global(> *) {
       max-width: 260px;

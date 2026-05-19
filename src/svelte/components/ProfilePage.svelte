@@ -845,7 +845,7 @@
   .section-link:hover { color: var(--weeb-accent-hover); }
 
   /* ── Anime grid ─────────────────────────────────────────────── */
-  .anime-grid { display: grid; gap: 16px; }
+  .anime-grid { display: grid; gap: 16px; align-items: start; }
   .anime-grid--3col {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
@@ -899,7 +899,6 @@
     overflow: hidden;
   }
   .skeleton-poster {
-    width: 100%;
     aspect-ratio: 2 / 3;
     background: var(--weeb-surface-hover, var(--weeb-surface));
   }

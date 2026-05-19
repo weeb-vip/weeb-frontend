@@ -93,12 +93,14 @@
   .poster-card {
     display: flex;
     flex-direction: column;
+    width: 100%;
     cursor: pointer;
     text-decoration: none;
     color: inherit;
   }
   .poster {
     aspect-ratio: 2/3;
+    width: 100%;
     border-radius: var(--weeb-radius, 8px);
     background: var(--weeb-surface);
     overflow: hidden;

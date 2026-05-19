@@ -800,6 +800,7 @@
     gap: 16px;
     min-height: 400px;
     transition: opacity 0.2s ease;
+    align-items: start;
   }
   .shows-grid.loading {
     opacity: 0.4;

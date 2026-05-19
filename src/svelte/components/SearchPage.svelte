@@ -1093,6 +1093,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 20px;
+    align-items: start;
   }
   .results-grid :global(.poster-card) {
     max-width: 200px;
@@ -1209,7 +1210,6 @@
   /* Skeleton */
   .skeleton-card {}
   .skeleton-poster {
-    width: 100%;
     aspect-ratio: 2 / 3;
     border-radius: var(--weeb-radius-lg);
     background: var(--weeb-surface);
