@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
-import { waitForAuthForm } from './helpers';
+import { waitForAuthForm, deleteEmailsForRecipient } from './helpers';
 
 // This is an alternative test that navigates directly to the login page
 // instead of using the modal, in case the modal has issues
@@ -16,6 +16,10 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
     // Generate unique email for this test run
     testEmail = `${uuidv4()}@weeb.vip`;
     console.log(`Testing with email: ${testEmail}`);
+  });
+
+  test.afterEach(async () => {
+    await deleteEmailsForRecipient(testEmail);
   });
 
   test('register user via direct navigation', async ({ page }) => {

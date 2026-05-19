@@ -1,6 +1,6 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
-import { waitForHomepage, waitForAuthForm, waitForPageReady } from './helpers';
+import { waitForHomepage, waitForAuthForm, waitForPageReady, deleteEmailsForRecipient } from './helpers';
 
 // Helper function to check Mailpit for emails
 async function getLatestEmail(recipientEmail: string, retries = 15, delay = 3000) {
@@ -93,36 +93,6 @@ function extractVerificationLink(emailContent: string, baseUrl: string): string 
   }
 
   return null;
-}
-
-async function deleteEmailsForRecipient(recipientEmail: string) {
-  try {
-    const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages');
-    const data = await response.json();
-
-    if (!data.messages || data.messages.length === 0) {
-      return;
-    }
-
-    const emailsToDelete = data.messages
-      .filter((msg: any) => {
-        const toMatch = msg.To?.some((t: any) => t.Address === recipientEmail);
-        const bccMatch = msg.Bcc?.some((t: any) => t.Address === recipientEmail);
-        return toMatch || bccMatch;
-      })
-      .map((msg: any) => msg.ID);
-
-    if (emailsToDelete.length > 0) {
-      await fetch('https://mailhog.staging.weeb.vip/api/v1/messages', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ IDs: emailsToDelete })
-      });
-      console.log(`Cleaned up ${emailsToDelete.length} emails for ${recipientEmail}`);
-    }
-  } catch (error) {
-    console.log('Could not delete emails:', error);
-  }
 }
 
 // Opens the auth modal in register mode and returns the dialog locator.

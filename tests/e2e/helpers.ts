@@ -52,3 +52,36 @@ export async function waitForShowPage(page: Page) {
   // Wait for main content area
   await page.locator('main, body').first().waitFor({ state: 'visible', timeout: 15000 });
 }
+
+/**
+ * Delete emails for a recipient from Mailpit (staging email server)
+ */
+export async function deleteEmailsForRecipient(recipientEmail: string) {
+  try {
+    const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages');
+    const data = await response.json();
+
+    if (!data.messages || data.messages.length === 0) {
+      return;
+    }
+
+    const emailsToDelete = data.messages
+      .filter((msg: any) => {
+        const toMatch = msg.To?.some((t: any) => t.Address === recipientEmail);
+        const bccMatch = msg.Bcc?.some((t: any) => t.Address === recipientEmail);
+        return toMatch || bccMatch;
+      })
+      .map((msg: any) => msg.ID);
+
+    if (emailsToDelete.length > 0) {
+      await fetch('https://mailhog.staging.weeb.vip/api/v1/messages', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ IDs: emailsToDelete })
+      });
+      console.log(`Cleaned up ${emailsToDelete.length} emails for ${recipientEmail}`);
+    }
+  } catch (error) {
+    console.log('Could not delete emails:', error);
+  }
+}
