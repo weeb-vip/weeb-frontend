@@ -1,0 +1,880 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e3]:
+    - link "weeb.vip weeb.vip" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "weeb.vip" [ref=e5]
+      - generic [ref=e6]: weeb.vip
+    - generic [ref=e7]:
+      - link "Home" [ref=e8] [cursor=pointer]:
+        - /url: /
+      - link "Season" [ref=e9] [cursor=pointer]:
+        - /url: /season/SPRING_2026
+      - link "Airing" [ref=e10] [cursor=pointer]:
+        - /url: /airing
+      - link "Browse" [ref=e11] [cursor=pointer]:
+        - /url: /search
+    - combobox [ref=e14]:
+      - img
+      - searchbox [ref=e15]
+      - generic: /
+    - generic [ref=e16]:
+      - button "Toggle title language" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e21]: EN
+      - generic [ref=e23]:
+        - button "Login" [ref=e24] [cursor=pointer]:
+          - generic [ref=e25]: Login
+        - button "Register" [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: Register
+  - main [ref=e28]:
+    - generic [ref=e30]:
+      - generic [ref=e32]:
+        - status "Loading image" [ref=e36]:
+          - generic [ref=e37]: Loading...
+        - generic [ref=e39]:
+          - 'heading "Classroom of the Elite 4th Season: Second Year, First Semester" [level=1] [ref=e40]'
+          - paragraph [ref=e41]: As Ayanokouji and his classmates begin their second year at the Advanced Nurturing High School, they're greeted by a fresh gauntlet of exams and a fresh batch of rather unique first-year students. They'll have to get to know each other quickly, becau...
+          - generic [ref=e42]:
+            - generic [ref=e43]: Drama
+            - generic [ref=e44]: Suspense
+            - generic [ref=e45]: Airs Wed 8:30 AM
+          - generic [ref=e46]:
+            - link "View Details" [ref=e47] [cursor=pointer]:
+              - /url: /show/c6e6bfbd-9e5a-4126-b786-12b67e051a92
+            - button "Add to List" [ref=e48] [cursor=pointer]:
+              - generic [ref=e49]: Add to List
+        - 'img "Classroom of the Elite 4th Season: Second Year, First Semester" [ref=e52]'
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - heading "Airing This Week" [level=2] [ref=e55]
+          - link "View schedule →" [ref=e56] [cursor=pointer]:
+            - /url: /airing
+        - generic [ref=e57]:
+          - 'link "Classroom of the Elite 4th Season: Second Year, First Semester Classroom of the Elite 4th Season: Second Year, First Semester Episode 11 Wed 8:30 AM Airing in 13h" [ref=e58] [cursor=pointer]':
+            - /url: /show/c6e6bfbd-9e5a-4126-b786-12b67e051a92
+            - 'img "Classroom of the Elite 4th Season: Second Year, First Semester" [ref=e61]'
+            - generic [ref=e62]:
+              - generic [ref=e63]: "Classroom of the Elite 4th Season: Second Year, First Semester"
+              - generic [ref=e64]: Episode 11
+              - generic [ref=e65]: Wed 8:30 AM
+              - generic [ref=e66]: Airing in 13h
+          - link "Daikenja Riddle no Jikan Gyakkou Daikenja Riddle no Jikan Gyakkou Episode 8 Wed 8:55 AM Airing in 14h" [ref=e67] [cursor=pointer]:
+            - /url: /show/bb78de99-b26f-4c82-a325-03f9136c21c7
+            - img "Daikenja Riddle no Jikan Gyakkou" [ref=e70]
+            - generic [ref=e71]:
+              - generic [ref=e72]: Daikenja Riddle no Jikan Gyakkou
+              - generic [ref=e73]: Episode 8
+              - generic [ref=e74]: Wed 8:55 AM
+              - generic [ref=e75]: Airing in 14h
+          - link "Reborn as a Vending Machine, I Now Wander the Dungeon Season 3 Reborn as a Vending Machine, I Now Wander the Dungeon Season 3 Episode 8 Wed 9:00 AM Airing in 14h" [ref=e76] [cursor=pointer]:
+            - /url: /show/31146b7e-1f70-46d0-a122-62f6120b73d5
+            - img "Reborn as a Vending Machine, I Now Wander the Dungeon Season 3" [ref=e79]
+            - generic [ref=e80]:
+              - generic [ref=e81]: Reborn as a Vending Machine, I Now Wander the Dungeon Season 3
+              - generic [ref=e82]: Episode 8
+              - generic [ref=e83]: Wed 9:00 AM
+              - generic [ref=e84]: Airing in 14h
+          - link "Re:ZERO -Starting Life in Another World- Season 4 Re:ZERO -Starting Life in Another World- Season 4 Episode 7 Wed 9:00 AM Airing in 14h" [ref=e85] [cursor=pointer]:
+            - /url: /show/bfa1ecb1-165e-47f8-a223-90f9fbdf67cd
+            - img "Re:ZERO -Starting Life in Another World- Season 4" [ref=e88]
+            - generic [ref=e89]:
+              - generic [ref=e90]: Re:ZERO -Starting Life in Another World- Season 4
+              - generic [ref=e91]: Episode 7
+              - generic [ref=e92]: Wed 9:00 AM
+              - generic [ref=e93]: Airing in 14h
+          - link "The Beginning After the End Season 2 The Beginning After the End Season 2 Episode 8 Wed 10:30 AM Airing in 15h" [ref=e94] [cursor=pointer]:
+            - /url: /show/d9a24c0e-810a-4f63-9cb8-414169645c11
+            - img "The Beginning After the End Season 2" [ref=e97]
+            - generic [ref=e98]:
+              - generic [ref=e99]: The Beginning After the End Season 2
+              - generic [ref=e100]: Episode 8
+              - generic [ref=e101]: Wed 10:30 AM
+              - generic [ref=e102]: Airing in 15h
+          - link "Gals Can't Be Kind to Otaku!? Gals Can't Be Kind to Otaku!? Episode 7 Wed 10:45 AM Airing in 15h" [ref=e103] [cursor=pointer]:
+            - /url: /show/619fecd7-12ea-4a92-ac16-2ac3283a17f6
+            - img "Gals Can't Be Kind to Otaku!?" [ref=e106]
+            - generic [ref=e107]:
+              - generic [ref=e108]: Gals Can't Be Kind to Otaku!?
+              - generic [ref=e109]: Episode 7
+              - generic [ref=e110]: Wed 10:45 AM
+              - generic [ref=e111]: Airing in 15h
+          - link "Always a Catch! Always a Catch! Episode 8 Wed 11:00 AM Airing in 16h" [ref=e112] [cursor=pointer]:
+            - /url: /show/bdf31a7e-a8dd-4434-8d07-3427ba9a1759
+            - img "Always a Catch!" [ref=e115]
+            - generic [ref=e116]:
+              - generic [ref=e117]: Always a Catch!
+              - generic [ref=e118]: Episode 8
+              - generic [ref=e119]: Wed 11:00 AM
+              - generic [ref=e120]: Airing in 16h
+          - link "Go For It, Nakamura! Go For It, Nakamura! Episode 8 Wed 11:30 AM Airing in 16h" [ref=e121] [cursor=pointer]:
+            - /url: /show/ff543485-57d8-445c-a64f-f3e58199f74f
+            - img "Go For It, Nakamura!" [ref=e124]
+            - generic [ref=e125]:
+              - generic [ref=e126]: Go For It, Nakamura!
+              - generic [ref=e127]: Episode 8
+              - generic [ref=e128]: Wed 11:30 AM
+              - generic [ref=e129]: Airing in 16h
+      - generic [ref=e130]:
+        - generic [ref=e131]:
+          - heading "Top Rated" [level=2] [ref=e132]
+          - link "See all →" [ref=e133] [cursor=pointer]:
+            - /url: /search
+        - generic [ref=e134]:
+          - 'link "Frieren: Beyond Journey''s End 9.3 During their decade-long quest to defeat the Demon King, the members of the hero''s party—Himmel himself, the priest Heit... 28 episodes ★ 9.3 Adventure Drama Fantasy Frieren: Beyond Journey''s End 28 ep · 2023" [ref=e135] [cursor=pointer]':
+            - /url: /show/59ec38e9-fe14-41c9-a02c-e0b9dc8794b7
+            - generic [ref=e136]:
+              - 'img "Frieren: Beyond Journey''s End" [ref=e138]'
+              - generic [ref=e139]: "9.3"
+              - generic:
+                - generic:
+                  - paragraph: During their decade-long quest to defeat the Demon King, the members of the hero's party—Himmel himself, the priest Heit...
+                  - generic:
+                    - generic: 28 episodes
+                    - generic: ★ 9.3
+                  - generic:
+                    - generic: Adventure
+                    - generic: Drama
+                    - generic: Fantasy
+            - generic [ref=e140]: "Frieren: Beyond Journey's End"
+            - generic [ref=e141]: 28 ep · 2023
+          - 'link "Gintama: The Very Final 9.1 Two years have passed following the Tendoshuu''s invasion of the O-Edo Central Terminal. Since then, the Yorozuya have go... 1 episodes ★ 9.1 Action Comedy Drama Gintama: The Very Final 1 ep · 2021" [ref=e142] [cursor=pointer]':
+            - /url: /show/0735ef04-8726-439f-9dee-8d9379440f77
+            - generic [ref=e143]:
+              - 'img "Gintama: The Very Final" [ref=e145]'
+              - generic [ref=e146]: "9.1"
+              - generic:
+                - generic:
+                  - paragraph: Two years have passed following the Tendoshuu's invasion of the O-Edo Central Terminal. Since then, the Yorozuya have go...
+                  - generic:
+                    - generic: 1 episodes
+                    - generic: ★ 9.1
+                  - generic:
+                    - generic: Action
+                    - generic: Comedy
+                    - generic: Drama
+            - generic [ref=e147]: "Gintama: The Very Final"
+            - generic [ref=e148]: 1 ep · 2021
+          - 'link "Fullmetal Alchemist: Brotherhood 9.1 After a horrific alchemy experiment goes wrong in the Elric household, brothers Edward and Alphonse are left in a catast... 64 episodes ★ 9.1 Action Adventure Drama Fullmetal Alchemist: Brotherhood 64 ep · 2009" [ref=e149] [cursor=pointer]':
+            - /url: /show/0ba03ecb-a713-4539-a67c-65be96a070b9
+            - generic [ref=e150]:
+              - 'img "Fullmetal Alchemist: Brotherhood" [ref=e152]'
+              - generic [ref=e153]: "9.1"
+              - generic:
+                - generic:
+                  - paragraph: After a horrific alchemy experiment goes wrong in the Elric household, brothers Edward and Alphonse are left in a catast...
+                  - generic:
+                    - generic: 64 episodes
+                    - generic: ★ 9.1
+                  - generic:
+                    - generic: Action
+                    - generic: Adventure
+                    - generic: Drama
+            - generic [ref=e154]: "Fullmetal Alchemist: Brotherhood"
+            - generic [ref=e155]: 64 ep · 2009
+          - link "Steins;Gate 9.1 Eccentric scientist Rintarou Okabe has a never-ending thirst for scientific exploration. Together with his ditzy but wel... 24 episodes ★ 9.1 Drama Sci-Fi Suspense Steins;Gate 24 ep · 2011" [ref=e156] [cursor=pointer]:
+            - /url: /show/14f27f0a-db27-443f-9a27-982c42575ce3
+            - generic [ref=e157]:
+              - img "Steins;Gate" [ref=e159]
+              - generic [ref=e160]: "9.1"
+              - generic:
+                - generic:
+                  - paragraph: Eccentric scientist Rintarou Okabe has a never-ending thirst for scientific exploration. Together with his ditzy but wel...
+                  - generic:
+                    - generic: 24 episodes
+                    - generic: ★ 9.1
+                  - generic:
+                    - generic: Drama
+                    - generic: Sci-Fi
+                    - generic: Suspense
+            - generic [ref=e161]: Steins;Gate
+            - generic [ref=e162]: 24 ep · 2011
+          - link "Gintama Season 4 9.1 Gintoki, Shinpachi, and Kagura return as the fun-loving but broke members of the Yorozuya team! Living in an alternate-r... 51 episodes ★ 9.1 Action Comedy Sci-Fi Gintama Season 4 51 ep · 2015" [ref=e163] [cursor=pointer]:
+            - /url: /show/6aa2615a-694a-4961-8ec6-c9a7836adacd
+            - generic [ref=e164]:
+              - img "Gintama Season 4" [ref=e166]
+              - generic [ref=e167]: "9.1"
+              - generic:
+                - generic:
+                  - paragraph: Gintoki, Shinpachi, and Kagura return as the fun-loving but broke members of the Yorozuya team! Living in an alternate-r...
+                  - generic:
+                    - generic: 51 episodes
+                    - generic: ★ 9.1
+                  - generic:
+                    - generic: Action
+                    - generic: Comedy
+                    - generic: Sci-Fi
+            - generic [ref=e168]: Gintama Season 4
+            - generic [ref=e169]: 51 ep · 2015
+          - link "Attack on Titan Season 3 Part 2 9.1 Seeking to restore humanity's diminishing hope, the Survey Corps embark on a mission to retake Wall Maria, where the bat... 10 episodes ★ 9.1 Action Drama Suspense Attack on Titan Season 3 Part 2 10 ep · 2019" [ref=e170] [cursor=pointer]:
+            - /url: /show/6f5833de-9fc3-4ba1-924c-98c0013afe63
+            - generic [ref=e171]:
+              - img "Attack on Titan Season 3 Part 2" [ref=e173]
+              - generic [ref=e174]: "9.1"
+              - generic:
+                - generic:
+                  - paragraph: Seeking to restore humanity's diminishing hope, the Survey Corps embark on a mission to retake Wall Maria, where the bat...
+                  - generic:
+                    - generic: 10 episodes
+                    - generic: ★ 9.1
+                  - generic:
+                    - generic: Action
+                    - generic: Drama
+                    - generic: Suspense
+            - generic [ref=e175]: Attack on Titan Season 3 Part 2
+            - generic [ref=e176]: 10 ep · 2019
+          - link "Loading image One Piece Fan Letter 9.0 Although the golden age of piracy is about to reach new heights, most people do not seek the glory of finding the elusiv... 1 episodes ★ 9.0 Action Adventure Fantasy One Piece Fan Letter 1 ep · 2024" [ref=e177] [cursor=pointer]:
+            - /url: /show/2db02287-cfb9-4089-a4a3-bc5b75236bf3
+            - generic [ref=e178]:
+              - generic [ref=e179]:
+                - status "Loading image" [ref=e180]:
+                  - generic [ref=e181]: Loading...
+                - img "One Piece Fan Letter" [ref=e182]
+              - generic [ref=e183]: "9.0"
+              - generic:
+                - generic:
+                  - paragraph: Although the golden age of piracy is about to reach new heights, most people do not seek the glory of finding the elusiv...
+                  - generic:
+                    - generic: 1 episodes
+                    - generic: ★ 9.0
+                  - generic:
+                    - generic: Action
+                    - generic: Adventure
+                    - generic: Fantasy
+            - generic [ref=e184]: One Piece Fan Letter
+            - generic [ref=e185]: 1 ep · 2024
+          - link "Loading image Legend of the Galactic Heroes 9.0 The 150-year-long stalemate between the two interstellar superpowers, the Galactic Empire and the Free Planets Alliance,... 110 episodes ★ 9.0 Drama Sci-Fi Legend of the Galactic Heroes 110 ep · 1988" [ref=e186] [cursor=pointer]:
+            - /url: /show/32114e6d-9c21-41dd-81da-afb15248f46f
+            - generic [ref=e187]:
+              - generic [ref=e188]:
+                - status "Loading image" [ref=e189]:
+                  - generic [ref=e190]: Loading...
+                - img "Legend of the Galactic Heroes" [ref=e191]
+              - generic [ref=e192]: "9.0"
+              - generic:
+                - generic:
+                  - paragraph: The 150-year-long stalemate between the two interstellar superpowers, the Galactic Empire and the Free Planets Alliance,...
+                  - generic:
+                    - generic: 110 episodes
+                    - generic: ★ 9.0
+                  - generic:
+                    - generic: Drama
+                    - generic: Sci-Fi
+            - generic [ref=e193]: Legend of the Galactic Heroes
+            - generic [ref=e194]: 110 ep · 1988
+          - link "Loading image Takopi's Original Sin 9.0 A squid-like creature, known as a Happian, leaves his home planet with the desire to spread happiness across the univers... 6 episodes ★ 9.0 Drama Sci-Fi Takopi's Original Sin 6 ep · 2025" [ref=e195] [cursor=pointer]:
+            - /url: /show/3970553c-981b-44a2-bc0b-af8d01bb9dac
+            - generic [ref=e196]:
+              - generic [ref=e197]:
+                - status "Loading image" [ref=e198]:
+                  - generic [ref=e199]: Loading...
+                - img "Takopi's Original Sin" [ref=e200]
+              - generic [ref=e201]: "9.0"
+              - generic:
+                - generic:
+                  - paragraph: A squid-like creature, known as a Happian, leaves his home planet with the desire to spread happiness across the univers...
+                  - generic:
+                    - generic: 6 episodes
+                    - generic: ★ 9.0
+                  - generic:
+                    - generic: Drama
+                    - generic: Sci-Fi
+            - generic [ref=e202]: Takopi's Original Sin
+            - generic [ref=e203]: 6 ep · 2025
+          - 'link "Loading image Gintama Season 2 9.0 After a one-year hiatus, Shinpachi Shimura returns to Edo, only to stumble upon a shocking surprise: Gintoki and Kagura,... 51 episodes ★ 9.0 Action Comedy Sci-Fi Gintama Season 2 51 ep · 2011" [ref=e204] [cursor=pointer]':
+            - /url: /show/623e2113-c6eb-45f8-9317-8beb7a2d0a46
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - status "Loading image" [ref=e207]:
+                  - generic [ref=e208]: Loading...
+                - img "Gintama Season 2" [ref=e209]
+              - generic [ref=e210]: "9.0"
+              - generic:
+                - generic:
+                  - paragraph: "After a one-year hiatus, Shinpachi Shimura returns to Edo, only to stumble upon a shocking surprise: Gintoki and Kagura,..."
+                  - generic:
+                    - generic: 51 episodes
+                    - generic: ★ 9.0
+                  - generic:
+                    - generic: Action
+                    - generic: Comedy
+                    - generic: Sci-Fi
+            - generic [ref=e211]: Gintama Season 2
+            - generic [ref=e212]: 51 ep · 2011
+          - 'link "Loading image Fruits Basket: The Final Season 9.0 Hundreds of years ago, the Chinese zodiac spirits and their god swore to stay together eternally. United by this promise... 13 episodes ★ 9.0 Drama Romance Supernatural Fruits Basket: The Final Season 13 ep · 2021" [ref=e213] [cursor=pointer]':
+            - /url: /show/6520ba38-d880-4425-bfc9-ebae511e18f3
+            - generic [ref=e214]:
+              - generic [ref=e215]:
+                - status "Loading image" [ref=e216]:
+                  - generic [ref=e217]: Loading...
+                - 'img "Fruits Basket: The Final Season" [ref=e218]'
+              - generic [ref=e219]: "9.0"
+              - generic:
+                - generic:
+                  - paragraph: Hundreds of years ago, the Chinese zodiac spirits and their god swore to stay together eternally. United by this promise...
+                  - generic:
+                    - generic: 13 episodes
+                    - generic: ★ 9.0
+                  - generic:
+                    - generic: Drama
+                    - generic: Romance
+                    - generic: Supernatural
+            - generic [ref=e220]: "Fruits Basket: The Final Season"
+            - generic [ref=e221]: 13 ep · 2021
+          - 'link "Loading image 9.0 While Gintoki Sakata was away, the Yorozuya found themselves a new leader: Kintoki, Gintoki''s golden-haired doppelganger... 13 episodes ★ 9.0 Action Comedy Sci-Fi Gintama: Enchousen 13 ep · 2012" [ref=e222] [cursor=pointer]':
+            - /url: /show/85bbd63b-46ca-4655-8486-5bded1751561
+            - generic [ref=e223]:
+              - status "Loading image" [ref=e225]:
+                - generic [ref=e226]: Loading...
+              - generic [ref=e227]: "9.0"
+              - generic:
+                - generic:
+                  - paragraph: "While Gintoki Sakata was away, the Yorozuya found themselves a new leader: Kintoki, Gintoki's golden-haired doppelganger..."
+                  - generic:
+                    - generic: 13 episodes
+                    - generic: ★ 9.0
+                  - generic:
+                    - generic: Action
+                    - generic: Comedy
+                    - generic: Sci-Fi
+            - generic [ref=e228]: "Gintama: Enchousen"
+            - generic [ref=e229]: 13 ep · 2012
+          - 'link "Loading image 9.0 The elite members of Shuchiin Academy''s student council continue their competitive day-to-day antics. Council president ... 13 episodes ★ 9.0 Comedy Romance Kaguya-sama: Love is War -Ultra Romantic- 13 ep · 2022" [ref=e230] [cursor=pointer]':
+            - /url: /show/90a9dcc5-c55c-445f-bf74-9386b231f2be
+            - generic [ref=e231]:
+              - status "Loading image" [ref=e233]:
+                - generic [ref=e234]: Loading...
+              - generic [ref=e235]: "9.0"
+              - generic:
+                - generic:
+                  - paragraph: The elite members of Shuchiin Academy's student council continue their competitive day-to-day antics. Council president ...
+                  - generic:
+                    - generic: 13 episodes
+                    - generic: ★ 9.0
+                  - generic:
+                    - generic: Comedy
+                    - generic: Romance
+            - generic [ref=e236]: "Kaguya-sama: Love is War -Ultra Romantic-"
+            - generic [ref=e237]: 13 ep · 2022
+          - link "Loading image 9.0 Hunters devote themselves to accomplishing hazardous tasks, all from traversing the world's uncharted territories to loc... 148 episodes ★ 9.0 Action Adventure Fantasy Hunter x Hunter 148 ep · 2011" [ref=e238] [cursor=pointer]:
+            - /url: /show/aad39739-d9b2-4990-b615-9e0c7a320ecf
+            - generic [ref=e239]:
+              - status "Loading image" [ref=e241]:
+                - generic [ref=e242]: Loading...
+              - generic [ref=e243]: "9.0"
+              - generic:
+                - generic:
+                  - paragraph: Hunters devote themselves to accomplishing hazardous tasks, all from traversing the world's uncharted territories to loc...
+                  - generic:
+                    - generic: 148 episodes
+                    - generic: ★ 9.0
+                  - generic:
+                    - generic: Action
+                    - generic: Adventure
+                    - generic: Fantasy
+            - generic [ref=e244]: Hunter x Hunter
+            - generic [ref=e245]: 148 ep · 2011
+      - generic [ref=e246]:
+        - generic [ref=e247]:
+          - heading "Newest Anime" [level=2] [ref=e248]
+          - link "See all →" [ref=e249] [cursor=pointer]:
+            - /url: /search
+        - generic [ref=e250]:
+          - link "Loading image 6.2 One day in the bustling city of Shibuya, a boy named Neku Sakuraba finds himself holding two black pins that enable him ... 12 episodes ★ 6.2 Action Mystery Suspense The World Ends with You The Animation 12 ep · 2021" [ref=e251] [cursor=pointer]:
+            - /url: /show/6eb769f4-af47-4b02-b3c3-3ff570045519
+            - generic [ref=e252]:
+              - status "Loading image" [ref=e254]:
+                - generic [ref=e255]: Loading...
+              - generic [ref=e256]: "6.2"
+              - generic:
+                - generic:
+                  - paragraph: One day in the bustling city of Shibuya, a boy named Neku Sakuraba finds himself holding two black pins that enable him ...
+                  - generic:
+                    - generic: 12 episodes
+                    - generic: ★ 6.2
+                  - generic:
+                    - generic: Action
+                    - generic: Mystery
+                    - generic: Suspense
+            - generic [ref=e257]: The World Ends with You The Animation
+            - generic [ref=e258]: 12 ep · 2021
+          - link "Loading image Lu Fan, a white-collar urban woman who has always considered herself a more ordinary woman than anyone else, is suddenly... 72 episodes Comedy Drama Romance No Choice But to Betray the Earth! 72 ep · 2021" [ref=e259] [cursor=pointer]:
+            - /url: /show/706967f1-b5b9-443b-9614-7b6dc910d0aa
+            - generic [ref=e260]:
+              - status "Loading image" [ref=e262]:
+                - generic [ref=e263]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Lu Fan, a white-collar urban woman who has always considered herself a more ordinary woman than anyone else, is suddenly...
+                  - generic:
+                    - generic: 72 episodes
+                  - generic:
+                    - generic: Comedy
+                    - generic: Drama
+                    - generic: Romance
+            - generic [ref=e264]: No Choice But to Betray the Earth!
+            - generic [ref=e265]: 72 ep · 2021
+          - link "Loading image 6.1 This series, which is set in the future, is about several events that break out after troops successfully rescued a teen... 52 episodes ★ 6.1 Action Adventure Sci-Fi World Peacekeepers 52 ep · 2014" [ref=e266] [cursor=pointer]:
+            - /url: /show/706b4895-66b6-4201-95a3-596de24ba020
+            - generic [ref=e267]:
+              - status "Loading image" [ref=e269]:
+                - generic [ref=e270]: Loading...
+              - generic [ref=e271]: "6.1"
+              - generic:
+                - generic:
+                  - paragraph: This series, which is set in the future, is about several events that break out after troops successfully rescued a teen...
+                  - generic:
+                    - generic: 52 episodes
+                    - generic: ★ 6.1
+                  - generic:
+                    - generic: Action
+                    - generic: Adventure
+                    - generic: Sci-Fi
+            - generic [ref=e272]: World Peacekeepers
+            - generic [ref=e273]: 52 ep · 2014
+          - link "Loading image 6.3 While saving a child from harm, otaku Asahi Ikusaba is transported to another world and believes he has reincarnated wit... 12 episodes ★ 6.3 Comedy Fantasy My One-Hit Kill Sister 12 ep · 2023" [ref=e274] [cursor=pointer]:
+            - /url: /show/de30f3ec-3c07-495c-bc88-79cfe8d0d599
+            - generic [ref=e275]:
+              - status "Loading image" [ref=e277]:
+                - generic [ref=e278]: Loading...
+              - generic [ref=e279]: "6.3"
+              - generic:
+                - generic:
+                  - paragraph: While saving a child from harm, otaku Asahi Ikusaba is transported to another world and believes he has reincarnated wit...
+                  - generic:
+                    - generic: 12 episodes
+                    - generic: ★ 6.3
+                  - generic:
+                    - generic: Comedy
+                    - generic: Fantasy
+            - generic [ref=e280]: My One-Hit Kill Sister
+            - generic [ref=e281]: 12 ep · 2023
+          - 'link "Loading image 6.2 A collection of the lives from the King of Prism franchise. The best ten live scenes were chosen by the fans out of twen... 1 episodes ★ 6.2 King of Prism All Stars: Prism Show☆Best Ten 1 ep · 2020" [ref=e282] [cursor=pointer]':
+            - /url: /show/e86a1905-a806-4a53-97df-651e480e2112
+            - generic [ref=e283]:
+              - status "Loading image" [ref=e285]:
+                - generic [ref=e286]: Loading...
+              - generic [ref=e287]: "6.2"
+              - generic:
+                - generic:
+                  - paragraph: A collection of the lives from the King of Prism franchise. The best ten live scenes were chosen by the fans out of twen...
+                  - generic:
+                    - generic: 1 episodes
+                    - generic: ★ 6.2
+            - generic [ref=e288]: "King of Prism All Stars: Prism Show☆Best Ten"
+            - generic [ref=e289]: 1 ep · 2020
+          - link "Loading image No synopsis information has been added to this title. Help improve our database by adding a synopsis here. 100 episodes Cookie Master 100 ep · 2008" [ref=e290] [cursor=pointer]:
+            - /url: /show/07467c79-514c-403b-98d1-f75168dffd89
+            - generic [ref=e291]:
+              - status "Loading image" [ref=e293]:
+                - generic [ref=e294]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+                  - generic:
+                    - generic: 100 episodes
+            - generic [ref=e295]: Cookie Master
+            - generic [ref=e296]: 100 ep · 2008
+          - link "Loading image Even the smallest creatures can make a big difference in this eggs-ceptionally funny adventure! Young chicks Cluck Norri... 1 episodes Hatched 1 ep · 2013" [ref=e297] [cursor=pointer]:
+            - /url: /show/0ed7a465-5260-440b-ad3d-bb9b2dc6a787
+            - generic [ref=e298]:
+              - status "Loading image" [ref=e300]:
+                - generic [ref=e301]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Even the smallest creatures can make a big difference in this eggs-ceptionally funny adventure! Young chicks Cluck Norri...
+                  - generic:
+                    - generic: 1 episodes
+            - generic [ref=e302]: Hatched
+            - generic [ref=e303]: 1 ep · 2013
+          - 'link "Loading image 8.1 Conspiring forces frame Jolyne Kuujou for a reckless crime, landing her in the infamous Green Dolphin Street Jail. Much ... 12 episodes ★ 8.1 Action Adventure JoJo''s Bizarre Adventure: Stone Ocean 12 ep · 2021" [ref=e304] [cursor=pointer]':
+            - /url: /show/24bdb20e-848d-4889-855e-88686a93329c
+            - generic [ref=e305]:
+              - status "Loading image" [ref=e307]:
+                - generic [ref=e308]: Loading...
+              - generic [ref=e309]: "8.1"
+              - generic:
+                - generic:
+                  - paragraph: Conspiring forces frame Jolyne Kuujou for a reckless crime, landing her in the infamous Green Dolphin Street Jail. Much ...
+                  - generic:
+                    - generic: 12 episodes
+                    - generic: ★ 8.1
+                  - generic:
+                    - generic: Action
+                    - generic: Adventure
+            - generic [ref=e310]: "JoJo's Bizarre Adventure: Stone Ocean"
+            - generic [ref=e311]: 12 ep · 2021
+          - link "Loading image 6.3 In 2060, in order to solve various supernatural crises, the World Organization selected elite agents from all over the w... 12 episodes ★ 6.3 Action Sci-Fi Supernatural Time Prisoner 12 ep · 2021" [ref=e312] [cursor=pointer]:
+            - /url: /show/336862aa-8523-4e2e-bd88-5aaf072f41ba
+            - generic [ref=e313]:
+              - status "Loading image" [ref=e315]:
+                - generic [ref=e316]: Loading...
+              - generic [ref=e317]: "6.3"
+              - generic:
+                - generic:
+                  - paragraph: In 2060, in order to solve various supernatural crises, the World Organization selected elite agents from all over the w...
+                  - generic:
+                    - generic: 12 episodes
+                    - generic: ★ 6.3
+                  - generic:
+                    - generic: Action
+                    - generic: Sci-Fi
+                    - generic: Supernatural
+            - generic [ref=e318]: Time Prisoner
+            - generic [ref=e319]: 12 ep · 2021
+          - link "Loading image 5.5 Fu, a dopey rabbit, is telepathically given the ultimate kung fu power after rescuing Shifu, a martial arts master, from... 1 episodes ★ 5.5 Action Adventure Comedy Legend of Kung Fu Rabbit 1 ep · 2011" [ref=e320] [cursor=pointer]:
+            - /url: /show/4278f635-c525-43dd-b2c7-cc6b355c6efa
+            - generic [ref=e321]:
+              - status "Loading image" [ref=e323]:
+                - generic [ref=e324]: Loading...
+              - generic [ref=e325]: "5.5"
+              - generic:
+                - generic:
+                  - paragraph: Fu, a dopey rabbit, is telepathically given the ultimate kung fu power after rescuing Shifu, a martial arts master, from...
+                  - generic:
+                    - generic: 1 episodes
+                    - generic: ★ 5.5
+                  - generic:
+                    - generic: Action
+                    - generic: Adventure
+                    - generic: Comedy
+            - generic [ref=e326]: Legend of Kung Fu Rabbit
+            - generic [ref=e327]: 1 ep · 2011
+          - link "Loading image In the late 21st century, mysterious structures known as \"Nightmare Domes\" began to appear all over the world, causing a... 12 episodes Comedy Slice of Life Zhandouban Geji! 12 ep · 2018" [ref=e328] [cursor=pointer]:
+            - /url: /show/6dfbf2d4-1e14-4ec6-bfa6-57596b13de4f
+            - generic [ref=e329]:
+              - status "Loading image" [ref=e331]:
+                - generic [ref=e332]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: In the late 21st century, mysterious structures known as "Nightmare Domes" began to appear all over the world, causing a...
+                  - generic:
+                    - generic: 12 episodes
+                  - generic:
+                    - generic: Comedy
+                    - generic: Slice of Life
+            - generic [ref=e333]: Zhandouban Geji!
+            - generic [ref=e334]: 12 ep · 2018
+          - link "Loading image Jeon Woo-chi travels over 500 years into the year 2015 on the elevator after defeating a king who bullies his people. He... 1 episodes Annyeong, Jeonwoochi! Dosoolrobotdaegyeoljeon 1 ep · 2015" [ref=e335] [cursor=pointer]:
+            - /url: /show/71a60f80-3179-4c5f-a4c0-ad56529b4c21
+            - generic [ref=e336]:
+              - status "Loading image" [ref=e338]:
+                - generic [ref=e339]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Jeon Woo-chi travels over 500 years into the year 2015 on the elevator after defeating a king who bullies his people. He...
+                  - generic:
+                    - generic: 1 episodes
+            - generic [ref=e340]: Annyeong, Jeonwoochi! Dosoolrobotdaegyeoljeon
+            - generic [ref=e341]: 1 ep · 2015
+          - 'link "Loading image 6.2 When researchers discover and exploit a fossil of the Mythical Pokémon Mew, they unleash a creation that goes against th... 1 episodes ★ 6.2 Action Adventure Comedy Pokémon: Mewtwo Strikes Back - Evolution 1 ep · 2019" [ref=e342] [cursor=pointer]':
+            - /url: /show/7f4a310d-7678-461e-827b-4f4b714e2c7c
+            - generic [ref=e343]:
+              - status "Loading image" [ref=e345]:
+                - generic [ref=e346]: Loading...
+              - generic [ref=e347]: "6.2"
+              - generic:
+                - generic:
+                  - paragraph: When researchers discover and exploit a fossil of the Mythical Pokémon Mew, they unleash a creation that goes against th...
+                  - generic:
+                    - generic: 1 episodes
+                    - generic: ★ 6.2
+                  - generic:
+                    - generic: Action
+                    - generic: Adventure
+                    - generic: Comedy
+            - generic [ref=e348]: "Pokémon: Mewtwo Strikes Back - Evolution"
+            - generic [ref=e349]: 1 ep · 2019
+          - link "Loading image 46-year-old Oh Jun-koo is a downtrodden thespian who hasn't worked in ages. The closest he gets to treading the boards n... 1 episodes I'll Just Live In Bando 1 ep · 2018" [ref=e350] [cursor=pointer]:
+            - /url: /show/99900538-bf0c-4a2f-8b42-133646c6a799
+            - generic [ref=e351]:
+              - status "Loading image" [ref=e353]:
+                - generic [ref=e354]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: 46-year-old Oh Jun-koo is a downtrodden thespian who hasn't worked in ages. The closest he gets to treading the boards n...
+                  - generic:
+                    - generic: 1 episodes
+            - generic [ref=e355]: I'll Just Live In Bando
+            - generic [ref=e356]: 1 ep · 2018
+      - generic [ref=e357]:
+        - heading "Browse by Genre" [level=2] [ref=e359]
+        - generic [ref=e360]:
+          - link "Action" [ref=e361] [cursor=pointer]:
+            - /url: /search?genre=Action
+          - link "Adventure" [ref=e362] [cursor=pointer]:
+            - /url: /search?genre=Adventure
+          - link "Comedy" [ref=e363] [cursor=pointer]:
+            - /url: /search?genre=Comedy
+          - link "Drama" [ref=e364] [cursor=pointer]:
+            - /url: /search?genre=Drama
+          - link "Fantasy" [ref=e365] [cursor=pointer]:
+            - /url: /search?genre=Fantasy
+          - link "Horror" [ref=e366] [cursor=pointer]:
+            - /url: /search?genre=Horror
+          - link "Mecha" [ref=e367] [cursor=pointer]:
+            - /url: /search?genre=Mecha
+          - link "Music" [ref=e368] [cursor=pointer]:
+            - /url: /search?genre=Music
+          - link "Mystery" [ref=e369] [cursor=pointer]:
+            - /url: /search?genre=Mystery
+          - link "Psychological" [ref=e370] [cursor=pointer]:
+            - /url: /search?genre=Psychological
+          - link "Romance" [ref=e371] [cursor=pointer]:
+            - /url: /search?genre=Romance
+          - link "Sci-Fi" [ref=e372] [cursor=pointer]:
+            - /url: /search?genre=Sci-Fi
+          - link "Slice of Life" [ref=e373] [cursor=pointer]:
+            - /url: /search?genre=Slice%20of%20Life
+          - link "Sports" [ref=e374] [cursor=pointer]:
+            - /url: /search?genre=Sports
+          - link "Supernatural" [ref=e375] [cursor=pointer]:
+            - /url: /search?genre=Supernatural
+          - link "Thriller" [ref=e376] [cursor=pointer]:
+            - /url: /search?genre=Thriller
+      - generic [ref=e377]:
+        - generic [ref=e378]:
+          - generic [ref=e379]:
+            - heading "Spring 2026 Highlights" [level=2] [ref=e380]
+            - link "Full season →" [ref=e381] [cursor=pointer]:
+              - /url: /season/SPRING_2026
+          - generic [ref=e382]:
+            - button "Spring 2026" [ref=e383] [cursor=pointer]
+            - button "Summer 2026" [ref=e384] [cursor=pointer]
+            - button "Fall 2026" [ref=e385] [cursor=pointer]
+        - generic [ref=e386]:
+          - link "Loading image 5.7 Yoshida is a tiny, frail high school graduate who became an unwilling manager of an apartment complex when his father, t... 12 episodes ★ 5.7 Comedy Supernatural Erotica Ingoku Danchi 12 ep · 2026" [ref=e387] [cursor=pointer]:
+            - /url: /show/b192dd01-61bf-4d47-8410-02e6a8ad23f7
+            - generic [ref=e388]:
+              - status "Loading image" [ref=e390]:
+                - generic [ref=e391]: Loading...
+              - generic [ref=e392]: "5.7"
+              - generic:
+                - generic:
+                  - paragraph: Yoshida is a tiny, frail high school graduate who became an unwilling manager of an apartment complex when his father, t...
+                  - generic:
+                    - generic: 12 episodes
+                    - generic: ★ 5.7
+                  - generic:
+                    - generic: Comedy
+                    - generic: Supernatural
+                    - generic: Erotica
+            - generic [ref=e393]: Ingoku Danchi
+            - generic [ref=e394]: 12 ep · 2026
+          - link "Loading image Fia always dreamed of becoming a knight. Born into a family of knights, she's the least talented among them, but she sti... Action Adventure Fantasy A Tale of the Secret Saint 0 ep · 2026" [ref=e395] [cursor=pointer]:
+            - /url: /show/031e66c3-5d52-49d1-9cab-08fbea82cc7d
+            - generic [ref=e396]:
+              - status "Loading image" [ref=e398]:
+                - generic [ref=e399]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Fia always dreamed of becoming a knight. Born into a family of knights, she's the least talented among them, but she sti...
+                  - generic:
+                    - generic: Action
+                    - generic: Adventure
+                    - generic: Fantasy
+            - generic [ref=e400]: A Tale of the Secret Saint
+            - generic [ref=e401]: 0 ep · 2026
+          - link "Loading image This is a story about a 20-year-old first-year college student, Botan Kamiina, and her life in a dorm, where she meets h... 12 episodes Comedy Girls Love Gourmet Botan Kamiina Fully Blossoms When Drunk 12 ep · 2026" [ref=e402] [cursor=pointer]:
+            - /url: /show/f8a12ae2-dfb8-4b58-94d4-4f3deb8c6359
+            - generic [ref=e403]:
+              - status "Loading image" [ref=e405]:
+                - generic [ref=e406]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: This is a story about a 20-year-old first-year college student, Botan Kamiina, and her life in a dorm, where she meets h...
+                  - generic:
+                    - generic: 12 episodes
+                  - generic:
+                    - generic: Comedy
+                    - generic: Girls Love
+                    - generic: Gourmet
+            - generic [ref=e407]: Botan Kamiina Fully Blossoms When Drunk
+            - generic [ref=e408]: 12 ep · 2026
+          - link "Loading image Ame is a child who loves sweets. But inside her mouth lived a cavity named Caries! Caries calls Ame \"Mama\" and acts comp... 5 episodes Comedy Fantasy Candy Caries 5 ep · 2026" [ref=e409] [cursor=pointer]:
+            - /url: /show/7c04dc99-4b6b-43c3-beea-c98b30b42cb3
+            - generic [ref=e410]:
+              - status "Loading image" [ref=e412]:
+                - generic [ref=e413]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Ame is a child who loves sweets. But inside her mouth lived a cavity named Caries! Caries calls Ame "Mama" and acts comp...
+                  - generic:
+                    - generic: 5 episodes
+                  - generic:
+                    - generic: Comedy
+                    - generic: Fantasy
+            - generic [ref=e414]: Candy Caries
+            - generic [ref=e415]: 5 ep · 2026
+          - 'link "Loading image In 199x, the world was engulfed in the blaze of nuclear war. With the Ocean drying up and Earth torn asunder, all life ... 12 episodes Action Drama Sci-Fi Hokuto no Ken: Fist of the North Star 12 ep · 2026" [ref=e416] [cursor=pointer]':
+            - /url: /show/798bf757-0da3-40f1-be70-1a2791a9d35c
+            - generic [ref=e417]:
+              - status "Loading image" [ref=e419]:
+                - generic [ref=e420]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: In 199x, the world was engulfed in the blaze of nuclear war. With the Ocean drying up and Earth torn asunder, all life ...
+                  - generic:
+                    - generic: 12 episodes
+                  - generic:
+                    - generic: Action
+                    - generic: Drama
+                    - generic: Sci-Fi
+            - generic [ref=e421]: "Hokuto no Ken: Fist of the North Star"
+            - generic [ref=e422]: 12 ep · 2026
+          - link "Loading image In sixth grade, childhood friends Yukiya Asagi and Miku Sakura created a game with the objective to embarrass the other ... 12 episodes Comedy Romance I Want to End this Love Game 12 ep · 2026" [ref=e423] [cursor=pointer]:
+            - /url: /show/bf2e1820-480e-4748-9430-6dd57b5ef63d
+            - generic [ref=e424]:
+              - status "Loading image" [ref=e426]:
+                - generic [ref=e427]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: In sixth grade, childhood friends Yukiya Asagi and Miku Sakura created a game with the objective to embarrass the other ...
+                  - generic:
+                    - generic: 12 episodes
+                  - generic:
+                    - generic: Comedy
+                    - generic: Romance
+            - generic [ref=e428]: I Want to End this Love Game
+            - generic [ref=e429]: 12 ep · 2026
+          - link "Loading image Meiko, a country girl, enrolls in a prestigious all-girls school under the condition that she joins a volunteer program.... 11 episodes Comedy Ecchi Ichijouma Mankitsugurashi! 11 ep · 2026" [ref=e430] [cursor=pointer]:
+            - /url: /show/509677d7-794d-485a-8687-88d966bd6c0d
+            - generic [ref=e431]:
+              - status "Loading image" [ref=e433]:
+                - generic [ref=e434]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Meiko, a country girl, enrolls in a prestigious all-girls school under the condition that she joins a volunteer program....
+                  - generic:
+                    - generic: 11 episodes
+                  - generic:
+                    - generic: Comedy
+                    - generic: Ecchi
+            - generic [ref=e435]: Ichijouma Mankitsugurashi!
+            - generic [ref=e436]: 11 ep · 2026
+          - link "Loading image Juuzou Oogami is a legendary hitman who has never failed an assignment, no matter how impossible. One day, after wiping ... 12 episodes Action Comedy Kill Blue 12 ep · 2026" [ref=e437] [cursor=pointer]:
+            - /url: /show/efbe55f2-5819-477a-98bb-8a071b0dae67
+            - generic [ref=e438]:
+              - status "Loading image" [ref=e440]:
+                - generic [ref=e441]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Juuzou Oogami is a legendary hitman who has never failed an assignment, no matter how impossible. One day, after wiping ...
+                  - generic:
+                    - generic: 12 episodes
+                  - generic:
+                    - generic: Action
+                    - generic: Comedy
+            - generic [ref=e442]: Kill Blue
+            - generic [ref=e443]: 12 ep · 2026
+          - link "Loading image Third season of Kumarba. Kumarba Season 3 0 ep · 2026" [ref=e444] [cursor=pointer]:
+            - /url: /show/e6157fae-d21f-45ab-a8c1-b2ba00b3bb50
+            - generic [ref=e445]:
+              - status "Loading image" [ref=e447]:
+                - generic [ref=e448]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Third season of Kumarba.
+            - generic [ref=e449]: Kumarba Season 3
+            - generic [ref=e450]: 0 ep · 2026
+          - 'link "Loading image Second season of Yozakura-san Chi no Daisakusen. 12 episodes Action Comedy Mission: Yozakura Family Season 2 12 ep · 2026" [ref=e451] [cursor=pointer]':
+            - /url: /show/b4fb268f-893f-4b36-8ece-28fc86aab00d
+            - generic [ref=e452]:
+              - status "Loading image" [ref=e454]:
+                - generic [ref=e455]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Second season of Yozakura-san Chi no Daisakusen.
+                  - generic:
+                    - generic: 12 episodes
+                  - generic:
+                    - generic: Action
+                    - generic: Comedy
+            - generic [ref=e456]: "Mission: Yozakura Family Season 2"
+            - generic [ref=e457]: 12 ep · 2026
+          - link "Loading image No synopsis information has been added to this title. Help improve our database by adding a synopsis here. Shou 3 Ashibe QQ Goma-chan 0 ep · 2026" [ref=e458] [cursor=pointer]:
+            - /url: /show/391af70f-8d17-42a7-857a-0553645846b5
+            - generic [ref=e459]:
+              - status "Loading image" [ref=e461]:
+                - generic [ref=e462]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: No synopsis information has been added to this title. Help improve our database by adding a synopsis here.
+            - generic [ref=e463]: Shou 3 Ashibe QQ Goma-chan
+            - generic [ref=e464]: 0 ep · 2026
+          - link "Loading image The Royal Diana Academy is a prestigious school that accepts individuals with adept magical abilities. Upon graduation, ... 24 episodes Comedy Fantasy The Classroom of a Black Cat and a Witch 24 ep · 2026" [ref=e465] [cursor=pointer]:
+            - /url: /show/2c13bb2c-0024-4758-8863-475b63360669
+            - generic [ref=e466]:
+              - status "Loading image" [ref=e468]:
+                - generic [ref=e469]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: The Royal Diana Academy is a prestigious school that accepts individuals with adept magical abilities. Upon graduation, ...
+                  - generic:
+                    - generic: 24 episodes
+                  - generic:
+                    - generic: Comedy
+                    - generic: Fantasy
+            - generic [ref=e470]: The Classroom of a Black Cat and a Witch
+            - generic [ref=e471]: 24 ep · 2026
+          - link "Loading image Shizuku Kanzaki is the only son of world-renowned wine critic Yutaka Kanzaki. From a young age, Shizuku has been subject... 24 episodes Drama Gourmet Mystery The Drops of God 24 ep · 2026" [ref=e472] [cursor=pointer]:
+            - /url: /show/3a1d0893-b573-4517-9880-1e0bcdac0b17
+            - generic [ref=e473]:
+              - status "Loading image" [ref=e475]:
+                - generic [ref=e476]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Shizuku Kanzaki is the only son of world-renowned wine critic Yutaka Kanzaki. From a young age, Shizuku has been subject...
+                  - generic:
+                    - generic: 24 episodes
+                  - generic:
+                    - generic: Drama
+                    - generic: Gourmet
+                    - generic: Mystery
+            - generic [ref=e477]: The Drops of God
+            - generic [ref=e478]: 24 ep · 2026
+          - 'link "Loading image Second season of Tsue to Tsurugi no Wistoria. 12 episodes Action Fantasy Wistoria: Wand and Sword Season 2 12 ep · 2026" [ref=e479] [cursor=pointer]':
+            - /url: /show/7dd8b2b0-85a8-4cb7-b5e6-5c585bbd2466
+            - generic [ref=e480]:
+              - status "Loading image" [ref=e482]:
+                - generic [ref=e483]: Loading...
+              - generic:
+                - generic:
+                  - paragraph: Second season of Tsue to Tsurugi no Wistoria.
+                  - generic:
+                    - generic: 12 episodes
+                  - generic:
+                    - generic: Action
+                    - generic: Fantasy
+            - generic [ref=e484]: "Wistoria: Wand and Sword Season 2"
+            - generic [ref=e485]: 12 ep · 2026
+  - contentinfo [ref=e487]:
+    - generic [ref=e488]: © 2026 weeb.vip
+    - generic [ref=e489]:
+      - link "About" [ref=e490] [cursor=pointer]:
+        - /url: /about
+      - link "API" [ref=e491] [cursor=pointer]:
+        - /url: "#"
+      - link "GitHub" [ref=e492] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e493]: vdev
+  - generic:
+    - generic:
+      - region "Notifications alt+T"
+  - button "🛠️ Dev Panel" [ref=e496] [cursor=pointer]:
+    - text: 🛠️
+    - generic [ref=e497]: Dev Panel
+  - generic [ref=e500]:
+    - button "Menu" [ref=e501]:
+      - img [ref=e503]
+      - generic: Menu
+    - button "Inspect" [ref=e507]:
+      - img [ref=e509]
+      - generic: Inspect
+    - button "Audit" [ref=e511]:
+      - generic [ref=e512]:
+        - img [ref=e513]
+        - img [ref=e516]
+      - generic: Audit
+    - button "Settings" [ref=e519]:
+      - img [ref=e521]
+      - generic: Settings
