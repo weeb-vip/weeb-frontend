@@ -3,6 +3,6 @@
   "graphql_host": "https://gateway.weeb.vip/graphql",
   "algolia_index": "anime",
   "cdn_url": "https://cdn.weeb.vip/weeb",
-  "cdn_user_url": "https://cdn.weeb.vip/weeb-user",
+  "cdn_user_url": "https://user.cdn.weeb.vip",
   "posthog_api_key": "phc_MbyMDQJkiLR9NSfSGSpEhA1RSwu79mROuedzQvxgxoI"
 }
