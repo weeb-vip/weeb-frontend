@@ -231,7 +231,7 @@
     // Priority 3: CDN poster as fallback
     const posterUrl = GetImageFromAnime(anime);
     if (posterUrl) {
-      sources.push(`https://cdn.weeb.vip/weeb/${encodeURIComponent(posterUrl)}`);
+      sources.push(`https://weeb.cdn.weeb.vip/${encodeURIComponent(posterUrl)}`);
     }
 
     return sources;
