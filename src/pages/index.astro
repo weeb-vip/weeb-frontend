@@ -166,10 +166,8 @@ let bannerImageUrl = null;
 if (currentlyAiringData?.getAiringAnimeAll?.length > 0) {
   console.log('airing data', currentlyAiringData.getAiringAnimeAll.map(a => ({airTime: a.airtime, title: a.title})));
   const firstAnime = currentlyAiringData.getAiringAnimeAll[0];
-  if (firstAnime.thetvdbid) {
-    bannerImageUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${firstAnime.thetvdbid}/fanart?w=1920&h=1080&fit=cover&q=85&f=webp`;
-  } else if (firstAnime.anidbid) {
-    bannerImageUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${firstAnime.anidbid}/fanart?w=1920&h=1080&fit=cover&q=85&f=webp`;
+  if (firstAnime.id) {
+    bannerImageUrl = `https://cdn.weeb.vip/weeb/banners/${encodeURIComponent(firstAnime.id)}`;
   }
 }
 

@@ -205,30 +205,12 @@
 
     const sources: string[] = [];
 
-    const baseParams = new URLSearchParams({
-      w: '1920',
-      h: '1080',
-      fit: 'cover',
-      q: '85'
-    });
-
-    if (supportsWebP) {
-      baseParams.set('f', 'webp');
+    // Priority 1: CDN banner (tvdb artwork synced by thetvdb-enrichment)
+    if (anime.id) {
+      sources.push(`https://cdn.weeb.vip/weeb/banners/${encodeURIComponent(anime.id)}`);
     }
 
-    // Priority 1: TVDB fanart (highest quality)
-    if (anime.thetvdbid) {
-      const baseUrl = `https://weeb-api.staging.weeb.vip/show/anime/series/${anime.thetvdbid}/fanart`;
-      sources.push(`${baseUrl}?${baseParams.toString()}`);
-    }
-
-    // Priority 2: AniDB fanart
-    if (anime.anidbid) {
-      const baseUrl = `https://weeb-api.staging.weeb.vip/show/anime/anidb/series/${anime.anidbid}/fanart`;
-      sources.push(`${baseUrl}?${baseParams.toString()}`);
-    }
-
-    // Priority 3: CDN poster as fallback
+    // Priority 2: CDN poster as fallback
     const posterUrl = GetImageFromAnime(anime);
     if (posterUrl) {
       sources.push(`https://cdn.weeb.vip/weeb/${encodeURIComponent(posterUrl)}`);
