@@ -3,8 +3,8 @@ name: "E2E Tests"
 on:
   push:
     branches: [develop]  # Only run directly on develop, not main
-  pull_request:
-    branches: [main, develop]
+  # PRs run these via test-status.yml (workflow_call) — a direct
+  # pull_request trigger here duplicated the entire suite on every PR
   workflow_call:  # Allow this workflow to be called by other workflows
 
 jobs:
