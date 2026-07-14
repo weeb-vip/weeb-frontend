@@ -1,0 +1,27 @@
+<script lang="ts">
+  import Seo from '$lib/Seo.svelte';
+  import HomepageSSR from '../svelte/components/HomepageSSR.svelte';
+
+  export let data;
+</script>
+
+<Seo
+  title="Home"
+  description="Discover and track your favorite anime. Get notifications for new episodes, explore seasonal anime, and manage your watchlist."
+/>
+
+<svelte:head>
+  {#if data.bannerImageUrl}
+    <link rel="preload" as="image" href={data.bannerImageUrl} fetchpriority="high" />
+  {/if}
+</svelte:head>
+
+<HomepageSSR
+  auth={data.auth}
+  homeData={data.homeData}
+  currentlyAiringData={data.currentlyAiringData}
+  seasonalData={data.seasonalData}
+  currentSeason={data.currentSeason}
+  ssrError={data.ssrError}
+  isTokenExpired={data.isTokenExpired}
+/>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+
+    <!-- Disable Cloudflare Rocket Loader to prevent script conflicts -->
+    <meta name="cf-rocket" content="false"/>
+    <meta name="keywords" content="anime, watchlist, tracker, episodes, notifications, seasonal anime, anime calendar, weeb, otaku" />
+    <meta name="author" content="WeebVIP" />
+
+    <!-- Performance optimizations: DNS prefetch and preconnect -->
+    <link rel="dns-prefetch" href="//gateway.weeb.vip" />
+    <link rel="dns-prefetch" href="//cdn.weeb.vip" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="//eu.posthog.com" />
+
+    <link rel="preconnect" href="//gateway.weeb.vip" crossorigin />
+    <link rel="preconnect" href="//cdn.weeb.vip" crossorigin />
+    <link rel="preconnect" href="//fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="//fonts.gstatic.com" crossorigin />
+
+    <!-- Favicons & PWA Icons -->
+    <link rel="icon" href="/assets/icons/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon-180x180.png">
+    <link rel="manifest" href="/manifest.json"/>
+
+    <!-- iOS PWA Splash Screens -->
+    <link rel="apple-touch-startup-image" href="/assets/splash/splash-750x1334.png">
+    <link rel="apple-touch-startup-image" href="/assets/splash/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/assets/splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/assets/splash/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/assets/splash/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/assets/splash/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/assets/splash/splash-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+
+    <!-- Additional SEO / PWA -->
+    <meta name="format-detection" content="telephone=no"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="WeebVIP"/>
+    <meta name="apple-touch-fullscreen" content="yes"/>
+    <meta name="msapplication-TileColor" content="#1a1a2e">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#1a1a2e">
+
+    <!-- Disable mobile Chrome speculation rules to prevent Cloudflare blocking -->
+    <script type="speculationrules">
+    {
+      "prefetch": [],
+      "prerender": []
+    }
+    </script>
+
+    <!-- Critical inline styles to prevent flash -->
+    <style>
+      /* Always-dark theme */
+      html, body {
+        background-color: oklch(14% 0.015 275);
+        color: oklch(95% 0.005 265);
+        min-height: 100vh;
+      }
+
+      /* PWA-specific */
+      @media (display-mode: standalone) {
+        html, html body {
+          background-color: oklch(14% 0.015 275) !important;
+          color: oklch(95% 0.005 265) !important;
+        }
+      }
+
+      /* Prevent transition flash on page load */
+      html.no-transitions * {
+        transition: none !important;
+      }
+    </style>
+
+    <!-- Theme initialization (blocking to prevent flash) -->
+    <script data-cfasync="false">
+      (function initTheme() {
+        document.documentElement.classList.add('no-transitions');
+        document.documentElement.classList.add('dark');
+        try { localStorage.setItem('theme', 'dark'); } catch(e) {}
+
+        var themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColorMeta) themeColorMeta.setAttribute('content', '#1a1a2e');
+
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            document.documentElement.classList.remove('no-transitions');
+          });
+        });
+
+        // Clean up PWA source parameter if present
+        var searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('source') === 'pwa') {
+          var newUrl = window.location.pathname + window.location.hash;
+          window.history.replaceState(null, '', newUrl);
+        }
+      })();
+    </script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "WeebVIP",
+        "description": "Track your anime watchlist with episode notifications and seasonal anime discovery",
+        "url": "https://weeb.vip",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://weeb.vip/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        },
+        "sameAs": [
+          "https://twitter.com/weebvip"
+        ]
+      }
+    </script>
+
+    %sveltekit.head%
+</head>
+<body class="bg-weeb-bg text-weeb-fg min-h-screen" data-sveltekit-preload-data="off">
+    <!-- Navigation Progress Bar -->
+    <div id="navigation-progress" class="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform -translate-y-full transition-all duration-300 opacity-0" style="z-index: 9999; box-shadow: 0 2px 10px rgba(59, 130, 246, 0.6);"></div>
+
+    <div style="display: contents">%sveltekit.body%</div>
+</body>
+</html>

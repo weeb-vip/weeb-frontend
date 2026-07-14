@@ -31,3 +31,6 @@ playwright-report
 .env
 .env.local
 .env.cloudflare
+
+.svelte-kit/
+build/

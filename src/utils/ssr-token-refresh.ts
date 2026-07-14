@@ -1,4 +1,9 @@
-import type { AstroCookies } from 'astro';
+// Minimal cookie interface (Astro-style: get returns {value}); satisfied
+// by the shim in hooks.server.ts
+interface AstroCookies {
+  get(name: string): { value: string } | undefined;
+  set(name: string, value: string, options?: any): void;
+}
 import { AuthStorage } from './auth-storage';
 import debug from './debug';
 

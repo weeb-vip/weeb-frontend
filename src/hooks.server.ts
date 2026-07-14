@@ -1,0 +1,134 @@
+import { redirect, type Handle } from '@sveltejs/kit';
+import { getConfig } from './config/build-time-loader';
+import { AuthStorage } from './utils/auth-storage';
+import { refreshTokenSSR, isTokenExpired } from './utils/ssr-token-refresh';
+
+// Config cache for performance
+let configData: any = null;
+
+// refreshTokenSSR was written against Astro's cookie API (get returns
+// {value}, set defaults the path) — adapt SvelteKit's cookies to it
+function astroStyleCookies(cookies: import('@sveltejs/kit').Cookies) {
+  return {
+    get(name: string) {
+      const value = cookies.get(name);
+      return value === undefined ? undefined : { value };
+    },
+    set(name: string, value: string, options: any = {}) {
+      cookies.set(name, value, { path: '/', ...options });
+    },
+    delete(name: string, options: any = {}) {
+      cookies.delete(name, { path: '/', ...options });
+    }
+  };
+}
+
+export const handle: Handle = async ({ event, resolve }) => {
+  const { request, url, cookies } = event;
+
+  // Skip work for static assets (served by the adapter, but belt and braces)
+  const isStaticAsset = url.pathname.startsWith('/assets/') ||
+                        url.pathname.startsWith('/_app/') ||
+                        /\.(png|jpg|ico|webp|svg|css|js|json)$/.test(url.pathname);
+
+  if (isStaticAsset) {
+    return resolve(event);
+  }
+
+  try {
+    if (!configData) {
+      configData = await getConfig();
+      console.log('[Hooks] Config loaded from build-time import');
+      console.log('[Hooks] API Host:', configData?.api_host);
+    }
+    event.locals.config = configData;
+  } catch (error) {
+    console.error('[Hooks] Failed to load config:', error);
+    return new Response('Configuration error', { status: 500 });
+  }
+
+  const cookieString = request.headers.get('cookie') || '';
+
+  // Check authentication status from cookies
+  const authResult = (() => {
+    const isLoggedIn = AuthStorage.isLoggedInFromCookieString(cookieString);
+    const tokens = AuthStorage.getTokensFromCookieString(cookieString);
+    return { isLoggedIn, tokens };
+  })();
+
+  // Token refresh logic - 3 cases
+  const hasAccessToken = !!authResult.tokens.authToken;
+  const hasRefreshToken = !!authResult.tokens.refreshToken;
+  const cookieShim = astroStyleCookies(cookies);
+
+  if (hasRefreshToken) {
+    if (!hasAccessToken) {
+      // CASE 1: Has refresh token but NO access token - refresh immediately
+      const refreshResult = await refreshTokenSSR(cookieShim, configData?.graphql_host || 'http://localhost:8079');
+
+      if (refreshResult.success) {
+        authResult.tokens.authToken = refreshResult.authToken;
+        authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
+        authResult.isLoggedIn = true;
+      } else {
+        console.error('[Hooks] ❌ Token refresh failed:', refreshResult.error);
+        authResult.isLoggedIn = false;
+      }
+    } else if (authResult.tokens.authToken && isTokenExpired(authResult.tokens.authToken)) {
+      // CASE 2: Has access token but it's EXPIRED - refresh it
+      const refreshResult = await refreshTokenSSR(cookieShim, configData?.graphql_host || 'http://localhost:8079');
+
+      if (refreshResult.success) {
+        authResult.tokens.authToken = refreshResult.authToken;
+        authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
+        authResult.isLoggedIn = true;
+      } else {
+        console.error('[Hooks] ❌ Token refresh failed:', refreshResult.error);
+        authResult.isLoggedIn = false;
+      }
+    }
+    // CASE 3: valid access token - continue normal flow
+  } else if (hasAccessToken && authResult.tokens.authToken && isTokenExpired(authResult.tokens.authToken)) {
+    // Access token expired and no refresh token available
+    authResult.isLoggedIn = false;
+  }
+
+  event.locals.auth = {
+    isLoggedIn: authResult.isLoggedIn,
+    authToken: authResult.tokens.authToken,
+    refreshToken: authResult.tokens.refreshToken,
+    hasAuthToken: !!authResult.tokens.authToken,
+    hasRefreshToken: !!authResult.tokens.refreshToken
+  };
+
+  // Handle authentication for protected routes
+  const protectedRoutes = ['/profile'];
+  const authRoutes = ['/auth/login', '/auth/register'];
+
+  if (protectedRoutes.some(route => url.pathname.startsWith(route)) && !authResult.isLoggedIn) {
+    redirect(302, '/auth/login');
+  }
+
+  if (authRoutes.some(route => url.pathname === route) && authResult.isLoggedIn) {
+    redirect(302, '/profile');
+  }
+
+  const response = await resolve(event);
+
+  if (response.headers) {
+    // Security headers
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+    // Cache control for different types of content
+    if (url.pathname.startsWith('/assets/') || url.pathname.includes('.')) {
+      response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (url.pathname === '/' || url.pathname === '/airing') {
+      response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=3600');
+    }
+  }
+
+  return response;
+};
