@@ -634,9 +634,13 @@ export const upsertAnime = () => ({
 export const deleteAnime = () => ({
   mutationFn: async (input: string) => {
     debug.anime("Sending input to DeleteAnime:", input);
-    const client = await AuthenticatedClient(); // ensure token read at call-time
-    const response = await client.request(mutateDeleteAnime, {input});
-    return response.DeleteAnime;
+    // Route through authenticatedRequest so an expired access token is
+    // refreshed and retried, matching upsertAnime — a direct client call
+    // failed with an auth error once the token expired (remove broken)
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateDeleteAnime, { input });
+      return response.DeleteAnime;
+    });
   }
 })
 

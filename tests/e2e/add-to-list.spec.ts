@@ -68,9 +68,23 @@ test.describe('Add to list (logged in)', () => {
     expect(happyBody.data?.AddAnime?.id).toBeTruthy();
     await expect(page.getByText(/please log in|authentication error/i)).toHaveCount(0);
 
+    const addedId = page.url().split('/show/')[1]?.split(/[/?#]/)[0];
+
+    // Reload the show page: SSR must load userAnime (it forwards the
+    // cookie, not a Bearer header) so the added status persists. This is
+    // the regression for "add, refresh, and it no longer shows as added".
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
+    const statusControl = page
+      .getByRole('button', { name: /plan to watch|watching|completed|on hold|dropped/i })
+      .first();
+    await expect(statusControl).toBeVisible({ timeout: 20000 });
+    // and it must NOT still offer to add it
+    await expect(
+      page.getByRole('button', { name: /^add to list$/i })
+    ).toHaveCount(0);
+
     // The anime just added now shows a status dropdown instead of "Add to
     // List", so the expired-token check needs a *different* show.
-    const addedId = page.url().split('/show/')[1]?.split(/[/?#]/)[0];
 
     // --- Expired token: on a second (different) show, drop the access-token
     // cookies (keep refresh_token) so the mutation must refresh-and-retry ---
