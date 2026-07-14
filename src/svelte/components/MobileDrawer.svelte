@@ -1,11 +1,11 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { derived } from 'svelte/store';
   import { createQuery } from '@tanstack/svelte-query';
   import { fade, fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import { loggedInStore } from '../stores/auth';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { AuthStorage } from '../../utils/auth-storage';
   import { preferencesStore } from '../stores/preferences';
   import { mobileDrawerOpen, closeMobileDrawer } from '../stores/mobileDrawer';
@@ -113,7 +113,7 @@
     AuthStorage.logout();
     loggedInStore.logout();
     onClose();
-    navigateWithTransition("/");
+    goto("/");
   }
 </script>
 

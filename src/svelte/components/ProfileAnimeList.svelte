@@ -1,11 +1,11 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
   import { fetchUserAnimes } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { Status, type UserAnime } from '../../gql/graphql';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { initializeQueryClient } from '../services/query-client';
   import PosterCard from './PosterCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
@@ -137,7 +137,7 @@
   }
 
   function navigateToAnime(animeId: string) {
-    navigateWithTransition(`/show/${animeId}`);
+    goto(`/show/${animeId}`);
   }
 
   function handleDropdownStatusChange(event: CustomEvent) {

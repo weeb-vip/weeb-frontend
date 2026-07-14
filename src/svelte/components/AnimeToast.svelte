@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let anime: {
@@ -50,14 +50,14 @@
   function handleShowClick(e: MouseEvent) {
     e.stopPropagation();
     if (anime.id) {
-      navigateWithTransition(`/show/${anime.id}`);
+      goto(`/show/${anime.id}`);
     }
   }
 
   function handleContainerClick(e: MouseEvent) {
     // On desktop, clicking the container navigates to the show
     if (!isMobile && anime.id) {
-      navigateWithTransition(`/show/${anime.id}`);
+      goto(`/show/${anime.id}`);
     }
   }
 

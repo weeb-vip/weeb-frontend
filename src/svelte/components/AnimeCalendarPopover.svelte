@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { format } from 'date-fns';
   import AnimeCard from './AnimeCard.svelte';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let anime: any;
@@ -60,7 +60,7 @@
   }
 
   function navigateToShow() {
-    navigateWithTransition(`/show/${anime.id}`);
+    goto(`/show/${anime.id}`);
   }
 
   $: if (typeof window !== 'undefined') {
@@ -127,4 +127,4 @@
       episodeNumber={anime.episodes[0]?.episodeNumber?.toString() || "Unknown"}
     />
   </div>
-{/if}
+{/if}
