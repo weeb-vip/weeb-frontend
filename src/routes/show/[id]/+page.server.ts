@@ -1,18 +1,18 @@
 import { redirect } from '@sveltejs/kit';
-import { GraphQLClient } from 'graphql-request';
 import type { PageServerLoad } from './$types';
 // use the same typed documents the client uses — a raw copy here drifts
 // (it already had: missing userAnime.episodes)
 import { getAnimeDetailsByID, queryCharactersAndStaffByAnimeID } from '../../../services/api/graphql/queries';
+import { createSSRGraphQLClient, cookieHeaderFrom } from '$lib/server/ssr-graphql';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const { id } = params;
 
   if (!id) {
     redirect(302, '/');
   }
 
-  const { auth, config } = locals;
+  const { config } = locals;
 
   let animeTitle = 'Anime Details';
   let animeDescription = 'View anime details, episodes, and information';
@@ -22,17 +22,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   let error: string | null = null;
 
   try {
-    const client = new GraphQLClient(config.graphql_host, {
-      headers: {
-        ...(auth.authToken && { Authorization: `Bearer ${auth.authToken}` })
-      },
-      fetch: (input: RequestInfo | URL, init?: RequestInit) => {
-        return fetch(input, {
-          ...init,
-          credentials: 'include'
-        });
-      }
-    });
+    // Forward the user's cookies — the gateway authenticates via cookie,
+    // not a Bearer header. A server-side fetch with credentials:'include'
+    // forwards NO cookie, so the old Bearer-only client got userAnime:null
+    // and every show rendered as "not on list" even when it was.
+    const client = createSSRGraphQLClient(config.graphql_host, cookieHeaderFrom(cookies));
 
     const [animeResponse, charactersResponse] = await Promise.all([
       client.request(getAnimeDetailsByID, { id }),
