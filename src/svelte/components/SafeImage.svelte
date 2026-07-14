@@ -248,21 +248,6 @@
       }
     });
 
-    // Re-trigger image loading after View Transitions (for persisted components)
-    const handlePageLoad = () => {
-      debug.log('View Transition complete, resetting image state and reloading');
-      // Reset state because DOM has been swapped by View Transitions
-      // The <img> element is new, so we need to reload even if chosenSrc is the same
-      domImageLoaded = false;
-      isLoadingInProgress = false;
-      chosenSrc = null; // Force fresh image selection
-      requestAnimationFrame(() => {
-        if (!destroyed) {
-          tryInOrder();
-        }
-      });
-    };
-
     // Handle browser back/forward cache (bfcache) restoration
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
@@ -297,13 +282,11 @@
       });
     }
 
-    document.addEventListener('astro:page-load', handlePageLoad);
     window.addEventListener('pageshow', handlePageShow);
     window.addEventListener('swipe-navigation-restored', handleSwipeNavigationRestored);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      document.removeEventListener('astro:page-load', handlePageLoad);
       window.removeEventListener('pageshow', handlePageShow);
       window.removeEventListener('swipe-navigation-restored', handleSwipeNavigationRestored);
       document.removeEventListener('visibilitychange', handleVisibilityChange);

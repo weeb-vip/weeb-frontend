@@ -1,5 +1,3 @@
-import api from "./api";
-import {type searchResults} from "./api/search";
 import request, {GraphQLClient} from "graphql-request";
 import debug from "../utils/debug";
 import {AuthStorage} from "../utils/auth-storage";
@@ -82,19 +80,6 @@ export const AuthenticatedClient = async () => {
     }
   })
 }
-
-export const fetchSearchResults = (query: string) => ({
-  queryKey: ["search"],
-  queryFn: () => api.search.search(query),
-  select: (data: searchResults) => data,
-})
-
-
-export const fetchSearchAdvancedResults = (query: string, year?: number, searchlimit?: number, limit?: number) => ({
-  queryKey: ["searchAdvanced", query, year],
-  queryFn: () => api.search.searchAdvanced(query, year, searchlimit),
-  select: (data: searchResults) => limit ? data.slice(0, limit) : data,
-})
 
 export const fetchHomePageData = () => ({
   queryKey: ['homedata', {limit: 20}],
