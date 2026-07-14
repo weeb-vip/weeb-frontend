@@ -190,19 +190,9 @@
     // Attach scroll listeners
     attachScrollListeners();
 
-    // Listen for Astro ViewTransition page loads
-    function onPageLoad() {
-      setTimeout(() => {
-        attachScrollListeners();
-        handleTabScroll();
-      }, 100);
-    }
-    document.addEventListener('astro:page-load', onPageLoad);
-
     // Cleanup
     return () => {
       detachScrollListeners();
-      document.removeEventListener('astro:page-load', onPageLoad);
     };
   });
 
