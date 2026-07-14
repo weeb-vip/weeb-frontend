@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { makeSSRFetcher, loggedOutAuth } from '$lib/server/ssr-graphql';
+import { makeSSRFetcher, loggedOutAuth, publicAuth } from '$lib/server/ssr-graphql';
 import { getCurrentlyAiringWithDatesAndEpisodes } from '../../services/api/graphql/queries';
 
 export const load: PageServerLoad = async ({ locals, request }) => {
@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ locals, request }) => {
   const isTokenExpired = fetcher.wasTokenExpired();
 
   return {
-    auth: isTokenExpired ? loggedOutAuth() : auth,
+    auth: isTokenExpired ? loggedOutAuth() : publicAuth(auth),
     ssrData: currentlyAiringData,
     ssrError,
     isTokenExpired

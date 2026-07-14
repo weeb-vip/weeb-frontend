@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { makeSSRFetcher, loggedOutAuth, getCurrentSeason } from '$lib/server/ssr-graphql';
+import { makeSSRFetcher, loggedOutAuth, publicAuth, getCurrentSeason } from '$lib/server/ssr-graphql';
 import {
   getHomePageData,
   getCurrentlyAiringWithDates,
@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ locals, request }) => {
   }
 
   const isTokenExpired = fetcher.wasTokenExpired();
-  const effectiveAuth = isTokenExpired ? loggedOutAuth() : auth;
+  const effectiveAuth = isTokenExpired ? loggedOutAuth() : publicAuth(auth);
 
   // First banner image for preloading
   let bannerImageUrl: string | null = null;

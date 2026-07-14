@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { makeSSRFetcher, loggedOutAuth } from '$lib/server/ssr-graphql';
+import { makeSSRFetcher, loggedOutAuth, publicAuth } from '$lib/server/ssr-graphql';
 import { getSeasonalAnime } from '../../../services/api/graphql/queries';
 
 function getCurrentSeason(): string {
@@ -45,7 +45,7 @@ export const load: PageServerLoad = async ({ params, locals, request }) => {
   const isTokenExpired = fetcher.wasTokenExpired();
 
   return {
-    auth: isTokenExpired ? loggedOutAuth() : auth,
+    auth: isTokenExpired ? loggedOutAuth() : publicAuth(auth),
     season,
     displayName: getSeasonDisplayName(season),
     seasonalData,

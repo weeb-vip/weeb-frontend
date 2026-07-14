@@ -13,7 +13,7 @@ ENV VITE_APP_VERSION=$VITE_APP_VERSION
 ENV NODE_ENV=production
 
 # Copy package files
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock ./
 
 # Install dependencies with Bun (much faster than yarn/npm)
 RUN bun install --frozen-lockfile
@@ -39,7 +39,7 @@ ENV PORT=3000
 ENV APP_CONFIG=staging
 
 # Copy package files and install production dependencies
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock ./
 RUN bun install --production --frozen-lockfile
 
 # Copy built application from build stage (sveltekit adapter-node output)

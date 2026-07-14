@@ -89,7 +89,7 @@ export async function refreshTokenSSR(
 
     // Determine the domain for cookies
     // Use dot-prefixed domain for production (works across subdomains)
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = import.meta.env.PROD;
     const cookieDomain = isProduction ? '.weeb.vip' : undefined; // undefined = current domain only for localhost
 
     // Update cookies with new tokens

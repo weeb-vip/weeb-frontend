@@ -1,4 +1,10 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  // until hydration completes, a submit would be a native form POST
+  // that sveltekit rejects (no form actions) — keep the button inert
+  let hydrated = false;
+  onMount(() => { hydrated = true; });
+
   import FormInput from './FormInput.svelte';
   import type { RegisterInput } from '../../gql/graphql';
   import debug from '../../utils/debug';
@@ -218,7 +224,7 @@
           type="submit"
           class="btn-primary"
           class:loading={isLoading}
-          disabled={isLoading}
+          disabled={isLoading || !hydrated}
         >
           <span class="btn-label">Create account</span>
           {#if isLoading}

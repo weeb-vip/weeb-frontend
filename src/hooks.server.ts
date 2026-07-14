@@ -122,11 +122,15 @@ export const handle: Handle = async ({ event, resolve }) => {
     response.headers.set('X-XSS-Protection', '1; mode=block');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-    // Cache control for different types of content
-    if (url.pathname.startsWith('/assets/') || url.pathname.includes('.')) {
-      response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-    } else if (url.pathname === '/' || url.pathname === '/airing') {
-      response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=3600');
+    // Cache control: only anonymous HTML may be publicly cached — a
+    // logged-in render is personalized and must never land in a shared
+    // cache. Static assets are handled by the adapter before this hook.
+    const isAnonymous = !authResult.isLoggedIn && !hasRefreshToken && !hasAccessToken;
+    if (url.pathname === '/' || url.pathname === '/airing') {
+      response.headers.set(
+        'Cache-Control',
+        isAnonymous ? 'public, max-age=300, s-maxage=3600' : 'private, no-store'
+      );
     }
   }
 
