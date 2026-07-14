@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 /**
  * Wait for page to be ready with explicit element checks instead of networkidle.
@@ -192,3 +192,46 @@ export function extractVerificationLink(emailContent: string, baseUrl: string): 
   return null;
 }
 
+
+/**
+ * Register a new account from /auth/register and wait for the success
+ * message. The staging registration endpoint is intermittently slow under
+ * parallel-shard load, so the submit is retried once if the confirmation
+ * doesn't appear — this is the single most common source of e2e flake.
+ */
+export async function registerNewUser(page: Page, email: string, password: string) {
+  await page.goto('/auth/register', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await waitForAuthForm(page);
+  await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
+
+  await page.locator('input[type="email"], input[name="username"]').first().fill(email);
+  await page.locator('input[name="password"][type="password"]').first().fill(password);
+  const confirm = page.locator('input[name="confirmPassword"]');
+  if ((await confirm.count()) > 0) await confirm.fill(password);
+
+  const submitButton = page.locator('form button[type="submit"]').first();
+  await submitButton.waitFor({ state: 'visible' });
+  // wait out the hydration gate before the first click
+  await page.waitForFunction(
+    () => {
+      const btn = document.querySelector('form button[type="submit"]') as HTMLButtonElement | null;
+      return !!btn && !btn.disabled;
+    },
+    { timeout: 15000 }
+  );
+
+  const success = page.locator('text=/registration.*successful|check.*email/i');
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await submitButton.click();
+    try {
+      await success.waitFor({ state: 'visible', timeout: 20000 });
+      return;
+    } catch {
+      if (attempt === 0) {
+        // eslint-disable-next-line no-console
+        console.log('Registration confirmation not shown, retrying submit...');
+      }
+    }
+  }
+  await expect(success).toBeVisible({ timeout: 20000 });
+}

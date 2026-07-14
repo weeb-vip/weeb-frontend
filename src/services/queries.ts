@@ -54,70 +54,14 @@ const clearInvalidTokens = () => {
 
 // Wrapper for authenticated requests that handles auth errors
 export const authenticatedRequest = async <T>(requestFn: (client: GraphQLClient) => Promise<T>): Promise<T> => {
-  const client = await AuthenticatedClient();
-  try {
-    const result = await requestFn(client);
-
-    // Check if the result has GraphQL errors indicating auth issues
-    if (result && typeof result === 'object') {
-      const response = result as any;
-      if (response.errors && Array.isArray(response.errors)) {
-        const hasAuthError = response.errors.some((error: any) => {
-          const msg = (error.message || '').toLowerCase();
-          return msg.includes('access denied') ||
-                 msg.includes('unauthorized') ||
-                 msg.includes('invalid token') ||
-                 msg.includes('jwt') ||
-                 msg.includes('authentication') ||
-                 msg.includes('forbidden');
-        });
-
-        if (hasAuthError) {
-          debug.auth("GraphQL auth error detected, clearing tokens");
-          clearInvalidTokens();
-          // Don't redirect automatically - let the component handle the error
-          throw new Error('Authentication failed');
-        }
-      }
-    }
-
-    return result;
-  } catch (error: any) {
-    const message = error?.message?.toLowerCase() || '';
-    const response = error?.response;
-
-    // Check for GraphQL errors in the error response
-    if (response?.errors && Array.isArray(response.errors)) {
-      const hasAuthError = response.errors.some((err: any) => {
-        const msg = (err.message || '').toLowerCase();
-        return msg.includes('access denied') ||
-               msg.includes('unauthorized') ||
-               msg.includes('invalid token') ||
-               msg.includes('jwt') ||
-               msg.includes('authentication') ||
-               msg.includes('forbidden');
-      });
-
-      if (hasAuthError) {
-        debug.auth("GraphQL auth error in response, clearing tokens");
-        clearInvalidTokens();
-        // Don't redirect automatically - let the component handle the error
-      }
-    }
-
-    // Also check for auth errors in the error message itself
-    if (message.includes('access denied') ||
-        message.includes('unauthorized') ||
-        message.includes('invalid token') ||
-        message.includes('jwt') ||
-        message.includes('authentication') ||
-        message.includes('forbidden')) {
-      clearInvalidTokens();
-      // Don't redirect automatically - let the component handle the error
-    }
-
-    throw error;
-  }
+  // Route through executeWithAutoRefresh so an expired access_token is
+  // refreshed and the request retried — mutations (upsertAnime/
+  // deleteAnime) previously lacked this and failed with an auth error
+  // once the 24h token expired, while auto-refreshing queries kept working
+  return executeWithAutoRefresh(async () => {
+    const client = await AuthenticatedClient();
+    return requestFn(client);
+  });
 };
 
 // create authenticated client

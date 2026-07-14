@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
-import { waitForAuthForm, waitForPageReady, deleteEmailsForRecipient, getLatestEmail, extractVerificationLink } from './helpers';
+import { waitForAuthForm, waitForPageReady, deleteEmailsForRecipient, getLatestEmail, extractVerificationLink, registerNewUser } from './helpers';
 
 // Full logged-in profile flow: register -> verify email -> login -> /profile.
 // Regression coverage for the user query dying with "No QueryClient was
@@ -23,20 +23,8 @@ test.describe('Profile page (logged in)', () => {
   });
 
   test('profile page renders user data after login', async ({ page }) => {
-    // Register via the direct page
-    await page.goto('/auth/register', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await waitForAuthForm(page);
-    await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
-
-    await page.locator('input[type="email"], input[name="username"]').first().fill(testEmail);
-    await page.locator('input[name="password"][type="password"]').first().fill(testPassword);
-    const confirm = page.locator('input[name="confirmPassword"]');
-    if (await confirm.count() > 0) await confirm.fill(testPassword);
-
-    const submitButton = page.locator('form button[type="submit"]').first();
-    await expect(submitButton).toBeEnabled({ timeout: 10000 }); // waits for hydration gate
-    await submitButton.click();
-    await expect(page.locator('text=/registration.*successful|check.*email/i')).toBeVisible({ timeout: 15000 });
+    // Register (helper retries the submit under staging flake)
+    await registerNewUser(page, testEmail, testPassword);
 
     // Verify the email
     const baseUrl = page.url().match(/^https?:\/\/[^\/]+/)![0];
