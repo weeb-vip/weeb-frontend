@@ -22,6 +22,7 @@ export const getHomePageData = graphql(/* GraphQL */`
                 id
                 status
                 score
+                episodes
             }
         }
         newestAnime(limit:100) {
@@ -44,6 +45,7 @@ export const getHomePageData = graphql(/* GraphQL */`
                 id
                 status
                 score
+                episodes
             }
         }
     }
@@ -71,6 +73,7 @@ export const getSeasonalAnime = graphql(/* GraphQL */`
                 id
                 status
                 score
+                episodes
             }
         }
     }
@@ -119,6 +122,7 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
                 id
                 status
                 score
+                episodes
             }
         }
     }
@@ -156,6 +160,7 @@ export const getCurrentlyAiring = graphql(/* GraphQL */`
                 id
                 status
                 score
+                episodes
             }
         }
     }
@@ -193,6 +198,7 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
                 id
                 status
                 score
+                episodes
             }
         }
     }
@@ -238,6 +244,7 @@ export const getCurrentlyAiringWithDatesAndEpisodes = graphql(/* GraphQL */`
                 id
                 status
                 score
+                episodes
             }
         }
     }

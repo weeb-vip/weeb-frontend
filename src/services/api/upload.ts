@@ -1,7 +1,6 @@
 import debug from '../../utils/debug';
 
 export async function uploadProfileImage(file: File): Promise<any> {
-  const token = localStorage.getItem("authToken");
   
   debug.info('Uploading profile image:', { 
     filename: file.name, 
@@ -48,10 +47,11 @@ export async function uploadProfileImage(file: File): Promise<any> {
     const response = await fetch(global.config.graphql_host, {
       method: 'POST',
       credentials: 'include',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        // Don't set Content-Type - let the browser set it with the boundary for multipart/form-data
-      },
+      // auth rides on the httpOnly cookies (credentials: include); the old
+      // Authorization header read a localStorage key that is never written,
+      // producing "Bearer null"
+      // Don't set Content-Type - let the browser set it with the boundary for multipart/form-data
+
       body: formData
     });
     

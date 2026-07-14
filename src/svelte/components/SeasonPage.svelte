@@ -18,34 +18,14 @@
   export let ssrError: string | null = null;
   export let isTokenExpired: boolean = false;
 
-  // Make season a local reactive variable so we can switch without page navigation
+  // Season switches go through the router: the route has a server load
+  // and a {#key data.season} remount, so params, load data, and SEO meta
+  // all stay in sync (a raw history.pushState left them stale)
   let activeSeason = season;
 
   function navigateToSeason(newSeason: string) {
-    activeSeason = newSeason;
-    // Update URL without page reload
-    history.pushState({ season: newSeason }, '', `/season/${newSeason}`);
-    // Reset filters
-    selectedTags = new Set();
-    showAllTags = false;
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    import('$app/navigation').then(({ goto }) => goto(`/season/${newSeason}`));
   }
-
-  // Handle browser back/forward
-  onMount(() => {
-    function handlePopState(e: PopStateEvent) {
-      if (e.state?.season) {
-        activeSeason = e.state.season;
-        selectedTags = new Set();
-        showAllTags = false;
-      }
-    }
-    window.addEventListener('popstate', handlePopState);
-    // Set initial state
-    history.replaceState({ season: activeSeason }, '', `/season/${activeSeason}`);
-    return () => window.removeEventListener('popstate', handlePopState);
-  });
 
   let animeStatuses: Record<string, 'idle' | 'loading' | 'success' | 'error'> = {};
 

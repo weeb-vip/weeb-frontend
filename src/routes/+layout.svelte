@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
   import { beforeNavigate, afterNavigate } from '$app/navigation';
+  import { QueryClientProvider } from '@tanstack/svelte-query';
+  import { getQueryClient, createQueryClient } from '../svelte/services/query-client';
   import Header from '$lib/Header.svelte';
   import Footer from '../svelte/components/Footer.svelte';
   import DevTestingPanel from '../svelte/components/DevTestingPanel.svelte';
@@ -18,6 +21,11 @@
 
   export let data;
 
+  // One QueryClient for the whole app via context. In the browser this is
+  // the shared singleton; during SSR each layout render gets a fresh
+  // client so per-user data never leaks between concurrent requests.
+  const queryClient = browser ? getQueryClient() : createQueryClient();
+
   onMount(() => {
     initGlobalErrorHandlers();
     initPostHogWhenConfigured();
@@ -28,6 +36,7 @@
   afterNavigate(() => hideNavigationFeedback());
 </script>
 
+<QueryClientProvider client={queryClient}>
 <Header ssrAuth={data.auth} />
 
 <!-- Main content — always full width, components handle their own padding -->
@@ -50,3 +59,4 @@
 
 <!-- Anime Notifications -->
 <AnimeNotificationProvider />
+</QueryClientProvider>

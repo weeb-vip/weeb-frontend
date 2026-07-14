@@ -1,93 +1,9 @@
 import { redirect } from '@sveltejs/kit';
 import { GraphQLClient } from 'graphql-request';
 import type { PageServerLoad } from './$types';
-
-// Full anime details query (same as client-side)
-const animeDetailsQuery = `
-  query getAnimeDetailsByID($id: ID!) {
-      anime(id: $id) {
-          id
-          anidbid
-          thetvdbid
-          titleEn
-          titleJp
-          titleRomaji
-          titleKanji
-          titleSynonyms
-          description
-          imageUrl
-          tags
-          studios
-          animeStatus
-          episodeCount
-          episodes {
-              id
-              animeId
-              episodeNumber
-              titleEn
-              titleJp
-              synopsis
-              airDate
-              createdAt
-              updatedAt
-          }
-          duration
-          rating
-          startDate
-          endDate
-          broadcast
-          source
-          licensors
-          ranking
-          createdAt
-          updatedAt
-          userAnime {
-              id
-              status
-              score
-          }
-      }
-  }
-`;
-
-const charactersQuery = `
-  query CharactersAndStaffByAnimeId($animeId: ID!) {
-      charactersAndStaffByAnimeId(animeId: $animeId) {
-          character {
-              id
-              animeId
-              name
-              role
-              birthday
-              zodiac
-              gender
-              race
-              height
-              weight
-              title
-              martialStatus
-              summary
-              image
-              createdAt
-              updatedAt
-          }
-          staff {
-              id
-              language
-              givenName
-              familyName
-              image
-              birthday
-              birthPlace
-              bloodType
-              hobbies
-              summary
-              createdAt
-              updatedAt
-          }
-      }
-  }
-`;
+// use the same typed documents the client uses — a raw copy here drifts
+// (it already had: missing userAnime.episodes)
+import { getAnimeDetailsByID, queryCharactersAndStaffByAnimeID } from '../../../services/api/graphql/queries';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const { id } = params;
@@ -119,8 +35,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     });
 
     const [animeResponse, charactersResponse] = await Promise.all([
-      client.request(animeDetailsQuery, { id }),
-      client.request(charactersQuery, { animeId: id })
+      client.request(getAnimeDetailsByID, { id }),
+      client.request(queryCharactersAndStaffByAnimeID, { animeId: id })
     ]);
 
     animeData = animeResponse;

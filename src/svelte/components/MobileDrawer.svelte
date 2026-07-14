@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { derived } from 'svelte/store';
+  import { createQuery } from '@tanstack/svelte-query';
   import { fade, fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import { loggedInStore } from '../stores/auth';
@@ -7,14 +9,13 @@
   import { AuthStorage } from '../../utils/auth-storage';
   import { preferencesStore } from '../stores/preferences';
   import { mobileDrawerOpen, closeMobileDrawer } from '../stores/mobileDrawer';
-  import { useUser } from '../services/queries';
+  import { userQueryOptions } from '../services/queries';
   import { logout } from '../../services/queries';
   import ProfileAvatar from './ProfileAvatar.svelte';
 
   const version = __APP_VERSION__;
 
   let isLoggedIn = false;
-  let userQuery: any = null;
 
   $: isOpen = $mobileDrawerOpen;
 
@@ -41,14 +42,12 @@
     };
   });
 
-  // Initialize user query when logged in
-  $: if (isLoggedIn && !userQuery) {
-    try {
-      userQuery = useUser();
-    } catch (error) {
-      console.error('Failed to initialize user query:', error);
-    }
-  }
+  // Create the query during component init (context is only available
+  // here) with a reactive enabled flag — lazily calling useUser() from a
+  // reactive block threw "No QueryClient was found in Svelte context"
+  const userQuery = createQuery(
+    derived(loggedInStore, (state) => userQueryOptions(state.isLoggedIn))
+  );
 
   $: user = userQuery ? $userQuery?.data : null;
 

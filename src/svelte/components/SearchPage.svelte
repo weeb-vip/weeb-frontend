@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { page } from '$app/stores';
+  import { replaceState } from '$app/navigation';
   import { onMount } from 'svelte';
   import { configStore } from '../stores/config';
   import { loggedInStore } from '../stores/auth';
@@ -226,7 +228,8 @@
     if (!searchQuery) {
       url.searchParams.delete('query');
     }
-    history.pushState({}, '', url.toString());
+    lastSeenSearch = url.search;
+    replaceState(url, {});
     performSearch();
   }
 
@@ -306,10 +309,24 @@
       if (q || genre) {
         performSearch();
       }
+      initializedFromUrl = true;
     } catch (e) {
       console.error('Algolia init failed:', e);
     }
   });
+
+  // Re-derive state when the URL changes while this page stays mounted
+  // (e.g. picking a navbar-autocomplete search while already on /search)
+  let initializedFromUrl = false;
+  let lastSeenSearch = '';
+  $: if (initializedFromUrl && $page.url.pathname === '/search' && $page.url.search !== lastSeenSearch) {
+    lastSeenSearch = $page.url.search;
+    const q = $page.url.searchParams.get('query') || '';
+    const genre = $page.url.searchParams.get('genre');
+    searchQuery = q;
+    selectedGenres = genre ? [genre] : [];
+    performSearch();
+  }
 
   async function performSearch(resetPage = true) {
     // Allow search if we have a query OR selected genres
