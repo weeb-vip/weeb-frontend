@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { derived } from 'svelte/store';
+  import { createQuery } from '@tanstack/svelte-query';
   import { loggedInStore } from '../stores/auth';
-  import { useUser } from '../services/queries';
+  import { userQueryOptions } from '../services/queries';
   import ProfileDropdown from './ProfileDropdown.svelte';
   import ProfileAvatar from './ProfileAvatar.svelte';
   import Button from './Button.svelte';
@@ -11,7 +13,6 @@
   export let onProfileClick: (() => void) | null = null;
 
   let isLoggedIn = false;
-  let userQuery: any = null;
 
   // Subscribe to auth state
   onMount(() => {
@@ -21,14 +22,12 @@
     return unsubscribe;
   });
 
-  // Initialize user query when logged in (this will be inside QueryClientProvider)
-  $: if (isLoggedIn && !userQuery) {
-    try {
-      userQuery = useUser();
-    } catch (error) {
-      console.error('Failed to initialize user query:', error);
-    }
-  }
+  // Create the query during component init (context is only available
+  // here) with a reactive enabled flag — lazily calling useUser() from a
+  // reactive block threw "No QueryClient was found in Svelte context"
+  const userQuery = createQuery(
+    derived(loggedInStore, (state) => userQueryOptions(state.isLoggedIn))
+  );
 
   $: user = userQuery ? $userQuery?.data : null;
   $: isLoading = userQuery ? $userQuery?.isLoading : false;

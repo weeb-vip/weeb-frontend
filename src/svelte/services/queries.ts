@@ -192,16 +192,16 @@ export function useResendVerificationEmail() {
 // USER QUERIES & MUTATIONS
 // ============================================================================
 
-export function useUser() {
-  return createQuery({
+export function userQueryOptions(enabled: boolean = true) {
+  return {
     queryKey: queryKeys.user(),
     queryFn: async (): Promise<User> => {
       const queryConfig = getUserQuery();
       return queryConfig.queryFn();
     },
-    enabled: true, // Can be made conditional based on auth state
+    enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: (failureCount, error: any) => {
+    retry: (failureCount: number, error: any) => {
       // Don't retry on auth errors
       if (error?.status === 401 || error?.status === 403) {
         return false;
@@ -212,7 +212,11 @@ export function useUser() {
       }
       return failureCount < 1; // Only retry once
     },
-  });
+  };
+}
+
+export function useUser() {
+  return createQuery(userQueryOptions());
 }
 
 export function useUpdateUser() {

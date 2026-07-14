@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { makeSSRFetcher, loggedOutAuth, publicAuth } from '$lib/server/ssr-graphql';
+import { makeSSRFetcher, loggedOutAuth, publicAuth, cookieHeaderFrom } from '$lib/server/ssr-graphql';
 import { getSeasonalAnime } from '../../../services/api/graphql/queries';
 
 function getCurrentSeason(): string {
@@ -19,7 +19,7 @@ function getSeasonDisplayName(s: string): string {
   return `${name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()} ${year}`;
 }
 
-export const load: PageServerLoad = async ({ params, locals, request }) => {
+export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const { season } = params;
 
   const validSeasonPattern = /^(WINTER|SPRING|SUMMER|FALL)_\d{4}$/;
@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ params, locals, request }) => {
   }
 
   const { auth, config } = locals;
-  const cookieHeader = request.headers.get('cookie');
+  const cookieHeader = cookieHeaderFrom(cookies);
 
   let seasonalData: any = null;
   let ssrError: string | null = null;

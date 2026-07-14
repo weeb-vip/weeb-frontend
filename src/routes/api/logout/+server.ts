@@ -1,18 +1,9 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { clearAuthCookies } from '$lib/server/auth-cookies';
 
 export const POST: RequestHandler = async ({ cookies }) => {
   try {
-    const cookiesToClear = ['authToken', 'refreshToken', 'session', 'auth', 'user'];
-
-    cookiesToClear.forEach((cookieName) => {
-      cookies.delete(cookieName, {
-        path: '/',
-        httpOnly: true,
-        secure: true,
-        sameSite: 'lax'
-      });
-    });
-
+    clearAuthCookies(cookies);
     return json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
     console.error('Logout error:', error);

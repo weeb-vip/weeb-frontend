@@ -1,14 +1,14 @@
 import type { PageServerLoad } from './$types';
-import { makeSSRFetcher, loggedOutAuth, publicAuth, getCurrentSeason } from '$lib/server/ssr-graphql';
+import { makeSSRFetcher, loggedOutAuth, publicAuth, getCurrentSeason, cookieHeaderFrom } from '$lib/server/ssr-graphql';
 import {
   getHomePageData,
   getCurrentlyAiringWithDates,
   getSeasonalAnime
 } from '../services/api/graphql/queries';
 
-export const load: PageServerLoad = async ({ locals, request }) => {
+export const load: PageServerLoad = async ({ locals, cookies }) => {
   const { auth, config } = locals;
-  const cookieHeader = request.headers.get('cookie');
+  const cookieHeader = cookieHeaderFrom(cookies);
   const currentSeason = getCurrentSeason();
 
   let homeData: any = null;

@@ -98,3 +98,97 @@ export async function deleteEmailsForRecipient(recipientEmail: string) {
     }
   }
 }
+
+// Helper function to check Mailpit for emails
+export async function getLatestEmail(recipientEmail: string, retries = 15, delay = 3000) {
+  console.log(`Looking for email for ${recipientEmail}...`);
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages');
+      const data = await response.json();
+
+      console.log(`Attempt ${i + 1}: Found ${data.messages?.length || 0} total emails in Mailpit`);
+
+      if (data.messages && data.messages.length > 0) {
+        const recipients = data.messages.map((msg: any) => msg.To?.[0]?.Address).filter(Boolean);
+        console.log(`Recipients found: ${recipients.join(', ')}`);
+
+        const email = data.messages.find((msg: any) => {
+          const toAddresses = msg.To?.map((t: any) => t.Address) || [];
+          return toAddresses.some((addr: string) =>
+            addr === recipientEmail || addr === `<${recipientEmail}>`
+          );
+        });
+
+        if (email) {
+          console.log(`Found email for ${recipientEmail}! Fetching full message...`);
+          // Fetch full message to get body content
+          const fullMsgResponse = await fetch(`https://mailhog.staging.weeb.vip/api/v1/message/${email.ID}`);
+          const fullMsg = await fullMsgResponse.json();
+          return fullMsg;
+        }
+      }
+    } catch (error) {
+      console.log(`Attempt ${i + 1} failed:`, error instanceof Error ? error.message : String(error));
+    }
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+
+  throw new Error(`No email found for ${recipientEmail} after ${retries} attempts`);
+}
+
+export function extractVerificationLink(emailContent: string, baseUrl: string): string | null {
+  let decodedContent = emailContent
+    .replace(/=\r?\n/g, '')
+    .replace(/=3D/g, '=')
+    .replace(/=20/g, ' ')
+    .replace(/=2F/g, '/')
+    .replace(/=3A/g, ':')
+    .replace(/=40/g, '@');
+
+  const linkPattern = /<a[^>]+href\s*=\s*(?:3D)?\\?["']([^"']*verification\?email=[^"']*)/gi;
+  const match = linkPattern.exec(decodedContent);
+
+  if (match && match[1]) {
+    let link = match[1];
+    link = link.replace(/&amp;/g, '&');
+    link = link.replace(/&#x3D;/g, '=');
+    link = link.replace(/\\/g, '');
+
+    if (!link.startsWith('http')) {
+      link = `${baseUrl}${link.startsWith('/') ? '' : '/'}${link}`;
+    } else {
+      const url = new URL(link);
+      const testUrl = new URL(baseUrl);
+      url.protocol = testUrl.protocol;
+      url.host = testUrl.host;
+      url.port = testUrl.port;
+      link = url.toString();
+    }
+
+    console.log(`Found verification link in email: ${link}`);
+    return link;
+  }
+
+  const directUrlPattern = /https?:\/\/[^\/\s]+\/auth\/verification\?email=[^&\s]+&token=[^&\s"]+/gi;
+  const directMatch = directUrlPattern.exec(decodedContent);
+  if (directMatch) {
+    let link = directMatch[0];
+    link = link.replace(/&amp;/g, '&');
+
+    const url = new URL(link);
+    const testUrl = new URL(baseUrl);
+    url.protocol = testUrl.protocol;
+    url.host = testUrl.host;
+    url.port = testUrl.port;
+    link = url.toString();
+
+    console.log(`Found verification link (direct pattern): ${link}`);
+    return link;
+  }
+
+  return null;
+}
+

@@ -1,7 +1,18 @@
 import { GraphQLClient } from 'graphql-request';
+import type { Cookies } from '@sveltejs/kit';
 
 // Shared SSR GraphQL helpers, extracted from the per-page copies in the
 // old .astro frontmatter
+
+// Build the Cookie header from event.cookies rather than the raw request
+// header: hooks may have refreshed the access token during this request,
+// and event.cookies reflects values set in the hook while the original
+// header still carries the expired token
+export function cookieHeaderFrom(cookies: Cookies): string | null {
+  const all = cookies.getAll();
+  if (!all.length) return null;
+  return all.map(({ name, value }) => `${name}=${encodeURIComponent(value)}`).join('; ');
+}
 
 export function createSSRGraphQLClient(graphqlHost: string, cookieHeader: string | null) {
   return new GraphQLClient(graphqlHost, {

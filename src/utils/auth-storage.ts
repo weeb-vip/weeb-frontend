@@ -223,38 +223,40 @@ export class AuthStorage {
     }
   }
 
+  // Match a cookie by exact name (word-boundary safe: 'access_token'
+  // must not match a hypothetical 'guest_access_token')
+  private static cookieFromString(cookieString: string, name: string): string | undefined {
+    const match = cookieString.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+    return match ? decodeURIComponent(match[1]) : undefined;
+  }
+
   // Server-side utility to extract token from cookie string
   static getTokenFromCookieString(cookieString: string | undefined): string | undefined {
     if (!cookieString) return undefined;
 
-    const cookieMatch = cookieString.match(/authToken=([^;]+)/);
-    return cookieMatch ? cookieMatch[1] : undefined;
+    return this.cookieFromString(cookieString, 'auth_token')
+      ?? this.cookieFromString(cookieString, 'access_token')
+      ?? this.cookieFromString(cookieString, 'authToken');
   }
 
   // Server-side utility to check if user is authenticated
   static isLoggedInFromCookieString(cookieString: string | undefined): boolean {
     if (!cookieString) return false;
 
-    // Check for both old and new cookie names
-    const authToken = cookieString.match(/authToken=([^;]+)/);
-    const refreshToken = cookieString.match(/refreshToken=([^;]+)/);
-    const accessToken = cookieString.match(/access_token=([^;]+)/);
-
-    return !!(authToken || refreshToken || accessToken);
+    const tokens = this.getTokensFromCookieString(cookieString);
+    return !!(tokens.authToken || tokens.refreshToken);
   }
 
   // Server-side utility to get both tokens from cookie string
   static getTokensFromCookieString(cookieString: string | undefined): { authToken?: string; refreshToken?: string } {
     if (!cookieString) return {};
 
-    // Check for both old and new cookie names
-    const authMatch = cookieString.match(/authToken=([^;]+)/);
-    const refreshMatch = cookieString.match(/refresh_token=([^;]+)/);
-    const accessMatch = cookieString.match(/access_token=([^;]+)/);
-
     return {
-      authToken: authMatch ? authMatch[1] : (accessMatch ? accessMatch[1] : undefined),
-      refreshToken: refreshMatch ? refreshMatch[1] : undefined
+      authToken: this.cookieFromString(cookieString, 'auth_token')
+        ?? this.cookieFromString(cookieString, 'access_token')
+        ?? this.cookieFromString(cookieString, 'authToken'),
+      refreshToken: this.cookieFromString(cookieString, 'refresh_token')
+        ?? this.cookieFromString(cookieString, 'refreshToken')
     };
   }
 }

@@ -14,6 +14,7 @@
   import { animeNotificationStore } from '../stores/animeNotifications';
   import ShowContentSkeleton from './ShowContentSkeleton.svelte';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
+  import { useAddAnimeWithToast } from '../utils/anime-actions';
 
   // Subscribe to preferences for reactive title updates
   $: preferences = $preferencesStore;
@@ -29,6 +30,37 @@
   let supportsWebP = false;
   let useFallback = false;
   let previousAnimeId: string | null = null; // Track anime ID changes
+
+  // Tracking controls: score + episode progress both go through the same
+  // upsert mutation used elsewhere (invalidates queries, toasts errors)
+  const upsertAnime = useAddAnimeWithToast();
+
+  function trackingInput(overrides: { score?: number; episodes?: number }) {
+    return {
+      input: {
+        animeID: anime.id,
+        status: anime.userAnime?.status ?? undefined,
+        score: anime.userAnime?.score ?? undefined,
+        episodes: anime.userAnime?.episodes ?? 0,
+        ...overrides
+      }
+    };
+  }
+
+  function handleScoreChange(event: Event) {
+    const value = (event.currentTarget as HTMLSelectElement).value;
+    if (!anime?.userAnime || value === '') return;
+    $upsertAnime.mutate(trackingInput({ score: Number(value) }));
+  }
+
+  function adjustEpisodes(delta: number) {
+    if (!anime?.userAnime) return;
+    const current = anime.userAnime.episodes ?? 0;
+    const max = anime.episodeCount || anime.episodes?.length || Infinity;
+    const next = Math.min(Math.max(current + delta, 0), max);
+    if (next === current) return;
+    $upsertAnime.mutate(trackingInput({ episodes: next }));
+  }
 
   // DOM refs
   let tabBarEl: HTMLElement;
@@ -533,7 +565,8 @@
           <div class="qi-score">
             <select class="qi-select" aria-label="Your score"
               value={anime.userAnime?.score || ''}
-              disabled={!anime.userAnime}
+              disabled={!anime.userAnime || $upsertAnime.isPending}
+              on:change={handleScoreChange}
             >
               <option value="">Score</option>
               {#each [10,9,8,7,6,5,4,3,2,1] as s}
@@ -544,13 +577,15 @@
 
           <div class="qi-progress">
             <button class="qi-ep-btn" aria-label="Decrease episodes"
-              disabled={!anime.userAnime || (anime.userAnime.episodesWatched || 0) <= 0}
+              disabled={!anime.userAnime || $upsertAnime.isPending || (anime.userAnime.episodes || 0) <= 0}
+              on:click={() => adjustEpisodes(-1)}
             >−</button>
             <span class="qi-ep-count">
-              {anime.userAnime?.episodesWatched || 0}/{anime.episodeCount || anime.episodes?.length || '?'}
+              {anime.userAnime?.episodes || 0}/{anime.episodeCount || anime.episodes?.length || '?'}
             </span>
             <button class="qi-ep-btn" aria-label="Increase episodes"
-              disabled={!anime.userAnime}
+              disabled={!anime.userAnime || $upsertAnime.isPending}
+              on:click={() => adjustEpisodes(1)}
             >+</button>
           </div>
         </div>
