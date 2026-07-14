@@ -61,23 +61,14 @@ export function navigateWithTransition(url: string) {
   // Show immediate feedback
   showNavigationLoading();
 
-  // Use Astro's navigate function if available (from View Transitions)
-  if ('astroNavigate' in window) {
-    (window as any).astroNavigate(url);
-    // Astro will handle hiding the loader when page loads
-    return;
-  }
-
-  // Fallback: Try to use startViewTransition if available
-  if ('startViewTransition' in document) {
-    document.startViewTransition(() => {
+  // Use SvelteKit client-side navigation
+  import('$app/navigation')
+    .then(({ goto }) => goto(url))
+    .then(() => hideNavigationLoading())
+    .catch(() => {
+      // Fallback: regular navigation
       window.location.href = url;
     });
-    return;
-  }
-
-  // Final fallback: regular navigation
-  window.location.href = url;
 }
 
 export function useAstroNavigation() {

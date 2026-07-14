@@ -77,30 +77,22 @@ jobs:
 
       - name: Build for Cloudflare Pages
         run: |
-          # Use Cloudflare-specific config and build
-          cp astro.config.cloudflare.mjs astro.config.mjs
-
-          echo "Building with Cloudflare adapter..."
-          # Build with proper Vite mode for production
+          echo "Building with SvelteKit Cloudflare adapter..."
           if [ "${{ inputs.environment }}" = "production" ]; then
-            NODE_ENV=production yarn build --mode production
+            NODE_ENV=production DEPLOY_TARGET=cloudflare yarn build --mode production
           else
-            NODE_ENV=production yarn build --mode staging
+            NODE_ENV=production DEPLOY_TARGET=cloudflare yarn build --mode staging
           fi
 
           # Verify the build output structure
           echo "=== Build output structure ==="
-          ls -la dist/
+          ls -la .svelte-kit/cloudflare/
 
-          # Check for _worker.js
-          if [ -f "dist/_worker.js" ]; then
+          if [ -f ".svelte-kit/cloudflare/_worker.js" ]; then
             echo "✅ Found _worker.js"
           else
-            echo "❌ Missing _worker.js - checking for functions directory"
-            if [ -d "dist/_worker" ]; then
-              echo "Found _worker directory"
-              ls -la dist/_worker/
-            fi
+            echo "❌ Missing _worker.js"
+            exit 1
           fi
         env:
           APP_CONFIG: ${{ inputs.environment }}
@@ -112,7 +104,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./dist --project-name=weeb-${{ inputs.environment }} --branch=${{ inputs.environment == 'production' && 'main' || 'staging' }}
+          command: pages deploy ./.svelte-kit/cloudflare --project-name=weeb-${{ inputs.environment }} --branch=${{ inputs.environment == 'production' && 'main' || 'staging' }}
 
       - name: Create deployment comment
         uses: actions/github-script@v7

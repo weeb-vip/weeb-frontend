@@ -42,9 +42,8 @@ ENV APP_CONFIG=staging
 COPY package.json bun.lockb* ./
 RUN bun install --production --frozen-lockfile
 
-# Copy built application from build stage
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/public ./public
+# Copy built application from build stage (sveltekit adapter-node output)
+COPY --from=build /app/build ./build
 
 # Copy config files if they exist
 COPY --from=build /app/src/config ./src/config
@@ -68,4 +67,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # Start the application using Bun
-CMD ["bun", "run", "./dist/server/entry.mjs"]
+CMD ["bun", "run", "./build/index.js"]
