@@ -1,5 +1,9 @@
 import { expect, type Page } from '@playwright/test';
 
+// Saved shared authenticated session (written by auth.setup.ts)
+export const authFile = 'playwright/.auth/user.json';
+export const authAccountFile = 'playwright/.auth/account.json';
+
 /**
  * Wait for page to be ready with explicit element checks instead of networkidle.
  * networkidle waits for ALL network requests which is unreliable with external APIs.

@@ -34,3 +34,6 @@ playwright-report
 
 .svelte-kit/
 build/
+
+# Playwright saved auth session
+playwright/.auth/

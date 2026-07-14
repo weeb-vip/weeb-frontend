@@ -15,18 +15,28 @@ export default defineConfig({
   },
 
   projects: [
+    // Registers + verifies + logs in one shared account, saving its
+    // session for the authenticated specs (see tests/e2e/auth.setup.ts).
+    {
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
+    },
+
     // Desktop browsers
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
     },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
+      dependencies: ['setup'],
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+      dependencies: ['setup'],
     },
 
     // Mobile web browsers (simulated)
