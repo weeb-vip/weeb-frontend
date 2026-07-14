@@ -5,7 +5,10 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || 'dev'),
-    __ENABLE_DEV_FEATURES__: process.env.NODE_ENV === 'development'
+    __ENABLE_DEV_FEATURES__: process.env.NODE_ENV === 'development',
+    // vite only exposes VITE_-prefixed vars on import.meta.env; the config
+    // loader branches on APP_CONFIG, so bake it in explicitly
+    'import.meta.env.APP_CONFIG': JSON.stringify(process.env.APP_CONFIG || '')
   },
   plugins: [
     sveltekit(),
@@ -25,7 +28,11 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: process.env.NODE_ENV === 'production',
+        // keep console.error/console.warn: they are the only production
+        // logging the k8s pods and workers emit
+        pure_funcs: process.env.NODE_ENV === 'production'
+          ? ['console.log', 'console.debug', 'console.info']
+          : [],
         drop_debugger: true
       }
     }

@@ -12,10 +12,9 @@
   // Accept SSR auth data to avoid unnecessary GraphQL calls
   export let ssrAuth: {
     isLoggedIn: boolean;
-    authToken: string | undefined;
-    refreshToken: string | undefined;
     hasAuthToken: boolean;
     hasRefreshToken: boolean;
+    authTokenExpiresAt: number | null;
   } | undefined = undefined;
 
   let currentLoggedInState: any = { isLoggedIn: false, isAuthInitialized: false };
@@ -60,11 +59,12 @@
             loggedInStore.setLoggedIn();
           }
 
-          // Start token refresher if we have refresh capabilities
-          if (ssrAuth.hasRefreshToken && ssrAuth.authToken) {
+          // Start token refresher if we have refresh capabilities; the
+          // server passes the token expiry, never the token itself
+          if (ssrAuth.hasRefreshToken && ssrAuth.authTokenExpiresAt) {
             TokenRefresher.getInstance(async () => {
               return refreshTokenSimple();
-            }).start(ssrAuth.authToken);
+            }).startWithExpiry(ssrAuth.authTokenExpiresAt);
           }
         } else {
           debug.auth("SSR data shows user is not logged in");

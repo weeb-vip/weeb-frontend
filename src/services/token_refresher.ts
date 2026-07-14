@@ -81,6 +81,27 @@ export class TokenRefresher {
   }
 
   /**
+   * Starts the refresh process from a known expiry timestamp, for callers
+   * that have the token expiry but (intentionally) not the token itself.
+   * @param expiryTime - Token expiry in milliseconds since epoch.
+   */
+  public startWithExpiry(expiryTime: number): void {
+    this.cancel();
+
+    debug.auth('Token expiry time:', new Date(expiryTime).toLocaleString());
+
+    const refreshTime = expiryTime - Date.now() - this.refreshWindow;
+
+    if (refreshTime <= 0) {
+      debug.auth('Token is already expired or too close to expiration. Refreshing immediately...');
+      this.refreshToken();
+      return;
+    }
+
+    this.refreshTimeout = setTimeout(() => this.refreshToken(), refreshTime);
+  }
+
+  /**
    * Cancels the ongoing token refresh process.
    */
   public cancel(): void {

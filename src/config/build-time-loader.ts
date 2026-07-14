@@ -3,14 +3,14 @@ import type { IConfig } from './interfaces';
 
 // Import configs directly at build time based on environment
 function getEnvironment(): string {
-  // Check build-time environment variables
+  // APP_CONFIG is baked in via vite define (see vite.config.ts); MODE is
+  // set by --mode on the build commands. NODE_ENV is never exposed on
+  // import.meta.env, so do not consult it.
   const appConfig = import.meta.env.APP_CONFIG;
-  const nodeEnv = import.meta.env.NODE_ENV;
   const mode = import.meta.env.MODE;
 
   if (appConfig) return appConfig;
-  if (mode === 'development') return 'development';
-  if (nodeEnv === 'production') return 'production';
+  if (mode === 'production' || mode === 'staging') return mode;
   return 'development';
 }
 

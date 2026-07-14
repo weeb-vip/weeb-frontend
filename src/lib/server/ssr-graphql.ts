@@ -86,15 +86,36 @@ export function makeSSRFetcher(graphqlHost: string, cookieHeader: string | null)
   return { fetchWithFallback, wasTokenExpired: () => tokenExpired };
 }
 
+// Client-safe view of the auth state: no token material ever goes into
+// load() return values — SvelteKit serializes those into the page HTML.
+// The expiry timestamp is enough for the client-side TokenRefresher.
+export function publicAuth(auth: App.Locals['auth']) {
+  return {
+    isLoggedIn: auth.isLoggedIn,
+    hasAuthToken: auth.hasAuthToken,
+    hasRefreshToken: auth.hasRefreshToken,
+    authTokenExpiresAt: decodeTokenExpiry(auth.authToken)
+  };
+}
+
+function decodeTokenExpiry(token: string | undefined): number | null {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 // Pages that detect an expired token during SSR blank out the auth state
 // they return to the client
 export function loggedOutAuth() {
   return {
     isLoggedIn: false,
-    authToken: undefined,
-    refreshToken: undefined,
     hasAuthToken: false,
-    hasRefreshToken: false
+    hasRefreshToken: false,
+    authTokenExpiresAt: null as number | null
   };
 }
 
