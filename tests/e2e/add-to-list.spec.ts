@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
-import { waitForAuthForm, deleteEmailsForRecipient, getLatestEmail, extractVerificationLink } from './helpers';
+import { waitForAuthForm, deleteEmailsForRecipient, getLatestEmail, extractVerificationLink, registerNewUser } from './helpers';
 
 // Logged-in user can add anime to their list from a show page, including
 // after the access token has expired. Regression coverage for
@@ -25,18 +25,8 @@ test.describe('Add to list (logged in)', () => {
   });
 
   test('add to list works, and recovers after the access token expires', async ({ page, context }) => {
-    // Register
-    await page.goto('/auth/register', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await waitForAuthForm(page);
-    await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
-    await page.locator('input[type="email"], input[name="username"]').first().fill(testEmail);
-    await page.locator('input[name="password"][type="password"]').first().fill(testPassword);
-    const confirm = page.locator('input[name="confirmPassword"]');
-    if (await confirm.count() > 0) await confirm.fill(testPassword);
-    const regBtn = page.locator('form button[type="submit"]').first();
-    await expect(regBtn).toBeEnabled({ timeout: 10000 });
-    await regBtn.click();
-    await expect(page.locator('text=/registration.*successful|check.*email/i')).toBeVisible({ timeout: 15000 });
+    // Register (helper retries the submit under staging flake)
+    await registerNewUser(page, testEmail, testPassword);
 
     // Verify email
     const baseUrl = page.url().match(/^https?:\/\/[^\/]+/)![0];
