@@ -1,13 +1,12 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { replaceState } from '$app/navigation';
+  import { goto, replaceState } from '$app/navigation';
   import { onMount } from 'svelte';
   import { configStore } from '../stores/config';
   import { loggedInStore } from '../stores/auth';
   import PosterCard from './PosterCard.svelte';
   import SafeImage from './SafeImage.svelte';
   import { GetImageFromAnime } from '../../services/utils';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { AuthStorage } from '../../utils/auth-storage';
   import { Status } from '../../gql/graphql';
   let searchQuery = '';
@@ -469,7 +468,7 @@
   }
 
   function navigateToShow(item: any) {
-    navigateWithTransition(`/show/${item.id ? encodeURIComponent(item.id) : ''}`);
+    goto(`/show/${item.id ? encodeURIComponent(item.id) : ''}`);
   }
 
   // Filtered + sorted results

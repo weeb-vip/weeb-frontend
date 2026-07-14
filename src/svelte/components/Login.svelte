@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   // until hydration completes, a submit would be a native form POST
   // that sveltekit rejects (no form actions) — keep the button inert
@@ -9,7 +10,6 @@
   import type { LoginInput } from '../../gql/graphql';
   import debug from '../../utils/debug';
   import { useLogin } from '../services/queries';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
 
   let formData: LoginInput = { username: '', password: '' };
   let errorMessage = '';
@@ -21,7 +21,7 @@
     debug.auth('Login successful');
     errorMessage = '';
     // Navigate to home page
-    navigateWithTransition('/');
+    goto('/');
   }
 
   $: if ($loginMutation.isError) {

@@ -8,7 +8,6 @@
   import type { LoginInput } from "../../gql/graphql";
   import { useLogin, useRegister } from '../services/queries';
   import { loggedInStore, loginModalStore } from '../stores/auth';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import FormInput from './FormInput.svelte';
 
   export let closeFn: (() => void) | undefined = undefined;

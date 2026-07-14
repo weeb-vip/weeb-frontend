@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { createQuery } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
   import { utc } from '@date-fns/utc/utc';
@@ -9,7 +10,6 @@
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import { getCurrentSeason, getSeasonDisplayName } from '../../utils/seasonUtils';
 
@@ -221,12 +221,12 @@
 
   function navigateToShow(animeId: string) {
     // Use proper navigation for View Transitions
-    navigateWithTransition(`/show/${animeId}`);
+    goto(`/show/${animeId}`);
   }
 
   function navigateToCalendar() {
     // Use proper navigation for View Transitions
-    navigateWithTransition('/airing/calendar');
+    goto('/airing/calendar');
   }
 
   // Reactive data using TanStack Query stores — merge main query data with additional calendar data

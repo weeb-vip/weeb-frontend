@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { createQuery, createMutation } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
@@ -13,7 +14,6 @@
   import '@fortawesome/fontawesome-free/css/all.min.css';
   import { configStore } from '../stores/config';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { Status } from '../../gql/graphql';
 
   // Initialize query client
@@ -368,7 +368,7 @@
   })();
 
   function navigateToAnime(animeId: string) {
-    navigateWithTransition(`/show/${animeId}`);
+    goto(`/show/${animeId}`);
   }
 </script>
 

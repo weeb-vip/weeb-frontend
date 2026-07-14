@@ -1,9 +1,9 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
   import { animate, stagger, spring } from 'motion';
   import AutocompleteItem from './AutocompleteItem.svelte';
   import { configStore } from '../stores/config';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { analytics } from '../../utils/analytics';
 
   // Dynamic imports for SSR compatibility
@@ -173,7 +173,7 @@
     }
     // Navigate to show page
     if (typeof window !== 'undefined') {
-      navigateWithTransition(`/show/${item.id ? encodeURIComponent(item.id) : ''}`);
+      goto(`/show/${item.id ? encodeURIComponent(item.id) : ''}`);
     }
     if (desktopInputRef) desktopInputRef.blur();
     if (mobileInputRef) mobileInputRef.blur();
@@ -401,7 +401,7 @@
           const query = target.value;
           if (query.trim()) {
             analytics.searchPerformed(query.trim(), 0);
-            navigateWithTransition(`/search?query=${encodeURIComponent(query.trim())}`);
+            goto(`/search?query=${encodeURIComponent(query.trim())}`);
           }
         }
       }}
@@ -482,7 +482,7 @@
                 href="/search?query={encodeURIComponent(autocompleteState.query)}"
                 class="ac-footer-link"
                 on:click|preventDefault={() => {
-                  navigateWithTransition(`/search?query=${encodeURIComponent(autocompleteState.query)}`);
+                  goto(`/search?query=${encodeURIComponent(autocompleteState.query)}`);
                 }}
               >
                 Search for '{autocompleteState.query}'
@@ -549,7 +549,7 @@
                 href="/search?query={encodeURIComponent(autocompleteState.query)}"
                 class="ac-footer-link"
                 on:click|preventDefault={() => {
-                  navigateWithTransition(`/search?query=${encodeURIComponent(autocompleteState.query)}`);
+                  goto(`/search?query=${encodeURIComponent(autocompleteState.query)}`);
                 }}
               >
                 Search for '{autocompleteState.query}'

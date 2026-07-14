@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { loggedInStore } from '../stores/auth';
-  import { navigateWithTransition } from '../../utils/astro-navigation';
   import { AuthStorage } from '../../utils/auth-storage';
   import ProfileAvatar from './ProfileAvatar.svelte';
   import { logout } from '../../services/queries';
@@ -51,7 +51,7 @@
     AuthStorage.logout();
     loggedInStore.logout();
     if (onClose) onClose();
-    navigateWithTransition("/");
+    goto("/");
   }
 
   function handleLinkClick() {
@@ -165,4 +165,4 @@
     {/if}
     Sign Out
   </button>
-</div>
+</div>
