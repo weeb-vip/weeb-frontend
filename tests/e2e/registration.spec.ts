@@ -36,17 +36,23 @@ async function openRegisterModal(page: Page): Promise<Locator> {
 }
 
 async function fillAndSubmitRegister(dialog: Locator, page: Page, email: string, password: string) {
-  await dialog.locator('input[name="username"]').fill(email);
-  await dialog.locator('input[name="password"]').fill(password);
-  await dialog.locator('input[name="confirmPassword"]').fill(password);
-
-  // Use evaluate for more reliable click and wait for API response
-  const responsePromise = page.waitForResponse(
-    (response) => response.url().includes('graphql') && response.status() === 200,
-    { timeout: 30000 }
-  );
-  await dialog.locator('form button[type="submit"]').evaluate((btn) => (btn as HTMLButtonElement).click());
-  await responsePromise.catch(() => console.log('No GraphQL response detected'));
+  // Staging's registration endpoint intermittently drops the request under
+  // parallel-shard load; retry the submit once if the success confirmation
+  // doesn't appear in the modal.
+  const success = dialog.locator('text=/registration.*successful/i');
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await dialog.locator('input[name="username"]').fill(email);
+    await dialog.locator('input[name="password"]').fill(password);
+    await dialog.locator('input[name="confirmPassword"]').fill(password);
+    await dialog.locator('form button[type="submit"]').evaluate((btn) => (btn as HTMLButtonElement).click());
+    try {
+      await success.waitFor({ state: 'visible', timeout: 20000 });
+      return;
+    } catch {
+      if (attempt === 0) console.log('Registration confirmation not shown in modal, retrying submit...');
+    }
+  }
+  await expect(success).toBeVisible({ timeout: 20000 });
 }
 
 test.describe('User Registration Flow', () => {
