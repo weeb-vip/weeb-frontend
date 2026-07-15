@@ -239,8 +239,8 @@
             id="palListViewBtn"
             title="List view"
             on:click={() => {
-              const listEl = document.querySelector('[data-view="list"]');
-              const gridEl = document.querySelector('[data-view="grid"]');
+              const listEl = document.querySelector<HTMLElement>('[data-view="list"]');
+              const gridEl = document.querySelector<HTMLElement>('[data-view="grid"]');
               const listBtn = document.getElementById('palListViewBtn');
               const gridBtn = document.getElementById('palGridViewBtn');
               if (listEl) listEl.style.display = 'block';
@@ -258,8 +258,8 @@
             id="palGridViewBtn"
             title="Grid view"
             on:click={() => {
-              const listEl = document.querySelector('[data-view="list"]');
-              const gridEl = document.querySelector('[data-view="grid"]');
+              const listEl = document.querySelector<HTMLElement>('[data-view="list"]');
+              const gridEl = document.querySelector<HTMLElement>('[data-view="grid"]');
               const listBtn = document.getElementById('palListViewBtn');
               const gridBtn = document.getElementById('palGridViewBtn');
               if (listEl) listEl.style.display = 'none';

@@ -347,10 +347,10 @@
       {#if previewUrl}
         <Button
           color="blue"
-          label={$uploadMutation.isLoading ? "Uploading..." : "Upload"}
+          label={$uploadMutation.isPending ? "Uploading..." : "Upload"}
           onClick={cropAndUpload}
           showLabel={true}
-          status={$uploadMutation.isLoading ? "loading" : "idle"}
+          status={$uploadMutation.isPending ? "loading" : "idle"}
           className="w-full sm:w-auto"
         />
       {/if}

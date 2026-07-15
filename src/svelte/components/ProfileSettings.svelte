@@ -240,7 +240,7 @@
             label="Save Changes"
             onClick={() => {}}
             showLabel={true}
-            status={$updateMutation.isLoading ? 'loading' : 'idle'}
+            status={$updateMutation.isPending ? 'loading' : 'idle'}
             className="flex-1"
           />
           <a
