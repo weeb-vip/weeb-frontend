@@ -403,7 +403,7 @@ function checkNotifications() {
 
     // Check if currently airing
     if (isCurrentlyAiring(nextEpisode.airDate, anime.broadcast, durationMinutes)) {
-      const notificationKey = `${anime.id}-airing`;
+      const notificationKey = `${anime.id}-${nextEpisode.episodeNumber ?? 'x'}-airing`;
       if (!notifiedAnime.has(notificationKey)) {
         notifiedAnime.add(notificationKey);
         postMessage({
@@ -423,7 +423,7 @@ function checkNotifications() {
     // Check if finished airing (within the last 30 minutes)
     const finishedTime = timeToAir + episodeDurationMs;
     if (finishedTime < 0 && finishedTime > -(30 * 60 * 1000)) {
-      const notificationKey = `${anime.id}-finished`;
+      const notificationKey = `${anime.id}-${nextEpisode.episodeNumber ?? 'x'}-finished`;
       if (!notifiedAnime.has(notificationKey)) {
         notifiedAnime.add(notificationKey);
         postMessage({
@@ -443,7 +443,7 @@ function checkNotifications() {
     // Check for 30-minute "airing soon" notification (within 5-second window)
     const airingSoonTime = timeToAir - (30 * 60 * 1000);
     if (airingSoonTime >= 0 && airingSoonTime < 5000) {
-      const notificationKey = `${anime.id}-airing-soon`;
+      const notificationKey = `${anime.id}-${nextEpisode.episodeNumber ?? 'x'}-airing-soon`;
       if (!notifiedAnime.has(notificationKey)) {
         notifiedAnime.add(notificationKey);
         postMessage({
@@ -462,7 +462,7 @@ function checkNotifications() {
     // Check for 5-minute warning (within 5-second window)
     const fiveMinuteWarning = timeToAir - (5 * 60 * 1000);
     if (fiveMinuteWarning >= 0 && fiveMinuteWarning < 5000) {
-      const notificationKey = `${anime.id}-warning`;
+      const notificationKey = `${anime.id}-${nextEpisode.episodeNumber ?? 'x'}-warning`;
       if (!notifiedAnime.has(notificationKey)) {
         notifiedAnime.add(notificationKey);
         postMessage({
@@ -480,7 +480,7 @@ function checkNotifications() {
 
     // Check for airing notification (within 5-second window)
     if (timeToAir >= 0 && timeToAir < 5000) {
-      const notificationKey = `${anime.id}-airing`;
+      const notificationKey = `${anime.id}-${nextEpisode.episodeNumber ?? 'x'}-airing`;
       if (!notifiedAnime.has(notificationKey)) {
         notifiedAnime.add(notificationKey);
         postMessage({
@@ -619,7 +619,3 @@ self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
   }
 });
 
-// Handle worker termination
-self.addEventListener('beforeunload', () => {
-  clearAllIntervals();
-});
