@@ -2,6 +2,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 import { getConfig } from './config/build-time-loader';
 import { AuthStorage } from './utils/auth-storage';
 import { refreshTokenSSR, isTokenExpired } from './utils/ssr-token-refresh';
+import { clearAuthCookies } from '$lib/server/auth-cookies';
 
 // Config cache for performance
 let configData: any = null;
@@ -61,33 +62,27 @@ export const handle: Handle = async ({ event, resolve }) => {
   const hasRefreshToken = !!authResult.tokens.refreshToken;
   const cookieShim = astroStyleCookies(cookies);
 
-  if (hasRefreshToken) {
-    if (!hasAccessToken) {
-      // CASE 1: Has refresh token but NO access token - refresh immediately
-      const refreshResult = await refreshTokenSSR(cookieShim, configData?.graphql_host || 'http://localhost:8079');
+  // Refresh when there's a refresh token and the access token is missing or
+  // expired. On a definitive failure (revoked/expired refresh token) clear
+  // the auth cookies so we don't blocking-retry a doomed refresh on every
+  // subsequent request; leave them on a transient (network/5xx) failure.
+  const needsRefresh = hasRefreshToken &&
+    (!hasAccessToken || (authResult.tokens.authToken && isTokenExpired(authResult.tokens.authToken)));
 
-      if (refreshResult.success) {
-        authResult.tokens.authToken = refreshResult.authToken;
-        authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
-        authResult.isLoggedIn = true;
-      } else {
-        console.error('[Hooks] ❌ Token refresh failed:', refreshResult.error);
-        authResult.isLoggedIn = false;
-      }
-    } else if (authResult.tokens.authToken && isTokenExpired(authResult.tokens.authToken)) {
-      // CASE 2: Has access token but it's EXPIRED - refresh it
-      const refreshResult = await refreshTokenSSR(cookieShim, configData?.graphql_host || 'http://localhost:8079');
+  if (needsRefresh) {
+    const refreshResult = await refreshTokenSSR(cookieShim, configData?.graphql_host || 'http://localhost:8079');
 
-      if (refreshResult.success) {
-        authResult.tokens.authToken = refreshResult.authToken;
-        authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
-        authResult.isLoggedIn = true;
-      } else {
-        console.error('[Hooks] ❌ Token refresh failed:', refreshResult.error);
-        authResult.isLoggedIn = false;
+    if (refreshResult.success) {
+      authResult.tokens.authToken = refreshResult.authToken;
+      authResult.tokens.refreshToken = refreshResult.refreshToken || authResult.tokens.refreshToken;
+      authResult.isLoggedIn = true;
+    } else {
+      console.error('[Hooks] ❌ Token refresh failed:', refreshResult.error);
+      authResult.isLoggedIn = false;
+      if (refreshResult.authError) {
+        clearAuthCookies(cookies);
       }
     }
-    // CASE 3: valid access token - continue normal flow
   } else if (hasAccessToken && authResult.tokens.authToken && isTokenExpired(authResult.tokens.authToken)) {
     // Access token expired and no refresh token available
     authResult.isLoggedIn = false;

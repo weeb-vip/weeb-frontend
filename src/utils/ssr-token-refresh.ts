@@ -12,6 +12,10 @@ interface RefreshTokenResponse {
   authToken?: string;
   refreshToken?: string;
   error?: string;
+  // true when the refresh token is definitively invalid (revoked/expired)
+  // vs a transient failure (network / 5xx) — lets the caller clear the
+  // cookies instead of retrying a doomed refresh on every request
+  authError?: boolean;
 }
 
 /**
@@ -60,7 +64,8 @@ export async function refreshTokenSSR(
       debug.error('[SSR] Token refresh HTTP error:', response.status);
       return {
         success: false,
-        error: `HTTP error: ${response.status}`
+        error: `HTTP error: ${response.status}`,
+        authError: response.status === 401 || response.status === 403
       };
     }
 
@@ -70,7 +75,8 @@ export async function refreshTokenSSR(
       debug.error('[SSR] Token refresh GraphQL errors:', data.errors);
       return {
         success: false,
-        error: data.errors[0]?.message || 'GraphQL error'
+        error: data.errors[0]?.message || 'GraphQL error',
+        authError: true
       };
     }
 
