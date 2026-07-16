@@ -26,6 +26,25 @@
   let mobilePanelRef: HTMLDivElement;
   let resultsListRefs: HTMLElement[] = [];
 
+  // Keyboard navigation: the currently highlighted result (-1 = none). The
+  // panel is rendered twice (mobile + desktop) but only one is visible, so a
+  // single flat index drives both; per-device option ids keep the DOM valid.
+  let activeIndex = -1;
+  $: flatItems = (autocompleteState.collections || [])
+    .flatMap((c: any) => filterValidItems(c.items || []));
+  // Keep the highlight in range as results change under the user.
+  $: if (activeIndex >= flatItems.length) activeIndex = flatItems.length - 1;
+
+  function activeDevice(): 'desktop' | 'mobile' {
+    return typeof window !== 'undefined' && window.innerWidth >= 640 ? 'desktop' : 'mobile';
+  }
+
+  function scrollActiveIntoView() {
+    if (activeIndex < 0 || typeof document === 'undefined') return;
+    const el = document.getElementById(`ac-opt-${activeDevice()}-${activeIndex}`);
+    el?.scrollIntoView({ block: 'nearest' });
+  }
+
 
   onMount(async () => {
     // Only run on client-side
@@ -265,6 +284,7 @@
     // Delay to allow click events to fire and animation to complete
     setTimeout(() => {
       isFocused = false;
+      activeIndex = -1;
       if (autocompleteInstance) {
         autocompleteInstance.setIsOpen(false);
       }
@@ -273,6 +293,43 @@
   }
 
   function handleKeyDown(event: KeyboardEvent) {
+    const len = flatItems.length;
+
+    if (event.key === 'ArrowDown') {
+      if (!autocompleteState.isOpen) return;
+      event.preventDefault();
+      activeIndex = len === 0 ? -1 : (activeIndex + 1) % len;
+      scrollActiveIntoView();
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      if (!autocompleteState.isOpen) return;
+      event.preventDefault();
+      activeIndex = len === 0 ? -1 : (activeIndex <= 0 ? len - 1 : activeIndex - 1);
+      scrollActiveIntoView();
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      // A highlighted result wins; otherwise fall through to a full search.
+      if (activeIndex >= 0 && flatItems[activeIndex]) {
+        event.preventDefault();
+        handleItemClick(flatItems[activeIndex]);
+      } else if (autocompleteState.query) {
+        event.preventDefault();
+        const query = autocompleteState.query;
+        analytics.searchPerformed(query.trim(), flatItems.length);
+        if (autocompleteInstance) {
+          autocompleteInstance.setIsOpen(false);
+          autocompleteInstance.setQuery('');
+        }
+        (event.target as HTMLInputElement).blur();
+        goto(`/search?query=${encodeURIComponent(query)}`);
+      }
+      return;
+    }
+
     if (event.key === 'Escape') {
       // Animate panel closing on escape
       const panel = window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
@@ -283,6 +340,7 @@
         );
       }
 
+      activeIndex = -1;
       setTimeout(() => {
         isFocused = false;
         if (autocompleteInstance) {
@@ -296,7 +354,9 @@
 
   function handleInputChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
-    console.log('Input changed:', value);
+    // Results are about to change; drop the highlight so it can't point at a
+    // stale row (Enter would otherwise open the wrong show).
+    activeIndex = -1;
     if (autocompleteInstance) {
       console.log('Setting query on autocomplete instance');
       autocompleteInstance.setQuery(value);
@@ -449,6 +509,11 @@
         on:keydown={handleKeyDown}
         on:input={handleInputChange}
         {...inputProps}
+        role="combobox"
+        aria-expanded={isFocused && autocompleteState.isOpen && flatItems.length > 0}
+        aria-controls="ac-listbox-mobile"
+        aria-autocomplete="list"
+        aria-activedescendant={activeIndex >= 0 ? `ac-opt-mobile-${activeIndex}` : undefined}
       />
       {#if !isFocused}
         <span class="ac-kbd">/</span>
@@ -460,22 +525,25 @@
           style="transform-origin: center top;"
         >
           <div class="ac-panel-divider"></div>
-          {#each autocompleteState.collections as collection}
-            {#if filterValidItems(collection.items).length > 0}
-              <ul class="ac-results-list">
-                {#each filterValidItems(collection.items) as item (item.objectID)}
-                  <AutocompleteItem {item} onClick={() => handleItemClick(item)} />
-                {/each}
-              </ul>
-            {:else if autocompleteState.query}
-              <div class="ac-empty">
-                <svg class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>No results for '{autocompleteState.query}'</span>
-              </div>
-            {/if}
-          {/each}
+          {#if flatItems.length > 0}
+            <ul class="ac-results-list" role="listbox" id="ac-listbox-mobile" aria-label="Search results">
+              {#each flatItems as item, i (item.objectID)}
+                <AutocompleteItem
+                  {item}
+                  id={`ac-opt-mobile-${i}`}
+                  active={activeIndex === i}
+                  onClick={() => handleItemClick(item)}
+                />
+              {/each}
+            </ul>
+          {:else if autocompleteState.query}
+            <div class="ac-empty">
+              <svg class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span>No results for '{autocompleteState.query}'</span>
+            </div>
+          {/if}
           {#if autocompleteState.query}
             <div class="ac-footer">
               <a
@@ -515,6 +583,11 @@
       on:keydown={handleKeyDown}
       on:input={handleInputChange}
       {...inputProps}
+      role="combobox"
+      aria-expanded={isFocused && autocompleteState.isOpen && flatItems.length > 0}
+      aria-controls="ac-listbox-desktop"
+      aria-autocomplete="list"
+      aria-activedescendant={activeIndex >= 0 ? `ac-opt-desktop-${activeIndex}` : undefined}
     />
     {#if !isFocused}
       <span class="ac-kbd">/</span>
@@ -527,22 +600,25 @@
           style="transform-origin: center top;"
         >
           <div class="ac-panel-divider"></div>
-          {#each autocompleteState.collections as collection}
-            {#if filterValidItems(collection.items).length > 0}
-              <ul class="ac-results-list">
-                {#each filterValidItems(collection.items) as item (item.objectID)}
-                  <AutocompleteItem {item} onClick={() => handleItemClick(item)} />
-                {/each}
-              </ul>
-            {:else if autocompleteState.query}
-              <div class="ac-empty">
-                <svg class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>No results for '{autocompleteState.query}'</span>
-              </div>
-            {/if}
-          {/each}
+          {#if flatItems.length > 0}
+            <ul class="ac-results-list" role="listbox" id="ac-listbox-desktop" aria-label="Search results">
+              {#each flatItems as item, i (item.objectID)}
+                <AutocompleteItem
+                  {item}
+                  id={`ac-opt-desktop-${i}`}
+                  active={activeIndex === i}
+                  onClick={() => handleItemClick(item)}
+                />
+              {/each}
+            </ul>
+          {:else if autocompleteState.query}
+            <div class="ac-empty">
+              <svg class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span>No results for '{autocompleteState.query}'</span>
+            </div>
+          {/if}
           {#if autocompleteState.query}
             <div class="ac-footer">
               <a
