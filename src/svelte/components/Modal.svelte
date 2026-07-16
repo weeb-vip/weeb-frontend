@@ -51,14 +51,65 @@
       }
     };
   }
+
+  const FOCUSABLE = [
+    'a[href]', 'button:not([disabled])', 'input:not([disabled])',
+    'select:not([disabled])', 'textarea:not([disabled])', '[tabindex]:not([tabindex="-1"])'
+  ].join(',');
+
+  function focusable(node: HTMLElement): HTMLElement[] {
+    return Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE))
+      .filter((el) => el.offsetParent !== null || el === document.activeElement);
+  }
+
+  // Trap Tab focus within the modal, move focus in on open, and restore it on
+  // close so keyboard users can't tab into the (inert) page behind the dialog.
+  function trapFocus(node: HTMLElement) {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+
+    // Focus the first focusable element, falling back to the dialog itself.
+    const initial = focusable(node)[0] ?? node;
+    // tick() isn't needed: the node is already in the DOM when the action runs.
+    initial.focus();
+
+    function onKeydown(e: KeyboardEvent) {
+      if (e.key !== 'Tab') return;
+      const items = focusable(node);
+      if (items.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey && (active === first || !node.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    node.addEventListener('keydown', onKeydown);
+
+    return {
+      destroy() {
+        node.removeEventListener('keydown', onKeydown);
+        // Restore focus to whatever opened the modal.
+        previouslyFocused?.focus?.();
+      }
+    };
+  }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
 {#if isOpen && mounted}
-  <div use:portal class="weeb-modal-backdrop" on:click={handleBackdropClick} role="dialog" aria-modal="true">
+  <div use:portal class="weeb-modal-backdrop" on:click={handleBackdropClick} role="dialog" aria-modal="true" aria-label="Dialog">
     <div class="weeb-modal-container">
-      <div class="weeb-modal-card {className}" on:click|stopPropagation>
+      <div class="weeb-modal-card {className}" use:trapFocus tabindex="-1" on:click|stopPropagation>
         {#if showCloseButton}
           <button type="button" class="weeb-modal-close" on:click={closeModal} aria-label="Close modal">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
