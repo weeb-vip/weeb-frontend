@@ -1,12 +1,13 @@
 import {format} from 'date-fns';
 import {formatInTimeZone} from 'date-fns-tz';
 
-// Get current time with dev offset applied (for testing)
+// Get current time with dev offset applied (for testing).
+// The notification worker time-travels by setting `devTimeOffset` on its
+// global scope; `globalThis` is that scope inside a worker, and the value is
+// undefined (→ 0) everywhere else, so this is a no-op on the main thread.
 export function getCurrentTime(): Date {
-  const now = new Date();
-
-
-  return now;
+  const offset = (globalThis as any).devTimeOffset || 0;
+  return new Date(Date.now() + offset);
 }
 
 
