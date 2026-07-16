@@ -7,7 +7,7 @@
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
-  import { animeCountdownStore } from '../stores/animeCountdown';
+  import { animeNotificationStore } from '../stores/animeNotifications';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let anime: any;
@@ -18,9 +18,9 @@
   let currentAnimeId: string | null = null;
   let supportsWebP = false;
 
-  // Get timing data from the anime countdown store
-  $: timingData = $animeCountdownStore.timingData[anime.id];
-  $: workerCountdown = $animeCountdownStore.countdowns[anime.id];
+  // Get timing data from the shared anime notification store
+  $: timingData = $animeNotificationStore.timingData[anime.id];
+  $: workerCountdown = $animeNotificationStore.countdowns[anime.id];
 
   // Computed timing values (matching React HeroBanner logic)
   $: hasTimingData = Boolean(timingData || workerCountdown);

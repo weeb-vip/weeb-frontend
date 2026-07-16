@@ -1,5 +1,4 @@
 import debug from '../utils/debug';
-import {animeCountdownStore} from '../svelte/stores/animeCountdown';
 
 export interface AnimeForNotification {
   id: string;
@@ -74,24 +73,12 @@ class AnimeNotificationService {
           this.notificationCallback(message.notificationType, message.anime, message.episode);
         }
       } else if (message.type === 'countdown') {
-
-        // Update Zustand store directly (backward compatibility)
-        animeCountdownStore.setCountdown(message.animeId, {
-          countdown: message.countdown,
-          isAiring: message.isAiring,
-          hasAired: message.hasAired,
-          progress: message.progress
-        });
-
-        // Keep the callback for backwards compatibility
+        // The store is fed through this callback (registered by
+        // animeNotificationStore); there is no separate countdown store.
         if (this.countdownCallback) {
           this.countdownCallback(message.animeId, message.countdown, message.isAiring, message.hasAired, message.progress);
         }
       } else if (message.type === 'timing') {
-        // Update Zustand store with comprehensive timing data
-        animeCountdownStore.setTimingData(message.animeId, message.timingData);
-
-        // Also call Svelte timing callback if set
         if (this.timingCallback) {
           this.timingCallback(message.animeId, message.timingData);
         }

@@ -14,20 +14,6 @@ jest.mock('../utils/debug', () => ({
   default: mockDebug,
 }));
 
-// Mock the Svelte store
-const mockSetCountdown = jest.fn();
-const mockSetTimingData = jest.fn();
-const mockGetState = jest.fn(() => ({
-  setCountdown: mockSetCountdown,
-  setTimingData: mockSetTimingData,
-}));
-
-jest.mock('../svelte/stores/animeCountdown', () => ({
-  animeCountdownStore: {
-    setCountdown: mockSetCountdown,
-    setTimingData: mockSetTimingData,
-  }
-}));
 
 // Mock Worker class
 class MockWorker {
@@ -80,6 +66,7 @@ class TestableAnimeNotificationService {
   private worker: MockWorker | null = null;
   private notificationCallback?: NotificationCallback;
   private countdownCallback?: CountdownCallback;
+  private timingCallback?: (animeId: string, timingData: any) => void;
   private isWorkerReady: boolean = false;
 
   setNotificationCallback(callback: NotificationCallback) {
@@ -88,6 +75,10 @@ class TestableAnimeNotificationService {
 
   setCountdownCallback(callback: CountdownCallback) {
     this.countdownCallback = callback;
+  }
+
+  setTimingCallback(callback: (animeId: string, timingData: any) => void) {
+    this.timingCallback = callback;
   }
 
   private setupWorkerListeners() {
@@ -110,21 +101,13 @@ class TestableAnimeNotificationService {
           this.notificationCallback(message.notificationType, message.anime, message.episode);
         }
       } else if (message.type === 'countdown') {
-        // Update Svelte store directly
-        mockSetCountdown(message.animeId, {
-          countdown: message.countdown,
-          isAiring: message.isAiring,
-          hasAired: message.hasAired,
-          progress: message.progress
-        });
-
-        // Keep the callback for backwards compatibility
         if (this.countdownCallback) {
           this.countdownCallback(message.animeId, message.countdown, message.isAiring, message.hasAired, message.progress);
         }
       } else if (message.type === 'timing') {
-        // Update Svelte store with comprehensive timing data
-        mockSetTimingData(message.animeId, message.timingData);
+        if (this.timingCallback) {
+          this.timingCallback(message.animeId, message.timingData);
+        }
       }
     });
 
@@ -206,6 +189,7 @@ describe('AnimeNotificationService', () => {
   let mockWorker: MockWorker;
   let notificationCallback: jest.MockedFunction<NotificationCallback>;
   let countdownCallback: jest.MockedFunction<CountdownCallback>;
+  let timingCallback: jest.MockedFunction<(animeId: string, timingData: any) => void>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -213,13 +197,17 @@ describe('AnimeNotificationService', () => {
     // Create fresh service instance
     service = new TestableAnimeNotificationService();
 
-    // Create fresh mock callbacks
+    // Create fresh mock callbacks. These are the sole path the worker data
+    // reaches the store (animeNotificationStore registers the same callbacks),
+    // so asserting on them verifies the store would be updated.
     notificationCallback = jest.fn();
     countdownCallback = jest.fn();
+    timingCallback = jest.fn();
 
     // Set up service callbacks
     service.setNotificationCallback(notificationCallback);
     service.setCountdownCallback(countdownCallback);
+    service.setTimingCallback(timingCallback);
   });
 
   afterEach(() => {
@@ -306,13 +294,6 @@ describe('AnimeNotificationService', () => {
 
         mockWorker.simulateMessage(countdownMessage);
 
-        expect(mockSetCountdown).toHaveBeenCalledWith('attack-titan', {
-          countdown: '5m',
-          isAiring: false,
-          hasAired: false,
-          progress: undefined
-        });
-
         expect(countdownCallback).toHaveBeenCalledWith('attack-titan', '5m', false, false, undefined);
       });
 
@@ -327,13 +308,6 @@ describe('AnimeNotificationService', () => {
         };
 
         mockWorker.simulateMessage(countdownMessage);
-
-        expect(mockSetCountdown).toHaveBeenCalledWith('demon-slayer', {
-          countdown: 'AIRING',
-          isAiring: true,
-          hasAired: false,
-          progress: 0.5
-        });
 
         expect(countdownCallback).toHaveBeenCalledWith('demon-slayer', 'AIRING', true, false, 0.5);
       });
@@ -365,7 +339,7 @@ describe('AnimeNotificationService', () => {
 
         mockWorker.simulateMessage(timingMessage);
 
-        expect(mockSetTimingData).toHaveBeenCalledWith('my-hero-academia', timingData);
+        expect(timingCallback).toHaveBeenCalledWith('my-hero-academia', timingData);
       });
     });
 
@@ -424,15 +398,10 @@ describe('AnimeNotificationService', () => {
         mockWorker.simulateMessage(attackTitanTiming);
         mockWorker.simulateMessage(demonSlayerTiming);
 
-        // Verify both anime received their updates in the store
-        expect(mockSetCountdown).toHaveBeenCalledTimes(2);
-        expect(mockSetTimingData).toHaveBeenCalledTimes(2);
-
-        expect(mockSetCountdown).toHaveBeenCalledWith('attack-titan', expect.objectContaining({ countdown: '5m' }));
-        expect(mockSetCountdown).toHaveBeenCalledWith('demon-slayer', expect.objectContaining({ countdown: '5m' }));
-
-        expect(mockSetTimingData).toHaveBeenCalledWith('attack-titan', expect.objectContaining({ countdown: '5m' }));
-        expect(mockSetTimingData).toHaveBeenCalledWith('demon-slayer', expect.objectContaining({ countdown: '5m' }));
+        // Verify both anime received their timing updates (store is fed via these callbacks)
+        expect(timingCallback).toHaveBeenCalledTimes(2);
+        expect(timingCallback).toHaveBeenCalledWith('attack-titan', expect.objectContaining({ countdown: '5m' }));
+        expect(timingCallback).toHaveBeenCalledWith('demon-slayer', expect.objectContaining({ countdown: '5m' }));
 
         // Verify callbacks were called for both anime (backend service working correctly)
         expect(countdownCallback).toHaveBeenCalledTimes(2);
@@ -483,8 +452,8 @@ describe('AnimeNotificationService', () => {
 
         // Verify all message types were handled
         expect(notificationCallback).toHaveBeenCalledTimes(1);
-        expect(mockSetCountdown).toHaveBeenCalledTimes(1);
-        expect(mockSetTimingData).toHaveBeenCalledTimes(1);
+        expect(countdownCallback).toHaveBeenCalledTimes(1);
+        expect(timingCallback).toHaveBeenCalledTimes(1);
 
         expect(notificationCallback).toHaveBeenCalledWith('airing', { id: animeId, titleEn: 'One Piece' }, { episodeNumber: 1000, titleEn: 'Special Episode' });
         expect(countdownCallback).toHaveBeenCalledWith(animeId, 'AIRING', true, false, 0.25);
