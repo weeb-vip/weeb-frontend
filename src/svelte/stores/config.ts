@@ -3,14 +3,26 @@ import type { IConfig } from '../../config/interfaces';
 
 // Create a writable store for config
 function createConfigStore() {
-  const { subscribe, set, update } = writable<IConfig | null>(null);
+  const { subscribe, set: _set, update } = writable<IConfig | null>(null);
+  // Mirror the current value so init()/get() can read it synchronously.
+  let current: IConfig | null = null;
+  const set = (config: IConfig | null) => { current = config; _set(config); };
   let isLoading = false;
   let loadPromise: Promise<IConfig | null> | null = null;
 
   return {
     subscribe,
-    // Initialize the config store by fetching from HTTP
+    // Populate synchronously from the server-provided (build-time) config that
+    // the root layout already loads, so the client never re-fetches
+    // /config.json. Idempotent — the first non-null value wins.
+    hydrate: (config: IConfig | null | undefined) => {
+      if (config && !current) set(config);
+    },
+    // Ensure config is available. Returns immediately once hydrated (the common
+    // case); only falls back to an HTTP fetch if nothing populated the store.
     init: async () => {
+      if (current) return current;
+
       // Prevent multiple simultaneous loads
       if (isLoading && loadPromise) {
         return loadPromise;
@@ -59,12 +71,8 @@ function createConfigStore() {
     },
     // Update config if needed
     setConfig: (config: IConfig) => set(config),
-    // Get specific config value synchronously
-    get: (): IConfig | null => {
-      let value: IConfig | null = null;
-      subscribe(val => value = val)();
-      return value;
-    }
+    // Get the current config synchronously
+    get: (): IConfig | null => current
   };
 }
 

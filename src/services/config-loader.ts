@@ -1,5 +1,6 @@
 // Config loader that ensures config is loaded before anything else
 import type { IConfig } from '../config/interfaces';
+import { configStore } from '../svelte/stores/config';
 
 let configPromise: Promise<IConfig> | null = null;
 let configData: IConfig | null = null;
@@ -90,6 +91,21 @@ async function initializeConfigSSR(): Promise<IConfig> {
 async function initializeConfigClient(): Promise<IConfig> {
   if (configData) {
     return configData;
+  }
+
+  // Prefer the config the root layout already hydrated from build-time data,
+  // avoiding a redundant /config.json round-trip. Falls through to fetch only
+  // if nothing populated the store yet.
+  const hydrated = configStore.get();
+  if (hydrated) {
+    configData = hydrated;
+    // @ts-ignore — legacy globals some code still reads
+    window.global = window.global || {};
+    // @ts-ignore
+    window.global.config = hydrated;
+    // @ts-ignore
+    window.config = hydrated;
+    return hydrated;
   }
 
   if (!configPromise) {
