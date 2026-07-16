@@ -23,6 +23,10 @@ export default defineConfig({
     })
   ],
   build: {
+    // explicit target so the worker build isn't forced below es2020 in CI
+    // (esbuild can't downlevel some deps' destructuring, which broke the
+    // worker build); es2020 is a safe, widely-supported floor
+    target: 'es2020',
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
     minify: 'terser',
