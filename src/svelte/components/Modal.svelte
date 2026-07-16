@@ -67,10 +67,14 @@
   function trapFocus(node: HTMLElement) {
     const previouslyFocused = document.activeElement as HTMLElement | null;
 
-    // Focus the first focusable element, falling back to the dialog itself.
-    const initial = focusable(node)[0] ?? node;
-    // tick() isn't needed: the node is already in the DOM when the action runs.
-    initial.focus();
+    // Defer initial focus to the next frame. The `portal` action on the parent
+    // backdrop runs *after* this one (children mount first) and appendChild's
+    // the subtree to <body> — moving a node blurs whatever we focused, kicking
+    // focus back to <body>. Focusing after the move lands is what makes it stick.
+    const raf = requestAnimationFrame(() => {
+      const initial = focusable(node)[0] ?? node;
+      initial.focus();
+    });
 
     function onKeydown(e: KeyboardEvent) {
       if (e.key !== 'Tab') return;
@@ -96,6 +100,7 @@
 
     return {
       destroy() {
+        cancelAnimationFrame(raf);
         node.removeEventListener('keydown', onKeydown);
         // Restore focus to whatever opened the modal.
         previouslyFocused?.focus?.();
