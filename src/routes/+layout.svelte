@@ -16,10 +16,17 @@
     showInstantFeedback,
     hideNavigationFeedback
   } from '$lib/client/global-ui';
+  import { configStore } from '../svelte/stores/config';
   import '../scss/base.scss';
   import '../styles/design-tokens.css';
 
   export let data;
+
+  // Config is loaded once (build-time import → locals → layout data). Seed the
+  // client store from it so nothing needs to re-fetch /config.json. Runs during
+  // both SSR and client hydration; the store is shared but config isn't
+  // per-user, so that's safe.
+  configStore.hydrate(data.config);
 
   // One QueryClient for the whole app via context. In the browser this is
   // the shared singleton; during SSR each layout render gets a fresh
