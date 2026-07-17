@@ -75,7 +75,7 @@
         src="/assets/icons/logo6-rev-sm_sm.png"
         alt="Weeb VIP"
         on:error={(e) => {
-          e.currentTarget.style.display = 'none';
+          (e.currentTarget as HTMLElement).style.display = 'none';
         }}
       />
     </div>

@@ -1,6 +1,8 @@
 import { writable } from 'svelte/store';
 import type { LoginInput, SigninResult } from "../../gql/graphql";
-import { refreshTokenSimple, queryClient, queryKeys } from "../../services/queries";
+import { refreshTokenSimple } from "../../services/queries";
+import { queryKeys } from "../services/queries";
+import { getQueryClient } from "../services/query-client";
 import { mutationCreateSession } from "../../services/api/graphql/queries";
 import { TokenRefresher } from "../../services/token_refresher";
 import { AuthStorage } from "../../utils/auth-storage";
@@ -12,6 +14,12 @@ interface LoginState {
   error: string | null;
   success: boolean;
 }
+
+// The generated SigninResult type does not include user details, but the
+// signin response payload may carry them; typed here for the auth-store update.
+type SigninResultWithUser = SigninResult & {
+  user?: { id: string; username?: string; email?: string } | null;
+};
 
 export function useLogin() {
   const state = writable<LoginState>({
@@ -46,7 +54,7 @@ export function useLogin() {
         throw new Error(result.errors[0]?.message || 'Login failed');
       }
 
-      const signinResult: SigninResult = result.data.signin;
+      const signinResult: SigninResultWithUser = result.data.signin;
 
       // Server sets HttpOnly cookies automatically - no manual storage needed
       console.log("✅ Login successful - server set cookies automatically");
@@ -91,6 +99,7 @@ export function useLogin() {
 
       // Invalidate all user-related queries to refresh data
       try {
+        const queryClient = getQueryClient();
         queryClient.invalidateQueries({ queryKey: queryKeys.user() });
         queryClient.invalidateQueries({ queryKey: queryKeys.users() });
         queryClient.invalidateQueries({ queryKey: ['user'] }); // Legacy key

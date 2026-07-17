@@ -1,7 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Fa from 'svelte-fa';
-  import { faSpinner, faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
+  import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+  import {
+    faSpinner as faSpinnerV7,
+    faCheckCircle as faCheckCircleV7,
+    faExclamationCircle as faExclamationCircleV7,
+  } from '@fortawesome/free-solid-svg-icons';
+
+  // free-solid-svg-icons v7 bundles its own fontawesome-common-types, whose
+  // IconDefinition is not assignable to the v6 one svelte-fa expects. The
+  // runtime shape is identical, so cast to the v6 type.
+  const faSpinner = faSpinnerV7 as unknown as IconDefinition;
+  const faCheckCircle = faCheckCircleV7 as unknown as IconDefinition;
+  const faExclamationCircle = faExclamationCircleV7 as unknown as IconDefinition;
 
   export let color: 'blue' | 'red' | 'transparent' | '' = 'blue';
   export let label: string = '';

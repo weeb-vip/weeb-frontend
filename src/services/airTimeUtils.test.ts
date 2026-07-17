@@ -11,7 +11,7 @@ import {
   getAirTimeInfo,
   findNextEpisode,
   getAirTimeDisplay,
-  Episode
+  type Episode
 } from "./airTimeUtils";
 import currentlyAiring from '../../currentlyaired.json';
 

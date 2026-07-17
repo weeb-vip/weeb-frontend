@@ -1,8 +1,18 @@
 import { createMutation } from '@tanstack/svelte-query';
+import { get } from 'svelte/store';
 import { toast } from 'svelte-sonner';
-import type { UserAnimeInput } from "../../gql/graphql";
+import { Status, type UserAnimeInput } from "../../gql/graphql";
 import { getQueryClient } from '../services/query-client';
 import { upsertAnime as upsertAnimeQuery, deleteAnime as deleteAnimeQuery } from "../../services/queries";
+import type { loggedInStore, loginModalStore } from '../stores/auth';
+
+declare global {
+  interface Window {
+    loggedInStore?: typeof loggedInStore;
+    loginModalStore?: typeof loginModalStore;
+    loggedInStoreValue?: { isLoggedIn: boolean; isAuthInitialized: boolean };
+  }
+}
 
 /**
  * Enhanced anime mutations with consistent toast error handling
@@ -61,7 +71,7 @@ export function useAddAnimeWithToast() {
               }
             },
             duration: 8000
-          }, queryClient);
+          });
         } else {
           // User is logged in but still got auth error, show generic error
           toast.error('Authentication error. Please try again.');
@@ -126,7 +136,7 @@ export function useDeleteAnimeWithToast() {
               }
             },
             duration: 8000
-          }, queryClient);
+          });
         } else {
           // User is logged in but still got auth error, show generic error
           toast.error('Authentication error. Please try again.');
@@ -147,29 +157,29 @@ export function useQuickAddAnime() {
 
   return {
     addToPlanToWatch: (animeId: string) => {
-      return addMutation.mutate({
+      return get(addMutation).mutate({
         input: {
           animeID: animeId,
-          status: 'PLAN_TO_WATCH'
+          status: Status.Plantowatch
         }
-      }, queryClient);
+      });
     },
     addToWatching: (animeId: string) => {
-      return addMutation.mutate({
+      return get(addMutation).mutate({
         input: {
           animeID: animeId,
-          status: 'WATCHING'
+          status: Status.Watching
         }
-      }, queryClient);
+      });
     },
     addToCompleted: (animeId: string) => {
-      return addMutation.mutate({
+      return get(addMutation).mutate({
         input: {
           animeID: animeId,
-          status: 'COMPLETED'
+          status: Status.Completed
         }
-      }, queryClient);
+      });
     },
-    isLoading: addMutation.isPending
+    isLoading: get(addMutation).isPending
   };
 }

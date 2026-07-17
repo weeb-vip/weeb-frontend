@@ -7,6 +7,7 @@
   import { initializeQueryClient } from '../services/query-client';
   import { fetchSeasonalAnime } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
+  import { Status } from '../../gql/graphql';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import SafeImage from './SafeImage.svelte';
@@ -99,7 +100,7 @@
 
   function handleAddAnime(id: string, animeId: string) {
     animeStatuses[id] = 'loading';
-    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: 'PLANTOWATCH' } });
+    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: Status.Plantowatch } });
   }
 
   function handleStatusChange(event: CustomEvent) {

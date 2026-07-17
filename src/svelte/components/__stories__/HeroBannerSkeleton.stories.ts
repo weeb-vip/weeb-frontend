@@ -8,7 +8,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<HeroBannerSkeleton>;
+} satisfies Meta<typeof HeroBannerSkeleton>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

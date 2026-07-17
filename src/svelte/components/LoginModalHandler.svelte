@@ -23,8 +23,11 @@
       isClient = true; // Still show modal without TanStack Query
     }
 
-    // Subscribe to modal state
-    const unsubscribe = loginModalStore.subscribe(state => {
+    // Subscribe to modal state.
+    // NOTE: async onMount callbacks cannot register cleanup functions
+    // (Svelte ignores the promise-resolved value), so no cleanup is
+    // returned here — matching the previous runtime behavior.
+    loginModalStore.subscribe(state => {
       isOpen = state.isOpen;
       isRegisterMode = state.register;
     });
@@ -40,12 +43,6 @@
 
     window.addEventListener('openLogin', handleOpenLogin);
     window.addEventListener('openRegister', handleOpenRegister);
-
-    return () => {
-      unsubscribe();
-      window.removeEventListener('openLogin', handleOpenLogin);
-      window.removeEventListener('openRegister', handleOpenRegister);
-    };
   });
 
   function closeModal() {

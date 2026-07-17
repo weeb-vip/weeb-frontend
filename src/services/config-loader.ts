@@ -68,19 +68,20 @@ async function initializeConfigSSR(): Promise<IConfig> {
       throw new Error(`Failed to fetch config: ${response.status}`);
     }
 
-    configData = await response.json();
+    const loadedConfig: IConfig = await response.json();
+    configData = loadedConfig;
     if (isDev) {
-      console.log('[SSR] 🔧 Config loaded:', configData);
+      console.log('[SSR] 🔧 Config loaded:', loadedConfig);
     }
 
     // Set on globalThis for compatibility
     // @ts-ignore
-    globalThis.config = configData;
+    globalThis.config = loadedConfig;
 
     if (isDev) {
       console.log('[SSR] Config loaded successfully');
     }
-    return configData;
+    return loadedConfig;
   } catch (error) {
     console.error('[SSR] Failed to load config:', error);
     throw error;

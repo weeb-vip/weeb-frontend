@@ -21,7 +21,7 @@ const meta = {
       options: ['default', 'hover', 'hover-transparent', 'transparent', 'long', 'detail', 'episode'],
     },
   },
-} satisfies Meta<AnimeCardSkeleton>;
+} satisfies Meta<typeof AnimeCardSkeleton>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

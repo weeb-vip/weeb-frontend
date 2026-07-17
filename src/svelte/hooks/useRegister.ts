@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import type { LoginInput } from "../../gql/graphql";
-import { register } from "../../services/queries";
+import { mutationRegister } from "../../services/api/graphql/queries";
 import debug from "../../utils/debug";
 
 interface RegisterState {
@@ -27,7 +27,7 @@ export function useRegister() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query: register().query,
+          query: mutationRegister,
           variables: { input }
         })
       });

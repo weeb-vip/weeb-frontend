@@ -41,6 +41,11 @@
     [Status.Watching]: "Watching"
   };
 
+  // Mutate options shape used when wrapping the consolidated mutations below
+  type MutateCallbacks = {
+    onSuccess?: (data: unknown, variables: unknown) => void;
+  };
+
   // Client-side only queries and mutations
   let userAnimesQuery: any;
   let upsertAnimeMutation: any;
@@ -70,7 +75,7 @@
 
     // Extend mutations with custom query invalidation for user animes
     const originalUpsertMutate = upsertAnimeMutation.mutate;
-    upsertAnimeMutation.mutate = (variables, options = {}) => {
+    upsertAnimeMutation.mutate = (variables: unknown, options: MutateCallbacks = {}) => {
       const originalOnSuccess = options.onSuccess;
       options.onSuccess = (data, vars) => {
         // Invalidate user animes query to update the list
@@ -81,7 +86,7 @@
     };
 
     const originalDeleteMutate = deleteAnimeMutation.mutate;
-    deleteAnimeMutation.mutate = (variables, options = {}) => {
+    deleteAnimeMutation.mutate = (variables: unknown, options: MutateCallbacks = {}) => {
       const originalOnSuccess = options.onSuccess;
       options.onSuccess = (data, vars) => {
         // Invalidate user animes query to update the list

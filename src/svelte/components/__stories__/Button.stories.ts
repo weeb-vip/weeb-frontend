@@ -15,7 +15,7 @@ const meta = {
       options: ['idle', 'loading', 'success', 'error'],
     },
   },
-} satisfies Meta<Button>;
+} satisfies Meta<typeof Button>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

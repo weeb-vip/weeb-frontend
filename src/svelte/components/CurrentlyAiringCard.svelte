@@ -56,6 +56,7 @@
     episodeNumber={episodeNumber}
     description={anime.description || ''}
     tags={anime.tags || []}
+    episodes=""
     episodeLength=""
     year=""
     image={GetImageFromAnime(anime)}

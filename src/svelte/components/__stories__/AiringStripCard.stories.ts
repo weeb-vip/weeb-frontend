@@ -8,7 +8,7 @@ const meta = {
   argTypes: {
     isLive: { control: 'boolean' },
   },
-} satisfies Meta<AiringStripCard>;
+} satisfies Meta<typeof AiringStripCard>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

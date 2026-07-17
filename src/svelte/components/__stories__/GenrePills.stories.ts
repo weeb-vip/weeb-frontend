@@ -5,7 +5,7 @@ const meta = {
   title: 'Design System/GenrePills',
   component: GenrePills,
   tags: ['autodocs'],
-} satisfies Meta<GenrePills>;
+} satisfies Meta<typeof GenrePills>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

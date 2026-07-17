@@ -279,7 +279,7 @@
 
     try {
       const algoliasearchModule = await import('algoliasearch/lite');
-      if (typeof algoliasearchModule.default === 'function') {
+      if ('default' in algoliasearchModule && typeof algoliasearchModule.default === 'function') {
         algoliasearch = algoliasearchModule.default;
       } else if (algoliasearchModule.liteClient) {
         algoliasearch = algoliasearchModule.liteClient;
@@ -513,7 +513,7 @@
 
   // Generate year options
   $: yearOptions = (() => {
-    const years = [];
+    const years: number[] = [];
     for (let y = new Date().getFullYear() + 1; y >= 1990; y--) {
       years.push(y);
     }
@@ -584,14 +584,14 @@
 
     <div class="filter-row filter-row--controls">
       <!-- Status -->
-      <select class="filter-select" bind:value={selectedStatus} on:change={performSearch}>
+      <select class="filter-select" bind:value={selectedStatus} on:change={() => performSearch()}>
         {#each STATUSES as status}
           <option value={status.value}>{status.label}</option>
         {/each}
       </select>
 
       <!-- Year -->
-      <select class="filter-select" bind:value={selectedYear} on:change={performSearch}>
+      <select class="filter-select" bind:value={selectedYear} on:change={() => performSearch()}>
         <option value="">All years</option>
         {#each yearOptions as year}
           <option value={year.toString()}>{year}</option>

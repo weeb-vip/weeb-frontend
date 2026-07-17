@@ -8,6 +8,13 @@
 
   type FilterType = 'all' | 'main' | 'supporting' | 'minor';
 
+  const filterOptions: { key: FilterType; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'main', label: 'Main' },
+    { key: 'supporting', label: 'Supporting' },
+    { key: 'minor', label: 'Minor' }
+  ];
+
   let filter: FilterType = 'all';
   let expandedCharacters = new Set<string>();
 
@@ -104,12 +111,7 @@
   <div class="chars-root">
     <!-- Filter pills -->
     <div class="chars-filters">
-      {#each [
-        { key: 'all', label: 'All' },
-        { key: 'main', label: 'Main' },
-        { key: 'supporting', label: 'Supporting' },
-        { key: 'minor', label: 'Minor' }
-      ] as { key, label }}
+      {#each filterOptions as { key, label }}
         <button
           on:click={() => filter = key}
           class="filter-pill"

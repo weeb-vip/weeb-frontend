@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
-  import { animate, stagger, spring } from 'motion';
+  import { animate, stagger } from 'motion';
   import AutocompleteItem from './AutocompleteItem.svelte';
   import { configStore } from '../stores/config';
   import { analytics } from '../../utils/analytics';
@@ -65,7 +65,7 @@
         const presetModule = await import('@algolia/autocomplete-preset-algolia');
 
         // Handle both default and named exports for algoliasearch
-        if (typeof algoliasearchModule.default === 'function') {
+        if ('default' in algoliasearchModule && typeof algoliasearchModule.default === 'function') {
           algoliasearch = algoliasearchModule.default;
         } else if (typeof algoliasearchModule === 'function') {
           algoliasearch = algoliasearchModule;
@@ -132,7 +132,7 @@
         // Algolia initialized successfully
 
         // Add environment event listeners for both mobile and desktop
-        const cleanupFunctions = [];
+        const cleanupFunctions: Array<() => void> = [];
 
         // Setup mobile environment props
         if (mobileFormRef && mobileInputRef && mobilePanelRef) {
@@ -222,7 +222,7 @@
     // Animate backdrop in with Motion
     animate(backdrop,
       { opacity: [0, 1] },
-      { duration: 0.3, easing: 'ease-out' }
+      { duration: 0.3, ease: 'easeOut' }
     );
   }
 
@@ -233,7 +233,7 @@
       // Animate backdrop out before removing
       animate(backdrop,
         { opacity: [1, 0] },
-        { duration: 0.2, easing: 'ease-in' }
+        { duration: 0.2, ease: 'easeIn' }
       ).then(() => {
         backdrop.remove();
       });
@@ -255,7 +255,7 @@
     if (container) {
       animate(container,
         { scale: [1, 1.02, 1] },
-        { duration: 0.4, easing: spring({ stiffness: 300, damping: 25 }) }
+        { type: 'spring', stiffness: 300, damping: 25 }
       );
     }
 
@@ -265,7 +265,7 @@
       if (panel && autocompleteState.isOpen) {
         animate(panel,
           { opacity: [0, 1], y: [-10, 0], scale: [0.95, 1] },
-          { duration: 0.3, easing: spring({ stiffness: 400, damping: 30 }) }
+          { type: 'spring', stiffness: 400, damping: 30 }
         );
       }
     }, 10);
@@ -277,7 +277,7 @@
     if (panel && autocompleteState.isOpen) {
       animate(panel,
         { opacity: [1, 0], y: [0, -10] },
-        { duration: 0.2, easing: 'ease-out' }
+        { duration: 0.2, ease: 'easeOut' }
       );
     }
 
@@ -336,7 +336,7 @@
       if (panel && autocompleteState.isOpen) {
         animate(panel,
           { opacity: [1, 0], y: [0, -10] },
-          { duration: 0.2, easing: 'ease-out' }
+          { duration: 0.2, ease: 'easeOut' }
         );
       }
 
@@ -377,20 +377,17 @@
   $: if (autocompleteState.collections && autocompleteState.collections.length > 0) {
     setTimeout(() => {
       const items = document.querySelectorAll('[data-autocomplete-item]');
-      if (items.length > 0 && typeof animate === 'function' && typeof stagger === 'function' && typeof spring === 'function') {
+      if (items.length > 0 && typeof animate === 'function' && typeof stagger === 'function') {
         try {
           const animationOptions: any = {
-            duration: 0.4
+            type: 'spring',
+            stiffness: 300,
+            damping: 25
           };
 
           // Only add delay if stagger is properly defined
           if (stagger) {
             animationOptions.delay = stagger(0.05);
-          }
-
-          // Only add easing if spring is properly defined
-          if (spring) {
-            animationOptions.easing = spring({ stiffness: 300, damping: 25 });
           }
 
           animate(
@@ -410,7 +407,7 @@
     // Animate in
     animate(node,
       { opacity: [0, 1] },
-      { duration: 0.3, easing: 'ease-out' }
+      { duration: 0.3, ease: 'easeOut' }
     );
 
     return {
@@ -419,7 +416,7 @@
         if (node.parentNode) {
           animate(node,
             { opacity: [1, 0] },
-            { duration: 0.2, easing: 'ease-in' }
+            { duration: 0.2, ease: 'easeIn' }
           );
         }
       }
@@ -457,8 +454,7 @@
       class="ac-simple-input"
       on:keydown={(e) => {
         if (e.key === 'Enter') {
-          const target = e.target;
-          const query = target.value;
+          const query = e.currentTarget.value;
           if (query.trim()) {
             analytics.searchPerformed(query.trim(), 0);
             goto(`/search?query=${encodeURIComponent(query.trim())}`);
