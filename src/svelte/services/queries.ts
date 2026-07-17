@@ -57,18 +57,24 @@ export const queryKeys = {
 // AUTH QUERIES & MUTATIONS
 // ============================================================================
 
+// The generated SigninResult type only declares id + Credentials, but the
+// login response may also carry a user object at runtime.
+type SigninResultWithUser = SigninResult & {
+  user?: { id: string; username?: string; email?: string } | null;
+};
+
 export function useLogin() {
   return createMutation({
-    mutationFn: async (input: LoginInput): Promise<SigninResult> => {
+    mutationFn: async (input: LoginInput): Promise<SigninResultWithUser> => {
       debug.auth("Starting Svelte login mutation");
 
       // Use the existing React query structure
       const queryConfig = loginQuery();
       const response = await queryConfig.mutationFn({ input });
 
-      return response;
+      return response as SigninResultWithUser;
     },
-    onSuccess: (data: SigninResult) => {
+    onSuccess: (data: SigninResultWithUser) => {
       debug.auth("Svelte login successful");
 
       // Server sets HttpOnly cookies automatically
@@ -107,7 +113,7 @@ export function useLogin() {
       // Start token refresher
       TokenRefresher.getInstance(async () => {
         return refreshTokenSimple();
-      }).start(data.Credentials.token);
+      }).start(data.Credentials.token!);
 
       // Invalidate all user-related queries to refresh data
       try {
@@ -223,7 +229,7 @@ export function useUpdateUser() {
   return createMutation({
     mutationFn: async (input: UpdateUserInput) => {
       const queryConfig = updateUserDetailsQuery();
-      return queryConfig.mutationFn({ input });
+      return queryConfig.mutationFn(input);
     },
     onSuccess: () => {
       // Invalidate user queries to refetch updated data
@@ -235,7 +241,7 @@ export function useUpdateUser() {
 export function useUserAnimes(variables: UserAnimesQueryVariables) {
   return createQuery({
     queryKey: queryKeys.userAnimes(variables),
-    queryFn: async (): Promise<UserAnimesQuery> => {
+    queryFn: async (): Promise<UserAnimesQuery['UserAnimes']> => {
       const queryConfig = userAnimesQuery(variables);
       return queryConfig.queryFn();
     },
@@ -299,7 +305,7 @@ export function useDeleteAnime() {
   return createMutation({
     mutationFn: async (animeId: string) => {
       const queryConfig = deleteAnimeQuery();
-      return queryConfig.mutationFn({ animeId });
+      return queryConfig.mutationFn(animeId);
     },
     onSuccess: () => {
       // Invalidate user anime queries

@@ -5,7 +5,7 @@ const meta = {
   title: 'Design System/Skeleton',
   component: Skeleton,
   tags: ['autodocs'],
-} satisfies Meta<Skeleton>;
+} satisfies Meta<typeof Skeleton>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

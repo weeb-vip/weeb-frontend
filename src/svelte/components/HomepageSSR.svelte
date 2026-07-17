@@ -15,6 +15,8 @@
     fetchSeasonalAnime, fetchCurrentlyAiringWithDates
   } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
+  import { Status } from '../../gql/graphql';
+  import type { UserAnimeInput } from '../../gql/graphql';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
@@ -31,6 +33,14 @@
   import '@fortawesome/fontawesome-free/css/all.min.css';
 
   // SSR props
+  type DebugWindow = Window & { refreshHomepageData?: () => void };
+
+  type UpsertMutateOptions = {
+    onSuccess?: (data: unknown, vars: { animeID: string }) => void;
+    onError?: (error: unknown, vars: { animeID: string }) => void;
+  };
+  type UpsertMutateFn = (variables: { input: UserAnimeInput }, options?: UpsertMutateOptions) => unknown;
+
   export let homeData: any;
   export let currentlyAiringData: any;
   export let seasonalData: any;
@@ -211,7 +221,7 @@
     window.addEventListener('authStateChanged', handleLoginSuccess);
 
     // Expose refresh function globally for debugging/integration
-    window.refreshHomepageData = refreshAllData;
+    (window as DebugWindow).refreshHomepageData = refreshAllData;
 
     // Background prefetch next two seasons for instant switching
     if (seasonOptions.length > 1) {
@@ -235,7 +245,7 @@
       clearInterval(tokenCheckInterval);
       window.removeEventListener('loginSuccess', handleLoginSuccess);
       window.removeEventListener('authStateChanged', handleLoginSuccess);
-      delete window.refreshHomepageData;
+      delete (window as DebugWindow).refreshHomepageData;
     };
   });
 
@@ -245,8 +255,9 @@
   const deleteAnimeMutation = useDeleteAnimeWithToast();
 
   // Extend upsert mutation with custom status tracking callbacks
-  const originalUpsertMutate = upsertAnimeMutation.mutate;
-  upsertAnimeMutation.mutate = (variables, options = {}) => {
+  const patchableUpsertMutation = upsertAnimeMutation as typeof upsertAnimeMutation & { mutate: UpsertMutateFn };
+  const originalUpsertMutate = patchableUpsertMutation.mutate;
+  patchableUpsertMutation.mutate = (variables, options = {}) => {
     // Update status tracking on success
     const originalOnSuccess = options.onSuccess;
     options.onSuccess = (data, vars) => {
@@ -376,7 +387,7 @@
 
   function handleAddAnime(id: string, animeId: string) {
     animeStatuses[id] = 'loading';
-    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: 'PLANTOWATCH' } });
+    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: Status.Plantowatch } });
   }
 
   // Process currently airing data from queries (with SSR fallback)

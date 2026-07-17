@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { AnimeForNotification, NotificationCallback, CountdownCallback } from './animeNotifications';
+import type { AnimeForNotification, NotificationCallback, CountdownCallback } from './animeNotifications';
 
 // Mock the debug utility
 const mockDebug = {

@@ -21,7 +21,7 @@ const meta = {
       options: ['default', 'hover', 'hover-transparent', 'transparent', 'long', 'detail', 'episode'],
     },
   },
-} satisfies Meta<AnimeCard>;
+} satisfies Meta<typeof AnimeCard>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

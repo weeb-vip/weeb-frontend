@@ -1,6 +1,13 @@
 <script lang="ts">
   import { faUser, faArrowLeft, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+  import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
   import Fa from 'svelte-fa';
+
+  // free-solid-svg-icons v7 bundles a newer fontawesome-common-types than
+  // svelte-fa/svg-core (v6) expect; the runtime icon shape is compatible.
+  const iconUser = faUser as unknown as IconDefinition;
+  const iconArrowLeft = faArrowLeft as unknown as IconDefinition;
+  const iconEnvelope = faEnvelope as unknown as IconDefinition;
   import FormInput from './FormInput.svelte';
   import Button from './Button.svelte';
   import { useResendVerificationEmail } from '../services/queries';
@@ -115,7 +122,7 @@
           on:input={handleInputChange}
           placeholder="Email address"
           label="Email address"
-          icon={faUser}
+          icon={iconUser}
           required
         />
       </div>
@@ -129,7 +136,7 @@
       {#if successMessage}
         <div class="bg-weeb-green/10 border border-weeb-green rounded-md p-3">
           <div class="flex items-center">
-            <Fa icon={faEnvelope} class="text-weeb-green mr-2" />
+            <Fa icon={iconEnvelope} class="text-weeb-green mr-2" />
             <p class="text-sm text-weeb-green">{successMessage}</p>
           </div>
         </div>
@@ -169,7 +176,7 @@
           href="/"
           class="text-sm text-weeb-fg-muted hover:text-weeb-fg transition-colors inline-flex items-center"
         >
-          <Fa icon={faArrowLeft} class="mr-2" />
+          <Fa icon={iconArrowLeft} class="mr-2" />
           Back to Home
         </a>
       </div>

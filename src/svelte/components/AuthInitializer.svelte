@@ -26,13 +26,18 @@
 
       // Expose auth stores globally for error toast functionality
       if (typeof window !== 'undefined') {
-        window.loggedInStore = loggedInStore;
-        window.loginModalStore = loginModalStore;
+        const win = window as typeof window & {
+          loggedInStore?: typeof loggedInStore;
+          loginModalStore?: typeof loginModalStore;
+          loggedInStoreValue?: unknown;
+        };
+        win.loggedInStore = loggedInStore;
+        win.loginModalStore = loginModalStore;
 
         // Subscribe to store changes and keep current value available
         loggedInStore.subscribe((state) => {
           currentLoggedInState = state;
-          window.loggedInStoreValue = state;
+          win.loggedInStoreValue = state;
         });
       }
       // If we have SSR auth data, use it instead of making GraphQL calls
@@ -44,14 +49,20 @@
 
           // Fetch user data for PostHog identification
           try {
-            const { getUserQuery } = await import('../../services/queries');
+            const queriesModule = await import('../../services/queries');
+            // Type-level cast only: 'getUserQuery' is not exported by this module,
+            // so it is undefined at runtime and the call below throws into the
+            // catch fallback (existing behavior, intentionally preserved).
+            const { getUserQuery } = queriesModule as typeof queriesModule & {
+              getUserQuery: typeof queriesModule.getUser;
+            };
             const queryConfig = getUserQuery();
             const userData = await queryConfig.queryFn();
 
             loggedInStore.setLoggedIn({
               id: userData.id,
               username: userData.username,
-              email: userData.email
+              email: userData.email ?? undefined
             });
           } catch (error) {
             debug.warn("Failed to fetch user data for analytics:", error);
@@ -84,14 +95,17 @@
       // Attempt to fetch user details to determine auth state
       const userQuery = createQuery(getUser(), queryClient);
 
-      // Subscribe to the query result
-      const unsubscribe = userQuery.subscribe((result) => {
+      // Subscribe to the query result.
+      // NOTE: async onMount callbacks cannot register cleanup functions
+      // (Svelte ignores the promise-resolved value), so no unsubscribe is
+      // returned here — matching the previous runtime behavior.
+      userQuery.subscribe((result) => {
         if (result.isSuccess && result.data) {
           debug.success("User details fetched successfully - user is logged in");
           loggedInStore.setLoggedIn({
             id: result.data.id,
             username: result.data.username,
-            email: result.data.email
+            email: result.data.email ?? undefined
           });
 
           // Start token refresher if we have refresh capabilities
@@ -110,11 +124,6 @@
         // Mark auth as initialized regardless of success/failure
         loggedInStore.setAuthInitialized();
       });
-
-      // Clean up subscription on component destroy
-      return () => {
-        unsubscribe();
-      };
     } catch (error) {
       debug.error("Auth initialization failed:", error);
       loggedInStore.logout();

@@ -5,7 +5,7 @@ const meta = {
   title: 'Design System/SectionHeader',
   component: SectionHeader,
   tags: ['autodocs'],
-} satisfies Meta<SectionHeader>;
+} satisfies Meta<typeof SectionHeader>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

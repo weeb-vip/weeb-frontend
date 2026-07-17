@@ -53,7 +53,7 @@ function createPreferencesStore() {
     // Toggle between English and Japanese titles
     toggleTitleLanguage: () => {
       update(prefs => {
-        const newPrefs = {
+        const newPrefs: PreferencesState = {
           ...prefs,
           titleLanguage: prefs.titleLanguage === 'english' ? 'japanese' : 'english'
         };

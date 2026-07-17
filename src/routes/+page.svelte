@@ -17,11 +17,9 @@
 </svelte:head>
 
 <HomepageSSR
-  auth={data.auth}
   homeData={data.homeData}
   currentlyAiringData={data.currentlyAiringData}
   seasonalData={data.seasonalData}
   currentSeason={data.currentSeason}
-  ssrError={data.ssrError}
   isTokenExpired={data.isTokenExpired}
 />

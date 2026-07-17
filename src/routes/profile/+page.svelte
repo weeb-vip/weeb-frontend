@@ -11,4 +11,4 @@
   noIndex={true}
 />
 
-<ProfilePage ssrAuth={data.auth} />
+<ProfilePage />

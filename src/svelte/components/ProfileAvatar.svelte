@@ -9,7 +9,7 @@
 
   let imageError = false;
 
-  const config = getContext('config') || { cdn_user_url: '' };
+  const config = getContext<{ cdn_user_url: string } | undefined>('config') || { cdn_user_url: '' };
 
   function getInitial(): string {
     if (!username) return '?';

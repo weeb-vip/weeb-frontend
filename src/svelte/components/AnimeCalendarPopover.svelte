@@ -120,7 +120,6 @@
       episodeLength={anime.duration ? anime.duration.replace(/per.+?$/, "") : "?"}
       image={GetImageFromAnime(anime)}
       className="hover:cursor-pointer"
-      onClick={navigateToShow}
       year={getYearUTC(anime.startDate)}
       airdate={anime.episodeAirTime ? format(anime.episodeAirTime, "EEE MMM do 'at' h:mm a") : anime.episodes[0]?.airDate ? format(new Date(anime.episodes[0].airDate), "EEE MMM do") : "Unknown"}
       episodeTitle={anime.episodes[0]?.titleEn || anime.episodes[0]?.titleJp || "Unknown"}

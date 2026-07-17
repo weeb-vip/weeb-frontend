@@ -1,8 +1,14 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import Fa from 'svelte-fa';
-  import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+  import { faEye as faEyeV7, faEyeSlash as faEyeSlashV7 } from '@fortawesome/free-solid-svg-icons';
   import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+
+  // free-solid-svg-icons v7 bundles its own fontawesome-common-types, whose
+  // IconDefinition is not assignable to the v6 one svelte-fa expects. The
+  // runtime shape is identical, so cast to the v6 type.
+  const faEye = faEyeV7 as unknown as IconDefinition;
+  const faEyeSlash = faEyeSlashV7 as unknown as IconDefinition;
 
   export let id: string;
   export let name: string;

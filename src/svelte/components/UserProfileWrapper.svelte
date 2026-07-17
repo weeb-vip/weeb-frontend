@@ -12,6 +12,16 @@
   export let isMobile: boolean = false;
   export let onProfileClick: (() => void) | null = null;
 
+  // Shape expected by ProfileDropdown's `user` prop
+  type ProfileUser = {
+    id: string;
+    username: string;
+    firstname: string;
+    lastname: string;
+    email?: string | null;
+    profileImageUrl?: string | null;
+  };
+
   let isLoggedIn = false;
 
   // Subscribe to auth state
@@ -35,11 +45,15 @@
 
   // Fallback user data when query fails but we're actually logged in
   // Only use fallback if user query specifically failed with access denied
+  // The fallback intentionally only carries the fields we render; cast to the
+  // dropdown's expected shape (unchanged runtime behavior).
   $: fallbackUser = hasError && isLoggedIn && userQuery &&
-    $userQuery?.error?.message?.includes('Access denied') ? {
+    $userQuery?.error?.message?.includes('Access denied') ? ({
     username: 'User',
     profileImageUrl: null
-  } : null;
+  } as Partial<ProfileUser> as ProfileUser) : null;
+
+  $: displayUser = user || fallbackUser;
 
   function handleMobileProfileClick() {
     openMobileDrawer();
@@ -66,8 +80,7 @@
         <div class="w-16 h-4 bg-weeb-surface rounded animate-pulse"></div>
       {/if}
     </div>
-  {:else if user || fallbackUser}
-    {@const displayUser = user || fallbackUser}
+  {:else if displayUser}
     {#if isMobile}
       <!-- Mobile: Just avatar that opens menu -->
       <button class="p-2" aria-label="Open menu" on:click={handleMobileProfileClick}>

@@ -180,7 +180,6 @@
       <AnimeActions
         {anime}
         variant="hero"
-        statusKey="hero-{anime.id}"
       />
     </div>
   </div>

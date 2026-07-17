@@ -5,12 +5,23 @@ import { getCurrentlyAiringWithDates } from '../../services/api/graphql/queries'
 import { animeToast } from '../utils/animeToast';
 import debug from '../../utils/debug';
 
+declare global {
+  interface Window {
+    __animeNotificationsInitialized?: boolean;
+    __animeNotificationsComponentMounted?: boolean;
+  }
+}
+
+// Matches the (unexported) AnimeData/EpisodeData parameter types of animeToast
+type ToastAnimeParam = Parameters<typeof animeToast.warning>[0];
+type ToastEpisodeParam = Parameters<typeof animeToast.warning>[1];
+
 // Notification tracking with localStorage and TTL
 interface NotificationRecord {
   timestamp: number;
   type: string;
   animeId: string;
-  episodeNumber?: number;
+  episodeNumber?: number | null;
 }
 
 class NotificationTracker {
@@ -43,7 +54,7 @@ class NotificationTracker {
     }
   }
 
-  hasBeenSent(type: string, animeId: string, episodeNumber?: number): boolean {
+  hasBeenSent(type: string, animeId: string, episodeNumber?: number | null): boolean {
     const records = this.getRecords();
     return records.some(r =>
       r.type === type &&
@@ -52,7 +63,7 @@ class NotificationTracker {
     );
   }
 
-  markAsSent(type: string, animeId: string, episodeNumber?: number): void {
+  markAsSent(type: string, animeId: string, episodeNumber?: number | null): void {
     if (typeof window === 'undefined') return;
 
     try {
@@ -117,25 +128,30 @@ class AnimeNotificationManager {
           // Mark as sent before showing to prevent rapid duplicates
           this.tracker.markAsSent(type, anime.id, episode?.episodeNumber);
 
+          // animeToast accepts the same shapes at runtime; its parameter types
+          // just use `undefined` where the notification callback allows `null`
+          const toastAnime = anime as AnimeForNotification & ToastAnimeParam;
+          const toastEpisode = episode as typeof episode & ToastEpisodeParam;
+
           switch (type) {
             case 'warning':
               debug.info('🔔 Showing warning toast');
-              animeToast.warning(anime, episode);
+              animeToast.warning(toastAnime, toastEpisode);
               break;
 
             case 'airing-soon':
               debug.info('🔔 Showing airing-soon toast');
-              animeToast.airingSoon(anime, episode, 30);
+              animeToast.airingSoon(toastAnime, toastEpisode, 30);
               break;
 
             case 'airing':
               debug.info('🔔 Showing now airing toast');
-              animeToast.nowAiring(anime, episode);
+              animeToast.nowAiring(toastAnime, toastEpisode);
               break;
 
             case 'finished-airing':
               debug.info('🔔 Showing finished airing toast');
-              animeToast.finished(anime, episode);
+              animeToast.finished(toastAnime, toastEpisode);
               break;
 
             default:

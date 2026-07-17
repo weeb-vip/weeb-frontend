@@ -1,7 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { faEnvelope, faUser, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+  import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
   import Fa from 'svelte-fa';
+
+  // free-solid-svg-icons v7 bundles a newer fontawesome-common-types than
+  // svelte-fa/svg-core (v6) expect; the runtime icon shape is compatible.
+  const iconEnvelope = faEnvelope as unknown as IconDefinition;
+  const iconUser = faUser as unknown as IconDefinition;
+  const iconArrowLeft = faArrowLeft as unknown as IconDefinition;
   import FormInput from './FormInput.svelte';
   import Button from './Button.svelte';
   import { initializeQueryClient } from '../services/query-client';
@@ -110,7 +117,7 @@
       <!-- Success state -->
       <div class="text-center">
         <div class="mx-auto h-12 w-12 bg-weeb-green/15 rounded-full flex items-center justify-center mb-4">
-          <Fa icon={faEnvelope} class="text-weeb-green text-xl" />
+          <Fa icon={iconEnvelope} class="text-weeb-green text-xl" />
         </div>
         <h2 class="text-3xl font-bold text-weeb-fg">Check your email</h2>
         <p class="mt-4 text-weeb-fg-muted">
@@ -125,7 +132,7 @@
           href="/"
           class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-weeb-fg-muted hover:text-weeb-fg transition-colors"
         >
-          <Fa icon={faArrowLeft} class="mr-2" />
+          <Fa icon={iconArrowLeft} class="mr-2" />
           Back to Home
         </a>
       </div>
@@ -139,7 +146,7 @@
 
       <div>
         <div class="mx-auto h-12 w-12 bg-weeb-accent/15 rounded-full flex items-center justify-center">
-          <Fa icon={faEnvelope} class="text-weeb-accent text-xl" />
+          <Fa icon={iconEnvelope} class="text-weeb-accent text-xl" />
         </div>
         <h2 class="mt-6 text-center text-3xl font-bold text-weeb-fg">Reset your password</h2>
         <p class="mt-2 text-center text-sm text-weeb-fg-muted">
@@ -164,7 +171,7 @@
               on:input={handleInputChange}
               placeholder="Username"
               label="Username"
-              icon={faUser}
+              icon={iconUser}
               required
               disabled={disabled}
             />
@@ -177,7 +184,7 @@
               on:input={handleInputChange}
               placeholder="Email address"
               label="Email address"
-              icon={faEnvelope}
+              icon={iconEnvelope}
               required
               disabled={disabled}
             />

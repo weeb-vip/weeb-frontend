@@ -25,7 +25,7 @@ const meta = {
       options: ['watching', 'completed', 'plan_to_watch', 'dropped', 'on_hold', null],
     },
   },
-} satisfies Meta<PosterCard>;
+} satisfies Meta<typeof PosterCard>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

@@ -7,6 +7,8 @@
   import { initializeQueryClient } from '../services/query-client';
   import { fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
+  import { Status } from '../../gql/graphql';
+  import type { UserAnimeInput } from '../../gql/graphql';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
@@ -78,8 +80,14 @@
   const upsertAnimeMutation = useAddAnimeWithToast();
 
   // Extend with custom status tracking callbacks
-  const originalUpsertMutate = upsertAnimeMutation.mutate;
-  upsertAnimeMutation.mutate = (variables, options = {}) => {
+  type UpsertMutateOptions = {
+    onSuccess?: (data: unknown, vars: { animeID: string }) => void;
+    onError?: (error: unknown, vars: { animeID: string }) => void;
+  };
+  type UpsertMutateFn = (variables: { input: UserAnimeInput }, options?: UpsertMutateOptions) => unknown;
+  const patchableUpsertMutation = upsertAnimeMutation as typeof upsertAnimeMutation & { mutate: UpsertMutateFn };
+  const originalUpsertMutate = patchableUpsertMutation.mutate;
+  patchableUpsertMutation.mutate = (variables, options = {}) => {
     // Update status tracking on success
     const originalOnSuccess = options.onSuccess;
     options.onSuccess = (data, vars) => {
@@ -216,7 +224,7 @@
 
   function handleAddAnime(id: string, animeId: string) {
     animeStatuses[id] = 'loading';
-    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: 'PLANTOWATCH' } });
+    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: Status.Plantowatch } });
   }
 
   function navigateToShow(animeId: string) {
@@ -664,7 +672,7 @@
                       src={`https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(GetImageFromAnime(entry.airingInfo))}`}
                       alt={title}
                       loading="lazy"
-                      on:error={(e) => { e.currentTarget.style.display = 'none'; }}
+                      on:error={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                     />
                   </div>
                   <div class="show-info">
@@ -781,7 +789,7 @@
                     src={`https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(GetImageFromAnime(entry.airingInfo))}`}
                     alt={title}
                     loading="lazy"
-                    on:error={(e) => { e.currentTarget.style.display = 'none'; }}
+                    on:error={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                   />
                 </div>
                 <div class="cal-show-info">
