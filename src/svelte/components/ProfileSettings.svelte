@@ -2,13 +2,12 @@
   import { onMount } from 'svelte';
   import { createQuery, createMutation } from '@tanstack/svelte-query';
   import {
-    faUser as faUserSolid,
-    faEnvelope as faEnvelopeSolid,
-    faGlobe as faGlobeSolid,
-    faArrowLeft as faArrowLeftSolid,
-    faCheck as faCheckSolid
+    faUser,
+    faEnvelope,
+    faGlobe,
+    faArrowLeft,
+    faCheck
   } from '@fortawesome/free-solid-svg-icons';
-  import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
   import { getUser, updateUserDetails } from '../../services/queries';
   import { Language, type UpdateUserInput } from '../../gql/graphql';
   import { initializeQueryClient } from '../services/query-client';
@@ -16,15 +15,6 @@
   import FormInput from './FormInput.svelte';
   import Fa from 'svelte-fa';
   import debug from '../../utils/debug';
-
-  // Cast needed: @fortawesome/free-solid-svg-icons bundles its own (newer)
-  // @fortawesome/fontawesome-common-types whose IconDefinition is nominally
-  // incompatible with the one svelte-fa/fontawesome-svg-core resolves.
-  const faUser = faUserSolid as unknown as IconDefinition;
-  const faEnvelope = faEnvelopeSolid as unknown as IconDefinition;
-  const faGlobe = faGlobeSolid as unknown as IconDefinition;
-  const faArrowLeft = faArrowLeftSolid as unknown as IconDefinition;
-  const faCheck = faCheckSolid as unknown as IconDefinition;
 
   // Initialize query client
   const queryClient = initializeQueryClient();

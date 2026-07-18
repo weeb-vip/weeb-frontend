@@ -1,14 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { faEnvelope, faUser, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-  import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
   import Fa from 'svelte-fa';
 
-  // free-solid-svg-icons v7 bundles a newer fontawesome-common-types than
-  // svelte-fa/svg-core (v6) expect; the runtime icon shape is compatible.
-  const iconEnvelope = faEnvelope as unknown as IconDefinition;
-  const iconUser = faUser as unknown as IconDefinition;
-  const iconArrowLeft = faArrowLeft as unknown as IconDefinition;
+  const iconEnvelope = faEnvelope;
+  const iconUser = faUser;
+  const iconArrowLeft = faArrowLeft;
   import FormInput from './FormInput.svelte';
   import Button from './Button.svelte';
   import { initializeQueryClient } from '../services/query-client';

@@ -2988,17 +2988,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fortawesome/fontawesome-common-types@npm:6.4.0":
-  version: 6.4.0
-  resolution: "@fortawesome/fontawesome-common-types@npm:6.4.0"
-  checksum: 10c0/fa5028a04188ca3bb36ee14b2df65d382b3d7344fbfcd596315612370b292e0eafa7408ce6498ba675441e72b2a28d64afe20fdd93ebc755aa385d8dd619a63a
-  languageName: node
-  linkType: hard
-
 "@fortawesome/fontawesome-common-types@npm:7.0.1":
   version: 7.0.1
   resolution: "@fortawesome/fontawesome-common-types@npm:7.0.1"
   checksum: 10c0/1cebe9727950f8fcea581e115ed91f9b2bf287114077adde0cc1fb32d25c2c2ec282a8cff291b22ca558cbb1264af7fad04b85c5afcb899745584b2874df4151
+  languageName: node
+  linkType: hard
+
+"@fortawesome/fontawesome-common-types@npm:7.3.1":
+  version: 7.3.1
+  resolution: "@fortawesome/fontawesome-common-types@npm:7.3.1"
+  checksum: 10c0/f443a0109773e57ceab3c35021c4f26baf8c29afc79efbea2324bcd9f7dd326f5ac415e46ead17eaf6e935bc23fce83993d4211a4cff375c19100ee65ea9e5cc
   languageName: node
   linkType: hard
 
@@ -3009,12 +3009,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fortawesome/fontawesome-svg-core@npm:^6.4.0":
-  version: 6.4.0
-  resolution: "@fortawesome/fontawesome-svg-core@npm:6.4.0"
+"@fortawesome/fontawesome-svg-core@npm:^7.1.0":
+  version: 7.3.1
+  resolution: "@fortawesome/fontawesome-svg-core@npm:7.3.1"
   dependencies:
-    "@fortawesome/fontawesome-common-types": "npm:6.4.0"
-  checksum: 10c0/fae9957c4ac453c89b6b5654106db35733d110932d291d78b039e3e00419015245e40bd627cfa48156be995e5daa0782597be504fac40c53c76ab131f1424658
+    "@fortawesome/fontawesome-common-types": "npm:7.3.1"
+  checksum: 10c0/07c84a5751999d13d875f63e059ec2b0ab6dbed9cfe363fe8a870fd64e045c049367ae55bdee18973b38255967593d6eef403170a1e70cf4400de8216a932654
   languageName: node
   linkType: hard
 
@@ -17064,7 +17064,7 @@ __metadata:
     "@date-fns/tz": "npm:^1.4.1"
     "@date-fns/utc": "npm:^2.1.0"
     "@fortawesome/fontawesome-free": "npm:^6.4.0"
-    "@fortawesome/fontawesome-svg-core": "npm:^6.4.0"
+    "@fortawesome/fontawesome-svg-core": "npm:^7.1.0"
     "@fortawesome/free-solid-svg-icons": "npm:^7.0.1"
     "@graphql-codegen/cli": "npm:^3.3.1"
     "@graphql-codegen/client-preset": "npm:^3.0.1"
