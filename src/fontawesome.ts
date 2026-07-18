@@ -1,4 +1,4 @@
-import { library, config, type IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { library, config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 
 // Configure FontAwesome
@@ -37,10 +37,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to the library
-// Cast needed: @fortawesome/free-solid-svg-icons bundles its own (newer)
-// @fortawesome/fontawesome-common-types whose IconDefinition is nominally
-// incompatible with the one fontawesome-svg-core resolves.
-library.add(...([
+library.add(
   faBars,
   faSearch,
   faMoon,
@@ -67,4 +64,4 @@ library.add(...([
   faChevronUp,
   faEye,
   faEyeSlash
-] as unknown as IconDefinition[]))
+)
