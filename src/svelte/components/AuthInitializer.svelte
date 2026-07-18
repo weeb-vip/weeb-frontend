@@ -49,15 +49,7 @@
 
           // Fetch user data for PostHog identification
           try {
-            const queriesModule = await import('../../services/queries');
-            // Type-level cast only: 'getUserQuery' is not exported by this module,
-            // so it is undefined at runtime and the call below throws into the
-            // catch fallback (existing behavior, intentionally preserved).
-            const { getUserQuery } = queriesModule as typeof queriesModule & {
-              getUserQuery: typeof queriesModule.getUser;
-            };
-            const queryConfig = getUserQuery();
-            const userData = await queryConfig.queryFn();
+            const userData = await getUser().queryFn();
 
             loggedInStore.setLoggedIn({
               id: userData.id,
