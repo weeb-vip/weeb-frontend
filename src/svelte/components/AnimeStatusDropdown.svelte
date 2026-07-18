@@ -15,7 +15,6 @@
   export let variant: 'default' | 'compact' | 'hero' | 'icon-only' = 'default';
   export let className: string = '';
   export let buttonClassName: string = '';
-  export let deleteButtonClassName: string = '';
 
   const dispatch = createEventDispatcher();
 

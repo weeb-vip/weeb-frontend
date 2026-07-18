@@ -314,6 +314,7 @@
             <div
               class="anime-row"
               on:click={() => navigateToAnime(entry.anime?.id)}
+              on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateToAnime(entry.anime?.id); } }}
               role="button"
               tabindex="0"
             >
@@ -346,7 +347,8 @@
                   <div class="progress-fill" style="width: {pct}%; background: {statusColor};"></div>
                 </div>
               </div>
-              <div class="row-actions" on:click|stopPropagation>
+              <!-- Presentational wrapper: only stops row navigation events from firing when interacting with the dropdown inside -->
+              <div class="row-actions" role="presentation" on:click|stopPropagation on:keydown|stopPropagation>
                 <AnimeStatusDropdown
                   entry={{ id: entry.id, anime: entry.anime, status: entry.status }}
                   variant="compact"

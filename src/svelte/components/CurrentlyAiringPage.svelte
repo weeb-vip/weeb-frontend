@@ -16,8 +16,6 @@
 
   // SSR props
   export let ssrData: any = null;
-  export let ssrError: string | null = null;
-  export let isTokenExpired: boolean = false;
 
   // Initialize query client
   const queryClient = initializeQueryClient();
@@ -528,11 +526,10 @@
           {/each}
         </select>
 
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <label class="toggle-wrap" class:on={myListOnly} data-toggle="my-list" on:click={toggleMyListOnly} role="switch" aria-checked={myListOnly} tabindex="0">
+        <button type="button" class="toggle-wrap" class:on={myListOnly} data-toggle="my-list" on:click={toggleMyListOnly} role="switch" aria-checked={myListOnly}>
           <span class="toggle-switch"></span>
           My list only
-        </label>
+        </button>
       </div>
     </div>
   </div>
@@ -857,10 +854,13 @@
     align-items: center;
     gap: 8px;
     font-size: 13px;
+    font-family: inherit;
     color: var(--weeb-fg-muted);
     cursor: pointer;
     user-select: none;
     padding: 4px 0;
+    background: none;
+    border: none;
   }
   .toggle-wrap:hover { color: var(--weeb-fg-secondary); }
   .toggle-switch {

@@ -7,8 +7,8 @@
   <span>&copy; {new Date().getFullYear()} weeb.vip</span>
   <div class="footer-links">
     <a href="/about">About</a>
-    <a href="#">API</a>
-    <a href="#">GitHub</a>
+    <a href="https://gateway.weeb.vip/graphql">API</a>
+    <a href="https://github.com/weeb-vip">GitHub</a>
     <span class="version">v{version}</span>
   </div>
 </footer>

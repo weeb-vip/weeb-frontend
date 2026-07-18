@@ -366,7 +366,6 @@
       data-sources={sources.length > 0 ? JSON.stringify(sources) : undefined}
       on:error={handleSimpleError}
       on:load={handleSimpleLoad}
-      on:click
     />
   {/if}
 </div>

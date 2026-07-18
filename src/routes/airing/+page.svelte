@@ -10,8 +10,4 @@
   description="Discover what anime is currently airing this season. Get episode schedules, notifications, and add shows to your watchlist."
 />
 
-<CurrentlyAiringPage
-  ssrData={data.ssrData}
-  ssrError={data.ssrError}
-  isTokenExpired={data.isTokenExpired}
-/>
+<CurrentlyAiringPage ssrData={data.ssrData} />

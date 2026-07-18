@@ -49,9 +49,12 @@
   }
 </script>
 
+<!-- Wrapper is presentational: hover handlers only toggle a decorative
+     marquee animation; the tags themselves stay visible and accessible. -->
 <div
   bind:this={containerRef}
   class="overflow-hidden whitespace-nowrap relative {className}"
+  role="presentation"
   on:mouseenter={handleMouseEnter}
   on:mouseleave={handleMouseLeave}
 >

@@ -1088,88 +1088,8 @@
   =========================== */
 
   /* ===========================
-     FLOATING TAB BAR
+     FLOATING TAB BAR — all styles inline in markup to survive ViewTransition CSS loss
   =========================== */
-  .tab-bar {
-    position: sticky;
-    top: var(--weeb-nav-height, 60px);
-    z-index: 80;
-    background: oklch(14% 0.015 275 / 0.95);
-    border-bottom: 1px solid var(--weeb-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    transition: top 0.3s ease;
-  }
-
-  .tab-bar__inner {
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 0 var(--weeb-section-px, 48px);
-    display: flex;
-    gap: 0;
-  }
-
-  .tab-bar__tab {
-    background: none;
-    border: none;
-    color: var(--weeb-fg-muted);
-    font-family: var(--weeb-font);
-    font-size: 13px;
-    font-weight: 500;
-    padding: 14px 20px;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-  }
-
-  .tab-bar__tab:hover {
-    color: var(--weeb-fg-secondary);
-  }
-
-  .tab-bar__tab--active {
-    color: var(--weeb-fg);
-  }
-
-  .tab-bar__tab--active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 20px;
-    right: 20px;
-    height: 2px;
-    background: var(--weeb-accent);
-    border-radius: 1px;
-  }
-
-  .tab-bar__count {
-    font-size: 11px;
-    font-family: var(--weeb-font-mono);
-    background: var(--weeb-surface);
-    color: var(--weeb-fg-secondary);
-    padding: 1px 6px;
-    border-radius: var(--weeb-radius-full, 9999px);
-    border: 1px solid var(--weeb-border);
-  }
-
-  @media (max-width: 768px) {
-    .tab-bar {
-      /* Always visible on mobile */
-    }
-    .tab-bar__inner {
-      padding: 0 16px;
-      justify-content: stretch;
-    }
-    .tab-bar__tab {
-      padding: 12px 8px;
-      font-size: 12px;
-      flex: 1;
-      justify-content: center;
-    }
-  }
 
   /* ===========================
      NEXT EPISODE BANNER
@@ -1193,9 +1113,7 @@
     padding: 40px 0 20px;
   }
 
-  .content-section {
-    /* Each section is a clean block */
-  }
+  /* .content-section — each section is a clean block; no styles needed */
 
   /* ===========================
      SECTION HEADINGS

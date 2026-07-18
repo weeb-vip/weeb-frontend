@@ -49,21 +49,21 @@
 </script>
 
 <div class={layout.container}>
-  <div class="{layout.image} bg-weeb-surface" />
+  <div class="{layout.image} bg-weeb-surface"></div>
   <div class="flex flex-col justify-between px-4 py-3 w-full h-full">
     <div class="space-y-2">
       <!-- Title line -->
-      <div class="w-full h-4 bg-weeb-surface rounded" />
+      <div class="w-full h-4 bg-weeb-surface rounded"></div>
 
       {#if layout.isEpisode}
-        <div class="w-2/3 h-3 bg-weeb-surface rounded" />
-        <div class="w-1/2 h-3 bg-weeb-surface rounded" />
-        <div class="w-2/3 h-3 bg-weeb-surface rounded" />
+        <div class="w-2/3 h-3 bg-weeb-surface rounded"></div>
+        <div class="w-1/2 h-3 bg-weeb-surface rounded"></div>
+        <div class="w-2/3 h-3 bg-weeb-surface rounded"></div>
       {:else}
         {#each Array(layout.lines - 1) as _, i}
           <div
             class="h-3 bg-weeb-surface rounded {i === 0 ? 'w-2/3' : i === 1 ? 'w-1/3' : 'w-1/4'}"
-          />
+          ></div>
         {/each}
       {/if}
     </div>
@@ -74,7 +74,7 @@
         class="h-8 rounded-full {style === 'transparent'
           ? 'bg-weeb-surface-hover/60'
           : 'bg-weeb-surface-hover'} {forceListLayout ? 'mx-0 w-24' : 'mx-auto w-24'}"
-      />
+      ></div>
     </div>
   </div>
 </div>

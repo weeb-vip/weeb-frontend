@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import Fa from 'svelte-fa';
   import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+  import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
   export let id: string;
   export let name: string;

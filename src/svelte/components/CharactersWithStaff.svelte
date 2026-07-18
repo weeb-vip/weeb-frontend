@@ -132,7 +132,16 @@
 
         <div class="char-card" class:expanded={isExpanded}>
           <!-- Main card content -->
-          <div class="char-card-main" on:click={() => hasMultipleVAs && toggleCharacterExpanded(entry.character.name || '')}>
+          <!-- Renders a real <button> when the card is expandable (native keyboard support),
+               otherwise a plain non-interactive <div> -->
+          <svelte:element
+            this={hasMultipleVAs ? 'button' : 'div'}
+            type={hasMultipleVAs ? 'button' : undefined}
+            role={hasMultipleVAs ? 'button' : undefined}
+            class="char-card-main"
+            aria-expanded={hasMultipleVAs ? isExpanded : undefined}
+            on:click={() => hasMultipleVAs && toggleCharacterExpanded(entry.character.name || '')}
+          >
             <div class="char-portrait char-portrait-{idx % 8}">
               <SafeImage
                 src="{encodeURIComponent(`${entry.character.name}_${animeId}`)}"
@@ -163,7 +172,7 @@
                 </div>
               {/if}
             </div>
-          </div>
+          </svelte:element>
 
           <!-- Expanded VA list -->
           {#if isExpanded && entry.staff && entry.staff.length > 1}
@@ -262,6 +271,14 @@
     gap: 12px;
     padding: 14px;
     cursor: default;
+    /* resets so the <button> variant renders identically to the <div> variant */
+    width: 100%;
+    margin: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
   }
   .char-card-main:has(+ .char-va-list),
   .char-card:not(.expanded) .char-card-main {

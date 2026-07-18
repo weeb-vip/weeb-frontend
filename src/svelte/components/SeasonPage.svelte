@@ -17,7 +17,6 @@
   export let seasonalData: any;
   export let season: string;
   export let ssrError: string | null = null;
-  export let isTokenExpired: boolean = false;
 
   // Season switches go through the router: the route has a server load
   // and a {#key data.season} remount, so params, load data, and SEO meta
@@ -547,21 +546,6 @@
     color: var(--weeb-accent);
   }
 
-  /* ── Featured section ── */
-  .section-heading {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  .section-title {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--weeb-fg);
-  }
-
   /* ── Top strip ── */
   .top-strip {
     display: flex;
@@ -763,16 +747,6 @@
     text-decoration: underline;
     padding: 0;
   }
-
-  /* ── Gradient placeholders ── */
-  .grad-1 { background: linear-gradient(145deg, oklch(35% 0.18 280), oklch(20% 0.12 260), oklch(15% 0.08 300)); }
-  .grad-2 { background: linear-gradient(145deg, oklch(30% 0.15 300), oklch(18% 0.10 275), oklch(22% 0.14 250)); }
-  .grad-3 { background: linear-gradient(145deg, oklch(32% 0.12 250), oklch(22% 0.16 280), oklch(18% 0.10 310)); }
-  .grad-4 { background: linear-gradient(145deg, oklch(28% 0.14 155), oklch(18% 0.08 180), oklch(22% 0.12 140)); }
-  .grad-5 { background: linear-gradient(145deg, oklch(30% 0.16 25), oklch(20% 0.10 350), oklch(18% 0.12 40)); }
-  .grad-6 { background: linear-gradient(145deg, oklch(25% 0.10 85), oklch(18% 0.14 60), oklch(22% 0.08 100)); }
-  .grad-7 { background: linear-gradient(145deg, oklch(33% 0.13 270), oklch(20% 0.09 290), oklch(25% 0.15 255)); }
-  .grad-8 { background: linear-gradient(145deg, oklch(22% 0.15 310), oklch(28% 0.10 280), oklch(18% 0.08 330)); }
 
   /* ── Poster grid ── */
   .shows-grid {

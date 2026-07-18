@@ -277,6 +277,7 @@
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
     -webkit-appearance: none;
+    appearance: none;
   }
   .login-form :global(input::placeholder) {
     color: var(--weeb-fg-muted);

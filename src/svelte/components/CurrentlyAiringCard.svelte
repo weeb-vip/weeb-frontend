@@ -11,7 +11,6 @@
   export let index: number;
   export let animeStatuses: Record<string, 'idle' | 'loading' | 'success' | 'error'>;
   export let handleAddAnime: (id: string, animeId: string) => void;
-  export let hoveredAnime: any;
   export let setHoveredAnime: (anime: any) => void;
   export let onDelete: (animeId: string) => void;
   export let onStatusChange: (event: CustomEvent) => void;
@@ -43,10 +42,16 @@
   $: episodeNumber = timingData?.episode?.episodeNumber?.toString() || airingInfo.nextEpisode?.episodeNumber?.toString() || "Unknown";
 </script>
 
+<!-- Presentational wrapper: hover/focus only drives the parent's banner preview;
+     the interactive content is the AnimeCard inside. focusin/focusout give keyboard
+     users the same preview behavior as mouseenter/mouseleave. -->
 <div
+  role="presentation"
   class="{index >= 5 ? 'lg:hidden xl:block' : ''}"
   on:mouseenter={() => setHoveredAnime(airingInfo)}
   on:mouseleave={() => setHoveredAnime(null)}
+  on:focusin={() => setHoveredAnime(airingInfo)}
+  on:focusout={() => setHoveredAnime(null)}
 >
   <AnimeCard
     style="episode"
@@ -54,7 +59,6 @@
     title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
     episodeTitle={episodeTitle}
     episodeNumber={episodeNumber}
-    description={anime.description || ''}
     tags={anime.tags || []}
     episodes=""
     episodeLength=""

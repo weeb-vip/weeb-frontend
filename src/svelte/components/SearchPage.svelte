@@ -1171,6 +1171,7 @@
     line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -1224,7 +1225,6 @@
   }
 
   /* Skeleton */
-  .skeleton-card {}
   .skeleton-poster {
     aspect-ratio: 2 / 3;
     border-radius: var(--weeb-radius-lg);
@@ -1248,18 +1248,18 @@
     animation: pulse 1.5s ease-in-out infinite;
   }
 
-  /* Empty + Initial State */
-  .empty-state, .initial-state {
+  /* Empty State */
+  .empty-state {
     text-align: center;
     padding: 64px 0;
     color: var(--weeb-fg-muted);
   }
-  .empty-state svg, .initial-state svg {
+  .empty-state svg {
     margin: 0 auto 24px;
     opacity: 0.3;
     display: block;
   }
-  .empty-state h3, .initial-state h3 {
+  .empty-state h3 {
     font-size: 1.25rem;
     color: var(--weeb-fg);
     margin-bottom: 8px;
@@ -1269,67 +1269,6 @@
   @keyframes pulse {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 0.7; }
-  }
-
-  /* Genre Browser */
-  .genre-browser {
-    padding: 32px 0 48px;
-  }
-  .genre-browser-header {
-    margin-bottom: 20px;
-  }
-  .genre-browser-header h2 {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    margin: 0;
-    color: var(--weeb-fg);
-  }
-  .genre-pills-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .genre-pill-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 20px;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--weeb-fg-secondary);
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-    font-family: var(--weeb-font);
-  }
-  .genre-pill-btn:hover {
-    border-color: var(--weeb-accent);
-    color: var(--weeb-fg);
-    background: var(--weeb-surface-hover);
-  }
-  .genre-pill-btn--more {
-    border-style: dashed;
-    color: var(--weeb-fg-muted);
-  }
-  .genre-pill-count {
-    font-family: var(--weeb-font-mono);
-    font-size: 11px;
-    color: var(--weeb-fg-muted);
-    background: var(--weeb-bg);
-    padding: 2px 6px;
-    border-radius: 10px;
-  }
-
-  /* Genre pill skeleton */
-  .genre-pill-skeleton {
-    width: 90px;
-    height: 36px;
-    border-radius: 20px;
-    background: var(--weeb-surface);
-    animation: pulse 1.5s ease-in-out infinite;
   }
 
   /* Pagination */
@@ -1419,8 +1358,6 @@
     .filter-row { gap: 6px; }
     .filter-row--controls { flex-wrap: wrap; }
     .results-grid { gap: 12px; }
-    .genre-pills-row { gap: 6px; }
-    .genre-pill-btn { padding: 6px 12px; font-size: 12px; }
   }
   @media (max-width: 768px) {
     .pagination { flex-direction: column; align-items: stretch; }
@@ -1431,8 +1368,6 @@
   @media (max-width: 480px) {
     .search-page { padding: 0 12px; }
     .search-hero { padding: 24px 0 16px; }
-    .genre-pill-btn { padding: 6px 10px; font-size: 11px; }
-    .genre-pill-count { font-size: 10px; padding: 1px 5px; }
     .search-bar-input { height: 48px; font-size: 14px; border-radius: 24px; padding: 0 48px 0 48px; }
     .search-icon { left: 18px; }
     .search-bar-clear { right: 14px; }
