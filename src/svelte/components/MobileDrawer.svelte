@@ -65,6 +65,12 @@
     }
   }
 
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && isOpen) {
+      onClose();
+    }
+  }
+
   function handleLinkClick() {
     onClose();
   }
@@ -117,15 +123,19 @@
   }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 {#if isOpen}
+  <!-- Backdrop is purely presentational; click-to-dismiss has keyboard
+       equivalents via the Escape handler and the close button. -->
   <div
     class="drawer-backdrop"
     on:click={handleBackdropClick}
+    role="presentation"
     transition:fade={{ duration: 200, easing: cubicOut }}
   >
     <div
       class="drawer-panel"
-      on:click|stopPropagation
       transition:fly={{ x: '100%', duration: 280, easing: cubicOut, opacity: 1 }}
     >
       <!-- Header -->

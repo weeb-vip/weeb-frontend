@@ -153,6 +153,7 @@
           <button
             on:click={togglePanel}
             class="text-weeb-fg-muted hover:text-white text-xs"
+            aria-label="Collapse dev testing panel"
           >
             <i class="fas fa-times"></i>
           </button>
@@ -251,6 +252,7 @@
             <button
               on:click={togglePanel}
               class="text-weeb-fg-muted hover:text-white text-sm"
+              aria-label="Collapse dev testing panel"
             >
               <i class="fas fa-chevron-down"></i>
             </button>

@@ -639,7 +639,6 @@
 <!-- Profile Image Upload Modal -->
 <ProfileImageUpload
   isOpen={showUploadModal}
-  currentImageUrl={userQuery && $userQuery.data ? $userQuery.data.profileImageUrl : null}
   {queryClient}
   on:close={() => showUploadModal = false}
 />
@@ -891,7 +890,6 @@
   .skeleton-line--lg { width: 60%; height: 20px; margin-bottom: 8px; }
   .skeleton-line--md { width: 75%; height: 14px; margin-bottom: 6px; }
   .skeleton-line--sm { width: 40%; height: 12px; margin-bottom: 6px; }
-  .skeleton-line--xs { width: 60px; height: 12px; }
   .skeleton-card {
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);

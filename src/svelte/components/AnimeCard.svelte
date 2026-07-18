@@ -9,7 +9,6 @@
   export let style: 'default' | 'hover-transparent' | 'hover' | 'transparent' | 'long' | 'detail' | 'episode' = 'default';
   export let forceListLayout: boolean = false;
   export let title: string;
-  export let description: string;
   export let episodes: number | string;
   export let episodeLength: string;
   export let year: string;

@@ -15,6 +15,5 @@
     seasonalData={data.seasonalData}
     season={data.season}
     ssrError={data.ssrError}
-    isTokenExpired={data.isTokenExpired}
   />
 {/key}

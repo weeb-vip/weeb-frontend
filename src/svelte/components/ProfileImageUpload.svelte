@@ -7,7 +7,6 @@
   import debug from '../../utils/debug';
 
   export let isOpen = false;
-  export let currentImageUrl: string | null = null;
   export let queryClient: any;
 
   const dispatch = createEventDispatcher();
@@ -208,6 +207,13 @@
     fileInput?.click();
   }
 
+  function handleDropzoneKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openFileDialog();
+    }
+  }
+
   function chooseNewImage() {
     resetState();
     fileInput?.click();
@@ -234,8 +240,10 @@
           on:drop={handleDrop}
           on:dragover={handleDragOver}
           on:click={openFileDialog}
+          on:keydown={handleDropzoneKeydown}
           role="button"
           tabindex="0"
+          aria-label="Upload profile picture"
         >
           <svg class="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-weeb-fg-muted" stroke="currentColor" fill="none" viewBox="0 0 48 48">
             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -273,25 +281,25 @@
                 class="absolute border-2 border-white shadow-lg pointer-events-none rounded-full"
                 style="left: {cropData.x}px; top: {cropData.y}px; width: {cropData.size}px; height: {cropData.size}px;"
               >
-                <div class="absolute inset-0 border border-dashed border-white/50 rounded-full" />
+                <div class="absolute inset-0 border border-dashed border-white/50 rounded-full"></div>
                 <div
                   class="absolute inset-0 cursor-move pointer-events-auto touch-manipulation rounded-full"
                   on:mousedown={handleStart}
                   on:touchstart={handleStart}
                   role="button"
                   tabindex="0"
-                />
+                ></div>
               </div>
               <!-- Circular overlay for darkening outside crop -->
               <div
                 class="absolute inset-0 pointer-events-none"
                 style="background: radial-gradient(circle at {cropData.x + cropData.size/2}px {cropData.y + cropData.size/2}px, transparent {cropData.size/2}px, rgba(0,0,0,0.5) {cropData.size/2}px);"
-              />
+              ></div>
             </div>
           </div>
 
           <div class="space-y-4 px-4">
-            <label class="text-sm font-medium text-weeb-fg-secondary block text-center">
+            <label for="crop-size-slider" class="text-sm font-medium text-weeb-fg-secondary block text-center">
               Crop Size: {Math.round(cropData.size)}px
             </label>
             <div class="px-6 py-4">
@@ -300,9 +308,10 @@
                 <div
                   class="absolute top-0 left-0 h-full bg-weeb-accent rounded-full"
                   style="width: {sliderProgress}%;"
-                />
+                ></div>
                 <!-- Hidden native slider -->
                 <input
+                  id="crop-size-slider"
                   type="range"
                   min={Math.min(imageSize.width, imageSize.height) * 0.5}
                   max={Math.max(imageSize.width, imageSize.height)}
@@ -314,7 +323,7 @@
                 <div
                   class="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-weeb-accent border-4 border-white rounded-full shadow-lg pointer-events-none"
                   style="left: {sliderProgress}%; transform: translateX(-50%) translateY(-50%);"
-                />
+                ></div>
               </div>
             </div>
             <p class="text-xs text-weeb-fg-muted text-center">
@@ -334,7 +343,7 @@
       {/if}
     </div>
 
-    <canvas bind:this={canvas} class="hidden" />
+    <canvas bind:this={canvas} class="hidden"></canvas>
 
     <div class="mt-6 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
       <Button

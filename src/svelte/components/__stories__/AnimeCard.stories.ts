@@ -30,7 +30,6 @@ export const Default: Story = {
   args: {
     id: '154587',
     title: 'Frieren: Beyond Journey\'s End',
-    description: 'The adventure is over but life goes on for an elf mage just beginning to learn what living is all about.',
     episodes: 28,
     episodeLength: '24 min',
     year: '2023',
@@ -44,7 +43,6 @@ export const DetailStyle: Story = {
   args: {
     id: '5114',
     title: 'Fullmetal Alchemist: Brotherhood',
-    description: 'Two brothers search for a Philosopher\'s Stone after an pointless transmutation leaves them in damaged physical forms.',
     episodes: 64,
     episodeLength: '24 min',
     year: '2009',
@@ -58,7 +56,6 @@ export const EpisodeStyle: Story = {
   args: {
     id: '52991',
     title: 'Sousou no Frieren',
-    description: '',
     episodes: 28,
     episodeLength: '24 min',
     year: '2023',
@@ -76,7 +73,6 @@ export const WithWatchlistStatus: Story = {
   args: {
     id: '1735',
     title: 'Naruto: Shippuuden',
-    description: '',
     episodes: 500,
     episodeLength: '24 min',
     year: '2007',
@@ -91,7 +87,6 @@ export const WithAiringBadge: Story = {
   args: {
     id: '21',
     title: 'One Punch Man Season 3',
-    description: '',
     episodes: 0,
     episodeLength: '',
     year: '2025',

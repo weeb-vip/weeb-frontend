@@ -112,9 +112,11 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if isOpen && mounted}
-  <div use:portal class="weeb-modal-backdrop" on:click={handleBackdropClick} role="dialog" aria-modal="true" aria-label="Dialog">
+  <!-- Backdrop is purely presentational; click-to-dismiss has a keyboard
+       equivalent via the window-level Escape handler above. -->
+  <div use:portal class="weeb-modal-backdrop" on:click={handleBackdropClick} role="presentation">
     <div class="weeb-modal-container">
-      <div class="weeb-modal-card {className}" use:trapFocus tabindex="-1" on:click|stopPropagation>
+      <div class="weeb-modal-card {className}" use:trapFocus tabindex="-1" role="dialog" aria-modal="true" aria-label="Dialog">
         {#if showCloseButton}
           <button type="button" class="weeb-modal-close" on:click={closeModal} aria-label="Close modal">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

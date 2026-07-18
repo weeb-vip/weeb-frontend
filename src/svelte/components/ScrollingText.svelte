@@ -57,10 +57,13 @@
   }
 </script>
 
+<!-- Wrapper is presentational: hover handlers only toggle a decorative
+     marquee animation; the text itself stays visible and accessible. -->
 <div
   bind:this={containerRef}
   class="overflow-hidden whitespace-nowrap relative {className}"
   style="max-width: {maxWidth}"
+  role="presentation"
   on:mouseenter={handleMouseEnter}
   on:mouseleave={handleMouseLeave}
 >

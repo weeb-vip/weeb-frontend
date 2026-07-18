@@ -97,10 +97,12 @@
 {#if isOpen}
   <!-- Mobile backdrop for easier closing -->
   {#if typeof window !== 'undefined' && window.innerWidth < 768}
-    <div
-      class="fixed inset-0 bg-black/20 z-40 md:hidden"
+    <button
+      type="button"
+      class="fixed inset-0 bg-black/20 z-40 md:hidden cursor-default"
+      aria-label="Close popover"
       on:click={closePopover}
-    ></div>
+    ></button>
   {/if}
 
   <div
@@ -114,7 +116,6 @@
       forceListLayout={true}
       id={anime.id}
       title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-      description={anime.description || ""}
       tags={anime.tags || []}
       episodes={anime.episodeCount || 0}
       episodeLength={anime.duration ? anime.duration.replace(/per.+?$/, "") : "?"}

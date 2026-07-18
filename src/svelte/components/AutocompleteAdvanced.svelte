@@ -918,10 +918,6 @@
     }
   }
 
-  .ac-desktop-container--open {
-    /* Keep the wrapper visible above backdrop when open */
-  }
-
   .ac-desktop-panel-anchor {
     position: absolute;
     top: 100%;
