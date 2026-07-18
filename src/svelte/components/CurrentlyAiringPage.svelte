@@ -6,9 +6,8 @@
   import SafeImage from './SafeImage.svelte';
   import { initializeQueryClient } from '../services/query-client';
   import { fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
-  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
+  import { useAddAnimeWithToast } from '../utils/anime-actions';
   import { Status } from '../../gql/graphql';
-  import type { UserAnimeInput } from '../../gql/graphql';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
@@ -19,8 +18,6 @@
   export let ssrData: any = null;
   export let ssrError: string | null = null;
   export let isTokenExpired: boolean = false;
-
-  let animeStatuses: Record<string, 'idle' | 'loading' | 'success' | 'error'> = {};
 
   // Initialize query client
   const queryClient = initializeQueryClient();
@@ -78,48 +75,6 @@
 
   // Create enhanced mutations with toast handling
   const upsertAnimeMutation = useAddAnimeWithToast();
-
-  // Extend with custom status tracking callbacks
-  type UpsertMutateOptions = {
-    onSuccess?: (data: unknown, vars: { animeID: string }) => void;
-    onError?: (error: unknown, vars: { animeID: string }) => void;
-  };
-  type UpsertMutateFn = (variables: { input: UserAnimeInput }, options?: UpsertMutateOptions) => unknown;
-  const patchableUpsertMutation = upsertAnimeMutation as typeof upsertAnimeMutation & { mutate: UpsertMutateFn };
-  const originalUpsertMutate = patchableUpsertMutation.mutate;
-  patchableUpsertMutation.mutate = (variables, options = {}) => {
-    // Update status tracking on success
-    const originalOnSuccess = options.onSuccess;
-    options.onSuccess = (data, vars) => {
-      // Update anime status
-      animeStatuses = { ...animeStatuses };
-      const animeId = vars.animeID;
-      Object.keys(animeStatuses).forEach(key => {
-        if (key.includes(animeId)) {
-          animeStatuses[key] = 'success';
-        }
-      });
-      if (originalOnSuccess) originalOnSuccess(data, vars);
-    };
-
-    // Update status tracking on error
-    const originalOnError = options.onError;
-    options.onError = (error, vars) => {
-      // Update anime status to error
-      const animeId = vars.animeID;
-      animeStatuses = { ...animeStatuses };
-      Object.keys(animeStatuses).forEach(key => {
-        if (key.includes(animeId)) {
-          animeStatuses[key] = 'error';
-        }
-      });
-      if (originalOnError) originalOnError(error, vars);
-    };
-
-    return originalUpsertMutate(variables, options);
-  };
-
-  const deleteAnimeMutation = useDeleteAnimeWithToast();
 
   // Process currently airing data for airing page with categories
   function processCurrentlyAiring(data: any) {
@@ -194,36 +149,7 @@
             .sort((a, b) => a.airingInfo.nextEpisodeDate.getTime() - b.airingInfo.nextEpisodeDate.getTime());
   }
 
-  function handleStatusChange(event: CustomEvent) {
-    const { animeId, status } = event.detail;
-    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status } });
-  }
-
-  function handleDelete(event: CustomEvent) {
-    console.log('🗑️ handleDelete called with:', event.detail);
-    const { animeId } = event.detail;
-    console.log('🗑️ Calling deleteAnimeMutation with animeId:', animeId);
-    $deleteAnimeMutation.mutate(animeId);
-  }
-
-  function clearAnimeStatus(animeId: string) {
-    console.log('🧹 clearAnimeStatus called with animeId:', animeId);
-    // Call the delete mutation first
-    console.log('🗑️ Calling deleteAnimeMutation from clearAnimeStatus with animeId:', animeId);
-    $deleteAnimeMutation.mutate(animeId);
-
-    // Clear status for all keys that contain this animeId
-    const updated = { ...animeStatuses };
-    Object.keys(updated).forEach(key => {
-      if (key.includes(animeId)) {
-        delete updated[key];
-      }
-    });
-    animeStatuses = updated;
-  }
-
-  function handleAddAnime(id: string, animeId: string) {
-    animeStatuses[id] = 'loading';
+  function handleAddAnime(animeId: string) {
     $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: Status.Plantowatch } });
   }
 
@@ -689,7 +615,7 @@
                     </span>
                   </div>
                   {#if !isInList}
-                    <button class="show-add-btn" title="Add to list" aria-label="Add to list" on:click|preventDefault|stopPropagation={() => handleAddAnime(entry.id, entry.airingInfo.id)}>
+                    <button class="show-add-btn" title="Add to list" aria-label="Add to list" on:click|preventDefault|stopPropagation={() => handleAddAnime(entry.airingInfo.id)}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     </button>
                   {/if}

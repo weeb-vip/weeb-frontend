@@ -14,9 +14,6 @@
     fetchCurrentlyAiring,
     fetchSeasonalAnime, fetchCurrentlyAiringWithDates
   } from '../../services/queries';
-  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
-  import { Status } from '../../gql/graphql';
-  import type { UserAnimeInput } from '../../gql/graphql';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
@@ -35,12 +32,6 @@
   // SSR props
   type DebugWindow = Window & { refreshHomepageData?: () => void };
 
-  type UpsertMutateOptions = {
-    onSuccess?: (data: unknown, vars: { animeID: string }) => void;
-    onError?: (error: unknown, vars: { animeID: string }) => void;
-  };
-  type UpsertMutateFn = (variables: { input: UserAnimeInput }, options?: UpsertMutateOptions) => unknown;
-
   export let homeData: any;
   export let currentlyAiringData: any;
   export let seasonalData: any;
@@ -49,7 +40,6 @@
 
   let selectedSeason = currentSeason;
   let isDropdownOpen = false;
-  let animeStatuses: Record<string, 'idle' | 'loading' | 'success' | 'error'> = {};
 
   // Initialize query client for mutations only
   const queryClient = initializeQueryClient();
@@ -249,45 +239,6 @@
     };
   });
 
-  // Create mutations with success callbacks
-  // Create enhanced mutations with toast handling
-  const upsertAnimeMutation = useAddAnimeWithToast();
-  const deleteAnimeMutation = useDeleteAnimeWithToast();
-
-  // Extend upsert mutation with custom status tracking callbacks
-  const patchableUpsertMutation = upsertAnimeMutation as typeof upsertAnimeMutation & { mutate: UpsertMutateFn };
-  const originalUpsertMutate = patchableUpsertMutation.mutate;
-  patchableUpsertMutation.mutate = (variables, options = {}) => {
-    // Update status tracking on success
-    const originalOnSuccess = options.onSuccess;
-    options.onSuccess = (data, vars) => {
-      // Update anime status
-      animeStatuses = { ...animeStatuses };
-      Object.keys(animeStatuses).forEach(key => {
-        if (key.includes(vars.animeID)) {
-          animeStatuses[key] = 'success';
-        }
-      });
-      if (originalOnSuccess) originalOnSuccess(data, vars);
-    };
-
-    // Update status tracking on error
-    const originalOnError = options.onError;
-    options.onError = (error, vars) => {
-      // Update anime status to error
-      const animeId = vars.animeID;
-      animeStatuses = { ...animeStatuses };
-      Object.keys(animeStatuses).forEach(key => {
-        if (key.includes(animeId)) {
-          animeStatuses[key] = 'error';
-        }
-      });
-      if (originalOnError) originalOnError(error, vars);
-    };
-
-    return originalUpsertMutate(variables, options);
-  };
-
   // Process currently airing data
   function processCurrentlyAiring(data: any) {
     if (!data?.currentlyAiring) return [];
@@ -362,32 +313,6 @@
       .sort((a, b) => a.airingInfo.nextEpisodeDate.getTime() - b.airingInfo.nextEpisodeDate.getTime());
 
     return [...recentlyAired, ...futureEpisodes];
-  }
-
-  function handleStatusChange(event: CustomEvent) {
-    const { animeId, status } = event.detail;
-    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status } });
-  }
-
-  function handleDelete(event: CustomEvent) {
-    const { animeId } = event.detail;
-    $deleteAnimeMutation.mutate(animeId);
-  }
-
-  function clearAnimeStatus(animeId: string) {
-    $deleteAnimeMutation.mutate(animeId);
-    const updated = { ...animeStatuses };
-    Object.keys(updated).forEach(key => {
-      if (key.includes(animeId)) {
-        delete updated[key];
-      }
-    });
-    animeStatuses = updated;
-  }
-
-  function handleAddAnime(id: string, animeId: string) {
-    animeStatuses[id] = 'loading';
-    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: Status.Plantowatch } });
   }
 
   // Process currently airing data from queries (with SSR fallback)
