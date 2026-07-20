@@ -25,7 +25,7 @@ export const getHomePageData = graphql(/* GraphQL */`
                 episodes
             }
         }
-        newestAnime(limit:100) {
+        newestAnime(limit:20) {
             id
             anidbid
             thetvdbid
