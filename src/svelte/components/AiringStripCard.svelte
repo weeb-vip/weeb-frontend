@@ -29,6 +29,7 @@
       alt={title}
       className="airing-poster-img"
       fallbackSrc="/assets/not found.jpg"
+      cdnWidth={160}
     />
   </div>
   <div class="airing-info">

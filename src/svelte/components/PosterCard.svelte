@@ -29,6 +29,7 @@
       alt={title}
       className="poster-img"
       fallbackSrc="/assets/not found.jpg"
+      cdnWidth={360}
     />
     {#if score}
       <span class="score-badge">{typeof score === 'number' ? score.toFixed(1) : score}</span>
