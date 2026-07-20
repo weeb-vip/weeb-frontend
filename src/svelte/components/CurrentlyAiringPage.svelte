@@ -9,6 +9,7 @@
   import { useAddAnimeWithToast } from '../utils/anime-actions';
   import { Status } from '../../gql/graphql';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { getSafeImageUrl, resizeCdnUrl } from '../utils/image';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
@@ -592,7 +593,7 @@
                 <a href="/show/{entry.airingInfo.id}" class="show-card" data-anime-id={entry.airingInfo.id} data-in-list={entry.airingInfo.userAnime != null ? 'true' : 'false'} on:click|preventDefault={() => navigateToShow(entry.airingInfo.id)}>
                   <div class="show-poster">
                     <img
-                      src={`https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(GetImageFromAnime(entry.airingInfo))}`}
+                      src={resizeCdnUrl(getSafeImageUrl(GetImageFromAnime(entry.airingInfo)), 160)}
                       alt={title}
                       loading="lazy"
                       on:error={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
@@ -709,7 +710,7 @@
               <a href="/show/{entry.airingInfo.id}" class="cal-show-item" on:click|preventDefault={() => navigateToShow(entry.airingInfo.id)}>
                 <div class="cal-show-poster">
                   <img
-                    src={`https://cdn.weeb.vip/weeb-staging/${encodeURIComponent(GetImageFromAnime(entry.airingInfo))}`}
+                    src={resizeCdnUrl(getSafeImageUrl(GetImageFromAnime(entry.airingInfo)), 160)}
                     alt={title}
                     loading="lazy"
                     on:error={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}

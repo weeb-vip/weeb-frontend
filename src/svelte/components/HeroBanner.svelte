@@ -119,6 +119,7 @@
         fallbackSrc="/assets/not found.jpg"
         perTryTimeoutMs={3000}
         className="hero-bg-cover"
+        cdnWidth={1600}
         on:chosen={handleImageChosen}
       />
     </div>
@@ -191,6 +192,7 @@
       alt={title}
       className="hero-poster-img"
       fallbackSrc="/assets/not found.jpg"
+      cdnWidth={440}
     />
   </div>
 </div>

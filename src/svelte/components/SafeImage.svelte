@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getSafeImageUrl } from '../utils/image';
+  import { getSafeImageUrl, resizeCdnUrl } from '../utils/image';
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import debug from '../../utils/debug';
 
@@ -14,6 +14,9 @@
   export let width: string | number | undefined = undefined;
   export let height: string | number | undefined = undefined;
   export let loading: 'lazy' | 'eager' | undefined = undefined;
+  /** Intended device-pixel width. When set, CDN sources are routed through
+   * Cloudflare Image Resizing (production only). Undefined = full-res (unchanged). */
+  export let cdnWidth: number | undefined = undefined;
 
   // New ordered loading props (like RacyImage)
   /** Ordered list of candidate URLs (first has highest priority) */
@@ -114,6 +117,13 @@
       // No sources or src provided
       debug.warn('No image sources or src provided');
       orderedSources = [getSafeImageUrl(src, path)];
+    }
+
+    // Route CDN sources through Cloudflare Image Resizing when a target width is
+    // given (no-op unless enabled in config, i.e. production). Applied before the
+    // preload race so the same URL is loaded, cached, and rendered.
+    if (cdnWidth) {
+      orderedSources = orderedSources.map(u => resizeCdnUrl(u, cdnWidth));
     }
 
     debug.log(`Racing ${orderedSources.length} image sources in parallel with priority order`);
