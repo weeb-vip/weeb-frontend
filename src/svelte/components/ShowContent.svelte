@@ -133,8 +133,13 @@
     console.error('🏃‍♂️ [ShowContent] SSR error:', ssrError);
   }
 
-  // Create query at top level (required for Svelte lifecycle)
-  showQueryStore = createQuery(fetchDetails(animeId));
+  // Create query at top level (required for Svelte lifecycle).
+  // Skip the client fetch when SSR already provided the details — otherwise
+  // this refetches the heaviest document in the app on every show view.
+  showQueryStore = createQuery({
+    ...fetchDetails(animeId),
+    enabled: !ssrAnimeData
+  });
 
   // Subscribe to query changes
   showQuery = $showQueryStore;
