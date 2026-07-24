@@ -82,6 +82,32 @@ export const analytics = {
   // Errors and performance
   errorOccurred: (errorType: string, errorMessage: string) =>
     trackEvent('error_occurred', { error_type: errorType, error_message: errorMessage }),
+
+  // Auth & signup funnel
+  // Raw email/username/passwords are deliberately NOT sent as event
+  // properties — accounts are linked via identifyUser() instead.
+  signUpSubmitted: () =>
+    trackEvent('sign_up_submitted'),
+  signedUp: (userId?: string) =>
+    trackEvent('sign_up_succeeded', userId ? { user_id: userId } : undefined),
+  signUpFailed: (reason: string) =>
+    trackEvent('sign_up_failed', { reason }),
+
+  loginSubmitted: () =>
+    trackEvent('login_submitted'),
+  loggedIn: (method: string = 'password') =>
+    trackEvent('logged_in', { method }),
+  loginFailed: (reason: string) =>
+    trackEvent('login_failed', { reason }),
+
+  // `$set` writes the property onto the PostHog person profile so you can
+  // segment/funnel on verified vs unverified users.
+  emailVerified: () =>
+    trackEvent('email_verified', { $set: { email_verified: true } }),
+  emailVerificationFailed: (reason: string) =>
+    trackEvent('email_verification_failed', { reason }),
+  verificationEmailResent: () =>
+    trackEvent('verification_email_resent'),
 };
 
 /**

@@ -36,6 +36,13 @@ import debug from "../../utils/debug";
 import { loggedInStore } from '../stores/auth';
 import { TokenRefresher } from "../../services/token_refresher";
 import { AuthStorage } from "../../utils/auth-storage";
+import { analytics, identifyUser } from "../../utils/analytics";
+
+// Compact, non-sensitive reason string for failed-auth analytics events.
+function authErrorReason(error: any): string {
+  const raw = error?.message ?? error?.toString?.() ?? 'unknown';
+  return String(raw).slice(0, 200);
+}
 
 // Initialize query client for Svelte
 const queryClient = initializeQueryClient();
@@ -67,6 +74,7 @@ export function useLogin() {
   return createMutation({
     mutationFn: async (input: LoginInput): Promise<SigninResultWithUser> => {
       debug.auth("Starting Svelte login mutation");
+      analytics.loginSubmitted();
 
       // Use the existing React query structure
       const queryConfig = loginQuery();
@@ -132,9 +140,13 @@ export function useLogin() {
       } catch (error) {
         debug.error('Failed to invalidate queries after login:', error);
       }
+
+      // User is already identified via loggedInStore.setLoggedIn -> identifyUser
+      analytics.loggedIn('password');
     },
     onError: (error: any) => {
       debug.error("Svelte login failed:", error);
+      analytics.loginFailed(authErrorReason(error));
     },
   });
 }
@@ -143,6 +155,7 @@ export function useRegister() {
   return createMutation({
     mutationFn: async (input: LoginInput) => {
       debug.auth("Starting Svelte registration");
+      analytics.signUpSubmitted();
 
       const queryConfig = registerQuery();
       const response = await queryConfig.mutationFn({ input });
@@ -151,9 +164,18 @@ export function useRegister() {
     },
     onSuccess: (data: any) => {
       debug.success("Svelte registration successful");
+
+      // Link the anonymous session to the new account so the rest of the
+      // funnel (email verification, first login) attributes to one person.
+      const userId = data?.id;
+      if (userId) {
+        identifyUser(userId, { email_verified: false });
+      }
+      analytics.signedUp(userId);
     },
     onError: (error: any) => {
       debug.error("Svelte registration failed:", error);
+      analytics.signUpFailed(authErrorReason(error));
     },
   });
 }
@@ -182,6 +204,12 @@ export function useVerifyEmail() {
       const queryConfig = verifyEmailQuery(token);
       return queryConfig.mutationFn();
     },
+    onSuccess: () => {
+      analytics.emailVerified();
+    },
+    onError: (error: any) => {
+      analytics.emailVerificationFailed(authErrorReason(error));
+    },
   });
 }
 
@@ -190,6 +218,9 @@ export function useResendVerificationEmail() {
     mutationFn: async (input: { username: string }): Promise<boolean> => {
       const queryConfig = resendVerificationQuery();
       return queryConfig.mutationFn(input);
+    },
+    onSuccess: () => {
+      analytics.verificationEmailResent();
     },
   });
 }
