@@ -29,7 +29,7 @@ import {
   getAnimeDetailsByID,
   getCurrentlyAiring, getCurrentlyAiringWithDates, getCurrentlyAiringWithDatesAndEpisodes,
   getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
-  mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationVerifyEmail, mutationResendVerificationEmail,
+  mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationResendVerificationEmail,
   mutationRegister, mutationLogout, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserDetails
 } from "./api/graphql/queries";
 
@@ -217,8 +217,13 @@ export const resetPassword = () => ({
   }
 })
 
+export interface VerifyEmailResult {
+  success: boolean;
+  userID: string | null;
+}
+
 export const verifyEmail = (token: string) => ({
-  mutationFn: async (): Promise<boolean> => {
+  mutationFn: async (): Promise<VerifyEmailResult> => {
     const config = await getConfig();
     console.log('🌐 Verify Email GraphQL URL:', config.graphql_host);
     // @ts-ignore
@@ -236,8 +241,22 @@ export const verifyEmail = (token: string) => ({
         });
       }
     });
-    const response = await client.request(mutationVerifyEmail);
-    return response.VerifyEmail;
+    // VerifyEmailWithUser is a newly added backend mutation that returns the
+    // verified user's id so callers can link identity (PostHog identify) on the
+    // verification page. It is written as an inline typed document rather than a
+    // codegen `graphql()` doc on purpose: graphql-codegen pulls its schema from
+    // the deployed gateway, so a generated document can't exist until the auth
+    // service ships this mutation. Keeping it inline makes the change
+    // self-contained and avoids a runtime-breaking codegen mismatch.
+    const response = await client.request<{ VerifyEmailWithUser: VerifyEmailResult }>(
+      `mutation VerifyEmailWithUser {
+        VerifyEmailWithUser {
+          success
+          userID
+        }
+      }`
+    );
+    return response.VerifyEmailWithUser;
   }
 })
 
