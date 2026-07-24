@@ -204,8 +204,19 @@ export function useVerifyEmail() {
       const queryConfig = verifyEmailQuery(token);
       return queryConfig.mutationFn();
     },
-    onSuccess: () => {
-      analytics.emailVerified();
+    onSuccess: (data) => {
+      // The mutation resolves even when verification didn't actually succeed
+      // (e.g. success=false with no error), so gate on the returned flag.
+      if (data?.success) {
+        // Link the verified account so the email_verified person property
+        // attaches even when the link is opened in a fresh (anonymous) session.
+        if (data.userID) {
+          identifyUser(data.userID, { email_verified: true });
+        }
+        analytics.emailVerified();
+      } else {
+        analytics.emailVerificationFailed('verification_unsuccessful');
+      }
     },
     onError: (error: any) => {
       analytics.emailVerificationFailed(authErrorReason(error));

@@ -20,14 +20,25 @@
 
   const verifyEmailMutation = useVerifyEmail();
 
-  // Handle verification state changes
+  // Handle verification state changes. The mutation can resolve with
+  // success=false (verification didn't actually happen), so treat that as an
+  // error rather than showing the success screen.
   $: if ($verifyEmailMutation.isSuccess) {
-    debug.success('Email verification successful');
-    state = {
-      loading: false,
-      success: true,
-      error: null
-    };
+    if ($verifyEmailMutation.data?.success) {
+      debug.success('Email verification successful');
+      state = {
+        loading: false,
+        success: true,
+        error: null
+      };
+    } else {
+      debug.error('Email verification returned unsuccessful');
+      state = {
+        loading: false,
+        success: false,
+        error: 'The verification token may be invalid or have expired. Please request a new verification email.'
+      };
+    }
   }
 
   $: if ($verifyEmailMutation.isError) {
