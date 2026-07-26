@@ -4,6 +4,7 @@ import type { PageServerLoad } from './$types';
 // (it already had: missing userAnime.episodes)
 import { getAnimeDetailsByID, queryCharactersAndStaffByAnimeID } from '../../../services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom } from '$lib/server/ssr-graphql';
+import { isFeatureEnabled } from '$lib/server/posthog';
 
 export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const { id } = params;
@@ -20,6 +21,7 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   let animeData: any = null;
   let charactersData: any = null;
   let error: string | null = null;
+  let streamingEnabled = false;
 
   try {
     // Forward the user's cookies — the gateway authenticates via cookie,
@@ -28,10 +30,12 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     // and every show rendered as "not on list" even when it was.
     const client = createSSRGraphQLClient(config.graphql_host, cookieHeaderFrom(cookies));
 
-    const [animeResponse, charactersResponse] = await Promise.all([
+    const [animeResponse, charactersResponse, flagEnabled] = await Promise.all([
       client.request(getAnimeDetailsByID, { id }),
-      client.request(queryCharactersAndStaffByAnimeID, { animeId: id })
+      client.request(queryCharactersAndStaffByAnimeID, { animeId: id }),
+      isFeatureEnabled('animeschedule-integration', config, cookies)
     ]);
+    streamingEnabled = flagEnabled;
 
     animeData = animeResponse;
     charactersData = charactersResponse;
@@ -59,6 +63,7 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     animeImage,
     ssrAnimeData: animeData,
     ssrCharactersData: charactersData,
-    ssrError: error
+    ssrError: error,
+    streamingEnabled
   };
 };
