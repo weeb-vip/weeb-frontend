@@ -20,20 +20,30 @@ type FlagMap = Record<string, boolean | string>;
 
 /**
  * Reuse the visitor's PostHog distinct_id (from the `ph_<key>_posthog` cookie)
- * so rollout bucketing stays consistent with the client; fall back to a random
- * id for anonymous requests.
+ * so rollout bucketing stays consistent with the client; fall back to an
+ * anonymous id otherwise.
+ *
+ * The cookie value is URL-encoded JSON, so it must be decoded before parsing.
+ * The fallback deliberately avoids `crypto.randomUUID()` — it isn't guaranteed
+ * in every edge runtime/compat-date, and throwing here would sink the whole
+ * flag lookup. The value only matters for percentage-rollout bucketing.
  */
 function distinctIdFrom(apiKey: string, cookies: Cookies): string {
-  const phCookie = cookies.get(`ph_${apiKey}_posthog`);
-  if (phCookie) {
+  const raw = cookies.get(`ph_${apiKey}_posthog`);
+  if (raw) {
     try {
-      const parsed = JSON.parse(phCookie);
+      const parsed = JSON.parse(decodeURIComponent(raw));
       if (parsed?.distinct_id) return parsed.distinct_id as string;
     } catch {
-      /* malformed cookie — fall through to a random id */
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed?.distinct_id) return parsed.distinct_id as string;
+      } catch {
+        /* malformed cookie — fall through to an anonymous id */
+      }
     }
   }
-  return crypto.randomUUID();
+  return `anon_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 /** One `/decide` round-trip → the raw flag map (empty on missing key/error). */
@@ -65,7 +75,8 @@ export async function isFeatureEnabled(
   try {
     const flags = await decide(config, cookies);
     return !!flags[flagKey];
-  } catch {
+  } catch (err) {
+    console.warn(`[posthog] isFeatureEnabled(${flagKey}) failed:`, err);
     return false;
   }
 }
