@@ -24,7 +24,6 @@
   export let ssrAnimeData: any = null;
   export let ssrCharactersData: any = null;
   export let ssrError: any = null;
-  export let streamingEnabled: boolean = false;
 
   let imageSources: string[] = [];
   let bgLoaded = false;
@@ -699,7 +698,7 @@
               </div>
             {/if}
           </div>
-          <StreamingPlatforms platforms={anime.streamingPlatforms} enabled={streamingEnabled} />
+          <StreamingPlatforms platforms={anime.streamingPlatforms} />
         </section>
       </div>
 

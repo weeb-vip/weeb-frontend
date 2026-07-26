@@ -17,6 +17,5 @@
     ssrAnimeData={data.ssrAnimeData}
     ssrCharactersData={data.ssrCharactersData}
     ssrError={data.ssrError}
-    streamingEnabled={data.streamingEnabled}
   />
 {/key}
