@@ -1,9 +1,20 @@
 <script lang="ts">
-  import { isFeatureEnabled } from '../../utils/analytics';
+  import { onMount } from 'svelte';
+  import { isFeatureEnabled, onFeatureFlags } from '../../utils/analytics';
 
   export let platforms: Array<{ platform: string; name?: string | null; url: string }> | null | undefined = undefined;
 
-  const featureEnabled = typeof window !== 'undefined' && isFeatureEnabled('animeschedule-integration');
+  // PostHog loads flags asynchronously after init, so evaluating once at
+  // component creation races the flag load and gets stuck on `false`. Read it
+  // on mount and re-read whenever flags (re)load so the section appears once
+  // the flag resolves.
+  let featureEnabled = false;
+  onMount(() => {
+    featureEnabled = isFeatureEnabled('animeschedule-integration');
+    onFeatureFlags(() => {
+      featureEnabled = isFeatureEnabled('animeschedule-integration');
+    });
+  });
 
   const platformIcons: Record<string, string> = {
     crunchyroll: 'https://img.animeschedule.net/production/assets/public/img/streams/crunchyroll.png',
