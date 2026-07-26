@@ -209,6 +209,11 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
                 createdAt
                 updatedAt
             }
+            streamingPlatforms {
+                platform
+                name
+                url
+            }
             userAnime {
                 id
                 status

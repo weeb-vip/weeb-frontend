@@ -464,6 +464,9 @@
             </div>
           {/if}
 
+          <!-- Where to watch -->
+          <StreamingPlatforms platforms={anime.streamingPlatforms} />
+
           <!-- Details grid -->
           <dl class="hero-details">
             {#if anime.endDate}
@@ -698,7 +701,6 @@
               </div>
             {/if}
           </div>
-          <StreamingPlatforms platforms={anime.streamingPlatforms} />
         </section>
       </div>
 
