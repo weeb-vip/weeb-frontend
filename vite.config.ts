@@ -45,7 +45,10 @@ export default defineConfig({
     noExternal: ['@tanstack/svelte-query', '@tanstack/query-core']
   },
   optimizeDeps: {
-    include: ['@tanstack/svelte-query', 'date-fns', 'graphql-request'],
-    exclude: ['@fortawesome/fontawesome-svg-core']
+    include: ['date-fns', 'graphql-request'],
+    // Packages that ship .svelte files can't be esbuild-prebundled (no .svelte
+    // loader in the dep optimizer) — exclude so the svelte plugin handles them.
+    // Otherwise `vite dev` crashes on startup.
+    exclude: ['@fortawesome/fontawesome-svg-core', '@tanstack/svelte-query', 'svelte-fa', 'svelte-sonner']
   }
 });

@@ -4,6 +4,7 @@
   import Button from './Button.svelte';
   import AnimeActions from './AnimeActions.svelte';
   import SafeImage from './SafeImage.svelte';
+  import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { GetImageFromAnime } from '../../services/utils';
   import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
@@ -175,6 +176,8 @@
         <span class="air-time">{anime.broadcast}</span>
       {/if}
     </div>
+
+    <StreamingPlatforms platforms={anime.streamingPlatforms} />
 
     <div class="hero-actions">
       <a href="/show/{anime.id}" class="btn-primary">View Details</a>

@@ -1,29 +1,37 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { isFeatureEnabled, onFeatureFlags } from '../../utils/analytics';
+  import { isFeatureEnabled } from '../../utils/analytics';
 
   export let platforms: Array<{ platform: string; name?: string | null; url: string }> | null | undefined = undefined;
 
-  // Client-driven flag gate. PostHog loads flags asynchronously after init, so
-  // evaluate on mount and re-evaluate whenever flags (re)load — the section
-  // appears once the animeschedule-integration flag resolves to true.
+  // Client-driven flag gate. This is empty during SSR (the flag is client-only).
+  // On a hard load PostHog hasn't loaded flags when onMount runs, and its
+  // onFeatureFlags event can fire once while the flag still reads false, then
+  // never re-fire — so re-check on a short interval until the flag resolves.
   let enabled = false;
   onMount(() => {
-    const update = () => { enabled = isFeatureEnabled('animeschedule-integration'); };
-    update();
-    onFeatureFlags(update);
+    let tries = 0;
+    const check = () => { enabled = isFeatureEnabled('animeschedule-integration'); return enabled; };
+    if (check()) return;
+    const iv = setInterval(() => { if (check() || ++tries >= 25) clearInterval(iv); }, 250);
+    return () => clearInterval(iv);
   });
 
+  // Locally-bundled brand logos (static/assets/streams). AnimeSchedule's own
+  // logo CDN 403s on hotlinking, so we self-host. Platforms without a bundled
+  // logo fall back to the platform name text.
   const platformIcons: Record<string, string> = {
-    crunchyroll: 'https://img.animeschedule.net/production/assets/public/img/streams/crunchyroll.png',
-    netflix: 'https://img.animeschedule.net/production/assets/public/img/streams/netflix.png',
-    hidive: 'https://img.animeschedule.net/production/assets/public/img/streams/hidive.png',
-    amazon: 'https://img.animeschedule.net/production/assets/public/img/streams/amazon.png',
-    hulu: 'https://img.animeschedule.net/production/assets/public/img/streams/hulu.png',
-    apple: 'https://img.animeschedule.net/production/assets/public/img/streams/apple.png',
-    youtube: 'https://img.animeschedule.net/production/assets/public/img/streams/youtube.png',
-    bilibili: 'https://img.animeschedule.net/production/assets/public/img/streams/bilibili.png',
-    'disney+': 'https://img.animeschedule.net/production/assets/public/img/streams/disneyplus.png',
+    crunchyroll: '/assets/streams/crunchyroll.svg',
+    netflix: '/assets/streams/netflix.svg',
+    amazon: '/assets/streams/amazon.svg',
+    'prime video': '/assets/streams/amazon.svg',
+    primevideo: '/assets/streams/amazon.svg',
+    hulu: '/assets/streams/hulu.svg',
+    apple: '/assets/streams/apple.svg',
+    'apple tv': '/assets/streams/apple.svg',
+    appletv: '/assets/streams/apple.svg',
+    youtube: '/assets/streams/youtube.svg',
+    bilibili: '/assets/streams/bilibili.svg',
   };
 
   function ensureUrl(url: string): string {
@@ -39,22 +47,22 @@
     <span class="label">Watch on</span>
     <div class="platforms-list">
       {#each platforms as platform}
+        {@const key = platform.platform.toLowerCase()}
+        {@const name = platform.name || platform.platform}
         <a
           href={ensureUrl(platform.url)}
           target="_blank"
           rel="noopener noreferrer"
           class="platform-link"
-          title={platform.name || platform.platform}
+          data-tip={name}
+          aria-label={`Watch on ${name}`}
         >
-          {#if platformIcons[platform.platform.toLowerCase()]}
-            <img
-              src={platformIcons[platform.platform.toLowerCase()]}
-              alt={platform.name || platform.platform}
-              class="platform-icon"
-              loading="lazy"
-            />
-          {/if}
-          <span class="platform-name">{platform.name || platform.platform}</span>
+          <img
+            src={platformIcons[key] || '/assets/streams/generic.svg'}
+            alt=""
+            class="platform-icon"
+            loading="lazy"
+          />
         </a>
       {/each}
     </div>
@@ -66,49 +74,99 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin: 1rem 0;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--weeb-border);
   }
 
+  /* Matches .hero-detail-key so it reads as a peer of the other hero labels. */
   .label {
-    font-size: 0.875rem;
+    font-family: var(--weeb-font-mono);
+    font-size: 11px;
     font-weight: 600;
-    color: var(--text-secondary, #888);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    color: var(--weeb-fg-muted);
   }
 
   .platforms-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .platform-link {
-    display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    border-radius: 0.375rem;
-    background: var(--bg-secondary, #1a1a2e);
-    color: var(--text-primary, #fff);
+    gap: 1rem;
+  }
+
+  /* Bare logo; platform name shows in a popover on hover. */
+  .platform-link {
+    position: relative;
+    display: inline-flex;
     text-decoration: none;
-    font-size: 0.8125rem;
-    transition: background 0.15s ease, transform 0.1s ease;
   }
-
-  .platform-link:hover {
-    background: var(--bg-hover, #2a2a4e);
-    transform: translateY(-1px);
-  }
-
   .platform-icon {
-    width: 18px;
-    height: 18px;
+    width: 28px;
+    height: 28px;
     object-fit: contain;
-    border-radius: 2px;
+    display: block;
+    transition: transform 0.12s ease;
+  }
+  .platform-link:hover .platform-icon,
+  .platform-link:focus-visible .platform-icon {
+    transform: scale(1.12);
   }
 
-  .platform-name {
+  /* Popover, styled on the weeb tokens. */
+  .platform-link::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 9px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    padding: 0.3rem 0.5rem;
+    border-radius: var(--weeb-radius-sm);
+    background: var(--weeb-bg-elevated);
+    border: 1px solid var(--weeb-border);
+    color: var(--weeb-fg);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
     white-space: nowrap;
+    box-shadow: var(--weeb-shadow-dropdown);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.14s ease, transform 0.14s ease;
+    z-index: 30;
+  }
+  .platform-link::before {
+    content: "";
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    border: 5px solid transparent;
+    border-top-color: var(--weeb-border);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.14s ease, transform 0.14s ease;
+    z-index: 30;
+  }
+  .platform-link:hover::after,
+  .platform-link:focus-visible::after,
+  .platform-link:hover::before,
+  .platform-link:focus-visible::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .platform-icon,
+    .platform-link::after,
+    .platform-link::before { transition: none; }
+  }
+
+  /* Match the hero's centered layout on mobile (hero-meta centers at 768px)
+     and enlarge the logos for touch. */
+  @media (max-width: 768px) {
+    .platforms-list { justify-content: center; gap: 1.4rem; }
+    .platform-icon { width: 38px; height: 38px; }
   }
 </style>
