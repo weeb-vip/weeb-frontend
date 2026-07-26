@@ -1,10 +1,18 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { isFeatureEnabled, onFeatureFlags } from '../../utils/analytics';
+
   export let platforms: Array<{ platform: string; name?: string | null; url: string }> | null | undefined = undefined;
 
-  // The animeschedule-integration flag is evaluated server-side (see
-  // $lib/server/posthog) and passed in, so the section is part of the SSR HTML
-  // rather than depending on a client-only flag check that races hydration.
-  export let enabled: boolean = false;
+  // Client-driven flag gate. PostHog loads flags asynchronously after init, so
+  // evaluate on mount and re-evaluate whenever flags (re)load — the section
+  // appears once the animeschedule-integration flag resolves to true.
+  let enabled = false;
+  onMount(() => {
+    const update = () => { enabled = isFeatureEnabled('animeschedule-integration'); };
+    update();
+    onFeatureFlags(update);
+  });
 
   const platformIcons: Record<string, string> = {
     crunchyroll: 'https://img.animeschedule.net/production/assets/public/img/streams/crunchyroll.png',

@@ -7,12 +7,11 @@
   export let ssrAnimeData: any = null;
   export let ssrCharactersData: any = null;
   export let ssrError: any = null;
-  export let streamingEnabled: boolean = false;
 
   // Initialize query client
   const queryClient = initializeQueryClient();
 </script>
 
 <QueryClientProvider client={queryClient}>
-  <ShowContent {animeId} {ssrAnimeData} {ssrCharactersData} {ssrError} {streamingEnabled} />
+  <ShowContent {animeId} {ssrAnimeData} {ssrCharactersData} {ssrError} />
 </QueryClientProvider>
