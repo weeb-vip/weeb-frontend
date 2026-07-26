@@ -1,17 +1,20 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { isFeatureEnabled, onFeatureFlags } from '../../utils/analytics';
+  import { isFeatureEnabled } from '../../utils/analytics';
 
   export let platforms: Array<{ platform: string; name?: string | null; url: string }> | null | undefined = undefined;
 
-  // Client-driven flag gate. PostHog loads flags asynchronously after init, so
-  // evaluate on mount and re-evaluate whenever flags (re)load — the section
-  // appears once the animeschedule-integration flag resolves to true.
+  // Client-driven flag gate. This is empty during SSR (the flag is client-only).
+  // On a hard load PostHog hasn't loaded flags when onMount runs, and its
+  // onFeatureFlags event can fire once while the flag still reads false, then
+  // never re-fire — so re-check on a short interval until the flag resolves.
   let enabled = false;
   onMount(() => {
-    const update = () => { enabled = isFeatureEnabled('animeschedule-integration'); };
-    update();
-    onFeatureFlags(update);
+    let tries = 0;
+    const check = () => { enabled = isFeatureEnabled('animeschedule-integration'); return enabled; };
+    if (check()) return;
+    const iv = setInterval(() => { if (check() || ++tries >= 25) clearInterval(iv); }, 250);
+    return () => clearInterval(iv);
   });
 
   const platformIcons: Record<string, string> = {
