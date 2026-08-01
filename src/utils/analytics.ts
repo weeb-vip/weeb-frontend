@@ -136,11 +136,54 @@ export function identifyUser(userId: string, userProperties?: Record<string, any
 }
 
 /**
+ * Local dev override for feature flags.
+ *
+ * PostHog is not initialised in local dev — the local/development configs carry no
+ * posthog_api_key, so initPostHog() bails, window.posthog never exists, and every
+ * flag reads false. That makes flag-gated features invisible on localhost, which
+ * looks identical to the feature being broken.
+ *
+ * Enabling PostHog locally is the wrong fix: it would ship dev traffic to the real
+ * project, and flags targeted at environment=staging still would not match, because
+ * environment falls back to 'production' when the config omits it.
+ *
+ * So instead: opt in per flag, dev builds only.
+ *   ?ff=anime-news             enable for this page load (persists to localStorage)
+ *   ?ff=anime-news,other-flag  several at once
+ *   ?ff=                       clear all overrides
+ * Overrides are read from localStorage, so they survive navigation and reloads.
+ */
+const FF_OVERRIDE_KEY = 'ff_overrides';
+
+function devFlagOverrides(): Set<string> | null {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return null;
+
+  try {
+    const param = new URLSearchParams(window.location.search).get('ff');
+    if (param !== null) {
+      // An empty ?ff= is an explicit reset, not an override of the empty string.
+      const keys = param.split(',').map((k) => k.trim()).filter(Boolean);
+      window.localStorage.setItem(FF_OVERRIDE_KEY, JSON.stringify(keys));
+      return new Set(keys);
+    }
+    const stored = window.localStorage.getItem(FF_OVERRIDE_KEY);
+    return stored ? new Set(JSON.parse(stored) as string[]) : null;
+  } catch {
+    // Private-mode localStorage, or malformed JSON from a hand-edited value.
+    return null;
+  }
+}
+
+/**
  * Check if a feature flag is enabled
  * @param flagKey - The feature flag key
  * @returns boolean indicating if the flag is enabled
  */
 export function isFeatureEnabled(flagKey: string): boolean {
+  // Dev-only, and only ever turns flags ON — it can't hide a feature that PostHog
+  // has enabled, so it cannot mask a real rollout while debugging.
+  if (devFlagOverrides()?.has(flagKey)) return true;
+
   if (typeof window !== 'undefined' && window.posthog) {
     try {
       return window.posthog.isFeatureEnabled(flagKey);
