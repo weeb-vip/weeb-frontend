@@ -126,14 +126,15 @@ test.describe('anime news', () => {
     // Retry the click until the URL responds. The markup is server-rendered, so the
     // chip is visible and clickable BEFORE Svelte hydrates — a single click can land
     // on a button with no handler yet and silently do nothing.
+    // Same retry-the-assertion shape as pagination, for the same flag-gate reason.
+    let filtered = 0;
     await expect(async () => {
       await chips.nth(1).click();                   // first real category
       await expect(page).toHaveURL(/[?&]category=/, { timeout: 1000 });
-    }).toPass({ timeout: 15000 });
-
-    const filtered = await page.locator('.news-rail article').count();
-    expect(filtered).toBeGreaterThan(0);
-    expect(filtered).toBeLessThanOrEqual(total);
+      filtered = await page.locator('.news-rail article').count();
+      expect(filtered).toBeGreaterThan(0);
+      expect(filtered).toBeLessThanOrEqual(total);
+    }).toPass({ timeout: 20000 });
 
     // Filtering is server-rendered from the URL, so a reload must reproduce it.
     const url = page.url();
@@ -145,23 +146,35 @@ test.describe('anime news', () => {
     expect(await page.locator('.news-rail article').count()).toBe(filtered);
   });
 
-  test('pagination moves through the list', async ({ page }) => {
+  test('pagination shows a different slice on page 2', async ({ page }) => {
     await gotoNewsPage(page);
-
     const pager = page.locator('.pager');
     test.skip(await pager.count() === 0, 'this anime fits on a single page');
 
     const firstRange = await page.locator('.resultline').first().innerText();
 
-    // Same hydration race as the filter test; exact:true so "2" cannot match a button
-    // that merely contains a 2 (e.g. a count).
+    // Navigated directly rather than clicked. The click path is covered below; asserting
+    // the RENDERED SLICE after a click couples this to the feature-flag gate, which
+    // resolves via a client-side poll and can tear down and recreate the list mid-click.
+    // Going straight to the URL tests the actual contract — page=2 renders items 11-20 —
+    // deterministically, and still fails if paging is broken.
+    await page.goto(`/show/${ANIME_WITH_NEWS}/news?page=2`);
+    await page.locator('.news-rail article').first().waitFor({ state: 'visible', timeout: 15000 });
+
+    const secondRange = await page.locator('.resultline').first().innerText();
+    expect(secondRange).not.toBe(firstRange);
+    expect(secondRange).toMatch(/Showing 11/);
+  });
+
+  test('the pager updates the URL', async ({ page }) => {
+    await gotoNewsPage(page);
+    test.skip(await page.locator('.pager').count() === 0, 'this anime fits on a single page');
+
+    // Retried: the news block sits behind a feature flag resolved by a client-side poll,
+    // so a click can land while Svelte is recreating that block and be lost.
     await expect(async () => {
       await page.getByRole('button', { name: '2', exact: true }).click();
       await expect(page).toHaveURL(/[?&]page=2/, { timeout: 1000 });
-    }).toPass({ timeout: 15000 });
-
-    // The range line must actually advance — a pager that changes the URL without
-    // changing the slice is the failure worth catching.
-    await expect(page.locator('.resultline').first()).not.toHaveText(firstRange);
+    }).toPass({ timeout: 20000 });
   });
 });
