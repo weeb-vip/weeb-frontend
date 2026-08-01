@@ -4,6 +4,14 @@
 
   export let platforms: Array<{ platform: string; name?: string | null; url: string }> | null | undefined = undefined;
 
+  /**
+   * Centre the logos on mobile. Only the anime page wants this — its hero-meta
+   * centres at 768px, so a left-aligned row would sit off-axis there. The
+   * homepage banner keeps its text left-aligned at every width, so centring
+   * the logos breaks that column instead of matching it.
+   */
+  export let centerOnMobile = false;
+
   // Client-driven flag gate. This is empty during SSR (the flag is client-only).
   // On a hard load PostHog hasn't loaded flags when onMount runs, and its
   // onFeatureFlags event can fire once while the flag still reads false, then
@@ -45,7 +53,7 @@
 {#if enabled && platforms && platforms.length > 0}
   <div class="streaming-platforms">
     <span class="label">Watch on</span>
-    <div class="platforms-list">
+    <div class="platforms-list" class:center-mobile={centerOnMobile}>
       {#each platforms as platform}
         {@const key = platform.platform.toLowerCase()}
         {@const name = platform.name || platform.platform}
@@ -163,10 +171,12 @@
     .platform-link::before { transition: none; }
   }
 
-  /* Match the hero's centered layout on mobile (hero-meta centers at 768px)
-     and enlarge the logos for touch. */
+  /* Enlarge the logos for touch on every surface. Centring is opt-in via
+     `centerOnMobile` — the anime page hero centres its meta column at 768px,
+     the homepage banner stays left-aligned. */
   @media (max-width: 768px) {
-    .platforms-list { justify-content: center; gap: 1.4rem; }
+    .platforms-list { gap: 1.4rem; }
+    .platforms-list.center-mobile { justify-content: center; }
     .platform-icon { width: 38px; height: 38px; }
   }
 </style>

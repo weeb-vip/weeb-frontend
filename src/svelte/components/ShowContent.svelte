@@ -7,6 +7,8 @@
   import Tag from './Tag.svelte';
   import Episodes from './Episodes.svelte';
   import CharactersWithStaff from './CharactersWithStaff.svelte';
+  import AnimeNews from './AnimeNews.svelte';
+  import { isFeatureEnabled } from '../../utils/analytics';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { fetchDetails } from '../../services/queries';
   import { GetImageFromAnime, getYearUTC, formatDateUTC } from '../../services/utils';
@@ -69,12 +71,29 @@
   // Floating tab bar state
   let activeTab = 'synopsis';
   let showTabBar = false;
+  // News is behind a flag while the research pipeline's quality gate is still being
+  // sorted out. Client-driven like the animeschedule gate: the flag is unavailable
+  // during SSR, and PostHog's onFeatureFlags can fire once while the flag still reads
+  // false and never re-fire, so re-check briefly until it resolves.
+  let newsEnabled = false;
+  onMount(() => {
+    let tries = 0;
+    const check = () => { newsEnabled = isFeatureEnabled('anime-news'); return newsEnabled; };
+    if (check()) return;
+    const iv = setInterval(() => { if (check() || ++tries >= 25) clearInterval(iv); }, 250);
+    return () => clearInterval(iv);
+  });
+
   let synopsisEl: HTMLElement;
+  let newsEl: HTMLElement;
   let episodesEl: HTMLElement;
   let charactersEl: HTMLElement;
 
   function scrollToSection(id: string) {
-    const el = id === 'synopsis' ? synopsisEl : id === 'episodes' ? episodesEl : charactersEl;
+    const el = id === 'synopsis' ? synopsisEl
+      : id === 'news' ? newsEl
+      : id === 'episodes' ? episodesEl
+      : charactersEl;
     if (el) {
       const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--weeb-nav-height') || '60');
       const stickyOffset = showStickyHeader ? 72 : 0;
@@ -96,10 +115,13 @@
     showTabBar = isMobile || window.scrollY > 400;
 
     // Determine active tab based on scroll position
+    // Checked bottom-up so the lowest section that has crossed the line wins.
     if (charactersEl && charactersEl.getBoundingClientRect().top < offset + 100) {
       activeTab = 'characters';
     } else if (episodesEl && episodesEl.getBoundingClientRect().top < offset + 100) {
       activeTab = 'episodes';
+    } else if (newsEl && newsEl.getBoundingClientRect().top < offset + 100) {
+      activeTab = 'news';
     } else {
       activeTab = 'synopsis';
     }
@@ -465,7 +487,7 @@
           {/if}
 
           <!-- Where to watch -->
-          <StreamingPlatforms platforms={anime.streamingPlatforms} />
+          <StreamingPlatforms platforms={anime.streamingPlatforms} centerOnMobile />
 
           <!-- Details grid -->
           <dl class="hero-details">
@@ -602,6 +624,12 @@
           style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'synopsis' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'synopsis' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
           on:click={() => scrollToSection('synopsis')}
         >Synopsis</button>
+        {#if newsEnabled && anime.news && anime.news.length > 0}
+          <button
+            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'news' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'news' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+            on:click={() => scrollToSection('news')}
+          >News <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:oklch(55% 0.15 280 / 0.15); color:oklch(55% 0.15 280); font-weight:600;">{anime.news.length}</span></button>
+        {/if}
         {#if anime.episodes && anime.episodes.length > 0}
           <button
             style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'episodes' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'episodes' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
@@ -629,6 +657,16 @@
             <p class="synopsis-empty">No synopsis available.</p>
           {/if}
         </section>
+
+        <!-- News Section — sits directly under Synopsis because it is the only
+             part of this page that changes after the first visit. Capped at the
+             latest 5; the rest live at /show/[id]/news. -->
+        {#if newsEnabled && anime.news && anime.news.length > 0}
+          <section class="content-section" bind:this={newsEl} aria-labelledby="news-heading">
+            <h2 class="section-heading" id="news-heading">News</h2>
+            <AnimeNews news={anime.news} limit={5} viewAllHref={`/show/${anime.id}/news`} />
+          </section>
+        {/if}
 
         <!-- Episodes Section -->
         {#if anime.episodes && anime.episodes.length > 0}
@@ -1145,6 +1183,7 @@
     height: 1px;
     background: var(--weeb-border);
   }
+
 
   /* ===========================
      SYNOPSIS
