@@ -8,6 +8,7 @@
   import Episodes from './Episodes.svelte';
   import CharactersWithStaff from './CharactersWithStaff.svelte';
   import AnimeNews from './AnimeNews.svelte';
+  import { isFeatureEnabled } from '../../utils/analytics';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { fetchDetails } from '../../services/queries';
   import { GetImageFromAnime, getYearUTC, formatDateUTC } from '../../services/utils';
@@ -70,6 +71,19 @@
   // Floating tab bar state
   let activeTab = 'synopsis';
   let showTabBar = false;
+  // News is behind a flag while the research pipeline's quality gate is still being
+  // sorted out. Client-driven like the animeschedule gate: the flag is unavailable
+  // during SSR, and PostHog's onFeatureFlags can fire once while the flag still reads
+  // false and never re-fire, so re-check briefly until it resolves.
+  let newsEnabled = false;
+  onMount(() => {
+    let tries = 0;
+    const check = () => { newsEnabled = isFeatureEnabled('anime-news'); return newsEnabled; };
+    if (check()) return;
+    const iv = setInterval(() => { if (check() || ++tries >= 25) clearInterval(iv); }, 250);
+    return () => clearInterval(iv);
+  });
+
   let synopsisEl: HTMLElement;
   let newsEl: HTMLElement;
   let episodesEl: HTMLElement;
@@ -610,7 +624,7 @@
           style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'synopsis' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'synopsis' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
           on:click={() => scrollToSection('synopsis')}
         >Synopsis</button>
-        {#if anime.news && anime.news.length > 0}
+        {#if newsEnabled && anime.news && anime.news.length > 0}
           <button
             style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'news' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'news' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
             on:click={() => scrollToSection('news')}
@@ -647,7 +661,7 @@
         <!-- News Section — sits directly under Synopsis because it is the only
              part of this page that changes after the first visit. Capped at the
              latest 5; the rest live at /show/[id]/news. -->
-        {#if anime.news && anime.news.length > 0}
+        {#if newsEnabled && anime.news && anime.news.length > 0}
           <section class="content-section" bind:this={newsEl} aria-labelledby="news-heading">
             <h2 class="section-heading" id="news-heading">News</h2>
             <AnimeNews news={anime.news} limit={5} viewAllHref={`/show/${anime.id}/news`} />

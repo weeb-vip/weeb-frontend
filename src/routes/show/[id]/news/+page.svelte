@@ -5,8 +5,25 @@
   import { GetImageFromAnime, getYearUTC } from '../../../../services/utils';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+  import { isFeatureEnabled } from '../../../../utils/analytics';
 
   export let data;
+
+  // Behind the same flag as the section on the anime page. `resolved` distinguishes
+  // "flags haven't loaded yet" from "flag is off" — without it the page would flash a
+  // not-available message on every load while PostHog is still fetching.
+  let newsEnabled = false;
+  let resolved = false;
+  onMount(() => {
+    let tries = 0;
+    const check = () => { newsEnabled = isFeatureEnabled('anime-news'); return newsEnabled; };
+    if (check()) { resolved = true; return; }
+    const iv = setInterval(() => {
+      if (check() || ++tries >= 25) { resolved = true; clearInterval(iv); }
+    }, 250);
+    return () => clearInterval(iv);
+  });
 
   /**
    * Banner candidates, same order as the show page: the tvdb artwork synced to the CDN
@@ -141,7 +158,13 @@
     </div>
   </header>
 
-  {#if data.ssrError}
+  {#if !newsEnabled}
+    <!-- Nothing while flags resolve, then a plain message. The hero above stays either
+         way, so a direct link still tells you which anime you asked about. -->
+    {#if resolved}
+      <p class="error">News isn't available yet.</p>
+    {/if}
+  {:else if data.ssrError}
     <p class="error">Couldn't load news right now. Try again in a moment.</p>
   {:else}
     {#if showFilters}

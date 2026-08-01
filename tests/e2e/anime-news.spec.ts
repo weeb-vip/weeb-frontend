@@ -27,6 +27,38 @@ async function gotoNewsPage(page: import('@playwright/test').Page) {
 }
 
 test.describe('anime news', () => {
+  /**
+   * The section is behind the `anime-news` flag. Tests force it on rather than depending
+   * on PostHog's rollout in whatever environment they run against — otherwise the suite
+   * would pass or fail on flag state rather than on the code under test.
+   *
+   * PostHog is NOT initialised in local dev (no key), so window.posthog is undefined and
+   * isFeatureEnabled returns false for everything. A patch-what-exists approach therefore
+   * has nothing to attach to; this installs a stub when absent and re-patches if the real
+   * SDK loads later and replaces it.
+   */
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      const FLAG = 'anime-news';
+      const install = () => {
+        const w = window as any;
+        if (!w.posthog) {
+          w.posthog = { isFeatureEnabled: (key: string) => key === FLAG };
+          return;
+        }
+        if (w.posthog.__flagPatched) return;
+        const original = typeof w.posthog.isFeatureEnabled === 'function'
+          ? w.posthog.isFeatureEnabled.bind(w.posthog)
+          : () => false;
+        w.posthog.isFeatureEnabled = (key: string) => (key === FLAG ? true : original(key));
+        w.posthog.__flagPatched = true;
+      };
+      install();
+      const iv = setInterval(install, 25);
+      setTimeout(() => clearInterval(iv), 10000);
+    });
+  });
+
   test('the show page renders a News tab and section', async ({ page }) => {
     await page.goto(`/show/${ANIME_WITH_NEWS}`);
     await waitForShowPage(page);
@@ -106,6 +138,9 @@ test.describe('anime news', () => {
     // Filtering is server-rendered from the URL, so a reload must reproduce it.
     const url = page.url();
     await page.reload();
+    // Wait for the reloaded page the same way gotoNewsPage does — counting straight
+    // after reload measures an empty DOM, not a broken filter.
+    await page.locator('.news-rail article').first().waitFor({ state: 'visible', timeout: 15000 });
     expect(page.url()).toBe(url);
     expect(await page.locator('.news-rail article').count()).toBe(filtered);
   });
