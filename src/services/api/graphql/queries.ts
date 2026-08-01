@@ -133,11 +133,59 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
             }
             createdAt
             updatedAt
+            news {
+                id
+                title
+                summary
+                category
+                sourceUrl
+                sourceName
+                publishedDate
+                episodeNumber
+                language
+                references {
+                    kind
+                    title
+                    url
+                }
+            }
             userAnime {
                 id
                 status
                 score
                 episodes
+            }
+        }
+    }
+`)
+
+// Just enough for /show/[id]/news — the full detail query drags in episodes,
+// characters and userAnime that this page never renders.
+export const getAnimeNewsByID = graphql(/* GraphQL */`
+    query getAnimeNewsByID($id: ID!) {
+        anime(id: $id) {
+            id
+            titleEn
+            titleJp
+            imageUrl
+            startDate
+            studios
+            tags
+            news {
+                id
+                title
+                summary
+                category
+                sourceUrl
+                sourceName
+                publishedDate
+                episodeNumber
+                language
+                references {
+                    kind
+                    title
+                    url
+                }
             }
         }
     }
