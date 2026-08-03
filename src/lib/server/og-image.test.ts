@@ -37,7 +37,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      getSource: async () => ({ title: 'One Piece' }),
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -57,7 +57,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      getSource: async () => ({ title: 'One Piece' }),
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -72,7 +72,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      getSource: async () => ({ title: 'Nonexistent Show' }),
+      getTitle: async () => 'Nonexistent Show',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -104,112 +104,67 @@ describe('resolveOgImage', () => {
     expect(url).toBe('https://weeb.vip/assets/og-image.jpg');
   });
 
-  it('falls back to the MyAnimeList poster when our CDN cannot be probed', async () => {
-    // This is production. Cloudflare bot-challenges Pages/Workers requests to
-    // /weeb/*, so both CDN candidates answer 403 and tell us nothing. MyAnimeList
-    // is outside that zone, so it can still be confirmed.
-    const MAL = 'https://cdn.myanimelist.net/images/anime/1371/154308.jpg';
-    const calls: string[] = [];
-    const impl = (async (url: any) => {
-      calls.push(String(url));
-      return { status: String(url) === MAL ? 206 : 403 } as Response;
-    }) as unknown as typeof fetch;
 
-    const url = await resolveOgImage({
-      id: ID,
-      getSource: async () => ({ title: 'One Piece', imageUrl: MAL }),
-      cdnUrl: CDN,
-      origin: ORIGIN,
-      fetchImpl: impl
-    });
 
-    expect(url).toBe(MAL);
-    // The CDN poster is skipped: it lives on the origin that just refused to answer.
-    expect(calls).toEqual([`${CDN}/banners/${ID}`, MAL]);
-  });
 
-  it('still prefers the CDN banner when it can be confirmed', async () => {
-    // Staging: egress is not challenged, so the landscape banner wins and
-    // MyAnimeList is never consulted.
-    const MAL = 'https://cdn.myanimelist.net/images/anime/1/1.jpg';
+
+  it('sends x-og-probe so the WAF Skip rule can let our own origin through', async () => {
     const { impl, calls } = fakeFetch([`${CDN}/banners/${ID}`]);
 
-    const url = await resolveOgImage({
+    await resolveOgImage({
       id: ID,
-      getSource: async () => ({ title: 'One Piece', imageUrl: MAL }),
+      probeSecret: 's3cret',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
     });
 
-    expect(url).toContain('/cdn-cgi/image/');
-    expect(calls.map((c) => c.url)).not.toContain(MAL);
+    expect(calls[0].init?.headers).toMatchObject({ 'x-og-probe': 's3cret' });
   });
 
-  it('prefers the CDN poster over MyAnimeList when the banner is merely absent', async () => {
-    const MAL = 'https://cdn.myanimelist.net/images/anime/1/1.jpg';
-    const { impl } = fakeFetch([`${CDN}/one_piece`]);
+  it('omits the header when no secret is configured', async () => {
+    const { impl, calls } = fakeFetch([`${CDN}/banners/${ID}`]);
 
-    const url = await resolveOgImage({
-      id: ID,
-      getSource: async () => ({ title: 'One Piece', imageUrl: MAL }),
-      cdnUrl: CDN,
-      origin: ORIGIN,
-      fetchImpl: impl
-    });
+    await resolveOgImage({ id: ID, cdnUrl: CDN, origin: ORIGIN, fetchImpl: impl });
 
-    expect(url).toContain('/weeb/one_piece');
-  });
-
-  it('lands on the branded default when even MyAnimeList is missing', async () => {
-    const { impl } = fakeFetch([], 403);
-
-    const url = await resolveOgImage({
-      id: ID,
-      getSource: async () => ({ title: 'One Piece', imageUrl: null }),
-      cdnUrl: CDN,
-      origin: ORIGIN,
-      fetchImpl: impl
-    });
-
-    expect(url).toBe('https://weeb.vip/assets/og-image.jpg');
+    expect(calls[0].init?.headers).not.toHaveProperty('x-og-probe');
   });
 
   it('does not look up the title when the banner is there', async () => {
     const { impl } = fakeFetch([`${CDN}/banners/${ID}`]);
-    const getSource = jest.fn(async () => ({ title: 'One Piece' }));
+    const getTitle = jest.fn(async () => 'One Piece');
 
-    await resolveOgImage({ id: ID, getSource, cdnUrl: CDN, origin: ORIGIN, fetchImpl: impl });
+    await resolveOgImage({ id: ID, getTitle, cdnUrl: CDN, origin: ORIGIN, fetchImpl: impl });
 
     // The title is only needed for the poster slug, and the poster was never reached.
-    expect(getSource).not.toHaveBeenCalled();
+    expect(getTitle).not.toHaveBeenCalled();
   });
 
   it('looks up the title only once the banner is definitively absent', async () => {
     const { impl } = fakeFetch([`${CDN}/one_piece`]);
-    const getSource = jest.fn(async () => ({ title: 'One Piece' }));
+    const getTitle = jest.fn(async () => 'One Piece');
 
     const url = await resolveOgImage({
       id: ID,
-      getSource,
+      getTitle,
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
     });
 
-    expect(getSource).toHaveBeenCalledTimes(1);
+    expect(getTitle).toHaveBeenCalledTimes(1);
     expect(url).toContain('/weeb/one_piece');
   });
 
   it('survives a failing title lookup', async () => {
     const { impl } = fakeFetch([]);
-    const getSource = jest.fn(async () => {
+    const getTitle = jest.fn(async () => {
       throw new Error('gateway down');
     });
 
     const url = await resolveOgImage({
       id: ID,
-      getSource,
+      getTitle,
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -220,7 +175,7 @@ describe('resolveOgImage', () => {
 
   it('caches, so repeated crawler hits do not re-probe', async () => {
     const { impl, calls } = fakeFetch([`${CDN}/banners/${ID}`]);
-    const args = { id: ID, getSource: async () => ({ title: 'One Piece' }), cdnUrl: CDN, origin: ORIGIN, fetchImpl: impl };
+    const args = { id: ID, getTitle: async () => 'One Piece', cdnUrl: CDN, origin: ORIGIN, fetchImpl: impl };
 
     const first = await resolveOgImage(args);
     const second = await resolveOgImage(args);
@@ -236,7 +191,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      getSource: async () => ({ title: 'One Piece' }),
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -250,7 +205,7 @@ describe('resolveOgImage', () => {
 
     await resolveOgImage({
       id: ID,
-      getSource: async () => ({ title: 'One Piece' }),
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -266,7 +221,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      getSource: async () => ({ title: 'One Piece' }),
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -283,7 +238,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      getSource: async () => ({ title: 'One Piece' }),
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl

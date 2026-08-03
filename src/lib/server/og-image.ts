@@ -70,16 +70,23 @@ type Presence = 'present' | 'absent' | 'unknown';
  * Probes the untransformed URL — cheaper than making Cloudflare re-encode an
  * image we may not use.
  *
- * Cloudflare currently bot-challenges server-to-server requests for /weeb/*
- * (`cf-mitigated: challenge`), from this cluster included, so in production this
- * returns 'unknown' rather than a real answer. Real crawlers are not challenged
- * and fetch those URLs fine — it is only our own probe that is blocked. See the
- * note on resolveOgImage for what that means, and how to lift it.
+ * Cloudflare bot-challenges server-to-server requests for /weeb/*
+ * (`cf-mitigated: challenge`) unless the caller looks like a verified crawler, so
+ * without the WAF Skip rule this returns 'unknown' rather than a real answer.
+ * Real crawlers are never challenged and fetch those URLs fine — it is only our
+ * own probe that is blocked. `probeSecret` is what the Skip rule matches on.
  */
-async function probe(url: string, fetchImpl: typeof fetch): Promise<Presence> {
+async function probe(
+  url: string,
+  fetchImpl: typeof fetch,
+  probeSecret?: string | null
+): Promise<Presence> {
   try {
     const res = await fetchImpl(url, {
-      headers: { range: 'bytes=0-0' },
+      headers: {
+        range: 'bytes=0-0',
+        ...(probeSecret ? { 'x-og-probe': probeSecret } : {})
+      },
       signal: AbortSignal.timeout(2500)
     });
     if (res.status === 200 || res.status === 206) return 'present';
@@ -91,21 +98,21 @@ async function probe(url: string, fetchImpl: typeof fetch): Promise<Presence> {
   }
 }
 
-export interface AnimeImageSource {
-  /** Used to derive the CDN poster slug. */
-  title?: string | null;
-  /** The MyAnimeList address. Reachable from anywhere — see resolveOgImage. */
-  imageUrl?: string | null;
-}
-
 export interface OgImageArgs {
   id: string;
   /**
-   * Resolves the anime's title and source image URL. Called lazily — only when the
-   * banner is not immediately usable — so the common path costs no lookup.
+   * Resolves the anime title, used to derive the CDN poster slug. Called lazily —
+   * only when the banner is missing — so the common path costs no lookup.
    * Optional: without it, only the banner and the default are considered.
    */
-  getSource?: () => Promise<AnimeImageSource | null>;
+  getTitle?: () => Promise<string | null>;
+  /**
+   * Sent as x-og-probe on every probe. Cloudflare challenges server-side requests
+   * to /weeb/*, so a WAF Skip rule matching this header is what lets our own origin
+   * check whether an image exists while the images stay bot-protected for everyone
+   * else. Without the rule in place this is simply an ignored header.
+   */
+  probeSecret?: string | null;
   /** locals.config.cdn_url, which in production already includes the /weeb prefix. */
   cdnUrl?: string | null;
   /** Absolute origin, for resolving the local fallback asset. */
@@ -116,25 +123,26 @@ export interface OgImageArgs {
 /**
  * Pick the share image for an anime.
  *
- * Order: CDN banner, CDN poster, MyAnimeList poster, branded default.
+ * Order: CDN banner, CDN poster, branded default. Everything comes from our own
+ * CDN — third-party artwork is deliberately not used as a fallback.
  *
- * The last-but-one step exists because our own CDN cannot always be probed.
- * Cloudflare bot-challenges server-to-server requests to /weeb/* — and crucially
- * this is per-environment, not global: the staging pod's egress is allowed, while
- * production, which runs on Cloudflare Pages, is challenged for every request.
- * That is why staging showed real artwork and production showed the placeholder.
+ * Both CDN candidates are resized to exactly 1200x630, so whichever wins, and the
+ * default too, the advertised dimensions are always honest.
  *
- * MyAnimeList sits outside that zone, so `imageUrl` can be verified from anywhere.
- * It is a portrait poster rather than a 1920x1080 banner, so it makes a worse card
- * than the CDN banner — but real artwork beats a generic logo, and unlike the CDN
- * candidates it can actually be confirmed before being advertised.
+ * A probe that cannot get an answer resolves to the default rather than gambling
+ * on a URL that might 404. Today that is production's normal state: Cloudflare
+ * challenges server-side requests to /weeb/*, and it is per-environment — staging
+ * runs as plain Node in k8s and is allowed, while production runs on Cloudflare
+ * Pages and is challenged every time. That is exactly why staging showed real
+ * artwork and production showed the placeholder.
  *
- * Once /weeb/* is exempted from the bot rule, the earlier CDN branches start
- * winning again on their own, with no code change.
+ * The WAF Skip rule matching `probeSecret` is what fixes it; the moment it lands,
+ * both branches start resolving with no code change.
  */
 export async function resolveOgImage({
   id,
-  getSource,
+  getTitle,
+  probeSecret,
   cdnUrl,
   origin,
   fetchImpl = fetch
@@ -151,33 +159,24 @@ export async function resolveOgImage({
   // Banner first: it is 1920x1080, so it crops to 1200x630 without distortion.
   // The poster is portrait and only a reasonable card after a cover crop.
   const banner = `${base}/banners/${encodeURIComponent(id)}`;
-  const bannerPresence = await probe(banner, fetchImpl);
+  const bannerPresence = await probe(banner, fetchImpl, probeSecret);
 
   if (bannerPresence === 'present') {
     chosen = withResize(banner);
-  } else if (getSource) {
-    const source = await getSource().catch(() => null);
-
-    // Only worth trying when the banner gave a real answer. An inconclusive probe
-    // means this origin is blocked for us, and the poster lives on that same origin.
-    if (bannerPresence === 'absent' && source?.title) {
-      const poster = `${base}/${animeCdnSlug(source.title)}`;
-      const posterPresence = await probe(poster, fetchImpl);
+  } else if (bannerPresence === 'unknown') {
+    // Whatever blocked this probe blocks the poster too — same origin, same rule.
+    conclusive = false;
+  } else if (getTitle) {
+    // Only now is the title worth fetching: the poster is the sole remaining
+    // candidate that needs it.
+    const title = await getTitle().catch(() => null);
+    if (title) {
+      const poster = `${base}/${animeCdnSlug(title)}`;
+      const posterPresence = await probe(poster, fetchImpl, probeSecret);
       if (posterPresence === 'present') chosen = withResize(poster);
       else if (posterPresence === 'unknown') conclusive = false;
     }
-
-    // Different origin, different rules — worth a try even when our own CDN
-    // refused to answer.
-    if (!chosen && source?.imageUrl) {
-      if ((await probe(source.imageUrl, fetchImpl)) === 'present') {
-        chosen = source.imageUrl;
-        conclusive = true;
-      }
-    }
   }
-
-  if (bannerPresence === 'unknown' && !chosen) conclusive = false;
 
   const url = chosen ?? new URL(DEFAULT_OG, origin).toString();
   // Don't cache a guess for hours — an inconclusive answer should be retried soon,
