@@ -1,9 +1,9 @@
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 // use the same typed documents the client uses — a raw copy here drifts
 // (it already had: missing userAnime.episodes)
 import { getAnimeDetailsByID, queryCharactersAndStaffByAnimeID } from '../../../services/api/graphql/queries';
-import { createSSRGraphQLClient, cookieHeaderFrom } from '$lib/server/ssr-graphql';
+import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
 
 export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const { id } = params;
@@ -19,7 +19,9 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   let animeImage = '/assets/og-image.jpg';
   let animeData: any = null;
   let charactersData: any = null;
-  let error: string | null = null;
+  // Not named `error`: that would shadow SvelteKit's error() helper imported above.
+  let loadError: string | null = null;
+  let error404 = false;
 
   try {
     // Forward the user's cookies — the gateway authenticates via cookie,
@@ -49,9 +51,31 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
       // disallows /*?*, which would hide it from the crawlers that need it.
       animeImage = `/og/${encodeURIComponent(id)}`;
     }
+    // The query succeeded and there is no such anime: a genuine 404. This used to
+    // return 200 with the placeholder title above, a soft 404 — which means every
+    // stale or mistyped id in the 32,000-URL sitemap could be indexed as an empty
+    // page competing with real ones.
+    //
+    // Guarded on the request having actually succeeded. A gateway blip must not be
+    // reported as "gone", or Google would start dropping real pages; that case still
+    // falls through to the catch and renders with ssrError, where the client can
+    // recover on hydration.
+    if (!animeData?.anime) {
+      error404 = true;
+    }
   } catch (err: any) {
-    console.error('[SSR] Failed to fetch anime data:', err);
-    error = err?.message || 'Failed to fetch anime data';
+    // A missing anime arrives here as a thrown DOWNSTREAM_SERVICE_ERROR, not as a
+    // null field, so it has to be separated from a genuine gateway failure.
+    if (isNotFoundError(err)) {
+      error404 = true;
+    } else {
+      console.error('[SSR] Failed to fetch anime data:', err);
+      loadError = err?.message || 'Failed to fetch anime data';
+    }
+  }
+
+  if (error404) {
+    error(404, 'Anime not found');
   }
 
   return {
@@ -59,8 +83,26 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     animeTitle,
     animeDescription,
     animeImage,
+    // The subset the JSON-LD builder needs. Passed explicitly rather than reaching
+    // into ssrAnimeData from the component, so the schema does not silently break
+    // if the query's shape changes.
+    animeSchemaSource: animeData?.anime
+      ? {
+          titleEn: animeData.anime.titleEn,
+          titleJp: animeData.anime.titleJp,
+          titleRomaji: animeData.anime.titleRomaji,
+          description: animeData.anime.description,
+          episodeCount: animeData.anime.episodeCount,
+          startDate: animeData.anime.startDate,
+          endDate: animeData.anime.endDate,
+          duration: animeData.anime.duration,
+          tags: animeData.anime.tags,
+          studios: animeData.anime.studios,
+          malId: animeData.anime.malId
+        }
+      : null,
     ssrAnimeData: animeData,
     ssrCharactersData: charactersData,
-    ssrError: error
+    ssrError: loadError
   };
 };
