@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getAnimeNewsByID } from '../../../../services/api/graphql/queries';
-import { createSSRGraphQLClient, cookieHeaderFrom } from '$lib/server/ssr-graphql';
+import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
 
 export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const { id } = params;
@@ -48,6 +48,10 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     // A 404 thrown above arrives here as a SvelteKit HttpError — rethrow it
     // rather than reporting a missing anime as a load failure.
     if (e?.status) throw e;
+    // The `!anime` check above never actually fires: the router reports a missing
+    // record by throwing a DOWNSTREAM_SERVICE_ERROR, not by returning null. Without
+    // this the page answered 200 for any bogus id — a soft 404.
+    if (isNotFoundError(e)) error(404, 'Anime not found');
     return {
       animeId: id,
       animeTitle: 'Anime',

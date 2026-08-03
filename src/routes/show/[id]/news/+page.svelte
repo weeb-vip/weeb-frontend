@@ -1,5 +1,7 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
+  import StructuredData from '$lib/StructuredData.svelte';
+  import { breadcrumbSchema } from '$lib/structured-data';
   import SafeImage from '../../../../svelte/components/SafeImage.svelte';
   import AnimeNews from '../../../../svelte/components/AnimeNews.svelte';
   import { GetImageFromAnime, getYearUTC } from '../../../../services/utils';
@@ -99,13 +101,24 @@
   const goPage = (n: number) => navigate({ page: n });
 
   const label = (c: string) => c.charAt(0).toUpperCase() + c.slice(1);
+
+  const SITE_URL = 'https://weeb.vip';
+  // Trailing "." on a title would otherwise produce "…Last Stand.." in the description.
+  $: descTitle = data.animeTitle.replace(/\.+$/, '');
+  $: breadcrumbs = breadcrumbSchema([
+    { name: 'Home', url: `${SITE_URL}/` },
+    { name: data.animeTitle, url: `${SITE_URL}/show/${data.animeId}` },
+    { name: 'News', url: `${SITE_URL}/show/${data.animeId}/news` }
+  ]);
 </script>
 
 <Seo
   title={`${data.animeTitle} — News`}
-  description={`All ${news.length} news ${news.length === 1 ? 'story' : 'stories'} for ${data.animeTitle}.`}
+  description={`All ${news.length} news ${news.length === 1 ? 'story' : 'stories'} for ${descTitle}.`}
   image={data.animeImage}
 />
+
+<StructuredData schemas={[breadcrumbs]} />
 
 <div class="news-page">
   <a class="back" href={`/show/${data.animeId}`}>

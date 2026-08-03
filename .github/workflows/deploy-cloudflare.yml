@@ -84,6 +84,28 @@ jobs:
           VITE_APP_VERSION: ${{ inputs.tag }}
           NODE_ENV: production
 
+      # Runtime secrets, pushed before the deploy so the new version starts with them.
+      #
+      # These cannot be baked in at build time: SvelteKit reads them through
+      # $env/dynamic/private, which on Pages resolves against the deployment's own
+      # environment, not the build environment. Setting them in the build step above
+      # would leave them undefined at request time.
+      #
+      # Production only. Staging runs in k8s and takes its config from weeb-argocd.
+      # OG_PROBE_SECRET lets /og/<id> check whether a CDN image exists. Cloudflare
+      # bot-challenges server-side requests to cdn.weeb.vip/weeb/*, and the WAF rule
+      # that lets this origin through matches on an x-og-probe header carrying this
+      # value. Without it every anime falls back to the branded default card.
+      - name: Sync runtime secrets to Pages
+        if: inputs.environment == 'production'
+        run: |
+          printf '%s' "$OG_PROBE_SECRET" \
+            | yarn wrangler pages secret put OG_PROBE_SECRET --project-name=weeb-production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          OG_PROBE_SECRET: ${{ secrets.OG_PROBE_SECRET }}
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
