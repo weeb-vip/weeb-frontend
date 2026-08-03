@@ -43,9 +43,11 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
         ? `${anime.description.substring(0, 160)}...`
         : `Watch and track ${animeTitle} episodes, get notifications, and manage your anime watchlist on WeebVIP.`;
 
-      if (anime.imageUrl) {
-        animeImage = `https://cdn.weeb.vip/weeb/${encodeURIComponent(anime.imageUrl)}`;
-      }
+      // Not anime.imageUrl: that is a MyAnimeList address, and wrapping it in the CDN
+      // prefix produced a 404 for every anime. /og/<id> resolves the banner, then the
+      // poster, then the site default, and always answers. No query string — robots.txt
+      // disallows /*?*, which would hide it from the crawlers that need it.
+      animeImage = `/og/${encodeURIComponent(id)}`;
     }
   } catch (err: any) {
     console.error('[SSR] Failed to fetch anime data:', err);
