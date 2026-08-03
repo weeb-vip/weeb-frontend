@@ -36,8 +36,10 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
       // Passing anime.imageUrl here was the bug: that's a MyAnimeList address the CDN
       // knows nothing about.
       anime,
-      // Kept for the og:image meta tag, which does want a real absolute URL.
-      animeImage: anime.imageUrl || '/assets/og-image.jpg',
+      // og:image. Hotlinking anime.imageUrl to MyAnimeList did render a card, but it
+      // is a portrait poster served under tags declaring 1200x630. /og/<id>.jpg
+      // returns a correctly sized image from our own CDN, with a real fallback.
+      animeImage: `/og/${encodeURIComponent(id)}?t=${encodeURIComponent(title)}`,
       news: anime.news ?? [],
       ssrError: null as string | null
     };
