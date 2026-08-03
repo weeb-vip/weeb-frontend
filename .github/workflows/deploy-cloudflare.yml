@@ -96,11 +96,31 @@ jobs:
       # bot-challenges server-side requests to cdn.weeb.vip/weeb/*, and the WAF rule
       # that lets this origin through matches on an x-og-probe header carrying this
       # value. Without it every anime falls back to the branded default card.
+      #
+      # Uses the REST API rather than `wrangler pages secret put`: the wrangler in
+      # node_modules needs Node 22, while .nvmrc pins this job to 20, so the CLI
+      # refuses to start. The deploy step below only avoids that because
+      # wrangler-action ships its own pinned wrangler.
       - name: Sync runtime secrets to Pages
         if: inputs.environment == 'production'
         run: |
-          printf '%s' "$OG_PROBE_SECRET" \
-            | yarn wrangler pages secret put OG_PROBE_SECRET --project-name=weeb-production
+          payload=$(jq -n --arg v "$OG_PROBE_SECRET" \
+            '{deployment_configs:{production:{env_vars:{OG_PROBE_SECRET:{type:"secret_text",value:$v}}}}}')
+
+          response=$(curl -sS -X PATCH \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/weeb-production" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "$payload")
+
+          # Cloudflare answers 200 with success:false on permission errors, so the
+          # status code alone is not enough. The response never echoes secret values.
+          if ! echo "$response" | jq -e '.success' > /dev/null; then
+            echo "Failed to set OG_PROBE_SECRET:"
+            echo "$response" | jq -c '.errors'
+            exit 1
+          fi
+          echo "OG_PROBE_SECRET set on weeb-production"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
