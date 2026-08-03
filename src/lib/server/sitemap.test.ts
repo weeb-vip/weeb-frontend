@@ -2,8 +2,10 @@ import {
   ANIME_PER_SITEMAP,
   chunkCount,
   escapeXml,
-  getAnimeEntries,
-  getNewsEntries,
+  animeEntries,
+  getAnimeRecords,
+  getNewsRecords,
+  newsEntries,
   getSeasonEntries,
   renderIndex,
   renderUrlset,
@@ -11,7 +13,46 @@ import {
   _clearSitemapCache
 } from './sitemap';
 
+const SITE = 'https://weeb.vip';
+const STAGING = 'https://staging.weeb.vip';
+
 beforeEach(() => _clearSitemapCache());
+
+describe('per-origin URLs', () => {
+  it('builds show URLs on whichever origin asked', () => {
+    const records = [{ id: 'a1', lastmod: '2026-08-03' }];
+
+    expect(animeEntries(records, SITE)[0].loc).toBe('https://weeb.vip/show/a1');
+    // A sitemap served from staging must not send crawlers to production.
+    expect(animeEntries(records, STAGING)[0].loc).toBe('https://staging.weeb.vip/show/a1');
+  });
+
+  it('builds news URLs on whichever origin asked', () => {
+    const records = [{ id: 'a1', lastmod: null }];
+
+    expect(newsEntries(records, STAGING)[0].loc).toBe('https://staging.weeb.vip/show/a1/news');
+  });
+
+  it('carries lastmod through unchanged', () => {
+    const records = [{ id: 'a1', lastmod: '2026-08-03' }];
+
+    expect(animeEntries(records, SITE)[0].lastmod).toBe('2026-08-03');
+    expect(newsEntries(records, SITE)[0].lastmod).toBe('2026-08-03');
+  });
+
+  it('caches records, not URLs, so a staging request cannot poison production', async () => {
+    const { client, calls } = fakeClient(() => ({
+      newestAnime: [{ id: 'a1', updatedAt: null }]
+    }));
+
+    const first = animeEntries(await getAnimeRecords(client), STAGING);
+    const second = animeEntries(await getAnimeRecords(client), SITE);
+
+    expect(calls).toHaveLength(1); // second call served from cache
+    expect(first[0].loc).toBe('https://staging.weeb.vip/show/a1');
+    expect(second[0].loc).toBe('https://weeb.vip/show/a1');
+  });
+});
 
 /** Minimal stand-in for the graphql-request client. */
 function fakeClient(handler: (query: string, vars: any) => any) {
@@ -92,11 +133,12 @@ describe('getAnimeEntries', () => {
       ]
     }));
 
-    const entries = await getAnimeEntries(client);
+    const records = await getAnimeRecords(client);
 
-    expect(entries).toEqual([
-      { loc: 'https://weeb.vip/show/a1', lastmod: '2026-08-03' },
-      { loc: 'https://weeb.vip/show/a2', lastmod: null }
+    // Records are host-independent; the URL is built later, per request origin.
+    expect(records).toEqual([
+      { id: 'a1', lastmod: '2026-08-03' },
+      { id: 'a2', lastmod: null }
     ]);
   });
 
@@ -105,14 +147,14 @@ describe('getAnimeEntries', () => {
       newestAnime: [{ id: 'a1', updatedAt: null }, { id: null }, {}]
     }));
 
-    expect(await getAnimeEntries(client)).toHaveLength(1);
+    expect(await getAnimeRecords(client)).toHaveLength(1);
   });
 
   it('caches: listing 32k anime is far too expensive to repeat per request', async () => {
     const { client, calls } = fakeClient(() => ({ newestAnime: [{ id: 'a1' }] }));
 
-    await getAnimeEntries(client);
-    await getAnimeEntries(client);
+    await getAnimeRecords(client);
+    await getAnimeRecords(client);
 
     expect(calls).toHaveLength(1);
   });
@@ -135,7 +177,7 @@ describe('getNewsEntries', () => {
       };
     });
 
-    const entries = await getNewsEntries(client);
+    const entries = await getNewsRecords(client);
 
     expect(calls).toHaveLength(3);
     expect(entries).toHaveLength(total);
@@ -153,7 +195,7 @@ describe('getNewsEntries', () => {
       }
     }));
 
-    const entries = await getNewsEntries(client);
+    const entries = newsEntries(await getNewsRecords(client), SITE);
 
     expect(entries).toHaveLength(2);
     expect(entries.map((e) => e.loc)).toEqual([
@@ -169,7 +211,7 @@ describe('getNewsEntries', () => {
       latestNews: { total: 9999, items: [] }
     }));
 
-    expect(await getNewsEntries(client)).toEqual([]);
+    expect(await getNewsRecords(client)).toEqual([]);
     expect(calls).toHaveLength(1);
   });
 });
@@ -182,7 +224,7 @@ describe('getSeasonEntries', () => {
         : { animeBySeasons: [] }
     );
 
-    const entries = await getSeasonEntries(client, new Date('2026-08-03T00:00:00Z'));
+    const entries = await getSeasonEntries(client, new Date('2026-08-03T00:00:00Z'), SITE);
 
     expect(entries).toEqual([{ loc: 'https://weeb.vip/season/SUMMER_2026' }]);
   });
@@ -194,7 +236,7 @@ describe('getSeasonEntries', () => {
     });
 
     await expect(
-      getSeasonEntries(client, new Date('2026-08-03T00:00:00Z'))
+      getSeasonEntries(client, new Date('2026-08-03T00:00:00Z'), SITE)
     ).resolves.toEqual([]);
   });
 });
