@@ -37,9 +37,10 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
       // knows nothing about.
       anime,
       // og:image. Hotlinking anime.imageUrl to MyAnimeList did render a card, but it
-      // is a portrait poster served under tags declaring 1200x630. /og/<id>.jpg
-      // returns a correctly sized image from our own CDN, with a real fallback.
-      animeImage: `/og/${encodeURIComponent(id)}?t=${encodeURIComponent(title)}`,
+      // is a portrait poster served under tags declaring 1200x630. /og/<id> returns a
+      // correctly sized image from our own CDN, with a real fallback. No query string —
+      // robots.txt disallows /*?*, which would hide it from the crawlers that need it.
+      animeImage: `/og/${encodeURIComponent(id)}`,
       news: anime.news ?? [],
       ssrError: null as string | null
     };
