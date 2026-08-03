@@ -371,6 +371,12 @@
 </script>
 
 <div class="homepage">
+  <!-- The page's actual heading. Visually hidden because the design leads with the hero
+       carousel rather than a title, but the document still needs one h1 describing the
+       page: the only h1 used to be the carousel's current anime, so the homepage's
+       primary heading changed with whichever show happened to be featured. -->
+  <h1 class="sr-only">WeebVIP — track your anime watchlist</h1>
+
   <!-- Hero Banner Section -->
   {#if sortedCurrentlyAiring.length > 0}
     <div class="hero-wrapper">

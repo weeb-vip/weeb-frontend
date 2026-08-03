@@ -151,7 +151,10 @@
       </div>
     {/if}
 
-    <h1>{title}</h1>
+    <!-- h2, not h1: this is one rotating featured item, so as an h1 the homepage's
+         primary heading changed with whatever the carousel happened to show. The
+         page-level h1 lives in HomepageSSR. -->
+    <h2>{title}</h2>
 
     {#if anime.description}
       <p class="hero-desc">
@@ -303,7 +306,7 @@
     background: oklch(0% 0 0 / 0.25);
     font-size: 10px;
   }
-  .hero h1 {
+  .hero h2 {
     font-size: clamp(28px, 4vw, 44px);
     font-weight: 700;
     letter-spacing: -0.02em;
@@ -388,7 +391,7 @@
   }
   @media (max-width: 768px) {
     .hero { min-height: 560px; }
-    .hero h1 { font-size: 24px; }
+    .hero h2 { font-size: 24px; }
   }
   @media (max-width: 480px) {
     .hero-content { padding: 0 16px 24px; }

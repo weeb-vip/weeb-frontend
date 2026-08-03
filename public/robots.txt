@@ -4,8 +4,10 @@ Allow: /
 # Sitemap
 Sitemap: https://weeb.vip/sitemap.xml
 
-# Crawl-delay for respectful crawling
-Crawl-delay: 1
+# No Crawl-delay. Google ignores it, but Bing and Yandex honour it — at one request
+# per second the ~32,000 show pages take over nine hours of continuous crawling to
+# get through, which throttles indexing far more than it protects the origin. The
+# site is behind Cloudflare; rate limiting belongs there, not here.
 
 # Disallow private/auth areas
 Disallow: /auth/

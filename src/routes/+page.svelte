@@ -5,8 +5,9 @@
   export let data;
 </script>
 
+<!-- No title, so Seo falls back to "WeebVIP - Track Your Anime Watchlist". This is the
+     most-linked page on the site and "Home | WeebVIP" says nothing about what it is. -->
 <Seo
-  title="Home"
   description="Discover and track your favorite anime. Get notifications for new episodes, explore seasonal anime, and manage your watchlist."
 />
 
