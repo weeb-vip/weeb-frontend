@@ -394,9 +394,12 @@
               fallbackSrc="/assets/not found.jpg"
             />
             <div class="min-w-0 flex-1">
-              <h1 class="text-base font-semibold text-weeb-fg truncate">
+              <!-- Not an h1: this is the sticky compact header, which repeats the title
+                   as navigation chrome. The page's h1 is the hero title further down,
+                   and having both made every show page emit two identical h1s. -->
+              <p class="text-base font-semibold text-weeb-fg truncate">
                 {animeTitle}
-              </h1>
+              </p>
               <p class="text-xs text-weeb-fg-secondary truncate">
                 {getYearUTC(anime.startDate)} • {anime.endDate ? "Finished" : "Ongoing"}
                 {#if anime.studios && anime.studios.length > 0}
