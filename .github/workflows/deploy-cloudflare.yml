@@ -97,30 +97,18 @@ jobs:
       # that lets this origin through matches on an x-og-probe header carrying this
       # value. Without it every anime falls back to the branded default card.
       #
-      # Uses the REST API rather than `wrangler pages secret put`. The CLI would work
-      # now that .nvmrc is on Node 24, but this needs no CLI at all and so cannot be
-      # broken again by a wrangler/Node version mismatch — which is exactly how the
-      # first version of this step took down a production deploy.
+      # The value is piped in rather than typed: wrangler reads stdin when it is not a
+      # TTY, so this never blocks waiting for input.
+      #
+      # This depends on .nvmrc staying at Node 22 or newer — wrangler 4.x refuses to
+      # start below that, which is how an earlier version of this step took down a
+      # production deploy. If a future wrangler raises its floor again, this breaks
+      # here first, before the deploy step.
       - name: Sync runtime secrets to Pages
         if: inputs.environment == 'production'
         run: |
-          payload=$(jq -n --arg v "$OG_PROBE_SECRET" \
-            '{deployment_configs:{production:{env_vars:{OG_PROBE_SECRET:{type:"secret_text",value:$v}}}}}')
-
-          response=$(curl -sS -X PATCH \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/weeb-production" \
-            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            --data "$payload")
-
-          # Cloudflare answers 200 with success:false on permission errors, so the
-          # status code alone is not enough. The response never echoes secret values.
-          if ! echo "$response" | jq -e '.success' > /dev/null; then
-            echo "Failed to set OG_PROBE_SECRET:"
-            echo "$response" | jq -c '.errors'
-            exit 1
-          fi
-          echo "OG_PROBE_SECRET set on weeb-production"
+          printf '%s' "$OG_PROBE_SECRET" \
+            | yarn wrangler pages secret put OG_PROBE_SECRET --project-name=weeb-production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
