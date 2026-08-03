@@ -162,7 +162,7 @@
           {news.length} {news.length === 1 ? 'story' : 'stories'}
         </span>
         <h1>{data.animeTitle}</h1>
-        {#if data.animeTitleJp}<span class="jp">{data.animeTitleJp}</span>{/if}
+        {#if data.animeTitleJp}<span class="jp" lang="ja">{data.animeTitleJp}</span>{/if}
         <span class="sub">
           {#if getYearUTC(data.anime?.startDate)}{getYearUTC(data.anime.startDate)}{/if}
           {#if studio}<span class="dot">·</span>{studio}{/if}

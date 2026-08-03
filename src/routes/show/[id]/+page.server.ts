@@ -4,6 +4,7 @@ import type { PageServerLoad } from './$types';
 // (it already had: missing userAnime.episodes)
 import { getAnimeDetailsByID, queryCharactersAndStaffByAnimeID } from '../../../services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
+import { metaDescription } from '$lib/meta';
 
 export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const { id } = params;
@@ -41,9 +42,12 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     if (animeData?.anime) {
       const anime = animeData.anime;
       animeTitle = anime.titleEn || anime.titleJp || 'Anime Details';
-      animeDescription = anime.description
-        ? `${anime.description.substring(0, 160)}...`
-        : `Watch and track ${animeTitle} episodes, get notifications, and manage your anime watchlist on WeebVIP.`;
+      // metaDescription rather than a raw substring: synopses are multi-paragraph, so
+      // the old `substring(0, 160) + '...'` put raw newlines in the tag and cut
+      // mid-word.
+      animeDescription =
+        metaDescription(anime.description) ??
+        `Watch and track ${animeTitle} episodes, get notifications, and manage your anime watchlist on WeebVIP.`;
 
       // Not anime.imageUrl: that is a MyAnimeList address, and wrapping it in the CDN
       // prefix produced a 404 for every anime. /og/<id> resolves the banner, then the
