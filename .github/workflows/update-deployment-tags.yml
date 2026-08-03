@@ -20,7 +20,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Read from .nvmrc like the other workflows, so this cannot drift behind
+          # again — it was still pinned to 20 after everything else had moved on.
+          node-version-file: '.nvmrc'
 
       - name: Enable Corepack
         run: corepack enable
