@@ -56,6 +56,31 @@ export function isAuthError(error: any): boolean {
          message.includes('expired');
 }
 
+/**
+ * True when the gateway is telling us the record does not exist, as opposed to
+ * failing to answer.
+ *
+ * The distinction matters for status codes: "no such anime" is a 404, while a gateway
+ * blip must not be, or Google would start dropping real pages from the index. The
+ * federation router reports it as a *thrown* error rather than a null field —
+ * a DOWNSTREAM_SERVICE_ERROR wrapping anime-api's "record not found" — so a plain
+ * `if (!data.anime)` check never sees it:
+ *
+ *   Failed to fetch from Subgraph 'anime-api'.
+ *     extensions.errors[0].message === "record not found"
+ */
+export function isNotFoundError(error: any): boolean {
+  const matches = (msg: unknown) => typeof msg === 'string' && /record not found/i.test(msg);
+
+  for (const err of error?.response?.errors ?? []) {
+    if (matches(err?.message)) return true;
+    for (const inner of err?.extensions?.errors ?? []) {
+      if (matches(inner?.message)) return true;
+    }
+  }
+  return false;
+}
+
 export interface SSRFetcher {
   fetchWithFallback: (query: any, variables: any, description: string) => Promise<any>;
   wasTokenExpired: () => boolean;
