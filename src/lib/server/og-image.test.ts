@@ -37,7 +37,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      title: 'One Piece',
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -57,7 +57,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      title: 'One Piece',
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -72,7 +72,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      title: 'Nonexistent Show',
+      getTitle: async () => 'Nonexistent Show',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -104,9 +104,52 @@ describe('resolveOgImage', () => {
     expect(url).toBe('https://weeb.vip/assets/og-image.jpg');
   });
 
+  it('does not look up the title when the banner is there', async () => {
+    const { impl } = fakeFetch([`${CDN}/banners/${ID}`]);
+    const getTitle = jest.fn(async () => 'One Piece');
+
+    await resolveOgImage({ id: ID, getTitle, cdnUrl: CDN, origin: ORIGIN, fetchImpl: impl });
+
+    // The title is only needed for the poster slug, and the poster was never reached.
+    expect(getTitle).not.toHaveBeenCalled();
+  });
+
+  it('looks up the title only once the banner is definitively absent', async () => {
+    const { impl } = fakeFetch([`${CDN}/one_piece`]);
+    const getTitle = jest.fn(async () => 'One Piece');
+
+    const url = await resolveOgImage({
+      id: ID,
+      getTitle,
+      cdnUrl: CDN,
+      origin: ORIGIN,
+      fetchImpl: impl
+    });
+
+    expect(getTitle).toHaveBeenCalledTimes(1);
+    expect(url).toContain('/weeb/one_piece');
+  });
+
+  it('survives a failing title lookup', async () => {
+    const { impl } = fakeFetch([]);
+    const getTitle = jest.fn(async () => {
+      throw new Error('gateway down');
+    });
+
+    const url = await resolveOgImage({
+      id: ID,
+      getTitle,
+      cdnUrl: CDN,
+      origin: ORIGIN,
+      fetchImpl: impl
+    });
+
+    expect(url).toBe('https://weeb.vip/assets/og-image.jpg');
+  });
+
   it('caches, so repeated crawler hits do not re-probe', async () => {
     const { impl, calls } = fakeFetch([`${CDN}/banners/${ID}`]);
-    const args = { id: ID, title: 'One Piece', cdnUrl: CDN, origin: ORIGIN, fetchImpl: impl };
+    const args = { id: ID, getTitle: async () => 'One Piece', cdnUrl: CDN, origin: ORIGIN, fetchImpl: impl };
 
     const first = await resolveOgImage(args);
     const second = await resolveOgImage(args);
@@ -122,7 +165,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      title: 'One Piece',
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -136,7 +179,7 @@ describe('resolveOgImage', () => {
 
     await resolveOgImage({
       id: ID,
-      title: 'One Piece',
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -152,7 +195,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      title: 'One Piece',
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl
@@ -169,7 +212,7 @@ describe('resolveOgImage', () => {
 
     const url = await resolveOgImage({
       id: ID,
-      title: 'One Piece',
+      getTitle: async () => 'One Piece',
       cdnUrl: CDN,
       origin: ORIGIN,
       fetchImpl: impl

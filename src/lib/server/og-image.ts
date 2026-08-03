@@ -93,8 +93,12 @@ async function probe(url: string, fetchImpl: typeof fetch): Promise<Presence> {
 
 export interface OgImageArgs {
   id: string;
-  /** Anime title, used to derive the poster slug. Optional: banners don't need it. */
-  title?: string | null;
+  /**
+   * Resolves the anime title, used to derive the poster slug. Called lazily — only
+   * when the banner turns out to be missing — so the common path costs no lookup.
+   * Optional: without it, only the banner and the default are considered.
+   */
+  getTitle?: () => Promise<string | null>;
   /** locals.config.cdn_url, which in production already includes the /weeb prefix. */
   cdnUrl?: string | null;
   /** Absolute origin, for resolving the local fallback asset. */
@@ -117,35 +121,40 @@ export interface OgImageArgs {
  */
 export async function resolveOgImage({
   id,
-  title,
+  getTitle,
   cdnUrl,
   origin,
   fetchImpl = fetch
 }: OgImageArgs): Promise<string> {
   const base = (cdnUrl || 'https://cdn.weeb.vip/weeb').replace(/\/+$/, '');
-  const key = `${base}|${id}|${title ?? ''}`;
+  const key = `${base}|${id}`;
 
   const cached = cache.get(key);
   if (cached && cached.expires > Date.now()) return cached.url;
 
-  // Banner first: it is 1920x1080, so it crops to 1200x630 without distortion.
-  // The poster is portrait and only a reasonable card after a cover crop.
-  const candidates = [`${base}/banners/${encodeURIComponent(id)}`];
-  if (title) candidates.push(`${base}/${animeCdnSlug(title)}`);
-
   let chosen: string | null = null;
   let conclusive = true;
-  for (const candidate of candidates) {
-    const presence = await probe(candidate, fetchImpl);
-    if (presence === 'present') {
-      chosen = withResize(candidate);
-      break;
-    }
-    if (presence === 'unknown') {
-      // Whatever blocked this probe will block the next one too. Stop paying for
-      // round trips that cannot answer the question.
-      conclusive = false;
-      break;
+
+  // Banner first: it is 1920x1080, so it crops to 1200x630 without distortion.
+  // The poster is portrait and only a reasonable card after a cover crop.
+  const banner = `${base}/banners/${encodeURIComponent(id)}`;
+  const bannerPresence = await probe(banner, fetchImpl);
+
+  if (bannerPresence === 'present') {
+    chosen = withResize(banner);
+  } else if (bannerPresence === 'unknown') {
+    // Whatever blocked this probe will block the next one too. Stop paying for
+    // round trips that cannot answer the question.
+    conclusive = false;
+  } else if (getTitle) {
+    // Only now is the title worth fetching: the poster is the sole candidate
+    // that needs it, and most anime never reach this branch.
+    const title = await getTitle().catch(() => null);
+    if (title) {
+      const poster = `${base}/${animeCdnSlug(title)}`;
+      const posterPresence = await probe(poster, fetchImpl);
+      if (posterPresence === 'present') chosen = withResize(poster);
+      else if (posterPresence === 'unknown') conclusive = false;
     }
   }
 
