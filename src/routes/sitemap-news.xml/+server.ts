@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import { createSSRGraphQLClient } from '$lib/server/ssr-graphql';
-import { getNewsEntries, renderUrlset, xmlResponse } from '$lib/server/sitemap';
+import { getNewsRecords, newsEntries, renderUrlset, xmlResponse } from '$lib/server/sitemap';
 
 /**
  * News hub pages, for anime that actually have news.
@@ -9,7 +9,8 @@ import { getNewsEntries, renderUrlset, xmlResponse } from '$lib/server/sitemap';
  * their own yet. Per-article routes are what would let Google rank individual
  * stories; until they exist this is the finest granularity available.
  */
-export const GET: RequestHandler = async ({ locals }) => {
+export const GET: RequestHandler = async ({ locals, url }) => {
   const client = createSSRGraphQLClient(locals.config.graphql_host, null);
-  return xmlResponse(renderUrlset(await getNewsEntries(client)));
+  const records = await getNewsRecords(client);
+  return xmlResponse(renderUrlset(newsEntries(records, url.origin)));
 };

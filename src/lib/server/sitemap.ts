@@ -10,7 +10,9 @@ import { createSSRGraphQLClient } from './ssr-graphql';
 // Everything here is cached in module scope. Building a chunk means listing the whole
 // catalogue, and that is far too expensive to repeat per crawler request.
 
-export const SITE_URL = 'https://weeb.vip';
+// URLs are built from the origin that served the request, never a hardcoded host: a
+// sitemap served from staging must advertise staging URLs, or it points crawlers at a
+// different deployment entirely.
 export const ANIME_PER_SITEMAP = 10_000;
 
 // Long, because the catalogue moves slowly and the query is expensive. The CDN
@@ -27,8 +29,17 @@ interface Cached<T> {
   expires: number;
 }
 
-let animeCache: Cached<SitemapEntry[]> | null = null;
-let newsCache: Cached<SitemapEntry[]> | null = null;
+/**
+ * Cached shape is host-independent — an id and a date, not a URL. Caching finished
+ * URLs would key the whole catalogue to whichever origin happened to warm the cache.
+ */
+export interface SitemapRecord {
+  id: string;
+  lastmod: string | null;
+}
+
+let animeCache: Cached<SitemapRecord[]> | null = null;
+let newsCache: Cached<SitemapRecord[]> | null = null;
 
 /**
  * The API returns "2026-08-03 04:25:32" — not ISO 8601, and with no zone marker.
@@ -108,19 +119,20 @@ const MAX_NEWS_PAGES = 200;
 
 type Client = ReturnType<typeof createSSRGraphQLClient>;
 
-export async function getAnimeEntries(client: Client): Promise<SitemapEntry[]> {
+export async function getAnimeRecords(client: Client): Promise<SitemapRecord[]> {
   if (animeCache && animeCache.expires > Date.now()) return animeCache.value;
 
   const res: any = await client.request(ALL_ANIME_QUERY, { limit: CATALOGUE_CEILING });
-  const entries: SitemapEntry[] = (res?.newestAnime ?? [])
+  const records: SitemapRecord[] = (res?.newestAnime ?? [])
     .filter((a: any) => a?.id)
-    .map((a: any) => ({
-      loc: `${SITE_URL}/show/${a.id}`,
-      lastmod: toLastmod(a.updatedAt)
-    }));
+    .map((a: any) => ({ id: a.id, lastmod: toLastmod(a.updatedAt) }));
 
-  animeCache = { value: entries, expires: Date.now() + TTL_MS };
-  return entries;
+  animeCache = { value: records, expires: Date.now() + TTL_MS };
+  return records;
+}
+
+export function animeEntries(records: SitemapRecord[], siteUrl: string): SitemapEntry[] {
+  return records.map(({ id, lastmod }) => ({ loc: `${siteUrl}/show/${id}`, lastmod }));
 }
 
 /**
@@ -130,7 +142,7 @@ export async function getAnimeEntries(client: Client): Promise<SitemapEntry[]> {
  * vast majority it renders nothing. Submitting 32,000 empty pages is how a site earns
  * a thin-content reputation, so only anime with at least one story are listed.
  */
-export async function getNewsEntries(client: Client): Promise<SitemapEntry[]> {
+export async function getNewsRecords(client: Client): Promise<SitemapRecord[]> {
   if (newsCache && newsCache.expires > Date.now()) return newsCache.value;
 
   const newest = new Map<string, string | null>();
@@ -162,20 +174,28 @@ export async function getNewsEntries(client: Client): Promise<SitemapEntry[]> {
     pages += 1;
   }
 
-  const entries: SitemapEntry[] = [...newest.entries()].map(([id, lastmod]) => ({
-    loc: `${SITE_URL}/show/${id}/news`,
+  const records: SitemapRecord[] = [...newest.entries()].map(([id, lastmod]) => ({
+    id,
     lastmod
   }));
 
-  newsCache = { value: entries, expires: Date.now() + TTL_MS };
-  return entries;
+  newsCache = { value: records, expires: Date.now() + TTL_MS };
+  return records;
+}
+
+export function newsEntries(records: SitemapRecord[], siteUrl: string): SitemapEntry[] {
+  return records.map(({ id, lastmod }) => ({ loc: `${siteUrl}/show/${id}/news`, lastmod }));
 }
 
 /**
  * Season pages, discovered rather than hardcoded: the API only holds a couple of
  * years, and a hardcoded list would either go stale or advertise empty pages.
  */
-export async function getSeasonEntries(client: Client, now: Date): Promise<SitemapEntry[]> {
+export async function getSeasonEntries(
+  client: Client,
+  now: Date,
+  siteUrl: string
+): Promise<SitemapEntry[]> {
   const year = now.getUTCFullYear();
   const seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL'];
   const candidates: string[] = [];
@@ -201,7 +221,7 @@ export async function getSeasonEntries(client: Client, now: Date): Promise<Sitem
 
   return checked
     .filter((s): s is string => Boolean(s))
-    .map((season) => ({ loc: `${SITE_URL}/season/${season}` }));
+    .map((season) => ({ loc: `${siteUrl}/season/${season}` }));
 }
 
 /** Static pages worth indexing. Auth, profile and settings are deliberately absent. */

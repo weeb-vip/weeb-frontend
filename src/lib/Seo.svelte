@@ -13,7 +13,12 @@
 
   $: pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
   $: pageDescription = description || defaultDescription;
-  $: pageImage = new URL(image || defaultImage, siteUrl).toString();
+  // Resolved against the host that actually served this page, not the canonical site.
+  // og:image has to be fetchable: on staging, resolving against siteUrl pointed the tag
+  // at https://weeb.vip/og/<id>, which is a different deployment and 404s there.
+  $: pageImage = new URL(image || defaultImage, $page.url.origin).toString();
+  // canonical, og:url and twitter:url deliberately stay on the canonical host. Staging
+  // self-canonicalising would make it an indexable duplicate of production.
   $: canonicalUrl = new URL($page.url.pathname, siteUrl).toString();
 </script>
 
