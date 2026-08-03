@@ -97,15 +97,10 @@ jobs:
       # that lets this origin through matches on an x-og-probe header carrying this
       # value. Without it every anime falls back to the branded default card.
       #
-      # Uses the REST API rather than `wrangler pages secret put`: the wrangler in
-      # node_modules is 4.x and needs Node 22, while .nvmrc pins this job to 20, so
-      # the CLI refuses to start.
-      #
-      # The deploy step below hits the same wall and survives it — wrangler-action
-      # probes `wrangler --version`, sees the incompatibility, and installs its own
-      # fallback (3.90.0) before running. A plain `run:` step gets no such rescue.
-      # Bumping .nvmrc to Node 22 would remove the whole problem and stop the deploy
-      # silently running a major version behind what adapter-cloudflare asks for.
+      # Uses the REST API rather than `wrangler pages secret put`. The CLI would work
+      # now that .nvmrc is on Node 24, but this needs no CLI at all and so cannot be
+      # broken again by a wrangler/Node version mismatch — which is exactly how the
+      # first version of this step took down a production deploy.
       - name: Sync runtime secrets to Pages
         if: inputs.environment == 'production'
         run: |
