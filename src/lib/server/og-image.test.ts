@@ -104,6 +104,32 @@ describe('resolveOgImage', () => {
     expect(url).toBe('https://weeb.vip/assets/og-image.jpg');
   });
 
+
+
+
+
+  it('sends x-og-probe so the WAF Skip rule can let our own origin through', async () => {
+    const { impl, calls } = fakeFetch([`${CDN}/banners/${ID}`]);
+
+    await resolveOgImage({
+      id: ID,
+      probeSecret: 's3cret',
+      cdnUrl: CDN,
+      origin: ORIGIN,
+      fetchImpl: impl
+    });
+
+    expect(calls[0].init?.headers).toMatchObject({ 'x-og-probe': 's3cret' });
+  });
+
+  it('omits the header when no secret is configured', async () => {
+    const { impl, calls } = fakeFetch([`${CDN}/banners/${ID}`]);
+
+    await resolveOgImage({ id: ID, cdnUrl: CDN, origin: ORIGIN, fetchImpl: impl });
+
+    expect(calls[0].init?.headers).not.toHaveProperty('x-og-probe');
+  });
+
   it('does not look up the title when the banner is there', async () => {
     const { impl } = fakeFetch([`${CDN}/banners/${ID}`]);
     const getTitle = jest.fn(async () => 'One Piece');

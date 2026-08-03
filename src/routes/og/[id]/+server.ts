@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 import { resolveOgImage } from '$lib/server/og-image';
 import { createSSRGraphQLClient } from '$lib/server/ssr-graphql';
@@ -26,6 +27,9 @@ export const GET: RequestHandler = async ({ params, url, locals, fetch }) => {
     cdnUrl: locals.config?.cdn_url,
     origin: url.origin,
     fetchImpl: fetch,
+    // Matched by the Cloudflare WAF Skip rule that lets our own origin probe
+    // /weeb/*. Absent in local dev, where it is simply an ignored header.
+    probeSecret: env.OG_PROBE_SECRET,
     getTitle: async () => {
       const client = createSSRGraphQLClient(locals.config.graphql_host, null);
       const res: any = await client.request(

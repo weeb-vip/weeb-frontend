@@ -70,16 +70,23 @@ type Presence = 'present' | 'absent' | 'unknown';
  * Probes the untransformed URL — cheaper than making Cloudflare re-encode an
  * image we may not use.
  *
- * Cloudflare currently bot-challenges server-to-server requests for /weeb/*
- * (`cf-mitigated: challenge`), from this cluster included, so in production this
- * returns 'unknown' rather than a real answer. Real crawlers are not challenged
- * and fetch those URLs fine — it is only our own probe that is blocked. See the
- * note on resolveOgImage for what that means, and how to lift it.
+ * Cloudflare bot-challenges server-to-server requests for /weeb/*
+ * (`cf-mitigated: challenge`) unless the caller looks like a verified crawler, so
+ * without the WAF Skip rule this returns 'unknown' rather than a real answer.
+ * Real crawlers are never challenged and fetch those URLs fine — it is only our
+ * own probe that is blocked. `probeSecret` is what the Skip rule matches on.
  */
-async function probe(url: string, fetchImpl: typeof fetch): Promise<Presence> {
+async function probe(
+  url: string,
+  fetchImpl: typeof fetch,
+  probeSecret?: string | null
+): Promise<Presence> {
   try {
     const res = await fetchImpl(url, {
-      headers: { range: 'bytes=0-0' },
+      headers: {
+        range: 'bytes=0-0',
+        ...(probeSecret ? { 'x-og-probe': probeSecret } : {})
+      },
       signal: AbortSignal.timeout(2500)
     });
     if (res.status === 200 || res.status === 206) return 'present';
@@ -94,11 +101,18 @@ async function probe(url: string, fetchImpl: typeof fetch): Promise<Presence> {
 export interface OgImageArgs {
   id: string;
   /**
-   * Resolves the anime title, used to derive the poster slug. Called lazily — only
-   * when the banner turns out to be missing — so the common path costs no lookup.
+   * Resolves the anime title, used to derive the CDN poster slug. Called lazily —
+   * only when the banner is missing — so the common path costs no lookup.
    * Optional: without it, only the banner and the default are considered.
    */
   getTitle?: () => Promise<string | null>;
+  /**
+   * Sent as x-og-probe on every probe. Cloudflare challenges server-side requests
+   * to /weeb/*, so a WAF Skip rule matching this header is what lets our own origin
+   * check whether an image exists while the images stay bot-protected for everyone
+   * else. Without the rule in place this is simply an ignored header.
+   */
+  probeSecret?: string | null;
   /** locals.config.cdn_url, which in production already includes the /weeb prefix. */
   cdnUrl?: string | null;
   /** Absolute origin, for resolving the local fallback asset. */
@@ -109,19 +123,26 @@ export interface OgImageArgs {
 /**
  * Pick the share image for an anime.
  *
- * Prefers a real banner, falls back to the poster, and lands on the branded site
- * default when neither is there.
+ * Order: CDN banner, CDN poster, branded default. Everything comes from our own
+ * CDN — third-party artwork is deliberately not used as a fallback.
  *
- * On an inconclusive probe it chooses the default rather than gambling on a URL
- * that might 404: a generic card that always renders beats a broken one 40% of
- * the time. That is the situation today, because Cloudflare bot-challenges
- * server-side requests to /weeb/* — so every anime currently resolves to the
- * default. Allowing this origin through that rule (or exempting /weeb/*) makes
- * per-anime banners start working with no code change.
+ * Both CDN candidates are resized to exactly 1200x630, so whichever wins, and the
+ * default too, the advertised dimensions are always honest.
+ *
+ * A probe that cannot get an answer resolves to the default rather than gambling
+ * on a URL that might 404. Today that is production's normal state: Cloudflare
+ * challenges server-side requests to /weeb/*, and it is per-environment — staging
+ * runs as plain Node in k8s and is allowed, while production runs on Cloudflare
+ * Pages and is challenged every time. That is exactly why staging showed real
+ * artwork and production showed the placeholder.
+ *
+ * The WAF Skip rule matching `probeSecret` is what fixes it; the moment it lands,
+ * both branches start resolving with no code change.
  */
 export async function resolveOgImage({
   id,
   getTitle,
+  probeSecret,
   cdnUrl,
   origin,
   fetchImpl = fetch
@@ -138,21 +159,20 @@ export async function resolveOgImage({
   // Banner first: it is 1920x1080, so it crops to 1200x630 without distortion.
   // The poster is portrait and only a reasonable card after a cover crop.
   const banner = `${base}/banners/${encodeURIComponent(id)}`;
-  const bannerPresence = await probe(banner, fetchImpl);
+  const bannerPresence = await probe(banner, fetchImpl, probeSecret);
 
   if (bannerPresence === 'present') {
     chosen = withResize(banner);
   } else if (bannerPresence === 'unknown') {
-    // Whatever blocked this probe will block the next one too. Stop paying for
-    // round trips that cannot answer the question.
+    // Whatever blocked this probe blocks the poster too — same origin, same rule.
     conclusive = false;
   } else if (getTitle) {
-    // Only now is the title worth fetching: the poster is the sole candidate
-    // that needs it, and most anime never reach this branch.
+    // Only now is the title worth fetching: the poster is the sole remaining
+    // candidate that needs it.
     const title = await getTitle().catch(() => null);
     if (title) {
       const poster = `${base}/${animeCdnSlug(title)}`;
-      const posterPresence = await probe(poster, fetchImpl);
+      const posterPresence = await probe(poster, fetchImpl, probeSecret);
       if (posterPresence === 'present') chosen = withResize(poster);
       else if (posterPresence === 'unknown') conclusive = false;
     }
