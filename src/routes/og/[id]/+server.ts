@@ -26,13 +26,17 @@ export const GET: RequestHandler = async ({ params, url, locals, fetch }) => {
     cdnUrl: locals.config?.cdn_url,
     origin: url.origin,
     fetchImpl: fetch,
-    getTitle: async () => {
+    getSource: async () => {
       const client = createSSRGraphQLClient(locals.config.graphql_host, null);
       const res: any = await client.request(
-        `query OgImageTitle($id: ID!) { anime(id: $id) { titleEn titleJp } }`,
+        `query OgImageSource($id: ID!) { anime(id: $id) { titleEn titleJp imageUrl } }`,
         { id: params.id }
       );
-      return res?.anime?.titleEn || res?.anime?.titleJp || null;
+      if (!res?.anime) return null;
+      return {
+        title: res.anime.titleEn || res.anime.titleJp || null,
+        imageUrl: res.anime.imageUrl || null
+      };
     }
   });
 

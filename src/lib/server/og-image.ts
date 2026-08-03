@@ -91,14 +91,21 @@ async function probe(url: string, fetchImpl: typeof fetch): Promise<Presence> {
   }
 }
 
+export interface AnimeImageSource {
+  /** Used to derive the CDN poster slug. */
+  title?: string | null;
+  /** The MyAnimeList address. Reachable from anywhere — see resolveOgImage. */
+  imageUrl?: string | null;
+}
+
 export interface OgImageArgs {
   id: string;
   /**
-   * Resolves the anime title, used to derive the poster slug. Called lazily — only
-   * when the banner turns out to be missing — so the common path costs no lookup.
+   * Resolves the anime's title and source image URL. Called lazily — only when the
+   * banner is not immediately usable — so the common path costs no lookup.
    * Optional: without it, only the banner and the default are considered.
    */
-  getTitle?: () => Promise<string | null>;
+  getSource?: () => Promise<AnimeImageSource | null>;
   /** locals.config.cdn_url, which in production already includes the /weeb prefix. */
   cdnUrl?: string | null;
   /** Absolute origin, for resolving the local fallback asset. */
@@ -109,19 +116,25 @@ export interface OgImageArgs {
 /**
  * Pick the share image for an anime.
  *
- * Prefers a real banner, falls back to the poster, and lands on the branded site
- * default when neither is there.
+ * Order: CDN banner, CDN poster, MyAnimeList poster, branded default.
  *
- * On an inconclusive probe it chooses the default rather than gambling on a URL
- * that might 404: a generic card that always renders beats a broken one 40% of
- * the time. That is the situation today, because Cloudflare bot-challenges
- * server-side requests to /weeb/* — so every anime currently resolves to the
- * default. Allowing this origin through that rule (or exempting /weeb/*) makes
- * per-anime banners start working with no code change.
+ * The last-but-one step exists because our own CDN cannot always be probed.
+ * Cloudflare bot-challenges server-to-server requests to /weeb/* — and crucially
+ * this is per-environment, not global: the staging pod's egress is allowed, while
+ * production, which runs on Cloudflare Pages, is challenged for every request.
+ * That is why staging showed real artwork and production showed the placeholder.
+ *
+ * MyAnimeList sits outside that zone, so `imageUrl` can be verified from anywhere.
+ * It is a portrait poster rather than a 1920x1080 banner, so it makes a worse card
+ * than the CDN banner — but real artwork beats a generic logo, and unlike the CDN
+ * candidates it can actually be confirmed before being advertised.
+ *
+ * Once /weeb/* is exempted from the bot rule, the earlier CDN branches start
+ * winning again on their own, with no code change.
  */
 export async function resolveOgImage({
   id,
-  getTitle,
+  getSource,
   cdnUrl,
   origin,
   fetchImpl = fetch
@@ -142,21 +155,29 @@ export async function resolveOgImage({
 
   if (bannerPresence === 'present') {
     chosen = withResize(banner);
-  } else if (bannerPresence === 'unknown') {
-    // Whatever blocked this probe will block the next one too. Stop paying for
-    // round trips that cannot answer the question.
-    conclusive = false;
-  } else if (getTitle) {
-    // Only now is the title worth fetching: the poster is the sole candidate
-    // that needs it, and most anime never reach this branch.
-    const title = await getTitle().catch(() => null);
-    if (title) {
-      const poster = `${base}/${animeCdnSlug(title)}`;
+  } else if (getSource) {
+    const source = await getSource().catch(() => null);
+
+    // Only worth trying when the banner gave a real answer. An inconclusive probe
+    // means this origin is blocked for us, and the poster lives on that same origin.
+    if (bannerPresence === 'absent' && source?.title) {
+      const poster = `${base}/${animeCdnSlug(source.title)}`;
       const posterPresence = await probe(poster, fetchImpl);
       if (posterPresence === 'present') chosen = withResize(poster);
       else if (posterPresence === 'unknown') conclusive = false;
     }
+
+    // Different origin, different rules — worth a try even when our own CDN
+    // refused to answer.
+    if (!chosen && source?.imageUrl) {
+      if ((await probe(source.imageUrl, fetchImpl)) === 'present') {
+        chosen = source.imageUrl;
+        conclusive = true;
+      }
+    }
   }
+
+  if (bannerPresence === 'unknown' && !chosen) conclusive = false;
 
   const url = chosen ?? new URL(DEFAULT_OG, origin).toString();
   // Don't cache a guess for hours — an inconclusive answer should be retried soon,

@@ -33,8 +33,12 @@
   <meta property="og:title" content={pageTitle} />
   <meta property="og:description" content={pageDescription} />
   <meta property="og:image" content={pageImage} />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <!-- No og:image:width/height. /og/<id> resolves to whichever image exists — a
+       1200x630 CDN banner, or a portrait MyAnimeList poster when the CDN cannot be
+       reached — so a fixed size would be wrong for a good share of pages. Every
+       platform measures the image it fetches; a declared size is only a hint, and a
+       wrong hint is worse than none. -->
+  <meta property="og:image:alt" content={pageTitle} />
   <meta property="og:site_name" content="WeebVIP" />
   <meta property="og:locale" content="en_US" />
 
