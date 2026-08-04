@@ -19,6 +19,10 @@ export const ANIME_PER_SITEMAP = 10_000;
 // cache in front of it is shorter, so a stale sitemap is never served for long.
 const TTL_MS = 6 * 60 * 60 * 1000;
 
+// Shorter: this set turns over as episodes air and seasons roll, and it is the one
+// crawlers are asked to revisit most often, so a stale lastmod here costs more.
+const AIRING_TTL_MS = 60 * 60 * 1000;
+
 export interface SitemapEntry {
   loc: string;
   lastmod?: string | null;
@@ -40,6 +44,7 @@ export interface SitemapRecord {
 
 let animeCache: Cached<SitemapRecord[]> | null = null;
 let newsCache: Cached<SitemapRecord[]> | null = null;
+let airingCache: Cached<SitemapRecord[]> | null = null;
 
 /**
  * The API returns "2026-08-03 04:25:32" — not ISO 8601, and with no zone marker.
@@ -107,6 +112,19 @@ const NEWS_PAGE_QUERY = `
   }
 `;
 
+/**
+ * The anime that matter most right now: airing today, plus everything in the current
+ * season. Two sources because they are not the same set — `currentlyAiring` returned
+ * 48 while the current season holds ~130, so a show between episodes falls out of the
+ * first but not the second.
+ */
+const AIRING_QUERY = `
+  query SitemapAiring($season: Season!) {
+    currentlyAiring(limit: 500) { id updatedAt }
+    animeBySeasons(season: $season, limit: 2000) { id updatedAt }
+  }
+`;
+
 // newestAnime has no pagination, only a limit, so this asks for more than the
 // catalogue holds and takes what comes back. Revisit if the catalogue approaches it.
 const CATALOGUE_CEILING = 100_000;
@@ -128,6 +146,34 @@ export async function getAnimeRecords(client: Client): Promise<SitemapRecord[]> 
     .map((a: any) => ({ id: a.id, lastmod: toLastmod(a.updatedAt) }));
 
   animeCache = { value: records, expires: Date.now() + TTL_MS };
+  return records;
+}
+
+/**
+ * Currently-airing and current-season anime, kept in their own sitemap.
+ *
+ * Note this is NOT done with <priority> or <changefreq>: Google states it ignores
+ * both, so marking these 1.0 would achieve nothing. The value of a separate file is
+ * that Search Console reports coverage per sitemap, so the ~180 pages that matter
+ * this season can be seen to be indexed without their signal drowning in 32,000
+ * others. What actually drives crawl priority is internal linking and an honest
+ * lastmod, not sitemap metadata.
+ */
+export async function getAiringRecords(
+  client: Client,
+  season: string
+): Promise<SitemapRecord[]> {
+  if (airingCache && airingCache.expires > Date.now()) return airingCache.value;
+
+  const res: any = await client.request(AIRING_QUERY, { season });
+
+  const seen = new Map<string, string | null>();
+  for (const a of [...(res?.currentlyAiring ?? []), ...(res?.animeBySeasons ?? [])]) {
+    if (a?.id && !seen.has(a.id)) seen.set(a.id, toLastmod(a.updatedAt));
+  }
+
+  const records = [...seen.entries()].map(([id, lastmod]) => ({ id, lastmod }));
+  airingCache = { value: records, expires: Date.now() + AIRING_TTL_MS };
   return records;
 }
 
@@ -245,4 +291,5 @@ export function xmlResponse(body: string): Response {
 export function _clearSitemapCache(): void {
   animeCache = null;
   newsCache = null;
+  airingCache = null;
 }
