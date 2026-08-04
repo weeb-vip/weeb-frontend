@@ -462,7 +462,9 @@
 
           <h1 class="hero-title">{animeTitle}</h1>
           {#if anime.titleJp}
-            <p class="hero-title-jp">{anime.titleJp}</p>
+            <!-- lang="ja": Japanese text inside a lang="en" document. Tells search
+                 engines which language it is, and screen readers which voice to use. -->
+            <p class="hero-title-jp" lang="ja">{anime.titleJp}</p>
           {/if}
 
           <!-- Ranking -->
@@ -692,7 +694,7 @@
             {#if anime.titleJp}
               <div class="info-item">
                 <span class="info-label">Japanese</span>
-                <span class="info-value">{anime.titleJp}</span>
+                <span class="info-value" lang="ja">{anime.titleJp}</span>
               </div>
             {/if}
             {#if anime.titleRomaji}
