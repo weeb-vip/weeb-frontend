@@ -18,6 +18,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   const children = [
     { loc: `${site}/sitemap-pages.xml` },
+    // Listed before the back catalogue. Ordering carries no documented weight with
+    // Google, but it reflects what a human should look at first in Search Console.
+    { loc: `${site}/sitemap-airing.xml` },
     ...Array.from({ length: chunkCount(anime.length) }, (_, i) => ({
       loc: `${site}/sitemap-anime-${i + 1}.xml`
     })),

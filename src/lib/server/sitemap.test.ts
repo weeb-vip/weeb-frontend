@@ -3,6 +3,7 @@ import {
   chunkCount,
   escapeXml,
   animeEntries,
+  getAiringRecords,
   getAnimeRecords,
   getNewsRecords,
   newsEntries,
@@ -212,6 +213,59 @@ describe('getNewsEntries', () => {
     }));
 
     expect(await getNewsRecords(client)).toEqual([]);
+    expect(calls).toHaveLength(1);
+  });
+});
+
+describe('getAiringRecords', () => {
+  it('unions currentlyAiring with the current season, without duplicates', async () => {
+    const { client, calls } = fakeClient(() => ({
+      currentlyAiring: [
+        { id: 'a', updatedAt: '2026-08-03 04:25:32' },
+        { id: 'b', updatedAt: null }
+      ],
+      // 'b' airs and is in the season; 'c' is in the season but between episodes.
+      animeBySeasons: [
+        { id: 'b', updatedAt: '2026-07-01 00:00:00' },
+        { id: 'c', updatedAt: '2026-07-02 00:00:00' }
+      ]
+    }));
+
+    const records = await getAiringRecords(client, 'SUMMER_2026');
+
+    expect(records.map((r) => r.id)).toEqual(['a', 'b', 'c']);
+    // One round trip: both sets come from a single query.
+    expect(calls).toHaveLength(1);
+  });
+
+  it('keeps the first lastmod seen, so airing data wins over season data', async () => {
+    const { client } = fakeClient(() => ({
+      currentlyAiring: [{ id: 'b', updatedAt: '2026-08-03 04:25:32' }],
+      animeBySeasons: [{ id: 'b', updatedAt: '2026-07-01 00:00:00' }]
+    }));
+
+    const records = await getAiringRecords(client, 'SUMMER_2026');
+
+    expect(records).toEqual([{ id: 'b', lastmod: '2026-08-03' }]);
+  });
+
+  it('passes the season through as a variable', async () => {
+    const { client, calls } = fakeClient(() => ({ currentlyAiring: [], animeBySeasons: [] }));
+
+    await getAiringRecords(client, 'FALL_2026');
+
+    expect(calls[0].vars).toEqual({ season: 'FALL_2026' });
+  });
+
+  it('caches, like the other sitemap sources', async () => {
+    const { client, calls } = fakeClient(() => ({
+      currentlyAiring: [{ id: 'a' }],
+      animeBySeasons: []
+    }));
+
+    await getAiringRecords(client, 'SUMMER_2026');
+    await getAiringRecords(client, 'SUMMER_2026');
+
     expect(calls).toHaveLength(1);
   });
 });
