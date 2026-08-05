@@ -1,3 +1,8 @@
+// Brings in App.Platform, which is where `platform.cache` is declared. Only
+// svelte.config.js references the adapter otherwise, and that is plain JS, so
+// nothing would put these types in the program.
+/// <reference types="@weeb-vip/adapter-knative" />
+
 declare global {
   namespace App {
     interface Locals {
