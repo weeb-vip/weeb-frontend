@@ -34,6 +34,16 @@ let configData: any = null;
  * Cloudflare's CDN honour. They are deliberately separate: the two shared
  * caches were tuned independently, and the sMaxAge values here preserve what
  * production was already doing rather than quietly retuning it.
+ *
+ * On picking a ttl: freshness comes from purging by tag, not from expiry. An
+ * entry is Fresh for ttl and Stale for the swr window after it, and a stale
+ * serve is fast for the visitor but wakes an SSR pod to revalidate behind it.
+ * Staging's first day ran ttl=60 and measured 5 hits against 5 stales — every
+ * repeat visit landed after the fresh window had closed, so the pod was woken
+ * about as often as with no cache at all and never scaled to zero. A ttl below
+ * the real gap between two visits to the same URL buys latency and throws away
+ * the scale-to-zero the architecture exists for. Prefer a generous ttl and
+ * purge on ingest.
  */
 const CACHEABLE_ROUTES: Array<{
   pattern: RegExp;
@@ -43,12 +53,26 @@ const CACHEABLE_ROUTES: Array<{
   sMaxAge: number;
   tags: (match: RegExpExecArray) => string[];
 }> = [
-  { pattern: /^\/$/,                    ttl: 60,  swr: 600,  maxAge: 300, sMaxAge: 3600, tags: () => ['home'] },
-  { pattern: /^\/airing$/,              ttl: 60,  swr: 600,  maxAge: 300, sMaxAge: 3600, tags: () => ['airing'] },
-  { pattern: /^\/airing\/calendar$/,    ttl: 300, swr: 1800, maxAge: 300, sMaxAge: 1800, tags: () => ['airing'] },
-  { pattern: /^\/season\/([^/]+)$/,     ttl: 300, swr: 1800, maxAge: 300, sMaxAge: 1800, tags: (m) => [`season:${m[1]}`] },
-  { pattern: /^\/show\/([^/]+)$/,       ttl: 60,  swr: 600,  maxAge: 60,  sMaxAge: 600,  tags: (m) => [`show:${m[1]}`] },
-  { pattern: /^\/show\/([^/]+)\/news$/, ttl: 300, swr: 1800, maxAge: 300, sMaxAge: 1800, tags: (m) => [`show:${m[1]}`, 'news'] }
+  // The two genuinely time-sensitive pages: an episode airing changes what they
+  // show. Still five minutes rather than one — nothing here is live to the
+  // second, and the airing sync can purge `airing` when it ingests.
+  { pattern: /^\/$/,                    ttl: 300,  swr: 3600, maxAge: 300, sMaxAge: 3600, tags: () => ['home'] },
+  { pattern: /^\/airing$/,              ttl: 300,  swr: 3600, maxAge: 300, sMaxAge: 3600, tags: () => ['airing'] },
+
+  // A month grid barely moves within a month.
+  { pattern: /^\/airing\/calendar$/,    ttl: 1800, swr: 7200, maxAge: 300, sMaxAge: 1800, tags: () => ['airing'] },
+
+  // Past seasons are effectively immutable; the current one changes about as
+  // fast as the airing list, which its own tag can purge.
+  { pattern: /^\/season\/([^/]+)$/,     ttl: 3600, swr: 7200, maxAge: 300, sMaxAge: 1800, tags: (m) => [`season:${m[1]}`] },
+
+  // A show's synopsis, studio and episode count are close to static — this was
+  // the worst offender at ttl=60, and it is also the largest URL space (~32k),
+  // so it is where repeat visits are furthest apart. Purged by `show:<id>`.
+  { pattern: /^\/show\/([^/]+)$/,       ttl: 3600, swr: 7200, maxAge: 60,  sMaxAge: 600,  tags: (m) => [`show:${m[1]}`] },
+
+  // News arrives in batches from the ingest, which can purge `news`.
+  { pattern: /^\/show\/([^/]+)\/news$/, ttl: 1800, swr: 7200, maxAge: 300, sMaxAge: 1800, tags: (m) => [`show:${m[1]}`, 'news'] }
 ];
 
 function cachePolicyFor(pathname: string) {
