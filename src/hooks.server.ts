@@ -7,6 +7,58 @@ import { clearAuthCookies } from '$lib/server/auth-cookies';
 // Config cache for performance
 let configData: any = null;
 
+/**
+ * Which pages may be cached, in one table rather than scattered across load
+ * functions. Nothing is cached unless it matches here: the adapter's default
+ * TTL is 0, so a new route stays uncached until it is added deliberately.
+ *
+ * Note what is deliberately NOT called here: `.public()`. That declares a page
+ * identical for every visitor, which puts it in the `pub` segment — and `pub`
+ * is served to logged-in users too. Every page below renders watchlist state
+ * when there is a session, so the claim would be false and a logged-in visitor
+ * would be handed the anonymous render, seeing "not on list" on everything.
+ * That is the bug the cookie-forwarding comment in show/[id]/+page.server.ts
+ * describes fixing, and it would come straight back.
+ *
+ * Without `.public()` these land in `anon`: cached from a logged-out render,
+ * served only to logged-out visitors, and unreadable by an authenticated
+ * request. Logged-in traffic bypasses the cache entirely and is rendered fresh.
+ *
+ * To get cache hits for logged-in users too, the page has to stop rendering
+ * per-user data into its HTML and fetch it after hydration — then, and only
+ * then, `.public()` becomes true.
+ *
+ * ttl/swr drive the adapter's Redis cache, which is what the Knative edge tier
+ * serves from. maxAge/sMaxAge drive the response header, which is what the
+ * browser and — on the Cloudflare build, where the adapter does not exist —
+ * Cloudflare's CDN honour. They are deliberately separate: the two shared
+ * caches were tuned independently, and the sMaxAge values here preserve what
+ * production was already doing rather than quietly retuning it.
+ */
+const CACHEABLE_ROUTES: Array<{
+  pattern: RegExp;
+  ttl: number;
+  swr: number;
+  maxAge: number;
+  sMaxAge: number;
+  tags: (match: RegExpExecArray) => string[];
+}> = [
+  { pattern: /^\/$/,                    ttl: 60,  swr: 600,  maxAge: 300, sMaxAge: 3600, tags: () => ['home'] },
+  { pattern: /^\/airing$/,              ttl: 60,  swr: 600,  maxAge: 300, sMaxAge: 3600, tags: () => ['airing'] },
+  { pattern: /^\/airing\/calendar$/,    ttl: 300, swr: 1800, maxAge: 300, sMaxAge: 1800, tags: () => ['airing'] },
+  { pattern: /^\/season\/([^/]+)$/,     ttl: 300, swr: 1800, maxAge: 300, sMaxAge: 1800, tags: (m) => [`season:${m[1]}`] },
+  { pattern: /^\/show\/([^/]+)$/,       ttl: 60,  swr: 600,  maxAge: 60,  sMaxAge: 600,  tags: (m) => [`show:${m[1]}`] },
+  { pattern: /^\/show\/([^/]+)\/news$/, ttl: 300, swr: 1800, maxAge: 300, sMaxAge: 1800, tags: (m) => [`show:${m[1]}`, 'news'] }
+];
+
+function cachePolicyFor(pathname: string) {
+  for (const route of CACHEABLE_ROUTES) {
+    const match = route.pattern.exec(pathname);
+    if (match) return { ...route, tags: route.tags(match) };
+  }
+  return null;
+}
+
 // refreshTokenSSR was written against Astro's cookie API (get returns
 // {value}, set defaults the path) — adapt SvelteKit's cookies to it
 function astroStyleCookies(cookies: import('@sveltejs/kit').Cookies) {
@@ -108,6 +160,20 @@ export const handle: Handle = async ({ event, resolve }) => {
     redirect(302, '/profile');
   }
 
+  const cachePolicy = cachePolicyFor(url.pathname);
+
+  // Declared before the render, but the adapter reads the directive back only
+  // after the whole response is produced — so this is equivalent to calling it
+  // inside a load, and keeps every route's policy in the table above.
+  // platform.cache is absent on the Cloudflare build, where the optional
+  // chaining makes this inert rather than broken.
+  if (cachePolicy) {
+    event.platform?.cache
+      ?.ttl(cachePolicy.ttl)
+      .swr(cachePolicy.swr)
+      .tag(cachePolicy.tags);
+  }
+
   const response = await resolve(event);
 
   if (response.headers) {
@@ -120,11 +186,18 @@ export const handle: Handle = async ({ event, resolve }) => {
     // Cache control: only anonymous HTML may be publicly cached — a
     // logged-in render is personalized and must never land in a shared
     // cache. Static assets are handled by the adapter before this hook.
+    //
+    // Restricted to 200s to match what the adapter will store. Without that a
+    // /show/<id> 404 or a /season/<bad> redirect would be handed a public
+    // max-age, and this codebase has already had to dig itself out of soft-404s
+    // being indexed.
     const isAnonymous = !authResult.isLoggedIn && !hasRefreshToken && !hasAccessToken;
-    if (url.pathname === '/' || url.pathname === '/airing') {
+    if (cachePolicy && response.status === 200) {
       response.headers.set(
         'Cache-Control',
-        isAnonymous ? 'public, max-age=300, s-maxage=3600' : 'private, no-store'
+        isAnonymous
+          ? `public, max-age=${cachePolicy.maxAge}, s-maxage=${cachePolicy.sMaxAge}`
+          : 'private, no-store'
       );
     }
   }
