@@ -28,12 +28,12 @@ let configData: any = null;
  * per-user data into its HTML and fetch it after hydration — then, and only
  * then, `.public()` becomes true.
  *
- * ttl/swr drive the adapter's Redis cache, which is what the Knative edge tier
- * serves from. maxAge/sMaxAge drive the response header, which is what the
- * browser and — on the Cloudflare build, where the adapter does not exist —
- * Cloudflare's CDN honour. They are deliberately separate: the two shared
- * caches were tuned independently, and the sMaxAge values here preserve what
- * production was already doing rather than quietly retuning it.
+ * Nothing in this table applies to the Cloudflare build — see the gate in the
+ * handler. ttl/swr drive the adapter's Redis cache, which is what the Knative
+ * edge tier serves from; maxAge/sMaxAge drive the response header, aimed at the
+ * visitor's browser and at that same edge tier. They stay separate numbers
+ * because a browser cache is per-visitor and a shared one is not, so they do
+ * not want the same values.
  *
  * On picking a ttl: freshness comes from purging by tag, not from expiry. An
  * entry is Fresh for ttl and Stale for the swr window after it, and a stale
@@ -45,6 +45,9 @@ let configData: any = null;
  * the scale-to-zero the architecture exists for. Prefer a generous ttl and
  * purge on ingest.
  */
+const HOUR = 3600;
+const DAY = 24 * HOUR;
+
 const CACHEABLE_ROUTES: Array<{
   pattern: RegExp;
   ttl: number;
@@ -53,26 +56,26 @@ const CACHEABLE_ROUTES: Array<{
   sMaxAge: number;
   tags: (match: RegExpExecArray) => string[];
 }> = [
-  // The two genuinely time-sensitive pages: an episode airing changes what they
-  // show. Still five minutes rather than one — nothing here is live to the
-  // second, and the airing sync can purge `airing` when it ingests.
-  { pattern: /^\/$/,                    ttl: 300,  swr: 3600, maxAge: 300, sMaxAge: 3600, tags: () => ['home'] },
-  { pattern: /^\/airing$/,              ttl: 300,  swr: 3600, maxAge: 300, sMaxAge: 3600, tags: () => ['airing'] },
+  // These two are the ones a long ttl actually costs something: both render a
+  // window relative to "now" (getCurrentlyAiringWithDates asks for the next
+  // seven days), so a half-day-old entry lists episodes that have already
+  // aired as upcoming. Hydration corrects it for real visitors — the client
+  // refetches — but first paint and crawlers see the stale window. The right
+  // fix is the airing sync purging `airing` as it ingests, not a short ttl.
+  { pattern: /^\/$/,                    ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 3600, tags: () => ['home'] },
+  { pattern: /^\/airing$/,              ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 3600, tags: () => ['airing'] },
 
-  // A month grid barely moves within a month.
-  { pattern: /^\/airing\/calendar$/,    ttl: 1800, swr: 7200, maxAge: 300, sMaxAge: 1800, tags: () => ['airing'] },
+  { pattern: /^\/airing\/calendar$/,    ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: () => ['airing'] },
 
-  // Past seasons are effectively immutable; the current one changes about as
-  // fast as the airing list, which its own tag can purge.
-  { pattern: /^\/season\/([^/]+)$/,     ttl: 3600, swr: 7200, maxAge: 300, sMaxAge: 1800, tags: (m) => [`season:${m[1]}`] },
+  // Past seasons are effectively immutable.
+  { pattern: /^\/season\/([^/]+)$/,     ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: (m) => [`season:${m[1]}`] },
 
-  // A show's synopsis, studio and episode count are close to static — this was
-  // the worst offender at ttl=60, and it is also the largest URL space (~32k),
-  // so it is where repeat visits are furthest apart. Purged by `show:<id>`.
-  { pattern: /^\/show\/([^/]+)$/,       ttl: 3600, swr: 7200, maxAge: 60,  sMaxAge: 600,  tags: (m) => [`show:${m[1]}`] },
+  // Synopsis, studio and cast do not change. Episode count does, weekly, for a
+  // currently-airing show — purged by `show:<id>` when the episode sync runs.
+  { pattern: /^\/show\/([^/]+)$/,       ttl: 12 * HOUR, swr: DAY, maxAge: 60,  sMaxAge: 600,  tags: (m) => [`show:${m[1]}`] },
 
   // News arrives in batches from the ingest, which can purge `news`.
-  { pattern: /^\/show\/([^/]+)\/news$/, ttl: 1800, swr: 7200, maxAge: 300, sMaxAge: 1800, tags: (m) => [`show:${m[1]}`, 'news'] }
+  { pattern: /^\/show\/([^/]+)\/news$/, ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: (m) => [`show:${m[1]}`, 'news'] }
 ];
 
 function cachePolicyFor(pathname: string) {
@@ -184,18 +187,24 @@ export const handle: Handle = async ({ event, resolve }) => {
     redirect(302, '/profile');
   }
 
-  const cachePolicy = cachePolicyFor(url.pathname);
+  // This hook runs on every build, Cloudflare included — only platform.cache is
+  // adapter-knative's. Presence of it is therefore the signal for whether any of
+  // this cache policy applies at all: it gates the response header as well as
+  // the directive, so the Cloudflare build emits neither.
+  //
+  // Not just tidiness. These values assume a shared cache that keys on auth
+  // state — the edge tier segments anon from auth, so an s-maxage there cannot
+  // hand a logged-out render to a logged-in visitor. Cloudflare's cache keys on
+  // URL and would happily do exactly that. Sending the same numbers to a cache
+  // that cannot honour the assumption behind them is how that bug gets written.
+  const pageCache = event.platform?.cache;
+  const cachePolicy = pageCache ? cachePolicyFor(url.pathname) : null;
 
   // Declared before the render, but the adapter reads the directive back only
   // after the whole response is produced — so this is equivalent to calling it
   // inside a load, and keeps every route's policy in the table above.
-  // platform.cache is absent on the Cloudflare build, where the optional
-  // chaining makes this inert rather than broken.
   if (cachePolicy) {
-    event.platform?.cache
-      ?.ttl(cachePolicy.ttl)
-      .swr(cachePolicy.swr)
-      .tag(cachePolicy.tags);
+    pageCache!.ttl(cachePolicy.ttl).swr(cachePolicy.swr).tag(cachePolicy.tags);
   }
 
   const response = await resolve(event);
