@@ -212,7 +212,28 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (response.headers) {
     // Security headers
     response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Frame-Options', 'DENY');
+
+    /*
+     * Who may frame this site, as an allowlist rather than a flat refusal.
+     *
+     * This replaces `X-Frame-Options: DENY`, which cannot express "nobody
+     * except one origin": its ALLOW-FROM directive was dropped from the spec,
+     * and a browser that meets it ignores the whole header rather than honour
+     * it. CSP's frame-ancestors is the mechanism that survived, and per CSP
+     * Level 3 §6.4.2.2 it "overrides the X-Frame-Options header" — where both
+     * are sent, the old one is ignored. Sending both would therefore be
+     * contradictory rather than belt-and-braces, so it is deliberately gone.
+     *
+     * This is not a relaxation. A page with no frame-ancestors at all may be
+     * framed by anyone, which is the setup a clickjacking attack wants; this
+     * permits exactly two origins and refuses every other site on the internet.
+     * jamesat.dev embeds this app as a window on its desktop.
+     */
+    response.headers.set(
+      'Content-Security-Policy',
+      "frame-ancestors 'self' https://jamesat.dev"
+    );
+
     response.headers.set('X-XSS-Protection', '1; mode=block');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
