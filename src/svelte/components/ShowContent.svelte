@@ -624,7 +624,7 @@
     <nav data-tab-bar bind:this={tabBarEl} aria-label="Section navigation"
       style="position:sticky; top:var(--weeb-nav-height,60px); z-index:50; background:oklch(14% 0.015 275 / 0.95); border-bottom:1px solid oklch(28% 0.015 275); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); transition:top 0.3s ease;"
     >
-      <div style="max-width:1280px; margin:0 auto; padding:0 48px; display:flex; align-items:center; gap:0;">
+      <div class="tab-bar-inner">
         <button
           style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'synopsis' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'synopsis' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
           on:click={() => scrollToSection('synopsis')}
@@ -1140,8 +1140,36 @@
   =========================== */
 
   /* ===========================
-     FLOATING TAB BAR — all styles inline in markup to survive ViewTransition CSS loss
+     FLOATING TAB BAR — button styles stay inline in markup (they were written that way
+     to survive Astro's ViewTransition CSS loss). The container lives here because it
+     needs a media query, which an inline style attribute cannot express.
   =========================== */
+  .tab-bar-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* The tabs are nowrap and there can be four of them with count badges, which is
+     wider than a small phone. Scroll them inside the bar rather than letting them
+     widen the document — an overflowing tab bar scrolls the whole page sideways. */
+  @media (max-width: 768px) {
+    .tab-bar-inner {
+      padding: 0 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-bar-inner::-webkit-scrollbar {
+      display: none;
+    }
+    .tab-bar-inner > button {
+      flex: none;
+    }
+  }
 
   /* ===========================
      NEXT EPISODE BANNER
