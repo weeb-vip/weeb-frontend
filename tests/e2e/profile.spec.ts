@@ -32,9 +32,10 @@ test.describe('Profile page (logged in)', () => {
     const verificationLink = extractVerificationLink(email.HTML || email.Text || '', baseUrl);
     expect(verificationLink).toBeTruthy();
     await page.goto(verificationLink!, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await expect(page.getByText(/verified successfully|verification failed/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: /you're verified|this link didn't work/i })).toBeVisible({ timeout: 20000 });
 
-    // Login
+    // Login. The verification screen auto-bounces here after a few seconds, so
+    // navigate explicitly to avoid racing that redirect mid-fill.
     await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForAuthForm(page);
     await page.fill('input[name="username"]', testEmail);

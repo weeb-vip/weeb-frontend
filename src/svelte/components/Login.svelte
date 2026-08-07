@@ -6,27 +6,66 @@
   let hydrated = false;
   onMount(() => { hydrated = true; });
 
+  import { page } from '$app/stores';
   import FormInput from './FormInput.svelte';
   import type { LoginInput } from '../../gql/graphql';
   import debug from '../../utils/debug';
-  import { useLogin } from '../services/queries';
+  import { isUnverifiedEmailError } from '../../utils/auth-errors';
+  import { useLogin, useResendVerificationEmail } from '../services/queries';
 
   let formData: LoginInput = { username: '', password: '' };
   let errorMessage = '';
+  // set instead of errorMessage when the account exists but isn't verified —
+  // the password is fine, so saying "check your credentials" sends people off
+  // to reset a password that was never wrong
+  let needsVerification = false;
+  let resendState: 'idle' | 'sending' | 'sent' | 'failed' = 'idle';
 
   const loginMutation = useLogin();
+  const resendMutation = useResendVerificationEmail();
+
+  // Arriving from the verification success screen, which can't mint a session
+  // itself — pre-fill so only the password is left to type.
+  onMount(() => {
+    const prefill = $page.url.searchParams.get('email');
+    if (prefill) {
+      formData = { ...formData, username: prefill };
+    }
+  });
 
   // Handle login state changes
   $: if ($loginMutation.isSuccess) {
     debug.auth('Login successful');
     errorMessage = '';
+    needsVerification = false;
     // Navigate to home page
     goto('/');
   }
 
   $: if ($loginMutation.isError) {
     debug.error('Login failed', $loginMutation.error);
-    errorMessage = 'Unable to sign in. Please check your credentials and try again.';
+    if (isUnverifiedEmailError($loginMutation.error)) {
+      needsVerification = true;
+      errorMessage = '';
+    } else {
+      needsVerification = false;
+      errorMessage = 'Unable to sign in. Please check your credentials and try again.';
+    }
+  }
+
+  $: if ($resendMutation.isSuccess) {
+    resendState = 'sent';
+  }
+
+  $: if ($resendMutation.isError) {
+    debug.error('Failed to resend verification email', $resendMutation.error);
+    resendState = 'failed';
+  }
+
+  function handleResend() {
+    if (!formData.username.trim() || $resendMutation.isPending) return;
+    resendState = 'sending';
+    $resendMutation.mutate({ username: formData.username });
   }
 
   function handleInputChange(event: CustomEvent) {
@@ -46,6 +85,11 @@
     if (errorMessage) {
       errorMessage = '';
     }
+    // Editing the email invalidates the banner it was addressed to
+    if (needsVerification && name === 'username') {
+      needsVerification = false;
+      resendState = 'idle';
+    }
   }
 
   function handleSubmit(event: Event) {
@@ -57,6 +101,8 @@
     }
 
     errorMessage = '';
+    needsVerification = false;
+    resendState = 'idle';
 
     // Use the reactive mutation pattern like the modal
     $loginMutation.mutate(formData);
@@ -126,6 +172,41 @@
         {#if errorMessage}
           <div class="error-banner">
             <p>{errorMessage}</p>
+          </div>
+        {/if}
+
+        <!-- Unverified account: nothing is wrong, there's just a step left -->
+        {#if needsVerification}
+          <div class="verify-banner" role="alert">
+            <div class="verify-head">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2.5" y="5" width="19" height="14" rx="2.5"/>
+                <path d="M3 7l9 6 9-6"/>
+              </svg>
+              Verify your email to continue
+            </div>
+            <!-- Deliberately does not assert the account exists: the backend
+                 returns INACTIVE_CREDENTIALS for an unknown address too, so
+                 claiming "we sent you a link" would be wrong for a typo — and
+                 would turn login into a user-enumeration oracle. -->
+            <p class="verify-body">
+              Accounts need a verified email before you can log in. Check
+              <b>{formData.username}</b> for the link we sent — it's often in spam.
+            </p>
+            {#if resendState === 'sent'}
+              <p class="verify-sent">Sent — check your inbox, and your spam folder.</p>
+            {:else if resendState === 'failed'}
+              <p class="verify-failed">We couldn't send that just now. Try again in a moment.</p>
+            {:else}
+              <button
+                type="button"
+                class="verify-action"
+                on:click={handleResend}
+                disabled={resendState === 'sending'}
+              >
+                {resendState === 'sending' ? 'Sending…' : 'Send a new link'}
+              </button>
+            {/if}
           </div>
         {/if}
 
@@ -305,6 +386,77 @@
     font-size: 13px;
     color: var(--weeb-red);
     margin: 0;
+  }
+
+  /* --- Unverified-account banner --- */
+  /* Amber, not red: the credentials were correct, there's just a step left. */
+  .verify-banner {
+    background: oklch(22% 0.04 85 / 0.45);
+    border: 1.5px solid var(--weeb-amber);
+    border-radius: var(--weeb-radius);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .verify-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--weeb-amber);
+  }
+
+  .verify-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--weeb-fg-secondary);
+    margin: 0;
+  }
+
+  .verify-body b {
+    color: var(--weeb-fg);
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  .verify-action {
+    align-self: flex-start;
+    background: var(--weeb-amber);
+    color: oklch(20% 0.04 85);
+    font-size: 12.5px;
+    font-weight: 700;
+    font-family: inherit;
+    padding: 7px 13px;
+    border: none;
+    border-radius: var(--weeb-radius-sm);
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+
+  .verify-action:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  .verify-action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .verify-sent,
+  .verify-failed {
+    font-size: 12.5px;
+    margin: 0;
+  }
+
+  .verify-sent {
+    color: var(--weeb-green);
+  }
+
+  .verify-failed {
+    color: var(--weeb-red);
   }
 
   /* --- Remember me / Forgot row --- */

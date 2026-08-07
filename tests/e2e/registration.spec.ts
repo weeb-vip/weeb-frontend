@@ -35,24 +35,34 @@ async function openRegisterModal(page: Page): Promise<Locator> {
   return dialog;
 }
 
+// Registering from the modal now closes it and navigates to /auth/check-email,
+// so the modal path and the /auth/register path end in the same place.
 async function fillAndSubmitRegister(dialog: Locator, page: Page, email: string, password: string) {
   // Staging's registration endpoint intermittently drops the request under
-  // parallel-shard load; retry the submit once if the success confirmation
-  // doesn't appear in the modal.
-  const success = dialog.locator('text=/registration.*successful/i');
+  // parallel-shard load; retry the submit once if the redirect doesn't happen.
+  const submit = dialog.locator('form button[type="submit"]');
   for (let attempt = 0; attempt < 2; attempt++) {
-    await dialog.locator('input[name="username"]').fill(email);
-    await dialog.locator('input[name="password"]').fill(password);
-    await dialog.locator('input[name="confirmPassword"]').fill(password);
-    await dialog.locator('form button[type="submit"]').evaluate((btn) => (btn as HTMLButtonElement).click());
+    if (page.url().includes('/auth/check-email')) break;
     try {
-      await success.waitFor({ state: 'visible', timeout: 20000 });
-      return;
+      // See helpers.registerNewUser: the submit button disables itself while the
+      // mutation is in flight, so a slow first submit must not be retried
+      // against a disabled button.
+      await expect(submit).toBeEnabled({ timeout: 30000 });
+      await dialog.locator('input[name="username"]').fill(email);
+      await dialog.locator('input[name="password"]').fill(password);
+      await dialog.locator('input[name="confirmPassword"]').fill(password);
+      await submit.evaluate((btn) => (btn as HTMLButtonElement).click());
     } catch {
-      if (attempt === 0) console.log('Registration confirmation not shown in modal, retrying submit...');
+      // navigated away (modal closed / inputs detached) or never settled
+    }
+    try {
+      await page.waitForURL(/\/auth\/check-email/, { timeout: 25000 });
+      break;
+    } catch {
+      if (attempt === 0) console.log('Registration redirect did not happen from modal, retrying submit...');
     }
   }
-  await expect(success).toBeVisible({ timeout: 20000 });
+  await expect(page).toHaveURL(/\/auth\/check-email/, { timeout: 20000 });
 }
 
 test.describe('User Registration Flow', () => {
@@ -82,9 +92,10 @@ test.describe('User Registration Flow', () => {
     const dialog = await openRegisterModal(page);
     await fillAndSubmitRegister(dialog, page, testEmail, testPassword);
 
-    // Success message is rendered inside the modal
-    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 30000 });
-    console.log('Registration successful, checking for verification email...');
+    // Registration now lands on a dedicated screen that names the address
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText(testEmail, { exact: false }).first()).toBeVisible({ timeout: 10000 });
+    console.log('Landed on check-email screen, waiting for verification email...');
 
     const email = await getLatestEmail(testEmail);
     expect(email).toBeTruthy();
@@ -99,17 +110,17 @@ test.describe('User Registration Flow', () => {
     await page.goto(verificationLink!, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForPageReady(page);
 
-    // Wait for the verification page to render and resolve
-    await expect(page.getByRole('heading', { name: /Email Verification/i })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/verified successfully|verification failed/i).first())
-      .toBeVisible({ timeout: 15000 });
-    console.log('Email verification page loaded');
+    // Success screen, then an automatic bounce to login with the email pre-filled.
+    // (Verification can't mint a session — the mutation returns success + userID
+    // only — so pre-filling is the closest we get to not making them retype.)
+    await expect(page.getByRole('heading', { name: /you're verified/i })).toBeVisible({ timeout: 20000 });
+    console.log('Email verified');
 
-    // Try to login with verified account on /auth/login
-    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForURL(/\/auth\/login/, { timeout: 20000 });
     await waitForAuthForm(page);
+    await expect(page.locator('input[name="username"]')).toHaveValue(testEmail, { timeout: 10000 });
+    console.log('Bounced to login with the email pre-filled');
 
-    await page.fill('input[name="username"]', testEmail);
     await page.fill('input[name="password"]', testPassword);
     await page.locator('form button[type="submit"]').first().click();
 
@@ -118,46 +129,54 @@ test.describe('User Registration Flow', () => {
     console.log('Login successful - registration flow complete!');
   });
 
-  test('resend verification email', async ({ page }) => {
+  test('resend verification email from the check-email screen', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
     await fillAndSubmitRegister(dialog, page, testEmail, testPassword);
 
-    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 30000 });
+    // Consume the signup email so the one we assert on below is the resent one
+    await getLatestEmail(testEmail);
+    await deleteEmailsForRecipient(testEmail);
 
-    // Navigate to resend verification page
-    await page.goto('/auth/resend-verification', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await waitForAuthForm(page);
+    // Resend without retyping the address — it travels in the URL
+    const resendButton = page.getByRole('button', { name: /resend email/i });
+    await resendButton.waitFor({ state: 'visible', timeout: 15000 });
+    await resendButton.click();
 
-    await page.fill('input[name="username"], input[type="email"]', testEmail);
-
-    // Wait for button to be ready and use evaluate for reliable click
-    const submitBtn = page.getByRole('button', { name: /send verification email/i });
-    await submitBtn.waitFor({ state: 'visible' });
-    await submitBtn.evaluate((btn) => (btn as HTMLButtonElement).click());
-
-    // The resend page shows: "Verification email sent! Please check your inbox and spam folder."
-    await expect(page.getByText(/verification email sent|check your inbox/i).first())
-      .toBeVisible({ timeout: 15000 });
-    console.log('Resend verification email successful');
+    await expect(page.getByText(/sent again just now/i)).toBeVisible({ timeout: 15000 });
+    console.log('Resend confirmed in place');
 
     const email = await getLatestEmail(testEmail);
     expect(email).toBeTruthy();
     console.log('Resent verification email received');
   });
 
-  test('prevent login before email verification', async ({ page }) => {
+  test('resend is rate-limited by a visible countdown', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForHomepage(page);
 
     const dialog = await openRegisterModal(page);
     await fillAndSubmitRegister(dialog, page, testEmail, testPassword);
 
-    await expect(dialog.locator('text=/registration.*successful/i')).toBeVisible({ timeout: 30000 });
+    await page.getByRole('button', { name: /resend email/i }).click();
+    await expect(page.getByText(/sent again just now/i)).toBeVisible({ timeout: 15000 });
 
-    // Try to login without verification
+    // A countdown replaces the button, so repeat taps can't fan out N emails
+    await expect(page.getByText(/resend in \d+:\d{2}/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('button', { name: /resend email/i })).toHaveCount(0);
+    console.log('Resend cooldown is shown and the button is gone');
+  });
+
+  test('unverified login is blocked and explains why', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForHomepage(page);
+
+    const dialog = await openRegisterModal(page);
+    await fillAndSubmitRegister(dialog, page, testEmail, testPassword);
+
+    // Try to login without verifying
     await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForAuthForm(page);
 
@@ -165,11 +184,69 @@ test.describe('User Registration Flow', () => {
     await page.fill('input[name="password"]', testPassword);
     await page.locator('form button[type="submit"]').first().click();
 
-    // Login should fail. The login form shows a generic credential error.
-    // Verify we did NOT navigate away from /auth/login AND an error banner is shown.
-    await expect(page.getByText(/unable to sign in|check your credentials/i).first())
-      .toBeVisible({ timeout: 10000 });
+    // The gateway returns INACTIVE_CREDENTIALS here, which the login form now
+    // renders as a verification prompt instead of a credential error.
+    await expect(page.getByText(/verify your email to continue/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/verified email before you can log in/i)).toBeVisible();
+    // The old copy blamed the password and sent people off to reset it
+    await expect(page.getByText(/check your credentials/i)).toHaveCount(0);
     expect(page.url()).toContain('/auth/login');
-    console.log('Login correctly blocked for unverified email');
+    console.log('Login correctly blocked with a verification prompt');
+  });
+
+  test('the blocked-login banner resends without retyping the address', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForHomepage(page);
+
+    const dialog = await openRegisterModal(page);
+    await fillAndSubmitRegister(dialog, page, testEmail, testPassword);
+
+    await getLatestEmail(testEmail);
+    await deleteEmailsForRecipient(testEmail);
+
+    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForAuthForm(page);
+    await page.fill('input[name="username"]', testEmail);
+    await page.fill('input[name="password"]', testPassword);
+    await page.locator('form button[type="submit"]').first().click();
+
+    const resend = page.getByRole('button', { name: /send a new link/i });
+    await resend.waitFor({ state: 'visible', timeout: 15000 });
+    await resend.click();
+
+    await expect(page.getByText(/sent — check your inbox/i)).toBeVisible({ timeout: 15000 });
+
+    const email = await getLatestEmail(testEmail);
+    expect(email).toBeTruthy();
+    console.log('Resent from the login banner without leaving the page');
+  });
+
+  test('a wrong password on a verified account still says the credentials are wrong', async ({ page }) => {
+    // Guards the branch: INVALID_CREDENTIALS must NOT render the verification
+    // prompt, or we would tell someone to check their email over a typo.
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForHomepage(page);
+
+    const dialog = await openRegisterModal(page);
+    await fillAndSubmitRegister(dialog, page, testEmail, testPassword);
+
+    const email = await getLatestEmail(testEmail);
+    const baseUrl = page.url().match(/^https?:\/\/[^\/]+/)?.[0] || 'http://localhost:4321';
+    const verificationLink = extractVerificationLink(email.HTML || email.Text || '', baseUrl);
+    expect(verificationLink).toBeTruthy();
+
+    await page.goto(verificationLink!, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await expect(page.getByRole('heading', { name: /you're verified/i })).toBeVisible({ timeout: 20000 });
+
+    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForAuthForm(page);
+    await page.fill('input[name="username"]', testEmail);
+    await page.fill('input[name="password"]', 'definitely-the-wrong-password');
+    await page.locator('form button[type="submit"]').first().click();
+
+    await expect(page.getByText(/unable to sign in|check your credentials/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/verify your email to continue/i)).toHaveCount(0);
+    expect(page.url()).toContain('/auth/login');
+    console.log('Verified account with a bad password gets the credential error, not the verify prompt');
   });
 });

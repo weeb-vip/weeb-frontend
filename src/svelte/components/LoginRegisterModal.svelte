@@ -5,8 +5,10 @@
   let hydrated = false;
   onMount(() => { hydrated = true; });
 
+  import { goto } from '$app/navigation';
   import type { LoginInput } from "../../gql/graphql";
-  import { useLogin, useRegister } from '../services/queries';
+  import { isUnverifiedEmailError } from '../../utils/auth-errors';
+  import { useLogin, useRegister, useResendVerificationEmail } from '../services/queries';
   import { loggedInStore, loginModalStore } from '../stores/auth';
   import FormInput from './FormInput.svelte';
 
@@ -20,11 +22,16 @@
     confirmPassword: "", // for registration validation
   };
   let errorMessage = "";
-  let successMessage = "";
   let validationErrors: Record<string, string> = {};
+  // login failed because the account exists but isn't verified — see Login.svelte
+  let needsVerification = false;
+  let resendState: 'idle' | 'sending' | 'sent' | 'failed' = 'idle';
+  // kept so the post-register redirect can carry the address
+  let submittedEmail = "";
 
   const loginMutation = useLogin();
   const registerMutation = useRegister();
+  const resendMutation = useResendVerificationEmail();
 
   // Subscribe to login modal state
   onMount(() => {
@@ -43,6 +50,7 @@
       id: $loginMutation.data.id
     });
     errorMessage = "";
+    needsVerification = false;
 
     // Dispatch custom event to trigger data refresh
     console.log('🎉 Login successful - dispatching loginSuccess event');
@@ -54,17 +62,42 @@
   }
 
   $: if ($loginMutation.isError) {
-    errorMessage = 'Unable to sign in. Please check your credentials and try again.';
+    if (isUnverifiedEmailError($loginMutation.error)) {
+      needsVerification = true;
+      errorMessage = "";
+    } else {
+      needsVerification = false;
+      errorMessage = 'Unable to sign in. Please check your credentials and try again.';
+    }
   }
 
-  // Handle register state changes
+  // Registration leaves the modal for the dedicated "check your email" screen,
+  // so the modal path doesn't diverge from /auth/register.
   $: if ($registerMutation.isSuccess) {
     errorMessage = "";
-    successMessage = "Registration successful! Please check your email to verify your account before logging in.";
+    const email = submittedEmail;
+    if (closeFn) {
+      closeFn();
+    }
+    goto(`/auth/check-email?email=${encodeURIComponent(email)}`);
   }
 
   $: if ($registerMutation.isError) {
     errorMessage = 'Unable to create account. Please try again.';
+  }
+
+  $: if ($resendMutation.isSuccess) {
+    resendState = 'sent';
+  }
+
+  $: if ($resendMutation.isError) {
+    resendState = 'failed';
+  }
+
+  function handleResend() {
+    if (!formData.username.trim() || $resendMutation.isPending) return;
+    resendState = 'sending';
+    $resendMutation.mutate({ username: formData.username });
   }
 
   function validateForm() {
@@ -105,8 +138,10 @@
     if (errorMessage) {
       errorMessage = "";
     }
-    if (successMessage) {
-      successMessage = "";
+    // Editing the email invalidates the banner it was addressed to
+    if (needsVerification && field === 'username') {
+      needsVerification = false;
+      resendState = 'idle';
     }
   }
 
@@ -116,6 +151,10 @@
     if (!validateForm()) {
       return;
     }
+
+    needsVerification = false;
+    resendState = 'idle';
+    submittedEmail = formData.username;
 
     const data: LoginInput = { username: formData.username, password: formData.password };
 
@@ -129,7 +168,8 @@
   function toggleMode() {
     isRegisterState = !isRegisterState;
     errorMessage = "";
-    successMessage = "";
+    needsVerification = false;
+    resendState = 'idle';
     validationErrors = {};
   }
 
@@ -161,10 +201,31 @@
       <p>{errorMessage}</p>
     </div>
   {/if}
-  {#if successMessage}
-    <div class="alert alert-success">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 16 8 12"/></svg>
-      <p>{successMessage}</p>
+  {#if needsVerification}
+    <div class="verify-banner" role="alert">
+      <div class="verify-head">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M3 7l9 6 9-6"/></svg>
+        Verify your email to continue
+      </div>
+      <!-- See Login.svelte: must not assert the account exists. -->
+      <p class="verify-body">
+        Accounts need a verified email before you can log in. Check
+        <b>{formData.username}</b> for the link we sent — it's often in spam.
+      </p>
+      {#if resendState === 'sent'}
+        <p class="verify-sent">Sent — check your inbox, and your spam folder.</p>
+      {:else if resendState === 'failed'}
+        <p class="verify-failed">We couldn't send that just now. Try again in a moment.</p>
+      {:else}
+        <button
+          type="button"
+          class="verify-action"
+          on:click={handleResend}
+          disabled={resendState === 'sending'}
+        >
+          {resendState === 'sending' ? 'Sending…' : 'Send a new link'}
+        </button>
+      {/if}
     </div>
   {/if}
 
@@ -238,12 +299,9 @@
 
   </form>
 
-  <!-- Login-only: resend verification -->
-  {#if !isRegisterState}
-    <div class="resend-link">
-      <a href="/auth/resend-verification" on:click={() => handleLinkClick(closeFn)} class="link-accent">Resend email verification</a>
-    </div>
-  {/if}
+  <!-- No standing "resend verification" link: an unverified login now surfaces
+       the banner above, which resends to the address already typed in.
+       /auth/resend-verification stays reachable for anyone who needs it. -->
 
   <!-- Divider -->
   <div class="divider">
@@ -316,10 +374,70 @@
     background: oklch(20% 0.03 25 / 0.5);
     border-color: oklch(60% 0.18 25 / 0.4);
   }
-  :global(.weeb-auth-modal .alert-success) {
+  /* Unverified-account banner — amber, not red: the credentials were correct,
+     there's just a step left. Mirrors Login.svelte. */
+  :global(.weeb-auth-modal .verify-banner) {
+    background: oklch(22% 0.04 85 / 0.45);
+    border: 1.5px solid var(--weeb-amber);
+    border-radius: var(--weeb-radius, 8px);
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  :global(.weeb-auth-modal .verify-head) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--weeb-amber);
+  }
+  :global(.weeb-auth-modal .verify-head svg) {
+    flex-shrink: 0;
+  }
+  :global(.weeb-auth-modal .verify-body) {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--weeb-fg-secondary);
+    margin: 0;
+  }
+  :global(.weeb-auth-modal .verify-body b) {
+    color: var(--weeb-fg);
+    font-weight: 600;
+    word-break: break-all;
+  }
+  :global(.weeb-auth-modal .verify-action) {
+    align-self: flex-start;
+    background: var(--weeb-amber);
+    color: oklch(20% 0.04 85);
+    font-size: 12.5px;
+    font-weight: 700;
+    font-family: inherit;
+    padding: 7px 13px;
+    border: none;
+    border-radius: var(--weeb-radius-sm, 4px);
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  :global(.weeb-auth-modal .verify-action:hover:not(:disabled)) {
+    filter: brightness(1.08);
+  }
+  :global(.weeb-auth-modal .verify-action:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  :global(.weeb-auth-modal .verify-sent),
+  :global(.weeb-auth-modal .verify-failed) {
+    font-size: 12.5px;
+    margin: 0;
+  }
+  :global(.weeb-auth-modal .verify-sent) {
     color: var(--weeb-green);
-    background: oklch(20% 0.03 155 / 0.5);
-    border-color: oklch(65% 0.15 155 / 0.4);
+  }
+  :global(.weeb-auth-modal .verify-failed) {
+    color: var(--weeb-red);
   }
 
   /* Form */
@@ -421,12 +539,6 @@
   }
   @keyframes -global-weeb-auth-spin {
     to { transform: rotate(360deg); }
-  }
-
-  /* Resend verification link */
-  :global(.weeb-auth-modal .resend-link) {
-    text-align: center;
-    margin-top: 12px;
   }
 
   /* Divider */
