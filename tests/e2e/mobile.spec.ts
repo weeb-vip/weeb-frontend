@@ -1,5 +1,9 @@
 import { test, expect, devices } from '@playwright/test';
 
+// Same anime as anime-news.spec.ts — hardcoded so the overflow check runs against a
+// show that actually has news and episodes, which is what makes the layout dense.
+const ANIME_WITH_NEWS = 'a8f45313-b080-4f5a-8d53-5d04e7d2a315';
+
 // Mobile-specific tests
 test.describe('Mobile Experience', () => {
   test('mobile navigation and touch interactions', async ({ page, isMobile }) => {
@@ -38,6 +42,65 @@ test.describe('Mobile Experience', () => {
       // Check if content doesn't overflow horizontally
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
       expect(bodyWidth).toBeLessThanOrEqual(viewport.width + 20); // Allow small margin
+    }
+  });
+
+  /**
+   * The page must not scroll sideways on a phone. The check above only covers `/` and
+   * allows 20px of slop, which let two real overflows through: the reference chips on
+   * the news page (nowrap, no max-width) and the show-page tab bar (four nowrap tabs
+   * wider than a small phone). Both widened the document itself, so assert on
+   * documentElement.scrollWidth with no tolerance, across the pages that broke.
+   *
+   * 320px is the narrowest viewport worth supporting (iPhone SE); bugs of this class
+   * only show up at the narrow end, which is why the 375px-and-up list above missed them.
+   */
+  test('no horizontal page scroll at 320px', async ({ page }) => {
+    const paths = [
+      '/',
+      '/airing',
+      '/search',
+      `/show/${ANIME_WITH_NEWS}`,
+      `/show/${ANIME_WITH_NEWS}/news`,
+    ];
+
+    await page.setViewportSize({ width: 320, height: 800 });
+
+    // Force the `anime-news` flag on, the same way anime-news.spec.ts does. Without it
+    // the news section may not render at all in some environments, and a page with no
+    // content trivially "passes" an overflow check.
+    await page.addInitScript(() => {
+      const FLAG = 'anime-news';
+      const install = () => {
+        const w = window as any;
+        if (!w.posthog) {
+          w.posthog = { isFeatureEnabled: (key: string) => key === FLAG };
+          return;
+        }
+        if (w.posthog.__flagPatched) return;
+        const original = typeof w.posthog.isFeatureEnabled === 'function'
+          ? w.posthog.isFeatureEnabled.bind(w.posthog)
+          : () => false;
+        w.posthog.isFeatureEnabled = (key: string) => (key === FLAG ? true : original(key));
+        w.posthog.__flagPatched = true;
+      };
+      install();
+      const iv = setInterval(install, 25);
+      setTimeout(() => clearInterval(iv), 10000);
+    });
+
+    for (const path of paths) {
+      await page.goto(path);
+      await page.waitForLoadState('domcontentloaded');
+      // Let async sections (news, episodes) render — they are what overflows.
+      await page.waitForTimeout(2000);
+
+      const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+
+      expect(scrollWidth, `${path} scrolls horizontally at 320px`).toBeLessThanOrEqual(clientWidth);
     }
   });
 

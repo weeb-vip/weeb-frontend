@@ -177,7 +177,7 @@
                   >
                     <path d={sourceIcon(ref.url, ref.kind).d} />
                   </svg>
-                  {ref.title}
+                  <span class="ref-title">{ref.title}</span>
                   <span class="ref-host">{hostOf(ref.url)}</span>
                 </a>
               {/each}
@@ -315,6 +315,10 @@
     line-height: 1.38;
     text-wrap: balance;
     transition: color 140ms ease;
+    /* Same min-width:auto trap as .refs — a long unbroken headline (a URL, a
+       romanised title with no spaces) would otherwise widen the 1fr column. */
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .date {
@@ -351,6 +355,9 @@
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 8px;
+    /* Grid items default to min-width:auto, which lets a nowrap chip widen the row
+       past the viewport instead of being clamped by it. */
+    min-width: 0;
   }
 
   .ref {
@@ -364,6 +371,17 @@
     border-radius: 20px;
     padding: 3px 11px 3px 8px;
     white-space: nowrap;
+    /* A chip stays on one line, so on a narrow screen it has to be allowed to
+       shrink and ellipsise its title — otherwise it scrolls the whole page. */
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .ref-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
   }
 
   .ref {
@@ -390,6 +408,7 @@
     font-family: var(--weeb-font-mono);
     font-size: 10px;
     color: var(--weeb-fg-muted);
+    flex: none;
   }
 
   .lang {
