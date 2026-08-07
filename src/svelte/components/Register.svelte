@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   // until hydration completes, a submit would be a native form POST
   // that sveltekit rejects (no form actions) — keep the button inert
   let hydrated = false;
@@ -16,17 +17,21 @@
     confirmPassword: ''
   };
   let errorMessage = '';
-  let successMessage = '';
   let validationErrors: Record<string, string> = {};
+  // the address submitted, kept so the redirect can carry it even though the
+  // form is cleared before navigation
+  let submittedEmail = '';
 
   const registerMutation = useRegister();
 
-  // Handle register state changes
+  // Registration succeeds into a dedicated screen rather than an inline alert
+  // under an emptied form — the verification step was too easy to miss there.
   $: if ($registerMutation.isSuccess) {
     debug.success('Registration successful!');
     errorMessage = '';
-    successMessage = 'Registration successful! Please check your email to verify your account before logging in.';
+    const email = submittedEmail;
     formData = { username: '', password: '', confirmPassword: '' };
+    goto(`/auth/check-email?email=${encodeURIComponent(email)}`);
   }
 
   $: if ($registerMutation.isError) {
@@ -46,7 +51,6 @@
     }
 
     errorMessage = errorMsg;
-    successMessage = '';
   }
 
   function validateForm() {
@@ -95,9 +99,6 @@
     if (errorMessage) {
       errorMessage = '';
     }
-    if (successMessage) {
-      successMessage = '';
-    }
   }
 
   function handleSubmit(event: Event) {
@@ -108,7 +109,7 @@
     }
 
     errorMessage = '';
-    successMessage = '';
+    submittedEmail = formData.username;
     const data: RegisterInput = { username: formData.username, password: formData.password };
 
     // Use the reactive mutation pattern like the modal
@@ -157,6 +158,9 @@
             error={validationErrors.username}
             required
           />
+          {#if !validationErrors.username}
+            <p class="field-hint">We'll send a link here to confirm it's yours.</p>
+          {/if}
         </div>
 
         <!-- Password -->
@@ -210,12 +214,6 @@
         {#if errorMessage}
           <div class="alert alert-error">
             <p>{errorMessage}</p>
-          </div>
-        {/if}
-
-        {#if successMessage}
-          <div class="alert alert-success">
-            <p>{successMessage}</p>
           </div>
         {/if}
 
@@ -416,10 +414,12 @@
     border-color: var(--weeb-red, oklch(60% 0.18 25));
   }
 
-  .alert-success {
-    color: var(--weeb-green);
-    background: oklch(20% 0.03 155 / 0.5);
-    border-color: var(--weeb-green);
+  /* --- Field hint --- */
+  .field-hint {
+    font-size: 12px;
+    color: var(--weeb-fg-muted);
+    line-height: 1.45;
+    margin-top: 6px;
   }
 
   /* --- Submit button --- */

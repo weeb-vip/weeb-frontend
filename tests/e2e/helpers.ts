@@ -194,10 +194,14 @@ export function extractVerificationLink(emailContent: string, baseUrl: string): 
 
 
 /**
- * Register a new account from /auth/register and wait for the success
- * message. The staging registration endpoint is intermittently slow under
- * parallel-shard load, so the submit is retried once if the confirmation
- * doesn't appear — this is the single most common source of e2e flake.
+ * Register a new account from /auth/register and wait for the redirect to the
+ * "check your email" screen, which is now how a successful signup confirms
+ * itself (it used to be an inline alert under the emptied form).
+ *
+ * The staging registration endpoint is intermittently slow under parallel-shard
+ * load, so the submit is retried once if the redirect doesn't happen — this is
+ * the single most common source of e2e flake. The retry re-checks the URL
+ * first, so a slow-but-successful redirect is never double-submitted.
  */
 export async function registerNewUser(page: Page, email: string, password: string) {
   await page.goto('/auth/register', { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -220,18 +224,31 @@ export async function registerNewUser(page: Page, email: string, password: strin
     { timeout: 15000 }
   );
 
-  const success = page.locator('text=/registration.*successful|check.*email/i');
   for (let attempt = 0; attempt < 2; attempt++) {
-    await submitButton.click();
+    if (page.url().includes('/auth/check-email')) break;
     try {
-      await success.waitFor({ state: 'visible', timeout: 20000 });
-      return;
+      // The button disables itself while the mutation is in flight. Waiting for
+      // it to be actionable means a merely-slow first submit is never retried
+      // against a disabled button, which otherwise hangs until the test timeout.
+      await expect(submitButton).toBeEnabled({ timeout: 30000 });
+      await submitButton.click({ timeout: 10000 });
+    } catch {
+      // Either we navigated away (button detached) or it never settled — the
+      // URL check below decides which.
+    }
+    try {
+      await page.waitForURL(/\/auth\/check-email/, { timeout: 25000 });
+      break;
     } catch {
       if (attempt === 0) {
         // eslint-disable-next-line no-console
-        console.log('Registration confirmation not shown, retrying submit...');
+        console.log('Registration redirect did not happen, retrying submit...');
       }
     }
   }
-  await expect(success).toBeVisible({ timeout: 20000 });
+
+  await expect(page).toHaveURL(/\/auth\/check-email/, { timeout: 20000 });
+  await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 15000 });
+  // The address must be on screen — that's the whole point of the screen.
+  await expect(page.getByText(email, { exact: false }).first()).toBeVisible({ timeout: 10000 });
 }
