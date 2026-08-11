@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { goto, replaceState } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { configStore } from '../stores/config';
   import { loggedInStore } from '../stores/auth';
@@ -210,26 +210,19 @@
   }
 
   function browseGenre(genreName: string) {
-    // Toggle genre selection
-    const idx = selectedGenres.indexOf(genreName);
-    if (idx === -1) {
-      selectedGenres = [genreName]; // Single select for now
-    } else {
-      selectedGenres = [];
-    }
-    // Update URL
+    // Toggle genre selection. Single select for now.
+    const next = selectedGenres.includes(genreName) ? [] : [genreName];
     const url = new URL(window.location.href);
-    if (selectedGenres.length > 0) {
-      url.searchParams.set('genre', genreName);
+    if (next.length > 0) {
+      url.searchParams.set('genre', next[0]);
     } else {
       url.searchParams.delete('genre');
     }
     if (!searchQuery) {
       url.searchParams.delete('query');
     }
-    lastSeenSearch = url.search;
-    replaceState(url, {});
-    performSearch();
+    // Write the URL only — syncFromUrl() derives state and runs the search.
+    applyUrl(url);
   }
 
   async function fetchUserAnimeMap() {
@@ -308,16 +301,35 @@
       if (q || genre) {
         performSearch();
       }
+      // Seed the sync block with what we just applied, so enabling it below
+      // doesn't immediately re-run this same search.
+      lastSeenSearch = window.location.search;
       initializedFromUrl = true;
     } catch (e) {
       console.error('Algolia init failed:', e);
     }
   });
 
-  // Re-derive state when the URL changes while this page stays mounted
-  // (e.g. picking a navbar-autocomplete search while already on /search)
+  // The URL is the single source of truth for `searchQuery` and `selectedGenres`.
+  // Handlers never write those directly — they call applyUrl(), and this block
+  // derives the state and runs the search once the store has actually updated.
+  //
+  // Do NOT set `lastSeenSearch` from a handler ahead of the navigation: the
+  // reactive block can run while `$page.url` still holds the previous URL, and
+  // a pre-advanced `lastSeenSearch` makes it "correct" the state back to that
+  // stale URL, wiping the selection that was just made.
   let initializedFromUrl = false;
   let lastSeenSearch = '';
+
+  function applyUrl(url: URL) {
+    // Must be goto(), not replaceState(). `replaceState` from $app/navigation is
+    // shallow routing: it swaps the history entry and sets `$page.state`, but
+    // leaves `$page.url` pointing at the old URL — so the sync block below would
+    // never see the new query/genre. goto() performs a real (client-side)
+    // navigation, which is what actually updates `$page.url`.
+    goto(url, { replaceState: true, noScroll: true, keepFocus: true });
+  }
+
   $: if (initializedFromUrl && $page.url.pathname === '/search' && $page.url.search !== lastSeenSearch) {
     lastSeenSearch = $page.url.search;
     const q = $page.url.searchParams.get('query') || '';
@@ -399,11 +411,9 @@
   function handleSearchSubmit(e?: Event) {
     e?.preventDefault();
     if (searchQuery.trim()) {
-      // Update URL
       const url = new URL(window.location.href);
       url.searchParams.set('query', searchQuery.trim());
-      history.pushState({}, '', url.toString());
-      performSearch();
+      applyUrl(url);
     }
   }
 
@@ -412,59 +422,39 @@
   }
 
   function clearSearch() {
-    searchQuery = '';
-    selectedGenres = [];
-    results = [];
-    hasSearched = false;
-    totalResults = 0;
-    // Clear all URL params
+    // Clearing the params drives the sync block, which resets the state and
+    // short-circuits performSearch() back to the browse placeholder.
     const url = new URL(window.location.href);
     url.searchParams.delete('query');
     url.searchParams.delete('genre');
-    history.pushState({}, '', url.toString());
+    applyUrl(url);
   }
 
   function toggleGenre(genre: string) {
-    const idx = selectedGenres.indexOf(genre);
-    if (idx === -1) {
-      selectedGenres = [...selectedGenres, genre];
-    } else {
-      selectedGenres = selectedGenres.filter(g => g !== genre);
-      // If removing the last genre and no search query, reset to browse state
-      if (selectedGenres.length === 0 && !searchQuery) {
-        results = [];
-        hasSearched = false;
-        totalResults = 0;
-        const url = new URL(window.location.href);
-        url.searchParams.delete('genre');
-        url.searchParams.delete('query');
-        history.pushState({}, '', url.toString());
-        return;
-      }
-    }
-    // Update URL with current genre selection
+    const next = selectedGenres.includes(genre)
+      ? selectedGenres.filter(g => g !== genre)
+      : [...selectedGenres, genre];
+
     const url = new URL(window.location.href);
-    if (selectedGenres.length > 0) {
-      url.searchParams.set('genre', selectedGenres[0]);
+    if (next.length > 0) {
+      url.searchParams.set('genre', next[0]);
     } else {
       url.searchParams.delete('genre');
+      // Dropping the last genre with no query returns to the browse placeholder.
+      if (!searchQuery) url.searchParams.delete('query');
     }
-    history.pushState({}, '', url.toString());
+    applyUrl(url);
   }
 
   function clearAllFilters() {
-    searchQuery = '';
-    selectedGenres = [];
+    // Status and year are not URL-backed, so they still reset directly.
     selectedStatus = '';
     selectedYear = '';
-    results = [];
-    hasSearched = false;
-    totalResults = 0;
-    // Clear URL params
+    // Query and genre are URL-backed — the sync block clears them.
     const url = new URL(window.location.href);
     url.searchParams.delete('query');
     url.searchParams.delete('genre');
-    history.pushState({}, '', url.toString());
+    applyUrl(url);
   }
 
   function navigateToShow(item: any) {
