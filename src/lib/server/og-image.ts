@@ -29,7 +29,7 @@ const UNKNOWN_TTL_MS = 2 * 60 * 1000;
 
 const cache = new Map<string, { url: string; expires: number }>();
 
-/** Matches escapeUri in src/services/utils.ts — the CDN keys are written with it. */
+/** Matches escapeUri in src/services/utils.ts and src/svelte/utils/image.ts. */
 function escapeUri(str: string): string {
   return encodeURIComponent(str).replace(
     /[!'()*]/g,
@@ -37,9 +37,27 @@ function escapeUri(str: string): string {
   );
 }
 
-/** The CDN slug for an anime, mirroring GetImageFromAnime. */
+/**
+ * The CDN slug for an anime.
+ *
+ * Escaped TWICE, because that is how the objects are actually keyed. The client
+ * builds a poster URL as getSafeImageUrl(GetImageFromAnime(anime)), and *both*
+ * of those apply escapeUri — so a title containing `:` is stored under the
+ * literal characters `%3A`, and requesting it means escaping the `%` in turn:
+ *
+ *   "Azumanga Daioh: The Animation"
+ *     GetImageFromAnime -> azumanga_daioh%3A_the_animation
+ *     getSafeImageUrl   -> azumanga_daioh%253A_the_animation   <- the real key
+ *
+ * Encoding only once yields a 404 for every title containing a character
+ * escapeUri touches (`:`, `;`, `,`, `'`, `(`, `)`, ...), which is why those
+ * shows fell through to the default share image while plain-ASCII titles like
+ * "Destiny Unchain Online" — identical under one pass or two — worked fine.
+ */
 export function animeCdnSlug(title: string): string {
-  return escapeUri(title.toLowerCase().replace(/ /g, '_'));
+  const fromGetImageFromAnime = escapeUri(title.toLowerCase().replace(/ /g, '_'));
+  // Mirrors getSafeImageUrl, including its %20 -> + step.
+  return escapeUri(fromGetImageFromAnime.replace(/%20/g, '+'));
 }
 
 /**

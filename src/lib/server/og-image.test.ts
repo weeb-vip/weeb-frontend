@@ -22,11 +22,30 @@ describe('animeCdnSlug', () => {
     expect(animeCdnSlug('One Piece')).toBe('one_piece');
   });
 
-  it('escapes characters that would otherwise break the CDN key', () => {
-    // The comma is why "Oh Boy, Was I Wrong About Her" missed its poster.
+  it('double-escapes, because that is how the CDN objects are keyed', () => {
+    // getSafeImageUrl(GetImageFromAnime(anime)) applies escapeUri twice, so the
+    // stored key holds the literal characters "%2C" and the request path must
+    // escape the "%" again. Verified against the live CDN: the single-encoded
+    // form 404s, the double-encoded form 206s.
     expect(animeCdnSlug('Oh Boy, Was I Wrong About Her')).toBe(
-      'oh_boy%2C_was_i_wrong_about_her'
+      'oh_boy%252C_was_i_wrong_about_her'
     );
+  });
+
+  it.each([
+    ['Azumanga Daioh: The Animation', 'azumanga_daioh%253A_the_animation'],
+    ['Steins;Gate', 'steins%253Bgate'],
+    ['Fullmetal Alchemist: Brotherhood', 'fullmetal_alchemist%253A_brotherhood'],
+    ["Steel Ball Run: JoJo's Bizarre Adventure", 'steel_ball_run%253A_jojo%2527s_bizarre_adventure'],
+    ['Nya Nya Nya Chu Nya (NNNCN)', 'nya_nya_nya_chu_nya_%2528nnncn%2529']
+  ])('resolves the real CDN key for %s', (title, expected) => {
+    expect(animeCdnSlug(title)).toBe(expected);
+  });
+
+  it('is unchanged for titles with no characters needing escaping', () => {
+    // Why "Destiny Unchain Online" was the only one on the homepage that worked:
+    // one pass and two are identical when nothing needs escaping.
+    expect(animeCdnSlug('Destiny Unchain Online')).toBe('destiny_unchain_online');
   });
 });
 
@@ -65,6 +84,28 @@ describe('resolveOgImage', () => {
 
     expect(url).toContain('/cdn-cgi/image/');
     expect(url).toContain('/weeb/one_piece');
+  });
+
+  it('finds the poster for a title with special characters', async () => {
+    // The regression: only the double-encoded key exists on the CDN, so a
+    // single-encoded probe 404s and the show silently fell through to the
+    // default share image. `fakeFetch` 206s for nothing else, so this fails
+    // outright if the slug loses its second escaping pass.
+    const poster = `${CDN}/azumanga_daioh%253A_the_animation`;
+    const { impl, calls } = fakeFetch([poster]);
+
+    const url = await resolveOgImage({
+      id: ID,
+      getTitle: async () => 'Azumanga Daioh: The Animation',
+      cdnUrl: CDN,
+      origin: ORIGIN,
+      fetchImpl: impl
+    });
+
+    expect(url).toContain('/weeb/azumanga_daioh%253A_the_animation');
+    expect(url).not.toBe('https://weeb.vip/assets/og-image.jpg');
+    // The banner is still tried first.
+    expect(calls[0].url).toBe(`${CDN}/banners/${ID}`);
   });
 
   it('falls back to the site default when neither exists', async () => {
