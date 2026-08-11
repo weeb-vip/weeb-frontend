@@ -373,33 +373,54 @@
   $: inputProps = autocompleteInstance?.getInputProps({}) || {};
   $: rootProps = autocompleteInstance?.getRootProps({}) || {};
 
-  // Animate search results when they change
-  $: if (autocompleteState.collections && autocompleteState.collections.length > 0) {
-    setTimeout(() => {
-      const items = document.querySelectorAll('[data-autocomplete-item]');
-      if (items.length > 0 && typeof animate === 'function' && typeof stagger === 'function') {
-        try {
-          const animationOptions: any = {
-            type: 'spring',
-            stiffness: 300,
-            damping: 25
-          };
+  // Total time the entrance stagger may span, regardless of how many results
+  // came back. A fixed per-item delay does not scale: at 0.05s, twenty results
+  // took a full second to finish appearing, and the old document-wide selector
+  // matched the mobile *and* desktop panels, so it was really forty items and
+  // about two seconds — while Algolia itself answers in well under a hundred
+  // milliseconds.
+  const RESULTS_STAGGER_BUDGET_S = 0.12;
 
-          // Only add delay if stagger is properly defined
-          if (stagger) {
-            animationOptions.delay = stagger(0.05);
-          }
+  function animateResultsIn() {
+    // Only the panel actually on screen; both are in the DOM at all times.
+    const panel = window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
+    const items = panel ? [...panel.querySelectorAll('[data-autocomplete-item]')] : [];
+    if (items.length === 0 || typeof animate !== 'function') return;
 
-          animate(
-            items,
-            { opacity: [0, 1], y: [20, 0] },
-            animationOptions
-          );
-        } catch (e) {
-          // Silently fail - animations are not critical
-        }
+    try {
+      const animationOptions: any = {
+        type: 'spring',
+        stiffness: 300,
+        damping: 25
+      };
+
+      if (typeof stagger === 'function') {
+        animationOptions.delay = stagger(RESULTS_STAGGER_BUDGET_S / items.length);
       }
-    }, 50);
+
+      animate(items, { opacity: [0, 1], y: [12, 0] }, animationOptions);
+    } catch (e) {
+      // Silently fail - animations are not critical
+    }
+  }
+
+  // Animate results in when the panel opens — deliberately NOT on every
+  // keystroke. Each run restarts the items from opacity 0, so re-running it per
+  // input made already-rendered results blink out and fade back in on every
+  // character, which is what made the search feel slow. Refining a query now
+  // swaps the contents in place.
+  let resultsPanelWasOpen = false;
+  $: {
+    const hasResults = (autocompleteState.collections || []).some(
+      (c: any) => (c?.items?.length ?? 0) > 0
+    );
+    const panelShowing = Boolean(autocompleteState.isOpen) && hasResults;
+
+    if (panelShowing && !resultsPanelWasOpen) {
+      // Let Svelte flush the items into the panel before measuring them.
+      setTimeout(animateResultsIn, 0);
+    }
+    resultsPanelWasOpen = panelShowing;
   }
 
   // Svelte action for mobile backdrop animation
