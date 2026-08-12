@@ -167,19 +167,37 @@
     const mainData = $currentlyAiringQuery.data;
     if (!mainData && additionalAnimeData.length === 0) return [];
 
-    // Merge: start with main query data, then add any additional anime from calendar fetches
-    const mergedData = { currentlyAiring: [...(mainData?.currentlyAiring || [])] };
+    // Merge main query data with the wider-range calendar fetches, unioning the
+    // episode lists per anime. Skipping anime whose id was already present drops
+    // every episode outside the initial two-month window for a show that is also
+    // airing inside it — which is most of them, so the calendar went blank as
+    // soon as you paged past that window.
+    const byId = new Map<string, any>();
 
-    if (additionalAnimeData.length > 0) {
-      const existingIds = new Set(mergedData.currentlyAiring.map((a: any) => a?.id));
-      additionalAnimeData.forEach((anime: any) => {
-        if (anime && !existingIds.has(anime.id)) {
-          mergedData.currentlyAiring.push(anime);
-        }
+    const mergeAnime = (anime: any) => {
+      if (!anime?.id) return;
+
+      const existing = byId.get(anime.id);
+      if (!existing) {
+        byId.set(anime.id, anime);
+        return;
+      }
+
+      const episodes = [...(existing.episodes || [])];
+      const seenEpisodes = new Set(episodes.map((e: any) => e?.episodeNumber));
+      (anime.episodes || []).forEach((episode: any) => {
+        if (!episode || seenEpisodes.has(episode.episodeNumber)) return;
+        seenEpisodes.add(episode.episodeNumber);
+        episodes.push(episode);
       });
-    }
 
-    return processCurrentlyAiring(mergedData);
+      byId.set(anime.id, { ...existing, ...anime, episodes });
+    };
+
+    (mainData?.currentlyAiring || []).forEach(mergeAnime);
+    additionalAnimeData.forEach(mergeAnime);
+
+    return processCurrentlyAiring({ currentlyAiring: [...byId.values()] });
   })();
 
   // Debug logging for data fetching
