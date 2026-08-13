@@ -16,6 +16,7 @@
     showInstantFeedback,
     hideNavigationFeedback
   } from '$lib/client/global-ui';
+  import { initTelemetryWhenConfigured } from '$lib/client/telemetry';
   import { configStore } from '../svelte/stores/config';
   import '../scss/base.scss';
   import '../styles/design-tokens.css';
@@ -36,6 +37,8 @@
   onMount(() => {
     initGlobalErrorHandlers();
     initPostHogWhenConfigured();
+    // Loads the OTel web SDK dynamically, so it stays off the first-paint path.
+    initTelemetryWhenConfigured();
     import('../scripts/init-swipe-navigation');
   });
 

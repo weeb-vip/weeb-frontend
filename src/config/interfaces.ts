@@ -17,4 +17,15 @@ export interface IConfig {
   /** Enable Cloudflare Image Resizing (/cdn-cgi/image/) on CDN URLs. Production only —
    * staging is not fronted by Cloudflare, so transforms would 404 there. */
   cdn_image_resize?: boolean;
+  /** OTLP/HTTP traces endpoint for browser RUM, e.g.
+   * "https://otel.weeb.vip/v1/traces". Terminates at Grafana Alloy, which
+   * forwards to Tempo alongside the server-side spans.
+   *
+   * Optional on purpose: when unset, RUM stays off entirely rather than
+   * failing. That is what local and development configs want — there is no
+   * collector to talk to, and pointing them at the shared endpoint would mix
+   * a developer's browser spans into staging. Only origins listed in Alloy's
+   * CORS config can post here, so a new environment needs an infra change
+   * (weeb-argocd argocd-apps/alloy.yaml) as well as a value here. */
+  otlp_endpoint?: string;
 }

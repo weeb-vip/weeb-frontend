@@ -5,5 +5,6 @@
   "cdn_url": "https://cdn.weeb.vip/weeb-staging",
   "cdn_user_url": "https://cdn.weeb.vip/weeb-user-staging",
   "posthog_api_key": "phc_MbyMDQJkiLR9NSfSGSpEhA1RSwu79mROuedzQvxgxoI",
-  "environment": "staging"
+  "environment": "staging",
+  "otlp_endpoint": "https://otel.weeb.vip/v1/traces"
 }

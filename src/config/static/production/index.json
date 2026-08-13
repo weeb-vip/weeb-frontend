@@ -6,5 +6,6 @@
   "cdn_user_url": "https://cdn.weeb.vip/weeb-user",
   "posthog_api_key": "phc_MbyMDQJkiLR9NSfSGSpEhA1RSwu79mROuedzQvxgxoI",
   "cdn_image_resize": true,
-  "environment": "production"
+  "environment": "production",
+  "otlp_endpoint": "https://otel.weeb.vip/v1/traces"
 }
