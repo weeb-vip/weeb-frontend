@@ -61,6 +61,11 @@ async function start(endpoint: string, environment: string): Promise<void> {
         // Distinct from the server-side "weeb-frontend" so browser and server
         // spans stay separable in Tempo while still sharing a trace.
         'service.name': 'weeb-frontend-browser',
+        // Same build constant the footer renders, so a span can be tied back
+        // to an exact release. Baked in by vite from VITE_APP_VERSION, which
+        // CI sets from the semantic-release version; it is the string "dev"
+        // for local builds.
+        'service.version': __APP_VERSION__,
         'deployment.environment': environment,
       }),
       spanProcessors: [new BatchSpanProcessor(exporter)],
