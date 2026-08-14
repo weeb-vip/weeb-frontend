@@ -10,6 +10,7 @@
 // the critical path of first paint.
 
 import type { IConfig } from '../../config/interfaces';
+import debug from '../../utils/debug';
 
 let started = false;
 
@@ -40,7 +41,6 @@ async function start(endpoint: string, environment: string): Promise<void> {
       { WebTracerProvider, BatchSpanProcessor },
       { OTLPTraceExporter },
       { resourceFromAttributes },
-      { ZoneContextManager },
       { registerInstrumentations },
       { FetchInstrumentation },
       { DocumentLoadInstrumentation },
@@ -48,7 +48,6 @@ async function start(endpoint: string, environment: string): Promise<void> {
       import('@opentelemetry/sdk-trace-web'),
       import('@opentelemetry/exporter-trace-otlp-http'),
       import('@opentelemetry/resources'),
-      import('@opentelemetry/context-zone'),
       import('@opentelemetry/instrumentation'),
       import('@opentelemetry/instrumentation-fetch'),
       import('@opentelemetry/instrumentation-document-load'),
@@ -71,9 +70,22 @@ async function start(endpoint: string, environment: string): Promise<void> {
       spanProcessors: [new BatchSpanProcessor(exporter)],
     });
 
-    // ZoneContextManager keeps trace context across async boundaries, so a
-    // fetch started inside a click handler stays attached to that interaction.
-    provider.register({ contextManager: new ZoneContextManager() });
+    // Deliberately the default context manager, not ZoneContextManager.
+    //
+    // context-zone pulls in zone.js, which monkey-patches setTimeout, promises
+    // and event handlers process-wide. That shifted the header search debounce
+    // enough that refining a query re-ran the results panel's entrance
+    // animation instead of swapping contents in place — the panel blinked to
+    // opacity 0 on every keystroke in Firefox, caught by
+    // tests/e2e/search-autocomplete-responsiveness.spec.ts.
+    //
+    // The tradeoff is small here: ZoneContextManager exists to keep trace
+    // context across async boundaries so a fetch nests under the interaction
+    // that triggered it, but we register no user-interaction instrumentation,
+    // so there is no parent span for it to preserve. Fetch spans are still
+    // created and exported either way. Do not reintroduce it without a
+    // user-interaction span to hang them off, and re-run that spec if you do.
+    provider.register();
 
     registerInstrumentations({
       tracerProvider: provider,
@@ -93,7 +105,7 @@ async function start(endpoint: string, environment: string): Promise<void> {
     });
   } catch (err) {
     // RUM must never take the page down with it.
-    console.warn('[telemetry] RUM init failed, continuing without it', err);
+    debug.warn('[telemetry] RUM init failed, continuing without it', err);
     started = false;
   }
 }
