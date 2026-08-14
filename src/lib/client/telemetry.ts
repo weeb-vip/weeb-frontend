@@ -92,10 +92,28 @@ async function start(endpoint: string, environment: string): Promise<void> {
       instrumentations: [
         new DocumentLoadInstrumentation(),
         new FetchInstrumentation({
-          // Only propagate trace headers to our own APIs. Sending traceparent
-          // to a third party trips their CORS preflight and the request fails.
+          // Staging hosts only, deliberately not all of weeb.vip.
+          //
+          // traceparent on a cross-origin request has to be listed in the
+          // server's Access-Control-Allow-Headers or the browser blocks the
+          // request outright. gateway.staging.weeb.vip sits behind an istio
+          // corsPolicy with allowHeaders ["*"], so it accepts it. Production
+          // gateway.weeb.vip answers with a fixed list:
+          //
+          //   Accept, Authorization, Content-Type, X-CSRF-Token
+          //
+          // no traceparent, so propagating there would fail the preflight and
+          // break every GraphQL call rather than merely losing a span.
+          //
+          // To extend this to production, first add traceparent (and
+          // tracestate) to gateway-proxy's allowed CORS headers, confirm with:
+          //   curl -X OPTIONS https://gateway.weeb.vip/graphql \
+          //     -H 'Origin: https://weeb.vip' \
+          //     -H 'Access-Control-Request-Method: POST' \
+          //     -H 'Access-Control-Request-Headers: traceparent'
+          // then widen this regex back to ([a-z0-9-]+\.)*weeb\.vip.
           propagateTraceHeaderCorsUrls: [
-            /^https:\/\/([a-z0-9-]+\.)*weeb\.vip\//,
+            /^https:\/\/([a-z0-9-]+\.)*staging\.weeb\.vip\//,
           ],
           // The collector call is itself a fetch; tracing it would generate a
           // span for every export and never settle.
