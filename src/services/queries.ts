@@ -3,6 +3,7 @@ import debug from "../utils/debug";
 import {AuthStorage} from "../utils/auth-storage";
 
 import { ensureConfigLoaded } from './config-loader';
+import { withSpan, graphqlOperationName } from '../lib/tracing';
 
 // Config accessor that dynamically ensures config is loaded
 async function getConfig() {
@@ -73,10 +74,20 @@ export const AuthenticatedClient = async () => {
     credentials: 'include',
     // Alternative: use fetch options directly
     fetch: (input: RequestInfo | URL, init?: RequestInit) => {
-      return fetch(input, {
-        ...init,
-        credentials: 'include'
-      });
+      // Every call here is POST /graphql, so the auto-instrumented fetch spans
+      // are indistinguishable from each other. Wrapping in a span named after
+      // the operation is what makes a trace readable. fetch is started inside
+      // the callback so it inherits the span as its parent.
+      const operation = graphqlOperationName(init?.body);
+      return withSpan(
+        operation ? `graphql ${operation}` : 'graphql request',
+        operation ? { 'graphql.operation.name': operation } : {},
+        () =>
+          fetch(input, {
+            ...init,
+            credentials: 'include'
+          })
+      );
     }
   })
 }
