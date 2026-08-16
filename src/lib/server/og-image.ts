@@ -3,8 +3,7 @@
 // Three things were broken here, and all three have to be handled together:
 //
 //   1. The show page built `cdn.weeb.vip/weeb/<urlencoded imageUrl>`. `imageUrl` is a
-//      MyAnimeList address; the CDN keys on a *slug* derived from the title, so that
-//      URL 404s for every anime.
+//      MyAnimeList address, not a CDN key, so that URL 404s for every anime.
 //   2. The CDN serves banners and posters as `application/octet-stream`. They are real
 //      JPEGs, but Twitter/Facebook/Discord reject a non-image content type, so a card
 //      renders blank even when the URL resolves. Routing through Cloudflare Image
@@ -28,37 +27,6 @@ const MISS_TTL_MS = 10 * 60 * 1000;
 const UNKNOWN_TTL_MS = 2 * 60 * 1000;
 
 const cache = new Map<string, { url: string; expires: number }>();
-
-/** Matches escapeUri in src/services/utils.ts and src/svelte/utils/image.ts. */
-function escapeUri(str: string): string {
-  return encodeURIComponent(str).replace(
-    /[!'()*]/g,
-    (char) => '%' + char.charCodeAt(0).toString(16).toUpperCase()
-  );
-}
-
-/**
- * The CDN slug for an anime.
- *
- * Escaped TWICE, because that is how the objects are actually keyed. The client
- * builds a poster URL as getSafeImageUrl(GetImageFromAnime(anime)), and *both*
- * of those apply escapeUri — so a title containing `:` is stored under the
- * literal characters `%3A`, and requesting it means escaping the `%` in turn:
- *
- *   "Azumanga Daioh: The Animation"
- *     GetImageFromAnime -> azumanga_daioh%3A_the_animation
- *     getSafeImageUrl   -> azumanga_daioh%253A_the_animation   <- the real key
- *
- * Encoding only once yields a 404 for every title containing a character
- * escapeUri touches (`:`, `;`, `,`, `'`, `(`, `)`, ...), which is why those
- * shows fell through to the default share image while plain-ASCII titles like
- * "Destiny Unchain Online" — identical under one pass or two — worked fine.
- */
-export function animeCdnSlug(title: string): string {
-  const fromGetImageFromAnime = escapeUri(title.toLowerCase().replace(/ /g, '_'));
-  // Mirrors getSafeImageUrl, including its %20 -> + step.
-  return escapeUri(fromGetImageFromAnime.replace(/%20/g, '+'));
-}
 
 /**
  * Wrap a CDN URL in Cloudflare Image Resizing. This is what fixes the content type,
@@ -119,12 +87,6 @@ async function probe(
 export interface OgImageArgs {
   id: string;
   /**
-   * Resolves the anime title, used to derive the CDN poster slug. Called lazily —
-   * only when the banner is missing — so the common path costs no lookup.
-   * Optional: without it, only the banner and the default are considered.
-   */
-  getTitle?: () => Promise<string | null>;
-  /**
    * Sent as x-og-probe on every probe. Cloudflare challenges server-side requests
    * to /weeb/*, so a WAF Skip rule matching this header is what lets our own origin
    * check whether an image exists while the images stay bot-protected for everyone
@@ -159,7 +121,6 @@ export interface OgImageArgs {
  */
 export async function resolveOgImage({
   id,
-  getTitle,
   probeSecret,
   cdnUrl,
   origin,
@@ -176,6 +137,7 @@ export async function resolveOgImage({
 
   // Banner first: it is 1920x1080, so it crops to 1200x630 without distortion.
   // The poster is portrait and only a reasonable card after a cover crop.
+  // Both are keyed by the anime id, so neither needs a title lookup.
   const banner = `${base}/banners/${encodeURIComponent(id)}`;
   const bannerPresence = await probe(banner, fetchImpl, probeSecret);
 
@@ -184,16 +146,11 @@ export async function resolveOgImage({
   } else if (bannerPresence === 'unknown') {
     // Whatever blocked this probe blocks the poster too — same origin, same rule.
     conclusive = false;
-  } else if (getTitle) {
-    // Only now is the title worth fetching: the poster is the sole remaining
-    // candidate that needs it.
-    const title = await getTitle().catch(() => null);
-    if (title) {
-      const poster = `${base}/${animeCdnSlug(title)}`;
-      const posterPresence = await probe(poster, fetchImpl, probeSecret);
-      if (posterPresence === 'present') chosen = withResize(poster);
-      else if (posterPresence === 'unknown') conclusive = false;
-    }
+  } else {
+    const poster = `${base}/${encodeURIComponent(id)}`;
+    const posterPresence = await probe(poster, fetchImpl, probeSecret);
+    if (posterPresence === 'present') chosen = withResize(poster);
+    else if (posterPresence === 'unknown') conclusive = false;
   }
 
   const url = chosen ?? new URL(DEFAULT_OG, origin).toString();
