@@ -1,4 +1,5 @@
 import debug from '../../utils/debug';
+import { withSpan } from '../../lib/tracing';
 
 export async function uploadProfileImage(file: File): Promise<any> {
   
@@ -43,17 +44,28 @@ export async function uploadProfileImage(file: File): Promise<any> {
   formData.append('0', file, file.name); // '0' corresponds to the key in the map
   
   try {
+    // Wrapped so the upload shows up as one named span carrying the file size,
+    // which is the thing that explains a slow upload. Without it this is an
+    // anonymous POST against the same /graphql URL as every other call.
     // @ts-ignore
-    const response = await fetch(global.config.graphql_host, {
-      method: 'POST',
-      credentials: 'include',
-      // auth rides on the httpOnly cookies (credentials: include); the old
-      // Authorization header read a localStorage key that is never written,
-      // producing "Bearer null"
-      // Don't set Content-Type - let the browser set it with the boundary for multipart/form-data
+    const response = await withSpan(
+      'upload profile image',
+      {
+        'file.size_bytes': file.size,
+        'file.mime_type': file.type,
+      },
+      () =>
+        fetch(global.config.graphql_host, {
+          method: 'POST',
+          credentials: 'include',
+          // auth rides on the httpOnly cookies (credentials: include); the old
+          // Authorization header read a localStorage key that is never written,
+          // producing "Bearer null"
+          // Don't set Content-Type - let the browser set it with the boundary for multipart/form-data
 
-      body: formData
-    });
+          body: formData
+        })
+    );
     
     debug.info('Upload response status:', response.status);
     
