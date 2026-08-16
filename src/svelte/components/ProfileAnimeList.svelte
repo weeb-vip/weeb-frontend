@@ -5,7 +5,8 @@
   import { fetchUserAnimes } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { Status, type UserAnime } from '../../gql/graphql';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageSourcesFromAnime, getYearUTC } from '../../services/utils';
+  import { getSafeImageUrl } from '../utils/image';
   import { initializeQueryClient } from '../services/query-client';
   import PosterCard from './PosterCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
@@ -301,7 +302,8 @@
         <div class="anime-list">
           {#each userAnimes as entry}
             {@const title = getAnimeTitle(entry.anime, preferences.titleLanguage)}
-            {@const image = GetImageFromAnime(entry.anime)}
+            {@const imageSources = GetImageSourcesFromAnime(entry.anime)}
+            {@const image = imageSources[0]}
             {@const score = entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
             {@const episodeCount = entry.anime?.episodeCount || 0}
             {@const progress = entry.watchedEpisodes || 0}
@@ -320,7 +322,19 @@
             >
               <div class="row-poster">
                 {#if image}
-                  <img src={image} alt={title} loading="lazy" />
+                  <img
+                    src={getSafeImageUrl(image)}
+                    alt={title}
+                    loading="lazy"
+                    on:error={(e) => {
+                      // Plain <img>, so one retry by hand against the pre-id key.
+                      const el = e.currentTarget as HTMLImageElement;
+                      if (imageSources[1] && !el.dataset.triedLegacy) {
+                        el.dataset.triedLegacy = 'true';
+                        el.src = getSafeImageUrl(imageSources[1]);
+                      }
+                    }}
+                  />
                 {:else}
                   <div class="row-poster-placeholder"></div>
                 {/if}
@@ -368,7 +382,7 @@
             <PosterCard
               id={entry.anime?.id}
               title={getAnimeTitle(entry.anime, preferences.titleLanguage)}
-              image={GetImageFromAnime(entry.anime)}
+              image={GetImageSourcesFromAnime(entry.anime)}
               score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
               status={entry.anime?.status || null}
               sub={entry.anime?.episodeCount ? `${entry.anime.episodeCount} episodes` : ''}

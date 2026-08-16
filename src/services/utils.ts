@@ -2,6 +2,10 @@ import debug from "../utils/debug";
 
 interface AnimePart {
   id?: string;
+  titleEn?: string;
+  titleJp?: string;
+  title_en?: string;
+  title_jp?: string;
 }
 
 /**
@@ -18,6 +22,46 @@ export function GetImageFromAnime(anime: AnimePart | any): string {
     return "not found.png";
   }
   return anime.id;
+}
+
+/**
+ * The key an anime's poster was stored under before the move to ids.
+ *
+ * Still needed, and not only while the backfill runs. Where two anime share a
+ * title they shared one object, so the backfill cannot tell whose it is and
+ * deliberately leaves it alone — those shows have no id-keyed poster and never
+ * will. Falling back to the old key restores what they showed before.
+ *
+ * getSafeImageUrl encodes once more on top of this, which is what the stored
+ * key needs: the object is named with the single-escaped form, so the request
+ * path has to escape the "%" again.
+ */
+export function GetLegacyImageFromAnime(anime: AnimePart | any): string {
+  if (!anime) return "";
+  const titleEn = anime.titleEn ?? anime.title_en;
+  const titleJp = anime.titleJp ?? anime.title_jp;
+  const title = titleEn || titleJp;
+  if (!title) return "";
+  return escapeUri(title.toLowerCase().replace(/ /g, "_"));
+}
+
+/**
+ * Poster candidates in priority order: the id-keyed object, then the legacy
+ * title-keyed one. SafeImage races them and takes the first that decodes.
+ */
+export function GetImageSourcesFromAnime(anime: AnimePart | any): string[] {
+  const out: string[] = [];
+  if (anime?.id) out.push(anime.id);
+  const legacy = GetLegacyImageFromAnime(anime);
+  if (legacy) out.push(legacy);
+  return out.length > 0 ? out : ["not found.png"];
+}
+
+function escapeUri(str: string): string {
+  return encodeURIComponent(str)
+    .replace(/[!'()*]/g, char =>
+      '%' + char.charCodeAt(0).toString(16).toUpperCase()
+    );
 }
 
 /**

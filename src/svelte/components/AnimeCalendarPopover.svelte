@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { format } from 'date-fns';
   import AnimeCard from './AnimeCard.svelte';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageSourcesFromAnime, getYearUTC } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let anime: any;
@@ -119,7 +119,7 @@
       tags={anime.tags || []}
       episodes={anime.episodeCount || 0}
       episodeLength={anime.duration ? anime.duration.replace(/per.+?$/, "") : "?"}
-      image={GetImageFromAnime(anime)}
+      image={GetImageSourcesFromAnime(anime)}
       className="hover:cursor-pointer"
       year={getYearUTC(anime.startDate)}
       airdate={anime.episodeAirTime ? format(anime.episodeAirTime, "EEE MMM do 'at' h:mm a") : anime.episodes[0]?.airDate ? format(new Date(anime.episodes[0].airDate), "EEE MMM do") : "Unknown"}
@@ -127,4 +127,4 @@
       episodeNumber={anime.episodes[0]?.episodeNumber?.toString() || "Unknown"}
     />
   </div>
-{/if}
+{/if}

@@ -3,7 +3,7 @@
   import AnimeCard from './AnimeCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
   import Button from './Button.svelte';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageSourcesFromAnime } from '../../services/utils';
   import { animeNotificationStore } from '../stores/animeNotifications';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
@@ -63,7 +63,7 @@
     episodes=""
     episodeLength=""
     year=""
-    image={GetImageFromAnime(anime)}
+    image={GetImageSourcesFromAnime(anime)}
     airdate={airingInfo.nextEpisode?.airDate ? format(new Date(airingInfo.nextEpisode.airDate), "EEE MMM do") : "Unknown"}
     airTime={airTimeDisplay}
     entry={anime.userAnime}

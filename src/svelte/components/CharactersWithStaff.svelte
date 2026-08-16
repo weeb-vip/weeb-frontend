@@ -144,7 +144,7 @@
           >
             <div class="char-portrait char-portrait-{idx % 8}">
               <SafeImage
-                src={entry.character.id}
+                sources={[entry.character.id, encodeURIComponent(`${entry.character.name}_${animeId}`)].filter(Boolean)}
                 path="characters"
                 alt={entry.character.name || ''}
                 className="char-portrait-img"

@@ -4,7 +4,9 @@
 
   export let id: string;
   export let title: string;
-  export let image: string;
+  /** Poster key, or an ordered list of candidates (id first, legacy slug second). */
+  export let image: string | string[];
+  $: imageSources = Array.isArray(image) ? image : [image];
   export let episodeText: string = '';
   export let timeText: string = '';
   export let localTime: string = '';
@@ -25,7 +27,7 @@
 >
   <div class="airing-poster">
     <SafeImage
-      src={image}
+      sources={imageSources}
       alt={title}
       className="airing-poster-img"
       fallbackSrc="/assets/not found.jpg"

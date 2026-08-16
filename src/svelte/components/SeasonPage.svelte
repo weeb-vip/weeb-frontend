@@ -8,7 +8,7 @@
   import { fetchSeasonalAnime } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { Status } from '../../gql/graphql';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageSourcesFromAnime, getYearUTC } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import SafeImage from './SafeImage.svelte';
   import { fade, fly } from 'svelte/transition';
@@ -254,7 +254,7 @@
             <span class="top-strip-rank">#{i + 1}</span>
             <div class="top-strip-poster">
               <SafeImage
-                src={GetImageFromAnime(anime)}
+                sources={GetImageSourcesFromAnime(anime)}
                 alt={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
                 className="w-full h-full object-cover"
               />
@@ -347,7 +347,7 @@
           <PosterCard
             id={anime.id}
             title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(anime)}
+            image={GetImageSourcesFromAnime(anime)}
             score={anime.rating && anime.rating !== 'N/A' ? parseFloat(anime.rating) : null}
             status={anime.status || null}
             sub={anime.studios?.[0] || `${getYearUTC(anime.startDate)} · ${anime.episodeCount || '?'} ep`}

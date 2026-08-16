@@ -4,7 +4,7 @@
   import { breadcrumbSchema } from '$lib/structured-data';
   import SafeImage from '../../../../svelte/components/SafeImage.svelte';
   import AnimeNews from '../../../../svelte/components/AnimeNews.svelte';
-  import { GetImageFromAnime, getYearUTC } from '../../../../services/utils';
+  import { GetImageSourcesFromAnime, getYearUTC } from '../../../../services/utils';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
@@ -29,14 +29,15 @@
 
   /**
    * Banner candidates, same order as the show page: the tvdb artwork synced to the CDN
-   * first, the poster as a fallback. Note GetImageFromAnime returns a CDN *slug*, not a
-   * URL — SafeImage resolves it. Handing it anime.imageUrl (a MyAnimeList address) is
-   * why the image was broken.
+   * first, then the poster — by id, then under its pre-id key. Handing it
+   * anime.imageUrl (a MyAnimeList address) is why the image was broken.
    */
   $: bannerSources = data.anime
     ? [
         `https://cdn.weeb.vip/weeb/banners/${encodeURIComponent(data.anime.id)}`,
-        `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(data.anime))}`
+        ...GetImageSourcesFromAnime(data.anime).map(
+          (key) => `https://cdn.weeb.vip/weeb/${encodeURIComponent(key)}`
+        )
       ].filter(Boolean)
     : [];
 
@@ -148,7 +149,7 @@
     <div class="hero-inner">
       <div class="hero-poster">
         <SafeImage
-          src={data.anime ? GetImageFromAnime(data.anime) : ''}
+          sources={data.anime ? GetImageSourcesFromAnime(data.anime) : []}
           alt={data.animeTitle}
           className="hero-poster-img"
           fallbackSrc="/assets/not found.jpg"

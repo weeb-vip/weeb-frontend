@@ -8,7 +8,25 @@
   import { fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
   import { useAddAnimeWithToast } from '../utils/anime-actions';
   import { Status } from '../../gql/graphql';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageFromAnime, GetLegacyImageFromAnime, getYearUTC } from '../../services/utils';
+
+  /**
+   * These are plain <img> tags, not SafeImage, so they get one retry by hand:
+   * on a miss, fall back to the pre-id key before giving up and hiding. Anime
+   * that shared a title never get an id-keyed object, so this is their only
+   * poster rather than just a transitional fallback.
+   */
+  function legacyPosterFallback(e: Event, anime: any) {
+    const img = e.currentTarget as HTMLImageElement;
+    const legacy = GetLegacyImageFromAnime(anime);
+    const retry = legacy ? resizeCdnUrl(getSafeImageUrl(legacy), 160) : '';
+    if (retry && !img.dataset.triedLegacy) {
+      img.dataset.triedLegacy = 'true';
+      img.src = retry;
+      return;
+    }
+    img.style.display = 'none';
+  }
   import { getSafeImageUrl, resizeCdnUrl } from '../utils/image';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
@@ -614,7 +632,7 @@
                       src={resizeCdnUrl(getSafeImageUrl(GetImageFromAnime(entry.airingInfo)), 160)}
                       alt={title}
                       loading="lazy"
-                      on:error={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      on:error={(e) => legacyPosterFallback(e, entry.airingInfo)}
                     />
                   </div>
                   <div class="show-info">
@@ -731,7 +749,7 @@
                     src={resizeCdnUrl(getSafeImageUrl(GetImageFromAnime(entry.airingInfo)), 160)}
                     alt={title}
                     loading="lazy"
-                    on:error={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    on:error={(e) => legacyPosterFallback(e, entry.airingInfo)}
                   />
                 </div>
                 <div class="cal-show-info">

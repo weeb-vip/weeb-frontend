@@ -1,6 +1,6 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageSourcesFromAnime, getYearUTC } from '../../services/utils';
 
   export let item: any;
   export let onClick: () => void;
@@ -22,7 +22,7 @@
 >
   <div class="flex-shrink-0 rounded-md overflow-hidden" style="width: 37px; height: 56px;">
     <SafeImage
-      src={GetImageFromAnime(item)}
+      sources={GetImageSourcesFromAnime(item)}
       alt={item.title_en || item.name || ''}
       fallbackSrc="/assets/not found.jpg"
       className="!w-full !h-full"

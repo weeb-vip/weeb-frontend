@@ -5,7 +5,7 @@
   import { format } from 'date-fns';
   import { initializeQueryClient } from '../services/query-client';
   import { getUser, fetchUserAnimes, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageSourcesFromAnime, getYearUTC } from '../../services/utils';
   import { getAirTimeDisplay, findNextEpisode, getCurrentTime, parseAirTime } from '../../services/airTimeUtils';
   import Button from './Button.svelte';
   import PosterCard from './PosterCard.svelte';
@@ -497,7 +497,7 @@
           <PosterCard
             id={entry.anime?.id}
             title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(entry.anime)}
+            image={GetImageSourcesFromAnime(entry.anime)}
             score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
             status={entry.anime?.status || null}
             sub={entry.anime?.episodeCount ? `${entry.anime.episodeCount} episodes` : ''}
@@ -562,7 +562,7 @@
           <PosterCard
             id={entry.anime?.id || entry.airingInfo?.id}
             title={getAnimeTitle(entry.anime || entry.airingInfo, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(entry.anime || entry.airingInfo)}
+            image={GetImageSourcesFromAnime(entry.anime || entry.airingInfo)}
             score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
             status={entry.anime?.status || null}
             sub={entry.anime?.episodeCount ? `${entry.anime.episodeCount} episodes` : ''}
@@ -615,7 +615,7 @@
           <PosterCard
             id={entry.anime?.id || entry.airingInfo?.id}
             title={getAnimeTitle(entry.anime || entry.airingInfo, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(entry.anime || entry.airingInfo)}
+            image={GetImageSourcesFromAnime(entry.anime || entry.airingInfo)}
             score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
             status={entry.anime?.status || null}
             sub={entry.anime?.episodeCount ? `${entry.anime.episodeCount} episodes` : ''}

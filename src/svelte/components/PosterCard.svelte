@@ -5,7 +5,9 @@
 
   export let id: string;
   export let title: string;
-  export let image: string;
+  /** Poster key, or an ordered list of candidates (id first, legacy slug second). */
+  export let image: string | string[];
+  $: imageSources = Array.isArray(image) ? image : [image];
   export let score: number | string | null = null;
   export let status: string | null = null;
   export let sub: string = '';
@@ -25,7 +27,7 @@
 >
   <div class="poster">
     <SafeImage
-      src={image}
+      sources={imageSources}
       alt={title}
       className="poster-img"
       fallbackSrc="/assets/not found.jpg"

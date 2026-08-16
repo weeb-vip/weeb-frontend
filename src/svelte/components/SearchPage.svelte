@@ -6,7 +6,7 @@
   import { loggedInStore } from '../stores/auth';
   import PosterCard from './PosterCard.svelte';
   import SafeImage from './SafeImage.svelte';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageSourcesFromAnime } from '../../services/utils';
   import { AuthStorage } from '../../utils/auth-storage';
   import { Status } from '../../gql/graphql';
   let searchQuery = '';
@@ -687,7 +687,7 @@
           <PosterCard
             id={item.id || ''}
             title={item.title_en || item.title_jp || ''}
-            image={GetImageFromAnime(item)}
+            image={GetImageSourcesFromAnime(item)}
             score={item.ratingNum}
             status={item.status || null}
             sub={[item.yearNum, item.studiosList?.[0]].filter(Boolean).join(' · ')}
@@ -704,7 +704,7 @@
           <a class="list-item" href="/show/{item.id ? encodeURIComponent(item.id) : ''}" on:click|preventDefault={() => navigateToShow(item)}>
             <div class="list-poster">
               <SafeImage
-                src={GetImageFromAnime(item)}
+                sources={GetImageSourcesFromAnime(item)}
                 alt={item.title_en || ''}
                 fallbackSrc="/assets/not found.jpg"
                 className="list-poster-img"

@@ -11,7 +11,7 @@
   import { isFeatureEnabled } from '../../utils/analytics';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { fetchDetails } from '../../services/queries';
-  import { GetImageFromAnime, getYearUTC, formatDateUTC } from '../../services/utils';
+  import { GetImageSourcesFromAnime, GetLegacyImageFromAnime, getYearUTC, formatDateUTC } from '../../services/utils';
   import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import debug from '../../utils/debug';
   import { animeNotificationStore } from '../stores/animeNotifications';
@@ -265,6 +265,14 @@
       sources.push(`https://cdn.weeb.vip/weeb/${id}`);
     }
 
+    // Priority 3: the poster under its pre-id key. Anime that shared a title
+    // have no id-keyed object — the backfill cannot tell whose it is — so this
+    // is their only poster, not just a transitional fallback.
+    const legacy = GetLegacyImageFromAnime(anime);
+    if (legacy) {
+      sources.push(`https://cdn.weeb.vip/weeb/${encodeURIComponent(legacy)}`);
+    }
+
     return sources;
   }
 
@@ -387,7 +395,7 @@
         <div class="max-w-screen-2xl mx-auto relative z-10">
           <div class="flex items-center gap-3">
             <SafeImage
-              src={GetImageFromAnime(anime)}
+              sources={GetImageSourcesFromAnime(anime)}
               alt={anime.titleEn || ""}
               className="w-9 h-14 object-cover rounded flex-shrink-0"
               fallbackSrc="/assets/not found.jpg"
@@ -443,7 +451,7 @@
         <!-- Poster -->
         <div class="hero-poster">
           <SafeImage
-            src={GetImageFromAnime(anime)}
+            sources={GetImageSourcesFromAnime(anime)}
             alt={anime.titleEn || ""}
             className="hero-poster__img"
             fallbackSrc="/assets/not found.jpg"

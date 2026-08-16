@@ -14,7 +14,7 @@
     fetchCurrentlyAiring,
     fetchSeasonalAnime, fetchCurrentlyAiringWithDates
   } from '../../services/queries';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageSourcesFromAnime, getYearUTC } from '../../services/utils';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import { animeNotificationService } from '../../services/animeNotifications';
@@ -410,7 +410,7 @@
           <AiringStripCard
             id={entry.anime.id}
             title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(entry.anime)}
+            image={GetImageSourcesFromAnime(entry.anime)}
             episodeText={entry.airingInfo?.nextEpisode?.episodeNumber ? `Episode ${entry.airingInfo.nextEpisode.episodeNumber}` : ''}
             localTime={entry.airingInfo?.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE h:mm a") : ''}
             timeText={entry.airingInfo?.airTimeDisplay?.text || ''}
@@ -437,7 +437,7 @@
           <PosterCard
             id={anime.id}
             title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(anime)}
+            image={GetImageSourcesFromAnime(anime)}
             score={anime.rating}
             status={anime.status}
             genres={anime.tags || []}
@@ -460,7 +460,7 @@
           <PosterCard
             id={anime.id}
             title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(anime)}
+            image={GetImageSourcesFromAnime(anime)}
             score={anime.rating}
             status={anime.status}
             genres={anime.tags || []}
@@ -516,7 +516,7 @@
           <PosterCard
             id={anime.id}
             title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(anime)}
+            image={GetImageSourcesFromAnime(anime)}
             score={anime.rating}
             status={anime.status}
             genres={anime.tags || []}

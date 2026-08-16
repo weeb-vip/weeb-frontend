@@ -5,7 +5,7 @@
   import AnimeActions from './AnimeActions.svelte';
   import SafeImage from './SafeImage.svelte';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageSourcesFromAnime, GetLegacyImageFromAnime } from '../../services/utils';
   import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
   import { animeNotificationStore } from '../stores/animeNotifications';
@@ -68,6 +68,14 @@
       sources.push(`https://cdn.weeb.vip/weeb/banners/${id}`);
       // Priority 2: CDN poster as fallback
       sources.push(`https://cdn.weeb.vip/weeb/${id}`);
+    }
+
+    // Priority 3: the poster under its pre-id key. Anime that shared a title
+    // have no id-keyed object — the backfill cannot tell whose it is — so this
+    // is their only poster, not just a transitional fallback.
+    const legacy = GetLegacyImageFromAnime(anime);
+    if (legacy) {
+      sources.push(`https://cdn.weeb.vip/weeb/${encodeURIComponent(legacy)}`);
     }
 
     return sources;
@@ -193,7 +201,7 @@
   <!-- Poster card -->
   <div class="hero-poster">
     <SafeImage
-      src={GetImageFromAnime(anime)}
+      sources={GetImageSourcesFromAnime(anime)}
       alt={title}
       className="hero-poster-img"
       fallbackSrc="/assets/not found.jpg"

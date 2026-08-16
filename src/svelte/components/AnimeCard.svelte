@@ -12,7 +12,9 @@
   export let episodes: number | string;
   export let episodeLength: string;
   export let year: string;
-  export let image: string;
+  /** Poster key, or an ordered list of candidates (id first, legacy slug second). */
+  export let image: string | string[];
+  $: imageSources = Array.isArray(image) ? image : [image];
   export let id: string | null | undefined;
   export let className: string = '';
   export let airTime: {
@@ -104,7 +106,7 @@
      on:click={() => analytics.animeViewed(id || '', title)}
      class="flex flex-col {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md h-full flex-shrink-0 flex-grow-0 w-32' : 'flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}" style="background: var(--weeb-surface);">
     <SafeImage
-            src={image}
+            sources={imageSources}
             alt={title}
             className="{forceListLayout ? 'object-cover h-full relative' : 'aspect-2/3 object-cover w-full h-full relative'}"
             fallbackSrc="/assets/not found.jpg"
