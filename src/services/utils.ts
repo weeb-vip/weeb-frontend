@@ -1,30 +1,23 @@
 import debug from "../utils/debug";
 
 interface AnimePart {
-  titleEn?: string;
-  titleJp?: string;
-  title_en?: string;
-  title_jp?: string;
+  id?: string;
 }
+
+/**
+ * The CDN key for an anime's poster.
+ *
+ * Posters used to be keyed by a slug derived from the title, which meant every
+ * consumer had to reproduce the exact lowercase/underscore/escape dance the
+ * sync services used — and a corrected title upstream silently orphaned the
+ * image. They are keyed by the anime id now, which is stable and needs no
+ * derivation. Algolia hits carry the same id, so search results resolve too.
+ */
 export function GetImageFromAnime(anime: AnimePart | any): string {
-  if (!anime) {
+  if (!anime?.id) {
     return "not found.png";
   }
-  if (anime.title_en) {
-    anime.titleEn = anime.title_en;
-  }
-  if (anime.title_jp) {
-    anime.titleJp = anime.title_jp;
-  }
-  return `${escapeUri((anime.titleEn ? anime.titleEn.toLowerCase().replace(/ /g, "_") : anime.titleJp?.toLowerCase().replace(/ /g, "_")) || "")}`;
-}
-
-
-function escapeUri(str) {
-  return encodeURIComponent(str)
-    .replace(/[!'()*]/g, char =>
-      '%' + char.charCodeAt(0).toString(16).toUpperCase()
-    );
+  return anime.id;
 }
 
 /**

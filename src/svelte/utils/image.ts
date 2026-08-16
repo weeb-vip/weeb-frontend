@@ -15,21 +15,19 @@ export function getCdnUrl(): string {
   return 'https://cdn.weeb.vip/weeb';
 }
 
+/**
+ * Build a CDN URL for an image key.
+ *
+ * `src` is a record id (anime, character, ...), which is what objects are keyed
+ * by. It used to be a title-derived slug that had already been escaped once by
+ * the caller, so this escaped it a *second* time to match how the object was
+ * actually stored — the source of a long tail of 404s for any title containing
+ * a `:` or `(`. Ids need no such dance; one encode is both correct and a no-op.
+ */
 export function getSafeImageUrl(src: string, path?: string): string {
   const cdnUrl = getCdnUrl();
-  // Replace %20 with + to match React SafeImage behavior exactly
-  const encodedSrc = src.replace(/%20/g, "+");
-  // Path handling - add trailing slash if path exists
   const pathPrefix = path ? `${path}/` : "";
-  // Return the properly encoded URL - only single encodeURIComponent like React
-  return `${cdnUrl}/${pathPrefix}${escapeUri(encodedSrc)}`;
-}
-
-function escapeUri(str) {
-  return encodeURIComponent(str)
-    .replace(/[!'()*]/g, char =>
-      '%' + char.charCodeAt(0).toString(16).toUpperCase()
-    );
+  return `${cdnUrl}/${pathPrefix}${encodeURIComponent(src)}`;
 }
 
 /** True only when the loaded config opts in (production, which is Cloudflare-fronted). */

@@ -1,7 +1,6 @@
 import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 import { resolveOgImage } from '$lib/server/og-image';
-import { createSSRGraphQLClient } from '$lib/server/ssr-graphql';
 
 /**
  * Share image for an anime: /og/<id>
@@ -16,10 +15,8 @@ import { createSSRGraphQLClient } from '$lib/server/ssr-graphql';
  * without setting locals.config — so a /og/<id>.jpg route would run without the
  * environment's cdn_url and silently point staging at the production CDN.
  *
- * Equally deliberately, the title is NOT a query parameter. robots.txt carries
- * `Disallow: /*?*`, so /og/<id>?t=<title> would be barred from the very crawlers
- * whose cards this exists to populate. It is resolved here instead, and only when
- * the banner is missing — most requests never make the call.
+ * Both candidates are keyed by the anime id, so this costs no data lookup at
+ * all — it used to resolve the title over GraphQL to derive the poster slug.
  */
 export const GET: RequestHandler = async ({ params, url, locals, fetch }) => {
   const target = await resolveOgImage({
@@ -29,15 +26,7 @@ export const GET: RequestHandler = async ({ params, url, locals, fetch }) => {
     fetchImpl: fetch,
     // Matched by the Cloudflare WAF Skip rule that lets our own origin probe
     // /weeb/*. Absent in local dev, where it is simply an ignored header.
-    probeSecret: env.OG_PROBE_SECRET,
-    getTitle: async () => {
-      const client = createSSRGraphQLClient(locals.config.graphql_host, null);
-      const res: any = await client.request(
-        `query OgImageTitle($id: ID!) { anime(id: $id) { titleEn titleJp } }`,
-        { id: params.id }
-      );
-      return res?.anime?.titleEn || res?.anime?.titleJp || null;
-    }
+    probeSecret: env.OG_PROBE_SECRET
   });
 
   return new Response(null, {

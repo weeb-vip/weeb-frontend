@@ -60,15 +60,14 @@
   function generateImageSources(): string[] {
     const sources: string[] = [];
 
-    // Priority 1: CDN banner (tvdb artwork synced by thetvdb-enrichment)
+    // Both are keyed by anime id: banners/<id> for the tvdb artwork synced by
+    // thetvdb-enrichment, <id> at the root for the poster.
     if (anime.id) {
-      sources.push(`https://cdn.weeb.vip/weeb/banners/${encodeURIComponent(anime.id)}`);
-    }
-
-    // Priority 2: CDN poster as fallback
-    const posterUrl = GetImageFromAnime(anime);
-    if (posterUrl) {
-      sources.push(`https://cdn.weeb.vip/weeb/${encodeURIComponent(posterUrl)}`);
+      const id = encodeURIComponent(anime.id);
+      // Priority 1: CDN banner
+      sources.push(`https://cdn.weeb.vip/weeb/banners/${id}`);
+      // Priority 2: CDN poster as fallback
+      sources.push(`https://cdn.weeb.vip/weeb/${id}`);
     }
 
     return sources;
