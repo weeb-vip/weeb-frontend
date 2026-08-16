@@ -1,137 +1,56 @@
-// Service Worker for WeebVIP
-const CACHE_NAME = 'weebvip-v1';
-const API_CACHE_NAME = 'weebvip-api-v1';
-const IMAGE_CACHE_NAME = 'weebvip-images-v1';
+// Tombstone service worker.
+//
+// This file used to be a caching service worker. Its registration was removed
+// in 6bced4f (the Astro -> Svelte migration), but removing the registration
+// call does not unregister anything: a service worker keeps running in every
+// browser that ever installed it, forever, until it explicitly unregisters
+// itself. So visitors from before that commit are still being served by the
+// old worker.
+//
+// That worker was actively harmful after a deploy:
+//
+//   - it served /assets/ and anything with a dot in the path cache-first,
+//     with no expiry, so it handed back JS chunks from an old build
+//   - its cache names were fixed constants ('weebvip-v1'), so the activate
+//     handler's cleanup never matched anything and caches were never
+//     invalidated between releases
+//   - navigation failures fell back to a copy of '/' precached at install
+//     time, which referenced asset hashes that no longer exist
+//
+// The visible symptom was a broken or 500-ing page after a Cloudflare Pages
+// deploy that came right only after a hard refresh, because a hard refresh is
+// exactly the thing that bypasses the service worker.
+//
+// This replacement deliberately registers no fetch handler, so it intercepts
+// nothing even before it manages to remove itself. Browsers re-check the
+// worker script on navigation, and because these bytes differ from the old
+// ones the update installs and this runs.
+//
+// Do not delete this file. Serving a 404 for /sw.js does not reliably remove
+// an installed worker, and the tombstone needs to stay reachable long enough
+// for infrequent visitors to pick it up.
 
-// URLs to cache on install
-const STATIC_CACHE_URLS = [
-  '/',
-  '/airing',
-  '/assets/icons/logo6-rev-sm_sm.png'
-];
-
-// API endpoints to cache
-const API_PATTERNS = [
-  /^https:\/\/weeb-api\.staging\.weeb\.vip\/.*/,
-  /^https:\/\/gateway\.staging\.weeb\.vip\/graphql$/
-];
-
-// Image patterns to cache
-const IMAGE_PATTERNS = [
-  /\.(?:png|jpg|jpeg|svg|gif|webp)$/
-];
-
-self.addEventListener('install', (event) => {
-  console.log('🔧 Service Worker: Installing...');
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('📦 Service Worker: Caching static resources');
-      return cache.addAll(STATIC_CACHE_URLS);
-    }).then(() => {
-      console.log('✅ Service Worker: Installation complete');
-    }).catch(error => {
-      console.error('❌ Service Worker: Installation failed', error);
-    })
-  );
+self.addEventListener('install', () => {
+  // Take over without waiting for existing tabs to close.
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('🚀 Service Worker: Activating...');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      console.log('🧹 Service Worker: Cleaning up old caches');
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (![CACHE_NAME, API_CACHE_NAME, IMAGE_CACHE_NAME].includes(cacheName)) {
-            console.log('🗑️ Service Worker: Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('✅ Service Worker: Activation complete');
-    }).catch(error => {
-      console.error('❌ Service Worker: Activation failed', error);
-    })
+    (async () => {
+      // Drop every cache, not just the known names — the old worker's
+      // constants may have drifted across versions.
+      const cacheKeys = await caches.keys();
+      await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+
+      await self.registration.unregister();
+
+      // Reload anything currently under this worker's control so it leaves
+      // immediately with fresh assets, rather than on some later visit.
+      const clients = await self.clients.matchAll({ type: 'window' });
+      for (const client of clients) {
+        client.navigate(client.url);
+      }
+    })()
   );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Handle API requests (only cache GET requests)
-  if (API_PATTERNS.some(pattern => pattern.test(request.url))) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Only cache successful GET responses
-          if (response.status === 200 && request.method === 'GET') {
-            const responseClone = response.clone();
-            caches.open(API_CACHE_NAME).then(cache => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Return cached version on network failure
-          return caches.match(request);
-        })
-    );
-    return;
-  }
-
-  // Handle image requests
-  if (IMAGE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
-    event.respondWith(
-      caches.open(IMAGE_CACHE_NAME).then(cache => {
-        return cache.match(request).then(response => {
-          if (response) {
-            return response;
-          }
-          return fetch(request).then(fetchResponse => {
-            cache.put(request, fetchResponse.clone());
-            return fetchResponse;
-          });
-        });
-      })
-    );
-    return;
-  }
-
-  // Handle other requests with cache-first strategy for static assets
-  if (url.pathname.startsWith('/assets/') || url.pathname.includes('.')) {
-    event.respondWith(
-      caches.match(request).then(response => {
-        return response || fetch(request);
-      })
-    );
-    return;
-  }
-
-  // Handle navigation requests with network-first strategy
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Cache successful navigation responses
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Return cached version or offline page
-          return caches.match(request).then(response => {
-            return response || caches.match('/');
-          });
-        })
-    );
-  }
 });
