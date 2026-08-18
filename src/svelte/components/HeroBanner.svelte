@@ -5,7 +5,7 @@
   import AnimeActions from './AnimeActions.svelte';
   import SafeImage from './SafeImage.svelte';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageFromAnime, animeHref } from '../../services/utils';
   import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
   import { animeNotificationStore } from '../stores/animeNotifications';
@@ -182,7 +182,7 @@
     <StreamingPlatforms platforms={anime.streamingPlatforms} />
 
     <div class="hero-actions">
-      <a href="/show/{anime.id}" class="btn-primary">View Details</a>
+      <a href={animeHref(anime)} class="btn-primary">View Details</a>
       <AnimeActions
         {anime}
         variant="hero"

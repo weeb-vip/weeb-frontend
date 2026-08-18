@@ -5,7 +5,7 @@
   import { format } from 'date-fns';
   import { initializeQueryClient } from '../services/query-client';
   import { getUser, fetchUserAnimes, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
   import { getAirTimeDisplay, findNextEpisode, getCurrentTime, parseAirTime } from '../../services/airTimeUtils';
   import Button from './Button.svelte';
   import PosterCard from './PosterCard.svelte';
@@ -367,8 +367,8 @@
     };
   })();
 
-  function navigateToAnime(animeId: string) {
-    goto(`/show/${animeId}`);
+  function navigateToAnime(anime: { id?: string | null; slug?: string | null } | null | undefined) {
+    goto(animeHref(anime));
   }
 </script>
 
@@ -496,6 +496,7 @@
         {#each watchlistAnalysis.currentlyWatching as entry}
           <PosterCard
             id={entry.anime?.id}
+          slug={entry.anime?.slug}
             title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
             image={GetImageFromAnime(entry.anime)}
             score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}

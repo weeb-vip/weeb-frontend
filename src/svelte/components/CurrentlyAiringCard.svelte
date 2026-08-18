@@ -56,6 +56,7 @@
   <AnimeCard
     style="episode"
     id={anime.id}
+    slug={anime.slug}
     title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
     episodeTitle={episodeTitle}
     episodeNumber={episodeNumber}

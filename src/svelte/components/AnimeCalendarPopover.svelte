@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { format } from 'date-fns';
   import AnimeCard from './AnimeCard.svelte';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let anime: any;
@@ -60,7 +60,7 @@
   }
 
   function navigateToShow() {
-    goto(`/show/${anime.id}`);
+    goto(animeHref(anime));
   }
 
   $: if (typeof window !== 'undefined') {
@@ -115,6 +115,7 @@
       style="episode"
       forceListLayout={true}
       id={anime.id}
+      slug={anime.slug}
       title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
       tags={anime.tags || []}
       episodes={anime.episodeCount || 0}
@@ -127,4 +128,4 @@
       episodeNumber={anime.episodes[0]?.episodeNumber?.toString() || "Unknown"}
     />
   </div>
-{/if}
+{/if}

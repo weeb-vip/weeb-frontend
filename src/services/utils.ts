@@ -54,3 +54,25 @@ export function formatDateUTC(dateStr: string | null | undefined, fallback: stri
     return fallback;
   }
 }
+
+/**
+ * The canonical URL path for an anime.
+ *
+ * Prefers /anime/<slug>. Falls back to /show/<id>, which still works — it
+ * permanently redirects — so a caller that has not been given a slug yet
+ * degrades to an extra hop rather than a broken link. That matters during the
+ * window where MySQL is still catching up on a newly added anime, and it means
+ * every call site does not have to be updated in the same commit.
+ *
+ * Slugs are generated in postgres and are already URL-safe (lowercase, digits
+ * and hyphens only), so they are not re-encoded here; ids are, since they reach
+ * this function from search results and other untrusted-ish inputs.
+ */
+export function animeHref(
+  anime: { id?: string | null; slug?: string | null } | null | undefined,
+  suffix: string = ''
+): string {
+  if (anime?.slug) return `/anime/${anime.slug}${suffix}`;
+  if (anime?.id) return `/show/${encodeURIComponent(anime.id)}${suffix}`;
+  return '/';
+}

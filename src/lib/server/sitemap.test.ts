@@ -15,27 +15,32 @@ import {
 } from './sitemap';
 
 const SITE = 'https://weeb.vip';
+// getNewsRecords resolves slugs from the anime records; latestNews only reports ids.
+const NEWS_SLUGS = new Map<string, string>([
+  ['same', 'same-anime'],
+  ['other', 'other-anime']
+]);
 const STAGING = 'https://staging.weeb.vip';
 
 beforeEach(() => _clearSitemapCache());
 
 describe('per-origin URLs', () => {
   it('builds show URLs on whichever origin asked', () => {
-    const records = [{ id: 'a1', lastmod: '2026-08-03' }];
+    const records = [{ id: 'a1', slug: 'anime-one', lastmod: '2026-08-03' }];
 
-    expect(animeEntries(records, SITE)[0].loc).toBe('https://weeb.vip/show/a1');
+    expect(animeEntries(records, SITE)[0].loc).toBe('https://weeb.vip/anime/anime-one');
     // A sitemap served from staging must not send crawlers to production.
-    expect(animeEntries(records, STAGING)[0].loc).toBe('https://staging.weeb.vip/show/a1');
+    expect(animeEntries(records, STAGING)[0].loc).toBe('https://staging.weeb.vip/anime/anime-one');
   });
 
   it('builds news URLs on whichever origin asked', () => {
-    const records = [{ id: 'a1', lastmod: null }];
+    const records = [{ id: 'a1', slug: 'anime-one', lastmod: null }];
 
-    expect(newsEntries(records, STAGING)[0].loc).toBe('https://staging.weeb.vip/show/a1/news');
+    expect(newsEntries(records, STAGING)[0].loc).toBe('https://staging.weeb.vip/anime/anime-one/news');
   });
 
   it('carries lastmod through unchanged', () => {
-    const records = [{ id: 'a1', lastmod: '2026-08-03' }];
+    const records = [{ id: 'a1', slug: 'anime-one', lastmod: '2026-08-03' }];
 
     expect(animeEntries(records, SITE)[0].lastmod).toBe('2026-08-03');
     expect(newsEntries(records, SITE)[0].lastmod).toBe('2026-08-03');
@@ -43,15 +48,15 @@ describe('per-origin URLs', () => {
 
   it('caches records, not URLs, so a staging request cannot poison production', async () => {
     const { client, calls } = fakeClient(() => ({
-      newestAnime: [{ id: 'a1', updatedAt: null }]
+      newestAnime: [{ id: 'a1', slug: 'anime-one', updatedAt: null }]
     }));
 
     const first = animeEntries(await getAnimeRecords(client), STAGING);
     const second = animeEntries(await getAnimeRecords(client), SITE);
 
     expect(calls).toHaveLength(1); // second call served from cache
-    expect(first[0].loc).toBe('https://staging.weeb.vip/show/a1');
-    expect(second[0].loc).toBe('https://weeb.vip/show/a1');
+    expect(first[0].loc).toBe('https://staging.weeb.vip/anime/anime-one');
+    expect(second[0].loc).toBe('https://weeb.vip/anime/anime-one');
   });
 });
 
@@ -104,12 +109,12 @@ describe('chunkCount', () => {
 describe('renderUrlset', () => {
   it('emits valid XML with lastmod only where known', () => {
     const xml = renderUrlset([
-      { loc: 'https://weeb.vip/show/a', lastmod: '2026-08-03' },
-      { loc: 'https://weeb.vip/show/b', lastmod: null }
+      { loc: 'https://weeb.vip/anime/a', lastmod: '2026-08-03' },
+      { loc: 'https://weeb.vip/anime/b', lastmod: null }
     ]);
     expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(xml).toContain('<loc>https://weeb.vip/show/a</loc>');
+    expect(xml).toContain('<loc>https://weeb.vip/anime/a</loc>');
     expect(xml).toContain('<lastmod>2026-08-03</lastmod>');
     // Exactly one lastmod: the entry without a date must not emit an empty tag.
     expect(xml.match(/<lastmod>/g)).toHaveLength(1);
@@ -126,10 +131,10 @@ describe('renderIndex', () => {
 });
 
 describe('getAnimeEntries', () => {
-  it('maps the catalogue onto show URLs with lastmod', async () => {
+  it('maps the catalogue onto anime records with lastmod', async () => {
     const { client } = fakeClient(() => ({
       newestAnime: [
-        { id: 'a1', updatedAt: '2026-08-03 04:25:32' },
+        { id: 'a1', slug: 'anime-one', updatedAt: '2026-08-03 04:25:32' },
         { id: 'a2', updatedAt: null }
       ]
     }));
@@ -138,21 +143,22 @@ describe('getAnimeEntries', () => {
 
     // Records are host-independent; the URL is built later, per request origin.
     expect(records).toEqual([
-      { id: 'a1', lastmod: '2026-08-03' },
-      { id: 'a2', lastmod: null }
+      { id: 'a1', slug: 'anime-one', lastmod: '2026-08-03' },
+      // No slug yet: MySQL has not caught up. animeEntries drops these.
+      { id: 'a2', slug: null, lastmod: null }
     ]);
   });
 
-  it('drops entries with no id rather than emitting /show/undefined', async () => {
+  it('drops entries with no id rather than emitting /anime/undefined', async () => {
     const { client } = fakeClient(() => ({
-      newestAnime: [{ id: 'a1', updatedAt: null }, { id: null }, {}]
+      newestAnime: [{ id: 'a1', slug: 'anime-one', updatedAt: null }, { id: null }, {}]
     }));
 
     expect(await getAnimeRecords(client)).toHaveLength(1);
   });
 
   it('caches: listing 32k anime is far too expensive to repeat per request', async () => {
-    const { client, calls } = fakeClient(() => ({ newestAnime: [{ id: 'a1' }] }));
+    const { client, calls } = fakeClient(() => ({ newestAnime: [{ id: 'a1', slug: 'anime-one' }] }));
 
     await getAnimeRecords(client);
     await getAnimeRecords(client);
@@ -178,7 +184,7 @@ describe('getNewsEntries', () => {
       };
     });
 
-    const entries = await getNewsRecords(client);
+    const entries = await getNewsRecords(client, NEWS_SLUGS);
 
     expect(calls).toHaveLength(3);
     expect(entries).toHaveLength(total);
@@ -196,12 +202,12 @@ describe('getNewsEntries', () => {
       }
     }));
 
-    const entries = newsEntries(await getNewsRecords(client), SITE);
+    const entries = newsEntries(await getNewsRecords(client, NEWS_SLUGS), SITE);
 
     expect(entries).toHaveLength(2);
     expect(entries.map((e) => e.loc)).toEqual([
-      'https://weeb.vip/show/same/news',
-      'https://weeb.vip/show/other/news'
+      'https://weeb.vip/anime/same-anime/news',
+      'https://weeb.vip/anime/other-anime/news'
     ]);
     // Newest story wins as the page's lastmod.
     expect(entries[0].lastmod).toBe('2026-08-03');
@@ -212,7 +218,7 @@ describe('getNewsEntries', () => {
       latestNews: { total: 9999, items: [] }
     }));
 
-    expect(await getNewsRecords(client)).toEqual([]);
+    expect(await getNewsRecords(client, NEWS_SLUGS)).toEqual([]);
     expect(calls).toHaveLength(1);
   });
 });
@@ -240,13 +246,13 @@ describe('getAiringRecords', () => {
 
   it('keeps the first lastmod seen, so airing data wins over season data', async () => {
     const { client } = fakeClient(() => ({
-      currentlyAiring: [{ id: 'b', updatedAt: '2026-08-03 04:25:32' }],
-      animeBySeasons: [{ id: 'b', updatedAt: '2026-07-01 00:00:00' }]
+      currentlyAiring: [{ id: 'b', slug: 'bee', updatedAt: '2026-08-03 04:25:32' }],
+      animeBySeasons: [{ id: 'b', slug: 'bee', updatedAt: '2026-07-01 00:00:00' }]
     }));
 
     const records = await getAiringRecords(client, 'SUMMER_2026');
 
-    expect(records).toEqual([{ id: 'b', lastmod: '2026-08-03' }]);
+    expect(records).toEqual([{ id: 'b', slug: 'bee', lastmod: '2026-08-03' }]);
   });
 
   it('passes the season through as a variable', async () => {

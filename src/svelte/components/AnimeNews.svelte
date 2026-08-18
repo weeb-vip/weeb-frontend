@@ -11,7 +11,7 @@
   /**
    * How many entries to render. The show page passes 5 — twelve items is more
    * page than the section deserves above Episodes. `null` renders everything,
-   * which is what /show/[id]/news does.
+   * which is what /anime/[slug]/news does.
    */
   export let limit: number | null = null;
 

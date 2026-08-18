@@ -39,6 +39,8 @@ interface Cached<T> {
  */
 export interface SitemapRecord {
   id: string;
+  /** null while MySQL is still catching up on a newly added anime. */
+  slug: string | null;
   lastmod: string | null;
 }
 
@@ -95,6 +97,7 @@ const ALL_ANIME_QUERY = `
   query SitemapAnime($limit: Int!) {
     newestAnime(limit: $limit) {
       id
+      slug
       updatedAt
     }
   }
@@ -120,8 +123,8 @@ const NEWS_PAGE_QUERY = `
  */
 const AIRING_QUERY = `
   query SitemapAiring($season: Season!) {
-    currentlyAiring(limit: 500) { id updatedAt }
-    animeBySeasons(season: $season, limit: 2000) { id updatedAt }
+    currentlyAiring(limit: 500) { id slug updatedAt }
+    animeBySeasons(season: $season, limit: 2000) { id slug updatedAt }
   }
 `;
 
@@ -143,7 +146,7 @@ export async function getAnimeRecords(client: Client): Promise<SitemapRecord[]> 
   const res: any = await client.request(ALL_ANIME_QUERY, { limit: CATALOGUE_CEILING });
   const records: SitemapRecord[] = (res?.newestAnime ?? [])
     .filter((a: any) => a?.id)
-    .map((a: any) => ({ id: a.id, lastmod: toLastmod(a.updatedAt) }));
+    .map((a: any) => ({ id: a.id, slug: a.slug ?? null, lastmod: toLastmod(a.updatedAt) }));
 
   animeCache = { value: records, expires: Date.now() + TTL_MS };
   return records;
@@ -167,28 +170,43 @@ export async function getAiringRecords(
 
   const res: any = await client.request(AIRING_QUERY, { season });
 
-  const seen = new Map<string, string | null>();
+  const seen = new Map<string, { slug: string | null; lastmod: string | null }>();
   for (const a of [...(res?.currentlyAiring ?? []), ...(res?.animeBySeasons ?? [])]) {
-    if (a?.id && !seen.has(a.id)) seen.set(a.id, toLastmod(a.updatedAt));
+    if (a?.id && !seen.has(a.id)) {
+      seen.set(a.id, { slug: a.slug ?? null, lastmod: toLastmod(a.updatedAt) });
+    }
   }
 
-  const records = [...seen.entries()].map(([id, lastmod]) => ({ id, lastmod }));
+  const records = [...seen.entries()].map(([id, v]) => ({ id, slug: v.slug, lastmod: v.lastmod }));
   airingCache = { value: records, expires: Date.now() + AIRING_TTL_MS };
   return records;
 }
 
+/**
+ * Records with no slug are dropped rather than falling back to /show/<id>.
+ * That URL still resolves, but only by permanently redirecting, and a sitemap
+ * full of redirects tells Google the canonical set is wrong. A slug appears
+ * within seconds of CDC catching up, and the sitemap is regenerated on a TTL,
+ * so a missing anime here corrects itself on the next build.
+ */
 export function animeEntries(records: SitemapRecord[], siteUrl: string): SitemapEntry[] {
-  return records.map(({ id, lastmod }) => ({ loc: `${siteUrl}/show/${id}`, lastmod }));
+  return records
+    .filter(({ slug }) => !!slug)
+    .map(({ slug, lastmod }) => ({ loc: `${siteUrl}/anime/${slug}`, lastmod }));
 }
 
 /**
  * News hub pages, for anime that actually have news.
  *
- * Deliberately not one per anime: /show/<id>/news exists for all ~32,000, but for the
+ * Deliberately not one per anime: /anime/<slug>/news exists for all ~32,000, but for the
  * vast majority it renders nothing. Submitting 32,000 empty pages is how a site earns
  * a thin-content reputation, so only anime with at least one story are listed.
  */
-export async function getNewsRecords(client: Client): Promise<SitemapRecord[]> {
+export async function getNewsRecords(
+  client: Client,
+  /** id -> slug, from getAnimeRecords. latestNews only reports animeId. */
+  slugById: Map<string, string>
+): Promise<SitemapRecord[]> {
   if (newsCache && newsCache.expires > Date.now()) return newsCache.value;
 
   const newest = new Map<string, string | null>();
@@ -222,6 +240,7 @@ export async function getNewsRecords(client: Client): Promise<SitemapRecord[]> {
 
   const records: SitemapRecord[] = [...newest.entries()].map(([id, lastmod]) => ({
     id,
+    slug: slugById.get(id) ?? null,
     lastmod
   }));
 
@@ -229,8 +248,11 @@ export async function getNewsRecords(client: Client): Promise<SitemapRecord[]> {
   return records;
 }
 
+/** Slugless records are dropped, for the same reason as in animeEntries. */
 export function newsEntries(records: SitemapRecord[], siteUrl: string): SitemapEntry[] {
-  return records.map(({ id, lastmod }) => ({ loc: `${siteUrl}/show/${id}/news`, lastmod }));
+  return records
+    .filter(({ slug }) => !!slug)
+    .map(({ slug, lastmod }) => ({ loc: `${siteUrl}/anime/${slug}/news`, lastmod }));
 }
 
 /**

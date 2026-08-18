@@ -5,6 +5,7 @@
   import AutocompleteItem from './AutocompleteItem.svelte';
   import { configStore } from '../stores/config';
   import { analytics } from '../../utils/analytics';
+  import { animeHref } from '../../services/utils';
 
   // Dynamic imports for SSR compatibility
   let algoliasearch: any = null;
@@ -192,7 +193,8 @@
     }
     // Navigate to show page
     if (typeof window !== 'undefined') {
-      goto(`/show/${item.id ? encodeURIComponent(item.id) : ''}`);
+      // url_slug: algolia stores the CDC payload verbatim, not camelCase.
+      goto(animeHref({ id: item?.id, slug: item?.url_slug ?? item?.slug }));
     }
     if (desktopInputRef) desktopInputRef.blur();
     if (mobileInputRef) mobileInputRef.blur();

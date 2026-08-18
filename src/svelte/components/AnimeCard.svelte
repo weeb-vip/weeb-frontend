@@ -5,6 +5,7 @@
   import ScrollingTags from './ScrollingTags.svelte';
   import { STATUS_LABELS } from '../utils/status';
   import { analytics } from '../../utils/analytics';
+  import { animeHref } from '../../services/utils';
 
   export let style: 'default' | 'hover-transparent' | 'hover' | 'transparent' | 'long' | 'detail' | 'episode' = 'default';
   export let forceListLayout: boolean = false;
@@ -14,6 +15,9 @@
   export let year: string;
   export let image: string;
   export let id: string | null | undefined;
+  // Optional: callers that have not been given the slug yet fall back to
+  // /show/<id>, which permanently redirects.
+  export let slug: string | null | undefined = undefined;
   export let className: string = '';
   export let airTime: {
     show: boolean;
@@ -100,7 +104,7 @@
     </div>
   {/if}
 
-  <a href="/show/{id}"
+  <a href={animeHref({ id, slug })}
      on:click={() => analytics.animeViewed(id || '', title)}
      class="flex flex-col {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md h-full flex-shrink-0 flex-grow-0 w-32' : 'flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}" style="background: var(--weeb-surface);">
     <SafeImage
@@ -113,7 +117,7 @@
 
   {#if style === 'detail'}
     <div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group">
-      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full flex-grow">
+      <a href={animeHref({ id, slug })} on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full flex-grow">
         <ScrollingText
                 text={title}
                 className="text-md font-bold text-weeb-fg"
@@ -153,7 +157,7 @@
 
   {#if style === 'episode'}
     <div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group">
-      <a href="/show/{id}" on:click={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full flex-grow">
+      <a href={animeHref({ id, slug })} on:click={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full flex-grow">
         <ScrollingText
                 text={title}
                 className="text-md font-bold text-weeb-fg"

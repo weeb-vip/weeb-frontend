@@ -2,9 +2,11 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
+  import { animeHref } from '../../services/utils';
 
   export let anime: {
     id?: string | number;
+    slug?: string | null;
     titleEn?: string;
     titleJp?: string;
     imageUrl?: string;
@@ -50,14 +52,14 @@
   function handleShowClick(e: MouseEvent) {
     e.stopPropagation();
     if (anime.id) {
-      goto(`/show/${anime.id}`);
+      goto(animeHref({ id: String(anime.id), slug: anime.slug }));
     }
   }
 
   function handleContainerClick(e: MouseEvent) {
     // On desktop, clicking the container navigates to the show
     if (!isMobile && anime.id) {
-      goto(`/show/${anime.id}`);
+      goto(animeHref({ id: String(anime.id), slug: anime.slug }));
     }
   }
 

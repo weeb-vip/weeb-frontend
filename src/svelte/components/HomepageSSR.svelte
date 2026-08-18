@@ -409,6 +409,7 @@
         {#each sortedCurrentlyAiring.slice(0, 8) as entry, index}
           <AiringStripCard
             id={entry.anime.id}
+            slug={entry.anime.slug}
             title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
             image={GetImageFromAnime(entry.anime)}
             episodeText={entry.airingInfo?.nextEpisode?.episodeNumber ? `Episode ${entry.airingInfo.nextEpisode.episodeNumber}` : ''}
@@ -436,6 +437,7 @@
         {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 14) as anime}
           <PosterCard
             id={anime.id}
+            slug={anime.slug}
             title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
             image={GetImageFromAnime(anime)}
             score={anime.rating}
@@ -459,6 +461,7 @@
         {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, 14) as anime}
           <PosterCard
             id={anime.id}
+            slug={anime.slug}
             title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
             image={GetImageFromAnime(anime)}
             score={anime.rating}
@@ -515,6 +518,7 @@
         }).slice(0, 14) as anime (anime.id)}
           <PosterCard
             id={anime.id}
+            slug={anime.slug}
             title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
             image={GetImageFromAnime(anime)}
             score={anime.rating}

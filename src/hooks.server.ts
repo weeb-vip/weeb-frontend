@@ -242,7 +242,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     // cache. Static assets are handled by the adapter before this hook.
     //
     // Restricted to 200s to match what the adapter will store. Without that a
-    // /show/<id> 404 or a /season/<bad> redirect would be handed a public
+    // /anime/<slug> 404 or a /season/<bad> redirect would be handed a public
     // max-age, and this codebase has already had to dig itself out of soft-404s
     // being indexed.
     const isAnonymous = !authResult.isLoggedIn && !hasRefreshToken && !hasAccessToken;
