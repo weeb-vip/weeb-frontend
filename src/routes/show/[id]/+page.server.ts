@@ -16,7 +16,7 @@ import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/
  * crawler still holds, so it must not pull episodes, news and characters just
  * to read one string.
  */
-export const load: PageServerLoad = async ({ params, locals, cookies }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies }) => {
   const { id } = params;
 
   if (!id) {
@@ -49,5 +49,5 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   // Prefer the slug, fall back to the id: /anime/<id> resolves too, and
   // redirects on to the slug once MySQL has it. Erroring here when the slug has
   // not landed yet would make a brand-new anime unreachable from its own links.
-  redirect(301, `/anime/${anime.slug ?? encodeURIComponent(anime.id)}`);
+  redirect(301, `/anime/${anime.slug ?? encodeURIComponent(anime.id)}${url.search}`);
 };

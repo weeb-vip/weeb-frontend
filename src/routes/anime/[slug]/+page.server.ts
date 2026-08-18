@@ -13,7 +13,7 @@ import { metaDescription } from '$lib/meta';
 /** A v4 UUID, i.e. this route was reached with an id rather than a slug. */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const load: PageServerLoad = async ({ params, locals, cookies }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies }) => {
   const { slug } = params;
 
   if (!slug) {
@@ -31,6 +31,7 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   let loadError: string | null = null;
   let error404 = false;
   let animeId = '';
+  let canonicalSlug: string | null = null;
 
   try {
     // Forward the user's cookies — the gateway authenticates via cookie,
@@ -51,10 +52,14 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     if (UUID.test(slug)) {
       const byId: any = await client.request(getAnimeDetailsByID, { id: slug });
       const found = byId?.anime;
-      // Once a slug exists it is the canonical URL, so send the id form there
-      // rather than serving the same page under two addresses.
+      // Once a slug exists it is the canonical URL, so the id form redirects
+      // there rather than serving the same page under two addresses.
+      //
+      // Recorded rather than thrown here: SvelteKit implements redirect() by
+      // throwing, and the catch below would swallow it and render an error page
+      // instead. The redirect is issued after the try.
       if (found?.slug) {
-        redirect(301, `/anime/${found.slug}`);
+        canonicalSlug = found.slug;
       }
       animeData = found ? { anime: found } : null;
     } else {
@@ -106,6 +111,12 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
       console.error('[SSR] Failed to fetch anime data:', err);
       loadError = err?.message || 'Failed to fetch anime data';
     }
+  }
+
+  if (canonicalSlug) {
+    // Carry the query string over. Dropping it silently changes the page the
+    // reader asked for -- ?page=2 would land them back on page 1.
+    redirect(301, `/anime/${canonicalSlug}${url.search}`);
   }
 
   if (error404) {

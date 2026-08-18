@@ -4,7 +4,7 @@ import { getAnimeSlugByID } from '../../../../services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
 
 /** Legacy URL. See ../+page.server.ts for why this is a permanent redirect. */
-export const load: PageServerLoad = async ({ params, locals, cookies }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies }) => {
   const { id } = params;
 
   if (!id) {
@@ -33,5 +33,5 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   // Prefer the slug, fall back to the id: /anime/<id> resolves too, and
   // redirects on to the slug once MySQL has it. Erroring here when the slug has
   // not landed yet would make a brand-new anime unreachable from its own links.
-  redirect(301, `/anime/${anime.slug ?? encodeURIComponent(anime.id)}/news`);
+  redirect(301, `/anime/${anime.slug ?? encodeURIComponent(anime.id)}/news${url.search}`);
 };

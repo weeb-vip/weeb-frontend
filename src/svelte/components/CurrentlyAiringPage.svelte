@@ -118,6 +118,7 @@
           id: `airing-${anime.id}-ep${episode.episodeNumber}`,
           anime: {
             id: anime.id,
+            slug: anime.slug,
             titleEn: anime.titleEn,
             titleJp: anime.titleJp,
             description: anime.description,
