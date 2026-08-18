@@ -271,6 +271,11 @@
         id: `homepage-${anime.id}`,
         anime: {
           id: anime.id,
+          // Needed for the card's href. This object is rebuilt field by field,
+          // so anything omitted is lost even though the query returned it --
+          // which is how these cards linked to /anime/<uuid> while other
+          // sections on the same page linked to /anime/<slug>.
+          slug: anime.slug,
           titleEn: anime.titleEn,
           titleJp: anime.titleJp,
           description: anime.description || null,
@@ -327,6 +332,8 @@
   $: if (currentlyAiringData?.currentlyAiring) {
     const animeForNotifications = currentlyAiringData.currentlyAiring.map(anime => ({
       id: anime.id,
+      // The toast links to the anime, so it needs the slug like any other link.
+      slug: anime.slug,
       titleEn: anime.titleEn,
       titleJp: anime.titleJp,
       imageUrl: anime.imageUrl,

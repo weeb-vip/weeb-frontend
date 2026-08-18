@@ -194,6 +194,7 @@ class AnimeNotificationManager {
             })
             .map(anime => ({
               id: anime.id,
+              slug: (anime as any).slug,
               titleEn: anime.titleEn,
               titleJp: anime.titleJp,
               imageUrl: anime.imageUrl,

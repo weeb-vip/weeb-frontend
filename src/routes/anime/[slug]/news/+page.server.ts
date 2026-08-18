@@ -6,7 +6,7 @@ import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/
 /** A v4 UUID, i.e. reached with an id rather than a slug. See ../+page.server.ts. */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const load: PageServerLoad = async ({ params, locals, cookies }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies }) => {
   const { slug } = params;
 
   if (!slug) {
@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
       const byId: any = await client.request(getAnimeNewsByID, { id: slug });
       anime = byId?.anime;
       if (anime?.slug) {
-        redirect(301, `/anime/${anime.slug}/news`);
+        redirect(301, `/anime/${anime.slug}/news${url.search}`);
       }
     } else {
       const response: any = await client.request(getAnimeNewsBySlug, { slug });
