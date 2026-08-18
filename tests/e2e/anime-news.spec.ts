@@ -12,6 +12,14 @@ import { waitForShowPage } from './helpers';
  * real published data, the same way the homepage specs do.
  */
 const ANIME_WITH_NEWS = 'a8f45313-b080-4f5a-8d53-5d04e7d2a315';
+// Anime pages live at /anime/<slug>, but the route accepts the id too and
+// redirects to the slug where one exists. Navigating by id keeps these tests
+// working in every environment: staging has the column but no backfill, so its
+// slugs are null, and hardcoding a production slug would 404 there.
+const ANIME_PATH = `/anime/${ANIME_WITH_NEWS}`;
+// Matches either form, since which one we land on depends on the environment.
+const ANIME_URL = /\/anime\/[^/]+$/;
+const ANIME_NEWS_URL = /\/anime\/[^/]+\/news$/;
 
 /**
  * Open the news page and wait until it has actually rendered. Without this, a
@@ -20,11 +28,45 @@ const ANIME_WITH_NEWS = 'a8f45313-b080-4f5a-8d53-5d04e7d2a315';
  * skips itself when the page is slow is worse than no test.
  */
 async function gotoNewsPage(page: import('@playwright/test').Page) {
-  await page.goto(`/show/${ANIME_WITH_NEWS}/news`);
+  await page.goto(`${ANIME_PATH}/news`);
   await page.waitForLoadState('domcontentloaded');
   await page.locator('.news-page').waitFor({ state: 'visible', timeout: 15000 });
   await page.locator('.news-rail article').first().waitFor({ state: 'visible', timeout: 15000 });
 }
+
+test.describe('legacy show URLs', () => {
+  /**
+   * ~32,000 /show/<id> URLs are in Google's index and spread across external
+   * links. They must keep resolving, and specifically via a 301 -- a 302 would
+   * ask Google to keep the old URL indexed instead of transferring its ranking
+   * to the slug, which is the entire point of the migration.
+   */
+  test('/show/<id> permanently redirects to /anime/<slug>', async ({ page }) => {
+    const response = await page.goto(`/show/${ANIME_WITH_NEWS}`);
+
+    await expect(page).toHaveURL(ANIME_URL);
+
+    // The redirect itself, not just where the browser ended up.
+    const redirect = response?.request().redirectedFrom();
+    expect(redirect, 'expected a server redirect, not a client-side navigation').toBeTruthy();
+    expect((await redirect!.response())?.status()).toBe(301);
+  });
+
+  test('/show/<id>/news permanently redirects too', async ({ page }) => {
+    const response = await page.goto(`/show/${ANIME_WITH_NEWS}/news`);
+
+    await expect(page).toHaveURL(ANIME_NEWS_URL);
+
+    const redirect = response?.request().redirectedFrom();
+    expect(redirect).toBeTruthy();
+    expect((await redirect!.response())?.status()).toBe(301);
+  });
+
+  test('an unknown id still 404s rather than redirecting somewhere wrong', async ({ page }) => {
+    const response = await page.goto('/show/00000000-0000-0000-0000-000000000000');
+    expect(response?.status()).toBe(404);
+  });
+});
 
 test.describe('anime news', () => {
   /**
@@ -60,7 +102,7 @@ test.describe('anime news', () => {
   });
 
   test('the show page renders a News tab and section', async ({ page }) => {
-    await page.goto(`/show/${ANIME_WITH_NEWS}`);
+    await page.goto(ANIME_PATH);
     await waitForShowPage(page);
 
     // The tab is guarded on news.length, so its presence proves the query resolved.
@@ -73,7 +115,7 @@ test.describe('anime news', () => {
   });
 
   test('the section caps at five items and links to the full list', async ({ page }) => {
-    await page.goto(`/show/${ANIME_WITH_NEWS}`);
+    await page.goto(ANIME_PATH);
     await waitForShowPage(page);
 
     // 5 is the cap the show page passes; more than that would mean the limit prop
@@ -84,7 +126,7 @@ test.describe('anime news', () => {
     const viewAll = page.getByRole('link', { name: /view all \d+ news/i });
     await expect(viewAll).toBeVisible();
     await viewAll.click();
-    await expect(page).toHaveURL(new RegExp(`/show/${ANIME_WITH_NEWS}/news$`));
+    await expect(page).toHaveURL(ANIME_NEWS_URL);
   });
 
   test('the news page identifies its anime and lists stories', async ({ page }) => {
@@ -158,7 +200,7 @@ test.describe('anime news', () => {
     // resolves via a client-side poll and can tear down and recreate the list mid-click.
     // Going straight to the URL tests the actual contract — page=2 renders items 11-20 —
     // deterministically, and still fails if paging is broken.
-    await page.goto(`/show/${ANIME_WITH_NEWS}/news?page=2`);
+    await page.goto(`${ANIME_PATH}/news?page=2`);
     await page.locator('.news-rail article').first().waitFor({ state: 'visible', timeout: 15000 });
 
     const secondRange = await page.locator('.resultline').first().innerText();

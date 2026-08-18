@@ -6,7 +6,7 @@
   import { loggedInStore } from '../stores/auth';
   import PosterCard from './PosterCard.svelte';
   import SafeImage from './SafeImage.svelte';
-  import { GetImageFromAnime } from '../../services/utils';
+  import { GetImageFromAnime, animeHref } from '../../services/utils';
   import { AuthStorage } from '../../utils/auth-storage';
   import { Status } from '../../gql/graphql';
   let searchQuery = '';
@@ -457,8 +457,14 @@
     applyUrl(url);
   }
 
+  // Algolia records are the CDC payload verbatim, so the slug arrives as
+  // url_slug rather than the camelCase the GraphQL types use.
+  function hrefFor(item: any) {
+    return animeHref({ id: item?.id, slug: item?.url_slug ?? item?.slug });
+  }
+
   function navigateToShow(item: any) {
-    goto(`/show/${item.id ? encodeURIComponent(item.id) : ''}`);
+    goto(hrefFor(item));
   }
 
   // Filtered + sorted results
@@ -686,6 +692,7 @@
         {#each filteredResults as item (item.objectID)}
           <PosterCard
             id={item.id || ''}
+            slug={item.url_slug ?? item.slug}
             title={item.title_en || item.title_jp || ''}
             image={GetImageFromAnime(item)}
             score={item.ratingNum}
@@ -701,7 +708,7 @@
     {:else}
       <div class="results-list">
         {#each filteredResults as item (item.objectID)}
-          <a class="list-item" href="/show/{item.id ? encodeURIComponent(item.id) : ''}" on:click|preventDefault={() => navigateToShow(item)}>
+          <a class="list-item" href={hrefFor(item)} on:click|preventDefault={() => navigateToShow(item)}>
             <div class="list-poster">
               <SafeImage
                 src={GetImageFromAnime(item)}

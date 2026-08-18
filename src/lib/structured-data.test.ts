@@ -5,7 +5,7 @@ import {
   serializeJsonLd
 } from './structured-data';
 
-const CANON = 'https://weeb.vip/show/bd4134c1';
+const CANON = 'https://weeb.vip/anime/some-anime';
 const IMG = 'https://weeb.vip/og/bd4134c1';
 
 const FULL = {

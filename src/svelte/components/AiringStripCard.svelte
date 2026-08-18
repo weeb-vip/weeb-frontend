@@ -1,8 +1,12 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
   import { analytics } from '../../utils/analytics';
+  import { animeHref } from '../../services/utils';
 
   export let id: string;
+  // Optional: callers that have not been given the slug yet fall back to
+  // /show/<id>, which permanently redirects.
+  export let slug: string | null | undefined = undefined;
   export let title: string;
   export let image: string;
   export let episodeText: string = '';
@@ -18,7 +22,7 @@
 
 <a
   class="airing-card"
-  href="/show/{id}"
+  href={animeHref({ id, slug })}
   on:click={() => analytics.animeViewed(id, title)}
   on:mouseenter
   on:mouseleave

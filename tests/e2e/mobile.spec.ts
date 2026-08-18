@@ -2,7 +2,8 @@ import { test, expect, devices } from '@playwright/test';
 
 // Same anime as anime-news.spec.ts — hardcoded so the overflow check runs against a
 // show that actually has news and episodes, which is what makes the layout dense.
-const ANIME_WITH_NEWS = 'a8f45313-b080-4f5a-8d53-5d04e7d2a315';
+// By id, not slug: the route accepts both, and staging has no slugs.
+const ANIME_PATH = '/anime/a8f45313-b080-4f5a-8d53-5d04e7d2a315';
 
 // Mobile-specific tests
 test.describe('Mobile Experience', () => {
@@ -60,8 +61,8 @@ test.describe('Mobile Experience', () => {
       '/',
       '/airing',
       '/search',
-      `/show/${ANIME_WITH_NEWS}`,
-      `/show/${ANIME_WITH_NEWS}/news`,
+      ANIME_PATH,
+      `${ANIME_PATH}/news`,
     ];
 
     await page.setViewportSize({ width: 320, height: 800 });

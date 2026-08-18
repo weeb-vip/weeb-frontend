@@ -6,6 +6,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             id
             anidbid
             thetvdbid
+            slug
             titleEn
             titleJp
             imageUrl
@@ -29,6 +30,7 @@ export const getHomePageData = graphql(/* GraphQL */`
             id
             anidbid
             thetvdbid
+            slug
             titleEn
             titleJp
             imageUrl
@@ -57,6 +59,7 @@ export const getSeasonalAnime = graphql(/* GraphQL */`
             id
             anidbid
             thetvdbid
+            slug
             titleEn
             titleJp
             imageUrl
@@ -87,6 +90,7 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
             anidbid
             thetvdbid
             malId
+            slug
             titleEn
             titleJp
             titleRomaji
@@ -159,12 +163,111 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
     }
 `)
 
+// Just the slug, for redirecting /show/<id> to /anime/<slug>. The redirect is
+// on the hot path for every legacy URL Google still has indexed, so it must not
+// drag in episodes, news and characters just to read one string.
+export const getAnimeSlugByID = graphql(/* GraphQL */`
+    query getAnimeSlugByID($id: ID!) {
+        anime(id: $id) {
+            id
+            slug
+        }
+    }
+`)
+
+// Same selection set as getAnimeDetailsByID, resolved by slug instead of id.
+// The duplication is deliberate -- this codebase uses no fragments, and the
+// client-preset's fragment masking would force useFragment() through every
+// consumer. queries.test.ts asserts the two stay identical, because the last
+// hand-maintained copy of this selection set silently lost userAnime.episodes.
+export const getAnimeDetailsBySlug = graphql(/* GraphQL */`
+    query getAnimeDetailsBySlug($slug: String!) {
+        animeBySlug(slug: $slug) {
+            id
+            anidbid
+            thetvdbid
+            malId
+            slug
+            titleEn
+            titleJp
+            titleRomaji
+            titleKanji
+            titleSynonyms
+            description
+            imageUrl
+            tags
+            studios
+            animeStatus
+            episodeCount
+            episodes {
+                id
+                animeId
+                episodeNumber
+                titleEn
+                titleJp
+                synopsis
+                airDate
+                createdAt
+                updatedAt
+            }
+            duration
+            rating
+            startDate
+            endDate
+            broadcast
+            source
+            licensors
+            ranking
+            scheduleInfo {
+                jpnTime
+                subTime
+                dubTime
+                notes
+                delayedTimetable
+                subDelayedTimetable
+                dubDelayedTimetable
+            }
+            streamingPlatforms {
+                platform
+                name
+                url
+            }
+            createdAt
+            updatedAt
+            news {
+                id
+                title
+                summary
+                category
+                sourceUrl
+                sourceName
+                publishedDate
+                episodeNumber
+                language
+                references {
+                    kind
+                    title
+                    url
+                }
+            }
+            userAnime {
+                id
+                status
+                score
+                episodes
+            }
+        }
+    }
+`)
+
+
 // Just enough for /show/[id]/news — the full detail query drags in episodes,
 // characters and userAnime that this page never renders.
 export const getAnimeNewsByID = graphql(/* GraphQL */`
     query getAnimeNewsByID($id: ID!) {
         anime(id: $id) {
             id
+            slug
             titleEn
             titleJp
             imageUrl
@@ -191,10 +294,45 @@ export const getAnimeNewsByID = graphql(/* GraphQL */`
     }
 `)
 
+// Same selection set as getAnimeNewsByID, resolved by slug.
+// queries.test.ts keeps the two in step.
+export const getAnimeNewsBySlug = graphql(/* GraphQL */`
+    query getAnimeNewsBySlug($slug: String!) {
+        animeBySlug(slug: $slug) {
+            id
+            slug
+            titleEn
+            titleJp
+            imageUrl
+            startDate
+            studios
+            tags
+            news {
+                id
+                title
+                summary
+                category
+                sourceUrl
+                sourceName
+                publishedDate
+                episodeNumber
+                language
+                references {
+                    kind
+                    title
+                    url
+                }
+            }
+        }
+    }
+`)
+
+
 export const getCurrentlyAiring = graphql(/* GraphQL */`
     query currentlyAiring($limit: Int) {
         currentlyAiring(limit: $limit) {
             id
+            slug
             titleEn
             titleJp
             anidbid
@@ -233,6 +371,7 @@ export const getCurrentlyAiringWithDates = graphql(/* GraphQL */`
     query currentlyAiringWithDate($input: CurrentlyAiringInput, $limit: Int) {
         currentlyAiring(input: $input, limit: $limit) {
             id
+            slug
             titleEn
             titleJp
             anidbid
@@ -276,6 +415,7 @@ export const getCurrentlyAiringWithDatesAndEpisodes = graphql(/* GraphQL */`
     query currentlyAiringWithDateAndEpisodes($input: CurrentlyAiringInput, $limit: Int) {
         currentlyAiring(input: $input, limit: $limit) {
             id
+            slug
             titleEn
             titleJp
             anidbid
@@ -465,6 +605,7 @@ export const queryUserAnimes = graphql(`
                 deletedAt
                 anime {
                     id
+                    slug
                     titleEn
                     titleJp
                     titleRomaji

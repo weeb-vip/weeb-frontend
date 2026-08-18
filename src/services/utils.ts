@@ -54,3 +54,29 @@ export function formatDateUTC(dateStr: string | null | undefined, fallback: stri
     return fallback;
   }
 }
+
+/**
+ * The canonical URL path for an anime.
+ *
+ * Always /anime/..., using the slug when there is one and the id otherwise —
+ * the route resolves both. Falling back to /show/<id> instead would be a dead
+ * end, because that route can only redirect if a slug exists: no slug would
+ * mean a link to /show/<id> which has nowhere to send the reader.
+ *
+ * An anime has an id from the moment it is created but only gets a slug once
+ * CDC carries one through to MySQL, so the id form is what keeps a brand-new
+ * anime reachable. /anime/<id> permanently redirects to /anime/<slug> as soon
+ * as the slug lands, so only one URL is ever canonical.
+ *
+ * Slugs are generated in postgres and already URL-safe (lowercase, digits and
+ * hyphens), so they are not re-encoded; ids are, since they reach this function
+ * from search results and other loosely-typed inputs.
+ */
+export function animeHref(
+  anime: { id?: string | null; slug?: string | null } | null | undefined,
+  suffix: string = ''
+): string {
+  if (anime?.slug) return `/anime/${anime.slug}${suffix}`;
+  if (anime?.id) return `/anime/${encodeURIComponent(anime.id)}${suffix}`;
+  return '/';
+}

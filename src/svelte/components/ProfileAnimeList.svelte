@@ -5,7 +5,7 @@
   import { fetchUserAnimes } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { Status, type UserAnime } from '../../gql/graphql';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
   import { initializeQueryClient } from '../services/query-client';
   import PosterCard from './PosterCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
@@ -141,8 +141,8 @@
     updateURL();
   }
 
-  function navigateToAnime(animeId: string) {
-    goto(`/show/${animeId}`);
+  function navigateToAnime(anime: { id?: string | null; slug?: string | null } | null | undefined) {
+    goto(animeHref(anime));
   }
 
   function handleDropdownStatusChange(event: CustomEvent) {
@@ -313,8 +313,8 @@
               : 'var(--weeb-fg-muted)'}
             <div
               class="anime-row"
-              on:click={() => navigateToAnime(entry.anime?.id)}
-              on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateToAnime(entry.anime?.id); } }}
+              on:click={() => navigateToAnime(entry.anime)}
+              on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateToAnime(entry.anime); } }}
               role="button"
               tabindex="0"
             >
@@ -367,6 +367,7 @@
           {#each userAnimes as entry}
             <PosterCard
               id={entry.anime?.id}
+              slug={entry.anime?.slug}
               title={getAnimeTitle(entry.anime, preferences.titleLanguage)}
               image={GetImageFromAnime(entry.anime)}
               score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}

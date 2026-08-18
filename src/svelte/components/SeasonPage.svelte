@@ -8,7 +8,7 @@
   import { fetchSeasonalAnime } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { Status } from '../../gql/graphql';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import SafeImage from './SafeImage.svelte';
   import { fade, fly } from 'svelte/transition';
@@ -250,7 +250,7 @@
       <span class="top-strip-label">TOP THIS SEASON</span>
       <div class="top-strip-items">
         {#each animeList.slice(0, 5) as anime, i}
-          <a href="/show/{anime.id}" class="top-strip-card">
+          <a href={animeHref(anime)} class="top-strip-card">
             <span class="top-strip-rank">#{i + 1}</span>
             <div class="top-strip-poster">
               <SafeImage
@@ -346,6 +346,7 @@
         <div in:fly={{ y: 15, duration: 200, delay: Math.min(index * 20, 400) }}>
           <PosterCard
             id={anime.id}
+            slug={anime.slug}
             title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
             image={GetImageFromAnime(anime)}
             score={anime.rating && anime.rating !== 'N/A' ? parseFloat(anime.rating) : null}

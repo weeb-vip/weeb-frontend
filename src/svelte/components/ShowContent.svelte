@@ -11,7 +11,7 @@
   import { isFeatureEnabled } from '../../utils/analytics';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { fetchDetails } from '../../services/queries';
-  import { GetImageFromAnime, getYearUTC, formatDateUTC } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, formatDateUTC, animeHref } from '../../services/utils';
   import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import debug from '../../utils/debug';
   import { animeNotificationStore } from '../stores/animeNotifications';
@@ -664,11 +664,11 @@
 
         <!-- News Section — sits directly under Synopsis because it is the only
              part of this page that changes after the first visit. Capped at the
-             latest 5; the rest live at /show/[id]/news. -->
+             latest 5; the rest live at /anime/[slug]/news. -->
         {#if newsEnabled && anime.news && anime.news.length > 0}
           <section class="content-section" bind:this={newsEl} aria-labelledby="news-heading">
             <h2 class="section-heading" id="news-heading">News</h2>
-            <AnimeNews news={anime.news} limit={5} viewAllHref={`/show/${anime.id}/news`} />
+            <AnimeNews news={anime.news} limit={5} viewAllHref={animeHref(anime, '/news')} />
           </section>
         {/if}
 

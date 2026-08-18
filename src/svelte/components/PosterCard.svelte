@@ -1,9 +1,13 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
   import { analytics } from '../../utils/analytics';
+  import { animeHref } from '../../services/utils';
   import { normalizeStatus, type AnimeStatus } from '../utils/status';
 
   export let id: string;
+  // Optional: callers that have not been given the slug yet fall back to
+  // /show/<id>, which permanently redirects.
+  export let slug: string | null | undefined = undefined;
   export let title: string;
   export let image: string;
   export let score: number | string | null = null;
@@ -20,7 +24,7 @@
 
 <a
   class="poster-card"
-  href={href || `/show/${id}`}
+  href={href || animeHref({ id, slug })}
   on:click={() => analytics.animeViewed(id, title)}
 >
   <div class="poster">

@@ -8,7 +8,7 @@
   import { fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
   import { useAddAnimeWithToast } from '../utils/anime-actions';
   import { Status } from '../../gql/graphql';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
   import { getSafeImageUrl, resizeCdnUrl } from '../utils/image';
   import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
   import { animeNotificationService } from '../../services/animeNotifications';
@@ -152,9 +152,9 @@
     $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: Status.Plantowatch } });
   }
 
-  function navigateToShow(animeId: string) {
+  function navigateToShow(anime: { id?: string | null; slug?: string | null } | null | undefined) {
     // Use proper navigation for View Transitions
-    goto(`/show/${animeId}`);
+    goto(animeHref(anime));
   }
 
   function navigateToCalendar() {
@@ -608,7 +608,7 @@
                 {@const timeStr = format(airTime, 'HH:mm')}
                 {@const isInList = entry.airingInfo.userAnime != null}
 
-                <a href="/show/{entry.airingInfo.id}" class="show-card" data-anime-id={entry.airingInfo.id} data-in-list={entry.airingInfo.userAnime != null ? 'true' : 'false'} on:click|preventDefault={() => navigateToShow(entry.airingInfo.id)}>
+                <a href={animeHref(entry.airingInfo)} class="show-card" data-anime-id={entry.airingInfo.id} data-in-list={entry.airingInfo.userAnime != null ? 'true' : 'false'} on:click|preventDefault={() => navigateToShow(entry.airingInfo)}>
                   <div class="show-poster">
                     <img
                       src={resizeCdnUrl(getSafeImageUrl(GetImageFromAnime(entry.airingInfo)), 160)}
@@ -725,7 +725,7 @@
               {@const title = getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
               {@const ep = entry.airingInfo.nextEpisode ? `Ep ${entry.airingInfo.nextEpisode.episodeNumber}` : ''}
               {@const timeStr = format(entry.airingInfo.nextEpisodeDate, 'HH:mm')}
-              <a href="/show/{entry.airingInfo.id}" class="cal-show-item" on:click|preventDefault={() => navigateToShow(entry.airingInfo.id)}>
+              <a href={animeHref(entry.airingInfo)} class="cal-show-item" on:click|preventDefault={() => navigateToShow(entry.airingInfo)}>
                 <div class="cal-show-poster">
                   <img
                     src={resizeCdnUrl(getSafeImageUrl(GetImageFromAnime(entry.airingInfo)), 160)}
