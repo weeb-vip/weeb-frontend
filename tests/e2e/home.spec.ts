@@ -26,7 +26,7 @@ test('homepage renders its content sections', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /airing this week/i })).toBeVisible();
 
   // ...and that the sections actually populated with linked anime cards.
-  await expect(page.locator('a[href^="/show/"]').first()).toBeVisible();
+  await expect(page.locator('a[href^="/anime/"]').first()).toBeVisible();
 });
 
 test('navigation works', async ({ page }) => {

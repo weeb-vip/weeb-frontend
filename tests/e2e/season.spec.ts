@@ -14,7 +14,7 @@ test.describe('Season page', () => {
     await expect(page.getByRole('button', { name: /Summer$/ })).toBeVisible();
 
     // Page shows either anime cards or empty state (depends on API availability)
-    const animeCards = page.locator('a[href^="/show/"]');
+    const animeCards = page.locator('a[href^="/anime/"]');
     const emptyState = page.locator('text=No anime found');
     await expect(animeCards.first().or(emptyState)).toBeVisible({ timeout: 10000 });
   });
@@ -26,7 +26,7 @@ test.describe('Season page', () => {
     await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
 
     // Wait for anime content to load (indicates hydration complete)
-    await page.locator('a[href^="/show/"]').first().waitFor({ state: 'visible', timeout: 10000 });
+    await page.locator('a[href^="/anime/"]').first().waitFor({ state: 'visible', timeout: 10000 });
 
     // Click using evaluate to ensure event fires
     await page.locator('button[aria-label="Next season"]').evaluate((btn) => (btn as HTMLButtonElement).click());
@@ -43,7 +43,7 @@ test.describe('Season page', () => {
     await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
 
     // Wait for anime content to load (indicates hydration complete)
-    await page.locator('a[href^="/show/"]').first().waitFor({ state: 'visible', timeout: 10000 });
+    await page.locator('a[href^="/anime/"]').first().waitFor({ state: 'visible', timeout: 10000 });
 
     // Click using evaluate to ensure event fires
     await page.locator('button[aria-label="Previous season"]').evaluate((btn) => (btn as HTMLButtonElement).click());

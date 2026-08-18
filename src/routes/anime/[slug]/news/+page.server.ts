@@ -1,7 +1,10 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getAnimeNewsBySlug } from '../../../../services/api/graphql/queries';
+import { getAnimeNewsByID, getAnimeNewsBySlug } from '../../../../services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
+
+/** A v4 UUID, i.e. reached with an id rather than a slug. See ../+page.server.ts. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const { slug } = params;
@@ -16,9 +19,19 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     // Same cookie-forwarding client the show page uses — the gateway
     // authenticates by cookie, not a Bearer header.
     const client = createSSRGraphQLClient(config.graphql_host, cookieHeaderFrom(cookies));
-    const response: any = await client.request(getAnimeNewsBySlug, { slug });
-
-    const anime = response?.animeBySlug;
+    // Accepts an id as well, for the same reason the detail route does: an
+    // anime without a slug yet must still be reachable from its own links.
+    let anime: any;
+    if (UUID.test(slug)) {
+      const byId: any = await client.request(getAnimeNewsByID, { id: slug });
+      anime = byId?.anime;
+      if (anime?.slug) {
+        redirect(301, `/anime/${anime.slug}/news`);
+      }
+    } else {
+      const response: any = await client.request(getAnimeNewsBySlug, { slug });
+      anime = response?.animeBySlug;
+    }
     if (!anime) {
       error(404, 'Anime not found');
     }

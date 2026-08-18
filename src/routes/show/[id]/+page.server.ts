@@ -46,13 +46,8 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     error(404, 'Anime not found');
   }
 
-  // Every anime in postgres has a slug, but MySQL trails it by however long CDC
-  // takes, so a brand-new anime can legitimately arrive here without one yet.
-  // Serving 404 for those would be wrong, and there is no slug to redirect to,
-  // so ask the crawler to come back rather than recording a verdict.
-  if (!anime.slug) {
-    error(503, 'This anime does not have a URL yet');
-  }
-
-  redirect(301, `/anime/${anime.slug}`);
+  // Prefer the slug, fall back to the id: /anime/<id> resolves too, and
+  // redirects on to the slug once MySQL has it. Erroring here when the slug has
+  // not landed yet would make a brand-new anime unreachable from its own links.
+  redirect(301, `/anime/${anime.slug ?? encodeURIComponent(anime.id)}`);
 };

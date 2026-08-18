@@ -70,7 +70,7 @@ test('anime search functionality', async ({ page }) => {
 
 test('show detail page', async ({ page }) => {
   // Try to go to a show page
-  const response = await page.goto('/show/1');
+  const response = await page.goto('/anime/does-not-exist-1');
 
   // Wait for page to load
   await waitForShowPage(page);

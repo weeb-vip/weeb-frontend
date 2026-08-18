@@ -30,9 +30,8 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   if (!anime) {
     error(404, 'Anime not found');
   }
-  if (!anime.slug) {
-    error(503, 'This anime does not have a URL yet');
-  }
-
-  redirect(301, `/anime/${anime.slug}/news`);
+  // Prefer the slug, fall back to the id: /anime/<id> resolves too, and
+  // redirects on to the slug once MySQL has it. Erroring here when the slug has
+  // not landed yet would make a brand-new anime unreachable from its own links.
+  redirect(301, `/anime/${anime.slug ?? encodeURIComponent(anime.id)}/news`);
 };

@@ -2,9 +2,16 @@ import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 // use the same typed documents the client uses — a raw copy here drifts
 // (it already had: missing userAnime.episodes)
-import { getAnimeDetailsBySlug, queryCharactersAndStaffByAnimeID } from '../../../services/api/graphql/queries';
+import {
+  getAnimeDetailsByID,
+  getAnimeDetailsBySlug,
+  queryCharactersAndStaffByAnimeID
+} from '../../../services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
 import { metaDescription } from '$lib/meta';
+
+/** A v4 UUID, i.e. this route was reached with an id rather than a slug. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const { slug } = params;
@@ -32,10 +39,28 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     // and every show rendered as "not on list" even when it was.
     const client = createSSRGraphQLClient(config.graphql_host, cookieHeaderFrom(cookies));
 
-    // Characters are keyed by anime id, which only the slug lookup can give us,
-    // so these two cannot be issued in parallel the way the id route does.
-    const animeResponse: any = await client.request(getAnimeDetailsBySlug, { slug });
-    animeData = animeResponse?.animeBySlug ? { anime: animeResponse.animeBySlug } : null;
+    // Characters are keyed by anime id, which only this lookup can give us, so
+    // the two requests cannot be issued in parallel.
+    //
+    // This route accepts an id as well as a slug. Anime always have an id but
+    // only have a slug once CDC has carried it through to MySQL, so resolving
+    // by id too is what stops a freshly added anime -- or a whole environment
+    // that has not been backfilled -- from having unreachable pages. Without
+    // it the fallbacks are circular: no slug means links point at /show/<id>,
+    // which itself can only redirect if a slug exists.
+    if (UUID.test(slug)) {
+      const byId: any = await client.request(getAnimeDetailsByID, { id: slug });
+      const found = byId?.anime;
+      // Once a slug exists it is the canonical URL, so send the id form there
+      // rather than serving the same page under two addresses.
+      if (found?.slug) {
+        redirect(301, `/anime/${found.slug}`);
+      }
+      animeData = found ? { anime: found } : null;
+    } else {
+      const animeResponse: any = await client.request(getAnimeDetailsBySlug, { slug });
+      animeData = animeResponse?.animeBySlug ? { anime: animeResponse.animeBySlug } : null;
+    }
 
     if (animeData?.anime) {
       const anime = animeData.anime;

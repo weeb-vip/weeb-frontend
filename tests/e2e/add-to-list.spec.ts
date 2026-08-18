@@ -49,10 +49,10 @@ test.describe('Add to list (logged in)', () => {
 
     // --- Happy path: add the first show to the list ---
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    let shows = page.locator('a[href^="/show/"]');
+    let shows = page.locator('a[href^="/anime/"]');
     await shows.first().waitFor({ state: 'visible', timeout: 15000 });
     await shows.nth(0).click();
-    await page.waitForURL(/\/show\//, { timeout: 30000 });
+    await page.waitForURL(/\/anime\//, { timeout: 30000 });
 
     const happyResponse = page.waitForResponse(
       (r) => r.url().includes('graphql') && r.request().postData()?.includes('AddAnime') === true,
@@ -69,7 +69,7 @@ test.describe('Add to list (logged in)', () => {
     expect(happyBody.data?.AddAnime?.id).toBeTruthy();
     await expect(page.getByText(/please log in|authentication error/i)).toHaveCount(0);
 
-    const addedId = page.url().split('/show/')[1]?.split(/[/?#]/)[0];
+    const addedSlug = page.url().split('/anime/')[1]?.split(/[/?#]/)[0];
 
     // Reload the show page: SSR must load userAnime (it forwards the
     // cookie, not a Bearer header) so the added status persists. This is
@@ -90,15 +90,15 @@ test.describe('Add to list (logged in)', () => {
     // --- Expired token: on a second (different) show, drop the access-token
     // cookies (keep refresh_token) so the mutation must refresh-and-retry ---
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    shows = page.locator('a[href^="/show/"]');
+    shows = page.locator('a[href^="/anime/"]');
     await shows.first().waitFor({ state: 'visible', timeout: 15000 });
     const hrefs: string[] = await shows.evaluateAll((els) =>
       els.map((e) => (e as HTMLAnchorElement).getAttribute('href') || '')
     );
-    const otherHref = hrefs.find((h) => h.startsWith('/show/') && !h.includes(addedId));
+    const otherHref = hrefs.find((h) => h.startsWith('/anime/') && !h.includes(addedSlug));
     expect(otherHref, 'need a second distinct show to test against').toBeTruthy();
     await page.goto(otherHref!, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await page.waitForURL(/\/show\//, { timeout: 30000 });
+    await page.waitForURL(/\/anime\//, { timeout: 30000 });
 
     await context.clearCookies({ name: 'access_token' });
     await context.clearCookies({ name: 'auth_token' });
