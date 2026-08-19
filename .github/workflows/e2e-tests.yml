@@ -20,9 +20,19 @@ jobs:
     # a different version, so bumping the dependency means bumping this too.
     container:
       image: mcr.microsoft.com/playwright:v1.60.0-noble
-      # The image sets HOME=/root; without this, actions that write to the
-      # runner's home directory and steps that read it disagree.
       options: --user root
+    env:
+      # A container job gets HOME=/github/home, which is mounted from the runner
+      # and owned by uid 1001 -- but the steps run as root. Firefox refuses to
+      # start in that situation:
+      #
+      #   Firefox is unable to launch if the $HOME folder isn't owned by the
+      #   current user.
+      #
+      # Chromium does not care, which is why only the firefox shards failed.
+      # Reproduced in the image with HOME pointed at a directory owned by
+      # another uid, and confirmed fixed by pointing HOME at one root owns.
+      HOME: /root
     timeout-minutes: 30
     strategy:
       fail-fast: false
