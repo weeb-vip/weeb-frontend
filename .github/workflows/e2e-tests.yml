@@ -10,6 +10,19 @@ on:
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest
+    # Browsers and their system libraries are already in this image, so the
+    # install step is gone. That step was not just slow -- it ran apt-get, which
+    # is not covered by the dependency cache, and when a mirror hung it took the
+    # whole 30 minute job budget with it. Two shards died that way on one run.
+    #
+    # The tag MUST match the @playwright/test version bun resolves (currently
+    # 1.60.0 per bun.lock). Playwright refuses to run against browsers built for
+    # a different version, so bumping the dependency means bumping this too.
+    container:
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
+      # The image sets HOME=/root; without this, actions that write to the
+      # runner's home directory and steps that read it disagree.
+      options: --user root
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -23,17 +36,18 @@ jobs:
         with:
           persist-credentials: false
 
+      # npm, not oven-sh/setup-bun: that action extracts a .zip and the
+      # playwright image has no unzip. Installing via npm needs no extra
+      # packages, which keeps this job free of apt entirely -- the point of
+      # moving to the image in the first place.
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
+        run: npm install -g bun
 
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: |
             **/node_modules
-            ~/.cache/ms-playwright
             ~/.bun/install/cache
           key: ${{ runner.os }}-e2e-bun-${{ matrix.browser }}-${{ hashFiles('**/bun.lockb', '**/yarn.lock', '**/package-lock.json') }}-${{ hashFiles('**/playwright.config.ts') }}
           restore-keys: |
@@ -42,9 +56,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-
-      - name: Install Playwright browsers
-        run: bunx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Build for staging
         run: APP_CONFIG=staging bun run build
