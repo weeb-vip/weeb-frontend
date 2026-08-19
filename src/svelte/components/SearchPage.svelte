@@ -179,11 +179,15 @@
           indexName: algoliaIndex,
           query: '',
           hitsPerPage: 0,
-          facets: ['genres'],
+          // 'tags', not 'genres': the search document renamed the field to
+          // match what the rest of the app calls it, and only configured
+          // facets can be requested -- asking for 'genres' now returns
+          // nothing, so the browse list silently came back empty.
+          facets: ['tags'],
         }]
       });
 
-      const facets = response.results?.[0]?.facets?.genres || {};
+      const facets = response.results?.[0]?.facets?.tags || {};
 
       // Convert facets to array
       browseGenres = Object.entries(facets)
@@ -359,7 +363,7 @@
     try {
       // Build filters for selected genres
       const filters = selectedGenres.length > 0
-        ? selectedGenres.map(g => `genres:"${g}"`).join(' OR ')
+        ? selectedGenres.map(g => `tags:"${g}"`).join(' OR ')
         : undefined;
 
       const response = await searchClient.search({
