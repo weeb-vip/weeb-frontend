@@ -70,6 +70,9 @@
 
 <style>
   .btn {
+    /* WCAG 2.5.5 at the shared base, so every variant clears it rather than
+       each caller remembering to. */
+    min-height: 44px;
     padding: 7px 18px;
     border-radius: var(--weeb-radius, 8px);
     font-size: 13px;

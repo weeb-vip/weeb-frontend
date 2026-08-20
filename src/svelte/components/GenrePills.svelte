@@ -19,6 +19,9 @@
     gap: 8px;
   }
   .genre-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     padding: 8px 16px;
     border-radius: 20px;
     background: var(--weeb-surface);

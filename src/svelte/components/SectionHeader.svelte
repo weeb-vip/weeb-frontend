@@ -27,9 +27,18 @@
   }
   a {
     font-size: 13px;
-    color: var(--weeb-accent);
+    /* The accent as text is only 3.93:1 on this ground; accent-text is the
+       lightness that clears AA without changing the accent used as a fill. */
+    color: var(--weeb-accent-text);
     font-weight: 500;
     text-decoration: none;
+    position: relative;
+  }
+  /* WCAG 2.5.5: the mark stays small, the target does not. */
+  a::after {
+    content: '';
+    position: absolute;
+    inset: -13px -10px;
   }
   a:hover {
     color: var(--weeb-accent-hover);

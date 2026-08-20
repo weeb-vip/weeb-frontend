@@ -12,11 +12,13 @@
 <button
   on:click={handleToggle}
   class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-weeb-fg-secondary hover:text-weeb-fg hover:bg-weeb-surface-hover rounded-lg transition-colors duration-200"
-  title="Switch between English and Japanese titles"
-  aria-label="Toggle title language"
+  title={preferences.titleLanguage === 'english' ? 'Show titles in Japanese' : 'Show titles in English'}
+  aria-label={preferences.titleLanguage === 'english' ? 'Show titles in Japanese' : 'Show titles in English'}
 >
   <!-- Language Icon -->
   <svg
+    aria-hidden="true"
+    focusable="false"
     class="w-4 h-4"
     fill="none"
     stroke="currentColor"

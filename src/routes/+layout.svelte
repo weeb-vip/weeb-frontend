@@ -57,8 +57,12 @@
     $page.route.id === '/show/[id]'}
 />
 
-<!-- Main content — always full width, components handle their own padding -->
-<main class="w-full bg-weeb-bg text-weeb-fg min-h-screen">
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<!-- Main content — always full width, components handle their own padding.
+     tabindex="-1" so the skip link can actually move focus here; without it the
+     browser jumps the viewport but leaves focus back in the header. -->
+<main id="main-content" tabindex="-1" class="w-full bg-weeb-bg text-weeb-fg min-h-screen">
   <slot />
 </main>
 

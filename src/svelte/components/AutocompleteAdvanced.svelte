@@ -464,7 +464,7 @@
       disabled
       class="ac-fallback-input"
     />
-    <svg class="ac-fallback-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg aria-hidden="true" focusable="false" class="ac-fallback-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
   </div>
@@ -485,7 +485,7 @@
         }
       }}
     />
-    <svg class="ac-fallback-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg aria-hidden="true" focusable="false" class="ac-fallback-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
   </div>
@@ -514,7 +514,7 @@
       style="transform-origin: center top;"
       {...rootProps}
     >
-      <svg class="ac-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg aria-hidden="true" focusable="false" class="ac-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
       <input
@@ -522,12 +522,14 @@
         class="ac-input ac-input--mobile"
         class:ac-input--panel-open={isFocused && autocompleteState.isOpen}
         class:ac-input--focused={isFocused && !autocompleteState.isOpen}
-        placeholder={isFocused ? "Search anime..." : "Search"}
         on:focus={handleFocus}
         on:blur={handleBlur}
         on:keydown={handleKeyDown}
         on:input={handleInputChange}
         {...inputProps}
+        id="search-desktop"
+        placeholder={isFocused ? "Search anime..." : "Search"}
+        aria-label="Search anime"
         role="combobox"
         aria-expanded={isFocused && autocompleteState.isOpen && flatItems.length > 0}
         aria-controls="ac-listbox-mobile"
@@ -557,7 +559,7 @@
             </ul>
           {:else if autocompleteState.query}
             <div class="ac-empty">
-              <svg class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" focusable="false" class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <span>No results for '{autocompleteState.query}'</span>
@@ -589,19 +591,20 @@
     style="transform-origin: center top;"
     {...rootProps}
   >
-    <svg class="ac-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg aria-hidden="true" focusable="false" class="ac-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
     <input
       bind:this={desktopInputRef}
       class="ac-input ac-input--desktop"
       class:ac-input--panel-open={isFocused && autocompleteState.isOpen}
-      placeholder="Search anime..."
       on:focus={handleFocus}
       on:blur={handleBlur}
       on:keydown={handleKeyDown}
       on:input={handleInputChange}
       {...inputProps}
+      placeholder="Search anime..."
+      aria-label="Search anime"
       role="combobox"
       aria-expanded={isFocused && autocompleteState.isOpen && flatItems.length > 0}
       aria-controls="ac-listbox-desktop"
@@ -632,7 +635,7 @@
             </ul>
           {:else if autocompleteState.query}
             <div class="ac-empty">
-              <svg class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" focusable="false" class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <span>No results for '{autocompleteState.query}'</span>
@@ -816,6 +819,7 @@
 
   /* ── Main input ── */
   .ac-input {
+    min-height: 44px;
     width: 100%;
     height: 38px;
     padding: 0 40px 0 38px;
@@ -836,6 +840,12 @@
   .ac-input:focus {
     border-color: var(--_ac-accent);
     box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.12);
+  }
+  /* The glow above is 1.09:1 against the page -- decoration, not an indicator.
+     This is the one that actually reads. */
+  .ac-input:focus-visible {
+    outline: 2px solid var(--weeb-accent-text);
+    outline-offset: 2px;
   }
 
   .ac-input--panel-open {

@@ -60,3 +60,63 @@ mark {
     will-change: transform, opacity;
   }
 }
+
+/* ── Focus ───────────────────────────────────────────────────────────────
+   Focus styling used to be opt-in, so 88 of 98 focusable elements fell through
+   to Chrome's default ring -- including every poster card and tag pill. This is
+   the floor: anything focusable gets a visible accent ring unless it authors a
+   better one. :focus-visible keeps it off mouse clicks. */
+:focus-visible {
+  outline: 2px solid var(--weeb-accent-text, #8b8bff);
+  outline-offset: 2px;
+  border-radius: var(--weeb-radius-sm, 4px);
+}
+/* Suppress the UA ring only where our own is guaranteed to render. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* A focused card must not land under the 60px sticky header. */
+:root {
+  scroll-padding-top: calc(var(--weeb-nav-height, 60px) + 12px);
+}
+a, button, input, select, textarea, [tabindex] {
+  scroll-margin-top: calc(var(--weeb-nav-height, 60px) + 12px);
+}
+
+/* ── Skip link ───────────────────────────────────────────────────────────
+   Nine tab stops separated the top of the page from its first content element,
+   on every page. */
+.skip-link {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  left: 8px;
+  top: 8px;
+  z-index: 1000;
+  padding: 10px 16px;
+  border-radius: var(--weeb-radius, 8px);
+  background: var(--weeb-accent);
+  color: #fff;
+  font-family: var(--weeb-font);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-150%);
+  transition: transform 0.15s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* html { scroll-behavior: smooth } otherwise animates every in-page jump for
+     people who asked for no motion. */
+  html {
+    scroll-behavior: auto;
+  }
+  .skip-link {
+    transition: none;
+  }
+}
