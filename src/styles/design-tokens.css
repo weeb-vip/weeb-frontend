@@ -60,6 +60,11 @@
 
   /* ── Overlay / frosted glass ── */
   --weeb-glass-bg:       oklch(14% 0.015 275 / 0.82);
+  /* Large panels laid over key art. Tinted from surface, not the page ground, so
+     the panel stays lighter than dark artwork; saturation pulled BELOW 1 so busy
+     art reads as calm texture instead of chroma noise. */
+  --weeb-panel-bg:       oklch(22% 0.02 275 / 0.90);
+  --weeb-panel-blur:     blur(28px) saturate(0.9);
   --weeb-glass-blur:     blur(24px) saturate(1.4);
 
   /* ── Spacing (section padding) ── */

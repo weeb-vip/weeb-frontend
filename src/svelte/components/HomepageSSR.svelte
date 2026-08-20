@@ -4,8 +4,8 @@
   import { onMount } from 'svelte';
   import HeroBanner from './HeroBanner.svelte';
   import HeroBannerSkeleton from './HeroBannerSkeleton.svelte';
+  import HeroAiringRail from './HeroAiringRail.svelte';
   import PosterCard from './PosterCard.svelte';
-  import AiringStripCard from './AiringStripCard.svelte';
   import SectionHeader from './SectionHeader.svelte';
   import GenrePills from './GenrePills.svelte';
   import { initializeQueryClient } from '../services/query-client';
@@ -396,6 +396,14 @@
       {:else}
         <HeroBannerSkeleton />
       {/if}
+      <!-- Sibling of the keyed banner, not a child: the banner remounts on every
+           selection and the rail must not, or it would lose focus mid-keyboard
+           navigation. -->
+      <HeroAiringRail
+        entries={sortedCurrentlyAiring}
+        activeId={bannerAnime?.id ?? null}
+        onSelect={(info) => (hoveredAnime = info)}
+      />
     </div>
   {:else if ($homeDataQuery.data || homeData)?.topRatedAnime?.length > 0}
     <div class="hero-wrapper">
@@ -408,30 +416,6 @@
     </div>
   {/if}
 
-  <!-- Airing This Week -->
-  {#if sortedCurrentlyAiring.length > 0}
-    <section class="section">
-      <SectionHeader title="Airing This Week" href="/airing" linkText="View schedule →" />
-      <div class="airing-strip">
-        {#each sortedCurrentlyAiring.slice(0, 8) as entry, index}
-          <AiringStripCard
-            id={entry.anime.id}
-            slug={entry.anime.slug}
-            title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(entry.anime)}
-            episodeText={entry.airingInfo?.nextEpisode?.episodeNumber ? `Episode ${entry.airingInfo.nextEpisode.episodeNumber}` : ''}
-            localTime={entry.airingInfo?.nextEpisodeDate ? format(entry.airingInfo.nextEpisodeDate, "EEE h:mm a") : ''}
-            timeText={entry.airingInfo?.airTimeDisplay?.text || ''}
-            isLive={entry.airingInfo?.airTimeDisplay?.variant === 'airing'}
-            currentEpisode={entry.airingInfo?.nextEpisode?.episodeNumber || 0}
-            totalEpisodes={entry.anime.episodeCount || 0}
-            on:mouseenter={() => hoveredAnime = entry.airingInfo}
-            on:mouseleave={() => hoveredAnime = null}
-          />
-        {/each}
-      </div>
-    </section>
-  {/if}
 
   <!-- Top Rated -->
   {#if ($homeDataQuery.data || homeData)?.topRatedAnime}
@@ -547,9 +531,20 @@
     width: 100%;
     overflow-x: clip;
   }
+  /* The banner runs up under the transparent nav, so it starts at the top of the
+     document rather than below the bar. */
   .hero-wrapper {
+    /* Extra banner below the fold carrying the dissolve into the page ground.
+       The first screen stays pure artwork; the fade is only ever revealed by
+       scrolling. Everything bottom-anchored inside the banner offsets by this
+       same value so the composition does not move down with it. */
+    --hero-fade: 100px;
     width: 100%;
     position: relative;
+    margin-top: calc(-1 * var(--weeb-nav-height, 60px));
+  }
+  @media (max-width: 768px) {
+    .hero-wrapper { --hero-fade: 70px; }
   }
 
   /* --- SECTIONS --- */
@@ -590,16 +585,6 @@
     .poster-row :global(> *) {
       max-width: 260px;
     }
-  }
-
-  /* --- AIRING STRIP --- */
-  .airing-strip {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--weeb-border) transparent;
   }
 
   /* --- SEASON TABS --- */

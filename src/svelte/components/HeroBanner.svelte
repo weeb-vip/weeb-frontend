@@ -5,7 +5,8 @@
   import AnimeActions from './AnimeActions.svelte';
   import SafeImage from './SafeImage.svelte';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
-  import { GetImageFromAnime, animeHref } from '../../services/utils';
+  import { animeHref } from '../../services/utils';
+  import { getSafeImageUrl } from '../utils/image';
   import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
   import { animeNotificationStore } from '../stores/animeNotifications';
@@ -61,13 +62,15 @@
     const sources: string[] = [];
 
     // Both are keyed by anime id: banners/<id> for the tvdb artwork synced by
-    // thetvdb-enrichment, <id> at the root for the poster.
+    // thetvdb-enrichment, <id> at the root for the poster. Built through
+    // getSafeImageUrl so they follow config.cdn_url. Hardcoding the host meant
+    // local and staging read production artwork, which hid the fact that staging
+    // had no banners of its own.
     if (anime.id) {
-      const id = encodeURIComponent(anime.id);
       // Priority 1: CDN banner
-      sources.push(`https://cdn.weeb.vip/weeb/banners/${id}`);
+      sources.push(getSafeImageUrl(anime.id, 'banners'));
       // Priority 2: CDN poster as fallback
-      sources.push(`https://cdn.weeb.vip/weeb/${id}`);
+      sources.push(getSafeImageUrl(anime.id));
     }
 
     return sources;
@@ -90,6 +93,14 @@
 
   $: title = getAnimeTitle(anime, $preferencesStore.titleLanguage);
 
+  // Show titles range from "Chiikawa" to "The Exiled Heavy Knight Knows How to
+  // Game the System". At one fixed Display size the long ones run to three lines
+  // and shove the panel's top edge up by ~150px, which is visible as a jump when
+  // the rail retargets the banner. Stepping the size by length keeps the panel
+  // roughly one height. Computed during render, so SSR emits the final size and
+  // there is no measure-then-resize flash.
+  $: titleTier = title.length > 40 ? 'long' : title.length > 18 ? 'mid' : 'short';
+
   // For now, we'll use a simpler approach without the worker data
   // This can be enhanced later with Svelte stores for countdown data
   const animeNextEpisodeInfo = anime.nextEpisode && (anime.nextEpisode.airDate || anime.nextEpisode.airTime) ? {
@@ -106,9 +117,6 @@
 </script>
 
 <div class="hero">
-  <!-- Background layer -->
-  <div class="hero-bg-animated"></div>
-
   {#if imageSources.length > 0}
     <div class="hero-bg-image" style="opacity: {bgLoaded ? 1 : 0};">
       <SafeImage
@@ -125,7 +133,10 @@
     </div>
   {/if}
 
-  <div class="hero-overlay"></div>
+  <!-- Only the nav band keeps a scrim; it is what makes a transparent bar safe
+       over key art of unknown colour. Everything below sits in a container. -->
+  <div class="hero-scrim-top"></div>
+  <div class="hero-scrim-bottom"></div>
 
   <!-- Content -->
   <div class="hero-content">
@@ -153,22 +164,13 @@
     <!-- h2, not h1: this is one rotating featured item, so as an h1 the homepage's
          primary heading changed with whatever the carousel happened to show. The
          page-level h1 lives in HomepageSSR. -->
-    <h2>{title}</h2>
+    <h2 class="t-{titleTier}">{title}</h2>
 
     {#if anime.description}
-      <p class="hero-desc">
-        {anime.description.length > 250
-          ? `${anime.description.substring(0, 250)}...`
-          : anime.description}
-      </p>
+      <p class="hero-desc">{anime.description}</p>
     {/if}
 
     <div class="hero-meta">
-      {#if anime.tags && anime.tags.length > 0}
-        {#each anime.tags.slice(0, 3) as tag}
-          <span class="tag">{tag}</span>
-        {/each}
-      {/if}
       {#if episodeNumber}
         <span>Episode {episodeNumber}</span>
       {/if}
@@ -179,7 +181,9 @@
       {/if}
     </div>
 
-    <StreamingPlatforms platforms={anime.streamingPlatforms} />
+    <div class="hero-platforms">
+      <StreamingPlatforms platforms={anime.streamingPlatforms} />
+    </div>
 
     <div class="hero-actions">
       <a href={animeHref(anime)} class="btn-primary">View Details</a>
@@ -190,36 +194,29 @@
     </div>
   </div>
 
-  <!-- Poster card -->
-  <div class="hero-poster">
-    <SafeImage
-      src={GetImageFromAnime(anime)}
-      alt={title}
-      className="hero-poster-img"
-      fallbackSrc="/assets/not found.jpg"
-      cdnWidth={440}
-    />
-  </div>
 </div>
 
 <style>
   .hero {
     position: relative;
-    min-height: 720px;
+    min-height: calc(100svh + var(--hero-fade, 0px));
     display: flex;
     align-items: flex-end;
+    background: var(--weeb-bg-elevated);
   }
-  .hero-bg-animated {
+  /* Sits behind the transparent nav. Short, and gone well before the artwork's
+     focal band. */
+  .hero-scrim-top {
     position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, oklch(22% 0.04 280), oklch(14% 0.02 260), oklch(16% 0.03 300));
-    background-size: 400% 400%;
-    animation: heroShift 20s ease infinite;
-    z-index: 0;
-  }
-  @keyframes heroShift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+    inset: 0 0 auto 0;
+    height: 180px;
+    z-index: 2;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--weeb-bg) 88%, transparent) 0%,
+      color-mix(in oklch, var(--weeb-bg) 50%, transparent) 40%,
+      transparent 100%
+    );
   }
   .hero-bg-image {
     position: absolute;
@@ -236,19 +233,43 @@
     object-position: center 20%;
     display: block;
   }
-  .hero-overlay {
+  /* Starts fully transparent above the fold, so none of it shows at rest; the
+     artwork dissolves into the page ground only as it scrolls past. */
+  .hero-scrim-bottom {
     position: absolute;
-    inset: 0;
+    inset: auto 0 0 0;
+    /* Exactly the below-fold band: its top edge sits on the fold, where the
+       gradient is still fully transparent, so nothing of it is visible at rest. */
+    height: var(--hero-fade, 0px);
     z-index: 2;
-    background:
-      linear-gradient(to top, var(--weeb-bg) 0%, oklch(14% 0.015 275 / 0.85) 40%, oklch(14% 0.015 275 / 0.55) 70%, oklch(14% 0.015 275 / 0.3) 100%),
-      linear-gradient(to right, oklch(14% 0.015 275 / 0.7) 0%, transparent 60%);
+    /* Smoothstep, not a linear ramp. A two-stop gradient begins fading at a
+       constant slope the instant it starts, and the eye reads that abrupt onset
+       as a horizontal seam (Mach band). These stops approximate t^2(3-2t), so the
+       fade starts at almost zero slope and there is no line where it begins. */
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in oklch, var(--weeb-bg) 6%, transparent) 15%,
+      color-mix(in oklch, var(--weeb-bg) 22%, transparent) 30%,
+      color-mix(in oklch, var(--weeb-bg) 43%, transparent) 45%,
+      color-mix(in oklch, var(--weeb-bg) 65%, transparent) 60%,
+      color-mix(in oklch, var(--weeb-bg) 84%, transparent) 75%,
+      color-mix(in oklch, var(--weeb-bg) 97%, transparent) 90%,
+      var(--weeb-bg) 100%
+    );
   }
+
   .hero-content {
     position: relative;
     z-index: 3;
-    padding: 0 48px 48px;
-    max-width: 640px;
+    margin: 0 0 calc(32px + var(--hero-fade, 0px)) 32px;
+    padding: 20px;
+    background: var(--weeb-panel-bg, var(--weeb-surface));
+    backdrop-filter: var(--weeb-panel-blur);
+    -webkit-backdrop-filter: var(--weeb-panel-blur);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius-lg, 12px);
+    box-shadow: var(--weeb-shadow-card, 0 12px 32px oklch(0% 0 0 / 0.4));
   }
   .hero-badge {
     position: relative;
@@ -259,7 +280,7 @@
     border-radius: 20px;
     background: var(--weeb-accent);
     color: white;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -267,7 +288,7 @@
     overflow: hidden;
   }
   .hero-badge--progress {
-    background: oklch(30% 0.04 275);
+    background: var(--weeb-surface-hover);
     padding: 6px 14px;
   }
   .badge-track {
@@ -296,30 +317,52 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    .dot { animation: none; }
+    .badge-track { transition: none; }
+  }
   .badge-countdown {
     position: relative;
     z-index: 1;
     margin-left: 4px;
     padding: 1px 6px;
-    border-radius: 4px;
-    background: oklch(0% 0 0 / 0.25);
-    font-size: 10px;
+    border-radius: var(--weeb-radius-sm, 4px);
+    background: color-mix(in oklch, var(--weeb-bg) 45%, transparent);
+    font-family: var(--weeb-font-mono);
+    font-size: 12px;
+    letter-spacing: 0.02em;
   }
   .hero h2 {
-    font-size: clamp(28px, 4vw, 44px);
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: -0.02em;
-    line-height: 1.15;
+    /* 1.1 per the Display spec; at 44px the extra 0.05 cost a visible band of
+       height on the three-line titles this catalogue is full of. */
+    line-height: 1.1;
     margin: 0 0 12px;
     color: var(--weeb-fg);
+    /* Show titles run long and arbitrary. Balancing stops the last line
+       collapsing to a single orphaned word. */
+    text-wrap: balance;
+  }
+  .hero h2.t-short { font-size: clamp(28px, 4vw, 44px); }
+  .hero h2.t-mid   { font-size: clamp(26px, 3.2vw, 36px); }
+  .hero h2.t-long  { font-size: clamp(24px, 2.6vw, 30px); }
+
+  /* A long title has already spent the panel's vertical budget; the synopsis
+     gives a line back so the panel does not grow twice over. */
+  .hero h2.t-long ~ .hero-desc {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
   .hero-desc {
-    font-size: 15px;
-    color: var(--weeb-fg-secondary);
+    display: none;
+    /* Body scale per DESIGN.md; 15px read as a second headline next to the
+       title rather than supporting text. */
+    font-size: 14px;
     line-height: 1.6;
-    max-width: 480px;
+    color: var(--weeb-fg-secondary);
+    max-width: 60ch;
     margin: 0 0 16px;
-    display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -328,21 +371,13 @@
   .hero-meta {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     flex-wrap: wrap;
-    font-size: 13px;
-    color: var(--weeb-fg-muted);
-  }
-  .tag {
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: var(--weeb-surface);
+    font-family: var(--weeb-font-mono);
     font-size: 12px;
-    color: var(--weeb-fg-secondary);
-  }
-  .air-time {
-    color: var(--weeb-accent);
     font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--weeb-fg);
   }
   .hero-actions {
     display: flex;
@@ -363,37 +398,32 @@
   .btn-primary:hover {
     background: var(--weeb-accent-hover);
   }
-  .hero-poster {
-    position: absolute;
-    right: 48px;
-    bottom: 48px;
-    z-index: 3;
-    width: 200px;
-    height: 290px;
-    border-radius: var(--weeb-radius-lg, 12px);
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    overflow: hidden;
-    box-shadow: 0 20px 60px oklch(0% 0 0 / 0.5);
-  }
-  .hero-poster :global(.hero-poster-img),
-  .hero-poster :global(.hero-poster-img img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+  @media (min-width: 1025px) {
+    .hero-desc { display: -webkit-box; }
+    /* Keeps the text column clear of the rail. Desktop only: below this width
+       the rail is a tray under the panel, and the subtraction would go negative. */
+    .hero-content { max-width: min(560px, calc(100vw - 470px)); }
   }
 
   @media (max-width: 1024px) {
-    .hero-poster { display: none; }
-    .hero-content { padding: 0 24px 32px; }
+    /* The airing tray sits across the base of the banner below this container. */
+    .hero-content {
+      margin: 0 12px calc(168px + var(--hero-fade, 0px));
+      /* Flex item in a row container: it shrinks to its content and stops short
+         of its own right margin, which reads as a broken box on a phone. flex
+         grows it along the main axis; align-self would only stretch height. */
+      flex: 1 1 auto;
+    }
   }
+
   @media (max-width: 768px) {
-    .hero { min-height: 560px; }
-    .hero h2 { font-size: 24px; }
+    /* Streaming platforms are still on the show page; here the room goes to the
+       schedule, which is what the visitor came for. */
+    .hero-platforms { display: none; }
+    .hero-scrim-top { height: 120px; }
   }
+
   @media (max-width: 480px) {
-    .hero-content { padding: 0 16px 24px; }
-    .hero { min-height: 480px; }
+    .hero-content { padding: 16px; }
   }
 </style>

@@ -5,6 +5,7 @@
   import SafeImage from '../../../../svelte/components/SafeImage.svelte';
   import AnimeNews from '../../../../svelte/components/AnimeNews.svelte';
   import { GetImageFromAnime, getYearUTC } from '../../../../services/utils';
+  import { getSafeImageUrl } from '../../../../svelte/utils/image';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
@@ -35,8 +36,8 @@
    */
   $: bannerSources = data.anime
     ? [
-        `https://cdn.weeb.vip/weeb/banners/${encodeURIComponent(data.anime.id)}`,
-        `https://cdn.weeb.vip/weeb/${encodeURIComponent(GetImageFromAnime(data.anime))}`
+        getSafeImageUrl(data.anime.id, 'banners'),
+        getSafeImageUrl(GetImageFromAnime(data.anime))
       ].filter(Boolean)
     : [];
 

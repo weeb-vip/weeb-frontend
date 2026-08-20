@@ -2,11 +2,11 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
   import { beforeNavigate, afterNavigate } from '$app/navigation';
+  import { page } from '$app/stores';
   import { QueryClientProvider } from '@tanstack/svelte-query';
   import { getQueryClient, createQueryClient } from '../svelte/services/query-client';
   import Header from '$lib/Header.svelte';
   import Footer from '../svelte/components/Footer.svelte';
-  import DevTestingPanel from '../svelte/components/DevTestingPanel.svelte';
   import GlobalToaster from '../svelte/components/GlobalToaster.svelte';
   import AnimeNotificationProvider from '../svelte/components/AnimeNotificationProvider.svelte';
   import MobileDrawer from '../svelte/components/MobileDrawer.svelte';
@@ -47,7 +47,15 @@
 </script>
 
 <QueryClientProvider client={queryClient}>
-<Header ssrAuth={data.auth} />
+<!-- The homepage runs its key art up under the bar, so the bar starts transparent
+     there and takes its glass on scroll. Resolved from the route during SSR, so
+     there is no flash of the solid bar on hydration. -->
+<Header
+  ssrAuth={data.auth}
+  overlay={$page.route.id === '/' ||
+    $page.route.id === '/anime/[slug]' ||
+    $page.route.id === '/show/[id]'}
+/>
 
 <!-- Main content — always full width, components handle their own padding -->
 <main class="w-full bg-weeb-bg text-weeb-fg min-h-screen">
@@ -61,11 +69,6 @@
 
 <!-- Global Toast Configuration -->
 <GlobalToaster />
-
-<!-- Dev Testing Panel -->
-{#if __ENABLE_DEV_FEATURES__}
-  <DevTestingPanel />
-{/if}
 
 <!-- Anime Notifications -->
 <AnimeNotificationProvider />
