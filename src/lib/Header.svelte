@@ -66,6 +66,7 @@
 <nav
   class="nav"
   class:nav--overlay={overlay}
+  class:nav--glass={!overlay || navSolid > 0.02}
   style="--nav-solid: {navSolid}"
   id="main-header"
 >
@@ -134,9 +135,18 @@
      into the artwork at the top and rebuilds itself continuously on scroll. */
   .nav--overlay {
     background: color-mix(in oklch, var(--weeb-glass-bg) calc(var(--nav-solid) * 100%), transparent);
+    /* No backdrop-filter at rest. blur(0px) is visually a no-op but still creates
+       a stacking context and forces a filter pass, which re-ran the autocomplete
+       options' entrance animation on every keystroke and blinked them to zero
+       opacity (see tests/e2e/search-autocomplete-responsiveness). The filter only
+       turns on once there is actually something to blur. */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom-color: color-mix(in oklch, var(--weeb-border) calc(var(--nav-solid) * 100%), transparent);
+  }
+  .nav--overlay.nav--glass {
     backdrop-filter: blur(calc(var(--nav-solid) * 24px)) saturate(calc(1 + var(--nav-solid) * 0.4));
     -webkit-backdrop-filter: blur(calc(var(--nav-solid) * 24px)) saturate(calc(1 + var(--nav-solid) * 0.4));
-    border-bottom-color: color-mix(in oklch, var(--weeb-border) calc(var(--nav-solid) * 100%), transparent);
   }
 
   /* Secondary grey only clears 2.4:1 against pale key art, so every label in the

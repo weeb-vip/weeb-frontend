@@ -23,7 +23,10 @@ test('homepage renders its content sections', async ({ page }) => {
   // what broke. "Airing This Week" covers the currently-airing query.
   await expect(page.getByRole('heading', { name: /top rated/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /newest/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /airing this week/i })).toBeVisible();
+  // The currently-airing query used to surface as an "Airing This Week" section;
+  // it now feeds the hero's Airing Next rail instead. Same guard, new home: if
+  // that query stops resolving, the rail disappears with it.
+  await expect(page.getByRole('heading', { name: /airing next/i })).toBeVisible();
 
   // ...and that the sections actually populated with linked anime cards.
   await expect(page.locator('a[href^="/anime/"]').first()).toBeVisible();
