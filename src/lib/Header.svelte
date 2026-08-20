@@ -4,8 +4,51 @@
   import UserProfileHandler from '../svelte/components/UserProfileHandler.svelte';
   import AuthInitializer from '../svelte/components/AuthInitializer.svelte';
   import TitleLanguageToggle from '../svelte/components/TitleLanguageToggle.svelte';
+  import { onDestroy } from 'svelte';
 
   export let ssrAuth: any;
+  /** When true the bar starts transparent over page artwork and takes its glass
+      on scroll. Pages without artwork behind the nav leave this false. */
+  export let overlay: boolean = false;
+
+  // Distance over which the bar earns its glass back.
+  const SOLID_OVER = 220;
+
+  // Scroll events do not arrive one per frame: a single wheel tick can move
+  // scrollY by 200px in ONE event, which drove this straight from 0 to 1 in a
+  // single frame and read as the background popping in. Mapping it more gradually
+  // does not help, because the input itself is a jump. So scroll only sets a
+  // TARGET and a rAF loop eases the rendered value toward it -- the fade becomes
+  // a property of the animation rather than of how the input is delivered.
+  let navSolid = overlay ? 0 : 1;
+  let navTarget = navSolid;
+  let raf = 0;
+
+  const EASE = 0.14; // per-frame approach; settles in ~250ms at 60fps
+
+  function step() {
+    const delta = navTarget - navSolid;
+    if (Math.abs(delta) < 0.002) {
+      navSolid = navTarget;
+      raf = 0;
+      return;
+    }
+    navSolid += delta * EASE;
+    raf = requestAnimationFrame(step);
+  }
+
+  function onScroll() {
+    navTarget = Math.min(1, Math.max(0, window.scrollY / SOLID_OVER));
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      navSolid = navTarget;
+      return;
+    }
+    if (!raf) raf = requestAnimationFrame(step);
+  }
+
+  onDestroy(() => {
+    if (raf) cancelAnimationFrame(raf);
+  });
 
   function getCurrentSeason(): string {
     const now = new Date();
@@ -18,7 +61,14 @@
   }
 </script>
 
-<nav class="nav" id="main-header">
+<svelte:window on:scroll={overlay ? onScroll : undefined} />
+
+<nav
+  class="nav"
+  class:nav--overlay={overlay}
+  style="--nav-solid: {navSolid}"
+  id="main-header"
+>
   <!-- Logo -->
   <a href="/" class="nav-logo">
     <img
@@ -78,6 +128,39 @@
     backdrop-filter: var(--weeb-glass-blur);
     -webkit-backdrop-filter: var(--weeb-glass-blur);
     border-bottom: 1px solid var(--weeb-border);
+  }
+
+  /* Overlay pages drive every one of these off --nav-solid, so the bar dissolves
+     into the artwork at the top and rebuilds itself continuously on scroll. */
+  .nav--overlay {
+    background: color-mix(in oklch, var(--weeb-glass-bg) calc(var(--nav-solid) * 100%), transparent);
+    backdrop-filter: blur(calc(var(--nav-solid) * 24px)) saturate(calc(1 + var(--nav-solid) * 0.4));
+    -webkit-backdrop-filter: blur(calc(var(--nav-solid) * 24px)) saturate(calc(1 + var(--nav-solid) * 0.4));
+    border-bottom-color: color-mix(in oklch, var(--weeb-border) calc(var(--nav-solid) * 100%), transparent);
+  }
+
+  /* Secondary grey only clears 2.4:1 against pale key art, so every label in the
+     bar rides up to full foreground while it is over artwork and settles back to
+     its resting colour as the glass arrives. Applies to the right-hand cluster
+     too: it was the half that still looked pasted on. */
+  .nav--overlay .nav-links a,
+  .nav--overlay :global(.nav-right a:not(.btn-accent)),
+  .nav--overlay :global(.nav-right button:not(.btn-accent)),
+  .nav--overlay :global(.nav-right-mobile button:not(.btn-accent)) {
+    color: color-mix(in oklch, var(--weeb-fg-secondary) calc(var(--nav-solid) * 100%), var(--weeb-fg));
+  }
+
+  /* The search field was the one opaque object in a transparent bar, which is
+     what read as a dark pill dropped on the artwork. It now starts as part of
+     the overlay and firms up with everything else. */
+  .nav--overlay .nav-search :global(input) {
+    background: color-mix(in oklch, var(--weeb-surface) calc(72% + var(--nav-solid) * 28%), transparent);
+    border-color: color-mix(in oklch, var(--weeb-border) calc(55% + var(--nav-solid) * 45%), transparent);
+  }
+  /* Muted placeholder over a translucent field on artwork is the weakest text in
+     the bar; it rides up with everything else while the ground is uncertain. */
+  .nav--overlay .nav-search :global(input::placeholder) {
+    color: color-mix(in oklch, var(--weeb-fg-muted) calc(var(--nav-solid) * 100%), var(--weeb-fg-secondary));
   }
 
   .nav-logo {
@@ -151,5 +234,9 @@
     .nav {
       padding: 0 16px;
     }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav--overlay { transition: none; }
   }
 </style>
