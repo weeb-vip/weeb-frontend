@@ -439,19 +439,14 @@
         </div>
       {/if}
 
-      <div class="hero-inner">
-        <!-- Poster -->
-        <div class="hero-poster">
-          <SafeImage
-            src={GetImageFromAnime(anime)}
-            alt={anime.titleEn || ""}
-            className="hero-poster__img"
-            fallbackSrc="/assets/not found.jpg"
-          />
-        </div>
+      <!-- Same two-edge treatment as the homepage banner: a scrim only under
+           the nav, and a fade band below the fold. -->
+      <div class="hero-scrim-top"></div>
+      <div class="hero-scrim-bottom"></div>
 
-        <!-- Meta -->
-        <div class="hero-meta">
+      <div class="hero-stage">
+        <!-- Identity -->
+        <div class="hero-panel">
           <p class="hero-eyebrow">
             {anime.type || "TV"} Series &middot; {getYearUTC(anime.startDate)}
             {#if anime.studios && anime.studios.length > 0}
@@ -466,21 +461,6 @@
             <p class="hero-title-jp" lang="ja">{anime.titleJp}</p>
           {/if}
 
-          <!-- Ranking -->
-          {#if anime.ranking}
-            <div class="hero-score-row">
-              <span class="hero-score-big" aria-label="Ranked #{anime.ranking}">#{anime.ranking}</span>
-              <div class="hero-score-details">
-                <div class="hero-score-stars" aria-hidden="true">
-                  <svg class="rank-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M8 1l2.35 4.76 5.25.77-3.8 3.7.9 5.24L8 12.93l-4.7 2.54.9-5.24-3.8-3.7 5.25-.77z"/>
-                  </svg>
-                </div>
-                <span class="hero-score-label">overall ranking</span>
-              </div>
-            </div>
-          {/if}
-
           <!-- Genre tags -->
           {#if anime.tags && anime.tags.length > 0}
             <div class="hero-tags" role="list" aria-label="Genres">
@@ -492,6 +472,35 @@
 
           <!-- Where to watch -->
           <StreamingPlatforms platforms={anime.streamingPlatforms} centerOnMobile />
+
+          <div class="hero-actions">
+            <AnimeActions {anime} variant="hero" />
+          </div>
+        </div>
+
+        <!-- Data: the schedule first, because the schedule is the promise -->
+        <aside class="hero-aside" aria-label="Show details">
+          {#if hasTimingData && countdown}
+            <div class="hero-next">
+              <span class="hero-next-label">
+                {currentlyAiring ? 'Airing now' : alreadyAired ? 'Recently aired' : 'Next episode'}
+              </span>
+              <span class="hero-next-countdown">{countdown}</span>
+              {#if episode?.episodeNumber}
+                <span class="hero-next-ep">EP {episode.episodeNumber}</span>
+              {/if}
+              {#if airTimeAndDate}
+                <span class="hero-next-when">{format(airTimeAndDate, 'EEE d MMM, h:mm a')}</span>
+              {/if}
+            </div>
+          {/if}
+
+          {#if anime.ranking}
+            <div class="hero-rank">
+              <span class="hero-rank-num">#{anime.ranking}</span>
+              <span class="hero-rank-label">overall ranking</span>
+            </div>
+          {/if}
 
           <!-- Details grid -->
           <dl class="hero-details">
@@ -528,7 +537,7 @@
               {formatDateUTC(anime.startDate, "Unknown")} &ndash; {formatDateUTC(anime.endDate, "Ongoing")}
             </dd>
           </dl>
-        </div>
+        </aside>
       </div>
     </section>
 
@@ -781,27 +790,164 @@
   /* ===========================
      HERO BANNER
   =========================== */
+  /* Same stage as the homepage banner: full-screen key art, a scrim only under
+     the nav, a fade band below the fold, and content in panels on panel glass.
+     The old accent-tinted gradient ground is gone -- the artwork is the ground. */
   .hero-banner {
+    /* Extra banner below the fold carrying the dissolve into the page ground, so
+       the artwork does not end on a hard cut. Nothing of it shows at rest. */
+    --hero-fade: 100px;
     position: relative;
+    min-height: calc(100svh + var(--hero-fade));
+    display: flex;
+    align-items: flex-end;
     overflow: hidden;
-    border-bottom: 1px solid var(--weeb-border);
+    margin-top: calc(-1 * var(--weeb-nav-height, 60px));
+    background: var(--weeb-bg-elevated);
+  }
+
+  .hero-scrim-top {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 180px;
+    z-index: 2;
     background: linear-gradient(
-      180deg,
-      color-mix(in oklch, var(--weeb-bg-elevated), var(--weeb-accent) 12%) 0%,
-      color-mix(in oklch, var(--weeb-bg), var(--weeb-accent) 4%) 60%,
+      to bottom,
+      color-mix(in oklch, var(--weeb-bg) 88%, transparent) 0%,
+      color-mix(in oklch, var(--weeb-bg) 50%, transparent) 40%,
+      transparent 100%
+    );
+  }
+
+  /* Sized to the below-fold band exactly, and eased on a smoothstep ramp: a
+     linear two-stop gradient begins fading at constant slope and the eye reads
+     that onset as a horizontal seam. */
+  .hero-scrim-bottom {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: var(--hero-fade);
+    z-index: 2;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in oklch, var(--weeb-bg) 6%, transparent) 15%,
+      color-mix(in oklch, var(--weeb-bg) 22%, transparent) 30%,
+      color-mix(in oklch, var(--weeb-bg) 43%, transparent) 45%,
+      color-mix(in oklch, var(--weeb-bg) 65%, transparent) 60%,
+      color-mix(in oklch, var(--weeb-bg) 84%, transparent) 75%,
+      color-mix(in oklch, var(--weeb-bg) 97%, transparent) 90%,
       var(--weeb-bg) 100%
     );
   }
 
-  .hero-banner::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 80% 60% at 30% 20%, color-mix(in oklch, var(--weeb-accent), transparent 75%), transparent),
-      radial-gradient(ellipse 60% 50% at 70% 60%, color-mix(in oklch, var(--weeb-violet), transparent 85%), transparent);
-    pointer-events: none;
+
+  .hero-stage {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    padding: 0 32px calc(32px + var(--hero-fade)) 32px;
   }
+
+  .hero-panel,
+  .hero-aside {
+    background: var(--weeb-panel-bg, var(--weeb-surface));
+    backdrop-filter: var(--weeb-panel-blur);
+    -webkit-backdrop-filter: var(--weeb-panel-blur);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius-lg, 12px);
+    box-shadow: var(--weeb-shadow-card, 0 12px 32px oklch(0% 0 0 / 0.4));
+    padding: 20px;
+  }
+  .hero-panel {
+    flex: 0 1 auto;
+    max-width: min(560px, calc(100vw - 460px));
+  }
+  .hero-aside {
+    flex: 0 0 auto;
+    width: 320px;
+  }
+
+  .hero-actions {
+    margin-top: 16px;
+  }
+
+  /* Next-episode block: the schedule leads the data panel. */
+  .hero-next {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--weeb-border);
+  }
+  .hero-next-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--weeb-fg-secondary);
+  }
+  .hero-next-countdown {
+    font-family: var(--weeb-font-mono);
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--weeb-fg);
+  }
+  .hero-next-ep,
+  .hero-next-when {
+    font-family: var(--weeb-font-mono);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: var(--weeb-fg-secondary);
+  }
+
+  .hero-rank {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--weeb-border);
+  }
+  .hero-rank-num {
+    font-family: var(--weeb-font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--weeb-fg);
+  }
+  .hero-rank-label {
+    font-size: 12px;
+    color: var(--weeb-fg-secondary);
+  }
+
+  @media (max-width: 1024px) {
+    .hero-stage {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      padding: 0 12px calc(24px + var(--hero-fade)) 12px;
+    }
+    .hero-panel { max-width: none; }
+    .hero-aside { width: auto; }
+    /* Stacked, the two panels ate 695px of an 844px screen and left almost no
+       artwork. The details list is the bulk of it and is the most redundant part
+       here: aired / rating / source / studio repeat in the Information section
+       below, and episodes / duration are chips in the quick-info bar. The
+       schedule and the ranking stay, because neither is repeated above the fold. */
+    /* Scoped to the aside, not bare .hero-details: a later `.hero-details {
+       display: grid }` rule of equal specificity would otherwise win on order. */
+    .hero-aside .hero-details { display: none; }
+  }
+  @media (max-width: 768px) {
+    .hero-banner { --hero-fade: 70px; }
+    .hero-scrim-top { height: 120px; }
+  }
+
 
   .hero-banner__bg {
     position: absolute;
@@ -816,31 +962,13 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 60%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 60%, transparent 100%);
+    /* No mask. The old layout treated key art as faint texture behind a solid
+       page, so it was capped at 35% opacity at the top and faded to nothing by
+       the bottom. Here the artwork IS the banner; legibility comes from the top
+       scrim and the panels, not from hiding the image. */
   }
 
-  .hero-inner {
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 48px 40px 40px;
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    gap: 48px;
-    align-items: start;
-    position: relative;
-    z-index: 1;
-  }
 
-  .hero-poster {
-    width: 240px;
-    height: 340px;
-    flex-shrink: 0;
-    border-radius: var(--weeb-radius-lg);
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
 
   :global(.hero-poster__img) {
     width: 100%;
@@ -849,9 +977,6 @@
     display: block;
   }
 
-  .hero-meta {
-    padding-top: 4px;
-  }
 
   .hero-eyebrow {
     font-family: var(--weeb-font-mono);
@@ -880,43 +1005,11 @@
     font-weight: 400;
   }
 
-  .hero-score-row {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 24px;
-  }
 
-  .hero-score-big {
-    font-family: var(--weeb-font-mono);
-    font-size: 48px;
-    font-weight: 800;
-    color: var(--weeb-accent);
-    line-height: 1;
-    letter-spacing: -0.03em;
-  }
 
-  .hero-score-details {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
 
-  .hero-score-label {
-    font-size: 12px;
-    color: var(--weeb-fg-muted);
-  }
 
-  .hero-score-stars {
-    display: flex;
-    gap: 2px;
-  }
 
-  .rank-icon {
-    width: 18px;
-    height: 18px;
-    color: var(--weeb-amber);
-  }
 
   .hero-tags {
     display: flex;
@@ -1316,21 +1409,8 @@
      RESPONSIVE -- 768px
   =========================== */
   @media (max-width: 768px) {
-    .hero-inner {
-      grid-template-columns: 1fr;
-      gap: 24px;
-      padding: 32px 20px;
-    }
 
-    .hero-poster {
-      width: 180px;
-      height: 256px;
-      margin: 0 auto;
-    }
 
-    .hero-meta {
-      text-align: center;
-    }
 
     .hero-tags {
       justify-content: center;
@@ -1342,9 +1422,6 @@
       margin: 0 auto;
     }
 
-    .hero-score-row {
-      justify-content: center;
-    }
 
     .main-content {
       padding: 0 16px;
@@ -1378,14 +1455,7 @@
       font-size: 24px;
     }
 
-    .hero-score-big {
-      font-size: 36px;
-    }
 
-    .hero-poster {
-      width: 160px;
-      height: 228px;
-    }
 
     .quick-info {
       margin-top: -8px;
