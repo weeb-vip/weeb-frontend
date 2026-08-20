@@ -28,15 +28,35 @@
   /* ── Foreground / text ── */
   --weeb-fg:             oklch(95% 0.005 265);
   --weeb-fg-secondary:   oklch(70% 0.01 270);
-  --weeb-fg-muted:       oklch(55% 0.01 270);
+  /* Lifted from 55%: at 55% this measured 4.10:1 on the page ground and 3.88:1
+     on elevated surfaces, so it could not reach WCAG AA anywhere in this
+     palette -- and it carries the sub-line on every poster card. */
+  --weeb-fg-muted:       oklch(62% 0.01 270);
 
-  /* ── Accent (primary action) ── */
-  --weeb-accent:         oklch(55% 0.15 280);
-  --weeb-accent-hover:   oklch(62% 0.16 280);
+  /* ── Accent (primary action) ──
+     Moved from hue 280 to 298. At 280 the accent sat 5 degrees from the page
+     ground's own hue (275), so the one colour meant to read as "this is the
+     action, this is selected" was a brighter tint of the background rather than
+     a separate voice. 298 is the furthest useful step into violet while staying
+     in the same emotional register as the ground. */
+  --weeb-accent:         oklch(55% 0.16 298);
+  --weeb-accent-hover:   oklch(63% 0.17 298);
+  /* The accent as a GROUND and the accent as TEXT need different lightness on a
+     dark page. White on --weeb-accent is 5.07:1, so the ground must stay at 55%;
+     the same value used as small link text is only 3.93:1. This is the text
+     variant -- never use it as a fill. */
+  --weeb-accent-text:    oklch(74% 0.14 298);
 
-  /* ── Secondary accent ── */
-  --weeb-violet:         oklch(62% 0.14 300);
-  --weeb-violet-muted:   oklch(45% 0.10 300);
+  /* ── Secondary accent — DEPRECATED ──
+     These were oklch(62% 0.14 300) and oklch(45% 0.10 300): 20 degrees from the
+     old accent, which is too close to read as a second role. Two tokens that
+     near each other do not say "primary" and "secondary", they say "one colour
+     applied inconsistently" -- which is exactly what the Cursor Rule forbids.
+     Now that the accent itself is violet they are aliases, so the ~20 existing
+     call sites keep working and the gradients they feed become single-hue tonal
+     ramps instead of two-colour blends. Do not use them in new work. */
+  --weeb-violet:         var(--weeb-accent-hover);
+  --weeb-violet-muted:   var(--weeb-accent);
 
   /* ── Status colors ── */
   --weeb-green:          oklch(65% 0.15 155);
@@ -54,6 +74,11 @@
   --weeb-radius-full:    9999px;
 
   /* ── Shadows ── */
+  /* Scrim for small labels laid directly over cover art. Key art is routinely
+     near-white, and at 0.7 alpha an amber score badge fell to 3.40:1 over it;
+     0.88 holds every backdrop from black to white. */
+  --weeb-scrim:          oklch(0% 0 0 / 0.88);
+
   --weeb-shadow-card:    0 12px 32px oklch(0% 0 0 / 0.4);
   --weeb-shadow-poster:  0 20px 60px oklch(0% 0 0 / 0.5);
   --weeb-shadow-dropdown: 0 8px 24px oklch(0% 0 0 / 0.4);
