@@ -25,6 +25,20 @@
   let currentAnimeId: string | null = null;
   let supportsWebP = false;
 
+  /**
+   * TheTVDB banner art is roughly 16:9 and the hero is a 100svh box, so on a
+   * phone the only way to cover that shape is to crop the banner to a narrow
+   * vertical strip of itself -- usually a piece of background with the subject
+   * outside the frame. A poster is 2:3 and fills a tall viewport natively. From
+   * a tablet up the hero is wide enough for the banner to read as composed, so
+   * it keeps priority there.
+   *
+   * Safe to decide on the client: SafeImage resolves its source after mount and
+   * emits no <img> during SSR, so there is nothing to flash or swap.
+   */
+  const PHONE_QUERY = '(max-width: 767px)';
+  let isPhone = false;
+
   // Get timing data from the shared anime notification store
   $: timingData = $animeNotificationStore.timingData[anime.id];
   $: workerCountdown = $animeNotificationStore.countdowns[anime.id];
@@ -62,8 +76,18 @@
     console.log('🖼️ WebP support:', supportsWebP);
   });
 
+  // Separate from the async onMount above: Svelte ignores a cleanup function
+  // returned from an async callback, so the listener would never be removed.
+  onMount(() => {
+    const mq = window.matchMedia(PHONE_QUERY);
+    isPhone = mq.matches;
+    const onChange = (event: MediaQueryListEvent) => (isPhone = event.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  });
+
   // Generate ordered list of image sources to try
-  function generateImageSources(): string[] {
+  function generateImageSources(phone: boolean): string[] {
     const sources: string[] = [];
 
     // Both are keyed by anime id: banners/<id> for the tvdb artwork synced by
@@ -72,10 +96,15 @@
     // local and staging read production artwork, which hid the fact that staging
     // had no banners of its own.
     if (anime.id) {
-      // Priority 1: CDN banner
-      sources.push(getSafeImageUrl(anime.id, 'banners'));
-      // Priority 2: CDN poster as fallback
-      sources.push(getSafeImageUrl(anime.id));
+      const banner = getSafeImageUrl(anime.id, 'banners');
+      const poster = getSafeImageUrl(anime.id);
+      // Whichever leads, the other stays as the fallback: a show with no banner
+      // still gets art, and so does one with no poster.
+      if (phone) {
+        sources.push(poster, banner);
+      } else {
+        sources.push(banner, poster);
+      }
     }
 
     return sources;
@@ -86,15 +115,23 @@
     if (currentAnimeId !== anime.id) {
       currentAnimeId = anime.id;
       bgLoaded = false;
-      imageSources = generateImageSources();
-      console.log('🖼️ Generated image sources for', anime.id, ':', imageSources);
+      imageSources = generateImageSources(isPhone);
     }
   }
 
   // Regenerate sources when WebP support is detected
   $: if (supportsWebP && currentAnimeId === anime.id) {
-    imageSources = generateImageSources();
+    imageSources = generateImageSources(isPhone);
   }
+
+  // ...and when the viewport crosses the breakpoint, so a rotate or a resized
+  // window re-picks rather than keeping art chosen for the other shape.
+  $: if (currentAnimeId === anime.id) {
+    imageSources = generateImageSources(isPhone);
+  }
+
+  // A phone never needs 1600px of hero art.
+  $: heroCdnWidth = isPhone ? 800 : 1600;
 
   $: title = getAnimeTitle(anime, $preferencesStore.titleLanguage);
 
@@ -141,7 +178,7 @@
         fallbackSrc="/assets/not found.jpg"
         perTryTimeoutMs={3000}
         className="hero-bg-cover"
-        cdnWidth={1600}
+        cdnWidth={heroCdnWidth}
         on:chosen={handleImageChosen}
       />
     </div>
