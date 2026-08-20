@@ -3,6 +3,8 @@
   import Button from './Button.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
+  import { loggedInStore, loginModalStore } from '../stores/auth';
+  import { getAnimeTitle, preferencesStore } from '../stores/preferences';
 
   // Props
   export let anime: any;
@@ -27,13 +29,37 @@
   $: currentStatus = ($addMutation?.isPending || $deleteMutation?.isPending) ? 'loading' : 'idle';
 
   // Action handlers
+  function addNow() {
+    $addMutation.mutate({ input: { animeID: anime.id, status: 'PLANTOWATCH' } });
+  }
+
   function handleAddAnime() {
     if (!anime?.id || !$addMutation) {
       console.log('❌ Early return - missing anime ID or mutation');
       return;
     }
 
-    $addMutation.mutate({ input: { animeID: anime.id, status: 'PLANTOWATCH' } });
+    // Tracking needs an account, so a signed-out click used to fire the mutation
+    // and take a rejection: the site's highest-intent action had exactly one
+    // possible outcome, failure. Gate it, and carry the intent through sign-in so
+    // the show still lands on their list.
+    //
+    // Only gate once auth has resolved. Before that a returning visitor with
+    // valid cookies reads as signed-out, and we would prompt someone who is
+    // already logged in.
+    if ($loggedInStore.isAuthInitialized && !$loggedInStore.isLoggedIn) {
+      const title = getAnimeTitle(anime, $preferencesStore.titleLanguage);
+      const named = title && title !== 'Unknown';
+      loginModalStore.requireAuth({
+        reason: named
+          ? `${title} will be added to your list.`
+          : 'This show will be added to your list.',
+        onAuthed: addNow
+      });
+      return;
+    }
+
+    addNow();
   }
 
   function onStatusChange(event: CustomEvent) {

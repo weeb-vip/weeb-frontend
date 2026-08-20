@@ -10,6 +10,12 @@ interface LoggedInState {
 interface LoginModalState {
   isOpen: boolean;
   register: boolean;
+  /**
+   * Why the modal opened, in the visitor's terms ("Sign in to track Chiikawa").
+   * Replaces the generic subtitle so the prompt explains itself instead of
+   * appearing as an unexplained wall in front of the thing they just clicked.
+   */
+  reason: string | null;
 }
 
 // Create writable stores
@@ -70,17 +76,43 @@ function createLoggedInStore() {
   };
 }
 
+/**
+ * The action a signed-out visitor was trying to take. Held outside the store
+ * because it is a closure, not state anything renders, and it must survive the
+ * whole modal round-trip. Exactly one intent is pending at a time: a second
+ * gated click replaces the first rather than queueing.
+ */
+let pendingIntent: (() => void) | null = null;
+
 function createLoginModalStore() {
   const { subscribe, set, update } = writable<LoginModalState>({
     isOpen: false,
-    register: false
+    register: false,
+    reason: null
   });
+
+  const clear = () => { pendingIntent = null; };
 
   return {
     subscribe,
-    openLogin: () => set({ isOpen: true, register: false }),
-    openRegister: () => set({ isOpen: true, register: true }),
-    close: () => set({ isOpen: false, register: false }),
+    openLogin: () => { clear(); set({ isOpen: true, register: false, reason: null }); },
+    openRegister: () => { clear(); set({ isOpen: true, register: true, reason: null }); },
+    /**
+     * Gate an action behind sign-in without losing it. The visitor lands back on
+     * the same page with the thing they asked for already done -- they do not
+     * have to find the show again and click the button a second time.
+     */
+    requireAuth: (options: { reason?: string; register?: boolean; onAuthed?: () => void }) => {
+      pendingIntent = options.onAuthed ?? null;
+      set({
+        isOpen: true,
+        register: options.register ?? false,
+        reason: options.reason ?? null
+      });
+    },
+    // Dismissing is a decision. Drop the intent rather than firing it later from
+    // somewhere the visitor cannot connect to what they did.
+    close: () => { clear(); set({ isOpen: false, register: false, reason: null }); },
     set,
     update
   };
@@ -88,3 +120,19 @@ function createLoginModalStore() {
 
 export const loggedInStore = createLoggedInStore();
 export const loginModalStore = createLoginModalStore();
+
+// Replay the preserved intent once authentication actually lands, whichever
+// route got there -- modal login, registration, or a cookie check that resolved
+// mid-flight. Deferred a tick so the auth token is in place before the mutation
+// goes out, which is the difference between completing the action and failing
+// it a second time.
+let wasLoggedIn = false;
+loggedInStore.subscribe(state => {
+  const justAuthed = state.isLoggedIn && !wasLoggedIn;
+  wasLoggedIn = state.isLoggedIn;
+  if (!justAuthed || !pendingIntent) return;
+
+  const run = pendingIntent;
+  pendingIntent = null;
+  setTimeout(run, 0);
+});

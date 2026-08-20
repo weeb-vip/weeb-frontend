@@ -16,6 +16,7 @@
 
   let registerState = false;
   let isRegisterState = registerState;
+  let reason: string | null = null;
   let formData = {
     username: "",
     password: "",
@@ -38,6 +39,7 @@
     const unsubscribe = loginModalStore.subscribe(state => {
       registerState = state.register;
       isRegisterState = state.register;
+      reason = state.reason ?? null;
     });
     return unsubscribe;
   });
@@ -190,8 +192,10 @@
         <circle cx="11" cy="11" r="1.2" fill="white" opacity="0.7"/>
       </svg>
     </div>
-    <h2 class="modal-title">{!isRegisterState ? 'Welcome back' : 'Create account'}</h2>
-    <p class="modal-subtitle">{!isRegisterState ? 'Sign in to your account' : 'Start tracking your anime'}</p>
+    <h2 class="modal-title">{reason ? (!isRegisterState ? 'Sign in to keep track' : 'Create your account') : (!isRegisterState ? 'Welcome back' : 'Create account')}</h2>
+    <!-- When the visitor was gated mid-action, say which action. The generic
+         subtitle only applies when they opened this deliberately. -->
+    <p class="modal-subtitle">{reason ?? (!isRegisterState ? 'Sign in to your account' : 'Start tracking your anime')}</p>
   </div>
 
   <!-- Alerts -->
