@@ -33,6 +33,7 @@
       alt={title}
       className="poster-img"
       fallbackSrc="/assets/not found.jpg"
+      placeholderTitle={title}
       cdnWidth={360}
     />
     {#if score}
@@ -64,7 +65,7 @@
         </svg>
       </span>
     {/if}
-    <div class="hover-overlay">
+    <div class="hover-overlay" aria-hidden="true">
       <div class="hover-content">
         {#if description}
           <p class="hover-desc">{description.replace(/<[^>]*>/g, '').slice(0, 120)}{description.length > 120 ? '...' : ''}</p>
@@ -115,7 +116,7 @@
   @media (hover: hover) and (pointer: fine) {
     .poster-card:hover .poster {
       transform: translateY(-4px);
-      box-shadow: 0 12px 32px oklch(0% 0 0 / 0.4);
+      box-shadow: var(--weeb-shadow-card);
     }
   }
   .poster :global(.poster-img) {
@@ -134,7 +135,7 @@
     left: 8px;
     padding: 2px 7px;
     border-radius: 4px;
-    background: oklch(0% 0 0 / 0.7);
+    background: var(--weeb-scrim);
     backdrop-filter: blur(8px);
     font-size: 12px;
     font-weight: 700;
@@ -167,7 +168,7 @@
     padding: 4px 0 8px;
     background: var(--weeb-accent);
     color: white;
-    font-size: 10px;
+    font-size: 12px;
     opacity: 0.9;
     transition: opacity 0.2s;
     clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
@@ -185,7 +186,7 @@
     background: var(--weeb-red);
   }
   .on-list-tab.on-hold {
-    background: oklch(55% 0.01 270);
+    background: var(--weeb-fg-muted);
   }
   .hover-overlay {
     position: absolute;
@@ -217,9 +218,9 @@
     width: 100%;
   }
   .hover-desc {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
-    color: oklch(85% 0.005 265);
+    color: var(--weeb-fg);
     display: -webkit-box;
     -webkit-line-clamp: 4;
     line-clamp: 4;
@@ -230,8 +231,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 11px;
-    color: oklch(70% 0.01 270);
+    font-size: 12px;
+    color: var(--weeb-fg-secondary);
   }
   .hover-meta-item {
     white-space: nowrap;
@@ -248,11 +249,11 @@
   .hover-genre {
     padding: 2px 7px;
     border-radius: var(--weeb-radius-full, 999px);
-    background: oklch(100% 0 0 / 0.12);
-    border: 1px solid oklch(100% 0 0 / 0.2);
-    font-size: 10px;
+    background: var(--weeb-border);
+    border: 1px solid var(--weeb-border);
+    font-size: 12px;
     font-weight: 500;
-    color: oklch(90% 0.005 265);
+    color: var(--weeb-fg);
     white-space: nowrap;
   }
   .poster-title {
@@ -276,15 +277,15 @@
   /* --- Mobile --- */
   @media (max-width: 480px) {
     .poster-title {
-      font-size: 11px;
+      font-size: 12px;
       margin-top: 6px;
       min-height: calc(2 * 1.3em);
     }
     .poster-sub {
-      font-size: 10px;
+      font-size: 12px;
     }
     .score-badge {
-      font-size: 10px;
+      font-size: 12px;
       padding: 1px 5px;
       top: 5px;
       left: 5px;

@@ -5,6 +5,7 @@
   import HeroBanner from './HeroBanner.svelte';
   import HeroBannerSkeleton from './HeroBannerSkeleton.svelte';
   import HeroAiringRail from './HeroAiringRail.svelte';
+  import { railEdges } from '../actions/railEdges';
   import PosterCard from './PosterCard.svelte';
   import SectionHeader from './SectionHeader.svelte';
   import GenrePills from './GenrePills.svelte';
@@ -15,7 +16,7 @@
     fetchSeasonalAnime, fetchCurrentlyAiringWithDates
   } from '../../services/queries';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
-  import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
+  import { findNextEpisode, parseDurationToMinutes, resolveEpisodeTiming } from '../../services/airTimeUtils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import { animeNotificationService } from '../../services/animeNotifications';
   import { AuthStorage } from '../../utils/auth-storage';
@@ -73,7 +74,28 @@
   const seasonOptions = getSeasonOptions(currentSeason);
 
   // Variables for tracking state
+  // "0 ep · 2026" was shipping on any show whose episode count had not landed
+  // yet, which is a fact the card does not know stated as one it does. Drop the
+  // part that has no value rather than printing a zero.
+  function posterSub(anime: any): string {
+    const episodes = Math.max(anime.episodeCount || 0, anime.episodes?.length || 0);
+    const origin = anime.studios?.[0] || getYearUTC(anime.startDate);
+    const parts: string[] = [];
+    if (episodes > 0) parts.push(`${episodes} ep`);
+    if (origin) parts.push(String(origin));
+    return parts.join(' \u00b7 ');
+  }
+
   let hoveredAnime: any = null;
+
+  // One clock for the whole schedule. The hero and the rail both derive their
+  // countdown from this tick, so they advance together instead of drifting into
+  // the "18H" / "Airing in 19h" disagreement they used to show side by side.
+  let now = new Date();
+  onMount(() => {
+    const id = setInterval(() => (now = new Date()), 30_000);
+    return () => clearInterval(id);
+  });
   let lastHoveredAnime: any = null;
 
   // Create all data queries that refresh on login state changes and cache invalidation
@@ -240,10 +262,10 @@
   });
 
   // Process currently airing data
-  function processCurrentlyAiring(data: any) {
+  function processCurrentlyAiring(data: any, current: Date) {
     if (!data?.currentlyAiring) return [];
 
-    const now = new Date();
+    const now = current;
     const currentlyAiringShows = data.currentlyAiring || [];
     const processedAnime: any[] = [];
 
@@ -255,17 +277,17 @@
       // Skip anime where nextEpisode has null airdate or airTime
       if (!nextEpisode.airDate && !nextEpisode.airTime) return;
 
-      // Use airTime from backend if available, otherwise fall back to airDate
-      const nextEpisodeAirTime = nextEpisode.airTime ? new Date(nextEpisode.airTime) : new Date(nextEpisode.airDate);
-
-      // Generate air time display info (using local timezone formatting)
-      const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast) || {
-          show: true,
-          text: nextEpisodeAirTime <= now
-            ? "Recently aired"
-            : `Airing ${format(nextEpisodeAirTime, "EEE MMM do")} at ${format(nextEpisodeAirTime, "h:mm a")}`,
-          variant: nextEpisodeAirTime <= now ? 'aired' as const : 'scheduled' as const
-        };
+      // Resolved once, here, and handed to every consumer. This used to be two
+      // derivations: nextEpisodeDate came from the exact airTime while
+      // airTimeDisplay came from (airDate, broadcast), so the rail and the hero
+      // printed different days for the same episode.
+      const timing = resolveEpisodeTiming(
+        nextEpisode,
+        anime.broadcast,
+        parseDurationToMinutes(anime.duration),
+        now
+      );
+      if (!timing) return;
 
       const processedEntry = {
         id: `homepage-${anime.id}`,
@@ -290,11 +312,14 @@
         airingInfo: {
           ...anime,
           userAnime: anime.userAnime || null,
-          airTimeDisplay: airTimeInfo,
-          nextEpisodeDate: nextEpisodeAirTime,
+          timing,
+          // Kept as a view onto `timing` so existing consumers of the old shape
+          // read the same resolved value rather than a second opinion.
+          airTimeDisplay: { show: true, text: timing.label, variant: timing.variant },
+          nextEpisodeDate: timing.airDateTime,
           nextEpisode: {
             ...nextEpisode,
-            airDate: nextEpisodeAirTime
+            airDate: timing.airDateTime
           },
           isInWatchlist: false
         }
@@ -321,7 +346,7 @@
   }
 
   // Process currently airing data from queries (with SSR fallback)
-  $: sortedCurrentlyAiring = processCurrentlyAiring($currentlyAiringQuery.data || currentlyAiringData);
+  $: sortedCurrentlyAiring = processCurrentlyAiring($currentlyAiringQuery.data || currentlyAiringData, now);
 
   // Get current seasonal data - use query data when available, SSR data as fallback
   $: currentSeasonalData = selectedSeason === currentSeason
@@ -391,6 +416,7 @@
         {#key bannerAnime.id}
           <HeroBanner
             anime={bannerAnime}
+            timing={bannerAnime.timing ?? null}
           />
         {/key}
       {:else}
@@ -424,8 +450,9 @@
     {(() => { if (typeof window !== 'undefined' && _dbgTopRated?.length) console.log('[WATCHLIST]', 'topRated[0].userAnime:', _dbgTopRated[0]?.userAnime, 'status:', _dbgTopRated[0]?.userAnime?.status, 'all userAnimes:', _dbgTopRated.map(a => ({ title: a.titleEn?.slice(0,20), ua: a.userAnime?.status || 'NONE' }))); return ''; })()}
     <section class="section">
       <SectionHeader title="Top Rated" href="/search" linkText="See all →" />
-      <div class="poster-row">
-        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 14) as anime}
+      <div class="rail-wrap" use:railEdges>
+        <div class="poster-row" data-rail>
+        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 20) as anime}
           <PosterCard
             id={anime.id}
             slug={anime.slug}
@@ -436,10 +463,11 @@
             genres={anime.tags || []}
             description={anime.description || ''}
             episodeCount={anime.episodeCount}
-            sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            sub={posterSub(anime)}
             onList={anime.userAnime?.status || null}
           />
         {/each}
+        </div>
       </div>
     </section>
   {/if}
@@ -448,8 +476,9 @@
   {#if ($homeDataQuery.data || homeData)?.newestAnime}
     <section class="section">
       <SectionHeader title="Newest Anime" href="/search" linkText="See all →" />
-      <div class="poster-row">
-        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, 14) as anime}
+      <div class="rail-wrap" use:railEdges>
+        <div class="poster-row" data-rail>
+        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, 20) as anime}
           <PosterCard
             id={anime.id}
             slug={anime.slug}
@@ -460,17 +489,18 @@
             genres={anime.tags || []}
             description={anime.description || ''}
             episodeCount={anime.episodeCount}
-            sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            sub={posterSub(anime)}
             onList={anime.userAnime?.status || null}
           />
         {/each}
+        </div>
       </div>
     </section>
   {/if}
 
-  <!-- Browse by Genre -->
+  <!-- Browse by Tag -->
   <section class="section">
-    <SectionHeader title="Browse by Genre" />
+    <SectionHeader title="Browse by Tag" />
     <GenrePills />
   </section>
 
@@ -489,9 +519,10 @@
         {/each}
       </div>
     </div>
-    <div class="poster-row">
+    <div class="rail-wrap" use:railEdges>
+      <div class="poster-row" data-rail>
       {#if $seasonalAnimeQuery.isLoading && selectedSeason !== currentSeason}
-        {#each Array(14) as _}
+        {#each Array(20) as _}
           <div class="poster-card-skeleton">
             <div class="poster-skeleton"></div>
             <div class="title-skeleton"></div>
@@ -506,7 +537,7 @@
             return isNaN(parsed) ? 0 : parsed;
           };
           return getRating(b.rating) - getRating(a.rating);
-        }).slice(0, 14) as anime (anime.id)}
+        }).slice(0, 20) as anime (anime.id)}
           <PosterCard
             id={anime.id}
             slug={anime.slug}
@@ -517,11 +548,12 @@
             genres={anime.tags || []}
             description={anime.description || ''}
             episodeCount={anime.episodeCount}
-            sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            sub={posterSub(anime)}
             onList={anime.userAnime?.status || null}
           />
         {/each}
       {/if}
+      </div>
     </div>
   </section>
 </div>
@@ -555,35 +587,91 @@
     border-top: 1px solid var(--weeb-border, oklch(28% 0.015 275));
   }
 
-  /* --- POSTER GRID --- */
+  /* --- POSTER SHELF ---
+     A shelf, not a grid. These sections are ordered (top rated, newest, ranked
+     season) so the first cards carry the weight and the tail is optional -- which
+     is what a horizontal run says and what a wrapped grid denies. The grid also
+     cost five to seven screens of vertical space per section on a phone; a shelf
+     costs one, whatever it holds. DESIGN.md specifies rails at every breakpoint;
+     this is that. */
+  .rail-wrap {
+    position: relative;
+  }
   .poster-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    display: flex;
+    align-items: flex-start;
     gap: 16px;
-    align-items: start; /* Prevent vertical stretching of grid items */
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    /* Snapped cards land clear of the leading edge rather than flush against it. */
+    scroll-padding-left: 2px;
+    /* Room for the scrollbar so the bottom of a card is never clipped by it. */
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--weeb-border) transparent;
+  }
+  /* The scrollbar is part of the design, not a browser leftover. */
+  .poster-row::-webkit-scrollbar {
+    height: 6px;
+  }
+  .poster-row::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .poster-row::-webkit-scrollbar-thumb {
+    background: var(--weeb-border);
+    border-radius: var(--weeb-radius-full, 9999px);
+  }
+  .poster-row:hover::-webkit-scrollbar-thumb {
+    background: var(--weeb-surface-hover);
   }
   .poster-row :global(> *) {
-    width: 100%;
-    max-width: 220px;
-    justify-self: center;
+    /* Grow, don't just sit. A fixed basis left ten cards huddled against the
+       left edge of a wide shelf with a band of dead space beside them, which
+       reads as a broken grid rather than a shelf. Growth only has an effect when
+       there is free space, so the same rule fills the row on a wide screen and
+       overflows into a scroll on a narrow one -- one behaviour, not a
+       breakpoint's worth of guesses. The cap keeps a wide screen from answering
+       "fill the row" by inflating the posters instead of showing more of them --
+       a shelf's length is free, since it costs horizontal scroll rather than
+       page height, so twenty cards at a readable size beat ten oversized ones.
+       Twenty is what it takes to run past the right edge of a 4K monitor at this
+       card width; past that the cap lets them grow a little rather than strand a
+       gap. Cards below the fold are lazy-loaded, so the extra length costs
+       markup, not bandwidth. */
+    flex: 1 0 clamp(140px, 20vw, 180px);
+    max-width: 200px;
+    scroll-snap-align: start;
   }
 
-  /* On wider screens, allow cards to grow larger and fill space */
-  @media (min-width: 1400px) {
-    .poster-row {
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    }
-    .poster-row :global(> *) {
-      max-width: 240px;
-    }
+  /* Edge fades, painted only when there is actually more shelf in that
+     direction (see railEdges). A fade that is always on stops meaning anything. */
+  .rail-wrap::before,
+  .rail-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 6px;
+    width: 48px;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1;
+  }
+  .rail-wrap::before {
+    left: 0;
+    background: linear-gradient(to right, var(--weeb-bg), transparent);
+    opacity: var(--rail-fade-start, 0);
+  }
+  .rail-wrap::after {
+    right: 0;
+    background: linear-gradient(to left, var(--weeb-bg), transparent);
+    opacity: var(--rail-fade-end, 0);
   }
 
-  @media (min-width: 1800px) {
-    .poster-row {
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    }
-    .poster-row :global(> *) {
-      max-width: 260px;
+  @media (prefers-reduced-motion: reduce) {
+    .rail-wrap::before,
+    .rail-wrap::after {
+      transition: none;
     }
   }
 
@@ -602,8 +690,9 @@
     gap: 6px;
   }
   .season-tab {
+    min-height: 44px;
     padding: 6px 14px;
-    border-radius: 6px;
+    border-radius: var(--weeb-radius, 8px);
     font-size: 13px;
     font-weight: 500;
     color: var(--weeb-fg-secondary);
@@ -657,11 +746,14 @@
   /* --- RESPONSIVE --- */
   @media (max-width: 768px) {
     .section {
-      padding: 28px 16px;
+      padding: var(--weeb-section-py, 32px) var(--weeb-section-px, 24px);
     }
     .poster-row {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
       gap: 12px;
+    }
+    .rail-wrap::before,
+    .rail-wrap::after {
+      width: 32px;
     }
     .season-tabs {
       flex-wrap: wrap;
@@ -669,10 +761,9 @@
   }
   @media (max-width: 400px) {
     .section {
-      padding: 24px 12px;
+      padding: var(--weeb-section-py, 24px) var(--weeb-section-px, 16px);
     }
     .poster-row {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
       gap: 10px;
     }
   }

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { format } from 'date-fns';
   import SafeImage from './SafeImage.svelte';
   import { GetImageFromAnime, animeHref } from '../../services/utils';
   import { analytics } from '../../utils/analytics';
@@ -20,15 +19,18 @@
   const LIMIT = 8;
   $: shown = entries.slice(0, LIMIT);
 
+  // Every field here comes off the one EpisodeTiming resolved in
+  // HomepageSSR.processCurrentlyAiring. The rail no longer formats a time or
+  // reads a variant of its own: when it did, it printed the exact airTime while
+  // the hero printed the reconstructed broadcast slot, and the two disagreed.
   function meta(entry: any) {
-    const info = entry.airingInfo;
-    const current = info?.nextEpisode?.episodeNumber ?? 0;
-    const total = entry.anime?.episodeCount ?? 0;
+    const timing = entry.airingInfo?.timing;
+    const current = entry.airingInfo?.nextEpisode?.episodeNumber ?? 0;
     return {
       episode: current ? `EP ${current}` : '',
-      localTime: info?.nextEpisodeDate ? format(info.nextEpisodeDate, 'EEE h:mm a') : '',
-      countdown: info?.airTimeDisplay?.text ?? '',
-      isLive: info?.airTimeDisplay?.variant === 'airing'
+      localTime: timing?.localTime ?? '',
+      countdown: timing?.label ?? '',
+      isLive: timing?.isLive ?? false
     };
   }
 </script>
@@ -114,6 +116,13 @@
     color: var(--weeb-fg-secondary);
   }
   .rail-all {
+    position: relative;
+  }
+  /* WCAG 2.5.5: 92x18 as drawn, 44 tall as a target. */
+  .rail-all::after {
+    content: '';
+    position: absolute;
+    inset: -13px -8px;
     font-size: 12px;
     font-weight: 600;
     color: var(--weeb-fg-secondary);
@@ -122,7 +131,7 @@
   }
   .rail-all:hover { color: var(--weeb-fg); }
   .rail-all:focus-visible {
-    outline: 2px solid var(--weeb-accent);
+    outline: 2px solid var(--weeb-accent-text);
     outline-offset: 2px;
     border-radius: var(--weeb-radius-sm, 4px);
   }
@@ -148,7 +157,7 @@
     background: var(--weeb-surface-hover);
   }
   .rail-item:focus-visible {
-    outline: 2px solid var(--weeb-accent);
+    outline: 2px solid var(--weeb-accent-text);
     outline-offset: 2px;
   }
 
