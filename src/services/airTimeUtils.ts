@@ -345,3 +345,136 @@ export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | 
     variant: 'scheduled' as const
   };
 }
+
+/**
+ * One episode's timing, resolved exactly once.
+ *
+ * Every other helper above answers from (airDate, broadcast): it rebuilds the
+ * datetime from airDate's calendar day plus the weekly broadcast slot. That is a
+ * reconstruction, and it disagrees with `episode.airTime` -- the exact timestamp
+ * the backend already returned -- whenever the slot and the real broadcast land
+ * on different days in the viewer's timezone. The homepage rendered both at
+ * once: the hero read the reconstruction ("Airs Wed 6:40 PM") while the rail
+ * beside it read the exact value ("Thu 6:40 PM") for the same episode, and the
+ * badge countdown came from a fourth source that rounded the other way (18H vs
+ * "Airing in 19h").
+ *
+ * This resolves the timing once, prefers the exact timestamp, and derives
+ * countdown and live state from that single Date instead of re-entering the
+ * (airDate, broadcast) family. Both surfaces consume the result, so they cannot
+ * disagree. Pass `now` to make the result deterministic; callers that tick a
+ * clock get a live countdown for free.
+ */
+export interface EpisodeTiming {
+  /** The single source of truth for when this episode airs. */
+  airDateTime: Date;
+  /** Broadcasting right now. */
+  isLive: boolean;
+  /** Finished, within the last 7 days. */
+  hasAired: boolean;
+  /** Bare value: "3h", "45m", "12m left", or "" when further out than a day. */
+  countdown: string;
+  /** Sentence form: "Airing in 3h", "Airing now", "Recently aired". */
+  label: string;
+  /** "Thu 6:40 PM" in the viewer's timezone. */
+  localTime: string;
+  variant: 'airing' | 'countdown' | 'aired' | 'scheduled';
+  /** The viewer's zone abbreviation ("PDT"), for the timezone marker. */
+  localZone: string;
+  /** The raw broadcast slot ("Wednesdays at 01:29 (JST)") when the API gave one. */
+  broadcastSlot: string | null;
+  /** False when airDateTime had to be reconstructed from the weekly slot. */
+  exact: boolean;
+}
+
+export function resolveEpisodeTiming(
+  episode?: { airDate?: string | null; airTime?: string | null } | null,
+  broadcast?: string | null,
+  durationMinutes?: number | null,
+  now?: Date | null
+): EpisodeTiming | null {
+  if (!episode) return null;
+
+  // Prefer the backend's exact timestamp. The weekly slot is a fallback, and a
+  // bare date is the last resort; only the first is authoritative.
+  const exactSource = episode.airTime ? new Date(episode.airTime) : null;
+  const isExact = Boolean(exactSource && !Number.isNaN(exactSource.getTime()));
+
+  const airDateTime = isExact
+    ? (exactSource as Date)
+    : (parseAirTime(episode.airDate, broadcast)
+        ?? (episode.airDate ? new Date(episode.airDate) : null));
+
+  if (!airDateTime || Number.isNaN(airDateTime.getTime())) return null;
+
+  const current = now ?? getCurrentTime();
+  const startMs = airDateTime.getTime();
+  const nowMs = current.getTime();
+  const durationMs = (durationMinutes || 24) * 60 * 1000;
+  const endMs = startMs + durationMs;
+
+  const isLive = nowMs >= startMs && nowMs <= endMs;
+  const hasAired = nowMs > endMs && (nowMs - endMs) <= 7 * 24 * 60 * 60 * 1000;
+
+  const localTime = format(airDateTime, 'EEE h:mm a');
+  const localZone = resolveZoneAbbreviation(airDateTime);
+  const broadcastSlot = broadcast ?? null;
+
+  let countdown = '';
+  let label = '';
+  let variant: EpisodeTiming['variant'];
+
+  if (isLive) {
+    const remainingMinutes = Math.floor((endMs - nowMs) / (1000 * 60));
+    countdown = remainingMinutes < 60 ? `${Math.max(remainingMinutes, 0)}m left` : 'AIRING NOW';
+    label = countdown === 'AIRING NOW' ? 'Airing now' : `Airing (${countdown})`;
+    variant = 'airing';
+  } else if (hasAired) {
+    countdown = '';
+    label = 'Recently aired';
+    variant = 'aired';
+  } else {
+    const diffMs = startMs - nowMs;
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    if (diffMs > 0 && diffMs <= DAY_MS) {
+      // One rounding rule for both surfaces. Which way it rounds matters less
+      // than that a single value reaches every consumer.
+      const diffMinutes = Math.ceil(diffMs / (1000 * 60));
+      countdown = diffMinutes < 60 ? `${diffMinutes}m` : `${Math.floor(diffMinutes / 60)}h`;
+      label = `Airing in ${countdown}`;
+      variant = 'countdown';
+    } else {
+      countdown = '';
+      label = `Airing ${localTime}`;
+      variant = 'scheduled';
+    }
+  }
+
+  return {
+    airDateTime,
+    isLive,
+    hasAired,
+    countdown,
+    label,
+    localTime,
+    variant,
+    localZone,
+    broadcastSlot,
+    exact: isExact
+  };
+}
+
+/**
+ * The viewer's zone abbreviation for a given instant. A timezone-sensitive
+ * product that prints a bare "6:40 PM" is asking the reader to guess whose
+ * clock it is; DST means the answer changes across the season, so it is read
+ * off the actual date rather than cached.
+ */
+function resolveZoneAbbreviation(at: Date): string {
+  try {
+    const parts = new Intl.DateTimeFormat(undefined, { timeZoneName: 'short' }).formatToParts(at);
+    return parts.find(p => p.type === 'timeZoneName')?.value ?? '';
+  } catch {
+    return '';
+  }
+}
