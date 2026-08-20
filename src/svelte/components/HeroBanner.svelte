@@ -96,14 +96,21 @@
     // local and staging read production artwork, which hid the fact that staging
     // had no banners of its own.
     if (anime.id) {
+      // TheTVDB's 680x1000 series poster, synced by thetvdb-enrichment.
+      const tvdbPoster = getSafeImageUrl(anime.id, 'posters');
+      // TheTVDB's wide background artwork.
       const banner = getSafeImageUrl(anime.id, 'banners');
-      const poster = getSafeImageUrl(anime.id);
-      // Whichever leads, the other stays as the fallback: a show with no banner
-      // still gets art, and so does one with no poster.
+      // The scraper's MyAnimeList image at the bucket root -- 225px wide, so it
+      // is the last resort at hero scale rather than a peer of the other two.
+      const malImage = getSafeImageUrl(anime.id);
+
       if (phone) {
-        sources.push(poster, banner);
+        // Tall box: prefer tall art, and prefer the high-resolution one.
+        sources.push(tvdbPoster, malImage, banner);
       } else {
-        sources.push(banner, poster);
+        // Wide box: the banner is composed for this shape. A poster cropped to
+        // a wide frame still beats a 225px image blown up to fill it.
+        sources.push(banner, tvdbPoster, malImage);
       }
     }
 

@@ -59,7 +59,6 @@
   let isError = false;
   let showPlaceholder = false;
   let chosenSrc: string | null = null;
-  let useFallback = false;
   let destroyed = false;
   let runId = 0;
   let domImageLoaded = false; // Track when the DOM <img> has loaded
@@ -154,27 +153,35 @@
     const previousSrc = chosenSrc;
     const wasLoaded = domImageLoaded;
 
-    // Start loading all sources in parallel
-    const loadPromises = orderedSources.map((url, index) =>
-      withTimeout(loadOne(url), perTryTimeoutMs)
-        .then(result => ({ ...result, index, success: true }))
-        .catch(err => ({ url, index, success: false, error: err }))
-    );
+    // Try candidates in priority order and stop at the first that loads.
+    //
+    // This used to start every candidate at once and discard the losers. That
+    // costs one wasted request per fallback on every image the app renders, and
+    // the cost scales with the chain: a poster shelf of 54 cards with a two-step
+    // fallback fetches 108 images to show 54. The race only ever bought latency
+    // in the case where the preferred source fails, which is the rare one --
+    // and perTryTimeoutMs already bounds how long that case can take.
+    let best: { url: string; index: number } | null = null;
+    for (let index = 0; index < orderedSources.length; index++) {
+      try {
+        await withTimeout(loadOne(orderedSources[index]), perTryTimeoutMs);
+        best = { url: orderedSources[index], index };
+        break;
+      } catch {
+        // try the next candidate
+      }
+      if (destroyed || id !== runId) {
+        isLoadingInProgress = false;
+        return;
+      }
+    }
 
-    // Wait for all to complete
-    const results = await Promise.all(loadPromises);
     if (destroyed || id !== runId) {
       isLoadingInProgress = false;
       return;
     }
 
-    // Find the best result respecting priority order
-    const successfulResults = results.filter(r => r.success);
-
-    if (successfulResults.length > 0) {
-      // Sort by index (priority) and pick the first successful one
-      successfulResults.sort((a, b) => a.index - b.index);
-      const best = successfulResults[0];
+    if (best) {
 
       debug.success(`Image loaded successfully: ${best.url} (priority ${best.index + 1})`);
       showPlaceholder = false;
@@ -199,19 +206,18 @@
         return;
       }
 
-      // Mark as fallback if we had to use the last source AND there were multiple sources
-      const hasMultipleSources = orderedSources.length > 1;
+      // Landing on a later candidate is not degradation, so nothing here is
+      // marked as an error state. This used to blur whenever the LAST of several
+      // sources won -- reasonable when the chain was [real image,
+      // not-found.jpg], and wrong the moment callers pass genuine alternatives.
+      // A poster shelf asking for [tvdb poster, scraper image] hits the second
+      // for every show TheTVDB does not carry, and blurred every one of them.
+      isError = false;
       const isLastSource = best.index === orderedSources.length - 1;
-
-      if (isLastSource && hasMultipleSources) {
-        useFallback = true;
-        isError = true;
-        dispatch('chosen', { src: chosenSrc, reason: 'last-source' });
-      } else {
-        useFallback = false;
-        isError = false;
-        dispatch('chosen', { src: chosenSrc, reason: 'load' });
-      }
+      dispatch('chosen', {
+        src: chosenSrc,
+        reason: isLastSource && orderedSources.length > 1 ? 'last-source' : 'load'
+      });
       isLoadingInProgress = false;
       return;
     }
@@ -225,7 +231,6 @@
         chosenSrc = null;
         showPlaceholder = true;
         domImageLoaded = true;
-        useFallback = false;
         isError = true;
         isLoaded = true;
         dispatch('chosen', { src: null, reason: 'placeholder' });
@@ -234,7 +239,6 @@
           chosenSrc = fallbackSrc ?? null;
           domImageLoaded = false; // Need to load fallback image
         }
-        useFallback = false; // Don't blur the fallback image
         isError = true;
         isLoaded = true;
         dispatch('chosen', { src: chosenSrc, reason: 'all-failed' });
@@ -260,7 +264,6 @@
     showPlaceholder = false;
     destroyed = false;
     chosenSrc = null; // Force fresh image selection
-    useFallback = false;
     runId = 0; // Reset run ID
 
     // Clean up any previous image elements
@@ -371,7 +374,6 @@
     }
     chosenSrc = fallbackSrc;
     domImageLoaded = false; // Reset to load fallback
-    useFallback = false; // Don't blur the fallback image
     isError = true;
     isLoaded = true;
     dispatch('error', { src: chosenSrc });
@@ -404,7 +406,7 @@
     <img
       src={chosenSrc}
       {alt}
-      class="w-full h-full object-cover {useFallback ? 'blur-md scale-110' : ''} {!domImageLoaded ? 'opacity-0' : ''}"
+      class="w-full h-full object-cover {!domImageLoaded ? 'opacity-0' : ''}"
       {width}
       {height}
       loading={actualLoading}

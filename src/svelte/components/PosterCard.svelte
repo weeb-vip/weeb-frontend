@@ -1,5 +1,6 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
+  import { getSafeImageUrl } from '../utils/image';
   import { analytics } from '../../utils/analytics';
   import { animeHref } from '../../services/utils';
   import { normalizeStatus, type AnimeStatus } from '../utils/status';
@@ -20,6 +21,15 @@
   export let onList: string | null = null;
 
   $: normalizedStatus = normalizeStatus(onList);
+
+  // Prefer TheTVDB's 680x1000 series poster over the scraper's MyAnimeList
+  // image, which MAL serves at 225px wide -- soft on any 2x display at card
+  // size, and this component renders 54 times on the homepage alone. Falls back
+  // per-anime, so the shows TheTVDB does not carry are unaffected.
+  //
+  // Costs no extra request: SafeImage resolves candidates in order and stops at
+  // the first that loads.
+  $: posterSources = image ? [getSafeImageUrl(image, 'posters'), getSafeImageUrl(image)] : [];
 </script>
 
 <a
@@ -29,7 +39,7 @@
 >
   <div class="poster">
     <SafeImage
-      src={image}
+      sources={posterSources}
       alt={title}
       className="poster-img"
       fallbackSrc="/assets/not found.jpg"
