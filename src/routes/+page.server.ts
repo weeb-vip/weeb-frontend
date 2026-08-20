@@ -45,7 +45,10 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
   let bannerImageUrl: string | null = null;
   const firstAnime = currentlyAiringData?.getAiringAnimeAll?.[0];
   if (firstAnime?.id) {
-    bannerImageUrl = `https://cdn.weeb.vip/weeb/banners/${encodeURIComponent(firstAnime.id)}`;
+    // From locals.config, not a hardcoded host: the preload hint has to point at
+    // the same bucket SafeImage will request, or it warms the wrong origin.
+    const cdnBase = (config?.cdn_url || 'https://cdn.weeb.vip/weeb').replace(/\/+$/, '');
+    bannerImageUrl = `${cdnBase}/banners/${encodeURIComponent(firstAnime.id)}`;
   }
 
   return {

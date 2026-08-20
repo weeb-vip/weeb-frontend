@@ -12,6 +12,7 @@
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { fetchDetails } from '../../services/queries';
   import { GetImageFromAnime, getYearUTC, formatDateUTC, animeHref } from '../../services/utils';
+  import { getSafeImageUrl } from '../utils/image';
   import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import debug from '../../utils/debug';
   import { animeNotificationStore } from '../stores/animeNotifications';
@@ -256,13 +257,15 @@
     const sources: string[] = [];
 
     // Both are keyed by anime id: banners/<id> for the tvdb artwork synced by
-    // thetvdb-enrichment, <id> at the root for the poster.
+    // thetvdb-enrichment, <id> at the root for the poster. Built through
+    // getSafeImageUrl so they follow config.cdn_url. Hardcoding the host meant
+    // local and staging read production artwork, which hid the fact that staging
+    // had no banners of its own.
     if (anime.id) {
-      const id = encodeURIComponent(anime.id);
       // Priority 1: CDN banner
-      sources.push(`https://cdn.weeb.vip/weeb/banners/${id}`);
+      sources.push(getSafeImageUrl(anime.id, 'banners'));
       // Priority 2: CDN poster as fallback
-      sources.push(`https://cdn.weeb.vip/weeb/${id}`);
+      sources.push(getSafeImageUrl(anime.id));
     }
 
     return sources;
@@ -929,11 +932,68 @@
     .hero-stage {
       flex-direction: column;
       align-items: stretch;
-      gap: 12px;
-      padding: 0 12px calc(24px + var(--hero-fade)) 12px;
+      gap: 8px;
+      padding: 0 12px calc(16px + var(--hero-fade)) 12px;
     }
     .hero-panel { max-width: none; }
     .hero-aside { width: auto; }
+
+    /* Phones: the two stacked panels were taking 608px of a 796px viewport and
+       left barely a third of the banner showing. Everything below tightens the
+       stage so the artwork keeps the majority of the screen. */
+    .hero-panel,
+    .hero-aside { padding: 14px; }
+    .hero-panel .hero-eyebrow { margin-bottom: 4px; }
+    .hero-panel .hero-title { margin-bottom: 2px; }
+    .hero-panel .hero-title-jp { margin-bottom: 8px; }
+    .hero-panel .hero-tags { margin-bottom: 10px; }
+    .hero-panel .hero-actions { margin-top: 10px; }
+
+    /* The schedule collapses from a four-row block to one line. It is the same
+       information -- state, episode, air time, countdown -- read across instead
+       of down. */
+    .hero-next {
+      flex-direction: row;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .hero-next-countdown { font-size: 15px; }
+    .hero-next-label {
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Ranking rides on the same line rather than owning a row of its own. */
+    .hero-rank {
+      padding-bottom: 0;
+      margin-bottom: 0;
+      border-bottom: 0;
+    }
+    .hero-rank-num { font-size: 15px; }
+
+    /* A show that has finished airing has no next-episode block, and details are
+       hidden here, so the data panel collapses to a single ranking line -- a
+       glass container wrapped around 23px of text. Drop the panel chrome in that
+       case and let the ranking sit as a caption under the identity panel. */
+    .hero-aside:not(:has(.hero-next)) {
+      background: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: 0;
+      box-shadow: none;
+      padding: 0 4px;
+    }
+
+    /* Watch-on marks were 38px squares; they are recognisable well below that
+       and were the tallest thing in the panel after the title. */
+    .hero-panel :global(.platform-link),
+    .hero-panel :global(.platform-icon) {
+      width: 28px;
+      height: 28px;
+    }
     /* Stacked, the two panels ate 695px of an 844px screen and left almost no
        artwork. The details list is the bulk of it and is the most redundant part
        here: aired / rating / source / studio repeat in the Information section

@@ -6,6 +6,7 @@
   import SafeImage from './SafeImage.svelte';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { animeHref } from '../../services/utils';
+  import { getSafeImageUrl } from '../utils/image';
   import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
   import { animeNotificationStore } from '../stores/animeNotifications';
@@ -61,13 +62,15 @@
     const sources: string[] = [];
 
     // Both are keyed by anime id: banners/<id> for the tvdb artwork synced by
-    // thetvdb-enrichment, <id> at the root for the poster.
+    // thetvdb-enrichment, <id> at the root for the poster. Built through
+    // getSafeImageUrl so they follow config.cdn_url. Hardcoding the host meant
+    // local and staging read production artwork, which hid the fact that staging
+    // had no banners of its own.
     if (anime.id) {
-      const id = encodeURIComponent(anime.id);
       // Priority 1: CDN banner
-      sources.push(`https://cdn.weeb.vip/weeb/banners/${id}`);
+      sources.push(getSafeImageUrl(anime.id, 'banners'));
       // Priority 2: CDN poster as fallback
-      sources.push(`https://cdn.weeb.vip/weeb/${id}`);
+      sources.push(getSafeImageUrl(anime.id));
     }
 
     return sources;
