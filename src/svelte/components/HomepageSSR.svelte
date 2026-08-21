@@ -647,8 +647,8 @@
     min-height: 44px;
     padding: 6px 14px;
     border-radius: var(--weeb-radius, 8px);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--weeb-fg-secondary);
     background: none;
     border: none;

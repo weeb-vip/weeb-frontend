@@ -21,7 +21,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--weeb-fg-muted);
   }
   .footer-links {
@@ -45,7 +45,7 @@
     color: var(--weeb-fg);
   }
   .version {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--weeb-fg-muted);
     font-family: var(--weeb-font-mono);
   }

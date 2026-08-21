@@ -139,7 +139,10 @@
     height: 100%;
     object-fit: cover;
   }
+  /* Numeral step. A score is a measured value like the sub-line beneath it, and
+     rendering one in the sans and the other in mono broke the family. */
   .score-badge {
+    font-family: var(--weeb-font-mono);
     position: absolute;
     top: 8px;
     left: 8px;
@@ -268,8 +271,11 @@
   }
   .poster-title {
     margin-top: 8px;
-    font-size: 13px;
-    font-weight: 500;
+    /* Title step. Was 13/500 -- a size the ramp does not define -- and 12px on a
+       phone, identical to the metadata beneath it, so the card had no internal
+       hierarchy at the size most people read it. */
+    font-size: 15px;
+    font-weight: 600;
     line-height: 1.3;
     min-height: calc(2 * 1.3em);
     display: -webkit-box;
@@ -278,7 +284,11 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  /* Numeral step: "28 ep · 2023" is a measured value, and the Mono Numeral Rule
+     puts every count and date in the mono face. Set in the sans it read as a
+     second title rather than as metadata. */
   .poster-sub {
+    font-family: var(--weeb-font-mono);
     font-size: 12px;
     color: var(--weeb-fg-muted);
     margin-top: 2px;
@@ -287,7 +297,7 @@
   /* --- Mobile --- */
   @media (max-width: 480px) {
     .poster-title {
-      font-size: 12px;
+      font-size: 15px;
       margin-top: 6px;
       min-height: calc(2 * 1.3em);
     }

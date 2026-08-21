@@ -117,6 +117,11 @@
   }
   .rail-all {
     position: relative;
+    /* Label step. This declared no size, so it inherited the browser default
+       16px and rendered a third larger than the identical "See all" link on
+       every other shelf. */
+    font-size: 12px;
+    font-weight: 600;
   }
   /* WCAG 2.5.5: 92x18 as drawn, 44 tall as a target. */
   .rail-all::after {
@@ -185,7 +190,7 @@
     justify-content: center;
   }
   .rail-name {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     line-height: 1.3;
     color: var(--weeb-fg);

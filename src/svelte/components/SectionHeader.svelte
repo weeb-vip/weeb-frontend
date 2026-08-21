@@ -26,11 +26,11 @@
     margin: 0;
   }
   a {
-    font-size: 13px;
+    font-size: 12px;
     /* The accent as text is only 3.93:1 on this ground; accent-text is the
        lightness that clears AA without changing the accent used as a fill. */
     color: var(--weeb-accent-text);
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     position: relative;
   }
@@ -48,8 +48,11 @@
     .section-header {
       margin-bottom: 14px;
     }
+    /* Headline stays 20px on a phone. At 16 it sat only 4px above the card
+       metadata, which is what made the page read as one flat band of text
+       instead of a hierarchy. */
     h2 {
-      font-size: 16px;
+      font-size: 20px;
     }
     a {
       font-size: 12px;

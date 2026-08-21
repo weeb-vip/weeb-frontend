@@ -344,7 +344,9 @@ artwork itself takes on the system's corner language.
 ## Components
 
 ### Buttons
-- **Shape:** 8px radius (`--weeb-radius`), 7px × 18px padding, 13px/600 label,
+- **Shape:** 8px radius (`--weeb-radius`), 7px × 18px padding, 14px/600 label
+  (the Body step; the frontmatter previously pointed at Label while this line said
+  13px, and neither matched the other),
   inline-flex, no border on filled variants.
 - **Primary:** `--weeb-accent` ground, white label. Hover steps to
   `--weeb-accent-hover`; 0.15s transition on background, colour and border.

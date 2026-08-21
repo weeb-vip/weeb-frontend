@@ -26,8 +26,8 @@
     border-radius: 20px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--weeb-fg-secondary);
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s, background 0.15s;
