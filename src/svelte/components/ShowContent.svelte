@@ -1155,8 +1155,11 @@
   .quick-info__inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    /* Not space-between: at 2,526px that pinned the fact chips and the tracking
+       controls to opposite ends of the bar with 1,539px of nothing between them.
+       They are one cluster and now read as one. */
+    justify-content: flex-start;
+    gap: 24px;
     padding: 12px 20px;
     background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
@@ -1174,7 +1177,7 @@
     overflow-x: auto;
     -ms-overflow-style: none;
     scrollbar-width: none;
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
   }
   .quick-info__stats::-webkit-scrollbar { display: none; }
@@ -1316,7 +1319,7 @@
   =========================== */
   .tab-bar-inner {
     width: 100%;
-    padding: 0 48px;
+    padding: 0 var(--weeb-section-px, 48px);
     display: flex;
     align-items: center;
     gap: 0;
@@ -1327,7 +1330,6 @@
      widen the document — an overflowing tab bar scrolls the whole page sideways. */
   @media (max-width: 768px) {
     .tab-bar-inner {
-      padding: 0 16px;
       overflow-x: auto;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
@@ -1361,8 +1363,8 @@
   .content-single {
     display: flex;
     flex-direction: column;
-    gap: 40px;
-    padding: 40px 0 20px;
+    gap: var(--weeb-section-py, 40px);
+    padding: var(--weeb-section-py, 40px) 0 20px;
   }
 
   /* .content-section — each section is a clean block; no styles needed */
@@ -1412,14 +1414,40 @@
   /* ===========================
      INFO GRID
   =========================== */
+  /* An explicit column count, not auto-fill. This is seven fixed rows of
+     reference data whose length is known, so auto-fill's answer at 2,526px was
+     nine columns -- one 48px-tall strip with two empty bordered cells -- rather
+     than a shape anyone chose. It is bounded for the same reason: it stops
+     growing instead of stretching.
+
+     Dividers are per-cell borders on the leading edges, pulled back over the
+     preceding cell by a matching negative margin. Three properties fall out of
+     that and all three matter here: the borders never occupy layout space, the
+     first row's and first column's borders land outside the padding box and are
+     clipped by overflow:hidden so the container's own 1px frame is not doubled,
+     and a cell that does not exist draws nothing -- so a partial final row is
+     simply the container's background rather than a lighter block. Gap-drawn
+     hairlines get the first two but not the third, and there is no CSS that
+     spans a filler across an unknown remainder. */
   .info-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 0;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 1200px;
     background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
     border-radius: var(--weeb-radius-lg);
     overflow: hidden;
+  }
+  @media (min-width: 640px) {
+    .info-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    /* Seven items over four columns is two rows with one empty cell. */
+    .info-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 
   .info-item {
@@ -1428,13 +1456,14 @@
     align-items: baseline;
     gap: 16px;
     padding: 14px 20px;
-    border-bottom: 1px solid var(--weeb-border);
-    border-right: 1px solid var(--weeb-border);
+    background: var(--weeb-bg-elevated);
+    border-left: 1px solid var(--weeb-border);
+    border-top: 1px solid var(--weeb-border);
+    margin: -1px 0 0 -1px;
   }
 
   .info-item--full {
     grid-column: 1 / -1;
-    border-right: none;
   }
 
   .info-label {
@@ -1472,20 +1501,6 @@
   }
 
   /* ===========================
-     RESPONSIVE -- 1024px
-  =========================== */
-  @media (max-width: 1024px) {
-    .info-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .info-item {
-      border-right: none;
-    }
-
-  }
-
-  /* ===========================
      RESPONSIVE -- 768px
   =========================== */
   @media (max-width: 768px) {
@@ -1503,13 +1518,10 @@
     }
 
 
-    .main-content {
-      padding: 0 16px;
-    }
-
-    .quick-info {
-      padding: 0 16px;
-    }
+    /* No gutter override here. Both already read --weeb-section-px, and pinning
+       them to 16px between 481 and 768 put the content 8px left of the tab bar
+       and the hero panel -- three left edges on one page. The token steps at
+       1024 and 480 for every surface at once. */
     .quick-info__inner {
       flex-direction: column;
       align-items: stretch;
@@ -1521,10 +1533,6 @@
       gap: 6px;
     }
 
-    .content-single {
-      gap: 32px;
-      padding: 28px 0 16px;
-    }
   }
 
   /* ===========================

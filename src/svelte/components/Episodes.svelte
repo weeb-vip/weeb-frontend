@@ -1,6 +1,6 @@
 <script lang="ts">
   import { format, isDate } from 'date-fns';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, tick } from 'svelte';
 
   export let episodes: any[];
   /** How many episodes the viewer has watched. Progress is a single integer, so
@@ -20,6 +20,10 @@
   const INITIAL_ROWS = 24;
 
   let expanded = false;
+  /** The list's own top. Collapsing 136 rows removes ~15,000px from above the
+   *  viewport, so without this the reader is returned to the footer of a page
+   *  they were reading the middle of. */
+  let listTop: HTMLElement;
   /** Newest first by default: the recurring question is "did the latest one
    *  drop", not "what was episode 1". Ascending is one click away for anyone
    *  starting a show, which is the other real reading order. */
@@ -74,9 +78,20 @@
     // which is what a single-integer progress model can honestly represent.
     dispatch('watch', { episodes: isWatched(episode) ? episode.episodeNumber - 1 : episode.episodeNumber });
   }
+
+  async function collapse() {
+    expanded = false;
+    // After the rows are gone, not before: scrolling into the old layout lands
+    // the reader at an offset the shrinking document immediately clamps away,
+    // which measured as the list toolbar sitting under the sticky tab bar.
+    await tick();
+    // Anchor to the list rather than the document: the reader asked for less
+    // list, not for the top of the page.
+    listTop?.scrollIntoView({ block: 'start', behavior: 'auto' });
+  }
 </script>
 
-<div class="ep-section">
+<div class="ep-section" bind:this={listTop}>
   <div class="ep-toolbar">
     <span class="ep-count">
       {ordered.length}
@@ -141,6 +156,10 @@
     <button type="button" class="ep-more" on:click={() => (expanded = true)}>
       Show all {ordered.length} episodes
     </button>
+  {:else if expanded}
+    <button type="button" class="ep-more" on:click={collapse}>
+      Show fewer
+    </button>
   {/if}
 </div>
 
@@ -179,37 +198,66 @@
     background: var(--weeb-surface);
   }
 
-  /* No max-height. The list used to live in its own 520px scroller, which put
+  /* No max-height: the list used to live in its own 520px scroller, which put
      500 episodes into a 67:1 nested box and buried the newest 34,000px down an
-     inner scrollbar. Content scrolls with the page. */
+     inner scrollbar. Content scrolls with the page.
+
+     Dividers are per-cell borders on the leading edges, pulled back over the
+     preceding cell by a matching negative margin. Three properties fall out of
+     that and all three matter here: the borders never occupy layout space, the
+     first row's and first column's borders land outside the padding box and are
+     clipped by overflow:hidden so the container's own 1px frame is not doubled,
+     and a cell that does not exist draws nothing -- so a partial final row is
+     simply the container's background rather than a lighter block. Gap-drawn
+     hairlines get the first two but not the third, and there is no CSS that
+     spans a filler across an unknown remainder. */
   .ep-list {
     list-style: none;
     margin: 0;
     padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
     border-radius: var(--weeb-radius-lg, 12px);
     overflow: hidden;
   }
 
+  /* Episodes are a list that tiles, so width becomes more of them rather than
+     wider ones. At 2,526px a single column put the episode number's right edge
+     at x=117 and its date at x=2,317 -- a 2,200px saccade across an empty row
+     to read two things about one episode. */
+  @media (min-width: 1400px) {
+    .ep-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 2000px) {
+    .ep-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
   .ep-row {
     display: grid;
-    grid-template-columns: 48px 1fr 132px;
+    grid-template-columns: 48px minmax(0, 1fr) 132px;
     align-items: center;
     gap: 12px;
     padding: 12px 20px;
-    border-bottom: 1px solid var(--weeb-border);
+    /* Opaque, so a row never lets the row it overlaps show through. */
+    background: var(--weeb-bg-elevated);
+    border-left: 1px solid var(--weeb-border);
+    border-top: 1px solid var(--weeb-border);
+    margin: -1px 0 0 -1px;
   }
   /* The row itself is not interactive and no longer pretends to be: it carried
      cursor:pointer and a hover background with no handler, href, role or
      tabindex on every one of 500 rows. */
-  .ep-row:last-child {
-    border-bottom: none;
-  }
   .ep-row--watched {
-    background: color-mix(in oklch, var(--weeb-accent) 7%, transparent);
+    background: color-mix(in oklch, var(--weeb-accent) 7%, var(--weeb-bg-elevated));
   }
   .ep-row--next {
-    background: color-mix(in oklch, var(--weeb-green) 8%, transparent);
+    background: color-mix(in oklch, var(--weeb-green) 8%, var(--weeb-bg-elevated));
   }
 
   .ep-num {
@@ -308,9 +356,13 @@
   }
 
   .ep-more {
+    /* Bounded and centred rather than full-bleed: a 2,422px-wide button is the
+       same void this list was just taught not to leave. */
     width: 100%;
+    max-width: 420px;
     min-height: 44px;
-    margin-top: 10px;
+    margin: 10px auto 0;
+    display: block;
     background: none;
     border: 1px solid var(--weeb-border);
     border-radius: var(--weeb-radius, 8px);
