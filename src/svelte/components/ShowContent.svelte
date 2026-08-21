@@ -393,14 +393,14 @@
     <!-- Sticky Header (portalled to body) -->
     <div use:portal data-sticky-header class="fixed left-0 right-0 z-[90] transition-all duration-300 {showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}" style="pointer-events: {showStickyHeader ? 'auto' : 'none'}; top: var(--weeb-nav-height, 60px);">
       <!-- Background container with overflow hidden -->
-      <div class="relative overflow-hidden border-b border-weeb-border shadow-lg" style="padding: 8px 24px;">
+      <div class="relative overflow-hidden border-b border-weeb-border shadow-lg sticky-header-inner">
         <!-- Background with blur -->
         <div
           class="absolute inset-0 bg-cover bg-center"
           style="background-image: {firstSource ? `url(${firstSource})` : 'none'}; filter: blur(12px) brightness(0.6); transform: scale(1.2);"
         ></div>
         <div class="absolute inset-0 backdrop-blur-md" style="background: oklch(14% 0.015 275 / 0.75);"></div>
-        <div class="max-w-screen-2xl mx-auto relative z-10">
+        <div class="relative z-10">
           <div class="flex items-center gap-3">
             <SafeImage
               src={GetImageFromAnime(anime)}
@@ -1311,6 +1311,18 @@
   /* ===========================
      STICKY HEADER — now in [id].astro (outside Svelte)
   =========================== */
+
+  /* ===========================
+     STICKY HEADER
+  =========================== */
+  /* Full width with the section gutter, the same as .main-content and
+     .tab-bar-inner. This used to be max-w-screen-2xl with its own 24px padding,
+     which left the title and the Add-to-list button floating in a centred
+     1,536px column while everything below them ran edge to edge. */
+  .sticky-header-inner {
+    width: 100%;
+    padding: 8px var(--weeb-section-px, 48px);
+  }
 
   /* ===========================
      FLOATING TAB BAR — button styles stay inline in markup (they were written that way

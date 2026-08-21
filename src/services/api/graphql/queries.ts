@@ -689,3 +689,40 @@ export const queryCharactersAndStaffByAnimeID = graphql(`
         }
     }
 `)
+
+// The voice actor page. anime_staff carries no anime_id and is deduplicated on
+// name by the scraper, so `roles` is the whole of this person's credited work
+// rather than the slice belonging to one anime.
+export const queryStaffByID = graphql(`
+    query StaffById($id: ID!) {
+        staff(id: $id) {
+            id
+            givenName
+            familyName
+            language
+            image
+            birthday
+            birthPlace
+            bloodType
+            hobbies
+            summary
+            roles {
+                character {
+                    id
+                    name
+                    role
+                    image
+                }
+                anime {
+                    id
+                    slug
+                    titleEn
+                    titleJp
+                    imageUrl
+                    startDate
+                    animeStatus
+                }
+            }
+        }
+    }
+`)

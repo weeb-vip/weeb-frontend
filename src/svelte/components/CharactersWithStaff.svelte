@@ -156,12 +156,27 @@
                 {entry.character.role || 'Character'}
               </div>
               {#if primaryVA}
-                <div class="char-va">
-                  {primaryVA.givenName} {primaryVA.familyName}
-                  {#if primaryVA.language}
-                    <span class="char-va-lang">({primaryVA.language})</span>
-                  {/if}
-                </div>
+                <!--
+                  A link to the voice actor's page, except where the card is
+                  itself a <button> (the multiple-VA case) -- an <a> nested in a
+                  button is invalid and unreachable by keyboard. Those cards
+                  expand instead, and every name in the expanded list links.
+                -->
+                {#if hasMultipleVAs}
+                  <div class="char-va">
+                    {primaryVA.givenName} {primaryVA.familyName}
+                    {#if primaryVA.language}
+                      <span class="char-va-lang">({primaryVA.language})</span>
+                    {/if}
+                  </div>
+                {:else}
+                  <a class="char-va char-va-link" href={`/people/${primaryVA.id}`}>
+                    {primaryVA.givenName} {primaryVA.familyName}
+                    {#if primaryVA.language}
+                      <span class="char-va-lang">({primaryVA.language})</span>
+                    {/if}
+                  </a>
+                {/if}
               {/if}
               {#if hasMultipleVAs}
                 <div class="char-va-more">
@@ -178,12 +193,12 @@
           {#if isExpanded && entry.staff && entry.staff.length > 1}
             <div class="char-va-list">
               {#each entry.staff as va, vaIdx}
-                <div class="va-chip" class:active={vaIdx === 0}>
+                <a class="va-chip" class:active={vaIdx === 0} href={`/people/${va.id}`}>
                   <span class="va-name">{va.givenName} {va.familyName}</span>
                   {#if va.language}
                     <span class="va-lang">{va.language}</span>
                   {/if}
-                </div>
+                </a>
               {/each}
             </div>
           {/if}
@@ -348,6 +363,22 @@
     opacity: 0.7;
   }
 
+  /* The voice actor's name is the one link on an otherwise inert card, so it
+     needs to look like one on hover without shouting at rest -- the character
+     is the subject here, the actor is the cross-reference. */
+  .char-va-link {
+    display: block;
+    text-decoration: none;
+    color: var(--weeb-fg-muted);
+    transition: color 0.15s;
+  }
+  .char-va-link:hover,
+  .char-va-link:focus-visible {
+    color: var(--weeb-accent-text, var(--weeb-fg));
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
   .char-va-more {
     font-size: 11px;
     color: var(--weeb-accent-text);
@@ -387,6 +418,19 @@
   .va-chip.active {
     border-color: var(--weeb-accent);
     background: oklch(22% 0.03 280);
+  }
+  a.va-chip {
+    text-decoration: none;
+    cursor: pointer;
+  }
+  a.va-chip:hover,
+  a.va-chip:focus-visible {
+    border-color: var(--weeb-accent);
+    background: var(--weeb-surface-hover);
+  }
+  a.va-chip:hover .va-name,
+  a.va-chip:focus-visible .va-name {
+    color: var(--weeb-fg);
   }
   .va-name {
     color: var(--weeb-fg-secondary);
