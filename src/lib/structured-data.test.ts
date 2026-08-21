@@ -1,7 +1,10 @@
 import {
   animeSchema,
   breadcrumbSchema,
+  episodeSchemas,
+  inferLanguage,
   isoDuration,
+  itemListSchema,
   serializeJsonLd
 } from './structured-data';
 
@@ -129,5 +132,118 @@ describe('serializeJsonLd', () => {
     expect(out).not.toContain('</script>');
     expect(out).toContain('\\u003c');
     expect(JSON.parse(out).description).toBe('</script><script>alert(1)</script>');
+  });
+});
+
+describe('inferLanguage', () => {
+  it('reads the script of the native title', () => {
+    expect(inferLanguage({ titleJp: 'ぼっち・ざ・ろっく！' })).toBe('ja');
+    expect(inferLanguage({ titleJp: '나 혼자만 레벨업' })).toBe('ko');
+    expect(inferLanguage({ titleJp: '斗罗大陆' })).toBe('zh');
+  });
+
+  it('falls back to Japanese when there is no native title to read', () => {
+    expect(inferLanguage({ titleEn: 'Some Anime' })).toBe('ja');
+  });
+
+  it('uses titleKanji when titleJp is absent', () => {
+    expect(inferLanguage({ titleKanji: '鋼の錬金術師' })).toBe('ja');
+  });
+});
+
+describe('episodeSchemas', () => {
+  const NOW = new Date('2026-08-19T00:00:00Z');
+
+  const EPS = [
+    { episodeNumber: 2, titleEn: 'Second', airDate: '2026-08-12T15:00:00Z' },
+    { episodeNumber: 1, titleEn: 'First', airDate: '2026-08-05T15:00:00Z' },
+    { episodeNumber: 3, titleEn: 'Third', airDate: '2026-08-26T15:00:00Z' }
+  ];
+
+  it('orders by episode number regardless of input order', () => {
+    expect(episodeSchemas(EPS, NOW).map((e) => e.episodeNumber)).toEqual([1, 2, 3]);
+  });
+
+  it('only claims datePublished for episodes that have aired', () => {
+    const [first, , third] = episodeSchemas(EPS, NOW);
+    expect(first.datePublished).toBe('2026-08-05');
+    expect(third.datePublished).toBeUndefined();
+  });
+
+  it('carries the scheduled time on future episodes as a BroadcastEvent', () => {
+    const [, , third] = episodeSchemas(EPS, NOW);
+    expect(third.publication).toEqual({
+      '@type': 'BroadcastEvent',
+      startDate: '2026-08-26',
+      isLiveBroadcast: false
+    });
+  });
+
+  it('keeps the most recent episodes when a long-runner exceeds the cap', () => {
+    const many = Array.from({ length: 250 }, (_, i) => ({
+      episodeNumber: i + 1,
+      titleEn: `Ep ${i + 1}`,
+      airDate: '2020-01-01T00:00:00Z'
+    }));
+    const out = episodeSchemas(many, NOW);
+    expect(out).toHaveLength(100);
+    expect(out[0].episodeNumber).toBe(151);
+    expect(out[99].episodeNumber).toBe(250);
+  });
+
+  it('drops episodes with no number rather than guessing one', () => {
+    expect(episodeSchemas([{ titleEn: 'Special', airDate: null }], NOW)).toEqual([]);
+  });
+
+  it('is empty for no episodes', () => {
+    expect(episodeSchemas(null, NOW)).toEqual([]);
+    expect(episodeSchemas([], NOW)).toEqual([]);
+  });
+});
+
+describe('itemListSchema', () => {
+  const OPTS = {
+    name: 'Summer 2026 Anime',
+    url: 'https://weeb.vip/season/SUMMER_2026',
+    siteUrl: 'https://weeb.vip'
+  };
+
+  const ITEMS = [
+    { slug: 'first-show', titleEn: 'First Show', imageUrl: 'https://cdn/1.jpg' },
+    { slug: 'second-show', titleEn: null, titleJp: '二番目' }
+  ];
+
+  it('builds positioned entries pointing at canonical show URLs', () => {
+    const list = itemListSchema(ITEMS, OPTS)!;
+
+    expect(list['@type']).toBe('ItemList');
+    expect(list.numberOfItems).toBe(2);
+    expect(list.itemListElement).toEqual([
+      {
+        '@type': 'ListItem',
+        position: 1,
+        url: 'https://weeb.vip/anime/first-show',
+        name: 'First Show',
+        image: 'https://cdn/1.jpg'
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        url: 'https://weeb.vip/anime/second-show',
+        name: '二番目'
+      }
+    ]);
+  });
+
+  it('drops entries with no slug rather than linking a redirect', () => {
+    const list = itemListSchema([{ titleEn: 'No Slug' }, ITEMS[0]], OPTS)!;
+    expect(list.numberOfItems).toBe(1);
+    expect((list.itemListElement as any[])[0].position).toBe(1);
+  });
+
+  it('is null when there is nothing to list', () => {
+    expect(itemListSchema([], OPTS)).toBeNull();
+    expect(itemListSchema(null, OPTS)).toBeNull();
+    expect(itemListSchema([{ titleEn: 'No Slug' }], OPTS)).toBeNull();
   });
 });

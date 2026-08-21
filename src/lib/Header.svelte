@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/stores';
   import AutocompleteAdvanced from '../svelte/components/AutocompleteAdvanced.svelte';
   import LoginModalHandler from '../svelte/components/LoginModalHandler.svelte';
   import UserProfileHandler from '../svelte/components/UserProfileHandler.svelte';
@@ -69,12 +70,13 @@
   class:nav--glass={!overlay || navSolid > 0.02}
   style="--nav-solid: {navSolid}"
   id="main-header"
+  aria-label="Main"
 >
   <!-- Logo -->
   <a href="/" class="nav-logo">
     <img
       src="https://cdn.weeb.vip/images/logo6-rev-sm_sm.png"
-      alt="weeb.vip"
+      alt=""
       width="32"
       height="32"
       loading="eager"
@@ -86,14 +88,17 @@
 
   <!-- Nav Links (desktop only) -->
   <div class="nav-links">
-    <a href="/">Home</a>
-    <a href={`/season/${getCurrentSeason()}`}>Season</a>
-    <a href="/airing">Airing</a>
-    <a href="/search">Browse</a>
+    <a href="/" aria-current={$page.url.pathname === '/' ? 'page' : undefined}>Home</a>
+    <a
+      href={`/season/${getCurrentSeason()}`}
+      aria-current={$page.url.pathname.startsWith('/season') ? 'page' : undefined}>Season</a
+    >
+    <a href="/airing" aria-current={$page.url.pathname.startsWith('/airing') ? 'page' : undefined}>Airing</a>
+    <a href="/search" aria-current={$page.url.pathname.startsWith('/search') ? 'page' : undefined}>Browse</a>
   </div>
 
   <!-- Search -->
-  <div class="nav-search">
+  <div class="nav-search" role="search">
     <AutocompleteAdvanced />
   </div>
 
@@ -174,13 +179,15 @@
   }
 
   .nav-logo {
+    min-height: 44px;
+    min-width: 44px;
     display: flex;
     align-items: center;
     gap: 8px;
     text-decoration: none;
     color: var(--weeb-fg);
     font-weight: 700;
-    font-size: 18px;
+    font-size: 20px;
     letter-spacing: -0.02em;
     flex-shrink: 0;
   }
@@ -199,8 +206,11 @@
     margin-left: 24px;
   }
   .nav-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     padding: 6px 14px;
-    border-radius: 6px;
+    border-radius: var(--weeb-radius, 8px);
     font-size: 14px;
     font-weight: 500;
     color: var(--weeb-fg-secondary);

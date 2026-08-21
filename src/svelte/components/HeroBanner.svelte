@@ -1,24 +1,43 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { format } from 'date-fns';
   import Button from './Button.svelte';
   import AnimeActions from './AnimeActions.svelte';
   import SafeImage from './SafeImage.svelte';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { animeHref } from '../../services/utils';
   import { getSafeImageUrl } from '../utils/image';
-  import { findNextEpisode, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
+  import type { EpisodeTiming } from '../../services/airTimeUtils';
   import { configStore } from '../stores/config';
   import { animeNotificationStore } from '../stores/animeNotifications';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
+  import { loggedInStore } from '../stores/auth';
 
   export let anime: any;
+  /**
+   * The episode timing resolved once in HomepageSSR.processCurrentlyAiring.
+   * Null on the fallback banner (top-rated), which has no schedule at all.
+   */
+  export let timing: EpisodeTiming | null = null;
 
   let imageSources: string[] = [];
   let bgLoaded = false;
   let showJstPopover = false;
   let currentAnimeId: string | null = null;
   let supportsWebP = false;
+
+  /**
+   * TheTVDB banner art is roughly 16:9 and the hero is a 100svh box, so on a
+   * phone the only way to cover that shape is to crop the banner to a narrow
+   * vertical strip of itself -- usually a piece of background with the subject
+   * outside the frame. A poster is 2:3 and fills a tall viewport natively. From
+   * a tablet up the hero is wide enough for the banner to read as composed, so
+   * it keeps priority there.
+   *
+   * Safe to decide on the client: SafeImage resolves its source after mount and
+   * emits no <img> during SSR, so there is nothing to flash or swap.
+   */
+  const PHONE_QUERY = '(max-width: 767px)';
+  let isPhone = false;
 
   // Get timing data from the shared anime notification store
   $: timingData = $animeNotificationStore.timingData[anime.id];
@@ -57,8 +76,18 @@
     console.log('🖼️ WebP support:', supportsWebP);
   });
 
+  // Separate from the async onMount above: Svelte ignores a cleanup function
+  // returned from an async callback, so the listener would never be removed.
+  onMount(() => {
+    const mq = window.matchMedia(PHONE_QUERY);
+    isPhone = mq.matches;
+    const onChange = (event: MediaQueryListEvent) => (isPhone = event.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  });
+
   // Generate ordered list of image sources to try
-  function generateImageSources(): string[] {
+  function generateImageSources(phone: boolean): string[] {
     const sources: string[] = [];
 
     // Both are keyed by anime id: banners/<id> for the tvdb artwork synced by
@@ -67,10 +96,22 @@
     // local and staging read production artwork, which hid the fact that staging
     // had no banners of its own.
     if (anime.id) {
-      // Priority 1: CDN banner
-      sources.push(getSafeImageUrl(anime.id, 'banners'));
-      // Priority 2: CDN poster as fallback
-      sources.push(getSafeImageUrl(anime.id));
+      // TheTVDB's 680x1000 series poster, synced by thetvdb-enrichment.
+      const tvdbPoster = getSafeImageUrl(anime.id, 'posters');
+      // TheTVDB's wide background artwork.
+      const banner = getSafeImageUrl(anime.id, 'banners');
+      // The scraper's MyAnimeList image at the bucket root -- 225px wide, so it
+      // is the last resort at hero scale rather than a peer of the other two.
+      const malImage = getSafeImageUrl(anime.id);
+
+      if (phone) {
+        // Tall box: prefer tall art, and prefer the high-resolution one.
+        sources.push(tvdbPoster, malImage, banner);
+      } else {
+        // Wide box: the banner is composed for this shape. A poster cropped to
+        // a wide frame still beats a 225px image blown up to fill it.
+        sources.push(banner, tvdbPoster, malImage);
+      }
     }
 
     return sources;
@@ -81,15 +122,23 @@
     if (currentAnimeId !== anime.id) {
       currentAnimeId = anime.id;
       bgLoaded = false;
-      imageSources = generateImageSources();
-      console.log('🖼️ Generated image sources for', anime.id, ':', imageSources);
+      imageSources = generateImageSources(isPhone);
     }
   }
 
   // Regenerate sources when WebP support is detected
   $: if (supportsWebP && currentAnimeId === anime.id) {
-    imageSources = generateImageSources();
+    imageSources = generateImageSources(isPhone);
   }
+
+  // ...and when the viewport crosses the breakpoint, so a rotate or a resized
+  // window re-picks rather than keeping art chosen for the other shape.
+  $: if (currentAnimeId === anime.id) {
+    imageSources = generateImageSources(isPhone);
+  }
+
+  // A phone never needs 1600px of hero art.
+  $: heroCdnWidth = isPhone ? 800 : 1600;
 
   $: title = getAnimeTitle(anime, $preferencesStore.titleLanguage);
 
@@ -101,13 +150,22 @@
   // there is no measure-then-resize flash.
   $: titleTier = title.length > 40 ? 'long' : title.length > 18 ? 'mid' : 'short';
 
-  // For now, we'll use a simpler approach without the worker data
-  // This can be enhanced later with Svelte stores for countdown data
-  const animeNextEpisodeInfo = anime.nextEpisode && (anime.nextEpisode.airDate || anime.nextEpisode.airTime) ? {
-    episode: anime.nextEpisode,
-    airTime: anime.nextEpisode.airTime ? new Date(anime.nextEpisode.airTime) : new Date(anime.nextEpisode.airDate)
-  } : null;
-  const airTimeAndDate = parseAirTime(animeNextEpisodeInfo?.episode.airDate, anime.broadcast);
+  // Display values come from the resolved timing when there is one. The worker
+  // store is kept only for `progress`, which nothing else computes; using it for
+  // the countdown too is what put "18H" in the badge while the rail beside it
+  // read "Airing in 19h" for the same episode.
+  $: liveNow = timing ? timing.isLive : currentlyAiring;
+  $: airedAlready = timing ? timing.hasAired : alreadyAired;
+  $: badgeCountdown = timing ? timing.countdown : countdown;
+  $: hasSchedule = Boolean(timing) || hasTimingData;
+
+  // "Airing Soon" was attached to anything neither airing nor already aired, so
+  // it shipped over an episode nineteen hours away. Soon has to mean soon; past
+  // a few hours the honest label is just what the thing is.
+  const SOON_MS = 6 * 60 * 60 * 1000;
+  $: upcomingLabel = timing && timing.airDateTime.getTime() - Date.now() <= SOON_MS
+    ? 'Airing Soon'
+    : 'Next Episode';
 
   function handleImageChosen(event: CustomEvent) {
     console.log('🖼️ HeroBanner image chosen:', event.detail);
@@ -121,13 +179,13 @@
     <div class="hero-bg-image" style="opacity: {bgLoaded ? 1 : 0};">
       <SafeImage
         sources={imageSources}
-        alt="Anime background"
+        alt=""
         loading="eager"
         priority={true}
         fallbackSrc="/assets/not found.jpg"
         perTryTimeoutMs={3000}
         className="hero-bg-cover"
-        cdnWidth={1600}
+        cdnWidth={heroCdnWidth}
         on:chosen={handleImageChosen}
       />
     </div>
@@ -140,22 +198,22 @@
 
   <!-- Content -->
   <div class="hero-content">
-    {#if hasTimingData && currentlyAiring}
-      <div class="hero-badge hero-badge--progress" style="--progress: {progress !== undefined ? Math.round(progress * 100) : 0}%;">
+    {#if hasSchedule && liveNow}
+      <div class="hero-badge hero-badge--progress" style="--progress-factor: {progress !== undefined ? progress : 0};">
         <span class="badge-track"></span>
         <span class="badge-label"><span class="dot"></span> Currently Airing</span>
-        {#if countdown}
-          <span class="badge-countdown">{countdown}</span>
+        {#if badgeCountdown}
+          <span class="badge-countdown">{badgeCountdown}</span>
         {/if}
       </div>
-    {:else if hasTimingData && !currentlyAiring && !alreadyAired}
+    {:else if hasSchedule && !liveNow && !airedAlready}
       <div class="hero-badge">
-        <span class="badge-label"><span class="dot"></span> Airing Soon</span>
-        {#if countdown && countdown !== "AIRING NOW" && !countdown.includes("JUST")}
-          <span class="badge-countdown">{countdown}</span>
+        <span class="badge-label"><span class="dot"></span> {upcomingLabel}</span>
+        {#if badgeCountdown && badgeCountdown !== "AIRING NOW" && !badgeCountdown.includes("JUST")}
+          <span class="badge-countdown">{badgeCountdown}</span>
         {/if}
       </div>
-    {:else if hasTimingData && alreadyAired}
+    {:else if hasSchedule && airedAlready}
       <div class="hero-badge" style="background: var(--weeb-green);">
         <span class="badge-label"><span class="dot" style="background: white;"></span> Recently Aired</span>
       </div>
@@ -174,10 +232,28 @@
       {#if episodeNumber}
         <span>Episode {episodeNumber}</span>
       {/if}
-      {#if airTimeAndDate}
-        <span class="air-time">Airs {format(airTimeAndDate, "EEE h:mm a")}</span>
+      {#if timing}
+        <span class="air-time"
+          >Airs {timing.localTime}{#if timing.localZone}&nbsp;<span class="air-time-zone"
+            >{timing.localZone}</span
+          >{/if}</span
+        >
+        {#if timing.broadcastSlot}
+          <button
+            type="button"
+            class="tz-toggle"
+            aria-expanded={showJstPopover}
+            aria-controls="hero-broadcast-slot"
+            on:click={() => (showJstPopover = !showJstPopover)}>Broadcast time</button
+          >
+        {/if}
       {:else if anime.broadcast}
         <span class="air-time">{anime.broadcast}</span>
+      {/if}
+      {#if showJstPopover && timing?.broadcastSlot}
+        <p class="tz-popover" id="hero-broadcast-slot">
+          Broadcast slot: {timing.broadcastSlot}. Times above are in your local timezone.
+        </p>
       {/if}
     </div>
 
@@ -192,6 +268,14 @@
         variant="hero"
       />
     </div>
+
+    <!-- Nowhere on the homepage did it say what an account is for, so "Add to
+         List" read as a wall rather than an offer. One line, only while signed
+         out, and only once auth has resolved so it does not flash at returning
+         visitors. Claims nothing the product does not already do. -->
+    {#if $loggedInStore.isAuthInitialized && !$loggedInStore.isLoggedIn}
+      <p class="hero-value">Free account &mdash; track every episode and get notified the moment one airs.</p>
+    {/if}
   </div>
 
 </div>
@@ -294,10 +378,12 @@
   .badge-track {
     position: absolute;
     inset: 0;
-    width: var(--progress, 0%);
+    width: 100%;
+    transform: scaleX(var(--progress-factor, 0));
+    transform-origin: left center;
     background: var(--weeb-accent);
     border-radius: 20px;
-    transition: width 1s ease-out;
+    transition: transform 1s ease-out;
   }
   .badge-label {
     position: relative;
@@ -379,6 +465,54 @@
     letter-spacing: 0.02em;
     color: var(--weeb-fg);
   }
+  /* The zone abbreviation is a measured value, so it stays in the mono column
+     the rest of .hero-meta already sets; only the colour steps back. */
+  .air-time-zone {
+    color: var(--weeb-fg-secondary);
+  }
+  .tz-toggle {
+    position: relative;
+    font: inherit;
+    color: var(--weeb-fg-secondary);
+    background: none;
+    border: 0;
+    border-bottom: 1px dashed var(--weeb-border);
+    padding: 0 0 1px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .tz-toggle::after {
+    content: '';
+    position: absolute;
+    inset: -13px -8px;
+  }
+  .tz-toggle:hover {
+    color: var(--weeb-fg);
+    border-bottom-color: var(--weeb-fg-secondary);
+  }
+  .tz-toggle:focus-visible {
+    outline: 2px solid var(--weeb-accent-text);
+    outline-offset: 3px;
+    border-radius: var(--weeb-radius-sm);
+  }
+  .tz-popover {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--weeb-fg-secondary);
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius);
+    box-shadow: var(--weeb-shadow-dropdown);
+    padding: 8px 12px;
+  }
+  .hero-value {
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    /* fg-secondary, not fg-muted: muted measures 4.1:1 on this ground and this
+       is the one line asking for the account. */
+    color: var(--weeb-fg-secondary);
+  }
   .hero-actions {
     display: flex;
     gap: 10px;
@@ -386,6 +520,9 @@
     align-items: center;
   }
   .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     padding: 10px 24px;
     border-radius: var(--weeb-radius, 8px);
     font-size: 14px;

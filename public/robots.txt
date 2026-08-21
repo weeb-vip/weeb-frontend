@@ -20,6 +20,9 @@ Allow: /show/
 Allow: /airing
 Allow: /airing/calendar
 
-# Block dynamic search parameters
+# Block dynamic search parameters. No Allow exception for utm_: Google resolves
+# competing rules by longest match, so "Allow: /*?utm_*" did not preserve campaign
+# tracking -- it specifically un-blocked the one query shape that is always a
+# duplicate of the clean URL. Campaign traffic still arrives and is still measured;
+# only crawling of the tagged copies is refused.
 Disallow: /*?*
-Allow: /*?utm_*

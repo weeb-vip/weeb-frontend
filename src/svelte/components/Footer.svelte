@@ -21,7 +21,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--weeb-fg-muted);
   }
   .footer-links {
@@ -33,12 +33,19 @@
     color: var(--weeb-fg-secondary);
     text-decoration: none;
     transition: color 0.15s;
+    position: relative;
+  }
+  /* WCAG 2.5.5: these rendered 21-42px wide and 20px tall. */
+  .footer-links a::after {
+    content: '';
+    position: absolute;
+    inset: -13px -12px;
   }
   .footer-links a:hover {
     color: var(--weeb-fg);
   }
   .version {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--weeb-fg-muted);
     font-family: var(--weeb-font-mono);
   }

@@ -11,9 +11,11 @@ import {
   getAirTimeInfo,
   findNextEpisode,
   getAirTimeDisplay,
+  resolveEpisodeTiming,
   type Episode
 } from "./airTimeUtils";
 import currentlyAiring from '../../currentlyaired.json';
+import { format } from 'date-fns';
 
 // Mock window object for testing
 const mockWindow = {
@@ -487,5 +489,82 @@ describe('getAirTimeDisplay (static time)', () => {
   test('returns null for invalid input', () => {
     const result = getAirTimeDisplay(null, null, 24);
     expect(result).toBe(null);
+  });
+});
+
+
+describe('resolveEpisodeTiming', () => {
+  // A slot and a real broadcast that land on different days. This is the shape
+  // that produced the homepage's "Airs Wed 6:40 PM" / "Thu 6:40 PM" split: the
+  // hero reconstructed the datetime from the weekly slot while the rail read the
+  // exact timestamp.
+  const broadcast = 'Wednesdays at 01:29 (JST)';
+  const airDate = '2026-08-20T00:00:00.000Z';
+  const airTime = '2026-08-20T22:40:00.000Z';
+
+  test('prefers the exact airTime over the reconstructed broadcast slot', () => {
+    const now = new Date('2026-08-20T12:00:00.000Z');
+    const timing = resolveEpisodeTiming({ airDate, airTime }, broadcast, 24, now);
+
+    expect(timing).not.toBeNull();
+    expect(timing!.airDateTime.toISOString()).toBe(airTime);
+    expect(timing!.exact).toBe(true);
+
+    // and it is NOT the slot reconstruction, which is what used to leak into the hero
+    const reconstructed = parseAirTime(airDate, broadcast);
+    expect(timing!.airDateTime.getTime()).not.toBe(reconstructed!.getTime());
+  });
+
+  test('falls back to the broadcast slot when no exact timestamp exists', () => {
+    const now = new Date('2026-08-20T12:00:00.000Z');
+    const timing = resolveEpisodeTiming({ airDate }, broadcast, 24, now);
+    const reconstructed = parseAirTime(airDate, broadcast);
+
+    expect(timing!.airDateTime.getTime()).toBe(reconstructed!.getTime());
+    expect(timing!.exact).toBe(false);
+  });
+
+  test('every displayed field derives from the one airDateTime', () => {
+    const now = new Date('2026-08-20T12:00:00.000Z');
+    const timing = resolveEpisodeTiming({ airDate, airTime }, broadcast, 24, now);
+
+    // The regression this guards: localTime and the countdown must describe the
+    // same instant. Formatting airDateTime independently has to reproduce
+    // localTime exactly, or two surfaces can print different days again.
+    expect(timing!.localTime).toBe(format(timing!.airDateTime, 'EEE h:mm a'));
+    expect(timing!.label).toBe(`Airing in ${timing!.countdown}`);
+    expect(timing!.variant).toBe('countdown');
+  });
+
+  test('reports live state across the episode window', () => {
+    const start = new Date(airTime);
+    const during = new Date(start.getTime() + 10 * 60 * 1000);
+    const after = new Date(start.getTime() + 40 * 60 * 1000);
+
+    const live = resolveEpisodeTiming({ airDate, airTime }, broadcast, 24, during);
+    expect(live!.isLive).toBe(true);
+    expect(live!.hasAired).toBe(false);
+    expect(live!.variant).toBe('airing');
+
+    const done = resolveEpisodeTiming({ airDate, airTime }, broadcast, 24, after);
+    expect(done!.isLive).toBe(false);
+    expect(done!.hasAired).toBe(true);
+    expect(done!.variant).toBe('aired');
+    expect(done!.label).toBe('Recently aired');
+  });
+
+  test('carries the raw broadcast slot for the timezone marker', () => {
+    const now = new Date('2026-08-20T12:00:00.000Z');
+    const timing = resolveEpisodeTiming({ airDate, airTime }, broadcast, 24, now);
+    expect(timing!.broadcastSlot).toBe(broadcast);
+
+    const noSlot = resolveEpisodeTiming({ airDate, airTime }, null, 24, now);
+    expect(noSlot!.broadcastSlot).toBeNull();
+  });
+
+  test('returns null when there is nothing to resolve', () => {
+    const now = new Date('2026-08-20T12:00:00.000Z');
+    expect(resolveEpisodeTiming(null, broadcast, 24, now)).toBeNull();
+    expect(resolveEpisodeTiming({}, null, 24, now)).toBeNull();
   });
 });

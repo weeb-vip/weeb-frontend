@@ -70,9 +70,14 @@
 
 <style>
   .btn {
+    /* WCAG 2.5.5 at the shared base, so every variant clears it rather than
+       each caller remembering to. */
+    min-height: 44px;
     padding: 7px 18px;
     border-radius: var(--weeb-radius, 8px);
-    font-size: 13px;
+    /* Body step. 13px is not on the ramp, and it left the shared button a
+       pixel adrift from the hero's own primary CTA at 14px. */
+    font-size: 14px;
     font-weight: 600;
     font-family: inherit;
     transition: background 0.15s, color 0.15s, border-color 0.15s;

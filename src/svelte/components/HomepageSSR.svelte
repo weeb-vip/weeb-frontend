@@ -5,6 +5,7 @@
   import HeroBanner from './HeroBanner.svelte';
   import HeroBannerSkeleton from './HeroBannerSkeleton.svelte';
   import HeroAiringRail from './HeroAiringRail.svelte';
+  import { isPhone, isTablet } from '../stores/viewport';
   import PosterCard from './PosterCard.svelte';
   import SectionHeader from './SectionHeader.svelte';
   import GenrePills from './GenrePills.svelte';
@@ -15,7 +16,7 @@
     fetchSeasonalAnime, fetchCurrentlyAiringWithDates
   } from '../../services/queries';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
-  import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
+  import { findNextEpisode, parseDurationToMinutes, resolveEpisodeTiming } from '../../services/airTimeUtils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import { animeNotificationService } from '../../services/animeNotifications';
   import { AuthStorage } from '../../utils/auth-storage';
@@ -73,7 +74,34 @@
   const seasonOptions = getSeasonOptions(currentSeason);
 
   // Variables for tracking state
+  // "0 ep · 2026" was shipping on any show whose episode count had not landed
+  // yet, which is a fact the card does not know stated as one it does. Drop the
+  // part that has no value rather than printing a zero.
+  function posterSub(anime: any): string {
+    const episodes = Math.max(anime.episodeCount || 0, anime.episodes?.length || 0);
+    const origin = anime.studios?.[0] || getYearUTC(anime.startDate);
+    const parts: string[] = [];
+    if (episodes > 0) parts.push(`${episodes} ep`);
+    if (origin) parts.push(String(origin));
+    return parts.join(' \u00b7 ');
+  }
+
+  // A grid fills its row whatever the count, so the only thing a breakpoint
+  // changes is how many ROWS a shelf costs. Twenty items is two rows on a wide
+  // monitor and ten on a phone, which is why the count is not fixed: six keeps a
+  // phone section to three rows, and "See all" owns completeness either way.
+  $: shelfLimit = $isPhone ? 6 : $isTablet ? 12 : 20;
+
   let hoveredAnime: any = null;
+
+  // One clock for the whole schedule. The hero and the rail both derive their
+  // countdown from this tick, so they advance together instead of drifting into
+  // the "18H" / "Airing in 19h" disagreement they used to show side by side.
+  let now = new Date();
+  onMount(() => {
+    const id = setInterval(() => (now = new Date()), 30_000);
+    return () => clearInterval(id);
+  });
   let lastHoveredAnime: any = null;
 
   // Create all data queries that refresh on login state changes and cache invalidation
@@ -240,10 +268,10 @@
   });
 
   // Process currently airing data
-  function processCurrentlyAiring(data: any) {
+  function processCurrentlyAiring(data: any, current: Date) {
     if (!data?.currentlyAiring) return [];
 
-    const now = new Date();
+    const now = current;
     const currentlyAiringShows = data.currentlyAiring || [];
     const processedAnime: any[] = [];
 
@@ -255,17 +283,17 @@
       // Skip anime where nextEpisode has null airdate or airTime
       if (!nextEpisode.airDate && !nextEpisode.airTime) return;
 
-      // Use airTime from backend if available, otherwise fall back to airDate
-      const nextEpisodeAirTime = nextEpisode.airTime ? new Date(nextEpisode.airTime) : new Date(nextEpisode.airDate);
-
-      // Generate air time display info (using local timezone formatting)
-      const airTimeInfo = getAirTimeDisplay(nextEpisode.airDate, anime.broadcast) || {
-          show: true,
-          text: nextEpisodeAirTime <= now
-            ? "Recently aired"
-            : `Airing ${format(nextEpisodeAirTime, "EEE MMM do")} at ${format(nextEpisodeAirTime, "h:mm a")}`,
-          variant: nextEpisodeAirTime <= now ? 'aired' as const : 'scheduled' as const
-        };
+      // Resolved once, here, and handed to every consumer. This used to be two
+      // derivations: nextEpisodeDate came from the exact airTime while
+      // airTimeDisplay came from (airDate, broadcast), so the rail and the hero
+      // printed different days for the same episode.
+      const timing = resolveEpisodeTiming(
+        nextEpisode,
+        anime.broadcast,
+        parseDurationToMinutes(anime.duration),
+        now
+      );
+      if (!timing) return;
 
       const processedEntry = {
         id: `homepage-${anime.id}`,
@@ -290,11 +318,14 @@
         airingInfo: {
           ...anime,
           userAnime: anime.userAnime || null,
-          airTimeDisplay: airTimeInfo,
-          nextEpisodeDate: nextEpisodeAirTime,
+          timing,
+          // Kept as a view onto `timing` so existing consumers of the old shape
+          // read the same resolved value rather than a second opinion.
+          airTimeDisplay: { show: true, text: timing.label, variant: timing.variant },
+          nextEpisodeDate: timing.airDateTime,
           nextEpisode: {
             ...nextEpisode,
-            airDate: nextEpisodeAirTime
+            airDate: timing.airDateTime
           },
           isInWatchlist: false
         }
@@ -321,7 +352,7 @@
   }
 
   // Process currently airing data from queries (with SSR fallback)
-  $: sortedCurrentlyAiring = processCurrentlyAiring($currentlyAiringQuery.data || currentlyAiringData);
+  $: sortedCurrentlyAiring = processCurrentlyAiring($currentlyAiringQuery.data || currentlyAiringData, now);
 
   // Get current seasonal data - use query data when available, SSR data as fallback
   $: currentSeasonalData = selectedSeason === currentSeason
@@ -391,6 +422,7 @@
         {#key bannerAnime.id}
           <HeroBanner
             anime={bannerAnime}
+            timing={bannerAnime.timing ?? null}
           />
         {/key}
       {:else}
@@ -425,7 +457,7 @@
     <section class="section">
       <SectionHeader title="Top Rated" href="/search" linkText="See all →" />
       <div class="poster-row">
-        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 14) as anime}
+        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, shelfLimit) as anime}
           <PosterCard
             id={anime.id}
             slug={anime.slug}
@@ -436,7 +468,7 @@
             genres={anime.tags || []}
             description={anime.description || ''}
             episodeCount={anime.episodeCount}
-            sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            sub={posterSub(anime)}
             onList={anime.userAnime?.status || null}
           />
         {/each}
@@ -449,7 +481,7 @@
     <section class="section">
       <SectionHeader title="Newest Anime" href="/search" linkText="See all →" />
       <div class="poster-row">
-        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, 14) as anime}
+        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, shelfLimit) as anime}
           <PosterCard
             id={anime.id}
             slug={anime.slug}
@@ -460,7 +492,7 @@
             genres={anime.tags || []}
             description={anime.description || ''}
             episodeCount={anime.episodeCount}
-            sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            sub={posterSub(anime)}
             onList={anime.userAnime?.status || null}
           />
         {/each}
@@ -468,9 +500,9 @@
     </section>
   {/if}
 
-  <!-- Browse by Genre -->
+  <!-- Browse by Tag -->
   <section class="section">
-    <SectionHeader title="Browse by Genre" />
+    <SectionHeader title="Browse by Tag" />
     <GenrePills />
   </section>
 
@@ -491,7 +523,7 @@
     </div>
     <div class="poster-row">
       {#if $seasonalAnimeQuery.isLoading && selectedSeason !== currentSeason}
-        {#each Array(14) as _}
+        {#each Array(12) as _}
           <div class="poster-card-skeleton">
             <div class="poster-skeleton"></div>
             <div class="title-skeleton"></div>
@@ -506,7 +538,7 @@
             return isNaN(parsed) ? 0 : parsed;
           };
           return getRating(b.rating) - getRating(a.rating);
-        }).slice(0, 14) as anime (anime.id)}
+        }).slice(0, shelfLimit) as anime (anime.id)}
           <PosterCard
             id={anime.id}
             slug={anime.slug}
@@ -517,7 +549,7 @@
             genres={anime.tags || []}
             description={anime.description || ''}
             episodeCount={anime.episodeCount}
-            sub="{Math.max(anime.episodeCount || 0, anime.episodes?.length || 0)} ep · {anime.studios?.[0] || getYearUTC(anime.startDate)}"
+            sub={posterSub(anime)}
             onList={anime.userAnime?.status || null}
           />
         {/each}
@@ -543,7 +575,7 @@
     position: relative;
     margin-top: calc(-1 * var(--weeb-nav-height, 60px));
   }
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     .hero-wrapper { --hero-fade: 70px; }
   }
 
@@ -555,12 +587,23 @@
     border-top: 1px solid var(--weeb-border, oklch(28% 0.015 275));
   }
 
-  /* --- POSTER GRID --- */
+  /* --- POSTER GRID ---
+     A grid, not a horizontal shelf. A carousel inside a vertically scrolling
+     page asks the reader to change gesture axis to reach content, and on a phone
+     it competes with the page scroll itself; everything past the second card
+     goes unseen. The grid also fills its row for free -- auto-fill with 1fr
+     tracks stretches to the full width whatever the item count, which a
+     fixed-width shelf cannot do without either stranding a gap or inflating the
+     cards.
+
+     The length problem a grid used to have was never the grid. It was fourteen
+     items in it: at two columns that is seven rows per section. The count is
+     capped per breakpoint instead (see shelfLimit). */
   .poster-row {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 16px;
-    align-items: start; /* Prevent vertical stretching of grid items */
+    align-items: start;
   }
   .poster-row :global(> *) {
     width: 100%;
@@ -568,7 +611,6 @@
     justify-self: center;
   }
 
-  /* On wider screens, allow cards to grow larger and fill space */
   @media (min-width: 1400px) {
     .poster-row {
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -602,10 +644,11 @@
     gap: 6px;
   }
   .season-tab {
+    min-height: 44px;
     padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
+    border-radius: var(--weeb-radius, 8px);
+    font-size: 12px;
+    font-weight: 600;
     color: var(--weeb-fg-secondary);
     background: none;
     border: none;
@@ -655,13 +698,16 @@
   }
 
   /* --- RESPONSIVE --- */
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     .section {
-      padding: 28px 16px;
+      padding: var(--weeb-section-py, 32px) var(--weeb-section-px, 24px);
     }
     .poster-row {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
+    }
+    .poster-row :global(> *) {
+      max-width: none;
     }
     .season-tabs {
       flex-wrap: wrap;
@@ -669,10 +715,10 @@
   }
   @media (max-width: 400px) {
     .section {
-      padding: 24px 12px;
+      padding: var(--weeb-section-py, 24px) var(--weeb-section-px, 16px);
     }
     .poster-row {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
     }
   }
