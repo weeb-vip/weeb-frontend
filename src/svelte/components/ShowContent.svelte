@@ -96,10 +96,10 @@
       : id === 'episodes' ? episodesEl
       : charactersEl;
     if (el) {
-      const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--weeb-nav-height') || '60');
-      const stickyOffset = showStickyHeader ? 72 : 0;
-      const tabBarHeight = 48;
-      const top = el.getBoundingClientRect().top + window.scrollY - navHeight - stickyOffset - tabBarHeight - 8;
+      const rootStyle = getComputedStyle(document.documentElement);
+      const navHeight = parseInt(rootStyle.getPropertyValue('--weeb-nav-height') || '60');
+      const stackHeight = parseInt(rootStyle.getPropertyValue('--weeb-sticky-offset') || '0');
+      const top = el.getBoundingClientRect().top + window.scrollY - navHeight - stackHeight - 8;
       window.scrollTo({ top, behavior: 'smooth' });
     }
   }
@@ -208,6 +208,10 @@
     scrollListenerAttached = false;
     window.removeEventListener('scroll', handleTabScroll);
     window.removeEventListener('resize', handleTabScroll);
+    // The offset lives on documentElement, which outlives this component. Left
+    // set, every other route would scroll as though it had this page's sticky
+    // stack under its nav.
+    document.documentElement.style.removeProperty('--weeb-sticky-offset');
   }
 
   onMount(() => {
@@ -315,7 +319,7 @@
     airing: { color: 'text-weeb-amber', text: 'Airing', icon: 'fa-clapperboard' },
     aired: { color: 'text-weeb-green', text: 'Recently Aired', icon: 'fa-calendar' },
     countdown: { color: 'text-weeb-red', text: 'Airing Soon', icon: 'fa-clock' },
-    scheduled: { color: 'text-weeb-accent', text: 'Next Episode', icon: 'fa-calendar' }
+    scheduled: { color: 'text-weeb-accent-text', text: 'Next Episode', icon: 'fa-calendar' }
   };
 
   // Hero banner style timing data (from notification store)
@@ -359,6 +363,15 @@
       const stickyEl = document.querySelector('[data-sticky-header]') as HTMLElement || document.querySelector('.fixed.z-\\[90\\]') as HTMLElement;
       const stickyHeaderHeight = shouldShow && stickyEl ? stickyEl.offsetHeight : 0;
       tabBar.style.top = `calc(var(--weeb-nav-height, 60px) + ${stickyHeaderHeight-1}px)`;
+
+      // Publish the measured stack so scroll-padding-top and scrollToSection stop
+      // guessing. Three places used to carry their own idea of this height -- CSS
+      // said 0, scrollToSection said 72 + 48, and only this function measured it,
+      // which is why a focused element or an anchor landed underneath the bars.
+      // offsetHeight is 0 while a bar is hidden, so the value follows visibility
+      // for free.
+      const stackHeight = stickyHeaderHeight + tabBar.offsetHeight;
+      document.documentElement.style.setProperty('--weeb-sticky-offset', `${stackHeight}px`);
     }
   }
 
@@ -637,23 +650,23 @@
     >
       <div class="tab-bar-inner">
         <button
-          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'synopsis' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'synopsis' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'synopsis' ? 'var(--weeb-accent)' : 'transparent'}; color:{activeTab === 'synopsis' ? 'var(--weeb-fg)' : 'var(--weeb-fg-muted)'};"
           on:click={() => scrollToSection('synopsis')}
         >Synopsis</button>
         {#if newsEnabled && anime.news && anime.news.length > 0}
           <button
-            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'news' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'news' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'news' ? 'var(--weeb-accent)' : 'transparent'}; color:{activeTab === 'news' ? 'var(--weeb-fg)' : 'var(--weeb-fg-muted)'};"
             on:click={() => scrollToSection('news')}
-          >News <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:oklch(55% 0.15 280 / 0.15); color:oklch(55% 0.15 280); font-weight:600;">{anime.news.length}</span></button>
+          >News <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:color-mix(in oklch, var(--weeb-accent) 15%, transparent); color:var(--weeb-accent-text); font-weight:600;">{anime.news.length}</span></button>
         {/if}
         {#if anime.episodes && anime.episodes.length > 0}
           <button
-            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'episodes' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'episodes' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'episodes' ? 'var(--weeb-accent)' : 'transparent'}; color:{activeTab === 'episodes' ? 'var(--weeb-fg)' : 'var(--weeb-fg-muted)'};"
             on:click={() => scrollToSection('episodes')}
-          >Episodes <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:oklch(55% 0.15 280 / 0.15); color:oklch(55% 0.15 280); font-weight:600;">{anime.episodes.length}</span></button>
+          >Episodes <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:color-mix(in oklch, var(--weeb-accent) 15%, transparent); color:var(--weeb-accent-text); font-weight:600;">{anime.episodes.length}</span></button>
         {/if}
         <button
-          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'characters' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'characters' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'characters' ? 'var(--weeb-accent)' : 'transparent'}; color:{activeTab === 'characters' ? 'var(--weeb-fg)' : 'var(--weeb-fg-muted)'};"
           on:click={() => scrollToSection('characters')}
         >Characters</button>
       </div>
@@ -688,7 +701,13 @@
         {#if anime.episodes && anime.episodes.length > 0}
           <section class="content-section" bind:this={episodesEl} aria-labelledby="episodes-heading">
             <h2 class="section-heading" id="episodes-heading">Episodes</h2>
-            <Episodes episodes={anime.episodes} broadcast={anime.broadcast} />
+            <Episodes
+              episodes={anime.episodes}
+              watchedCount={anime.userAnime?.episodes ?? 0}
+              canTrack={Boolean(anime.userAnime)}
+              pending={$upsertAnime.isPending}
+              on:watch={(e) => $upsertAnime.mutate(trackingInput({ episodes: e.detail.episodes }))}
+            />
           </section>
         {/if}
 
@@ -1092,7 +1111,7 @@
 
   .hero-tag:hover {
     border-color: var(--weeb-accent);
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     background: color-mix(in oklch, var(--weeb-accent), transparent 85%);
   }
 
@@ -1126,8 +1145,7 @@
      QUICK INFO BAR
   =========================== */
   .quick-info {
-    max-width: 1440px;
-    margin: 0 auto;
+    width: 100%;
     padding: 0 var(--weeb-section-px, 48px);
     position: relative;
     z-index: 2;
@@ -1137,8 +1155,11 @@
   .quick-info__inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    /* Not space-between: at 2,526px that pinned the fact chips and the tracking
+       controls to opposite ends of the bar with 1,539px of nothing between them.
+       They are one cluster and now read as one. */
+    justify-content: flex-start;
+    gap: 24px;
     padding: 12px 20px;
     background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
@@ -1156,7 +1177,7 @@
     overflow-x: auto;
     -ms-overflow-style: none;
     scrollbar-width: none;
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
   }
   .quick-info__stats::-webkit-scrollbar { display: none; }
@@ -1178,7 +1199,7 @@
   }
 
   .qi-chip--accent {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     border-color: color-mix(in oklch, var(--weeb-accent), transparent 70%);
     background: color-mix(in oklch, var(--weeb-accent), transparent 90%);
   }
@@ -1297,9 +1318,8 @@
      needs a media query, which an inline style attribute cannot express.
   =========================== */
   .tab-bar-inner {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 48px;
+    width: 100%;
+    padding: 0 var(--weeb-section-px, 48px);
     display: flex;
     align-items: center;
     gap: 0;
@@ -1310,7 +1330,6 @@
      widen the document — an overflowing tab bar scrolls the whole page sideways. */
   @media (max-width: 768px) {
     .tab-bar-inner {
-      padding: 0 16px;
       overflow-x: auto;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
@@ -1331,9 +1350,12 @@
   /* ===========================
      MAIN CONTENT
   =========================== */
+  /* Full width with the section gutter, matching the homepage. The hero runs
+     edge to edge; a 1440px column underneath it left 1,086px of empty margin on
+     a wide monitor and made the two halves of the page look unrelated.
+     Everything that is READ keeps its own measure cap -- width is for content
+     that tiles, not for lines of prose. */
   .main-content {
-    max-width: 1440px;
-    margin: 0 auto;
     width: 100%;
     padding: 0 var(--weeb-section-px, 48px);
   }
@@ -1341,8 +1363,8 @@
   .content-single {
     display: flex;
     flex-direction: column;
-    gap: 40px;
-    padding: 40px 0 20px;
+    gap: var(--weeb-section-py, 40px);
+    padding: var(--weeb-section-py, 40px) 0 20px;
   }
 
   /* .content-section — each section is a clean block; no styles needed */
@@ -1392,14 +1414,40 @@
   /* ===========================
      INFO GRID
   =========================== */
+  /* An explicit column count, not auto-fill. This is seven fixed rows of
+     reference data whose length is known, so auto-fill's answer at 2,526px was
+     nine columns -- one 48px-tall strip with two empty bordered cells -- rather
+     than a shape anyone chose. It is bounded for the same reason: it stops
+     growing instead of stretching.
+
+     Dividers are per-cell borders on the leading edges, pulled back over the
+     preceding cell by a matching negative margin. Three properties fall out of
+     that and all three matter here: the borders never occupy layout space, the
+     first row's and first column's borders land outside the padding box and are
+     clipped by overflow:hidden so the container's own 1px frame is not doubled,
+     and a cell that does not exist draws nothing -- so a partial final row is
+     simply the container's background rather than a lighter block. Gap-drawn
+     hairlines get the first two but not the third, and there is no CSS that
+     spans a filler across an unknown remainder. */
   .info-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 0;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 1200px;
     background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
     border-radius: var(--weeb-radius-lg);
     overflow: hidden;
+  }
+  @media (min-width: 640px) {
+    .info-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    /* Seven items over four columns is two rows with one empty cell. */
+    .info-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 
   .info-item {
@@ -1408,13 +1456,14 @@
     align-items: baseline;
     gap: 16px;
     padding: 14px 20px;
-    border-bottom: 1px solid var(--weeb-border);
-    border-right: 1px solid var(--weeb-border);
+    background: var(--weeb-bg-elevated);
+    border-left: 1px solid var(--weeb-border);
+    border-top: 1px solid var(--weeb-border);
+    margin: -1px 0 0 -1px;
   }
 
   .info-item--full {
     grid-column: 1 / -1;
-    border-right: none;
   }
 
   .info-label {
@@ -1452,20 +1501,6 @@
   }
 
   /* ===========================
-     RESPONSIVE -- 1024px
-  =========================== */
-  @media (max-width: 1024px) {
-    .info-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .info-item {
-      border-right: none;
-    }
-
-  }
-
-  /* ===========================
      RESPONSIVE -- 768px
   =========================== */
   @media (max-width: 768px) {
@@ -1483,13 +1518,10 @@
     }
 
 
-    .main-content {
-      padding: 0 16px;
-    }
-
-    .quick-info {
-      padding: 0 16px;
-    }
+    /* No gutter override here. Both already read --weeb-section-px, and pinning
+       them to 16px between 481 and 768 put the content 8px left of the tab bar
+       and the hero panel -- three left edges on one page. The token steps at
+       1024 and 480 for every surface at once. */
     .quick-info__inner {
       flex-direction: column;
       align-items: stretch;
@@ -1501,10 +1533,6 @@
       gap: 6px;
     }
 
-    .content-single {
-      gap: 32px;
-      padding: 28px 0 16px;
-    }
   }
 
   /* ===========================

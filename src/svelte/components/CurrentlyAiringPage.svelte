@@ -800,7 +800,7 @@
     text-transform: uppercase;
     font-weight: 600;
     font-family: var(--weeb-font-mono);
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
   .page-title {
     font-size: clamp(1.75rem, 3vw, 2.5rem);
@@ -1065,12 +1065,12 @@
     width: fit-content;
   }
   .show-countdown.upcoming {
-    background: oklch(55% 0.15 280 / 0.15);
-    color: var(--weeb-accent-hover, var(--weeb-accent));
+    background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
+    color: var(--weeb-accent-text, var(--weeb-accent-hover));
   }
   .show-countdown.aired {
     background: oklch(28% 0.015 275 / 0.6);
-    color: var(--weeb-fg-muted);
+    color: var(--weeb-fg-secondary);
   }
   .show-countdown.airing-now {
     background: oklch(65% 0.15 155 / 0.15);
@@ -1105,9 +1105,9 @@
   }
   .show-card:hover .show-add-btn { opacity: 1; }
   .show-add-btn:hover {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     border-color: var(--weeb-accent);
-    background: oklch(55% 0.15 280 / 0.1);
+    background: color-mix(in oklch, var(--weeb-accent) 10%, transparent);
   }
 
   /* ---- Show card position for add btn ---- */
@@ -1245,11 +1245,11 @@
     font-weight: 700;
     font-size: 13px;
   }
-  .cal-day.selected { background: oklch(55% 0.15 280 / 0.15); }
+  .cal-day.selected { background: color-mix(in oklch, var(--weeb-accent) 15%, transparent); }
   .cal-day.selected .cal-day-num {
     border: 2px solid var(--weeb-accent);
     border-radius: 50%;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     font-weight: 700;
   }
   .cal-day.today.selected .cal-day-num {
@@ -1383,7 +1383,7 @@
     margin-top: 12px;
     background: none;
     border: 1px solid var(--weeb-border);
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     padding: 8px 20px;
     border-radius: var(--weeb-radius, 8px);
     cursor: pointer;

@@ -225,7 +225,7 @@
     </div>
 
     <div class="flex items-center gap-4">
-      <button on:click={goPrev} class="text-sm text-weeb-accent hover:underline transition-colors duration-300">
+      <button on:click={goPrev} class="text-sm text-weeb-accent-text hover:underline transition-colors duration-300">
         ← Previous
       </button>
       <h1 class="text-xl font-bold text-weeb-fg">
@@ -233,7 +233,7 @@
           ? format(currentDate, "MMMM yyyy")
           : `Week of ${format(start, "MMM d")}`}
       </h1>
-      <button on:click={goNext} class="text-sm text-weeb-accent hover:underline transition-colors duration-300">
+      <button on:click={goNext} class="text-sm text-weeb-accent-text hover:underline transition-colors duration-300">
         Next →
       </button>
     </div>
@@ -258,55 +258,55 @@
           <div class="flex flex-col gap-1 pr-1 overflow-y-auto scrollbar-thin scrollbar-thumb-weeb-border scrollbar-track-transparent">
             <!-- Simulate varying number of anime entries with more realistic distribution -->
             {#if index === 0 || index === 3 || index === 5 || index === 6}
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-12 mt-0.5"></div>
               </div>
             {/if}
             {#if index === 1 || index === 7 || index === 14}
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-14 mt-0.5"></div>
               </div>
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-16 mt-0.5"></div>
               </div>
             {/if}
             {#if index === 2 || index === 8 || index === 9 || index === 10 || index === 15}
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-12 mt-0.5"></div>
               </div>
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-14 mt-0.5"></div>
               </div>
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-10 mt-0.5"></div>
               </div>
             {/if}
             {#if index === 4 || index === 11 || index === 18}
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-14 mt-0.5"></div>
               </div>
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-12 mt-0.5"></div>
               </div>
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-16 mt-0.5"></div>
               </div>
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-14 mt-0.5"></div>
               </div>
             {/if}
             {#if index === 12 || index === 19 || index === 20}
-              <div class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
+              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
                 <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
                 <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-12 mt-0.5"></div>
               </div>

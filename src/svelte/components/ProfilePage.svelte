@@ -827,7 +827,7 @@
   }
   .section-count--accent {
     background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
   .section-count--red {
     background: color-mix(in oklch, var(--weeb-red) 15%, transparent);
@@ -839,7 +839,7 @@
   }
   .section-link {
     font-size: 0.85rem; font-weight: 500;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     text-decoration: none; transition: color 0.15s;
   }
   .section-link:hover { color: var(--weeb-accent-hover); }

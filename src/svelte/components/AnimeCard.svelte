@@ -51,7 +51,7 @@
       case 'countdown': return 'text-weeb-red';
       case 'airing': return 'text-weeb-amber';
       case 'aired': return 'text-weeb-green';
-      default: return 'text-weeb-accent';
+      default: return 'text-weeb-accent-text';
     }
   }
 

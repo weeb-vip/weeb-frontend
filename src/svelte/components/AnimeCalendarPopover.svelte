@@ -82,7 +82,7 @@
   bind:this={buttonRef}
   on:click={togglePopover}
   title="{getAnimeTitle(anime, $preferencesStore.titleLanguage)} (Ep {anime.episodes[0]?.episodeNumber || '?'}){airTimeText ? ` at ${airTimeText}` : ''}"
-  class="text-xs text-weeb-accent text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col"
+  class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col"
 >
   <span class="truncate">
     {getAnimeTitle(anime, $preferencesStore.titleLanguage)} (Ep {anime.episodes[0]?.episodeNumber || "?"})

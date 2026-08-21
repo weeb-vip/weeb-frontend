@@ -365,7 +365,7 @@
   }
   .login-form :global(input:focus) {
     border-color: var(--weeb-accent);
-    box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.2);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--weeb-accent) 20%, transparent);
   }
 
   .login-form :global(label) {
@@ -485,7 +485,7 @@
   }
   .link-muted {
     font-size: 13px;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     text-decoration: none;
     transition: color 0.15s;
   }
@@ -557,7 +557,7 @@
     color: var(--weeb-fg-muted);
   }
   .card-footer a {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.15s;

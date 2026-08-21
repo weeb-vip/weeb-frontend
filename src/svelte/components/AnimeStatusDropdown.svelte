@@ -203,13 +203,13 @@
           bind:this={menuElement}
           use:portalMenu
           class="asd-menu"
-          style="position: fixed; z-index: 9999; top: {menuTop}px; left: {menuLeft}px; min-width: 180px; max-height: calc(100vh - 16px); overflow-y: auto; background: var(--weeb-surface, oklch(22% 0.02 275)); border: 1px solid var(--weeb-border, oklch(28% 0.015 275)); border-radius: 8px; padding: 4px; box-shadow: 0 8px 32px oklch(0% 0 0 / 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--weeb-fg, oklch(95% 0.005 265));"
+          style="position: fixed; z-index: 9999; top: {menuTop}px; left: {menuLeft}px; min-width: 180px; max-height: calc(100vh - 16px); overflow-y: auto; background: var(--weeb-surface, oklch(22% 0.02 275)); border: 1px solid var(--weeb-border, oklch(28% 0.015 275)); border-radius: 8px; padding: 4px; box-shadow: 0 8px 32px oklch(0% 0 0 / 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--weeb-fg, var(--weeb-fg));"
           transition:scale={{duration: 100, start: 0.95}}
         >
           <div class="asd-menu-header" style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--weeb-fg-muted, oklch(45% 0.01 270)); padding: 8px 10px 4px;">Change Status</div>
           {#each statusOptions as statusOption, index}
             <button
-              style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; background: transparent; color: inherit; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; {entry.status === statusOption ? 'background: oklch(55% 0.15 280 / 0.08); color: var(--weeb-accent, oklch(55% 0.15 280));' : ''}"
+              style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; background: transparent; color: inherit; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; {entry.status === statusOption ? 'background: color-mix(in oklch, var(--weeb-accent) 8%, transparent); color: var(--weeb-accent, var(--weeb-accent));' : ''}"
               on:click={() => onChangeStatus(statusOption)}
               on:mouseenter={() => handleMouseEnter(index)}
               on:mouseleave={handleMouseLeave}
@@ -249,12 +249,12 @@
           bind:this={menuElement}
           use:portalMenu
           class="asd-menu"
-          style="position: fixed; z-index: 9999; top: {menuTop}px; left: {menuLeft}px; min-width: 180px; max-height: calc(100vh - 16px); overflow-y: auto; background: var(--weeb-surface, oklch(22% 0.02 275)); border: 1px solid var(--weeb-border, oklch(28% 0.015 275)); border-radius: 8px; padding: 4px; box-shadow: 0 8px 32px oklch(0% 0 0 / 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--weeb-fg, oklch(95% 0.005 265));"
+          style="position: fixed; z-index: 9999; top: {menuTop}px; left: {menuLeft}px; min-width: 180px; max-height: calc(100vh - 16px); overflow-y: auto; background: var(--weeb-surface, oklch(22% 0.02 275)); border: 1px solid var(--weeb-border, oklch(28% 0.015 275)); border-radius: 8px; padding: 4px; box-shadow: 0 8px 32px oklch(0% 0 0 / 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--weeb-fg, var(--weeb-fg));"
           transition:scale={{duration: 100, start: 0.95}}
         >
           {#each statusOptions as statusOption, index}
             <button
-              style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; background: transparent; color: inherit; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; {entry.status === statusOption ? 'background: oklch(55% 0.15 280 / 0.08); color: var(--weeb-accent, oklch(55% 0.15 280));' : ''}"
+              style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; background: transparent; color: inherit; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; {entry.status === statusOption ? 'background: color-mix(in oklch, var(--weeb-accent) 8%, transparent); color: var(--weeb-accent, var(--weeb-accent));' : ''}"
               on:click|stopPropagation={() => onChangeStatus(statusOption)}
               on:mouseenter={() => handleMouseEnter(statusOptions.length + 1 + index)}
               on:mouseleave={handleMouseLeave}
@@ -384,7 +384,7 @@
     color: var(--weeb-fg);
   }
   .asd-menu-item--active {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     font-weight: 600;
   }
   .asd-menu-item--danger {
@@ -404,7 +404,7 @@
   .asd-check {
     width: 14px;
     height: 14px;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     flex-shrink: 0;
   }
 

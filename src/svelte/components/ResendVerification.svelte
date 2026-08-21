@@ -155,7 +155,7 @@
           Already verified?{' '}
           <a
             href="/auth/login"
-            class="text-weeb-accent hover:text-weeb-accent transition-colors"
+            class="text-weeb-accent-text hover:text-weeb-accent-text transition-colors"
           >
             Sign in here
           </a>
@@ -164,7 +164,7 @@
           Need help?{' '}
           <a
             href="/auth/password-reset-request"
-            class="text-weeb-accent hover:text-weeb-accent transition-colors"
+            class="text-weeb-accent-text hover:text-weeb-accent-text transition-colors"
           >
             Reset your password
           </a>

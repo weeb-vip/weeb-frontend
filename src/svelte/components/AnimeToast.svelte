@@ -70,7 +70,7 @@
   const statusConfig = {
     'airing-soon': {
       icon: 'fa-clock',
-      color: 'text-weeb-accent',
+      color: 'text-weeb-accent-text',
       bgColor: 'bg-weeb-surface',
       borderColor: 'border-weeb-border'
     },
@@ -258,7 +258,7 @@
   .toast-status-icon {
     flex-shrink: 0;
   }
-  .toast-status-airing-soon { color: var(--weeb-accent); }
+  .toast-status-airing-soon { color: var(--weeb-accent-text); }
   .toast-status-airing { color: var(--weeb-green); }
   .toast-status-finished { color: var(--weeb-violet); }
   .toast-status-warning { color: var(--weeb-amber); }
@@ -275,9 +275,9 @@
     border: 1px solid var(--weeb-border);
   }
   .toast-indicator-airing-soon {
-    color: var(--weeb-accent);
-    background: oklch(55% 0.15 280 / 0.1);
-    border-color: oklch(55% 0.15 280 / 0.3);
+    color: var(--weeb-accent-text);
+    background: color-mix(in oklch, var(--weeb-accent) 10%, transparent);
+    border-color: color-mix(in oklch, var(--weeb-accent) 30%, transparent);
   }
   .toast-indicator-airing {
     color: var(--weeb-green);

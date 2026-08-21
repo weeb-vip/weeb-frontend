@@ -143,7 +143,7 @@
 
       <div>
         <div class="mx-auto h-12 w-12 bg-weeb-accent/15 rounded-full flex items-center justify-center">
-          <Fa icon={iconEnvelope} class="text-weeb-accent text-xl" />
+          <Fa icon={iconEnvelope} class="text-weeb-accent-text text-xl" />
         </div>
         <h2 class="mt-6 text-center text-3xl font-bold text-weeb-fg">Reset your password</h2>
         <p class="mt-2 text-center text-sm text-weeb-fg-muted">
@@ -207,7 +207,7 @@
           <div class="text-center mt-2">
             <a
               href="/"
-              class="text-sm text-weeb-accent hover:text-weeb-accent transition-colors"
+              class="text-sm text-weeb-accent-text hover:text-weeb-accent-text transition-colors"
             >
               ← Back to Home
             </a>

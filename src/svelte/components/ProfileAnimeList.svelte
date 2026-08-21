@@ -491,7 +491,7 @@
   }
   .tab-btn:hover { color: var(--weeb-fg); }
   .tab-btn.active {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     border-bottom-color: var(--weeb-accent);
   }
   .tab-count {
@@ -507,8 +507,8 @@
     text-align: center;
   }
   .tab-btn.active .tab-count {
-    background: oklch(55% 0.15 280 / 0.15);
-    color: var(--weeb-accent);
+    background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
+    color: var(--weeb-accent-text);
   }
 
   /* ── VIEW CONTROLS ──────────────────────────────────── */
@@ -558,7 +558,7 @@
     transition: background 0.15s, color 0.15s;
   }
   .view-btn + .view-btn { border-left: 1px solid var(--weeb-border); }
-  .view-btn.active { background: oklch(55% 0.15 280 / 0.15); color: var(--weeb-accent); }
+  .view-btn.active { background: color-mix(in oklch, var(--weeb-accent) 15%, transparent); color: var(--weeb-accent-text); }
   .view-btn:hover:not(.active) { background: var(--weeb-surface-hover); }
 
   /* ── LIST VIEW ──────────────────────────────────────── */

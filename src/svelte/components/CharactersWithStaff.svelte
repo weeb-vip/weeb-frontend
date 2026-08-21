@@ -93,7 +93,7 @@
   function getRoleColor(role: string) {
     const roleStr = role?.toLowerCase() || '';
     if (roleStr.includes('main') || roleStr.includes('protagonist')) {
-      return 'text-weeb-accent bg-weeb-surface';
+      return 'text-weeb-accent-text bg-weeb-surface';
     } else if (roleStr.includes('supporting')) {
       return 'text-weeb-green bg-weeb-green/10';
     }
@@ -247,7 +247,7 @@
 
   .chars-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 12px;
   }
 
@@ -332,7 +332,7 @@
     margin-top: 2px;
   }
   .char-role.main {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
 
   .char-va {
@@ -350,7 +350,7 @@
 
   .char-va-more {
     font-size: 11px;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     margin-top: 3px;
     display: flex;
     align-items: center;

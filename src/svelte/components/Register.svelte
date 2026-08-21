@@ -485,7 +485,7 @@
   }
 
   .card-footer a {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.15s;

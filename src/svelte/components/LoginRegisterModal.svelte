@@ -483,7 +483,7 @@
   /* Accent links */
   :global(.weeb-auth-modal .link-accent) {
     font-size: 13px;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     text-decoration: none;
     background: none;
     border: none;

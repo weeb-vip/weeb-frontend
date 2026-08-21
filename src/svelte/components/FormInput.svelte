@@ -161,7 +161,7 @@
 
   :global(.weeb-form-input:focus) {
     border-color: var(--weeb-accent);
-    box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.2);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--weeb-accent) 20%, transparent);
   }
 
   :global(.weeb-form-input.has-icon) {

@@ -854,7 +854,7 @@
     transition: color 0.2s;
   }
   .search-bar-wrap:focus-within .search-icon {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
   .search-bar-input {
     width: 100%;
@@ -871,7 +871,7 @@
   .search-bar-input:focus {
     outline: none;
     border-color: var(--weeb-accent);
-    box-shadow: 0 0 0 4px oklch(55% 0.15 280 / 0.12);
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--weeb-accent) 12%, transparent);
   }
   .search-bar-input::placeholder { color: var(--weeb-fg-muted); }
   .search-bar-clear {
@@ -941,12 +941,12 @@
   .genre-tag:hover {
     border-color: var(--weeb-accent);
     color: var(--weeb-fg);
-    background: oklch(55% 0.15 280 / 0.08);
+    background: color-mix(in oklch, var(--weeb-accent) 8%, transparent);
   }
   .genre-tag.selected {
-    background: oklch(55% 0.15 280 / 0.15);
+    background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
     border-color: var(--weeb-accent);
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
   .genre-tag--more {
     border-style: dashed;
@@ -960,7 +960,7 @@
     opacity: 0.7;
   }
   .genre-tag.selected .genre-tag-count {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     opacity: 0.8;
   }
   .genre-tag-skeleton {
@@ -1023,14 +1023,14 @@
     border-radius: 14px;
     font-size: 12px;
     font-weight: 500;
-    background: oklch(55% 0.15 280 / 0.12);
-    color: var(--weeb-accent);
-    border: 1px solid oklch(55% 0.15 280 / 0.25);
+    background: color-mix(in oklch, var(--weeb-accent) 12%, transparent);
+    color: var(--weeb-accent-text);
+    border: 1px solid color-mix(in oklch, var(--weeb-accent) 25%, transparent);
     cursor: pointer;
     transition: all 0.15s;
     font-family: var(--weeb-font);
   }
-  .filter-pill:hover { background: oklch(55% 0.15 280 / 0.18); }
+  .filter-pill:hover { background: color-mix(in oklch, var(--weeb-accent) 18%, transparent); }
   .filter-pill-remove {
     width: 14px;
     height: 14px;
@@ -1131,7 +1131,7 @@
     cursor: pointer;
   }
   .list-item:hover { background: var(--weeb-surface); margin: 0 -16px; padding: 16px 16px; }
-  .list-item:hover .list-title { color: var(--weeb-accent); }
+  .list-item:hover .list-title { color: var(--weeb-accent-text); }
   .list-poster {
     width: 52px;
     height: 78px;
@@ -1186,9 +1186,9 @@
     font-size: 10px;
     padding: 1px 6px;
     border-radius: var(--weeb-radius-full, 9999px);
-    background: oklch(55% 0.15 280 / 0.1);
+    background: color-mix(in oklch, var(--weeb-accent) 10%, transparent);
     color: var(--weeb-fg-secondary);
-    border: 1px solid oklch(55% 0.15 280 / 0.15);
+    border: 1px solid color-mix(in oklch, var(--weeb-accent) 15%, transparent);
   }
   .list-badges {
     display: flex;
@@ -1210,7 +1210,7 @@
     background: var(--weeb-surface);
   }
   .list-status-badge.watching { color: var(--weeb-green); border-color: var(--weeb-green); background: color-mix(in oklch, var(--weeb-green) 8%, transparent); }
-  .list-status-badge.completed { color: var(--weeb-accent); border-color: var(--weeb-accent); background: color-mix(in oklch, var(--weeb-accent) 8%, transparent); }
+  .list-status-badge.completed { color: var(--weeb-accent-text); border-color: var(--weeb-accent); background: color-mix(in oklch, var(--weeb-accent) 8%, transparent); }
   .list-status-badge.plan { color: var(--weeb-amber); border-color: var(--weeb-amber); background: color-mix(in oklch, var(--weeb-amber) 8%, transparent); }
   .list-status-badge.dropped { color: var(--weeb-red); border-color: var(--weeb-red); background: color-mix(in oklch, var(--weeb-red) 8%, transparent); }
   .list-status-badge.onhold { color: var(--weeb-fg-muted); border-color: var(--weeb-fg-muted); background: color-mix(in oklch, var(--weeb-fg-muted) 8%, transparent); }
