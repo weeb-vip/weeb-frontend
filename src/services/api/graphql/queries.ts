@@ -674,6 +674,7 @@ export const queryCharactersAndStaffByAnimeID = graphql(`
             }
             staff {
                 id
+                slug
                 language
                 givenName
                 familyName
@@ -697,6 +698,44 @@ export const queryStaffByID = graphql(`
     query StaffById($id: ID!) {
         staff(id: $id) {
             id
+            slug
+            givenName
+            familyName
+            language
+            image
+            birthday
+            birthPlace
+            bloodType
+            hobbies
+            summary
+            roles {
+                character {
+                    id
+                    name
+                    role
+                    image
+                }
+                anime {
+                    id
+                    slug
+                    titleEn
+                    titleJp
+                    imageUrl
+                    startDate
+                    animeStatus
+                }
+            }
+        }
+    }
+`)
+
+// The slug twin of queryStaffByID. Same selection set: the page renders
+// whichever of the two answered, so they must not drift.
+export const queryStaffBySlug = graphql(`
+    query StaffBySlug($slug: String!) {
+        staffBySlug(slug: $slug) {
+            id
+            slug
             givenName
             familyName
             language
