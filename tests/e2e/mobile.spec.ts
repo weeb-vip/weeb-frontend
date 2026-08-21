@@ -158,11 +158,15 @@ test.describe('Mobile Device Simulation', () => {
     await mobilePage.goto('/');
     await expect(mobilePage.locator('body')).toBeVisible();
     
-    // Test touch interactions
-    const touchTarget = mobilePage.locator('button, a, [role="button"]').first();
-    if (await touchTarget.count() > 0) {
-      await touchTarget.tap();
-    }
+    // Tap a named control rather than whatever is first in the DOM. That used to
+    // be the skip link, which is correctly parked off-screen until it takes
+    // focus -- Playwright still counts it visible, since it has a bounding box,
+    // and then times out trying to scroll it into view. A generic "first
+    // interactive element" also says nothing when it breaks: it reports on
+    // whichever element happens to lead the document, not on touch working.
+    const touchTarget = mobilePage.getByRole('button', { name: /open menu/i });
+    await expect(touchTarget).toBeVisible();
+    await touchTarget.tap();
     
     await context.close();
   });

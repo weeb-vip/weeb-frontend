@@ -19,10 +19,11 @@ test('homepage renders its content sections', async ({ page }) => {
   // resolve (e.g. an edited query string that no longer matches the generated
   // codegen document — see PR #70) silently drops its section with no error.
   // These assertions guard the homepage against that class of regression:
-  // "Top Rated" and "Newest" are both fed by getHomePageData, which is exactly
-  // what broke. "Airing This Week" covers the currently-airing query.
+  // "Top Rated" and "Recently Added" are both fed by getHomePageData, which is
+  // exactly what broke. The latter was called "Newest" until the shelf was
+  // renamed -- the guard is on the query resolving, so it follows the heading.
   await expect(page.getByRole('heading', { name: /top rated/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /newest/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /recently added/i })).toBeVisible();
   // The currently-airing query used to surface as an "Airing This Week" section;
   // it now feeds the hero's Airing Next rail instead. Same guard, new home: if
   // that query stops resolving, the rail disappears with it.
