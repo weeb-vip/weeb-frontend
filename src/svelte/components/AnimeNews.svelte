@@ -502,7 +502,7 @@
     border-left: 1px solid var(--weeb-border);
     font-size: 13px;
     font-weight: 500;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     text-decoration: none;
     transition: color 140ms ease;
   }

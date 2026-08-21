@@ -149,8 +149,8 @@
     margin-top: 8px;
     padding: 3px 8px;
     border-radius: 4px;
-    background: oklch(55% 0.15 280 / 0.15);
-    color: var(--weeb-accent);
+    background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
+    color: var(--weeb-accent-text);
     font-size: 11px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;

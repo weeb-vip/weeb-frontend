@@ -637,23 +637,23 @@
     >
       <div class="tab-bar-inner">
         <button
-          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'synopsis' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'synopsis' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'synopsis' ? 'var(--weeb-accent)' : 'transparent'}; color:{activeTab === 'synopsis' ? 'var(--weeb-fg)' : 'var(--weeb-fg-muted)'};"
           on:click={() => scrollToSection('synopsis')}
         >Synopsis</button>
         {#if newsEnabled && anime.news && anime.news.length > 0}
           <button
-            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'news' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'news' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'news' ? 'var(--weeb-accent)' : 'transparent'}; color:{activeTab === 'news' ? 'var(--weeb-fg)' : 'var(--weeb-fg-muted)'};"
             on:click={() => scrollToSection('news')}
-          >News <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:oklch(55% 0.15 280 / 0.15); color:oklch(55% 0.15 280); font-weight:600;">{anime.news.length}</span></button>
+          >News <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:color-mix(in oklch, var(--weeb-accent) 15%, transparent); color:var(--weeb-accent-text); font-weight:600;">{anime.news.length}</span></button>
         {/if}
         {#if anime.episodes && anime.episodes.length > 0}
           <button
-            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'episodes' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'episodes' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+            style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; border-bottom:2px solid {activeTab === 'episodes' ? 'var(--weeb-accent)' : 'transparent'}; color:{activeTab === 'episodes' ? 'var(--weeb-fg)' : 'var(--weeb-fg-muted)'};"
             on:click={() => scrollToSection('episodes')}
-          >Episodes <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:oklch(55% 0.15 280 / 0.15); color:oklch(55% 0.15 280); font-weight:600;">{anime.episodes.length}</span></button>
+          >Episodes <span style="font-size:11px; padding:2px 7px; border-radius:10px; background:color-mix(in oklch, var(--weeb-accent) 15%, transparent); color:var(--weeb-accent-text); font-weight:600;">{anime.episodes.length}</span></button>
         {/if}
         <button
-          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'characters' ? 'oklch(55% 0.15 280)' : 'transparent'}; color:{activeTab === 'characters' ? 'oklch(95% 0.005 265)' : 'oklch(55% 0.01 270)'};"
+          style="padding:10px 20px; font-size:13px; font-weight:500; background:none; border:none; cursor:pointer; white-space:nowrap; border-bottom:2px solid {activeTab === 'characters' ? 'var(--weeb-accent)' : 'transparent'}; color:{activeTab === 'characters' ? 'var(--weeb-fg)' : 'var(--weeb-fg-muted)'};"
           on:click={() => scrollToSection('characters')}
         >Characters</button>
       </div>
@@ -688,7 +688,13 @@
         {#if anime.episodes && anime.episodes.length > 0}
           <section class="content-section" bind:this={episodesEl} aria-labelledby="episodes-heading">
             <h2 class="section-heading" id="episodes-heading">Episodes</h2>
-            <Episodes episodes={anime.episodes} broadcast={anime.broadcast} />
+            <Episodes
+              episodes={anime.episodes}
+              watchedCount={anime.userAnime?.episodes ?? 0}
+              canTrack={Boolean(anime.userAnime)}
+              pending={$upsertAnime.isPending}
+              on:watch={(e) => $upsertAnime.mutate(trackingInput({ episodes: e.detail.episodes }))}
+            />
           </section>
         {/if}
 
@@ -1092,7 +1098,7 @@
 
   .hero-tag:hover {
     border-color: var(--weeb-accent);
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     background: color-mix(in oklch, var(--weeb-accent), transparent 85%);
   }
 
@@ -1178,7 +1184,7 @@
   }
 
   .qi-chip--accent {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     border-color: color-mix(in oklch, var(--weeb-accent), transparent 70%);
     background: color-mix(in oklch, var(--weeb-accent), transparent 90%);
   }

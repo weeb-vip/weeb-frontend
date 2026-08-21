@@ -382,7 +382,7 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     margin-bottom: 8px;
   }
 
@@ -395,7 +395,7 @@
   }
 
   .page-title .accent {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
 
   /* ── Season selector ── */
@@ -469,7 +469,7 @@
 
   .season-arrow:hover {
     border-color: var(--weeb-accent);
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     background: var(--weeb-bg-elevated);
   }
 
@@ -521,7 +521,7 @@
     font-family: var(--weeb-font-mono);
     font-size: 13px;
     font-weight: 600;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
 
   .stats-divider {
@@ -544,7 +544,7 @@
   }
 
   .current-season-link:hover {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
 
   /* ── Top strip ── */
@@ -567,7 +567,7 @@
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.1em;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     white-space: nowrap;
     flex-shrink: 0;
   }
@@ -599,7 +599,7 @@
     font-family: var(--weeb-font-mono);
     font-size: 12px;
     font-weight: 800;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     width: 22px;
     text-align: center;
     flex-shrink: 0;
@@ -737,12 +737,12 @@
   .tag-pill--toggle:hover {
     border-style: solid;
     border-color: var(--weeb-accent);
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
   .empty-clear-btn {
     background: none;
     border: none;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     cursor: pointer;
     font-size: inherit;
     text-decoration: underline;

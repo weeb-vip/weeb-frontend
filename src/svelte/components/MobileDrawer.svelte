@@ -397,7 +397,7 @@
   }
   .drawer-nav-item:hover .drawer-nav-icon,
   .drawer-nav-item:active .drawer-nav-icon {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
 
   /* Settings */

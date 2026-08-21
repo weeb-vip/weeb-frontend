@@ -419,7 +419,7 @@
   .reset {
     font: inherit;
     font-size: 12.5px;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     background: transparent;
     border: 1px solid color-mix(in oklch, var(--weeb-accent) 45%, transparent);
     border-radius: 20px;

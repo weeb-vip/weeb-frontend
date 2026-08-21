@@ -332,7 +332,7 @@
     margin-top: 2px;
   }
   .char-role.main {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
   }
 
   .char-va {
@@ -350,7 +350,7 @@
 
   .char-va-more {
     font-size: 11px;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     margin-top: 3px;
     display: flex;
     align-items: center;

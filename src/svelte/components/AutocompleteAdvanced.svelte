@@ -668,11 +668,11 @@
     --_ac-bg-elevated: var(--weeb-bg-elevated, oklch(18% 0.018 275));
     --_ac-surface: var(--weeb-surface, oklch(22% 0.02 275));
     --_ac-surface-hover: var(--weeb-surface-hover, oklch(26% 0.022 275));
-    --_ac-fg: var(--weeb-fg, oklch(95% 0.005 265));
+    --_ac-fg: var(--weeb-fg, var(--weeb-fg));
     --_ac-fg-secondary: var(--weeb-fg-secondary, oklch(70% 0.01 270));
-    --_ac-fg-muted: var(--weeb-fg-muted, oklch(55% 0.01 270));
+    --_ac-fg-muted: var(--weeb-fg-muted, var(--weeb-fg-muted));
     --_ac-border: var(--weeb-border, oklch(28% 0.015 275));
-    --_ac-accent: var(--weeb-accent, oklch(55% 0.15 280));
+    --_ac-accent: var(--weeb-accent, var(--weeb-accent));
     --_ac-accent-hover: var(--weeb-accent-hover, oklch(62% 0.16 280));
     --_ac-radius: var(--weeb-radius, 8px);
     --_ac-radius-lg: var(--weeb-radius-lg, 12px);
@@ -768,7 +768,7 @@
 
   .ac-simple-input:focus {
     border-color: var(--_ac-accent);
-    box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.12);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--weeb-accent) 12%, transparent);
   }
 
   .ac-fallback-icon {
@@ -839,7 +839,7 @@
 
   .ac-input:focus {
     border-color: var(--_ac-accent);
-    box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.12);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--weeb-accent) 12%, transparent);
   }
   /* The glow above is 1.09:1 against the page -- decoration, not an indicator.
      This is the one that actually reads. */

@@ -244,8 +244,8 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: oklch(55% 0.15 280 / 0.16);
-    color: var(--weeb-accent);
+    background: color-mix(in oklch, var(--weeb-accent) 16%, transparent);
+    color: var(--weeb-accent-text);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -409,7 +409,7 @@
     font-size: 13.5px;
     font-family: inherit;
     font-weight: 500;
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     cursor: pointer;
     transition: color 0.15s;
   }
@@ -433,7 +433,7 @@
   }
 
   .card-footer a {
-    color: var(--weeb-accent);
+    color: var(--weeb-accent-text);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.15s;
