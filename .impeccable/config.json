@@ -1,0 +1,20 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-radius",
+        "value": "4px)",
+        "createdAt": "2026-08-19T22:04:13.462Z",
+        "reason": "Claude: parser artifact. Matches the literal fallback inside var(--weeb-radius-sm, 4px); 4px IS rounded.sm in DESIGN.md frontmatter, so the value is on-scale."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "13px",
+        "createdAt": "2026-08-19T22:04:13.487Z",
+        "reason": "Claude: DESIGN.md prose documents 13px ('13px/600 label') but its frontmatter typography ramp omits the step. Known drift, reported in the 2026-08-19 critique, not repaired as a side effect. 13px also matches AiringStripCard's .airing-title, the rail's sibling component."
+      }
+    ]
+  }
+}

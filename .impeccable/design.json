@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-19T00:00:00.000Z",
+  "title": "Design System: weeb.vip",
+  "extensions": {
+    "colorMeta": {
+      "accent": { "role": "primary", "displayName": "Signal Indigo", "canonical": "oklch(55% 0.15 280)", "tonalRamp": ["oklch(18% 0.06 280)","oklch(28% 0.09 280)","oklch(38% 0.12 280)","oklch(48% 0.14 280)","oklch(55% 0.15 280)","oklch(66% 0.14 280)","oklch(78% 0.10 280)","oklch(92% 0.04 280)"] },
+      "accent-hover": { "role": "primary", "displayName": "Signal Indigo Lift", "canonical": "oklch(62% 0.16 280)", "tonalRamp": ["oklch(20% 0.06 280)","oklch(30% 0.10 280)","oklch(40% 0.13 280)","oklch(52% 0.15 280)","oklch(62% 0.16 280)","oklch(72% 0.13 280)","oklch(84% 0.08 280)","oklch(95% 0.03 280)"] },
+      "violet": { "role": "secondary", "displayName": "Gallery Violet", "canonical": "oklch(62% 0.14 300)", "tonalRamp": ["oklch(18% 0.05 300)","oklch(28% 0.08 300)","oklch(38% 0.11 300)","oklch(50% 0.13 300)","oklch(62% 0.14 300)","oklch(73% 0.12 300)","oklch(84% 0.08 300)","oklch(94% 0.03 300)"] },
+      "violet-muted": { "role": "secondary", "displayName": "Gallery Violet Muted", "canonical": "oklch(45% 0.10 300)", "tonalRamp": ["oklch(16% 0.04 300)","oklch(24% 0.06 300)","oklch(34% 0.08 300)","oklch(45% 0.10 300)","oklch(56% 0.10 300)","oklch(68% 0.09 300)","oklch(80% 0.06 300)","oklch(93% 0.02 300)"] },
+      "green": { "role": "tertiary", "displayName": "Airing Green", "canonical": "oklch(65% 0.15 155)", "tonalRamp": ["oklch(20% 0.05 155)","oklch(30% 0.08 155)","oklch(40% 0.11 155)","oklch(52% 0.14 155)","oklch(65% 0.15 155)","oklch(76% 0.13 155)","oklch(86% 0.09 155)","oklch(95% 0.03 155)"] },
+      "amber": { "role": "tertiary", "displayName": "Upcoming Amber", "canonical": "oklch(72% 0.14 85)", "tonalRamp": ["oklch(22% 0.05 85)","oklch(32% 0.08 85)","oklch(44% 0.11 85)","oklch(58% 0.13 85)","oklch(72% 0.14 85)","oklch(82% 0.12 85)","oklch(90% 0.08 85)","oklch(96% 0.03 85)"] },
+      "red": { "role": "tertiary", "displayName": "Dropped Red", "canonical": "oklch(60% 0.18 25)", "tonalRamp": ["oklch(20% 0.06 25)","oklch(30% 0.10 25)","oklch(40% 0.14 25)","oklch(50% 0.17 25)","oklch(60% 0.18 25)","oklch(72% 0.15 25)","oklch(84% 0.10 25)","oklch(95% 0.03 25)"] },
+      "bg": { "role": "neutral", "displayName": "Theatre Black", "canonical": "oklch(14% 0.015 275)", "tonalRamp": ["oklch(14% 0.015 275)","oklch(18% 0.018 275)","oklch(22% 0.02 275)","oklch(26% 0.022 275)","oklch(38% 0.018 275)","oklch(55% 0.01 270)","oklch(70% 0.01 270)","oklch(95% 0.005 265)"] },
+      "bg-elevated": { "role": "neutral", "displayName": "Raised Black", "canonical": "oklch(18% 0.018 275)", "tonalRamp": ["oklch(14% 0.015 275)","oklch(18% 0.018 275)","oklch(22% 0.02 275)","oklch(26% 0.022 275)","oklch(38% 0.018 275)","oklch(55% 0.01 270)","oklch(70% 0.01 270)","oklch(95% 0.005 265)"] },
+      "surface": { "role": "neutral", "displayName": "Screen Grey", "canonical": "oklch(22% 0.02 275)", "tonalRamp": ["oklch(14% 0.015 275)","oklch(18% 0.018 275)","oklch(22% 0.02 275)","oklch(26% 0.022 275)","oklch(38% 0.018 275)","oklch(55% 0.01 270)","oklch(70% 0.01 270)","oklch(95% 0.005 265)"] },
+      "surface-hover": { "role": "neutral", "displayName": "Screen Grey Lit", "canonical": "oklch(26% 0.022 275)", "tonalRamp": ["oklch(14% 0.015 275)","oklch(18% 0.018 275)","oklch(22% 0.02 275)","oklch(26% 0.022 275)","oklch(38% 0.018 275)","oklch(55% 0.01 270)","oklch(70% 0.01 270)","oklch(95% 0.005 265)"] },
+      "border": { "role": "neutral", "displayName": "Edge", "canonical": "oklch(28% 0.015 275)", "tonalRamp": ["oklch(16% 0.01 275)","oklch(22% 0.013 275)","oklch(28% 0.015 275)","oklch(36% 0.015 275)","oklch(48% 0.013 275)","oklch(62% 0.01 272)","oklch(78% 0.008 268)","oklch(95% 0.005 265)"] },
+      "fg": { "role": "neutral", "displayName": "Projection White", "canonical": "oklch(95% 0.005 265)", "tonalRamp": ["oklch(20% 0.005 265)","oklch(34% 0.006 265)","oklch(48% 0.008 268)","oklch(55% 0.01 270)","oklch(70% 0.01 270)","oklch(82% 0.008 268)","oklch(90% 0.006 266)","oklch(95% 0.005 265)"] },
+      "fg-secondary": { "role": "neutral", "displayName": "Half Light", "canonical": "oklch(70% 0.01 270)", "tonalRamp": ["oklch(20% 0.005 265)","oklch(34% 0.006 265)","oklch(48% 0.008 268)","oklch(55% 0.01 270)","oklch(70% 0.01 270)","oklch(82% 0.008 268)","oklch(90% 0.006 266)","oklch(95% 0.005 265)"] },
+      "fg-muted": { "role": "neutral", "displayName": "Quarter Light", "canonical": "oklch(55% 0.01 270)", "tonalRamp": ["oklch(20% 0.005 265)","oklch(34% 0.006 265)","oklch(48% 0.008 268)","oklch(55% 0.01 270)","oklch(70% 0.01 270)","oklch(82% 0.008 268)","oklch(90% 0.006 266)","oklch(95% 0.005 265)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero and page titles. One per screen." },
+      "headline": { "displayName": "Headline", "purpose": "Section headers above rails and grids." },
+      "title": { "displayName": "Title", "purpose": "Card titles, show names, modal headings." },
+      "body": { "displayName": "Body", "purpose": "Synopses and prose, capped at 65-75ch." },
+      "label": { "displayName": "Label", "purpose": "Badges, chips, meta labels, small buttons." },
+      "numeral": { "displayName": "Numeral (mono)", "purpose": "Air times, countdowns, episode numbers and counts, durations, scores, dates." }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 12px 32px oklch(0% 0 0 / 0.4)", "purpose": "Cards at rest in an art context, and panels sitting over artwork." },
+      { "name": "poster", "value": "0 20px 60px oklch(0% 0 0 / 0.5)", "purpose": "Hero posters and large key-art elements. Deepest shadow in the system." },
+      { "name": "dropdown", "value": "0 8px 24px oklch(0% 0 0 / 0.4)", "purpose": "Menus, popovers, autocomplete panels, toasts." }
+    ],
+    "motion": [
+      { "name": "state-transition", "value": "0.15s", "purpose": "Background, colour and border transitions on buttons and interactive surfaces." },
+      { "name": "surface-transition", "value": "0.3s", "purpose": "Larger surface and region transitions (page regions, drawers)." },
+      { "name": "glass-blur", "value": "blur(24px) saturate(1.4)", "purpose": "Frosted nav and hero overlays; the saturate carries artwork colour through." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "480px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single primary action on a screen; carries the accent.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Add to watchlist</button>",
+      "css": ".ds-btn { padding: 7px 18px; border-radius: var(--weeb-radius, 8px); font-size: 13px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; border: none; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; } .ds-btn-primary { background: var(--weeb-accent, oklch(55% 0.15 280)); color: #fff; } .ds-btn-primary:hover { background: var(--weeb-accent-hover, oklch(62% 0.16 280)); } .ds-btn-primary:focus-visible { outline: 2px solid var(--weeb-accent-hover, oklch(62% 0.16 280)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action; outlined, fills on hover.",
+      "html": "<button class=\"ds-btn ds-btn-ghost\">Details</button>",
+      "css": ".ds-btn-ghost { padding: 7px 18px; border-radius: var(--weeb-radius, 8px); font-size: 13px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--weeb-fg-secondary, oklch(70% 0.01 270)); border: 1px solid var(--weeb-border, oklch(28% 0.015 275)); cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; } .ds-btn-ghost:hover { background: var(--weeb-surface, oklch(22% 0.02 275)); color: var(--weeb-fg, oklch(95% 0.005 265)); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--weeb-accent, oklch(55% 0.15 280)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Genre Pill",
+      "kind": "chip",
+      "refersTo": "chip-tag",
+      "description": "Tag / genre chip in a horizontally scrolling row; selected state takes the accent.",
+      "html": "<div style=\"display:flex;gap:8px\"><span class=\"ds-chip ds-chip-on\">Action</span><span class=\"ds-chip\">Slice of Life</span></div>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 20px; background: var(--weeb-surface, oklch(22% 0.02 275)); color: var(--weeb-fg-secondary, oklch(70% 0.01 270)); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; white-space: nowrap; cursor: pointer; transition: background 0.15s, color 0.15s; } .ds-chip:hover { background: var(--weeb-surface-hover, oklch(26% 0.022 275)); color: var(--weeb-fg, oklch(95% 0.005 265)); } .ds-chip-on { background: var(--weeb-accent, oklch(55% 0.15 280)); color: #fff; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Text field; focus shifts the border to the accent with a soft ring.",
+      "html": "<div class=\"ds-field\"><svg class=\"ds-field-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"></circle><path d=\"M20 20l-3.5-3.5\"></path></svg><input class=\"ds-input\" placeholder=\"Search anime\" /></div>",
+      "css": ".ds-field { position: relative; display: flex; align-items: center; } .ds-field-icon { position: absolute; left: 12px; color: var(--weeb-fg-muted, oklch(55% 0.01 270)); pointer-events: none; } .ds-input { width: 100%; padding: 10px 14px 10px 36px; border-radius: var(--weeb-radius, 8px); background: var(--weeb-surface, oklch(22% 0.02 275)); border: 1px solid var(--weeb-border, oklch(28% 0.015 275)); color: var(--weeb-fg, oklch(95% 0.005 265)); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 14px; transition: border-color 0.15s, box-shadow 0.15s; } .ds-input::placeholder { color: var(--weeb-fg-muted, oklch(55% 0.01 270)); } .ds-input:focus { outline: none; border-color: var(--weeb-accent, oklch(55% 0.15 280)); box-shadow: 0 0 0 3px oklch(55% 0.15 280 / 0.25); }"
+    },
+    {
+      "name": "Navigation Bar",
+      "kind": "nav",
+      "description": "Fixed 60px frosted bar; active item carries the accent.",
+      "html": "<nav class=\"ds-nav\"><span class=\"ds-nav-brand\">weeb.vip</span><a class=\"ds-nav-link ds-nav-link-on\" href=\"#\">Airing</a><a class=\"ds-nav-link\" href=\"#\">Season</a><a class=\"ds-nav-link\" href=\"#\">Watchlist</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 24px; height: 60px; padding: 0 24px; background: var(--weeb-glass-bg, oklch(14% 0.015 275 / 0.82)); backdrop-filter: blur(24px) saturate(1.4); border-bottom: 1px solid var(--weeb-border, oklch(28% 0.015 275)); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; } .ds-nav-brand { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; color: var(--weeb-fg, oklch(95% 0.005 265)); margin-right: 8px; } .ds-nav-link { font-size: 13px; font-weight: 600; color: var(--weeb-fg-secondary, oklch(70% 0.01 270)); text-decoration: none; transition: color 0.15s; } .ds-nav-link:hover { color: var(--weeb-fg, oklch(95% 0.005 265)); } .ds-nav-link-on { color: var(--weeb-accent, oklch(55% 0.15 280)); }"
+    },
+    {
+      "name": "Poster Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Signature 2:3 poster card. Art at rest, quiet metadata, lifts on hover; sub-line in mono.",
+      "html": "<a class=\"ds-poster\" href=\"#\"><div class=\"ds-poster-art\"><span class=\"ds-poster-score\">8.4</span></div><div class=\"ds-poster-meta\"><span class=\"ds-poster-title\">Frieren: Beyond Journey's End</span><span class=\"ds-poster-sub\"><i class=\"ds-dot\"></i>EP 12 · 23:00</span></div></a>",
+      "css": ".ds-poster { display: block; width: 168px; text-decoration: none; transition: transform 0.15s, box-shadow 0.15s; } .ds-poster-art { position: relative; aspect-ratio: 2 / 3; border-radius: var(--weeb-radius, 8px); background: linear-gradient(160deg, oklch(40% 0.10 300), oklch(24% 0.06 275)); box-shadow: 0 12px 32px oklch(0% 0 0 / 0.4); overflow: hidden; } .ds-poster-score { position: absolute; top: 8px; right: 8px; padding: 3px 7px; border-radius: 4px; background: oklch(14% 0.015 275 / 0.82); backdrop-filter: blur(8px); color: var(--weeb-fg, oklch(95% 0.005 265)); font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 500; } .ds-poster:hover { transform: translateY(-4px); } .ds-poster:hover .ds-poster-art { box-shadow: 0 20px 60px oklch(0% 0 0 / 0.5); } .ds-poster-meta { display: flex; flex-direction: column; gap: 3px; padding-top: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; } .ds-poster-title { font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--weeb-fg, oklch(95% 0.005 265)); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } .ds-poster-sub { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: var(--weeb-fg-secondary, oklch(70% 0.01 270)); } .ds-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--weeb-green, oklch(65% 0.15 155)); }"
+    },
+    {
+      "name": "Airing Strip Card",
+      "kind": "custom",
+      "description": "Signature horizontal schedule card. Small art, title, episode text, mono air time, live dot in airing green.",
+      "html": "<div class=\"ds-strip\"><div class=\"ds-strip-art\"></div><div class=\"ds-strip-body\"><span class=\"ds-strip-title\">Dandadan</span><span class=\"ds-strip-ep\">EP 07</span></div><span class=\"ds-strip-time\"><i class=\"ds-live\"></i>2h ago</span></div>",
+      "css": ".ds-strip { display: flex; align-items: center; gap: 12px; width: 320px; padding: 10px; border-radius: var(--weeb-radius, 8px); background: var(--weeb-surface, oklch(22% 0.02 275)); border: 1px solid var(--weeb-border, oklch(28% 0.015 275)); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; transition: background 0.15s; } .ds-strip:hover { background: var(--weeb-surface-hover, oklch(26% 0.022 275)); } .ds-strip-art { flex: none; width: 40px; height: 60px; border-radius: 4px; background: linear-gradient(160deg, oklch(38% 0.12 280), oklch(22% 0.05 275)); } .ds-strip-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; } .ds-strip-title { font-size: 15px; font-weight: 600; color: var(--weeb-fg, oklch(95% 0.005 265)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-strip-ep { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: var(--weeb-fg-secondary, oklch(70% 0.01 270)); } .ds-strip-time { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; color: var(--weeb-fg-secondary, oklch(70% 0.01 270)); white-space: nowrap; } .ds-live { width: 6px; height: 6px; border-radius: 9999px; background: var(--weeb-green, oklch(65% 0.15 155)); box-shadow: 0 0 0 3px oklch(65% 0.15 155 / 0.2); }"
+    },
+    {
+      "name": "Section Header",
+      "kind": "custom",
+      "description": "Headline-scale rail label with an optional 'View all' link.",
+      "html": "<div class=\"ds-section\"><h2 class=\"ds-section-title\">Currently Airing</h2><a class=\"ds-section-link\" href=\"#\">View all</a></div>",
+      "css": ".ds-section { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; } .ds-section-title { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.25; color: var(--weeb-fg, oklch(95% 0.005 265)); } .ds-section-link { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--weeb-fg-secondary, oklch(70% 0.01 270)); text-decoration: none; transition: color 0.15s; } .ds-section-link:hover { color: var(--weeb-accent, oklch(55% 0.15 280)); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Broadcast Gallery",
+    "overview": "weeb.vip is a precision schedule desk standing inside a darkened gallery hung with lit key art. Those are not two moods fighting; they are two jobs in one room. The schedule half is instrumentation — times, episode numbers, countdowns and status set in mono, aligned to a grid, read at a glance and trusted. The gallery half is the catalogue — cover art and key art given real size, real light, and real shadow, because the artwork is the only genuinely beautiful material the product owns and hiding it behind chrome wastes it.\n\nThe ground is a near-black indigo (oklch(14% 0.015 275)), not neutral black. Everything above it is built from four tonal steps of the same hue, so surfaces separate by light rather than by outline. Against that ground, artwork reads as the brightest thing on screen — which is the point. The indigo accent behaves like a cursor, not a coat of paint: it marks the one action that matters and the one thing currently selected, and it appears nowhere else. Status lives in the three signal colours (green airing, amber upcoming, red dropped/error), used as indicators rather than decoration.\n\nDepth is cinematic and directional. Cards and posters sit on soft, heavy shadows cast downward (12–32px blur at 40% black; 20–60px for posters), and lift on hover. Frosted glass over blurred key art carries the navigation and hero overlays. The result should feel like a dimmed room where the screens are on, not like a flat dashboard and not like a decorated one.",
+    "keyCharacteristics": [
+      "Dark-only, single-hue tonal ground (indigo-black, four steps)",
+      "Artwork is the brightest element on any screen; the UI frames it",
+      "Mono numerals for every time, count, and duration",
+      "One accent, used like a cursor",
+      "Cinematic downward shadows; hover lifts",
+      "High information density with no ornament"
+    ],
+    "rules": [
+      { "name": "The Cursor Rule", "body": "The accent is the cursor of the interface. It marks exactly one primary action and the current selection — nothing else. If two things on a screen are accent-coloured and neither is the primary action, one of them is wrong.", "section": "colors" },
+      { "name": "The Art Is Brightest Rule", "body": "Cover and key art must remain the brightest, most saturated thing in any viewport. If a UI element out-saturates the artwork beside it, tone the element down; never brighten the ground to compete.", "section": "colors" },
+      { "name": "The Signal-Not-Decoration Rule", "body": "Green, amber and red mean airing, upcoming and dropped/error. They never appear for emphasis, variety, or category colour.", "section": "colors" },
+      { "name": "The Mono Numeral Rule", "body": "Every value the schedule is accountable for — air time, countdown, episode number, episode count, duration, score, date — is set in JetBrains Mono. Prose numbers inside a sentence stay in the sans. This is what makes the timing look measured, and it is the typographic signature of the system.", "section": "typography" },
+      { "name": "The One Display Rule", "body": "A screen gets one Display-sized element. A second one means the hierarchy has collapsed and something should be Headline instead.", "section": "typography" },
+      { "name": "The Full-Bleed Art Rule", "body": "Hero and banner artwork runs edge to edge, ignoring the section gutter. The gutter governs text and controls, never key art.", "section": "layout" },
+      { "name": "The Lift-On-Intent Rule", "body": "A shadow deepening or a surface stepping lighter is a response to the user's intent (hover, focus, open). Nothing gains elevation just to look important at rest.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do reference tokens (var(--weeb-*) in scoped styles, weeb-* in Tailwind) rather than literal colour values.",
+      "Do set every air time, countdown, episode number, count, duration, score and date in JetBrains Mono at Numeral scale.",
+      "Do let cover and key art run full-bleed and be the brightest thing in the viewport.",
+      "Do put a gradient scrim under any text laid over artwork.",
+      "Do separate resting surfaces by tonal step first, and add a hairline --weeb-border only when the step alone is too subtle.",
+      "Do reserve shadows for elements that float or are responding to intent, using the three named shadow tokens.",
+      "Do keep green, amber and red bound to airing, upcoming and dropped/error."
+    ],
+    "donts": [
+      "Don't use dark: Tailwind prefixes or add a light theme. There is no light mode.",
+      "Don't hardcode oklch() values in components.",
+      "Don't introduce a new hue, a new font family, or a gradient of two arbitrary colours. The palette is one indigo family plus three signals.",
+      "Don't spend the accent on more than the primary action and the current selection on a given screen.",
+      "Don't put a shadow under a flat resting list surface, or use a shadow with less than 24px total blur.",
+      "Don't let a UI element out-saturate the artwork next to it.",
+      "Don't wrap a horizontal rail into a grid at small breakpoints; rails scroll at every size.",
+      "Don't put more than one Display-scale element on a screen.",
+      "Don't add social, feed, forum, or review affordances — they are outside the product's scope, and no visual pattern for them exists here."
+    ]
+  }
+}
