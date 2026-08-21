@@ -78,10 +78,13 @@ mark {
 
 /* A focused card must not land under the 60px sticky header. */
 :root {
-  scroll-padding-top: calc(var(--weeb-nav-height, 60px) + 12px);
+  /* --weeb-sticky-offset is published by whichever surface has a sticky stack
+     below the nav (see ShowContent's handleStickyHeader); it is 0 elsewhere, so
+     this stays nav + 12 on pages without one. */
+  scroll-padding-top: calc(var(--weeb-nav-height, 60px) + var(--weeb-sticky-offset, 0px) + 12px);
 }
 a, button, input, select, textarea, [tabindex] {
-  scroll-margin-top: calc(var(--weeb-nav-height, 60px) + 12px);
+  scroll-margin-top: calc(var(--weeb-nav-height, 60px) + var(--weeb-sticky-offset, 0px) + 12px);
 }
 
 /* ── Skip link ───────────────────────────────────────────────────────────

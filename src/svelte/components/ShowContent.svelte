@@ -96,10 +96,10 @@
       : id === 'episodes' ? episodesEl
       : charactersEl;
     if (el) {
-      const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--weeb-nav-height') || '60');
-      const stickyOffset = showStickyHeader ? 72 : 0;
-      const tabBarHeight = 48;
-      const top = el.getBoundingClientRect().top + window.scrollY - navHeight - stickyOffset - tabBarHeight - 8;
+      const rootStyle = getComputedStyle(document.documentElement);
+      const navHeight = parseInt(rootStyle.getPropertyValue('--weeb-nav-height') || '60');
+      const stackHeight = parseInt(rootStyle.getPropertyValue('--weeb-sticky-offset') || '0');
+      const top = el.getBoundingClientRect().top + window.scrollY - navHeight - stackHeight - 8;
       window.scrollTo({ top, behavior: 'smooth' });
     }
   }
@@ -208,6 +208,10 @@
     scrollListenerAttached = false;
     window.removeEventListener('scroll', handleTabScroll);
     window.removeEventListener('resize', handleTabScroll);
+    // The offset lives on documentElement, which outlives this component. Left
+    // set, every other route would scroll as though it had this page's sticky
+    // stack under its nav.
+    document.documentElement.style.removeProperty('--weeb-sticky-offset');
   }
 
   onMount(() => {
@@ -359,6 +363,15 @@
       const stickyEl = document.querySelector('[data-sticky-header]') as HTMLElement || document.querySelector('.fixed.z-\\[90\\]') as HTMLElement;
       const stickyHeaderHeight = shouldShow && stickyEl ? stickyEl.offsetHeight : 0;
       tabBar.style.top = `calc(var(--weeb-nav-height, 60px) + ${stickyHeaderHeight-1}px)`;
+
+      // Publish the measured stack so scroll-padding-top and scrollToSection stop
+      // guessing. Three places used to carry their own idea of this height -- CSS
+      // said 0, scrollToSection said 72 + 48, and only this function measured it,
+      // which is why a focused element or an anchor landed underneath the bars.
+      // offsetHeight is 0 while a bar is hidden, so the value follows visibility
+      // for free.
+      const stackHeight = stickyHeaderHeight + tabBar.offsetHeight;
+      document.documentElement.style.setProperty('--weeb-sticky-offset', `${stackHeight}px`);
     }
   }
 
