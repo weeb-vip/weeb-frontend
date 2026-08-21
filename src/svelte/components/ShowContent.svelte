@@ -1132,8 +1132,7 @@
      QUICK INFO BAR
   =========================== */
   .quick-info {
-    max-width: 1440px;
-    margin: 0 auto;
+    width: 100%;
     padding: 0 var(--weeb-section-px, 48px);
     position: relative;
     z-index: 2;
@@ -1303,8 +1302,7 @@
      needs a media query, which an inline style attribute cannot express.
   =========================== */
   .tab-bar-inner {
-    max-width: 1280px;
-    margin: 0 auto;
+    width: 100%;
     padding: 0 48px;
     display: flex;
     align-items: center;
@@ -1337,9 +1335,12 @@
   /* ===========================
      MAIN CONTENT
   =========================== */
+  /* Full width with the section gutter, matching the homepage. The hero runs
+     edge to edge; a 1440px column underneath it left 1,086px of empty margin on
+     a wide monitor and made the two halves of the page look unrelated.
+     Everything that is READ keeps its own measure cap -- width is for content
+     that tiles, not for lines of prose. */
   .main-content {
-    max-width: 1440px;
-    margin: 0 auto;
     width: 100%;
     padding: 0 var(--weeb-section-px, 48px);
   }
