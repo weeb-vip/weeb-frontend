@@ -117,6 +117,9 @@
   }
   .rail-all {
     position: relative;
+    color: var(--weeb-fg-secondary);
+    text-decoration: none;
+    white-space: nowrap;
     /* Label step. This declared no size, so it inherited the browser default
        16px and rendered a third larger than the identical "See all" link on
        every other shelf. */
@@ -128,11 +131,6 @@
     content: '';
     position: absolute;
     inset: -13px -8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--weeb-fg-secondary);
-    text-decoration: none;
-    white-space: nowrap;
   }
   .rail-all:hover { color: var(--weeb-fg); }
   .rail-all:focus-visible {

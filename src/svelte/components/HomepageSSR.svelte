@@ -476,10 +476,10 @@
     </section>
   {/if}
 
-  <!-- Newest Anime -->
+  <!-- Recently Added -->
   {#if ($homeDataQuery.data || homeData)?.newestAnime}
     <section class="section">
-      <SectionHeader title="Newest Anime" href="/search" linkText="See all →" />
+      <SectionHeader title="Recently Added" href="/search" linkText="See all →" />
       <div class="poster-row">
         {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, shelfLimit) as anime}
           <PosterCard

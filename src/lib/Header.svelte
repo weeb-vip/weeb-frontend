@@ -205,6 +205,9 @@
     gap: 4px;
     margin-left: 24px;
   }
+  .nav-links a[aria-current='page'] {
+    color: var(--weeb-accent-text);
+  }
   .nav-links a {
     display: inline-flex;
     align-items: center;

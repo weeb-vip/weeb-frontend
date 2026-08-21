@@ -50,14 +50,16 @@
 <!-- The homepage runs its key art up under the bar, so the bar starts transparent
      there and takes its glass on scroll. Resolved from the route during SSR, so
      there is no flash of the solid bar on hydration. -->
+<!-- First in the document so it is the first thing Tab reaches. Placed after
+     the header it was the eleventh stop, which is decoration rather than a skip. -->
+<a class="skip-link" href="#main-content">Skip to content</a>
+
 <Header
   ssrAuth={data.auth}
   overlay={$page.route.id === '/' ||
     $page.route.id === '/anime/[slug]' ||
     $page.route.id === '/show/[id]'}
 />
-
-<a class="skip-link" href="#main-content">Skip to content</a>
 
 <!-- Main content — always full width, components handle their own padding.
      tabindex="-1" so the skip link can actually move focus here; without it the
