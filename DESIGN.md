@@ -250,10 +250,17 @@ The homepage grammar is **full-screen banner, then rails**: a `100svh` hero
 carrying the featured show and the schedule, followed by rows of poster cards
 under Headline-sized section labels. The banner owns the whole first viewport by
 design — nothing from the next section peeks above the fold. Poster cards hold a 2:3 aspect ratio
-(`aspect-2/3`); rails scroll horizontally on every breakpoint rather than
-reflowing into a wrapped grid, so a row always reads as one continuous shelf.
-Grid surfaces (season, search, profile) wrap the same 2:3 card into a responsive
-grid instead.
+(`aspect-2/3`) and sit in a responsive grid on every surface, homepage included.
+
+**The Single-Axis Rule.** Content scrolls down, never sideways. A horizontal
+carousel inside a vertically scrolling page asks the reader to change gesture
+axis to reach content, and on a phone it competes with the page scroll itself,
+so everything past the second card goes unseen. This reverses an earlier rule
+that specified horizontally scrolling rails at every breakpoint; the rails were
+adopted to solve a page that ran to 5,098px on a phone, but the length was never
+caused by the grid -- it was fourteen items in it, which at two columns is seven
+rows per section. Cap the count per breakpoint and let "See all" own
+completeness.
 
 Density is deliberately high — a seasonal watcher checking what aired should see
 the whole answer without scrolling twice. Vertical rhythm inside cards and
@@ -469,8 +476,9 @@ keyboard focus.
 - **Don't** put a shadow under a flat resting list surface, or use a shadow with
   less than 24px total blur.
 - **Don't** let a UI element out-saturate the artwork next to it.
-- **Don't** wrap a horizontal rail into a grid at small breakpoints; rails scroll
-  at every size.
+- **Don't** introduce a horizontally scrolling carousel of content. Grids scroll
+  with the page. The one exception is the hero's airing rail on mobile, which is
+  a fixed schedule strip rather than a browse surface.
 - **Don't** put more than one Display-scale element on a screen.
 - **Don't** add social, feed, forum, or review affordances — they are outside
   the product's scope, and no visual pattern for them exists here.

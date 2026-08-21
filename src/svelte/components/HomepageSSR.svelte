@@ -5,7 +5,7 @@
   import HeroBanner from './HeroBanner.svelte';
   import HeroBannerSkeleton from './HeroBannerSkeleton.svelte';
   import HeroAiringRail from './HeroAiringRail.svelte';
-  import { railEdges } from '../actions/railEdges';
+  import { isPhone, isTablet } from '../stores/viewport';
   import PosterCard from './PosterCard.svelte';
   import SectionHeader from './SectionHeader.svelte';
   import GenrePills from './GenrePills.svelte';
@@ -85,6 +85,12 @@
     if (origin) parts.push(String(origin));
     return parts.join(' \u00b7 ');
   }
+
+  // A grid fills its row whatever the count, so the only thing a breakpoint
+  // changes is how many ROWS a shelf costs. Twenty items is two rows on a wide
+  // monitor and ten on a phone, which is why the count is not fixed: six keeps a
+  // phone section to three rows, and "See all" owns completeness either way.
+  $: shelfLimit = $isPhone ? 6 : $isTablet ? 12 : 20;
 
   let hoveredAnime: any = null;
 
@@ -450,9 +456,8 @@
     {(() => { if (typeof window !== 'undefined' && _dbgTopRated?.length) console.log('[WATCHLIST]', 'topRated[0].userAnime:', _dbgTopRated[0]?.userAnime, 'status:', _dbgTopRated[0]?.userAnime?.status, 'all userAnimes:', _dbgTopRated.map(a => ({ title: a.titleEn?.slice(0,20), ua: a.userAnime?.status || 'NONE' }))); return ''; })()}
     <section class="section">
       <SectionHeader title="Top Rated" href="/search" linkText="See all →" />
-      <div class="rail-wrap" use:railEdges>
-        <div class="poster-row" data-rail>
-        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 20) as anime}
+      <div class="poster-row">
+        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, shelfLimit) as anime}
           <PosterCard
             id={anime.id}
             slug={anime.slug}
@@ -467,7 +472,6 @@
             onList={anime.userAnime?.status || null}
           />
         {/each}
-        </div>
       </div>
     </section>
   {/if}
@@ -476,9 +480,8 @@
   {#if ($homeDataQuery.data || homeData)?.newestAnime}
     <section class="section">
       <SectionHeader title="Newest Anime" href="/search" linkText="See all →" />
-      <div class="rail-wrap" use:railEdges>
-        <div class="poster-row" data-rail>
-        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, 20) as anime}
+      <div class="poster-row">
+        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, shelfLimit) as anime}
           <PosterCard
             id={anime.id}
             slug={anime.slug}
@@ -493,7 +496,6 @@
             onList={anime.userAnime?.status || null}
           />
         {/each}
-        </div>
       </div>
     </section>
   {/if}
@@ -519,10 +521,9 @@
         {/each}
       </div>
     </div>
-    <div class="rail-wrap" use:railEdges>
-      <div class="poster-row" data-rail>
+    <div class="poster-row">
       {#if $seasonalAnimeQuery.isLoading && selectedSeason !== currentSeason}
-        {#each Array(20) as _}
+        {#each Array(12) as _}
           <div class="poster-card-skeleton">
             <div class="poster-skeleton"></div>
             <div class="title-skeleton"></div>
@@ -537,7 +538,7 @@
             return isNaN(parsed) ? 0 : parsed;
           };
           return getRating(b.rating) - getRating(a.rating);
-        }).slice(0, 20) as anime (anime.id)}
+        }).slice(0, shelfLimit) as anime (anime.id)}
           <PosterCard
             id={anime.id}
             slug={anime.slug}
@@ -553,7 +554,6 @@
           />
         {/each}
       {/if}
-      </div>
     </div>
   </section>
 </div>
@@ -575,7 +575,7 @@
     position: relative;
     margin-top: calc(-1 * var(--weeb-nav-height, 60px));
   }
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     .hero-wrapper { --hero-fade: 70px; }
   }
 
@@ -587,91 +587,45 @@
     border-top: 1px solid var(--weeb-border, oklch(28% 0.015 275));
   }
 
-  /* --- POSTER SHELF ---
-     A shelf, not a grid. These sections are ordered (top rated, newest, ranked
-     season) so the first cards carry the weight and the tail is optional -- which
-     is what a horizontal run says and what a wrapped grid denies. The grid also
-     cost five to seven screens of vertical space per section on a phone; a shelf
-     costs one, whatever it holds. DESIGN.md specifies rails at every breakpoint;
-     this is that. */
-  .rail-wrap {
-    position: relative;
-  }
+  /* --- POSTER GRID ---
+     A grid, not a horizontal shelf. A carousel inside a vertically scrolling
+     page asks the reader to change gesture axis to reach content, and on a phone
+     it competes with the page scroll itself; everything past the second card
+     goes unseen. The grid also fills its row for free -- auto-fill with 1fr
+     tracks stretches to the full width whatever the item count, which a
+     fixed-width shelf cannot do without either stranding a gap or inflating the
+     cards.
+
+     The length problem a grid used to have was never the grid. It was fourteen
+     items in it: at two columns that is seven rows per section. The count is
+     capped per breakpoint instead (see shelfLimit). */
   .poster-row {
-    display: flex;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 16px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    /* Snapped cards land clear of the leading edge rather than flush against it. */
-    scroll-padding-left: 2px;
-    /* Room for the scrollbar so the bottom of a card is never clipped by it. */
-    padding-bottom: 6px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--weeb-border) transparent;
-  }
-  /* The scrollbar is part of the design, not a browser leftover. */
-  .poster-row::-webkit-scrollbar {
-    height: 6px;
-  }
-  .poster-row::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .poster-row::-webkit-scrollbar-thumb {
-    background: var(--weeb-border);
-    border-radius: var(--weeb-radius-full, 9999px);
-  }
-  .poster-row:hover::-webkit-scrollbar-thumb {
-    background: var(--weeb-surface-hover);
+    align-items: start;
   }
   .poster-row :global(> *) {
-    /* Grow, don't just sit. A fixed basis left ten cards huddled against the
-       left edge of a wide shelf with a band of dead space beside them, which
-       reads as a broken grid rather than a shelf. Growth only has an effect when
-       there is free space, so the same rule fills the row on a wide screen and
-       overflows into a scroll on a narrow one -- one behaviour, not a
-       breakpoint's worth of guesses. The cap keeps a wide screen from answering
-       "fill the row" by inflating the posters instead of showing more of them --
-       a shelf's length is free, since it costs horizontal scroll rather than
-       page height, so twenty cards at a readable size beat ten oversized ones.
-       Twenty is what it takes to run past the right edge of a 4K monitor at this
-       card width; past that the cap lets them grow a little rather than strand a
-       gap. Cards below the fold are lazy-loaded, so the extra length costs
-       markup, not bandwidth. */
-    flex: 1 0 clamp(140px, 20vw, 180px);
-    max-width: 200px;
-    scroll-snap-align: start;
+    width: 100%;
+    max-width: 220px;
+    justify-self: center;
   }
 
-  /* Edge fades, painted only when there is actually more shelf in that
-     direction (see railEdges). A fade that is always on stops meaning anything. */
-  .rail-wrap::before,
-  .rail-wrap::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 6px;
-    width: 48px;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    z-index: 1;
-  }
-  .rail-wrap::before {
-    left: 0;
-    background: linear-gradient(to right, var(--weeb-bg), transparent);
-    opacity: var(--rail-fade-start, 0);
-  }
-  .rail-wrap::after {
-    right: 0;
-    background: linear-gradient(to left, var(--weeb-bg), transparent);
-    opacity: var(--rail-fade-end, 0);
+  @media (min-width: 1400px) {
+    .poster-row {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+    .poster-row :global(> *) {
+      max-width: 240px;
+    }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .rail-wrap::before,
-    .rail-wrap::after {
-      transition: none;
+  @media (min-width: 1800px) {
+    .poster-row {
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    }
+    .poster-row :global(> *) {
+      max-width: 260px;
     }
   }
 
@@ -744,16 +698,16 @@
   }
 
   /* --- RESPONSIVE --- */
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     .section {
       padding: var(--weeb-section-py, 32px) var(--weeb-section-px, 24px);
     }
     .poster-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }
-    .rail-wrap::before,
-    .rail-wrap::after {
-      width: 32px;
+    .poster-row :global(> *) {
+      max-width: none;
     }
     .season-tabs {
       flex-wrap: wrap;
@@ -764,6 +718,7 @@
       padding: var(--weeb-section-py, 24px) var(--weeb-section-px, 16px);
     }
     .poster-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
     }
   }
