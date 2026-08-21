@@ -319,7 +319,7 @@
     airing: { color: 'text-weeb-amber', text: 'Airing', icon: 'fa-clapperboard' },
     aired: { color: 'text-weeb-green', text: 'Recently Aired', icon: 'fa-calendar' },
     countdown: { color: 'text-weeb-red', text: 'Airing Soon', icon: 'fa-clock' },
-    scheduled: { color: 'text-weeb-accent', text: 'Next Episode', icon: 'fa-calendar' }
+    scheduled: { color: 'text-weeb-accent-text', text: 'Next Episode', icon: 'fa-calendar' }
   };
 
   // Hero banner style timing data (from notification store)

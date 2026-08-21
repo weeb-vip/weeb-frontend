@@ -150,7 +150,7 @@
     <div class="mb-6">
       <a
         href="/profile"
-        class="inline-flex items-center text-weeb-accent hover:text-weeb-accent transition-colors mb-4"
+        class="inline-flex items-center text-weeb-accent-text hover:text-weeb-accent-text transition-colors mb-4"
       >
         <Fa icon={faArrowLeft} class="mr-2" />
         Back to Profile

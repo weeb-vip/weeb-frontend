@@ -70,7 +70,7 @@
   const statusConfig = {
     'airing-soon': {
       icon: 'fa-clock',
-      color: 'text-weeb-accent',
+      color: 'text-weeb-accent-text',
       bgColor: 'bg-weeb-surface',
       borderColor: 'border-weeb-border'
     },

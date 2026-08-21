@@ -19,6 +19,10 @@ export default {
           border: 'var(--weeb-border)',
           accent: 'var(--weeb-accent)',
           'accent-hover': 'var(--weeb-accent-hover)',
+          /* --weeb-accent is a fill and measures 3.81:1 as text. This is the
+             variant for text on it, and it needs a utility or every Tailwind
+             call site has no choice but to use the fill. */
+          'accent-text': 'var(--weeb-accent-text)',
           violet: 'var(--weeb-violet)',
           green: 'var(--weeb-green)',
           amber: 'var(--weeb-amber)',

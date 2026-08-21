@@ -93,7 +93,7 @@
   function getRoleColor(role: string) {
     const roleStr = role?.toLowerCase() || '';
     if (roleStr.includes('main') || roleStr.includes('protagonist')) {
-      return 'text-weeb-accent bg-weeb-surface';
+      return 'text-weeb-accent-text bg-weeb-surface';
     } else if (roleStr.includes('supporting')) {
       return 'text-weeb-green bg-weeb-green/10';
     }

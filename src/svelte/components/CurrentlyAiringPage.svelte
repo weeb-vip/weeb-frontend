@@ -1066,11 +1066,11 @@
   }
   .show-countdown.upcoming {
     background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
-    color: var(--weeb-accent-hover, var(--weeb-accent));
+    color: var(--weeb-accent-text, var(--weeb-accent-hover));
   }
   .show-countdown.aired {
     background: oklch(28% 0.015 275 / 0.6);
-    color: var(--weeb-fg-muted);
+    color: var(--weeb-fg-secondary);
   }
   .show-countdown.airing-now {
     background: oklch(65% 0.15 155 / 0.15);

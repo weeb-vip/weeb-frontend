@@ -31,8 +31,8 @@
   </div>
   <div class="flex-1 min-w-0 flex flex-col justify-center">
     <span
-      class="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis group-hover:text-weeb-accent transition-colors"
-      class:text-weeb-accent={active}
+      class="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis group-hover:text-weeb-accent-text transition-colors"
+      class:text-weeb-accent-text={active}
       class:text-weeb-fg={!active}
     >
       {item.title_en || ''}
