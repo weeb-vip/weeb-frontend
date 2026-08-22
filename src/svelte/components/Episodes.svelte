@@ -107,7 +107,7 @@
     </button>
   </div>
 
-  <ol class="ep-list">
+  <ol class="ep-list" class:ep-list--trackable={canTrack}>
     {#each visible as episode (episode.id)}
       {@const watched = isWatched(episode)}
       {@const next = nextUp && episode.id === nextUp.id}
@@ -250,6 +250,19 @@
     border-top: 1px solid var(--weeb-border);
     margin: -1px 0 0 -1px;
   }
+  /* A fourth column for the watch button, only when it is rendered.
+     The row has four children when canTrack, but the grid declared three, so
+     the button had no column and wrapped onto an implicit second row --
+     stranded under the episode number with the row grown to fit it. It looked
+     correct on a phone only because the narrow layout below places both the
+     date and the button explicitly.
+     Scoped to the container class rather than added unconditionally: signed
+     out there is no button, and a fourth column would leave its width and gap
+     as dead space on the right of every row. */
+  .ep-list--trackable .ep-row {
+    grid-template-columns: 48px minmax(0, 1fr) 132px 44px;
+  }
+
   /* The row itself is not interactive and no longer pretends to be: it carried
      cursor:pointer and a hover background with no handler, href, role or
      tabindex on every one of 500 rows. */
@@ -387,7 +400,11 @@
   }
 
   @media (max-width: 480px) {
-    .ep-row {
+    .ep-row,
+    /* Same specificity as the desktop rule above, which is a two-class
+       selector; a bare .ep-row here would lose to it and take the phone layout
+       back to four columns. */
+    .ep-list--trackable .ep-row {
       grid-template-columns: 32px 1fr auto;
       gap: 10px;
       padding: 10px 12px;
