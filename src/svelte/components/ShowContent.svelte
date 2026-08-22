@@ -7,6 +7,7 @@
   import Tag from './Tag.svelte';
   import Episodes from './Episodes.svelte';
   import CharactersWithStaff from './CharactersWithStaff.svelte';
+  import RelatedAnime from './RelatedAnime.svelte';
   import AnimeNews from './AnimeNews.svelte';
   import { isFeatureEnabled } from '../../utils/analytics';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
@@ -716,6 +717,20 @@
           <h2 class="section-heading" id="characters-heading">Characters & Staff</h2>
           <CharactersWithStaff animeId={anime.id} ssrCharactersData={charactersData} />
         </section>
+
+        <!-- Other entries in the same series. Placed after the cast and before
+             the raw information block: it is a way onward through the franchise,
+             which belongs with the other browsing surfaces rather than with the
+             reference data. Renders nothing at all when the anime has no
+             TheTVDB series id, which is most of the catalogue -- an empty
+             "Related" heading would assert this show stands alone, and the
+             absence of a series id does not mean that. -->
+        {#if anime.relatedAnime && anime.relatedAnime.length > 0}
+          <section class="content-section" aria-labelledby="related-heading">
+            <h2 class="section-heading" id="related-heading">Related</h2>
+            <RelatedAnime related={anime.relatedAnime} current={anime} />
+          </section>
+        {/if}
 
         <!-- Additional Info -->
         <section class="content-section" aria-labelledby="info-heading">

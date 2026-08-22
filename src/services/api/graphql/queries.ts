@@ -113,6 +113,17 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
                 createdAt
                 updatedAt
             }
+            type
+            relatedAnime {
+                id
+                slug
+                titleEn
+                titleJp
+                imageUrl
+                type
+                startDate
+                animeStatus
+            }
             duration
             rating
             startDate
@@ -209,6 +220,17 @@ export const getAnimeDetailsBySlug = graphql(/* GraphQL */`
                 airDate
                 createdAt
                 updatedAt
+            }
+            type
+            relatedAnime {
+                id
+                slug
+                titleEn
+                titleJp
+                imageUrl
+                type
+                startDate
+                animeStatus
             }
             duration
             rating
