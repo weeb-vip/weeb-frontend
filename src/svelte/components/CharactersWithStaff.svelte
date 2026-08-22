@@ -170,7 +170,7 @@
                     {/if}
                   </div>
                 {:else}
-                  <a class="char-va char-va-link" href={`/people/${primaryVA.id}`}>
+                  <a class="char-va char-va-link" href={`/people/${primaryVA.slug || primaryVA.id}`}>
                     {primaryVA.givenName} {primaryVA.familyName}
                     {#if primaryVA.language}
                       <span class="char-va-lang">({primaryVA.language})</span>
@@ -193,7 +193,7 @@
           {#if isExpanded && entry.staff && entry.staff.length > 1}
             <div class="char-va-list">
               {#each entry.staff as va, vaIdx}
-                <a class="va-chip" class:active={vaIdx === 0} href={`/people/${va.id}`}>
+                <a class="va-chip" class:active={vaIdx === 0} href={`/people/${va.slug || va.id}`}>
                   <span class="va-name">{va.givenName} {va.familyName}</span>
                   {#if va.language}
                     <span class="va-lang">{va.language}</span>

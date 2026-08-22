@@ -11,7 +11,7 @@
   // The canonical host rather than the request origin, matching the anime
   // route: these URLs identify the entity and must agree with the canonical tag
   // whichever deployment served the page.
-  $: canonical = `${SITE_URL}/people/${data.staffId}`;
+  $: canonical = `${SITE_URL}/people/${data.staffPath}`;
   $: schemas = [
     breadcrumbSchema([
       { name: 'Home', url: `${SITE_URL}/` },
