@@ -2,24 +2,64 @@
   import SafeImage from './SafeImage.svelte';
   import { getYearUTC } from '../../services/utils';
 
+  /** RelatedAnime entries: { relation, anime }. */
   export let related: any[] = [];
   /** The anime being viewed, so it can be placed in its own timeline. */
   export let current: any = null;
 
   /**
-   * The API returns the other entries oldest first. Slotting the current anime
-   * into that order turns a list of "other things" into a timeline the reader
-   * can locate themselves in -- which is the whole value of the grouping, since
-   * a shared series id says these belong together but not which came first.
+   * Heading per relation kind. Entries in the same series are not "related" to
+   * this anime -- they are this anime, in another form -- so they get their own
+   * heading rather than being pooled with genuinely separate works.
+   *
+   * Unknown kinds fall back rather than vanishing: the API will grow kinds
+   * (a shared source work, a shared creator) before this list learns their
+   * names, and silently dropping them would hide data the server sent.
    */
-  $: timeline = [...related, ...(current ? [{ ...current, isCurrent: true }] : [])].sort((a, b) => {
-    // Undated entries last rather than first: an unaired special should not
-    // open the history of a series that started in 1998.
-    if (!a.startDate && !b.startDate) return 0;
-    if (!a.startDate) return 1;
-    if (!b.startDate) return -1;
-    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-  });
+  const HEADINGS: Record<string, string> = {
+    SAME_SERIES: 'Same series'
+  };
+  const FALLBACK_HEADING = 'Related';
+
+  // Order the headings deliberately; same-series first, since it is the
+  // closest relationship and the one most readers are looking for.
+  const ORDER = ['SAME_SERIES'];
+
+  $: groups = (() => {
+    const byKind = new Map<string, any[]>();
+    for (const entry of related) {
+      if (!entry?.anime) continue;
+      const kind = entry.relation || FALLBACK_HEADING;
+      if (!byKind.has(kind)) byKind.set(kind, []);
+      byKind.get(kind)!.push(entry.anime);
+    }
+
+    // The current anime belongs in the same-series timeline, where the ordering
+    // means something. It is not added to other kinds: a spin-off list has no
+    // "you are here" position.
+    const sameSeries = byKind.get('SAME_SERIES');
+    if (sameSeries && current) {
+      sameSeries.push({ ...current, isCurrent: true });
+    }
+
+    const kinds = [...byKind.keys()].sort((a, b) => {
+      const ai = ORDER.indexOf(a), bi = ORDER.indexOf(b);
+      return (ai === -1 ? ORDER.length : ai) - (bi === -1 ? ORDER.length : bi);
+    });
+
+    return kinds.map((kind) => ({
+      kind,
+      heading: HEADINGS[kind] ?? FALLBACK_HEADING,
+      // Air-date order, undated last: an unaired special should not open the
+      // history of a series that began in 1998.
+      items: byKind.get(kind)!.slice().sort((a, b) => {
+        if (!a.startDate && !b.startDate) return 0;
+        if (!a.startDate) return 1;
+        if (!b.startDate) return -1;
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      })
+    }));
+  })();
 
   function href(entry: any): string {
     return `/anime/${entry.slug || entry.id}`;
@@ -31,42 +71,60 @@
   }
 </script>
 
-{#if timeline.length > 1}
-  <ul class="rel-list">
-    {#each timeline as entry (entry.id)}
-      <li class="rel-item" class:current={entry.isCurrent}>
-        <svelte:element
-          this={entry.isCurrent ? 'div' : 'a'}
-          href={entry.isCurrent ? undefined : href(entry)}
-          aria-current={entry.isCurrent ? 'page' : undefined}
-          class="rel-card"
-        >
-          <div class="rel-poster">
-            <SafeImage
-              src={entry.id}
-              alt={entry.titleEn || entry.titleJp || ''}
-              className="rel-poster-img"
-            />
-          </div>
-          <div class="rel-text">
-            <span class="rel-title">{entry.titleEn || entry.titleJp}</span>
-            <span class="rel-meta">
-              <span class="rel-year">{getYearUTC(entry.startDate)}</span>
-              {#if entry.type}
-                <span class="rel-type" class:main={isMainEntry(entry.type)}>{entry.type}</span>
-              {/if}
-              {#if entry.isCurrent}
-                <span class="rel-here">You are here</span>
-              {/if}
-            </span>
-          </div>
-        </svelte:element>
-      </li>
-    {/each}
-  </ul>
-{/if}
+{#each groups as group (group.kind)}
+  {#if group.items.length > 1 || group.kind !== 'SAME_SERIES'}
+    <div class="rel-group">
+      <h3 class="rel-group-heading">{group.heading}</h3>
+      <ul class="rel-list">
+        {#each group.items as entry (entry.id)}
+          <li class="rel-item" class:current={entry.isCurrent}>
+            <svelte:element
+              this={entry.isCurrent ? 'div' : 'a'}
+              href={entry.isCurrent ? undefined : href(entry)}
+              aria-current={entry.isCurrent ? 'page' : undefined}
+              class="rel-card"
+            >
+              <div class="rel-poster">
+                <SafeImage
+                  src={entry.id}
+                  alt={entry.titleEn || entry.titleJp || ''}
+                  className="rel-poster-img"
+                />
+              </div>
+              <div class="rel-text">
+                <span class="rel-title">{entry.titleEn || entry.titleJp}</span>
+                <span class="rel-meta">
+                  <span class="rel-year">{getYearUTC(entry.startDate)}</span>
+                  {#if entry.type}
+                    <span class="rel-type" class:main={isMainEntry(entry.type)}>{entry.type}</span>
+                  {/if}
+                  {#if entry.isCurrent}
+                    <span class="rel-here">You are here</span>
+                  {/if}
+                </span>
+              </div>
+            </svelte:element>
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
+{/each}
 
 <style>
+  .rel-group + .rel-group {
+    margin-top: 20px;
+  }
+
+  .rel-group-heading {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--weeb-fg-muted);
+  }
+
   .rel-list {
     list-style: none;
     margin: 0;

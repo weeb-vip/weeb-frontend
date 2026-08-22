@@ -727,7 +727,7 @@
              absence of a series id does not mean that. -->
         {#if anime.relatedAnime && anime.relatedAnime.length > 0}
           <section class="content-section" aria-labelledby="related-heading">
-            <h2 class="section-heading" id="related-heading">Related</h2>
+            <h2 class="section-heading" id="related-heading">Related anime</h2>
             <RelatedAnime related={anime.relatedAnime} current={anime} />
           </section>
         {/if}
