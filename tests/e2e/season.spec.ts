@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForSeasonPage } from './helpers';
+import { waitForSeasonPage, waitForSeasonGrid } from './helpers';
 
 test.describe('Season page', () => {
   test('loads season page with heading and navigation', async ({ page }) => {
@@ -14,9 +14,7 @@ test.describe('Season page', () => {
     await expect(page.getByRole('button', { name: /Summer$/ })).toBeVisible();
 
     // Page shows either anime cards or empty state (depends on API availability)
-    const animeCards = page.locator('a[href^="/anime/"]');
-    const emptyState = page.locator('text=No anime found');
-    await expect(animeCards.first().or(emptyState)).toBeVisible({ timeout: 10000 });
+    await waitForSeasonGrid(page);
   });
 
   test('clicking next season navigates and updates page', async ({ page }) => {
@@ -25,8 +23,10 @@ test.describe('Season page', () => {
 
     await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
 
-    // Wait for anime content to load (indicates hydration complete)
-    await page.locator('a[href^="/anime/"]').first().waitFor({ state: 'visible', timeout: 10000 });
+    // Wait for the grid to render, with or without anime in it. These tests are
+    // about navigation, so they must not fail because a season is empty or the
+    // seasonal query is unavailable.
+    await waitForSeasonGrid(page);
 
     // Click using evaluate to ensure event fires
     await page.locator('button[aria-label="Next season"]').evaluate((btn) => (btn as HTMLButtonElement).click());
@@ -42,8 +42,10 @@ test.describe('Season page', () => {
 
     await expect(page.getByRole('heading', { name: 'Spring 2026', level: 1 })).toBeVisible();
 
-    // Wait for anime content to load (indicates hydration complete)
-    await page.locator('a[href^="/anime/"]').first().waitFor({ state: 'visible', timeout: 10000 });
+    // Wait for the grid to render, with or without anime in it. These tests are
+    // about navigation, so they must not fail because a season is empty or the
+    // seasonal query is unavailable.
+    await waitForSeasonGrid(page);
 
     // Click using evaluate to ensure event fires
     await page.locator('button[aria-label="Previous season"]').evaluate((btn) => (btn as HTMLButtonElement).click());

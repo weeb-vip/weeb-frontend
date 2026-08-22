@@ -36,6 +36,24 @@ export async function waitForSeasonPage(page: Page) {
 }
 
 /**
+ * Wait for a season's grid to settle, whether or not it has anime in it.
+ *
+ * Navigation tests need to know the page has hydrated before clicking, and used
+ * to wait on an anime card to decide that. That couples them to the API having
+ * data: when the seasonal query fails or the season is genuinely empty, the wait
+ * times out and a navigation test reports a failure that has nothing to do with
+ * navigation. It also reports it as a bare locator timeout, which says nothing
+ * about the real cause.
+ *
+ * Cards or the empty state both mean the same thing here -- the grid rendered.
+ */
+export async function waitForSeasonGrid(page: Page) {
+  const animeCards = page.locator('a[href^="/anime/"]');
+  const emptyState = page.locator('text=No anime found');
+  await expect(animeCards.first().or(emptyState)).toBeVisible({ timeout: 15000 });
+}
+
+/**
  * Wait for auth page form to be ready
  */
 export async function waitForAuthForm(page: Page) {
