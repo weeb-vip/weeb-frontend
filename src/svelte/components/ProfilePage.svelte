@@ -367,11 +367,17 @@
     return {
       // total, not the array length: the arrays are capped by the page limit,
       // so counting them under-reports any list longer than a page.
-      watching: $watchingQuery.data?.total ?? watching.length,
-      planToWatch: $planToWatchQuery.data?.total ?? planToWatch.length,
-      completed: $completedQuery.data?.total ?? 0,
-      dropped: $droppedQuery.data?.total ?? 0,
-      onHold: $onHoldQuery.data?.total ?? 0,
+      //
+      // Number(), because total is Int64 in the schema and gqlgen marshals
+      // that to a JSON string (marshalNInt642string) to stay clear of
+      // JavaScript's 53-bit integer limit. Left as strings, the summed TOTAL
+      // tile concatenates instead of adding: 6, 53, 294, 1, 1 rendered as
+      // 65329411. Codegen types Int64 as `any`, so nothing catches this.
+      watching: Number($watchingQuery.data?.total ?? watching.length),
+      planToWatch: Number($planToWatchQuery.data?.total ?? planToWatch.length),
+      completed: Number($completedQuery.data?.total ?? 0),
+      dropped: Number($droppedQuery.data?.total ?? 0),
+      onHold: Number($onHoldQuery.data?.total ?? 0),
       airingSoon: airingSoon.slice(0, 12),
       recentlyAired: recentlyAired.slice(0, 6),
       currentlyWatching,
