@@ -4,7 +4,7 @@
   import { createQuery, createMutation } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
   import { initializeQueryClient } from '../services/query-client';
-  import { getUser, fetchUserAnimes, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
+  import { getUser, fetchUserAnimes, fetchUserAnimeCount, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
   import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
   import { getAirTimeDisplay, findNextEpisode, getCurrentTime, parseAirTime } from '../../services/airTimeUtils';
   import Button from './Button.svelte';
@@ -65,18 +65,28 @@
       queryClient
     );
 
+    // Completed, dropped and on-hold are rendered as numbers only -- nothing
+    // reads the rows behind them -- so these ask for the count alone.
+    //
+    // They previously fetched up to 1000 entries each, and every entry carried
+    // its anime and every episode of that anime with synopses. For the heaviest
+    // account that was roughly 30,000 episode rows pulled across three requests
+    // to display three integers.
+    //
+    // The count is also the correct one. animes.length stops at the page limit,
+    // so a user with 3,460 completed was shown 1000.
     completedQuery = createQuery(
-      fetchUserAnimes({ input: { status: Status.Completed, limit: 1000, page: 1 } }),
+      fetchUserAnimeCount({ input: { status: Status.Completed, limit: 1, page: 1 } }),
       queryClient
     );
 
     droppedQuery = createQuery(
-      fetchUserAnimes({ input: { status: Status.Dropped, limit: 1000, page: 1 } }),
+      fetchUserAnimeCount({ input: { status: Status.Dropped, limit: 1, page: 1 } }),
       queryClient
     );
 
     onHoldQuery = createQuery(
-      fetchUserAnimes({ input: { status: Status.Onhold, limit: 1000, page: 1 } }),
+      fetchUserAnimeCount({ input: { status: Status.Onhold, limit: 1, page: 1 } }),
       queryClient
     );
 
@@ -355,11 +365,13 @@
     });
 
     return {
-      watching: watching.length,
-      planToWatch: planToWatch.length,
-      completed: $completedQuery.data?.animes?.length || 0,
-      dropped: $droppedQuery.data?.animes?.length || 0,
-      onHold: $onHoldQuery.data?.animes?.length || 0,
+      // total, not the array length: the arrays are capped by the page limit,
+      // so counting them under-reports any list longer than a page.
+      watching: $watchingQuery.data?.total ?? watching.length,
+      planToWatch: $planToWatchQuery.data?.total ?? planToWatch.length,
+      completed: $completedQuery.data?.total ?? 0,
+      dropped: $droppedQuery.data?.total ?? 0,
+      onHold: $onHoldQuery.data?.total ?? 0,
       airingSoon: airingSoon.slice(0, 12),
       recentlyAired: recentlyAired.slice(0, 6),
       currentlyWatching,

@@ -611,6 +611,24 @@ export const mutateUploadProfileImage = graphql(`
     }
 `)
 
+// Counts only. The profile page shows "Completed / On hold / Dropped" as
+// numbers and nothing else, so it has no use for the rows behind them.
+//
+// UserAnimes computes total with its own COUNT(*) over
+// (user_id, status), independent of limit, and idx_user_anime_user_id_status
+// covers that exactly -- so asking for the count costs one index scan and
+// returns no rows at all.
+//
+// It is also the correct number. Reading animes.length instead caps at the
+// page limit: a user with 3,460 completed and limit 1000 was shown 1000.
+export const queryUserAnimeCount = graphql(`
+    query UserAnimeCount($input: UserAnimesInput!) {
+        UserAnimes(input: $input) {
+            total
+        }
+    }
+`)
+
 export const queryUserAnimes = graphql(`
     query UserAnimes($input: UserAnimesInput!) {
         UserAnimes(input: $input) {

@@ -24,14 +24,16 @@ import {
   type User,
   type UserAnimeInput,
   type UserAnimesQuery,
-  type UserAnimesQueryVariables
+  type UserAnimesQueryVariables,
+  type UserAnimeCountQuery,
+  type UserAnimeCountQueryVariables
 } from "../gql/graphql";
 import {
   getAnimeDetailsByID,
   getCurrentlyAiring, getCurrentlyAiringWithDates, getCurrentlyAiringWithDatesAndEpisodes,
   getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
   mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationResendVerificationEmail,
-  mutationRegister, mutationLogout, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserDetails
+  mutationRegister, mutationLogout, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserAnimeCount, queryUserDetails
 } from "./api/graphql/queries";
 
 ;
@@ -626,6 +628,16 @@ export const updateUserDetails = () => ({
     return response.UpdateUserDetails;
   }
 })
+
+// Count without the rows, for the profile page's status tiles.
+export const fetchUserAnimeCount = (variables: UserAnimeCountQueryVariables) => ({
+  queryKey: ["user-anime-count", variables],
+  queryFn: async (): Promise<UserAnimeCountQuery["UserAnimes"]> => {
+    const client = await AuthenticatedClient();
+    const response = await client.request(queryUserAnimeCount, variables);
+    return response.UserAnimes;
+  },
+});
 
 export const fetchUserAnimes = (variables: UserAnimesQueryVariables) => ({
   queryKey: ["user-animes", variables],
