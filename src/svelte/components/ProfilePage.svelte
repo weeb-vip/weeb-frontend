@@ -17,6 +17,9 @@
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import { Status } from '../../gql/graphql';
 
+  /** Prefetched on the server by +page.server.ts. */
+  export let ssr: any = null;
+
   // Initialize query client
   const queryClient = initializeQueryClient();
 
@@ -24,14 +27,78 @@
   let showUploadModal = false;
   let mounted = false;
 
-  // Client-side only queries
-  let userQuery: any;
-  let watchingQuery: any;
-  let planToWatchQuery: any;
-  let completedQuery: any;
-  let droppedQuery: any;
-  let onHoldQuery: any;
-  let currentlyAiringQuery: any;
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+  const airingStart = ssr?.startDate ? new Date(ssr.startDate) : new Date(Date.now() - WEEK);
+  const airingEnd = ssr?.endDate ? new Date(ssr.endDate) : new Date(Date.now() + WEEK);
+
+  // Created here rather than in onMount.
+  //
+  // onMount does not run during SSR, so every one of these was created only
+  // after hydration -- and behind an `await configStore.init()` at that. The
+  // server rendered a skeleton, the browser parsed it, booted, awaited config,
+  // and only then began seven requests. Nothing on the page existed until they
+  // came back.
+  //
+  // With initialData from the server load they resolve immediately and the
+  // markup ships filled in. The queryFn stays, so a client-side navigation to
+  // this route still fetches normally.
+  const userQuery = createQuery(
+    { ...getUser(), initialData: ssr?.user ?? undefined },
+    queryClient
+  );
+  const watchingQuery = createQuery(
+    {
+      ...fetchUserAnimes({ input: { status: Status.Watching, limit: 1000, page: 1 } }),
+      initialData: ssr?.watching ?? undefined
+    },
+    queryClient
+  );
+  const planToWatchQuery = createQuery(
+    {
+      ...fetchUserAnimes({ input: { status: Status.Plantowatch, limit: 1000, page: 1 } }),
+      initialData: ssr?.planToWatch ?? undefined
+    },
+    queryClient
+  );
+
+  // Completed, dropped and on-hold are rendered as numbers only -- nothing
+  // reads the rows behind them -- so these ask for the count alone.
+  //
+  // They previously fetched up to 1000 entries each, and every entry carried
+  // its anime and every episode of that anime with synopses. For the heaviest
+  // account that was roughly 30,000 episode rows pulled across three requests
+  // to display three integers.
+  //
+  // The count is also the correct one. animes.length stops at the page limit,
+  // so a user with 3,460 completed was shown 1000.
+  const completedQuery = createQuery(
+    {
+      ...fetchUserAnimeCount({ input: { status: Status.Completed, limit: 1, page: 1 } }),
+      initialData: ssr?.completed ?? undefined
+    },
+    queryClient
+  );
+  const droppedQuery = createQuery(
+    {
+      ...fetchUserAnimeCount({ input: { status: Status.Dropped, limit: 1, page: 1 } }),
+      initialData: ssr?.dropped ?? undefined
+    },
+    queryClient
+  );
+  const onHoldQuery = createQuery(
+    {
+      ...fetchUserAnimeCount({ input: { status: Status.Onhold, limit: 1, page: 1 } }),
+      initialData: ssr?.onHold ?? undefined
+    },
+    queryClient
+  );
+  const currentlyAiringQuery = createQuery(
+    {
+      ...fetchCurrentlyAiringWithDatesAndEpisodes(airingStart, airingEnd),
+      initialData: ssr?.currentlyAiring ?? undefined
+    },
+    queryClient
+  );
 
   function getProfileImageUrl(profileImageUrl: string | null): string | undefined {
     if (!profileImageUrl) return undefined;
@@ -49,60 +116,14 @@
 
   onMount(async () => {
     mounted = true;
-
-    // Initialize config store
+    // Still needed for the upload widget and the CDN base, but nothing waits
+    // on it to render any more -- the queries above are already resolved.
     await configStore.init();
-
-    // Initialize queries only on client side
-    userQuery = createQuery(getUser(), queryClient);
-
-    watchingQuery = createQuery(
-      fetchUserAnimes({ input: { status: Status.Watching, limit: 1000, page: 1 } }),
-      queryClient
-    );
-
-    planToWatchQuery = createQuery(
-      fetchUserAnimes({ input: { status: Status.Plantowatch, limit: 1000, page: 1 } }),
-      queryClient
-    );
-
-    // Completed, dropped and on-hold are rendered as numbers only -- nothing
-    // reads the rows behind them -- so these ask for the count alone.
-    //
-    // They previously fetched up to 1000 entries each, and every entry carried
-    // its anime and every episode of that anime with synopses. For the heaviest
-    // account that was roughly 30,000 episode rows pulled across three requests
-    // to display three integers.
-    //
-    // The count is also the correct one. animes.length stops at the page limit,
-    // so a user with 3,460 completed was shown 1000.
-    completedQuery = createQuery(
-      fetchUserAnimeCount({ input: { status: Status.Completed, limit: 1, page: 1 } }),
-      queryClient
-    );
-
-    droppedQuery = createQuery(
-      fetchUserAnimeCount({ input: { status: Status.Dropped, limit: 1, page: 1 } }),
-      queryClient
-    );
-
-    onHoldQuery = createQuery(
-      fetchUserAnimeCount({ input: { status: Status.Onhold, limit: 1, page: 1 } }),
-      queryClient
-    );
-
-    // Fetch currently airing shows for a 2-week window (WITH EPISODES!)
-    const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    currentlyAiringQuery = createQuery(
-      fetchCurrentlyAiringWithDatesAndEpisodes(startDate, endDate),
-      queryClient
-    );
   });
 
   // Process watchlist and airing data
   $: watchlistAnalysis = (() => {
-    if (!mounted || !userQuery || !watchingQuery || !planToWatchQuery || !completedQuery || !droppedQuery || !onHoldQuery || !currentlyAiringQuery) {
+    if (!$userQuery) {
       return {
         watching: 0,
         planToWatch: 0,
@@ -397,7 +418,7 @@
 <!-- Profile Header (overlaps banner) -->
 <header class="profile-header">
   <div class="profile-header-inner">
-  {#if !mounted || !userQuery || (userQuery && $userQuery.isLoading)}
+  {#if $userQuery.isLoading && !$userQuery.data}
     <!-- Loading skeleton -->
     <div class="profile-avatar skeleton-pulse"></div>
     <div class="profile-info">
