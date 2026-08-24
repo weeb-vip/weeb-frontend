@@ -9,6 +9,7 @@
   import { initializeQueryClient } from '../services/query-client';
   import PosterCard from './PosterCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
+  import PosterGrid from './PosterGrid.svelte';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   // Initialize query client
@@ -210,11 +211,11 @@
         <div class="skeleton-tab"></div>
       {/each}
     </div>
-    <div class="anime-grid" style="margin-top: 20px;">
+    <PosterGrid class="pal-grid">
       {#each Array(8) as _}
         <div class="skeleton-card"></div>
       {/each}
-    </div>
+    </PosterGrid>
   </div>
 {:else}
   <div class="pal-wrapper">
@@ -363,7 +364,7 @@
 
       <!-- Grid View -->
       <div data-view="grid">
-        <div class="anime-grid">
+        <PosterGrid>
           {#each userAnimes as entry}
             <PosterCard
               id={entry.anime?.id}
@@ -379,7 +380,7 @@
               onList={entry.status || null}
             />
           {/each}
-        </div>
+        </PosterGrid>
       </div>
 
       <!-- Pagination -->
@@ -668,15 +669,6 @@
   }
 
   /* ── GRID VIEW ──────────────────────────────────────── */
-  .anime-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px;
-    width: 100%;
-  }
-  .anime-grid > :global(*) {
-    max-width: 200px;
-  }
 
   /* ── EMPTY STATE ────────────────────────────────────── */
   .empty-state {
@@ -803,7 +795,6 @@
   /* ── RESPONSIVE ─────────────────────────────────────── */
   @media (max-width: 1024px) {
     .pal-wrapper { padding: 0 24px; }
-    .anime-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
     .anime-row { grid-template-columns: 44px 1fr 48px 120px 70px; }
   }
 
@@ -818,7 +809,6 @@
     }
     .anime-row .row-progress { display: none; }
     .row-poster { width: 32px; height: 46px; }
-    .anime-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
     .pagination { flex-direction: column; align-items: stretch; }
     .pagination-left { justify-content: center; }
     .pagination-right { justify-content: center; }
@@ -830,6 +820,7 @@
       grid-template-columns: 1fr 40px 70px;
     }
     .anime-row .row-poster { display: none; }
-    .anime-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
   }
+  /* Was an inline margin-top on the grid div. */
+  :global(.pal-grid) { margin-top: 20px; }
 </style>

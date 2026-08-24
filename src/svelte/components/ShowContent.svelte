@@ -464,40 +464,80 @@
       <div class="hero-stage">
         <!-- Identity -->
         <div class="hero-panel">
-          <p class="hero-eyebrow">
-            {anime.type || "TV"} Series &middot; {getYearUTC(anime.startDate)}
-            {#if anime.studios && anime.studios.length > 0}
-              &middot; {Array.isArray(anime.studios) ? anime.studios[0] : anime.studios}
-            {/if}
-          </p>
-
-          <h1 class="hero-title">{animeTitle}</h1>
-          {#if anime.titleJp}
-            <!-- lang="ja": Japanese text inside a lang="en" document. Tells search
-                 engines which language it is, and screen readers which voice to use. -->
-            <p class="hero-title-jp" lang="ja">{anime.titleJp}</p>
-          {/if}
-
-          <!-- Genre tags -->
-          {#if anime.tags && anime.tags.length > 0}
-            <div class="hero-tags" role="list" aria-label="Genres">
-              {#each anime.tags as tag}
-                <span class="hero-tag" role="listitem">{tag}</span>
-              {/each}
+          <!-- The poster, which the page did not show anywhere.
+               The artwork behind the hero is the wide banner; the 2:3 cover was
+               only ever visible in the sticky header once you scrolled. It sits
+               beside the identity text rather than above it so it costs no
+               vertical space on a phone, where the panels were already
+               deliberately tightened to keep the banner visible. -->
+          <!-- Two bands. The poster and the show's name pair up top, because
+               together they are what identifies it. Everything else -- what kind
+               of show it is, what it is about, and the one action -- belongs to
+               the show rather than to its name, so it sits below on the panel's
+               full width and centred. It was previously stacked inside a 221px
+               column beside the poster, where the tag rows wrapped and the
+               action sat indented against empty space. -->
+          <div class="hero-identity">
+            <div class="hero-poster">
+              <SafeImage
+                src={GetImageFromAnime(anime)}
+                alt=""
+                className="hero-poster-img"
+                fallbackSrc="/assets/not found.jpg"
+                cdnWidth={300}
+              />
             </div>
-          {/if}
 
-          <!-- Where to watch -->
-          <StreamingPlatforms platforms={anime.streamingPlatforms} centerOnMobile />
+            <div class="hero-identity-text">
+              <h1 class="hero-title">{animeTitle}</h1>
+              {#if anime.titleJp}
+                <!-- lang="ja": Japanese text inside a lang="en" document. Tells search
+                     engines which language it is, and screen readers which voice to use. -->
+                <p class="hero-title-jp" lang="ja">{anime.titleJp}</p>
+              {/if}
+            </div>
+          </div>
 
-          <div class="hero-actions">
-            <AnimeActions {anime} variant="hero" />
+          <div class="hero-panel-body">
+            <!-- Under the title, not above it. The name identifies the show;
+                 format, year and studio qualify it. -->
+            <p class="hero-meta">
+              {anime.type || "TV"} Series &middot; {getYearUTC(anime.startDate)}
+              {#if anime.studios && anime.studios.length > 0}
+                &middot; {Array.isArray(anime.studios) ? anime.studios[0] : anime.studios}
+              {/if}
+            </p>
+
+            <!-- Genre tags -->
+            {#if anime.tags && anime.tags.length > 0}
+              <div class="hero-tags" role="list" aria-label="Genres">
+                {#each anime.tags as tag}
+                  <span class="hero-tag" role="listitem">{tag}</span>
+                {/each}
+              </div>
+            {/if}
+
+            <!-- Where to watch -->
+            <StreamingPlatforms platforms={anime.streamingPlatforms} centerOnMobile />
+
+            <div class="hero-actions">
+              <AnimeActions {anime} variant="hero" />
+            </div>
           </div>
         </div>
 
-        <!-- Data: the schedule first, because the schedule is the promise -->
-        <aside class="hero-aside" aria-label="Show details">
-          {#if hasTimingData && countdown}
+        <!-- The schedule, and only the schedule.
+             This carried the ranking and a details list as well, both of which
+             the quick-info bar immediately below already shows -- ranking,
+             status, episode count, duration and studio are all chips down
+             there. A panel of glass over the artwork is expensive; it has to
+             earn its place with something the page does not already say.
+
+             Rendered only when there is something to schedule. Without this
+             guard a finished show got a container built around a single line of
+             duplicated text. -->
+        {#if hasTimingData && countdown}
+          <aside class="hero-aside" aria-label="Broadcast schedule">
             <div class="hero-next">
               <span class="hero-next-label">
                 {currentlyAiring ? 'Airing now' : alreadyAired ? 'Recently aired' : 'Next episode'}
@@ -510,51 +550,8 @@
                 <span class="hero-next-when">{format(airTimeAndDate, 'EEE d MMM, h:mm a')}</span>
               {/if}
             </div>
-          {/if}
-
-          {#if anime.ranking}
-            <div class="hero-rank">
-              <span class="hero-rank-num">#{anime.ranking}</span>
-              <span class="hero-rank-label">overall ranking</span>
-            </div>
-          {/if}
-
-          <!-- Details grid -->
-          <dl class="hero-details">
-            {#if anime.endDate}
-              <dt class="hero-detail-key">Status</dt>
-              <dd class="hero-detail-val">Finished</dd>
-            {:else}
-              <dt class="hero-detail-key">Status</dt>
-              <dd class="hero-detail-val hero-detail-val--green">{anime.endDate ? "Finished" : "Airing"}</dd>
-            {/if}
-
-            {#if anime.episodes && anime.episodes.length > 0}
-              <dt class="hero-detail-key">Episodes</dt>
-              <dd class="hero-detail-val">{anime.episodes.length}</dd>
-            {/if}
-
-            {#if anime.duration}
-              <dt class="hero-detail-key">Duration</dt>
-              <dd class="hero-detail-val">{anime.duration}</dd>
-            {/if}
-
-            {#if anime.studios}
-              <dt class="hero-detail-key">Studio</dt>
-              <dd class="hero-detail-val">{Array.isArray(anime.studios) ? anime.studios.join(', ') : anime.studios}</dd>
-            {/if}
-
-            {#if anime.source}
-              <dt class="hero-detail-key">Source</dt>
-              <dd class="hero-detail-val">{anime.source}</dd>
-            {/if}
-
-            <dt class="hero-detail-key">Aired</dt>
-            <dd class="hero-detail-val">
-              {formatDateUTC(anime.startDate, "Unknown")} &ndash; {formatDateUTC(anime.endDate, "Ongoing")}
-            </dd>
-          </dl>
-        </aside>
+          </aside>
+        {/if}
       </div>
     </section>
 
@@ -903,9 +900,62 @@
     flex: 0 1 auto;
     max-width: min(560px, calc(100vw - 460px));
   }
+
+  /* Poster and title, side by side. The pair is the show's identity; the poster
+     carries no text so it needs no width of its own beyond being recognisable. */
+  .hero-identity {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .hero-identity-text {
+    flex: 1 1 auto;
+    /* Without this a long untruncated title refuses to shrink and pushes the
+       poster out of the panel. */
+    min-width: 0;
+  }
+
+  /* The band under the identity pair, centred. Centring is what makes it read as
+     a caption to the pair above rather than a second column of its own. */
+  .hero-panel-body {
+    margin-top: 18px;
+    text-align: center;
+  }
+  .hero-panel-body :global(.hero-tags),
+  .hero-panel-body :global(.platforms-container) {
+    justify-content: center;
+  }
+  .hero-panel-body .hero-actions {
+    display: flex;
+    justify-content: center;
+  }
+  .hero-poster {
+    flex: 0 0 auto;
+    width: 150px;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--weeb-radius);
+    overflow: hidden;
+    background: var(--weeb-surface);
+    box-shadow: var(--weeb-shadow-card);
+  }
+  /* :global because SafeImage renders the img itself. */
+  .hero-poster :global(.hero-poster-img) {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
   .hero-aside {
     flex: 0 0 auto;
     width: 320px;
+  }
+
+  /* The band under the identity row. Tags, watch-on marks and the action are
+     about the show, not about its name, so they get the panel's width instead
+     of the text column's -- which is what leaves the space beside the poster
+     empty rather than stranded. */
+  .hero-panel-body {
+    margin-top: 16px;
   }
 
   .hero-actions {
@@ -913,13 +963,14 @@
   }
 
   /* Next-episode block: the schedule leads the data panel. */
+  /* No trailing rule any more: the border and the padding under it existed to
+     separate the schedule from the ranking beneath it, and that has moved to the
+     quick-info bar. Left in place it drew a line under the last line of the
+     panel. */
   .hero-next {
     display: flex;
     flex-direction: column;
     gap: 3px;
-    padding-bottom: 14px;
-    margin-bottom: 14px;
-    border-bottom: 1px solid var(--weeb-border);
   }
   .hero-next-label {
     font-size: 12px;
@@ -943,24 +994,6 @@
     color: var(--weeb-fg-secondary);
   }
 
-  .hero-rank {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding-bottom: 14px;
-    margin-bottom: 14px;
-    border-bottom: 1px solid var(--weeb-border);
-  }
-  .hero-rank-num {
-    font-family: var(--weeb-font-mono);
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--weeb-fg);
-  }
-  .hero-rank-label {
-    font-size: 12px;
-    color: var(--weeb-fg-secondary);
-  }
 
   @media (max-width: 1024px) {
     .hero-stage {
@@ -977,9 +1010,14 @@
        stage so the artwork keeps the majority of the screen. */
     .hero-panel,
     .hero-aside { padding: 14px; }
-    .hero-panel .hero-eyebrow { margin-bottom: 4px; }
+    .hero-identity { gap: 14px; }
+    /* 96px is a phone size. This block runs to 1024px, where the panel is full
+       width and a 96px poster beside a ~900px column stops being the subject and
+       becomes a stamp, so it scales with the room it is given. */
+    .hero-poster { width: clamp(96px, 12vw, 148px); }
     .hero-panel .hero-title { margin-bottom: 2px; }
-    .hero-panel .hero-title-jp { margin-bottom: 8px; }
+    .hero-panel .hero-meta { margin-top: 6px; }
+    .hero-panel-body { margin-top: 12px; }
     .hero-panel .hero-tags { margin-bottom: 10px; }
     .hero-panel .hero-actions { margin-top: 10px; }
 
@@ -991,8 +1029,6 @@
       align-items: baseline;
       flex-wrap: wrap;
       gap: 8px;
-      padding-bottom: 10px;
-      margin-bottom: 10px;
     }
     .hero-next-countdown { font-size: 15px; }
     .hero-next-label {
@@ -1000,26 +1036,7 @@
       letter-spacing: 0.05em;
     }
 
-    /* Ranking rides on the same line rather than owning a row of its own. */
-    .hero-rank {
-      padding-bottom: 0;
-      margin-bottom: 0;
-      border-bottom: 0;
-    }
-    .hero-rank-num { font-size: 15px; }
 
-    /* A show that has finished airing has no next-episode block, and details are
-       hidden here, so the data panel collapses to a single ranking line -- a
-       glass container wrapped around 23px of text. Drop the panel chrome in that
-       case and let the ranking sit as a caption under the identity panel. */
-    .hero-aside:not(:has(.hero-next)) {
-      background: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      border: 0;
-      box-shadow: none;
-      padding: 0 4px;
-    }
 
     /* Watch-on marks were 38px squares; they are recognisable well below that
        and were the tallest thing in the panel after the title. */
@@ -1033,9 +1050,6 @@
        here: aired / rating / source / studio repeat in the Information section
        below, and episodes / duration are chips in the quick-info bar. The
        schedule and the ranking stay, because neither is repeated above the fold. */
-    /* Scoped to the aside, not bare .hero-details: a later `.hero-details {
-       display: grid }` rule of equal specificity would otherwise win on order. */
-    .hero-aside .hero-details { display: none; }
   }
   @media (max-width: 768px) {
     .hero-banner { --hero-fade: 70px; }
@@ -1064,22 +1078,18 @@
 
 
 
-  :global(.hero-poster__img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-
-  .hero-eyebrow {
+  /* Was .hero-eyebrow, above the title. Below it now, so it reads as a
+     qualifier rather than a label announcing the heading. Uppercase mono is
+     kept: format, year and studio are catalogue facts, and the mono numeral
+     rule already governs the year. */
+  .hero-meta {
     font-family: var(--weeb-font-mono);
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.1em;
     color: var(--weeb-fg-muted);
     text-transform: uppercase;
-    margin-bottom: 10px;
+    margin-top: 8px;
   }
 
   .hero-title {
@@ -1130,31 +1140,9 @@
     background: color-mix(in oklch, var(--weeb-accent), transparent 85%);
   }
 
-  .hero-details {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 8px 32px;
-  }
 
-  .hero-detail-key {
-    font-family: var(--weeb-font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    color: var(--weeb-fg-muted);
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
 
-  .hero-detail-val {
-    font-size: 13px;
-    color: var(--weeb-fg-secondary);
-  }
 
-  .hero-detail-val--green {
-    color: var(--weeb-green);
-    font-weight: 600;
-  }
 
   /* ===========================
      QUICK INFO BAR
@@ -1538,11 +1526,6 @@
       justify-content: center;
     }
 
-    .hero-details {
-      justify-content: center;
-      max-width: 400px;
-      margin: 0 auto;
-    }
 
 
     /* No gutter override here. Both already read --weeb-section-px, and pinning

@@ -11,10 +11,14 @@
   import PosterCard from './PosterCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
   import ProfileImageUpload from './ProfileImageUpload.svelte';
+  import PosterGrid from './PosterGrid.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
   import { configStore } from '../stores/config';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import { Status } from '../../gql/graphql';
+
+  /** Prefetched on the server by +page.server.ts. */
+  export let ssr: any = null;
 
   // Initialize query client
   const queryClient = initializeQueryClient();
@@ -23,14 +27,78 @@
   let showUploadModal = false;
   let mounted = false;
 
-  // Client-side only queries
-  let userQuery: any;
-  let watchingQuery: any;
-  let planToWatchQuery: any;
-  let completedQuery: any;
-  let droppedQuery: any;
-  let onHoldQuery: any;
-  let currentlyAiringQuery: any;
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+  const airingStart = ssr?.startDate ? new Date(ssr.startDate) : new Date(Date.now() - WEEK);
+  const airingEnd = ssr?.endDate ? new Date(ssr.endDate) : new Date(Date.now() + WEEK);
+
+  // Created here rather than in onMount.
+  //
+  // onMount does not run during SSR, so every one of these was created only
+  // after hydration -- and behind an `await configStore.init()` at that. The
+  // server rendered a skeleton, the browser parsed it, booted, awaited config,
+  // and only then began seven requests. Nothing on the page existed until they
+  // came back.
+  //
+  // With initialData from the server load they resolve immediately and the
+  // markup ships filled in. The queryFn stays, so a client-side navigation to
+  // this route still fetches normally.
+  const userQuery = createQuery(
+    { ...getUser(), initialData: ssr?.user ?? undefined },
+    queryClient
+  );
+  const watchingQuery = createQuery(
+    {
+      ...fetchUserAnimes({ input: { status: Status.Watching, limit: 1000, page: 1 } }),
+      initialData: ssr?.watching ?? undefined
+    },
+    queryClient
+  );
+  const planToWatchQuery = createQuery(
+    {
+      ...fetchUserAnimes({ input: { status: Status.Plantowatch, limit: 1000, page: 1 } }),
+      initialData: ssr?.planToWatch ?? undefined
+    },
+    queryClient
+  );
+
+  // Completed, dropped and on-hold are rendered as numbers only -- nothing
+  // reads the rows behind them -- so these ask for the count alone.
+  //
+  // They previously fetched up to 1000 entries each, and every entry carried
+  // its anime and every episode of that anime with synopses. For the heaviest
+  // account that was roughly 30,000 episode rows pulled across three requests
+  // to display three integers.
+  //
+  // The count is also the correct one. animes.length stops at the page limit,
+  // so a user with 3,460 completed was shown 1000.
+  const completedQuery = createQuery(
+    {
+      ...fetchUserAnimeCount({ input: { status: Status.Completed, limit: 1, page: 1 } }),
+      initialData: ssr?.completed ?? undefined
+    },
+    queryClient
+  );
+  const droppedQuery = createQuery(
+    {
+      ...fetchUserAnimeCount({ input: { status: Status.Dropped, limit: 1, page: 1 } }),
+      initialData: ssr?.dropped ?? undefined
+    },
+    queryClient
+  );
+  const onHoldQuery = createQuery(
+    {
+      ...fetchUserAnimeCount({ input: { status: Status.Onhold, limit: 1, page: 1 } }),
+      initialData: ssr?.onHold ?? undefined
+    },
+    queryClient
+  );
+  const currentlyAiringQuery = createQuery(
+    {
+      ...fetchCurrentlyAiringWithDatesAndEpisodes(airingStart, airingEnd),
+      initialData: ssr?.currentlyAiring ?? undefined
+    },
+    queryClient
+  );
 
   function getProfileImageUrl(profileImageUrl: string | null): string | undefined {
     if (!profileImageUrl) return undefined;
@@ -48,60 +116,14 @@
 
   onMount(async () => {
     mounted = true;
-
-    // Initialize config store
+    // Still needed for the upload widget and the CDN base, but nothing waits
+    // on it to render any more -- the queries above are already resolved.
     await configStore.init();
-
-    // Initialize queries only on client side
-    userQuery = createQuery(getUser(), queryClient);
-
-    watchingQuery = createQuery(
-      fetchUserAnimes({ input: { status: Status.Watching, limit: 1000, page: 1 } }),
-      queryClient
-    );
-
-    planToWatchQuery = createQuery(
-      fetchUserAnimes({ input: { status: Status.Plantowatch, limit: 1000, page: 1 } }),
-      queryClient
-    );
-
-    // Completed, dropped and on-hold are rendered as numbers only -- nothing
-    // reads the rows behind them -- so these ask for the count alone.
-    //
-    // They previously fetched up to 1000 entries each, and every entry carried
-    // its anime and every episode of that anime with synopses. For the heaviest
-    // account that was roughly 30,000 episode rows pulled across three requests
-    // to display three integers.
-    //
-    // The count is also the correct one. animes.length stops at the page limit,
-    // so a user with 3,460 completed was shown 1000.
-    completedQuery = createQuery(
-      fetchUserAnimeCount({ input: { status: Status.Completed, limit: 1, page: 1 } }),
-      queryClient
-    );
-
-    droppedQuery = createQuery(
-      fetchUserAnimeCount({ input: { status: Status.Dropped, limit: 1, page: 1 } }),
-      queryClient
-    );
-
-    onHoldQuery = createQuery(
-      fetchUserAnimeCount({ input: { status: Status.Onhold, limit: 1, page: 1 } }),
-      queryClient
-    );
-
-    // Fetch currently airing shows for a 2-week window (WITH EPISODES!)
-    const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    currentlyAiringQuery = createQuery(
-      fetchCurrentlyAiringWithDatesAndEpisodes(startDate, endDate),
-      queryClient
-    );
   });
 
   // Process watchlist and airing data
   $: watchlistAnalysis = (() => {
-    if (!mounted || !userQuery || !watchingQuery || !planToWatchQuery || !completedQuery || !droppedQuery || !onHoldQuery || !currentlyAiringQuery) {
+    if (!$userQuery) {
       return {
         watching: 0,
         planToWatch: 0,
@@ -396,7 +418,7 @@
 <!-- Profile Header (overlaps banner) -->
 <header class="profile-header">
   <div class="profile-header-inner">
-  {#if !mounted || !userQuery || (userQuery && $userQuery.isLoading)}
+  {#if $userQuery.isLoading && !$userQuery.data}
     <!-- Loading skeleton -->
     <div class="profile-avatar skeleton-pulse"></div>
     <div class="profile-info">
@@ -497,7 +519,7 @@
     </div>
 
     {#if watchlistAnalysis.isLoading}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each Array(6) as _}
           <div class="skeleton-card skeleton-pulse">
             <div class="skeleton-poster"></div>
@@ -508,9 +530,9 @@
             </div>
           </div>
         {/each}
-      </div>
+      </PosterGrid>
     {:else if watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each watchlistAnalysis.currentlyWatching as entry}
           <PosterCard
             id={entry.anime?.id}
@@ -526,7 +548,7 @@
             onList={entry.status || 'watching'}
           />
         {/each}
-      </div>
+      </PosterGrid>
     {:else}
       <div class="empty-state">
         <svg class="empty-state-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M17 2l-5 5-5-5"/></svg>
@@ -563,7 +585,7 @@
     </div>
 
     {#if watchlistAnalysis.isLoading}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each Array(3) as _}
           <div class="skeleton-card skeleton-pulse">
             <div class="skeleton-poster"></div>
@@ -574,9 +596,9 @@
             </div>
           </div>
         {/each}
-      </div>
+      </PosterGrid>
     {:else if watchlistAnalysis.airingSoon.length > 0}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each watchlistAnalysis.airingSoon as entry}
           <PosterCard
             id={entry.anime?.id || entry.airingInfo?.id}
@@ -591,7 +613,7 @@
             onList={entry.status || 'watching'}
           />
         {/each}
-      </div>
+      </PosterGrid>
     {:else}
       <div class="empty-state">
         <svg class="empty-state-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M15 14l-6 6M9 14l6 6"/></svg>
@@ -616,7 +638,7 @@
     </div>
 
     {#if watchlistAnalysis.isLoading}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each Array(3) as _}
           <div class="skeleton-card skeleton-pulse">
             <div class="skeleton-poster"></div>
@@ -627,9 +649,9 @@
             </div>
           </div>
         {/each}
-      </div>
+      </PosterGrid>
     {:else if watchlistAnalysis.recentlyAired.length > 0}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each watchlistAnalysis.recentlyAired as entry}
           <PosterCard
             id={entry.anime?.id || entry.airingInfo?.id}
@@ -644,7 +666,7 @@
             onList={entry.status || 'watching'}
           />
         {/each}
-      </div>
+      </PosterGrid>
     {:else}
       <div class="empty-state">
         <svg class="empty-state-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l-3 3"/></svg>
@@ -863,11 +885,7 @@
   .section-link:hover { color: var(--weeb-accent-hover); }
 
   /* ── Anime grid ─────────────────────────────────────────────── */
-  .anime-grid { display: grid; gap: 16px; align-items: start; }
-  .anime-grid--3col {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-  .anime-grid--3col > :global(*) { max-width: 200px; }
+  /* The poster grid lives in PosterGrid.svelte. */
 
   /* ── Empty state ────────────────────────────────────────────── */
   .empty-state {
@@ -923,9 +941,6 @@
 
   /* ── Responsive: 1024px ────────────────────────────────────── */
   @media (max-width: 1024px) {
-    .anime-grid--3col {
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    }
   }
 
   /* ── Responsive: 768px ─────────────────────────────────────── */
@@ -943,10 +958,6 @@
     .stat-label { font-size: 0.6rem; }
     .profile-content { padding: 24px 16px 48px; }
     .profile-section { margin-bottom: 24px; }
-    .anime-grid--3col {
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 10px;
-    }
   }
 
   /* ── Responsive: 480px ─────────────────────────────────────── */
@@ -961,9 +972,5 @@
     .stat-cell:nth-child(4),
     .stat-cell:nth-child(5),
     .stat-cell:nth-child(6) { border-top: 1px solid var(--weeb-border); }
-    .anime-grid--3col {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
   }
 </style>
