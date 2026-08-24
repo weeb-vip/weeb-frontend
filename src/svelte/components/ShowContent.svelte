@@ -464,34 +464,54 @@
       <div class="hero-stage">
         <!-- Identity -->
         <div class="hero-panel">
-          <p class="hero-eyebrow">
-            {anime.type || "TV"} Series &middot; {getYearUTC(anime.startDate)}
-            {#if anime.studios && anime.studios.length > 0}
-              &middot; {Array.isArray(anime.studios) ? anime.studios[0] : anime.studios}
-            {/if}
-          </p>
-
-          <h1 class="hero-title">{animeTitle}</h1>
-          {#if anime.titleJp}
-            <!-- lang="ja": Japanese text inside a lang="en" document. Tells search
-                 engines which language it is, and screen readers which voice to use. -->
-            <p class="hero-title-jp" lang="ja">{anime.titleJp}</p>
-          {/if}
-
-          <!-- Genre tags -->
-          {#if anime.tags && anime.tags.length > 0}
-            <div class="hero-tags" role="list" aria-label="Genres">
-              {#each anime.tags as tag}
-                <span class="hero-tag" role="listitem">{tag}</span>
-              {/each}
+          <!-- The poster, which the page did not show anywhere.
+               The artwork behind the hero is the wide banner; the 2:3 cover was
+               only ever visible in the sticky header once you scrolled. It sits
+               beside the identity text rather than above it so it costs no
+               vertical space on a phone, where the panels were already
+               deliberately tightened to keep the banner visible. -->
+          <div class="hero-identity">
+            <div class="hero-poster">
+              <SafeImage
+                src={GetImageFromAnime(anime)}
+                alt=""
+                className="hero-poster-img"
+                fallbackSrc="/assets/not found.jpg"
+                cdnWidth={300}
+              />
             </div>
-          {/if}
 
-          <!-- Where to watch -->
-          <StreamingPlatforms platforms={anime.streamingPlatforms} centerOnMobile />
+            <div class="hero-identity-text">
+              <p class="hero-eyebrow">
+                {anime.type || "TV"} Series &middot; {getYearUTC(anime.startDate)}
+                {#if anime.studios && anime.studios.length > 0}
+                  &middot; {Array.isArray(anime.studios) ? anime.studios[0] : anime.studios}
+                {/if}
+              </p>
 
-          <div class="hero-actions">
-            <AnimeActions {anime} variant="hero" />
+              <h1 class="hero-title">{animeTitle}</h1>
+              {#if anime.titleJp}
+                <!-- lang="ja": Japanese text inside a lang="en" document. Tells search
+                     engines which language it is, and screen readers which voice to use. -->
+                <p class="hero-title-jp" lang="ja">{anime.titleJp}</p>
+              {/if}
+
+              <!-- Genre tags -->
+              {#if anime.tags && anime.tags.length > 0}
+                <div class="hero-tags" role="list" aria-label="Genres">
+                  {#each anime.tags as tag}
+                    <span class="hero-tag" role="listitem">{tag}</span>
+                  {/each}
+                </div>
+              {/if}
+
+              <!-- Where to watch -->
+              <StreamingPlatforms platforms={anime.streamingPlatforms} centerOnMobile />
+
+              <div class="hero-actions">
+                <AnimeActions {anime} variant="hero" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -903,6 +923,38 @@
     flex: 0 1 auto;
     max-width: min(560px, calc(100vw - 460px));
   }
+
+  /* Poster beside the identity text, not above it. Above would push the title
+     and the action button down by the poster's full height, and on a phone the
+     stage is already tuned so the two panels leave the banner the majority of
+     the screen. */
+  .hero-identity {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .hero-identity-text {
+    flex: 1 1 auto;
+    /* Without this a long untruncated title refuses to shrink and pushes the
+       poster out of the panel. */
+    min-width: 0;
+  }
+  .hero-poster {
+    flex: 0 0 auto;
+    width: 150px;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--weeb-radius);
+    overflow: hidden;
+    background: var(--weeb-surface);
+    box-shadow: var(--weeb-shadow-card);
+  }
+  /* :global because SafeImage renders the img itself. */
+  .hero-poster :global(.hero-poster-img) {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
   .hero-aside {
     flex: 0 0 auto;
     width: 320px;
@@ -977,6 +1029,11 @@
        stage so the artwork keeps the majority of the screen. */
     .hero-panel,
     .hero-aside { padding: 14px; }
+    /* Sized so the poster is never the tallest thing in the panel -- the text
+       beside it already runs to roughly this height, so the poster costs no
+       extra vertical space. */
+    .hero-identity { gap: 14px; }
+    .hero-poster { width: 96px; }
     .hero-panel .hero-eyebrow { margin-bottom: 4px; }
     .hero-panel .hero-title { margin-bottom: 2px; }
     .hero-panel .hero-title-jp { margin-bottom: 8px; }
@@ -1062,14 +1119,6 @@
        scrim and the panels, not from hiding the image. */
   }
 
-
-
-  :global(.hero-poster__img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
 
 
   .hero-eyebrow {
