@@ -11,6 +11,7 @@
   import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import SafeImage from './SafeImage.svelte';
+  import PosterGrid from './PosterGrid.svelte';
   import { fade, fly } from 'svelte/transition';
   import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -310,7 +311,7 @@
   {/if}
 
   <!-- Poster Grid -->
-  <div class="shows-grid" class:loading={$seasonalAnimeQuery.isFetching && animeList.length > 0}>
+  <PosterGrid minHeight="400px" loading={$seasonalAnimeQuery.isFetching && animeList.length > 0}>
     {#if $seasonalAnimeQuery.isLoading && !seasonalData}
       {#each Array(16) as _}
         <div class="skeleton-card">
@@ -360,7 +361,7 @@
         </div>
       {/each}
     {/if}
-  </div>
+  </PosterGrid>
 
 </div>
 
@@ -749,22 +750,7 @@
     padding: 0;
   }
 
-  /* ── Poster grid ── */
-  .shows-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px;
-    min-height: 400px;
-    transition: opacity 0.2s ease;
-    align-items: start;
-  }
-  .shows-grid.loading {
-    opacity: 0.4;
-    pointer-events: none;
-  }
-  .shows-grid > :global(*) {
-    max-width: 200px;
-  }
+  /* Poster grid: see PosterGrid.svelte. Skeletons below are slotted into it. */
 
   /* ── Skeleton cards ── */
   .skeleton-card {
@@ -838,10 +824,6 @@
       font-size: 24px;
     }
 
-    .shows-grid {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 12px;
-    }
 
     .season-selector {
       gap: 8px;
@@ -882,10 +864,6 @@
   }
 
   @media (max-width: 480px) {
-    .shows-grid {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 10px;
-    }
 
     .season-tabs {
       overflow-x: auto;

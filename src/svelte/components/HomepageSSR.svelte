@@ -9,6 +9,7 @@
   import PosterCard from './PosterCard.svelte';
   import SectionHeader from './SectionHeader.svelte';
   import GenrePills from './GenrePills.svelte';
+  import PosterGrid from './PosterGrid.svelte';
   import { initializeQueryClient } from '../services/query-client';
   import {
     fetchHomePageData,
@@ -456,7 +457,7 @@
     {(() => { if (typeof window !== 'undefined' && _dbgTopRated?.length) console.log('[WATCHLIST]', 'topRated[0].userAnime:', _dbgTopRated[0]?.userAnime, 'status:', _dbgTopRated[0]?.userAnime?.status, 'all userAnimes:', _dbgTopRated.map(a => ({ title: a.titleEn?.slice(0,20), ua: a.userAnime?.status || 'NONE' }))); return ''; })()}
     <section class="section">
       <SectionHeader title="Top Rated" href="/search" linkText="See all →" />
-      <div class="poster-row">
+      <PosterGrid>
         {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, shelfLimit) as anime}
           <PosterCard
             id={anime.id}
@@ -472,7 +473,7 @@
             onList={anime.userAnime?.status || null}
           />
         {/each}
-      </div>
+      </PosterGrid>
     </section>
   {/if}
 
@@ -480,7 +481,7 @@
   {#if ($homeDataQuery.data || homeData)?.newestAnime}
     <section class="section">
       <SectionHeader title="Recently Added" href="/search" linkText="See all →" />
-      <div class="poster-row">
+      <PosterGrid>
         {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, shelfLimit) as anime}
           <PosterCard
             id={anime.id}
@@ -496,7 +497,7 @@
             onList={anime.userAnime?.status || null}
           />
         {/each}
-      </div>
+      </PosterGrid>
     </section>
   {/if}
 
@@ -521,7 +522,7 @@
         {/each}
       </div>
     </div>
-    <div class="poster-row">
+    <PosterGrid>
       {#if $seasonalAnimeQuery.isLoading && selectedSeason !== currentSeason}
         {#each Array(12) as _}
           <div class="poster-card-skeleton">
@@ -554,7 +555,7 @@
           />
         {/each}
       {/if}
-    </div>
+    </PosterGrid>
   </section>
 </div>
 
@@ -599,35 +600,7 @@
      The length problem a grid used to have was never the grid. It was fourteen
      items in it: at two columns that is seven rows per section. The count is
      capped per breakpoint instead (see shelfLimit). */
-  .poster-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px;
-    align-items: start;
-  }
-  .poster-row :global(> *) {
-    width: 100%;
-    max-width: 220px;
-    justify-self: center;
-  }
-
-  @media (min-width: 1400px) {
-    .poster-row {
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    }
-    .poster-row :global(> *) {
-      max-width: 240px;
-    }
-  }
-
-  @media (min-width: 1800px) {
-    .poster-row {
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    }
-    .poster-row :global(> *) {
-      max-width: 260px;
-    }
-  }
+  /* The poster grid lives in PosterGrid.svelte. */
 
   /* --- SEASON TABS --- */
   .section-header-with-tabs {
@@ -702,13 +675,6 @@
     .section {
       padding: var(--weeb-section-py, 32px) var(--weeb-section-px, 24px);
     }
-    .poster-row {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .poster-row :global(> *) {
-      max-width: none;
-    }
     .season-tabs {
       flex-wrap: wrap;
     }
@@ -716,10 +682,6 @@
   @media (max-width: 400px) {
     .section {
       padding: var(--weeb-section-py, 24px) var(--weeb-section-px, 16px);
-    }
-    .poster-row {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
     }
   }
 </style>

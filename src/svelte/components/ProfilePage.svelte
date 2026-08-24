@@ -11,6 +11,7 @@
   import PosterCard from './PosterCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
   import ProfileImageUpload from './ProfileImageUpload.svelte';
+  import PosterGrid from './PosterGrid.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
   import { configStore } from '../stores/config';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
@@ -497,7 +498,7 @@
     </div>
 
     {#if watchlistAnalysis.isLoading}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each Array(6) as _}
           <div class="skeleton-card skeleton-pulse">
             <div class="skeleton-poster"></div>
@@ -508,9 +509,9 @@
             </div>
           </div>
         {/each}
-      </div>
+      </PosterGrid>
     {:else if watchlistAnalysis.currentlyWatching && watchlistAnalysis.currentlyWatching.length > 0}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each watchlistAnalysis.currentlyWatching as entry}
           <PosterCard
             id={entry.anime?.id}
@@ -526,7 +527,7 @@
             onList={entry.status || 'watching'}
           />
         {/each}
-      </div>
+      </PosterGrid>
     {:else}
       <div class="empty-state">
         <svg class="empty-state-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M17 2l-5 5-5-5"/></svg>
@@ -563,7 +564,7 @@
     </div>
 
     {#if watchlistAnalysis.isLoading}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each Array(3) as _}
           <div class="skeleton-card skeleton-pulse">
             <div class="skeleton-poster"></div>
@@ -574,9 +575,9 @@
             </div>
           </div>
         {/each}
-      </div>
+      </PosterGrid>
     {:else if watchlistAnalysis.airingSoon.length > 0}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each watchlistAnalysis.airingSoon as entry}
           <PosterCard
             id={entry.anime?.id || entry.airingInfo?.id}
@@ -591,7 +592,7 @@
             onList={entry.status || 'watching'}
           />
         {/each}
-      </div>
+      </PosterGrid>
     {:else}
       <div class="empty-state">
         <svg class="empty-state-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M15 14l-6 6M9 14l6 6"/></svg>
@@ -616,7 +617,7 @@
     </div>
 
     {#if watchlistAnalysis.isLoading}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each Array(3) as _}
           <div class="skeleton-card skeleton-pulse">
             <div class="skeleton-poster"></div>
@@ -627,9 +628,9 @@
             </div>
           </div>
         {/each}
-      </div>
+      </PosterGrid>
     {:else if watchlistAnalysis.recentlyAired.length > 0}
-      <div class="anime-grid anime-grid--3col">
+      <PosterGrid>
         {#each watchlistAnalysis.recentlyAired as entry}
           <PosterCard
             id={entry.anime?.id || entry.airingInfo?.id}
@@ -644,7 +645,7 @@
             onList={entry.status || 'watching'}
           />
         {/each}
-      </div>
+      </PosterGrid>
     {:else}
       <div class="empty-state">
         <svg class="empty-state-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l-3 3"/></svg>
@@ -863,11 +864,7 @@
   .section-link:hover { color: var(--weeb-accent-hover); }
 
   /* ── Anime grid ─────────────────────────────────────────────── */
-  .anime-grid { display: grid; gap: 16px; align-items: start; }
-  .anime-grid--3col {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-  .anime-grid--3col > :global(*) { max-width: 200px; }
+  /* The poster grid lives in PosterGrid.svelte. */
 
   /* ── Empty state ────────────────────────────────────────────── */
   .empty-state {
@@ -923,9 +920,6 @@
 
   /* ── Responsive: 1024px ────────────────────────────────────── */
   @media (max-width: 1024px) {
-    .anime-grid--3col {
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    }
   }
 
   /* ── Responsive: 768px ─────────────────────────────────────── */
@@ -943,10 +937,6 @@
     .stat-label { font-size: 0.6rem; }
     .profile-content { padding: 24px 16px 48px; }
     .profile-section { margin-bottom: 24px; }
-    .anime-grid--3col {
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 10px;
-    }
   }
 
   /* ── Responsive: 480px ─────────────────────────────────────── */
@@ -961,9 +951,5 @@
     .stat-cell:nth-child(4),
     .stat-cell:nth-child(5),
     .stat-cell:nth-child(6) { border-top: 1px solid var(--weeb-border); }
-    .anime-grid--3col {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
   }
 </style>
