@@ -479,12 +479,27 @@
                action sat indented against empty space. -->
           <div class="hero-identity">
             <div class="hero-poster">
+              <!-- posters/ first, then the root object.
+                   Both are the same artwork at different sizes: posters/ is
+                   680x1000 and the root one 225x318, which is soft at this size
+                   on a dense screen. posters/ is not reliable though -- it is
+                   missing for roughly half the catalogue -- so the root object,
+                   which exists for everything, is the fallback rather than the
+                   choice. SafeImage tries them in order and a 404 rejects
+                   immediately, so the miss costs a fast request rather than the
+                   per-attempt timeout.
+
+                   No cdnWidth: that routes through /cdn-cgi/image/, and the
+                   account's free transform quota is exhausted, so every
+                   transformed request 429s and lands on the placeholder. -->
               <SafeImage
-                src={GetImageFromAnime(anime)}
+                sources={[
+                  getSafeImageUrl(anime.id, 'posters'),
+                  getSafeImageUrl(anime.id)
+                ]}
                 alt=""
                 className="hero-poster-img"
                 fallbackSrc="/assets/not found.jpg"
-                cdnWidth={300}
               />
             </div>
 
