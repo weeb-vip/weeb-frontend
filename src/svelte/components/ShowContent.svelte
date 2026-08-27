@@ -489,9 +489,9 @@
                    immediately, so the miss costs a fast request rather than the
                    per-attempt timeout.
 
-                   No cdnWidth: that routes through /cdn-cgi/image/, and the
-                   account's free transform quota is exhausted, so every
-                   transformed request 429s and lands on the placeholder. -->
+                   cdnWidth asks for a 300px transform, and SafeImage keeps the
+                   untransformed URL behind each one, so a failed transform
+                   degrades to the full-size image rather than the placeholder. -->
               <SafeImage
                 sources={[
                   getSafeImageUrl(anime.id, 'posters'),
@@ -500,6 +500,7 @@
                 alt=""
                 className="hero-poster-img"
                 fallbackSrc="/assets/not found.jpg"
+                cdnWidth={300}
               />
             </div>
 
