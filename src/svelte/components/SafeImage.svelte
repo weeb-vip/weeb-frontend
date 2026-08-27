@@ -129,13 +129,33 @@
     }
 
     // Route CDN sources through Cloudflare Image Resizing when a target width is
-    // given (no-op unless enabled in config, i.e. production). Applied before the
-    // preload race so the same URL is loaded, cached, and rendered.
+    // given (no-op unless enabled in config, i.e. production), and keep the
+    // untransformed URL behind each one.
+    //
+    // The transform is a separate thing that can fail while the image behind it
+    // is perfectly fine, and when it does every poster on the site becomes the
+    // not-found placeholder:
+    //
+    //     GET /cdn-cgi/image/width=360,.../weeb/<id>
+    //     HTTP/2 429   cf-resized: err=9422
+    //     ERROR 9422: Free unique transformations by account has been exhausted
+    //
+    // That is a monthly cap on unique transformations, so it recurs on a
+    // schedule rather than being a one-off. Falling through to the original
+    // degrades the page to full-size images -- more bytes than intended, but the
+    // artwork is there -- instead of losing all of it.
+    //
+    // Only where the two differ: resizeCdnUrl returns its input unchanged when
+    // resizing is off or the URL is not a CDN one, and a duplicate entry would
+    // just be a second identical request.
     if (cdnWidth) {
-      orderedSources = orderedSources.map(u => resizeCdnUrl(u, cdnWidth));
+      orderedSources = orderedSources.flatMap(u => {
+        const resized = resizeCdnUrl(u, cdnWidth);
+        return resized === u ? [u] : [resized, u];
+      });
     }
 
-    debug.log(`Racing ${orderedSources.length} image sources in parallel with priority order`);
+    debug.log(`Trying ${orderedSources.length} image sources in priority order`);
 
     // Only reset states if we're loading a different image
     const newFirstSource = orderedSources[0];
