@@ -231,7 +231,12 @@ export function initPostHogWhenConfigured() {
     const environment = config.environment || 'production';
 
     w.posthog.init(config.posthog_api_key, {
-      api_host: 'https://us.i.posthog.com',
+      // The managed reverse proxy, so events are not sent to a third-party
+      // origin the browser will block. ui_host is required alongside it: with
+      // api_host pointed at the proxy, links PostHog generates back into its own
+      // app would otherwise point at the proxy too.
+      api_host: 'https://n.weeb.vip',
+      ui_host: 'https://us.posthog.com',
       capture_pageview: true,
       person_profiles: 'identified_only',
       opt_in_site_apps: true,
