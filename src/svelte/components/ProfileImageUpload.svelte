@@ -110,8 +110,10 @@
         }
 
         imageSize = { width: displayWidth, height: displayHeight };
-        const maxDimension = Math.max(displayWidth, displayHeight);
-        const cropSize = Math.min(maxDimension, 300);
+        // Bounded by the shorter side for the same reason as the slider. This
+        // took the LONGER one, so a wide image opened with a crop taller than
+        // itself and a negative y before the slider was touched at all.
+        const cropSize = Math.min(displayWidth, displayHeight, 300);
         cropData = {
           x: (displayWidth - cropSize) / 2,
           y: (displayHeight - cropSize) / 2,
@@ -149,9 +151,7 @@
   function handleSizeChange(event: Event) {
     const target = event.target as HTMLInputElement;
     const newSize = Number(target.value);
-    const maxSize = Math.max(imageSize.width, imageSize.height);
-    const minSize = Math.min(imageSize.width, imageSize.height) * 0.5;
-    const size = Math.max(minSize, Math.min(newSize, maxSize));
+    const size = Math.max(minCropSize, Math.min(newSize, maxCropSize));
     const maxX = Math.max(0, imageSize.width - size);
     const maxY = Math.max(0, imageSize.height - size);
 
@@ -236,10 +236,17 @@
     fileInput?.click();
   }
 
+  // The crop is a square, so the largest one that fits is bounded by the
+  // SHORTER side. This was Math.max, which let the square exceed the image on
+  // its short axis: at full size on a 600x400 the crop ran 200px past the
+  // bottom, and drawImage filled the overhang with transparent black -- a solid
+  // band across the avatar, since the export is JPEG and has no alpha.
+  $: maxCropSize = Math.min(imageSize.width, imageSize.height);
+  $: minCropSize = maxCropSize * 0.5;
+
   // Calculate slider progress percentage
-  $: sliderProgress = imageSize.width && imageSize.height ?
-    ((cropData.size - Math.min(imageSize.width, imageSize.height) * 0.5) /
-     (Math.max(imageSize.width, imageSize.height) - Math.min(imageSize.width, imageSize.height) * 0.5)) * 100 : 0;
+  $: sliderProgress = imageSize.width && imageSize.height && maxCropSize > minCropSize ?
+    ((cropData.size - minCropSize) / (maxCropSize - minCropSize)) * 100 : 0;
 </script>
 
 <svelte:window on:mousemove={handleMove} on:mouseup={handleEnd} />
@@ -330,8 +337,8 @@
                 <input
                   id="crop-size-slider"
                   type="range"
-                  min={Math.min(imageSize.width, imageSize.height) * 0.5}
-                  max={Math.max(imageSize.width, imageSize.height)}
+                  min={minCropSize}
+                  max={maxCropSize}
                   value={cropData.size}
                   on:input={handleSizeChange}
                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
