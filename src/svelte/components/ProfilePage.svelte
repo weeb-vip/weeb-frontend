@@ -25,6 +25,11 @@
 
   // State
   let showUploadModal = false;
+  /** Set when the avatar image fails to load, so the initial can stand in for
+      it. Without this a stale or missing profileImageUrl left a broken <img>
+      in place: the URL is truthy, so the initial branch never ran, and the
+      avatar rendered as nothing at all. */
+  let avatarImageError = false;
   let mounted = false;
 
   const WEEK = 7 * 24 * 60 * 60 * 1000;
@@ -428,11 +433,12 @@
   {:else if userQuery && $userQuery.data}
     <div class="profile-avatar-wrap">
       <div class="profile-avatar">
-        {#if $userQuery.data.profileImageUrl}
+        {#if $userQuery.data.profileImageUrl && !avatarImageError}
           <img
             src={getProfileImageUrl($userQuery.data.profileImageUrl)}
             alt={$userQuery.data.username}
             class="profile-avatar-img"
+            on:error={() => (avatarImageError = true)}
           />
         {:else}
           <span class="profile-avatar-letter">
@@ -756,7 +762,19 @@
     cursor: pointer; border: none;
     color: #fff;
   }
-  .profile-avatar-wrap:hover .profile-avatar-overlay { opacity: 1; }
+  .profile-avatar-wrap:hover .profile-avatar-overlay,
+  .profile-avatar-overlay:focus-visible { opacity: 1; }
+
+  /* Hover is not available on a touch screen, so on a coarse pointer the only
+     way to change an avatar was invisible and undiscoverable. Show it there
+     instead, dimmed enough that it reads as a control over the image rather
+     than covering it. */
+  @media (hover: none) {
+    .profile-avatar-overlay {
+      opacity: 1;
+      background: color-mix(in oklch, black 35%, transparent);
+    }
+  }
 
   .profile-info {
     flex: 1; min-width: 0;
