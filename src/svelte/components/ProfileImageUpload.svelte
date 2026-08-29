@@ -19,6 +19,10 @@
   let imageSize = { width: 0, height: 0 };
   let fileInput: HTMLInputElement;
   let canvas: HTMLCanvasElement;
+  /** Shown to the user when an upload fails. debug.* is compiled out of
+      production (it gates on import.meta.env.DEV), so anything reported only
+      through it is reported to nobody. */
+  let uploadError: string | null = null;
 
   const uploadMutation = createMutation({
     mutationFn: async (croppedBlob: Blob) => {
@@ -38,6 +42,7 @@
     },
     onSuccess: (data) => {
       debug.success('Profile image uploaded successfully', data);
+      uploadError = null;
       queryClient.setQueryData(['user'], data);
       queryClient.invalidateQueries({ queryKey: ['user'] });
       handleClose();
@@ -45,12 +50,16 @@
     },
     onError: (error: any) => {
       debug.error('Failed to upload profile image:', error);
+      uploadError = error?.message
+        ? `Upload failed: ${error.message}`
+        : 'Upload failed. Please try again.';
     }
   }, queryClient);
 
   function resetState() {
     selectedFile = null;
     previewUrl = null;
+    uploadError = null;
     cropData = { x: 0, y: 0, size: 200 };
     imageSize = { width: 0, height: 0 };
   }
@@ -155,6 +164,7 @@
 
   async function cropAndUpload() {
     if (!previewUrl || !canvas) return;
+    uploadError = null;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -189,10 +199,17 @@
 
       ctx.restore();
 
-      // Convert to blob
+      // Convert to blob.
+      //
+      // A null blob used to return silently, which looked exactly like a
+      // successful click that did nothing -- the button never even entered its
+      // pending state, because mutate() was never called.
       canvas.toBlob((blob) => {
         if (blob) {
+          uploadError = null;
           $uploadMutation.mutate(blob);
+        } else {
+          uploadError = 'Could not process that image. Try a different file.';
         }
       }, 'image/jpeg', 0.9);
     };
@@ -345,6 +362,15 @@
 
     <canvas bind:this={canvas} class="hidden"></canvas>
 
+    {#if uploadError}
+      <div
+        class="mt-4 rounded-lg border border-weeb-red/40 bg-weeb-red/10 px-4 py-3 text-sm text-weeb-red"
+        role="alert"
+      >
+        {uploadError}
+      </div>
+    {/if}
+
     <div class="mt-6 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
       <Button
         color="transparent"
@@ -359,7 +385,7 @@
           label={$uploadMutation.isPending ? "Uploading..." : "Upload"}
           onClick={cropAndUpload}
           showLabel={true}
-          status={$uploadMutation.isPending ? "loading" : "idle"}
+          status={$uploadMutation.isPending ? "loading" : uploadError ? "error" : "idle"}
           className="w-full sm:w-auto"
         />
       {/if}
