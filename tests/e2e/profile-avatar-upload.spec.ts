@@ -56,9 +56,21 @@ test.describe('Profile avatar upload', () => {
     await loginButton.click();
     await page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 60000 });
 
-    // Fail only the upload mutation. Matching on the operation name rather than
-    // the URL matters: the profile page issues several GraphQL calls against
-    // this same endpoint, and failing all of them would test nothing.
+    await page.goto('/profile', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForPageReady(page);
+
+    // The page renders a skeleton until the user query resolves, so wait for the
+    // control itself rather than assuming the load is finished.
+    const changeButton = page.getByRole('button', { name: /change profile picture/i });
+    await expect(changeButton).toBeVisible({ timeout: 60000 });
+
+    // Intercept only now that the page has loaded. Registering this before the
+    // navigation put every GraphQL call the profile page makes through this
+    // handler, and the page never finished loading.
+    //
+    // Matching on the operation name rather than the URL matters too: the page
+    // issues several calls against this same endpoint, and failing all of them
+    // would test nothing.
     let uploadAttempted = false;
     await page.route('**/graphql', async (route) => {
       const body = route.request().postData() || '';
@@ -71,13 +83,10 @@ test.describe('Profile avatar upload', () => {
         });
         return;
       }
-      await route.fallback();
+      await route.continue();
     });
 
-    await page.goto('/profile', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await waitForPageReady(page);
-
-    await page.getByRole('button', { name: /change profile picture/i }).click();
+    await changeButton.click();
 
     // The input is visually hidden behind a styled dropzone; setInputFiles
     // drives it directly rather than opening a real file chooser.

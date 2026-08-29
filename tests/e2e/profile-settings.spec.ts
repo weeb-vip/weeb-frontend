@@ -48,6 +48,11 @@ test.describe('Profile settings', () => {
     await page.goto('/profile/settings', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForPageReady(page);
 
+    // The form is behind a loading skeleton until the user query resolves, so
+    // wait for the field to exist before asserting anything about its value --
+    // otherwise this races the query and fails with "element(s) not found".
+    await expect(page.locator('#firstname')).toBeVisible({ timeout: 60000 });
+
     // The precondition the bug depended on. If registration ever starts
     // collecting these, this assertion fails and says so rather than the test
     // quietly no longer covering anything.
