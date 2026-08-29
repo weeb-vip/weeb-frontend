@@ -14,7 +14,9 @@
     <link rel="dns-prefetch" href="//cdn.weeb.vip" />
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     <link rel="dns-prefetch" href="//fonts.gstatic.com" />
-    <link rel="dns-prefetch" href="//eu.posthog.com" />
+    <!-- The analytics proxy. This pointed at eu.posthog.com, which was doubly
+         wrong: the project is US, and traffic goes through the proxy now. -->
+    <link rel="dns-prefetch" href="//n.weeb.vip" />
 
     <link rel="preconnect" href="//gateway.weeb.vip" crossorigin />
     <link rel="preconnect" href="//cdn.weeb.vip" crossorigin />
