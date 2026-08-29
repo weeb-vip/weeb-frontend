@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { waitForAuthForm, waitForPageReady, deleteEmailsForRecipient, getLatestEmail, extractVerificationLink, registerNewUser } from './helpers';
 
 // Regression coverage for a reported bug: uploading an avatar showed a brief
@@ -16,7 +17,10 @@ import { waitForAuthForm, waitForPageReady, deleteEmailsForRecipient, getLatestE
 // not depend on the router fix, and it writes nothing to the CDN -- both of
 // which would make it a test of the environment rather than of this code.
 
-const FIXTURE = path.join(__dirname, 'fixtures', 'avatar.png');
+// __dirname does not exist here: the project is ESM, and referencing it threw
+// at import time, which failed every shard before a single test ran.
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const FIXTURE = path.join(HERE, 'fixtures', 'avatar.png');
 
 test.describe('Profile avatar upload', () => {
   test.describe.configure({ mode: 'serial' });
