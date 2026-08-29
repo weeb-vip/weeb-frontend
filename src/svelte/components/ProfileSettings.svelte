@@ -104,9 +104,15 @@
 
     if (!userQuery || !$userQuery.data) return;
 
-    // Basic validation
-    if (!formData.firstname?.trim() || !formData.lastname?.trim() || !formData.username?.trim()) {
-      errorMessage = 'First name, last name, and username are required.';
+    // Only the username is required.
+    //
+    // First and last name are never collected: registration asks for a username
+    // and a password, so both are blank on every account that has not edited
+    // them. Requiring them here made them a roadblock in front of changing the
+    // username -- the one field the account actually has -- rather than
+    // information the product ever asked for.
+    if (!formData.username?.trim()) {
+      errorMessage = 'Username is required.';
       return;
     }
 
@@ -171,7 +177,7 @@
             placeholder="First Name"
             label="First Name"
             icon={faUser}
-            required={true}
+            required={false}
           />
 
           <FormInput
@@ -183,7 +189,7 @@
             placeholder="Last Name"
             label="Last Name"
             icon={faUser}
-            required={true}
+            required={false}
           />
         </div>
 

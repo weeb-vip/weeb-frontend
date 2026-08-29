@@ -19,6 +19,10 @@
   let imageSize = { width: 0, height: 0 };
   let fileInput: HTMLInputElement;
   let canvas: HTMLCanvasElement;
+  /** Shown to the user when an upload fails. debug.* is compiled out of
+      production (it gates on import.meta.env.DEV), so anything reported only
+      through it is reported to nobody. */
+  let uploadError: string | null = null;
 
   const uploadMutation = createMutation({
     mutationFn: async (croppedBlob: Blob) => {
@@ -38,6 +42,7 @@
     },
     onSuccess: (data) => {
       debug.success('Profile image uploaded successfully', data);
+      uploadError = null;
       queryClient.setQueryData(['user'], data);
       queryClient.invalidateQueries({ queryKey: ['user'] });
       handleClose();
@@ -45,12 +50,16 @@
     },
     onError: (error: any) => {
       debug.error('Failed to upload profile image:', error);
+      uploadError = error?.message
+        ? `Upload failed: ${error.message}`
+        : 'Upload failed. Please try again.';
     }
   }, queryClient);
 
   function resetState() {
     selectedFile = null;
     previewUrl = null;
+    uploadError = null;
     cropData = { x: 0, y: 0, size: 200 };
     imageSize = { width: 0, height: 0 };
   }
@@ -101,8 +110,10 @@
         }
 
         imageSize = { width: displayWidth, height: displayHeight };
-        const maxDimension = Math.max(displayWidth, displayHeight);
-        const cropSize = Math.min(maxDimension, 300);
+        // Bounded by the shorter side for the same reason as the slider. This
+        // took the LONGER one, so a wide image opened with a crop taller than
+        // itself and a negative y before the slider was touched at all.
+        const cropSize = Math.min(displayWidth, displayHeight, 300);
         cropData = {
           x: (displayWidth - cropSize) / 2,
           y: (displayHeight - cropSize) / 2,
@@ -140,9 +151,7 @@
   function handleSizeChange(event: Event) {
     const target = event.target as HTMLInputElement;
     const newSize = Number(target.value);
-    const maxSize = Math.max(imageSize.width, imageSize.height);
-    const minSize = Math.min(imageSize.width, imageSize.height) * 0.5;
-    const size = Math.max(minSize, Math.min(newSize, maxSize));
+    const size = Math.max(minCropSize, Math.min(newSize, maxCropSize));
     const maxX = Math.max(0, imageSize.width - size);
     const maxY = Math.max(0, imageSize.height - size);
 
@@ -155,6 +164,7 @@
 
   async function cropAndUpload() {
     if (!previewUrl || !canvas) return;
+    uploadError = null;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -189,10 +199,17 @@
 
       ctx.restore();
 
-      // Convert to blob
+      // Convert to blob.
+      //
+      // A null blob used to return silently, which looked exactly like a
+      // successful click that did nothing -- the button never even entered its
+      // pending state, because mutate() was never called.
       canvas.toBlob((blob) => {
         if (blob) {
+          uploadError = null;
           $uploadMutation.mutate(blob);
+        } else {
+          uploadError = 'Could not process that image. Try a different file.';
         }
       }, 'image/jpeg', 0.9);
     };
@@ -219,10 +236,17 @@
     fileInput?.click();
   }
 
+  // The crop is a square, so the largest one that fits is bounded by the
+  // SHORTER side. This was Math.max, which let the square exceed the image on
+  // its short axis: at full size on a 600x400 the crop ran 200px past the
+  // bottom, and drawImage filled the overhang with transparent black -- a solid
+  // band across the avatar, since the export is JPEG and has no alpha.
+  $: maxCropSize = Math.min(imageSize.width, imageSize.height);
+  $: minCropSize = maxCropSize * 0.5;
+
   // Calculate slider progress percentage
-  $: sliderProgress = imageSize.width && imageSize.height ?
-    ((cropData.size - Math.min(imageSize.width, imageSize.height) * 0.5) /
-     (Math.max(imageSize.width, imageSize.height) - Math.min(imageSize.width, imageSize.height) * 0.5)) * 100 : 0;
+  $: sliderProgress = imageSize.width && imageSize.height && maxCropSize > minCropSize ?
+    ((cropData.size - minCropSize) / (maxCropSize - minCropSize)) * 100 : 0;
 </script>
 
 <svelte:window on:mousemove={handleMove} on:mouseup={handleEnd} />
@@ -313,8 +337,8 @@
                 <input
                   id="crop-size-slider"
                   type="range"
-                  min={Math.min(imageSize.width, imageSize.height) * 0.5}
-                  max={Math.max(imageSize.width, imageSize.height)}
+                  min={minCropSize}
+                  max={maxCropSize}
                   value={cropData.size}
                   on:input={handleSizeChange}
                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -345,6 +369,15 @@
 
     <canvas bind:this={canvas} class="hidden"></canvas>
 
+    {#if uploadError}
+      <div
+        class="mt-4 rounded-lg border border-weeb-red/40 bg-weeb-red/10 px-4 py-3 text-sm text-weeb-red"
+        role="alert"
+      >
+        {uploadError}
+      </div>
+    {/if}
+
     <div class="mt-6 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
       <Button
         color="transparent"
@@ -359,7 +392,7 @@
           label={$uploadMutation.isPending ? "Uploading..." : "Upload"}
           onClick={cropAndUpload}
           showLabel={true}
-          status={$uploadMutation.isPending ? "loading" : "idle"}
+          status={$uploadMutation.isPending ? "loading" : uploadError ? "error" : "idle"}
           className="w-full sm:w-auto"
         />
       {/if}
