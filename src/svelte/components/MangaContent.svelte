@@ -16,6 +16,7 @@
   import PosterGrid from './PosterGrid.svelte';
   import PosterCard from './PosterCard.svelte';
   import { getSafeImageUrl } from '../utils/image';
+  import { GetImageFromAnime } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   export let work: any = null;
@@ -64,6 +65,32 @@
     ? [getSafeImageUrl(work.id, 'works'), work.imageUrl].filter(Boolean) as string[]
     : [];
   $: adaptations = work?.adaptations ?? [];
+
+  /*
+    The banner behind the hero.
+
+    A work's own art is a 2:3 cover, and a portrait doing a wide banner's job has
+    to be scaled past the frame and blurred to avoid hard edges -- which is a
+    fallback, not a design. An adaptation has real wide key art, synced from
+    TheTVDB under banners/<anime id>, so when one exists the page uses it and
+    shows artwork rather than a smear of colour.
+
+    The oldest adaptation, which is what the query returns first. A work with
+    several is being adapted repeatedly, and the first one is the one its
+    audience recognises.
+  */
+  $: bannerAnime = adaptations.length > 0 ? adaptations[0] : null;
+  $: heroSources = (bannerAnime
+    ? [getSafeImageUrl(bannerAnime.id, 'banners'), getSafeImageUrl(bannerAnime.id), ...coverSources]
+    : coverSources) as string[];
+
+  // Which source actually won decides the treatment, rather than which one was
+  // offered: a missing banner falls through to the poster and then the cover,
+  // and a portrait shown at banner treatment looks like a mistake.
+  let heroIsBanner = false;
+  function handleHeroChosen(event: CustomEvent) {
+    heroIsBanner = typeof event.detail?.src === 'string' && event.detail.src.includes('/banners/');
+  }
   $: authors = (work?.authors ?? []) as string[];
   $: publishedRange = published(work?.publishedFrom, work?.publishedTo, work?.status);
   // Volumes and chapters are facts about the work. Score and ranked are shown
@@ -92,10 +119,10 @@
 {:else if work}
   <article class="work">
     <section class="hero" aria-label="{title} overview">
-      {#if coverSources.length > 0}
-        <div class="hero-bg" aria-hidden="true">
+      {#if heroSources.length > 0}
+        <div class="hero-bg" class:hero-bg--banner={heroIsBanner} aria-hidden="true">
           <SafeImage
-            sources={coverSources}
+            sources={heroSources}
             alt=""
             loading="eager"
             priority={true}
@@ -103,6 +130,7 @@
             perTryTimeoutMs={3000}
             className="hero-bg-img"
             style=""
+            on:chosen={handleHeroChosen}
           />
         </div>
       {/if}
@@ -198,7 +226,7 @@
                 id={anime.id}
                 slug={anime.slug}
                 title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-                image={getSafeImageUrl(anime.id)}
+                image={GetImageFromAnime(anime)}
                 score={anime.rating}
                 status={anime.animeStatus}
                 genres={anime.tags || []}
@@ -241,13 +269,20 @@
     border-radius: var(--weeb-radius-sm, 4px);
   }
 
-  /* ---- hero ---- */
+  /* ---- hero ----
+     The same banner the anime page uses: a full viewport of artwork starting
+     under the transparent nav, with a fade band below the fold so it dissolves
+     into the page ground instead of ending on a cut. A work page that stopped
+     at two thirds of the screen read as a lesser kind of page. */
   .hero {
+    --hero-fade: 100px;
     position: relative;
-    min-height: 62svh;
+    min-height: calc(100svh + var(--hero-fade));
     display: flex;
     align-items: flex-end;
     overflow: hidden;
+    margin-top: calc(-1 * var(--weeb-nav-height, 60px));
+    background: var(--weeb-bg-elevated);
   }
   .hero-bg {
     position: absolute;
@@ -257,16 +292,25 @@
   /* SafeImage puts className on its wrapper div, not on the image element,
      which always carries w-full h-full object-cover. So the treatment goes on
      the wrapper and only sizing goes on the image itself. */
+  /* The cover fallback: a 2:3 portrait doing a wide banner's job. Scaled past
+     the frame and blurred so it does not read as a stretched poster with hard
+     edges; the sharp copy sits in the panel a few hundred pixels away, so this
+     layer only has to carry colour and light. */
   .hero-bg :global(.hero-bg-img) {
     width: 100%;
     height: 100%;
-    /* The cover is a 2:3 portrait doing the job of a wide banner. Scaling it
-       past the frame and blurring it is what keeps it from being a stretched
-       poster with hard edges; the sharp copy sits in the panel a few hundred
-       pixels away, so this layer only has to carry colour and light. */
     transform: scale(1.2);
     filter: blur(36px) saturate(1.1);
     opacity: 0.5;
+    transition: filter 0.4s ease, opacity 0.4s ease, transform 0.4s ease;
+  }
+  /* An adaptation's key art is already the right shape and is the best image
+     the page has. It is shown, not smeared -- the scrims and the panel do the
+     work of keeping text legible over it, exactly as they do on the anime hero. */
+  .hero-bg--banner :global(.hero-bg-img) {
+    transform: none;
+    filter: none;
+    opacity: 0.85;
   }
   .hero-bg :global(.hero-bg-img img) {
     width: 100%;
@@ -274,25 +318,44 @@
     object-fit: cover;
     display: block;
   }
+  /* Required, not decorative: it is what makes a transparent nav safe over key
+     art of unknown colour. */
   .hero-scrim-top {
     position: absolute;
     inset: 0 0 auto 0;
-    height: calc(var(--weeb-nav-height, 60px) * 2.2);
-    background: linear-gradient(to bottom, oklch(0% 0 0 / 0.75), transparent);
-    z-index: 1;
+    height: 180px;
+    z-index: 2;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--weeb-bg) 88%, transparent) 0%,
+      color-mix(in oklch, var(--weeb-bg) 50%, transparent) 40%,
+      transparent 100%
+    );
   }
+  /* Eased on a smoothstep ramp. A linear two-stop gradient begins fading at a
+     constant slope and the eye reads that onset as a horizontal seam. */
   .hero-scrim-bottom {
     position: absolute;
     inset: auto 0 0 0;
-    height: 55%;
-    background: linear-gradient(to top, var(--weeb-bg) 12%, transparent);
-    z-index: 1;
+    height: var(--hero-fade);
+    z-index: 2;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in oklch, var(--weeb-bg) 6%, transparent) 15%,
+      color-mix(in oklch, var(--weeb-bg) 22%, transparent) 30%,
+      color-mix(in oklch, var(--weeb-bg) 43%, transparent) 45%,
+      color-mix(in oklch, var(--weeb-bg) 65%, transparent) 60%,
+      color-mix(in oklch, var(--weeb-bg) 84%, transparent) 75%,
+      color-mix(in oklch, var(--weeb-bg) 97%, transparent) 90%,
+      var(--weeb-bg) 100%
+    );
   }
   .hero-stage {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     width: 100%;
-    padding: calc(var(--weeb-nav-height, 60px) + var(--weeb-section-py, 40px)) var(--weeb-section-px, 48px) var(--weeb-section-py, 40px);
+    padding: 0 var(--weeb-section-px, 48px) calc(var(--weeb-section-py, 40px) + var(--hero-fade));
   }
   .hero-panel {
     max-width: 640px;
@@ -502,7 +565,6 @@
     .hero-panel { max-width: none; }
   }
   @media (max-width: 640px) {
-    .hero { min-height: 54svh; }
     .hero-cover { flex-basis: 92px; }
     .hero-identity { gap: 14px; }
     .facts-inner { gap: 8px 20px; }
