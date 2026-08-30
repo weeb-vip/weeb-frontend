@@ -450,63 +450,6 @@
   {/if}
 
 
-  <!-- Top Rated -->
-  {#if ($homeDataQuery.data || homeData)?.topRatedAnime}
-    {@const _dbgTopRated = ($homeDataQuery.data || homeData).topRatedAnime}
-    {console.log("[TOPRATED", ($homeDataQuery.data || homeData).topRatedAnime.slice(0, 14))}
-    {(() => { if (typeof window !== 'undefined' && _dbgTopRated?.length) console.log('[WATCHLIST]', 'topRated[0].userAnime:', _dbgTopRated[0]?.userAnime, 'status:', _dbgTopRated[0]?.userAnime?.status, 'all userAnimes:', _dbgTopRated.map(a => ({ title: a.titleEn?.slice(0,20), ua: a.userAnime?.status || 'NONE' }))); return ''; })()}
-    <section class="section">
-      <SectionHeader title="Top Rated" href="/search" linkText="See all →" />
-      <PosterGrid>
-        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, shelfLimit) as anime}
-          <PosterCard
-            id={anime.id}
-            slug={anime.slug}
-            title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(anime)}
-            score={anime.rating}
-            status={anime.status}
-            genres={anime.tags || []}
-            description={anime.description || ''}
-            episodeCount={anime.episodeCount}
-            sub={posterSub(anime)}
-            onList={anime.userAnime?.status || null}
-          />
-        {/each}
-      </PosterGrid>
-    </section>
-  {/if}
-
-  <!-- Recently Added -->
-  {#if ($homeDataQuery.data || homeData)?.newestAnime}
-    <section class="section">
-      <SectionHeader title="Recently Added" href="/search" linkText="See all →" />
-      <PosterGrid>
-        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, shelfLimit) as anime}
-          <PosterCard
-            id={anime.id}
-            slug={anime.slug}
-            title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(anime)}
-            score={anime.rating}
-            status={anime.status}
-            genres={anime.tags || []}
-            description={anime.description || ''}
-            episodeCount={anime.episodeCount}
-            sub={posterSub(anime)}
-            onList={anime.userAnime?.status || null}
-          />
-        {/each}
-      </PosterGrid>
-    </section>
-  {/if}
-
-  <!-- Browse by Tag -->
-  <section class="section">
-    <SectionHeader title="Browse by Tag" />
-    <GenrePills />
-  </section>
-
   <!-- Seasonal Highlights -->
   <section class="section">
     <div class="section-header-with-tabs">
@@ -557,6 +500,60 @@
       {/if}
     </PosterGrid>
   </section>
+  <!-- Recently Added -->
+  {#if ($homeDataQuery.data || homeData)?.newestAnime}
+    <section class="section">
+      <SectionHeader title="Recently Added" href="/search" linkText="See all →" />
+      <PosterGrid>
+        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, shelfLimit) as anime}
+          <PosterCard
+            id={anime.id}
+            slug={anime.slug}
+            title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(anime)}
+            score={anime.rating}
+            status={anime.status}
+            genres={anime.tags || []}
+            description={anime.description || ''}
+            episodeCount={anime.episodeCount}
+            sub={posterSub(anime)}
+            onList={anime.userAnime?.status || null}
+          />
+        {/each}
+      </PosterGrid>
+    </section>
+  {/if}
+
+  <!-- Top Rated -->
+  {#if ($homeDataQuery.data || homeData)?.topRatedAnime}
+    <section class="section">
+      <SectionHeader title="Top Rated" href="/search" linkText="See all →" />
+      <PosterGrid>
+        {#each ($homeDataQuery.data || homeData).topRatedAnime.slice(0, shelfLimit) as anime}
+          <PosterCard
+            id={anime.id}
+            slug={anime.slug}
+            title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(anime)}
+            score={anime.rating}
+            status={anime.status}
+            genres={anime.tags || []}
+            description={anime.description || ''}
+            episodeCount={anime.episodeCount}
+            sub={posterSub(anime)}
+            onList={anime.userAnime?.status || null}
+          />
+        {/each}
+      </PosterGrid>
+    </section>
+  {/if}
+
+  <!-- Browse by Tag -->
+  <section class="section">
+    <SectionHeader title="Browse by Tag" />
+    <GenrePills />
+  </section>
+
 </div>
 
 <style>
