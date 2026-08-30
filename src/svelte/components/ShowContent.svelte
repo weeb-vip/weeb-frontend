@@ -508,6 +508,21 @@
               {/if}
             </p>
 
+            <!-- What this adapts, when we know it. The link is the only way
+                 into a work's page from inside the catalogue, and it is what
+                 makes the two re-adaptations of one manga reachable from each
+                 other. Absent for originals and for sources MyAnimeList's manga
+                 database does not cover, which together are most of the
+                 catalogue -- so it renders nothing rather than a placeholder. -->
+            {#if anime.sourceWork?.urlSlug}
+              <p class="hero-source">
+                <span class="hero-source-label">Adapted from</span>
+                <a class="hero-source-link" href="/manga/{anime.sourceWork.urlSlug}">
+                  {anime.sourceWork.titleEn || anime.sourceWork.titleJp}
+                </a>
+              </p>
+            {/if}
+
             <!-- Genre tags -->
             {#if anime.tags && anime.tags.length > 0}
               <div class="hero-tags" role="list" aria-label="Genres">
@@ -754,7 +769,19 @@
             {#if anime.source}
               <div class="info-item">
                 <span class="info-label">Source</span>
-                <span class="info-value">{anime.source}</span>
+                <!-- The value stays the category MyAnimeList records -- "Light novel",
+                     "Manga" -- and becomes a link to the actual work once we know which
+                     one. Which is the point of modelling works at all: the category told
+                     you what kind of thing it came from, never which one. -->
+                {#if anime.sourceWork?.urlSlug}
+                  <a
+                    class="info-value info-value--link"
+                    href="/manga/{anime.sourceWork.urlSlug}"
+                    title={anime.sourceWork.titleEn || anime.sourceWork.titleJp || undefined}
+                  >{anime.source}</a>
+                {:else}
+                  <span class="info-value">{anime.source}</span>
+                {/if}
               </div>
             {/if}
             {#if anime.licensors && anime.licensors.length > 0}
@@ -1082,6 +1109,43 @@
      qualifier rather than a label announcing the heading. Uppercase mono is
      kept: format, year and studio are catalogue facts, and the mono numeral
      rule already governs the year. */
+  /* Its own line, with room on both sides. It sits between the meta line and
+     the tag row and had margin above but none below, so the tags butted
+     straight into it -- and at 14px it was also the largest thing in that stack
+     after the title, which is more weight than "what this adapts" is asking
+     for. Sized to sit with the meta line it follows, not to compete with it. */
+  .hero-source {
+    margin: 12px 0 14px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .hero-source-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--weeb-fg-muted);
+    margin-right: 8px;
+  }
+  /* accent-text, not accent: the fill value fails AA at label size on this
+     ground, which is the whole reason the two exist separately. */
+  .hero-source-link {
+    color: var(--weeb-accent-text);
+    /* Underlined at rest, not only on hover. Coloured text sitting among other
+       coloured text does not read as a link -- the underline is the only thing
+       that says it can be clicked before you point at it. */
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in oklch, var(--weeb-accent-text) 45%, transparent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s ease, color 0.15s ease;
+  }
+  .hero-source-link:hover,
+  .hero-source-link:focus-visible {
+    color: var(--weeb-fg);
+    text-decoration-color: currentColor;
+  }
+
   .hero-meta {
     font-family: var(--weeb-font-mono);
     font-size: 11px;
@@ -1497,6 +1561,21 @@
     color: var(--weeb-fg-secondary);
     text-align: right;
     line-height: 1.4;
+  }
+  /* Underlined at rest. This value sits in a grid of plain values, so colour
+     alone would not tell a reader that this one row goes somewhere. */
+  .info-value--link {
+    color: var(--weeb-accent-text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in oklch, var(--weeb-accent-text) 45%, transparent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s ease, color 0.15s ease;
+  }
+  .info-value--link:hover,
+  .info-value--link:focus-visible {
+    color: var(--weeb-fg);
+    text-decoration-color: currentColor;
   }
 
   /* ===========================
