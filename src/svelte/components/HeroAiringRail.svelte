@@ -23,13 +23,41 @@
   // HomepageSSR.processCurrentlyAiring. The rail no longer formats a time or
   // reads a variant of its own: when it did, it printed the exact airTime while
   // the hero printed the reconstructed broadcast slot, and the two disagreed.
+  // The rail says when, in its own short form, rather than reusing
+  // timing.label.
+  //
+  // label is written for surfaces that show nothing else -- so past a day out
+  // it reads "Airing Tue 7:30 AM". Here that is the same string the row already
+  // prints on the line below the title, so every row beyond tomorrow said the
+  // time twice.
+  //
+  // It also cost the titles. This column is content-sized and the title column
+  // absorbs whatever is left, so a row reading "Airing Tue 10:00 AM" truncated
+  // its title far earlier than one reading "Airing in 15h" -- the same show
+  // ellipsised at a different place depending on how far away it airs.
+  //
+  // These forms are short and near enough to one width that the titles line up.
+  function when(timing: any): string {
+    if (!timing) return '';
+    if (timing.isLive) return timing.countdown === 'AIRING NOW' ? 'Now' : timing.countdown;
+    if (timing.hasAired) return 'Aired';
+    // Inside a day the shared countdown is already the right shape: 45m, 15h.
+    if (timing.countdown) return `in ${timing.countdown}`;
+    // Beyond that, days -- the exact time is on the line below.
+    const start = timing.airDateTime ? new Date(timing.airDateTime).getTime() : NaN;
+    if (Number.isNaN(start)) return '';
+    const days = Math.max(1, Math.ceil((start - Date.now()) / 86400000));
+
+    return `in ${days}d`;
+  }
+
   function meta(entry: any) {
     const timing = entry.airingInfo?.timing;
     const current = entry.airingInfo?.nextEpisode?.episodeNumber ?? 0;
     return {
       episode: current ? `EP ${current}` : '',
       localTime: timing?.localTime ?? '',
-      countdown: timing?.label ?? '',
+      countdown: when(timing),
       isLive: timing?.isLive ?? false
     };
   }
@@ -208,7 +236,13 @@
   .rail-local { color: var(--weeb-fg-secondary); }
 
   .rail-when {
+    /* Fixed, not content-sized. The whole point is that every row gives its
+       title the same width, so titles truncate at one place down the list
+       instead of wherever that row's countdown happened to end. 8ch covers the
+       longest form ("15m left") in this monospace face. */
     flex: 0 0 auto;
+    min-width: 8ch;
+    justify-content: flex-end;
     display: inline-flex;
     align-items: center;
     gap: 5px;
