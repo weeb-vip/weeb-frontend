@@ -31,8 +31,44 @@
   // panel is rendered twice (mobile + desktop) but only one is visible, so a
   // single flat index drives both; per-device option ids keep the DOM valid.
   let activeIndex = -1;
-  $: flatItems = (autocompleteState.collections || [])
-    .flatMap((c: any) => filterValidItems(c.items || []));
+
+  // Anime and works are separate indices, so Algolia ranks each on its own and
+  // the two scores are not comparable. Blending them into one list would mean
+  // inventing an order; they stay grouped in the order the sources are
+  // declared, each internally ranked by Algolia.
+  $: groups = (autocompleteState.collections || [])
+    .map((c: any) => ({
+      sourceId: c?.source?.sourceId,
+      items: filterValidItems(c?.items || []),
+    }))
+    .filter((g: any) => g.items.length > 0);
+
+  // Still one flat index across every group, because the highlight moves
+  // through the whole panel rather than restarting per section.
+  $: flatItems = groups.flatMap((g: any) => g.items);
+
+  // Headings only once there is more than one group, so a query that matches
+  // no works looks exactly as it did before works were searchable.
+  $: rows = (() => {
+    const out: any[] = [];
+    let index = 0;
+    for (const group of groups) {
+      if (groups.length > 1) {
+        out.push({ kind: 'header', sourceId: group.sourceId });
+      }
+      for (const item of group.items) {
+        out.push({ kind: 'item', item, index: index++ });
+      }
+    }
+
+    return out;
+  })();
+
+  const GROUP_LABELS: Record<string, string> = {
+    data: 'Anime',
+    works: 'Manga & light novels',
+  };
+
   // Keep the highlight in range as results change under the user.
   $: if (activeIndex >= flatItems.length) activeIndex = flatItems.length - 1;
 
@@ -122,6 +158,52 @@
                   });
                 },
               },
+              {
+                sourceId: "works",
+                getItemInputValue({ item }) {
+                  return item.title_en;
+                },
+                getItems({ query }) {
+                  if (!query) {
+                    return [];
+                  }
+
+                  const config = configStore.get();
+                  const worksIndex = config?.algolia_works_index;
+                  // No works index configured means anything running an older
+                  // config just keeps getting anime results, rather than
+                  // erroring on an index that does not exist.
+                  if (!worksIndex) {
+                    return [];
+                  }
+
+                  return getAlgoliaResults({
+                    searchClient,
+                    queries: [
+                      {
+                        indexName: worksIndex,
+                        query,
+                        params: {
+                          // Fewer than anime deliberately. Anime is what people
+                          // come here for; works are the answer to "where did
+                          // this come from", so they earn a few rows, not half
+                          // the panel.
+                          hitsPerPage: 4,
+                        },
+                      },
+                    ],
+                    // Tagged here rather than inferred from the fields, so the
+                    // item component never has to guess which index a hit came
+                    // from to decide where it links.
+                    transformResponse({ hits }) {
+                      return (hits[0] || []).map((hit: any) => ({
+                        ...hit,
+                        __kind: 'work',
+                      }));
+                    },
+                  });
+                },
+              },
             ];
           },
         });
@@ -194,7 +276,17 @@
     // Navigate to show page
     if (typeof window !== 'undefined') {
       // url_slug: algolia stores the CDC payload verbatim, not camelCase.
-      goto(animeHref({ id: item?.id, slug: item?.url_slug ?? item?.slug }));
+      const slug = item?.url_slug ?? item?.slug;
+      if (item?.__kind === 'work') {
+        // A work has no id-based route to fall back on -- workBySlug is the
+        // only lookup the schema exposes -- so a work with no slug has nowhere
+        // to go and is left alone rather than sent to a certain 404.
+        if (slug) {
+          goto(`/manga/${slug}`);
+        }
+      } else {
+        goto(animeHref({ id: item?.id, slug }));
+      }
     }
     if (desktopInputRef) desktopInputRef.blur();
     if (mobileInputRef) mobileInputRef.blur();
@@ -548,13 +640,19 @@
           <div class="ac-panel-divider"></div>
           {#if flatItems.length > 0}
             <ul class="ac-results-list" role="listbox" id="ac-listbox-mobile" aria-label="Search results">
-              {#each flatItems as item, i (item.objectID)}
-                <AutocompleteItem
-                  {item}
-                  id={`ac-opt-mobile-${i}`}
-                  active={activeIndex === i}
-                  onClick={() => handleItemClick(item)}
-                />
+              {#each rows as row (row.kind === 'header' ? `h-${row.sourceId}` : row.item.objectID)}
+                {#if row.kind === 'header'}
+                  <li class="ac-group-label" role="presentation">
+                    {GROUP_LABELS[row.sourceId] ?? row.sourceId}
+                  </li>
+                {:else}
+                  <AutocompleteItem
+                    item={row.item}
+                    id={`ac-opt-mobile-${row.index}`}
+                    active={activeIndex === row.index}
+                    onClick={() => handleItemClick(row.item)}
+                  />
+                {/if}
               {/each}
             </ul>
           {:else if autocompleteState.query}
@@ -624,13 +722,19 @@
           <div class="ac-panel-divider"></div>
           {#if flatItems.length > 0}
             <ul class="ac-results-list" role="listbox" id="ac-listbox-desktop" aria-label="Search results">
-              {#each flatItems as item, i (item.objectID)}
-                <AutocompleteItem
-                  {item}
-                  id={`ac-opt-desktop-${i}`}
-                  active={activeIndex === i}
-                  onClick={() => handleItemClick(item)}
-                />
+              {#each rows as row (row.kind === 'header' ? `h-${row.sourceId}` : row.item.objectID)}
+                {#if row.kind === 'header'}
+                  <li class="ac-group-label" role="presentation">
+                    {GROUP_LABELS[row.sourceId] ?? row.sourceId}
+                  </li>
+                {:else}
+                  <AutocompleteItem
+                    item={row.item}
+                    id={`ac-opt-desktop-${row.index}`}
+                    active={activeIndex === row.index}
+                    onClick={() => handleItemClick(row.item)}
+                  />
+                {/if}
               {/each}
             </ul>
           {:else if autocompleteState.query}
@@ -1016,6 +1120,25 @@
     list-style: none;
     margin: 0;
     padding: 8px 0;
+  }
+
+  /* ── Group heading ──
+     Only rendered when a query matches more than one index, so a panel of
+     anime alone looks exactly as it did before works were searchable. Quiet
+     rather than decorative: it separates two lists, it is not a result. */
+  .ac-group-label {
+    padding: 10px 16px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--weeb-fg-muted, #8b8b8b);
+    pointer-events: none;
+  }
+  /* The first heading sits directly under the panel divider, where the list's
+     own top padding is already doing the work. */
+  .ac-group-label:first-child {
+    padding-top: 2px;
   }
 
   /* ── Empty state ── */

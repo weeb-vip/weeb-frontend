@@ -33,6 +33,38 @@
   let algoliasearch: any = null;
   let searchClient: any = null;
   let algoliaIndex: string = 'anime-staging';
+  // Empty when unconfigured, which is the signal to skip the works request
+  // entirely rather than query an index that may not exist.
+  let worksIndex: string = '';
+  let workResults: any[] = [];
+
+  // A work is reachable only by slug -- workBySlug is the only lookup the
+  // schema exposes, and there is no id route to fall back on the way anime
+  // have. One without a slug would render a card leading to a certain 404, so
+  // it is left out rather than shown.
+  $: linkableWorks = workResults.filter((w: any) => !!w?.slug);
+
+  // MANGA -> Manga, LIGHT_NOVEL -> Light novel.
+  function readableWorkType(value: string | null | undefined): string {
+    if (!value) return 'Work';
+    const words = value.toLowerCase().split('_');
+    return words[0].charAt(0).toUpperCase() + words[0].slice(1) +
+      (words.length > 1 ? ' ' + words.slice(1).join(' ') : '');
+  }
+
+  function workYear(value: string | null | undefined): string | null {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : String(parsed.getUTCFullYear());
+  }
+
+  // The kind comes first: "Light novel" is what separates this card from the
+  // anime of the same name a row above it.
+  function workSub(work: any): string {
+    return [readableWorkType(work?.type), workYear(work?.published_from)]
+      .filter(Boolean)
+      .join(' · ');
+  }
 
   // Parse JSON string fields from Algolia (genres, studios, licensors come as JSON strings)
   function parseJsonField(val: any): string[] {
@@ -284,6 +316,7 @@
 
       const config = configStore.get();
       algoliaIndex = config?.algolia_index || 'anime-staging';
+      worksIndex = config?.algolia_works_index || '';
       searchClient = algoliasearch("A2HF2P5C6X", "45216ed5ac3f9e0a478d3c354d353d58");
 
       // Fetch browse genres in the background
@@ -347,6 +380,7 @@
     // Allow search if we have a query OR selected genres
     if (!searchClient || (!searchQuery.trim() && selectedGenres.length === 0)) {
       results = [];
+      workResults = [];
       hasSearched = false;
       totalResults = 0;
       currentPage = 0;
@@ -366,15 +400,32 @@
         ? selectedGenres.map(g => `tags:"${g}"`).join(' OR ')
         : undefined;
 
-      const response = await searchClient.search({
-        requests: [{
-          indexName: algoliaIndex,
+      // Works are fetched alongside anime in the same round trip -- `requests`
+      // has always been an array. They are skipped when a genre filter is on,
+      // because `tags` is an anime facet that no work carries, and on later
+      // pages, because pagination here walks the anime results and a repeated
+      // works section under page 4 would be noise.
+      const wantWorks = !!worksIndex && !!searchQuery.trim() &&
+        selectedGenres.length === 0 && currentPage === 0;
+
+      const requests: any[] = [{
+        indexName: algoliaIndex,
+        query: searchQuery.trim(),
+        hitsPerPage: perPage,
+        page: currentPage,
+        filters,
+      }];
+      if (wantWorks) {
+        requests.push({
+          indexName: worksIndex,
           query: searchQuery.trim(),
-          hitsPerPage: perPage,
-          page: currentPage,
-          filters,
-        }]
-      });
+          hitsPerPage: 6,
+        });
+      }
+
+      const response = await searchClient.search({ requests });
+
+      workResults = wantWorks ? (response.results?.[1]?.hits || []) : [];
 
       // Algolia v5 response may have results at different paths
       const firstResult = response.results?.[0] || response;
@@ -393,6 +444,7 @@
     } catch (e) {
       console.error('Search failed:', e);
       results = [];
+      workResults = [];
       totalResults = 0;
     }
 
@@ -767,6 +819,32 @@
       </div>
     {/if}
 
+    <!-- Works: the manga, light novels and novels matching the same query.
+         A separate section rather than mixed into the grid above, because the
+         two indices are ranked independently and their scores are not
+         comparable -- interleaving them would be inventing an order. Renders
+         only when there are hits, so a query matching no works looks exactly
+         as this page did before. -->
+    {#if workResults.length > 0}
+      <section class="works-section" aria-labelledby="works-heading">
+        <h2 class="works-heading" id="works-heading">Manga &amp; light novels</h2>
+        <div class="results-grid">
+          {#each linkableWorks as work (work.objectID)}
+            <PosterCard
+              id={work.id || ''}
+              title={work.title_en || work.title_jp || ''}
+              image={work.id || ''}
+              imagePath="works"
+              score={work.score}
+              sub={workSub(work)}
+              description={work.description || ''}
+              href={`/manga/${work.slug}`}
+            />
+          {/each}
+        </div>
+      </section>
+    {/if}
+
     <!-- Pagination -->
     {#if totalPages > 1}
       <div class="pagination">
@@ -1106,6 +1184,23 @@
   }
 
   /* Results Grid */
+  /* ── Works section ──
+     Set apart from the anime grid rather than blended into it: the two indices
+     rank independently, so presenting them as one list would imply an order
+     that does not exist. */
+  .works-section {
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--weeb-border, rgba(255, 255, 255, 0.08));
+  }
+  .works-heading {
+    margin: 0 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--weeb-fg-muted, #8b8b8b);
+  }
+
   .results-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

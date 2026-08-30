@@ -28,6 +28,7 @@ export function getConfig(): IConfig {
       api_host: 'https://weeb-api.staging.weeb.vip',
       graphql_host: 'https://gateway.staging.weeb.vip/graphql',
       algolia_index: 'fallback',
+      algolia_works_index: '',
       cdn_url: 'https://cdn.weeb.vip',
       cdn_user_url: 'https://cdn.weeb.vip',
       posthog_api_key: 'phc_fallback_key',
