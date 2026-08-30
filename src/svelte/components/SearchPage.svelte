@@ -5,6 +5,7 @@
   import { configStore } from '../stores/config';
   import { loggedInStore } from '../stores/auth';
   import PosterCard from './PosterCard.svelte';
+  import Select from './Select.svelte';
   import SafeImage from './SafeImage.svelte';
   import { GetImageFromAnime, animeHref } from '../../services/utils';
   import { AuthStorage } from '../../utils/auth-storage';
@@ -571,6 +572,15 @@
     }
     return years;
   })();
+
+  // The Select takes {value,label} pairs. Year and page size are plain numbers,
+  // so they are shaped here rather than in the markup.
+  $: yearSelectOptions = [
+    { value: '', label: 'All years' },
+    ...yearOptions.map((y: number) => ({ value: y.toString(), label: y.toString() })),
+  ];
+
+  const pageSizeSelectOptions = PAGE_SIZE_OPTIONS.map((n) => ({ value: n, label: String(n) }));
 </script>
 
 <div class="search-page">
@@ -636,26 +646,23 @@
 
     <div class="filter-row filter-row--controls">
       <!-- Status -->
-      <select class="filter-select" bind:value={selectedStatus} on:change={() => performSearch()}>
-        {#each STATUSES as status}
-          <option value={status.value}>{status.label}</option>
-        {/each}
-      </select>
+      <Select
+        bind:value={selectedStatus}
+        options={STATUSES}
+        ariaLabel="Filter by status"
+        on:change={() => performSearch()}
+      />
 
       <!-- Year -->
-      <select class="filter-select" bind:value={selectedYear} on:change={() => performSearch()}>
-        <option value="">All years</option>
-        {#each yearOptions as year}
-          <option value={year.toString()}>{year}</option>
-        {/each}
-      </select>
+      <Select
+        bind:value={selectedYear}
+        options={yearSelectOptions}
+        ariaLabel="Filter by year"
+        on:change={() => performSearch()}
+      />
 
       <!-- Sort -->
-      <select class="filter-select" bind:value={sortBy}>
-        {#each SORT_OPTIONS as opt}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
+      <Select bind:value={sortBy} options={SORT_OPTIONS} ariaLabel="Sort results" />
     </div>
   </section>
 
@@ -878,11 +885,12 @@
 
         <div class="pagination-right">
           <label class="per-page-label" for="search-per-page">Show</label>
-          <select id="search-per-page" class="per-page-select" bind:value={perPage} on:change={() => { currentPage = 0; performSearch(false); }}>
-            {#each PAGE_SIZE_OPTIONS as opt}
-              <option value={opt}>{opt}</option>
-            {/each}
-          </select>
+          <Select
+            bind:value={perPage}
+            options={pageSizeSelectOptions}
+            ariaLabel="Results per page"
+            on:change={() => { currentPage = 0; performSearch(false); }}
+          />
           <span class="per-page-label">per page</span>
         </div>
       </div>
@@ -1051,32 +1059,6 @@
   @keyframes pulse {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 0.7; }
-  }
-  .filter-select {
-    height: 32px;
-    padding: 0 28px 0 12px;
-    border: 1px solid var(--weeb-border);
-    border-radius: 16px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--weeb-fg-secondary);
-    background: transparent;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237a7a8a' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    font-family: var(--weeb-font);
-    transition: all 0.15s;
-  }
-  .filter-select:hover {
-    border-color: var(--weeb-fg-muted);
-    color: var(--weeb-fg);
-  }
-  .filter-select:focus {
-    outline: none;
-    border-color: var(--weeb-accent);
   }
 
   /* Active Filters */
@@ -1424,27 +1406,6 @@
   .per-page-label {
     font-size: 0.75rem;
     color: var(--weeb-fg-muted);
-  }
-  .per-page-select {
-    height: 32px;
-    padding: 0 28px 0 10px;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
-    color: var(--weeb-fg);
-    font-size: 0.8rem;
-    font-family: var(--weeb-font-mono, monospace);
-    font-variant-numeric: tabular-nums;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    transition: border-color 0.15s;
-  }
-  .per-page-select:focus {
-    outline: none;
-    border-color: var(--weeb-accent);
   }
 
   /* Responsive */
