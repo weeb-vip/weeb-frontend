@@ -508,6 +508,21 @@
               {/if}
             </p>
 
+            <!-- What this adapts, when we know it. The link is the only way
+                 into a work's page from inside the catalogue, and it is what
+                 makes the two re-adaptations of one manga reachable from each
+                 other. Absent for originals and for sources MyAnimeList's manga
+                 database does not cover, which together are most of the
+                 catalogue -- so it renders nothing rather than a placeholder. -->
+            {#if anime.sourceWork?.urlSlug}
+              <p class="hero-source">
+                <span class="hero-source-label">Adapted from</span>
+                <a class="hero-source-link" href="/manga/{anime.sourceWork.urlSlug}">
+                  {anime.sourceWork.titleEn || anime.sourceWork.titleJp}
+                </a>
+              </p>
+            {/if}
+
             <!-- Genre tags -->
             {#if anime.tags && anime.tags.length > 0}
               <div class="hero-tags" role="list" aria-label="Genres">
@@ -1082,6 +1097,31 @@
      qualifier rather than a label announcing the heading. Uppercase mono is
      kept: format, year and studio are catalogue facts, and the mono numeral
      rule already governs the year. */
+  .hero-source {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .hero-source-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--weeb-fg-muted);
+    margin-right: 8px;
+  }
+  /* accent-text, not accent: the fill value fails AA at label size on this
+     ground, which is the whole reason the two exist separately. */
+  .hero-source-link {
+    color: var(--weeb-accent-text);
+    text-decoration: none;
+    text-underline-offset: 3px;
+  }
+  .hero-source-link:hover,
+  .hero-source-link:focus-visible {
+    text-decoration: underline;
+  }
+
   .hero-meta {
     font-family: var(--weeb-font-mono);
     font-size: 11px;

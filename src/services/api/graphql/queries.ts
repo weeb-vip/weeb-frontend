@@ -90,6 +90,15 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
             anidbid
             thetvdbid
             malId
+            # The work this anime adapts, when known. Null for originals and for
+            # sources MyAnimeList does not cover, which is most of the catalogue.
+            sourceWork {
+                id
+                urlSlug
+                titleEn
+                titleJp
+                type
+            }
             slug
             titleEn
             titleJp
@@ -201,6 +210,15 @@ export const getAnimeDetailsBySlug = graphql(/* GraphQL */`
             anidbid
             thetvdbid
             malId
+            # The work this anime adapts, when known. Null for originals and for
+            # sources MyAnimeList does not cover, which is most of the catalogue.
+            sourceWork {
+                id
+                urlSlug
+                titleEn
+                titleJp
+                type
+            }
             slug
             titleEn
             titleJp
@@ -291,6 +309,52 @@ export const getAnimeDetailsBySlug = graphql(/* GraphQL */`
 
 // Just enough for /show/[id]/news — the full detail query drags in episodes,
 // characters and userAnime that this page never renders.
+// The source work behind /manga/<slug>: manga, light novel, novel, manhwa.
+//
+// adaptations is asked for in the same round trip rather than as a second query.
+// It is the reason the page exists -- the other anime made from this work -- and
+// it is usually empty, so a separate request would spend a round trip to learn
+// there is nothing to show.
+export const getWorkBySlug = graphql(/* GraphQL */`
+    query getWorkBySlug($slug: String!) {
+        workBySlug(slug: $slug) {
+            id
+            malId
+            type
+            urlSlug
+            titleEn
+            titleJp
+            titleSynonyms
+            synopsis
+            imageUrl
+            status
+            volumes
+            chapters
+            publishedFrom
+            publishedTo
+            demographic
+            serialization
+            authors
+            score
+            ranking
+            members
+            favorites
+            adaptations(limit: 24) {
+                id
+                slug
+                titleEn
+                titleJp
+                imageUrl
+                startDate
+                rating
+                animeStatus
+                episodeCount
+                tags
+            }
+        }
+    }
+`)
+
 export const getAnimeNewsByID = graphql(/* GraphQL */`
     query getAnimeNewsByID($id: ID!) {
         anime(id: $id) {
