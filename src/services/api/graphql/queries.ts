@@ -313,6 +313,16 @@ export const getWorkBySlug = graphql(/* GraphQL */`
             authors
             score
             ranking
+            # The viewer's own row, resolved by list-service off the Work entity.
+            # Null when signed out or not on their shelf, which is the same
+            # answer and the same rendering.
+            userWork {
+                id
+                status
+                score
+                chapters
+                volumes
+            }
             adaptations(limit: 24) {
                 id
                 slug
@@ -326,6 +336,40 @@ export const getWorkBySlug = graphql(/* GraphQL */`
                 tags
             }
         }
+    }
+`)
+
+export const mutateAddWork = graphql(/* GraphQL */`
+    mutation AddWork($input: UserWorkInput!) {
+        AddWork(input: $input) {
+            id
+            status
+            chapters
+            volumes
+            score
+        }
+    }
+`)
+
+// Add and update are the same call: list-service keys the write on (user, work),
+// so setting a status on something already tracked updates it rather than
+// creating a second row. Kept as its own document anyway, because the caller
+// knows which it means and the mutation name is what shows up in traces.
+export const mutateUpdateWork = graphql(/* GraphQL */`
+    mutation UpdateWork($input: UserWorkInput!) {
+        UpdateWork(input: $input) {
+            id
+            status
+            chapters
+            volumes
+            score
+        }
+    }
+`)
+
+export const mutateDeleteWork = graphql(/* GraphQL */`
+    mutation DeleteWork($input: ID!) {
+        DeleteWork(id: $input)
     }
 `)
 

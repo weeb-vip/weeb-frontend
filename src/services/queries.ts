@@ -23,6 +23,7 @@ import {
   type UpdateUserInput,
   type User,
   type UserAnimeInput,
+  type UserWorkInput,
   type UserAnimesQuery,
   type UserAnimesQueryVariables,
   type UserAnimeCountQuery,
@@ -31,7 +32,7 @@ import {
 import {
   getAnimeDetailsByID,
   getCurrentlyAiring, getCurrentlyAiringWithDates, getCurrentlyAiringWithDatesAndEpisodes,
-  getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
+  getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateAddWork, mutateDeleteWork, mutateUpdateUserDetails,
   mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationResendVerificationEmail,
   mutationRegister, mutationLogout, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserAnimeCount, queryUserDetails
 } from "./api/graphql/queries";
@@ -667,6 +668,30 @@ export const deleteAnime = () => ({
     return authenticatedRequest(async (client) => {
       const response = await client.request(mutateDeleteAnime, { input });
       return response.DeleteAnime;
+    });
+  }
+})
+
+// Add and update both go through AddWork: list-service keys the write on
+// (user, work), so one call covers "put this on my shelf" and "change where I
+// am in it". A separate update path would be two names for the same request.
+export const upsertWork = () => ({
+  mutationFn: async (input: { input: UserWorkInput }) => {
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateAddWork, input);
+      return response.AddWork;
+    });
+  }
+})
+
+export const deleteWork = () => ({
+  mutationFn: async (input: string) => {
+    // Through authenticatedRequest so an expired access token is refreshed and
+    // retried, for the reason deleteAnime documents: a direct client call fails
+    // once the token expires and the removal silently does nothing.
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateDeleteWork, { input });
+      return response.DeleteWork;
     });
   }
 })
