@@ -78,6 +78,35 @@
   // "0 ep · 2026" was shipping on any show whose episode count had not landed
   // yet, which is a fact the card does not know stated as one it does. Drop the
   // part that has no value rather than printing a zero.
+  // The shows the visitor is actually following, out of what is airing.
+  //
+  // No new query: currentlyAiring already returns userAnime, and the SSR fetch
+  // carries the auth cookie, so this is resolved on the server like everything
+  // else on the page. It also means no separate signed-in check -- a signed-out
+  // visitor has userAnime null on every entry, so the list is empty and the
+  // section does not render.
+  //
+  // WATCHING only. Plan to Watch is a list of intentions, not a thing you are
+  // waiting on an episode of, and mixing the two turns "what is next for me"
+  // into a second seasonal shelf.
+  $: myAiring = sortedCurrentlyAiring.filter(
+    (entry: any) => entry?.anime?.userAnime?.status === 'WATCHING'
+  );
+
+  // Episode and countdown, because that is what this section is for. The other
+  // shelves show episode count and studio, which say nothing about when.
+  function watchingSub(entry: any): string {
+    const timing = entry?.airingInfo?.timing;
+    const episode = entry?.airingInfo?.nextEpisode?.episodeNumber;
+    const parts: string[] = [];
+    if (episode) parts.push(`EP ${episode}`);
+    if (timing?.isLive) parts.push('Airing now');
+    else if (timing?.countdown) parts.push(`in ${timing.countdown}`);
+    else if (timing?.localTime) parts.push(String(timing.localTime));
+
+    return parts.join(' \u00b7 ');
+  }
+
   function posterSub(anime: any): string {
     const episodes = Math.max(anime.episodeCount || 0, anime.episodes?.length || 0);
     const origin = anime.studios?.[0] || getYearUTC(anime.startDate);
@@ -449,6 +478,36 @@
     </div>
   {/if}
 
+
+  <!-- Airing from your list -->
+  <!-- First thing under the hero, because the product's recurring loop starts
+       with "what aired for the shows I follow" and nothing on this page used to
+       answer it. Renders only when there is something in it, so a signed-out
+       homepage is unchanged rather than carrying an empty shelf. -->
+  {#if myAiring.length > 0}
+    <section class="section">
+      <SectionHeader title="Airing from your list" href="/profile/anime" linkText="Your list →" />
+      <PosterGrid>
+        {#each myAiring as entry (entry.anime.id)}
+          <!-- status comes off airingInfo: the anime object is rebuilt field by
+               field above and drops animeStatus, while airingInfo spreads the
+               whole record. -->
+          <PosterCard
+            id={entry.anime.id}
+            slug={entry.anime.slug}
+            title={getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
+            image={GetImageFromAnime(entry.anime)}
+            status={entry.airingInfo?.animeStatus || null}
+            sub={watchingSub(entry)}
+            genres={entry.anime.tags || []}
+            description={entry.anime.description || ''}
+            episodeCount={entry.anime.episodeCount}
+            onList={entry.anime.userAnime?.status || null}
+          />
+        {/each}
+      </PosterGrid>
+    </section>
+  {/if}
 
   <!-- Seasonal Highlights -->
   <section class="section">

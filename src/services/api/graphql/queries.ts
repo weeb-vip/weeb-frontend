@@ -26,30 +26,6 @@ export const getHomePageData = graphql(/* GraphQL */`
                 episodes
             }
         }
-        newestAnime(limit:20) {
-            id
-            anidbid
-            thetvdbid
-            slug
-            titleEn
-            titleJp
-            imageUrl
-            duration
-            tags
-            description
-            episodeCount
-            animeStatus
-            imageUrl
-            rating
-            startDate
-            ranking
-            userAnime {
-                id
-                status
-                score
-                episodes
-            }
-        }
     }
 `)
 
