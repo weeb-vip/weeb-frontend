@@ -19,7 +19,7 @@ import { waitForHomepage, waitForShowPage } from './helpers';
   replacing it; a slug that stops resolving degrades to a skip, not a failure.
 */
 
-const SEED_SLUGS = ['hellsing'];
+const SEED_SLUGS = ['hellsing', 'detective-conan-the-movie-the-last-wizard-of-the-century'];
 
 /** First seeded slug that actually resolves, or null if none are in the store. */
 async function findWork(page: Page): Promise<string | null> {
