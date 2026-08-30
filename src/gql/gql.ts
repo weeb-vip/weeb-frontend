@@ -22,6 +22,12 @@ const documents = {
     "\n    mutation AddWork($input: UserWorkInput!) {\n        AddWork(input: $input) {\n            id\n            status\n            chapters\n            volumes\n            score\n        }\n    }\n": types.AddWorkDocument,
     "\n    mutation UpdateWork($input: UserWorkInput!) {\n        UpdateWork(input: $input) {\n            id\n            status\n            chapters\n            volumes\n            score\n        }\n    }\n": types.UpdateWorkDocument,
     "\n    mutation DeleteWork($input: ID!) {\n        DeleteWork(id: $input)\n    }\n": types.DeleteWorkDocument,
+    "\n    query WatchedEpisodes($animeID: String!) {\n        WatchedEpisodes(animeID: $animeID) {\n            id\n            episodeNumber\n            watchedAt\n        }\n    }\n": types.WatchedEpisodesDocument,
+    "\n    mutation MarkEpisodeWatched($input: MarkEpisodeInput!) {\n        MarkEpisodeWatched(input: $input) {\n            id\n            episodeNumber\n        }\n    }\n": types.MarkEpisodeWatchedDocument,
+    "\n    mutation UnmarkEpisodeWatched($input: MarkEpisodeInput!) {\n        UnmarkEpisodeWatched(input: $input)\n    }\n": types.UnmarkEpisodeWatchedDocument,
+    "\n    query ReadChapters($workID: String!) {\n        ReadChapters(workID: $workID) {\n            id\n            chapterNumber\n            readAt\n        }\n    }\n": types.ReadChaptersDocument,
+    "\n    mutation MarkChapterRead($input: MarkChapterInput!) {\n        MarkChapterRead(input: $input) {\n            id\n            chapterNumber\n        }\n    }\n": types.MarkChapterReadDocument,
+    "\n    mutation UnmarkChapterRead($input: MarkChapterInput!) {\n        UnmarkChapterRead(input: $input)\n    }\n": types.UnmarkChapterReadDocument,
     "\n    query getAnimeNewsByID($id: ID!) {\n        anime(id: $id) {\n            id\n            slug\n            titleEn\n            titleJp\n            imageUrl\n            startDate\n            studios\n            tags\n            news {\n                id\n                title\n                summary\n                category\n                sourceUrl\n                sourceName\n                publishedDate\n                episodeNumber\n                language\n                references {\n                    kind\n                    title\n                    url\n                }\n            }\n        }\n    }\n": types.GetAnimeNewsByIdDocument,
     "\n    query getAnimeNewsBySlug($slug: String!) {\n        animeBySlug(slug: $slug) {\n            id\n            slug\n            titleEn\n            titleJp\n            imageUrl\n            startDate\n            studios\n            tags\n            news {\n                id\n                title\n                summary\n                category\n                sourceUrl\n                sourceName\n                publishedDate\n                episodeNumber\n                language\n                references {\n                    kind\n                    title\n                    url\n                }\n            }\n        }\n    }\n": types.GetAnimeNewsBySlugDocument,
     "\n    query currentlyAiring($limit: Int) {\n        currentlyAiring(limit: $limit) {\n            id\n            slug\n            titleEn\n            titleJp\n            anidbid\n            endDate\n            startDate\n            imageUrl\n            duration\n            ranking\n            broadcast\n            thetvdbid\n            tags\n            description\n            nextEpisode {\n                id\n                animeId\n                episodeNumber\n                titleEn\n                titleJp\n                synopsis\n                airDate\n                airTime\n                createdAt\n                updatedAt\n            }\n            userAnime {\n                id\n                status\n                score\n                episodes\n            }\n        }\n    }\n": types.CurrentlyAiringDocument,
@@ -97,6 +103,30 @@ export function graphql(source: "\n    mutation UpdateWork($input: UserWorkInput
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    mutation DeleteWork($input: ID!) {\n        DeleteWork(id: $input)\n    }\n"): (typeof documents)["\n    mutation DeleteWork($input: ID!) {\n        DeleteWork(id: $input)\n    }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query WatchedEpisodes($animeID: String!) {\n        WatchedEpisodes(animeID: $animeID) {\n            id\n            episodeNumber\n            watchedAt\n        }\n    }\n"): (typeof documents)["\n    query WatchedEpisodes($animeID: String!) {\n        WatchedEpisodes(animeID: $animeID) {\n            id\n            episodeNumber\n            watchedAt\n        }\n    }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    mutation MarkEpisodeWatched($input: MarkEpisodeInput!) {\n        MarkEpisodeWatched(input: $input) {\n            id\n            episodeNumber\n        }\n    }\n"): (typeof documents)["\n    mutation MarkEpisodeWatched($input: MarkEpisodeInput!) {\n        MarkEpisodeWatched(input: $input) {\n            id\n            episodeNumber\n        }\n    }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    mutation UnmarkEpisodeWatched($input: MarkEpisodeInput!) {\n        UnmarkEpisodeWatched(input: $input)\n    }\n"): (typeof documents)["\n    mutation UnmarkEpisodeWatched($input: MarkEpisodeInput!) {\n        UnmarkEpisodeWatched(input: $input)\n    }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query ReadChapters($workID: String!) {\n        ReadChapters(workID: $workID) {\n            id\n            chapterNumber\n            readAt\n        }\n    }\n"): (typeof documents)["\n    query ReadChapters($workID: String!) {\n        ReadChapters(workID: $workID) {\n            id\n            chapterNumber\n            readAt\n        }\n    }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    mutation MarkChapterRead($input: MarkChapterInput!) {\n        MarkChapterRead(input: $input) {\n            id\n            chapterNumber\n        }\n    }\n"): (typeof documents)["\n    mutation MarkChapterRead($input: MarkChapterInput!) {\n        MarkChapterRead(input: $input) {\n            id\n            chapterNumber\n        }\n    }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    mutation UnmarkChapterRead($input: MarkChapterInput!) {\n        UnmarkChapterRead(input: $input)\n    }\n"): (typeof documents)["\n    mutation UnmarkChapterRead($input: MarkChapterInput!) {\n        UnmarkChapterRead(input: $input)\n    }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

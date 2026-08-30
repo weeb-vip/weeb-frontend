@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { format } from 'date-fns';
-  import { createQuery } from '@tanstack/svelte-query';
+  import { createQuery, createMutation } from '@tanstack/svelte-query';
+  import { watchedEpisodes, markEpisodeWatched, unmarkEpisodeWatched } from '../../services/queries';
+  import { getQueryClient } from '../services/query-client';
   import SafeImage from './SafeImage.svelte';
   import AnimeActions from './AnimeActions.svelte';
   import Tag from './Tag.svelte';
@@ -39,6 +41,36 @@
   // Tracking controls: score + episode progress both go through the same
   // upsert mutation used elsewhere (invalidates queries, toasts errors)
   const upsertAnime = useAddAnimeWithToast();
+
+  // Per-episode progress, which the count on userAnime cannot express: it can
+  // only say "up to N", so watching 1, 2 and 5 claimed 3 and 4 as well.
+  //
+  // Its own query because it is the viewer's data rather than the show's, and
+  // only fetched when there is a viewer with something to fetch.
+  const episodeQueryClient = getQueryClient();
+  $: watchedQuery = createQuery({
+    ...watchedEpisodes(anime?.id ?? ''),
+    enabled: Boolean(anime?.id) && Boolean(anime?.userAnime),
+  }, episodeQueryClient);
+
+  // Null until the query has answered, so Episodes falls back to the count
+  // rather than rendering everything unwatched for a moment -- which would
+  // invite a click that un-marks something.
+  $: watchedNumbers = $watchedQuery?.data
+    ? new Set<number>($watchedQuery.data.map((e: any) => e.episodeNumber))
+    : null;
+
+  const markEpisode = createMutation({
+    mutationFn: async (vars: { episodeNumber: number; watched: boolean }) => {
+      const input = { input: { animeID: anime.id, episodeNumber: vars.episodeNumber } };
+      return vars.watched
+        ? markEpisodeWatched().mutationFn(input)
+        : unmarkEpisodeWatched().mutationFn(input);
+    },
+    // Both the episode list and the aggregate count move: list-service derives
+    // userAnime.episodes from these rows, so the show's own query is stale too.
+    onSuccess: () => episodeQueryClient.invalidateQueries(),
+  }, episodeQueryClient);
 
   function trackingInput(overrides: { score?: number; episodes?: number }) {
     return {
@@ -717,9 +749,10 @@
             <Episodes
               episodes={anime.episodes}
               watchedCount={anime.userAnime?.episodes ?? 0}
+              {watchedNumbers}
               canTrack={Boolean(anime.userAnime)}
-              pending={$upsertAnime.isPending}
-              on:watch={(e) => $upsertAnime.mutate(trackingInput({ episodes: e.detail.episodes }))}
+              pending={$upsertAnime.isPending || $markEpisode.isPending}
+              on:watch={(e) => $markEpisode.mutate(e.detail)}
             />
           </section>
         {/if}

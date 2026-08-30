@@ -3,16 +3,31 @@
   import { createEventDispatcher, tick } from 'svelte';
 
   export let episodes: any[];
-  /** How many episodes the viewer has watched. Progress is a single integer, so
-   *  "episode N is watched" is exactly `watchedCount >= N`. */
+  /**
+   * How many episodes the viewer has watched, as the aggregate on their list
+   * entry. Only a fallback now: it can express "up to N" and nothing else, so
+   * watchedNumbers wins wherever it is available.
+   */
   export let watchedCount: number = 0;
+  /**
+   * Episode numbers the viewer has actually finished.
+   *
+   * Null means the caller has no per-episode data -- signed out, or still
+   * loading -- and the component falls back to watchedCount. That fallback is
+   * what keeps the list honest during the moment before the query resolves,
+   * rather than showing every episode unwatched and inviting a click that
+   * un-marks something.
+   */
+  export let watchedNumbers: Set<number> | null = null;
   /** False when the show is not on the viewer's list. The control is then absent
    *  rather than disabled: a dead button teaches nothing, and the page already
    *  had two of them. */
   export let canTrack: boolean = false;
   export let pending: boolean = false;
 
-  const dispatch = createEventDispatcher<{ watch: { episodes: number } }>();
+  const dispatch = createEventDispatcher<{
+    watch: { episodeNumber: number; watched: boolean };
+  }>();
 
   /** Rendered before the reader asks for more. A 500-episode show shipped every
    *  row into the SSR payload -- 796KB for Naruto, 960KB for Bleach -- on a
@@ -69,14 +84,23 @@
   }
 
   function isWatched(episode: any): boolean {
+    // Per-episode when we have it. The count is a fallback for the moment
+    // before that query resolves, and it can only express "up to N" -- which is
+    // exactly the limitation this replaces.
+    if (watchedNumbers) return watchedNumbers.has(episode.episodeNumber);
+
     return watchedCount >= episode.episodeNumber;
   }
 
   function toggle(episode: any) {
     if (!canTrack || pending) return;
-    // Marking N watched means "I am up to N". Un-marking means "I am up to N-1",
-    // which is what a single-integer progress model can honestly represent.
-    dispatch('watch', { episodes: isWatched(episode) ? episode.episodeNumber - 1 : episode.episodeNumber });
+    // The episode itself, not a new high-water mark. Watching 1, 2 and 5 is a
+    // thing people do, and the old model could only say "up to 5" -- which
+    // silently claimed 3 and 4 as well.
+    dispatch('watch', {
+      episodeNumber: episode.episodeNumber,
+      watched: !isWatched(episode),
+    });
   }
 
   async function collapse() {

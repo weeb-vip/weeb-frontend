@@ -373,6 +373,59 @@ export const mutateDeleteWork = graphql(/* GraphQL */`
     }
 `)
 
+// Which episodes a viewer has finished, as numbers rather than ids: the scraper
+// clears an anime's episodes and reinserts them with new ids, so history keyed
+// on an id would be lost on every re-scrape.
+export const queryWatchedEpisodes = graphql(/* GraphQL */`
+    query WatchedEpisodes($animeID: String!) {
+        WatchedEpisodes(animeID: $animeID) {
+            id
+            episodeNumber
+            watchedAt
+        }
+    }
+`)
+
+export const mutateMarkEpisodeWatched = graphql(/* GraphQL */`
+    mutation MarkEpisodeWatched($input: MarkEpisodeInput!) {
+        MarkEpisodeWatched(input: $input) {
+            id
+            episodeNumber
+        }
+    }
+`)
+
+export const mutateUnmarkEpisodeWatched = graphql(/* GraphQL */`
+    mutation UnmarkEpisodeWatched($input: MarkEpisodeInput!) {
+        UnmarkEpisodeWatched(input: $input)
+    }
+`)
+
+export const queryReadChapters = graphql(/* GraphQL */`
+    query ReadChapters($workID: String!) {
+        ReadChapters(workID: $workID) {
+            id
+            chapterNumber
+            readAt
+        }
+    }
+`)
+
+export const mutateMarkChapterRead = graphql(/* GraphQL */`
+    mutation MarkChapterRead($input: MarkChapterInput!) {
+        MarkChapterRead(input: $input) {
+            id
+            chapterNumber
+        }
+    }
+`)
+
+export const mutateUnmarkChapterRead = graphql(/* GraphQL */`
+    mutation UnmarkChapterRead($input: MarkChapterInput!) {
+        UnmarkChapterRead(input: $input)
+    }
+`)
+
 export const getAnimeNewsByID = graphql(/* GraphQL */`
     query getAnimeNewsByID($id: ID!) {
         anime(id: $id) {
