@@ -66,13 +66,20 @@
   $: adaptations = work?.adaptations ?? [];
   $: authors = (work?.authors ?? []) as string[];
   $: publishedRange = published(work?.publishedFrom, work?.publishedTo, work?.status);
+  // Volumes and chapters are facts about the work. Score and ranked are shown
+  // because the anime pages already show both and a reader arriving from one
+  // expects the same measure.
+  //
+  // Members and favourites are deliberately absent. They are MyAnimeList's
+  // community counts, and rendered here unlabelled they read as weeb.vip's own
+  // -- we have no such number. They are also the one thing this product says it
+  // does not do: the neighbouring sites compete on community, and this one does
+  // not follow them there.
   $: facts = [
     { label: 'Volumes', value: grouped(work?.volumes) },
     { label: 'Chapters', value: grouped(work?.chapters) },
     { label: 'Score', value: work?.score != null ? Number(work.score).toFixed(2) : null },
-    { label: 'Ranked', value: work?.ranking != null ? `#${grouped(work.ranking)}` : null },
-    { label: 'Members', value: grouped(work?.members) },
-    { label: 'Favourites', value: grouped(work?.favorites) }
+    { label: 'Ranked', value: work?.ranking != null ? `#${grouped(work.ranking)}` : null }
   ].filter((f) => f.value !== null && f.value !== undefined);
 </script>
 
@@ -130,17 +137,31 @@
             </p>
 
             {#if authors.length > 0 || work.serialization || work.demographic}
-              <div class="hero-credits">
+              <!-- A definition list on a two-column grid, so the values line up
+                   on one edge whatever the labels measure. "Author",
+                   "Serialised in" and "Aimed at" are three different widths, and
+                   inline labels left the values starting at three different
+                   places.
+
+                   Three plain nouns. "Ran in" and "Serialised in" both describe
+                   the relationship instead of naming the thing, and neither
+                   tells a reader that Afternoon is a magazine -- which is the
+                   only fact they were missing. A label that needs explaining is
+                   the wrong label. -->
+              <dl class="hero-credits">
                 {#if authors.length > 0}
-                  <p class="credit"><span class="credit-label">By</span> {authors.join(', ')}</p>
+                  <dt class="credit-label">{authors.length > 1 ? 'Authors' : 'Author'}</dt>
+                  <dd class="credit-value">{authors.join(', ')}</dd>
                 {/if}
                 {#if work.serialization}
-                  <p class="credit"><span class="credit-label">Ran in</span> {work.serialization}</p>
+                  <dt class="credit-label">Magazine</dt>
+                  <dd class="credit-value">{work.serialization}</dd>
                 {/if}
                 {#if work.demographic}
-                  <p class="credit"><span class="credit-label">For</span> {work.demographic}</p>
+                  <dt class="credit-label">Audience</dt>
+                  <dd class="credit-value">{work.demographic}</dd>
                 {/if}
-              </div>
+              </dl>
             {/if}
           </div>
         </div>
@@ -341,15 +362,13 @@
   }
   .hero-credits {
     margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .credit {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--weeb-fg);
+    display: grid;
+    /* The label column sizes to the longest label, so every value shares one
+       left edge. */
+    grid-template-columns: auto 1fr;
+    column-gap: 14px;
+    row-gap: 5px;
+    margin-bottom: 0;
   }
   .credit-label {
     font-size: 12px;
@@ -357,7 +376,16 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--weeb-fg-muted);
-    margin-right: 8px;
+    /* Nudged down so a 12px uppercase label sits on the same optical line as
+       the 14px value beside it. */
+    padding-top: 2px;
+  }
+  .credit-value {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--weeb-fg);
+    min-width: 0;
   }
 
   /* ---- facts strip ---- */

@@ -337,8 +337,6 @@ export const getWorkBySlug = graphql(/* GraphQL */`
             authors
             score
             ranking
-            members
-            favorites
             adaptations(limit: 24) {
                 id
                 slug
