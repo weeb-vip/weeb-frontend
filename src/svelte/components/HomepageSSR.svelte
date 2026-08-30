@@ -500,30 +500,6 @@
       {/if}
     </PosterGrid>
   </section>
-  <!-- Recently Added -->
-  {#if ($homeDataQuery.data || homeData)?.newestAnime}
-    <section class="section">
-      <SectionHeader title="Recently Added" href="/search" linkText="See all →" />
-      <PosterGrid>
-        {#each ($homeDataQuery.data || homeData).newestAnime.slice(0, shelfLimit) as anime}
-          <PosterCard
-            id={anime.id}
-            slug={anime.slug}
-            title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-            image={GetImageFromAnime(anime)}
-            score={anime.rating}
-            status={anime.status}
-            genres={anime.tags || []}
-            description={anime.description || ''}
-            episodeCount={anime.episodeCount}
-            sub={posterSub(anime)}
-            onList={anime.userAnime?.status || null}
-          />
-        {/each}
-      </PosterGrid>
-    </section>
-  {/if}
-
   <!-- Top Rated -->
   {#if ($homeDataQuery.data || homeData)?.topRatedAnime}
     <section class="section">
