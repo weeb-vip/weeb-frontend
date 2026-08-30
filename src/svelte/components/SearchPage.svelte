@@ -835,20 +835,69 @@
     {#if workResults.length > 0}
       <section class="works-section" aria-labelledby="works-heading">
         <h2 class="works-heading" id="works-heading">Manga &amp; light novels</h2>
-        <div class="results-grid">
-          {#each linkableWorks as work (work.objectID)}
-            <PosterCard
-              id={work.id || ''}
-              title={work.title_en || work.title_jp || ''}
-              image={work.id || ''}
-              imagePath="works"
-              score={work.score}
-              sub={workSub(work)}
-              description={work.description || ''}
-              href={`/manga/${work.slug}`}
-            />
-          {/each}
-        </div>
+        {#if viewMode === 'grid'}
+          <div class="results-grid">
+            {#each linkableWorks as work (work.objectID)}
+              <PosterCard
+                id={work.id || ''}
+                title={work.title_en || work.title_jp || ''}
+                image={work.id || ''}
+                imagePath="works"
+                score={work.score}
+                sub={workSub(work)}
+                description={work.description || ''}
+                href={`/manga/${work.slug}`}
+              />
+            {/each}
+          </div>
+        {:else}
+          <!-- The same list rows the anime results use, so switching view mode
+               changes the whole page rather than half of it. -->
+          <div class="results-list">
+            {#each linkableWorks as work (work.objectID)}
+              <a class="list-item" href={`/manga/${work.slug}`}>
+                <div class="list-poster">
+                  <SafeImage
+                    src={work.id || ''}
+                    path="works"
+                    alt={work.title_en || work.title_jp || ''}
+                    fallbackSrc={work.image_url || '/assets/not found.jpg'}
+                    className="list-poster-img"
+                    width="52"
+                    height="78"
+                  />
+                </div>
+                <div class="list-info">
+                  <div class="list-title">{work.title_en || work.title_jp || ''}</div>
+                  <div class="list-sub">
+                    {workSub(work)}
+                    {#if work.volumes} · {work.volumes} volumes{/if}
+                    {#if work.chapters} · {work.chapters} chapters{/if}
+                  </div>
+                  {#if work.description}
+                    {@const desc = work.description.replace(/<[^>]*>/g, '')}
+                    <div class="list-desc">{desc.slice(0, 180)}{desc.length > 180 ? '...' : ''}</div>
+                  {/if}
+                  {#if work.authors?.length > 0}
+                    <div class="list-tags">
+                      {#each work.authors.slice(0, 3) as author}
+                        <span class="list-tag">{author}</span>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+                <div class="list-badges">
+                  {#if work.score}
+                    <div class="list-score">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      {work.score.toFixed(1)}
+                    </div>
+                  {/if}
+                </div>
+              </a>
+            {/each}
+          </div>
+        {/if}
       </section>
     {/if}
 

@@ -1,7 +1,6 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
-  import { getSafeImageUrl } from '../utils/image';
 
   export let item: any;
   export let onClick: () => void;
@@ -12,10 +11,12 @@
   // never has to infer which one a hit came from by sniffing its fields.
   $: isWork = item?.__kind === 'work';
 
-  // Works live under /works on the CDN, and image_url is MyAnimeList's own
-  // host -- the fallback rather than the source, so a cover that has reached
-  // the CDN is served from there.
-  $: imageSrc = isWork ? getSafeImageUrl(item.id, 'works') : GetImageFromAnime(item);
+  // SafeImage takes a record id and the CDN folder it lives in, and builds the
+  // URL itself -- handing it a finished URL gets that URL encoded into another
+  // one. Works are stored under works/; anime posters sit at the CDN root here.
+  $: imageSrc = isWork ? (item?.id ?? '') : GetImageFromAnime(item);
+  $: imagePath = isWork ? 'works' : '';
+  // MyAnimeList's own host, used only if the cover has not reached the CDN.
   $: imageFallback = isWork && item?.image_url ? item.image_url : '/assets/not found.jpg';
 
   // MANGA -> Manga, LIGHT_NOVEL -> Light novel.
@@ -49,6 +50,7 @@
   <div class="flex-shrink-0 rounded-md overflow-hidden" style="width: 37px; height: 56px;">
     <SafeImage
       src={imageSrc}
+      path={imagePath}
       alt={item.title_en || item.title_jp || item.name || ''}
       fallbackSrc={imageFallback}
       className="!w-full !h-full"
