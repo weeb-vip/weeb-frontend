@@ -11,6 +11,10 @@
   export let slug: string | null | undefined = undefined;
   export let title: string;
   export let image: string;
+  // Which CDN folder the poster lives in. Anime posters are the default; works
+  // are stored under works/ by image-sync, and passing the id without this
+  // would ask the CDN for an anime poster that does not exist.
+  export let imagePath: string = 'posters';
   export let score: number | string | null = null;
   export let status: string | null = null;
   export let sub: string = '';
@@ -29,7 +33,7 @@
   //
   // Costs no extra request: SafeImage resolves candidates in order and stops at
   // the first that loads.
-  $: posterSources = image ? [getSafeImageUrl(image, 'posters'), getSafeImageUrl(image)] : [];
+  $: posterSources = image ? [getSafeImageUrl(image, imagePath), getSafeImageUrl(image)] : [];
 </script>
 
 <a

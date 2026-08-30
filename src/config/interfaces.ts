@@ -2,6 +2,10 @@ export interface IConfig {
   api_host: string;
   graphql_host: string;
   algolia_index: string;
+  // The works index -- manga, light novels, manhwa. Optional: search skips the
+  // works request entirely when it is unset, so a config that predates this
+  // field degrades to anime-only results rather than failing.
+  algolia_works_index?: string;
   cdn_url: string;
   cdn_user_url: string;
   posthog_api_key?: string;

@@ -5,6 +5,7 @@
   import { configStore } from '../stores/config';
   import { loggedInStore } from '../stores/auth';
   import PosterCard from './PosterCard.svelte';
+  import Select from './Select.svelte';
   import SafeImage from './SafeImage.svelte';
   import { GetImageFromAnime, animeHref } from '../../services/utils';
   import { AuthStorage } from '../../utils/auth-storage';
@@ -33,6 +34,38 @@
   let algoliasearch: any = null;
   let searchClient: any = null;
   let algoliaIndex: string = 'anime-staging';
+  // Empty when unconfigured, which is the signal to skip the works request
+  // entirely rather than query an index that may not exist.
+  let worksIndex: string = '';
+  let workResults: any[] = [];
+
+  // A work is reachable only by slug -- workBySlug is the only lookup the
+  // schema exposes, and there is no id route to fall back on the way anime
+  // have. One without a slug would render a card leading to a certain 404, so
+  // it is left out rather than shown.
+  $: linkableWorks = workResults.filter((w: any) => !!w?.slug);
+
+  // MANGA -> Manga, LIGHT_NOVEL -> Light novel.
+  function readableWorkType(value: string | null | undefined): string {
+    if (!value) return 'Work';
+    const words = value.toLowerCase().split('_');
+    return words[0].charAt(0).toUpperCase() + words[0].slice(1) +
+      (words.length > 1 ? ' ' + words.slice(1).join(' ') : '');
+  }
+
+  function workYear(value: string | null | undefined): string | null {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : String(parsed.getUTCFullYear());
+  }
+
+  // The kind comes first: "Light novel" is what separates this card from the
+  // anime of the same name a row above it.
+  function workSub(work: any): string {
+    return [readableWorkType(work?.type), workYear(work?.published_from)]
+      .filter(Boolean)
+      .join(' · ');
+  }
 
   // Parse JSON string fields from Algolia (genres, studios, licensors come as JSON strings)
   function parseJsonField(val: any): string[] {
@@ -284,6 +317,7 @@
 
       const config = configStore.get();
       algoliaIndex = config?.algolia_index || 'anime-staging';
+      worksIndex = config?.algolia_works_index || '';
       searchClient = algoliasearch("A2HF2P5C6X", "45216ed5ac3f9e0a478d3c354d353d58");
 
       // Fetch browse genres in the background
@@ -347,6 +381,7 @@
     // Allow search if we have a query OR selected genres
     if (!searchClient || (!searchQuery.trim() && selectedGenres.length === 0)) {
       results = [];
+      workResults = [];
       hasSearched = false;
       totalResults = 0;
       currentPage = 0;
@@ -366,15 +401,32 @@
         ? selectedGenres.map(g => `tags:"${g}"`).join(' OR ')
         : undefined;
 
-      const response = await searchClient.search({
-        requests: [{
-          indexName: algoliaIndex,
+      // Works are fetched alongside anime in the same round trip -- `requests`
+      // has always been an array. They are skipped when a genre filter is on,
+      // because `tags` is an anime facet that no work carries, and on later
+      // pages, because pagination here walks the anime results and a repeated
+      // works section under page 4 would be noise.
+      const wantWorks = !!worksIndex && !!searchQuery.trim() &&
+        selectedGenres.length === 0 && currentPage === 0;
+
+      const requests: any[] = [{
+        indexName: algoliaIndex,
+        query: searchQuery.trim(),
+        hitsPerPage: perPage,
+        page: currentPage,
+        filters,
+      }];
+      if (wantWorks) {
+        requests.push({
+          indexName: worksIndex,
           query: searchQuery.trim(),
-          hitsPerPage: perPage,
-          page: currentPage,
-          filters,
-        }]
-      });
+          hitsPerPage: 6,
+        });
+      }
+
+      const response = await searchClient.search({ requests });
+
+      workResults = wantWorks ? (response.results?.[1]?.hits || []) : [];
 
       // Algolia v5 response may have results at different paths
       const firstResult = response.results?.[0] || response;
@@ -393,6 +445,7 @@
     } catch (e) {
       console.error('Search failed:', e);
       results = [];
+      workResults = [];
       totalResults = 0;
     }
 
@@ -519,6 +572,15 @@
     }
     return years;
   })();
+
+  // The Select takes {value,label} pairs. Year and page size are plain numbers,
+  // so they are shaped here rather than in the markup.
+  $: yearSelectOptions = [
+    { value: '', label: 'All years' },
+    ...yearOptions.map((y: number) => ({ value: y.toString(), label: y.toString() })),
+  ];
+
+  const pageSizeSelectOptions = PAGE_SIZE_OPTIONS.map((n) => ({ value: n, label: String(n) }));
 </script>
 
 <div class="search-page">
@@ -584,26 +646,23 @@
 
     <div class="filter-row filter-row--controls">
       <!-- Status -->
-      <select class="filter-select" bind:value={selectedStatus} on:change={() => performSearch()}>
-        {#each STATUSES as status}
-          <option value={status.value}>{status.label}</option>
-        {/each}
-      </select>
+      <Select
+        bind:value={selectedStatus}
+        options={STATUSES}
+        ariaLabel="Filter by status"
+        on:change={() => performSearch()}
+      />
 
       <!-- Year -->
-      <select class="filter-select" bind:value={selectedYear} on:change={() => performSearch()}>
-        <option value="">All years</option>
-        {#each yearOptions as year}
-          <option value={year.toString()}>{year}</option>
-        {/each}
-      </select>
+      <Select
+        bind:value={selectedYear}
+        options={yearSelectOptions}
+        ariaLabel="Filter by year"
+        on:change={() => performSearch()}
+      />
 
       <!-- Sort -->
-      <select class="filter-select" bind:value={sortBy}>
-        {#each SORT_OPTIONS as opt}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
+      <Select bind:value={sortBy} options={SORT_OPTIONS} ariaLabel="Sort results" />
     </div>
   </section>
 
@@ -767,6 +826,81 @@
       </div>
     {/if}
 
+    <!-- Works: the manga, light novels and novels matching the same query.
+         A separate section rather than mixed into the grid above, because the
+         two indices are ranked independently and their scores are not
+         comparable -- interleaving them would be inventing an order. Renders
+         only when there are hits, so a query matching no works looks exactly
+         as this page did before. -->
+    {#if workResults.length > 0}
+      <section class="works-section" aria-labelledby="works-heading">
+        <h2 class="works-heading" id="works-heading">Manga &amp; light novels</h2>
+        {#if viewMode === 'grid'}
+          <div class="results-grid">
+            {#each linkableWorks as work (work.objectID)}
+              <PosterCard
+                id={work.id || ''}
+                title={work.title_en || work.title_jp || ''}
+                image={work.id || ''}
+                imagePath="works"
+                score={work.score}
+                sub={workSub(work)}
+                description={work.description || ''}
+                href={`/manga/${work.slug}`}
+              />
+            {/each}
+          </div>
+        {:else}
+          <!-- The same list rows the anime results use, so switching view mode
+               changes the whole page rather than half of it. -->
+          <div class="results-list">
+            {#each linkableWorks as work (work.objectID)}
+              <a class="list-item" href={`/manga/${work.slug}`}>
+                <div class="list-poster">
+                  <SafeImage
+                    src={work.id || ''}
+                    path="works"
+                    alt={work.title_en || work.title_jp || ''}
+                    fallbackSrc={work.image_url || '/assets/not found.jpg'}
+                    className="list-poster-img"
+                    width="52"
+                    height="78"
+                  />
+                </div>
+                <div class="list-info">
+                  <div class="list-title">{work.title_en || work.title_jp || ''}</div>
+                  <div class="list-sub">
+                    {workSub(work)}
+                    {#if work.volumes} · {work.volumes} volumes{/if}
+                    {#if work.chapters} · {work.chapters} chapters{/if}
+                  </div>
+                  {#if work.description}
+                    {@const desc = work.description.replace(/<[^>]*>/g, '')}
+                    <div class="list-desc">{desc.slice(0, 180)}{desc.length > 180 ? '...' : ''}</div>
+                  {/if}
+                  {#if work.authors?.length > 0}
+                    <div class="list-tags">
+                      {#each work.authors.slice(0, 3) as author}
+                        <span class="list-tag">{author}</span>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+                <div class="list-badges">
+                  {#if work.score}
+                    <div class="list-score">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      {work.score.toFixed(1)}
+                    </div>
+                  {/if}
+                </div>
+              </a>
+            {/each}
+          </div>
+        {/if}
+      </section>
+    {/if}
+
     <!-- Pagination -->
     {#if totalPages > 1}
       <div class="pagination">
@@ -800,11 +934,12 @@
 
         <div class="pagination-right">
           <label class="per-page-label" for="search-per-page">Show</label>
-          <select id="search-per-page" class="per-page-select" bind:value={perPage} on:change={() => { currentPage = 0; performSearch(false); }}>
-            {#each PAGE_SIZE_OPTIONS as opt}
-              <option value={opt}>{opt}</option>
-            {/each}
-          </select>
+          <Select
+            bind:value={perPage}
+            options={pageSizeSelectOptions}
+            ariaLabel="Results per page"
+            on:change={() => { currentPage = 0; performSearch(false); }}
+          />
           <span class="per-page-label">per page</span>
         </div>
       </div>
@@ -974,32 +1109,6 @@
     0%, 100% { opacity: 0.4; }
     50% { opacity: 0.7; }
   }
-  .filter-select {
-    height: 32px;
-    padding: 0 28px 0 12px;
-    border: 1px solid var(--weeb-border);
-    border-radius: 16px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--weeb-fg-secondary);
-    background: transparent;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237a7a8a' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    font-family: var(--weeb-font);
-    transition: all 0.15s;
-  }
-  .filter-select:hover {
-    border-color: var(--weeb-fg-muted);
-    color: var(--weeb-fg);
-  }
-  .filter-select:focus {
-    outline: none;
-    border-color: var(--weeb-accent);
-  }
 
   /* Active Filters */
   .active-filters-section { padding: 12px 0; }
@@ -1106,6 +1215,23 @@
   }
 
   /* Results Grid */
+  /* ── Works section ──
+     Set apart from the anime grid rather than blended into it: the two indices
+     rank independently, so presenting them as one list would imply an order
+     that does not exist. */
+  .works-section {
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--weeb-border, rgba(255, 255, 255, 0.08));
+  }
+  .works-heading {
+    margin: 0 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--weeb-fg-muted, #8b8b8b);
+  }
+
   .results-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -1329,27 +1455,6 @@
   .per-page-label {
     font-size: 0.75rem;
     color: var(--weeb-fg-muted);
-  }
-  .per-page-select {
-    height: 32px;
-    padding: 0 28px 0 10px;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
-    color: var(--weeb-fg);
-    font-size: 0.8rem;
-    font-family: var(--weeb-font-mono, monospace);
-    font-variant-numeric: tabular-nums;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    transition: border-color 0.15s;
-  }
-  .per-page-select:focus {
-    outline: none;
-    border-color: var(--weeb-accent);
   }
 
   /* Responsive */
