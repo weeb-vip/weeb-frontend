@@ -23,6 +23,9 @@ import {
   type UpdateUserInput,
   type User,
   type UserAnimeInput,
+  type UserWorkInput,
+  type MarkEpisodeInput,
+  type MarkChapterInput,
   type UserAnimesQuery,
   type UserAnimesQueryVariables,
   type UserAnimeCountQuery,
@@ -31,7 +34,9 @@ import {
 import {
   getAnimeDetailsByID,
   getCurrentlyAiring, getCurrentlyAiringWithDates, getCurrentlyAiringWithDatesAndEpisodes,
-  getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateUpdateUserDetails,
+  getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateAddWork, mutateDeleteWork, mutateUpdateUserDetails,
+  queryWatchedEpisodes, mutateMarkEpisodeWatched, mutateUnmarkEpisodeWatched,
+  queryReadChapters, mutateMarkChapterRead, mutateUnmarkChapterRead,
   mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationResendVerificationEmail,
   mutationRegister, mutationLogout, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserAnimeCount, queryUserDetails
 } from "./api/graphql/queries";
@@ -667,6 +672,88 @@ export const deleteAnime = () => ({
     return authenticatedRequest(async (client) => {
       const response = await client.request(mutateDeleteAnime, { input });
       return response.DeleteAnime;
+    });
+  }
+})
+
+// Add and update both go through AddWork: list-service keys the write on
+// (user, work), so one call covers "put this on my shelf" and "change where I
+// am in it". A separate update path would be two names for the same request.
+export const upsertWork = () => ({
+  mutationFn: async (input: { input: UserWorkInput }) => {
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateAddWork, input);
+      return response.AddWork;
+    });
+  }
+})
+
+export const deleteWork = () => ({
+  mutationFn: async (input: string) => {
+    // Through authenticatedRequest so an expired access token is refreshed and
+    // retried, for the reason deleteAnime documents: a direct client call fails
+    // once the token expires and the removal silently does nothing.
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateDeleteWork, { input });
+      return response.DeleteWork;
+    });
+  }
+})
+
+// Per-episode progress. Separate from the anime query because it is the
+// viewer's data rather than the show's, and only a signed-in reader has any.
+export const watchedEpisodes = (animeID: string) => ({
+  queryKey: ["watched-episodes", animeID],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(queryWatchedEpisodes, { animeID });
+      return response.WatchedEpisodes;
+    });
+  }
+})
+
+export const markEpisodeWatched = () => ({
+  mutationFn: async (input: { input: MarkEpisodeInput }) => {
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateMarkEpisodeWatched, input);
+      return response.MarkEpisodeWatched;
+    });
+  }
+})
+
+export const unmarkEpisodeWatched = () => ({
+  mutationFn: async (input: { input: MarkEpisodeInput }) => {
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateUnmarkEpisodeWatched, input);
+      return response.UnmarkEpisodeWatched;
+    });
+  }
+})
+
+export const readChapters = (workID: string) => ({
+  queryKey: ["read-chapters", workID],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(queryReadChapters, { workID });
+      return response.ReadChapters;
+    });
+  }
+})
+
+export const markChapterRead = () => ({
+  mutationFn: async (input: { input: MarkChapterInput }) => {
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateMarkChapterRead, input);
+      return response.MarkChapterRead;
+    });
+  }
+})
+
+export const unmarkChapterRead = () => ({
+  mutationFn: async (input: { input: MarkChapterInput }) => {
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateUnmarkChapterRead, input);
+      return response.UnmarkChapterRead;
     });
   }
 })

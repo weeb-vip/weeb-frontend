@@ -474,22 +474,42 @@ export type LoginInput = {
   username: Scalars['String'];
 };
 
+export type MarkChapterInput = {
+  chapterNumber: Scalars['Int'];
+  readAt?: InputMaybe<Scalars['String']>;
+  workID: Scalars['String'];
+};
+
+export type MarkEpisodeInput = {
+  animeID: Scalars['String'];
+  episodeNumber: Scalars['Int'];
+  /** Defaults to now. Supplied when backfilling something watched earlier. */
+  watchedAt?: InputMaybe<Scalars['String']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   AddAnime: UserAnime;
+  AddWork: UserWork;
   CreatUser: User;
   CreateList: UserList;
   CreateSession?: Maybe<SigninResult>;
   DeleteAnime: Scalars['Boolean'];
   DeleteList: Scalars['Boolean'];
+  DeleteWork: Scalars['Boolean'];
   Logout: Scalars['Boolean'];
+  MarkChapterRead: ReadChapter;
+  MarkEpisodeWatched: WatchedEpisode;
   RefreshToken: SigninResult;
   Register: RegisterResult;
   RequestPasswordReset: Scalars['Boolean'];
   ResendVerificationEmail: Scalars['Boolean'];
   ResetPassword: Scalars['Boolean'];
+  UnmarkChapterRead: Scalars['Boolean'];
+  UnmarkEpisodeWatched: Scalars['Boolean'];
   UpdateAnime: UserAnime;
   UpdateUserDetails: User;
+  UpdateWork: UserWork;
   UploadProfileImage: User;
   /** @deprecated Use VerifyEmailWithUser, which returns the verified user's id for analytics/identity linkage. */
   VerifyEmail: Scalars['Boolean'];
@@ -502,6 +522,11 @@ export type Mutation = {
 
 export type MutationAddAnimeArgs = {
   input: UserAnimeInput;
+};
+
+
+export type MutationAddWorkArgs = {
+  input: UserWorkInput;
 };
 
 
@@ -530,6 +555,21 @@ export type MutationDeleteListArgs = {
 };
 
 
+export type MutationDeleteWorkArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationMarkChapterReadArgs = {
+  input: MarkChapterInput;
+};
+
+
+export type MutationMarkEpisodeWatchedArgs = {
+  input: MarkEpisodeInput;
+};
+
+
 export type MutationRefreshTokenArgs = {
   token: Scalars['String'];
 };
@@ -555,6 +595,16 @@ export type MutationResetPasswordArgs = {
 };
 
 
+export type MutationUnmarkChapterReadArgs = {
+  input: MarkChapterInput;
+};
+
+
+export type MutationUnmarkEpisodeWatchedArgs = {
+  input: MarkEpisodeInput;
+};
+
+
 export type MutationUpdateAnimeArgs = {
   input: UserAnimeInput;
 };
@@ -562,6 +612,11 @@ export type MutationUpdateAnimeArgs = {
 
 export type MutationUpdateUserDetailsArgs = {
   input: UpdateUserInput;
+};
+
+
+export type MutationUpdateWorkArgs = {
+  input: UserWorkInput;
 };
 
 
@@ -597,9 +652,12 @@ export type NewsReference = {
 
 export type Query = {
   __typename?: 'Query';
+  ReadChapters: Array<ReadChapter>;
   UserAnimes?: Maybe<UserAnimePaginated>;
   UserDetails: User;
   UserLists?: Maybe<Array<UserList>>;
+  UserWorks?: Maybe<UserWorkPaginated>;
+  WatchedEpisodes: Array<WatchedEpisode>;
   /** Get anime by ID */
   anime: Anime;
   /** Get anime by season name and year (more flexible) */
@@ -663,8 +721,23 @@ export type Query = {
 };
 
 
+export type QueryReadChaptersArgs = {
+  workID: Scalars['String'];
+};
+
+
 export type QueryUserAnimesArgs = {
   input: UserAnimesInput;
+};
+
+
+export type QueryUserWorksArgs = {
+  input: UserWorksInput;
+};
+
+
+export type QueryWatchedEpisodesArgs = {
+  animeID: Scalars['String'];
 };
 
 
@@ -772,6 +845,15 @@ export type QueryTopRatedAnimeArgs = {
 
 export type QueryWorkBySlugArgs = {
   slug: Scalars['String'];
+};
+
+/** One chapter a reader has finished. Numbered, because works have no chapter records at all. */
+export type ReadChapter = {
+  __typename?: 'ReadChapter';
+  chapterNumber: Scalars['Int'];
+  id: Scalars['ID'];
+  readAt?: Maybe<Scalars['String']>;
+  workID: Scalars['String'];
 };
 
 export type RegisterInput = {
@@ -1013,6 +1095,69 @@ export type UserListInput = {
 };
 
 /**
+ * A work on a reader's shelf.
+ *
+ * Deliberately parallel to UserAnime -- same job, different medium -- so a client
+ * can render both through one card. Progress differs because a manga release is
+ * counted in chapters and volumes, not episodes.
+ */
+export type UserWork = {
+  __typename?: 'UserWork';
+  chapters?: Maybe<Scalars['Int']>;
+  createdAt?: Maybe<Scalars['String']>;
+  deletedAt?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  listID?: Maybe<Scalars['String']>;
+  score?: Maybe<Scalars['Float']>;
+  status?: Maybe<WorkStatus>;
+  tags?: Maybe<Array<Scalars['String']>>;
+  updatedAt?: Maybe<Scalars['String']>;
+  userID: Scalars['String'];
+  volumes?: Maybe<Scalars['Int']>;
+  workID: Scalars['String'];
+};
+
+export type UserWorkInput = {
+  chapters?: InputMaybe<Scalars['Int']>;
+  id?: InputMaybe<Scalars['String']>;
+  listID?: InputMaybe<Scalars['String']>;
+  score?: InputMaybe<Scalars['Float']>;
+  status?: InputMaybe<WorkStatus>;
+  tags?: InputMaybe<Array<Scalars['String']>>;
+  volumes?: InputMaybe<Scalars['Int']>;
+  workID: Scalars['String'];
+};
+
+export type UserWorkPaginated = {
+  __typename?: 'UserWorkPaginated';
+  limit: Scalars['Int'];
+  page: Scalars['Int'];
+  total: Scalars['Int64'];
+  works: Array<UserWork>;
+};
+
+export type UserWorksInput = {
+  limit: Scalars['Int'];
+  page: Scalars['Int'];
+  status?: InputMaybe<WorkStatus>;
+};
+
+/**
+ * One episode a viewer has finished.
+ *
+ * Identified by number rather than by the episode record's id: the scraper
+ * sometimes clears an anime's episodes and reinserts them with new ids, and
+ * history pointing at those would be lost on every re-scrape.
+ */
+export type WatchedEpisode = {
+  __typename?: 'WatchedEpisode';
+  animeID: Scalars['String'];
+  episodeNumber: Scalars['Int'];
+  id: Scalars['ID'];
+  watchedAt?: Maybe<Scalars['String']>;
+};
+
+/**
  * A source work: the manga, light novel or novel an anime is adapted from.
  *
  * One type for the whole family, discriminated by `type`. MyAnimeList serves them
@@ -1075,6 +1220,7 @@ export type Work = {
   updatedAt: Scalars['String'];
   /** Public URL segment. Assigned once and never rewritten. */
   urlSlug?: Maybe<Scalars['String']>;
+  userWork?: Maybe<UserWork>;
   volumes?: Maybe<Scalars['Int']>;
 };
 
@@ -1094,6 +1240,19 @@ export type Work = {
 export type WorkAdaptationsArgs = {
   limit?: InputMaybe<Scalars['Int']>;
 };
+
+/**
+ * Reading statuses. Its own enum rather than reusing Status: watching a manga is
+ * not a thing, and one shared enum would force every client to translate WATCHING
+ * into "Reading" on some screens and not others.
+ */
+export enum WorkStatus {
+  Completed = 'COMPLETED',
+  Dropped = 'DROPPED',
+  Onhold = 'ONHOLD',
+  Plantoread = 'PLANTOREAD',
+  Reading = 'READING'
+}
 
 export type GetHomePageDataQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']>;
@@ -1136,7 +1295,70 @@ export type GetWorkBySlugQueryVariables = Exact<{
 }>;
 
 
-export type GetWorkBySlugQuery = { __typename?: 'Query', workBySlug?: { __typename?: 'Work', id: string, malId?: number | null, type: string, urlSlug?: string | null, titleEn?: string | null, titleJp?: string | null, titleSynonyms?: Array<string> | null, synopsis?: string | null, imageUrl?: string | null, status?: string | null, volumes?: number | null, chapters?: number | null, publishedFrom?: string | null, publishedTo?: string | null, demographic?: string | null, serialization?: string | null, authors?: Array<string> | null, score?: number | null, ranking?: number | null, adaptations?: Array<{ __typename?: 'Anime', id: string, slug?: string | null, titleEn?: string | null, titleJp?: string | null, imageUrl?: string | null, startDate?: any | null, rating?: string | null, animeStatus?: string | null, episodeCount?: number | null, tags?: Array<string> | null }> | null } | null };
+export type GetWorkBySlugQuery = { __typename?: 'Query', workBySlug?: { __typename?: 'Work', id: string, malId?: number | null, type: string, urlSlug?: string | null, titleEn?: string | null, titleJp?: string | null, titleSynonyms?: Array<string> | null, synopsis?: string | null, imageUrl?: string | null, status?: string | null, volumes?: number | null, chapters?: number | null, publishedFrom?: string | null, publishedTo?: string | null, demographic?: string | null, serialization?: string | null, authors?: Array<string> | null, score?: number | null, ranking?: number | null, userWork?: { __typename?: 'UserWork', id: string, status?: WorkStatus | null, score?: number | null, chapters?: number | null, volumes?: number | null } | null, adaptations?: Array<{ __typename?: 'Anime', id: string, slug?: string | null, titleEn?: string | null, titleJp?: string | null, imageUrl?: string | null, startDate?: any | null, rating?: string | null, animeStatus?: string | null, episodeCount?: number | null, tags?: Array<string> | null }> | null } | null };
+
+export type AddWorkMutationVariables = Exact<{
+  input: UserWorkInput;
+}>;
+
+
+export type AddWorkMutation = { __typename?: 'Mutation', AddWork: { __typename?: 'UserWork', id: string, status?: WorkStatus | null, chapters?: number | null, volumes?: number | null, score?: number | null } };
+
+export type UpdateWorkMutationVariables = Exact<{
+  input: UserWorkInput;
+}>;
+
+
+export type UpdateWorkMutation = { __typename?: 'Mutation', UpdateWork: { __typename?: 'UserWork', id: string, status?: WorkStatus | null, chapters?: number | null, volumes?: number | null, score?: number | null } };
+
+export type DeleteWorkMutationVariables = Exact<{
+  input: Scalars['ID'];
+}>;
+
+
+export type DeleteWorkMutation = { __typename?: 'Mutation', DeleteWork: boolean };
+
+export type WatchedEpisodesQueryVariables = Exact<{
+  animeID: Scalars['String'];
+}>;
+
+
+export type WatchedEpisodesQuery = { __typename?: 'Query', WatchedEpisodes: Array<{ __typename?: 'WatchedEpisode', id: string, episodeNumber: number, watchedAt?: string | null }> };
+
+export type MarkEpisodeWatchedMutationVariables = Exact<{
+  input: MarkEpisodeInput;
+}>;
+
+
+export type MarkEpisodeWatchedMutation = { __typename?: 'Mutation', MarkEpisodeWatched: { __typename?: 'WatchedEpisode', id: string, episodeNumber: number } };
+
+export type UnmarkEpisodeWatchedMutationVariables = Exact<{
+  input: MarkEpisodeInput;
+}>;
+
+
+export type UnmarkEpisodeWatchedMutation = { __typename?: 'Mutation', UnmarkEpisodeWatched: boolean };
+
+export type ReadChaptersQueryVariables = Exact<{
+  workID: Scalars['String'];
+}>;
+
+
+export type ReadChaptersQuery = { __typename?: 'Query', ReadChapters: Array<{ __typename?: 'ReadChapter', id: string, chapterNumber: number, readAt?: string | null }> };
+
+export type MarkChapterReadMutationVariables = Exact<{
+  input: MarkChapterInput;
+}>;
+
+
+export type MarkChapterReadMutation = { __typename?: 'Mutation', MarkChapterRead: { __typename?: 'ReadChapter', id: string, chapterNumber: number } };
+
+export type UnmarkChapterReadMutationVariables = Exact<{
+  input: MarkChapterInput;
+}>;
+
+
+export type UnmarkChapterReadMutation = { __typename?: 'Mutation', UnmarkChapterRead: boolean };
 
 export type GetAnimeNewsByIdQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -1301,7 +1523,16 @@ export const GetSeasonalAnimeDocument = {"kind":"Document","definitions":[{"kind
 export const GetAnimeDetailsByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getAnimeDetailsByID"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"anime"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"anidbid"}},{"kind":"Field","name":{"kind":"Name","value":"thetvdbid"}},{"kind":"Field","name":{"kind":"Name","value":"malId"}},{"kind":"Field","name":{"kind":"Name","value":"sourceWork"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"urlSlug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"titleRomaji"}},{"kind":"Field","name":{"kind":"Name","value":"titleKanji"}},{"kind":"Field","name":{"kind":"Name","value":"titleSynonyms"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"studios"}},{"kind":"Field","name":{"kind":"Name","value":"animeStatus"}},{"kind":"Field","name":{"kind":"Name","value":"episodeCount"}},{"kind":"Field","name":{"kind":"Name","value":"episodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"animeId"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"synopsis"}},{"kind":"Field","name":{"kind":"Name","value":"airDate"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"relatedAnime"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"relation"}},{"kind":"Field","name":{"kind":"Name","value":"anime"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"animeStatus"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"duration"}},{"kind":"Field","name":{"kind":"Name","value":"rating"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"broadcast"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"licensors"}},{"kind":"Field","name":{"kind":"Name","value":"ranking"}},{"kind":"Field","name":{"kind":"Name","value":"scheduleInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"jpnTime"}},{"kind":"Field","name":{"kind":"Name","value":"subTime"}},{"kind":"Field","name":{"kind":"Name","value":"dubTime"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"delayedTimetable"}},{"kind":"Field","name":{"kind":"Name","value":"subDelayedTimetable"}},{"kind":"Field","name":{"kind":"Name","value":"dubDelayedTimetable"}}]}},{"kind":"Field","name":{"kind":"Name","value":"streamingPlatforms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"platform"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"news"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"sourceUrl"}},{"kind":"Field","name":{"kind":"Name","value":"sourceName"}},{"kind":"Field","name":{"kind":"Name","value":"publishedDate"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"references"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"userAnime"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"episodes"}}]}}]}}]}}]} as unknown as DocumentNode<GetAnimeDetailsByIdQuery, GetAnimeDetailsByIdQueryVariables>;
 export const GetAnimeSlugByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getAnimeSlugByID"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"anime"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}}]}}]}}]} as unknown as DocumentNode<GetAnimeSlugByIdQuery, GetAnimeSlugByIdQueryVariables>;
 export const GetAnimeDetailsBySlugDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getAnimeDetailsBySlug"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"animeBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"anidbid"}},{"kind":"Field","name":{"kind":"Name","value":"thetvdbid"}},{"kind":"Field","name":{"kind":"Name","value":"malId"}},{"kind":"Field","name":{"kind":"Name","value":"sourceWork"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"urlSlug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"titleRomaji"}},{"kind":"Field","name":{"kind":"Name","value":"titleKanji"}},{"kind":"Field","name":{"kind":"Name","value":"titleSynonyms"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"studios"}},{"kind":"Field","name":{"kind":"Name","value":"animeStatus"}},{"kind":"Field","name":{"kind":"Name","value":"episodeCount"}},{"kind":"Field","name":{"kind":"Name","value":"episodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"animeId"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"synopsis"}},{"kind":"Field","name":{"kind":"Name","value":"airDate"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"relatedAnime"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"relation"}},{"kind":"Field","name":{"kind":"Name","value":"anime"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"animeStatus"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"duration"}},{"kind":"Field","name":{"kind":"Name","value":"rating"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"broadcast"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"licensors"}},{"kind":"Field","name":{"kind":"Name","value":"ranking"}},{"kind":"Field","name":{"kind":"Name","value":"scheduleInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"jpnTime"}},{"kind":"Field","name":{"kind":"Name","value":"subTime"}},{"kind":"Field","name":{"kind":"Name","value":"dubTime"}},{"kind":"Field","name":{"kind":"Name","value":"notes"}},{"kind":"Field","name":{"kind":"Name","value":"delayedTimetable"}},{"kind":"Field","name":{"kind":"Name","value":"subDelayedTimetable"}},{"kind":"Field","name":{"kind":"Name","value":"dubDelayedTimetable"}}]}},{"kind":"Field","name":{"kind":"Name","value":"streamingPlatforms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"platform"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"news"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"sourceUrl"}},{"kind":"Field","name":{"kind":"Name","value":"sourceName"}},{"kind":"Field","name":{"kind":"Name","value":"publishedDate"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"references"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"userAnime"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"episodes"}}]}}]}}]}}]} as unknown as DocumentNode<GetAnimeDetailsBySlugQuery, GetAnimeDetailsBySlugQueryVariables>;
-export const GetWorkBySlugDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getWorkBySlug"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"malId"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"urlSlug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"titleSynonyms"}},{"kind":"Field","name":{"kind":"Name","value":"synopsis"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"publishedFrom"}},{"kind":"Field","name":{"kind":"Name","value":"publishedTo"}},{"kind":"Field","name":{"kind":"Name","value":"demographic"}},{"kind":"Field","name":{"kind":"Name","value":"serialization"}},{"kind":"Field","name":{"kind":"Name","value":"authors"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"ranking"}},{"kind":"Field","name":{"kind":"Name","value":"adaptations"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"24"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"rating"}},{"kind":"Field","name":{"kind":"Name","value":"animeStatus"}},{"kind":"Field","name":{"kind":"Name","value":"episodeCount"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}}]}}]}}]}}]} as unknown as DocumentNode<GetWorkBySlugQuery, GetWorkBySlugQueryVariables>;
+export const GetWorkBySlugDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getWorkBySlug"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"malId"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"urlSlug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"titleSynonyms"}},{"kind":"Field","name":{"kind":"Name","value":"synopsis"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"publishedFrom"}},{"kind":"Field","name":{"kind":"Name","value":"publishedTo"}},{"kind":"Field","name":{"kind":"Name","value":"demographic"}},{"kind":"Field","name":{"kind":"Name","value":"serialization"}},{"kind":"Field","name":{"kind":"Name","value":"authors"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"ranking"}},{"kind":"Field","name":{"kind":"Name","value":"userWork"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}}]}},{"kind":"Field","name":{"kind":"Name","value":"adaptations"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"24"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"rating"}},{"kind":"Field","name":{"kind":"Name","value":"animeStatus"}},{"kind":"Field","name":{"kind":"Name","value":"episodeCount"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}}]}}]}}]}}]} as unknown as DocumentNode<GetWorkBySlugQuery, GetWorkBySlugQueryVariables>;
+export const AddWorkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddWork"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserWorkInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"AddWork"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}}]}}]}}]} as unknown as DocumentNode<AddWorkMutation, AddWorkMutationVariables>;
+export const UpdateWorkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateWork"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserWorkInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UpdateWork"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}}]}}]}}]} as unknown as DocumentNode<UpdateWorkMutation, UpdateWorkMutationVariables>;
+export const DeleteWorkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteWork"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"DeleteWork"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<DeleteWorkMutation, DeleteWorkMutationVariables>;
+export const WatchedEpisodesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"WatchedEpisodes"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"animeID"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"WatchedEpisodes"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"animeID"},"value":{"kind":"Variable","name":{"kind":"Name","value":"animeID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}},{"kind":"Field","name":{"kind":"Name","value":"watchedAt"}}]}}]}}]} as unknown as DocumentNode<WatchedEpisodesQuery, WatchedEpisodesQueryVariables>;
+export const MarkEpisodeWatchedDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MarkEpisodeWatched"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"MarkEpisodeInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"MarkEpisodeWatched"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}}]}}]}}]} as unknown as DocumentNode<MarkEpisodeWatchedMutation, MarkEpisodeWatchedMutationVariables>;
+export const UnmarkEpisodeWatchedDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnmarkEpisodeWatched"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"MarkEpisodeInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UnmarkEpisodeWatched"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<UnmarkEpisodeWatchedMutation, UnmarkEpisodeWatchedMutationVariables>;
+export const ReadChaptersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ReadChapters"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"workID"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ReadChapters"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"workID"},"value":{"kind":"Variable","name":{"kind":"Name","value":"workID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"chapterNumber"}},{"kind":"Field","name":{"kind":"Name","value":"readAt"}}]}}]}}]} as unknown as DocumentNode<ReadChaptersQuery, ReadChaptersQueryVariables>;
+export const MarkChapterReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"MarkChapterRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"MarkChapterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"MarkChapterRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"chapterNumber"}}]}}]}}]} as unknown as DocumentNode<MarkChapterReadMutation, MarkChapterReadMutationVariables>;
+export const UnmarkChapterReadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnmarkChapterRead"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"MarkChapterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UnmarkChapterRead"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<UnmarkChapterReadMutation, UnmarkChapterReadMutationVariables>;
 export const GetAnimeNewsByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getAnimeNewsByID"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"anime"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"studios"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"news"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"sourceUrl"}},{"kind":"Field","name":{"kind":"Name","value":"sourceName"}},{"kind":"Field","name":{"kind":"Name","value":"publishedDate"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"references"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetAnimeNewsByIdQuery, GetAnimeNewsByIdQueryVariables>;
 export const GetAnimeNewsBySlugDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getAnimeNewsBySlug"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"animeBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"studios"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"news"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"sourceUrl"}},{"kind":"Field","name":{"kind":"Name","value":"sourceName"}},{"kind":"Field","name":{"kind":"Name","value":"publishedDate"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"references"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetAnimeNewsBySlugQuery, GetAnimeNewsBySlugQueryVariables>;
 export const CurrentlyAiringDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"currentlyAiring"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"currentlyAiring"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"anidbid"}},{"kind":"Field","name":{"kind":"Name","value":"endDate"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"duration"}},{"kind":"Field","name":{"kind":"Name","value":"ranking"}},{"kind":"Field","name":{"kind":"Name","value":"broadcast"}},{"kind":"Field","name":{"kind":"Name","value":"thetvdbid"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"nextEpisode"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"animeId"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"synopsis"}},{"kind":"Field","name":{"kind":"Name","value":"airDate"}},{"kind":"Field","name":{"kind":"Name","value":"airTime"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"userAnime"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"episodes"}}]}}]}}]}}]} as unknown as DocumentNode<CurrentlyAiringQuery, CurrentlyAiringQueryVariables>;

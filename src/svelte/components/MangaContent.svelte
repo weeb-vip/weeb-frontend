@@ -16,6 +16,7 @@
   import PosterGrid from './PosterGrid.svelte';
   import PosterCard from './PosterCard.svelte';
   import { getSafeImageUrl } from '../utils/image';
+  import WorkStatusControl from './WorkStatusControl.svelte';
   import { GetImageFromAnime } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
@@ -158,6 +159,13 @@
           </div>
 
           <div class="hero-body">
+            <!-- Directly under the title, where the equivalent control sits on
+                 an anime page. Until now a manga page was somewhere to read
+                 about a work and nowhere to put it. -->
+            <div class="hero-track">
+              <WorkStatusControl workId={work.id} userWork={work.userWork ?? null} />
+            </div>
+
             <p class="hero-meta">
               {readableType(work.type)}
               {#if publishedRange}<span class="dot" aria-hidden="true">·</span><span class="num">{publishedRange}</span>{/if}
@@ -408,6 +416,9 @@
   }
   .hero-body {
     margin-top: 18px;
+  }
+  .hero-track {
+    margin-bottom: 14px;
   }
   .hero-meta {
     margin: 0;
