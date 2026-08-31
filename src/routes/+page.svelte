@@ -21,6 +21,7 @@
   homeData={data.homeData}
   currentlyAiringData={data.currentlyAiringData}
   seasonalData={data.seasonalData}
+  publishingWorksData={data.publishingWorksData}
   currentSeason={data.currentSeason}
   isTokenExpired={data.isTokenExpired}
 />
