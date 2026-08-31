@@ -358,6 +358,74 @@ export const getWorkBySlug = graphql(/* GraphQL */`
     }
 `)
 
+// A reader's shelf, by status. The reading counterpart of UserAnimes.
+//
+// `work` is resolved through federation (anime-api extends UserWork), so the
+// title, cover and slug a card needs arrive in the same round trip rather than
+// as a lookup per row -- there is no batch works-by-id query to make them from
+// otherwise.
+export const queryUserWorks = graphql(/* GraphQL */`
+    query UserWorks($input: UserWorksInput!) {
+        UserWorks(input: $input) {
+            page
+            limit
+            total
+            works {
+                id
+                userID
+                workID
+                status
+                score
+                chapters
+                volumes
+                createdAt
+                updatedAt
+                work {
+                    id
+                    urlSlug
+                    titleEn
+                    titleJp
+                    type
+                    imageUrl
+                    status
+                    chapters
+                    volumes
+                    score
+                    publishedFrom
+                }
+            }
+        }
+    }
+`)
+
+// Every status count in one request, for the profile tabs. Replaces a count
+// query per tab: the set of statuses is fixed, so one grouped query answers all
+// of them and a signed-in list page spends one round trip on its tab numbers
+// rather than five.
+export const queryUserWorkStatusCounts = graphql(/* GraphQL */`
+    query UserWorkStatusCounts {
+        UserWorkStatusCounts {
+            reading
+            planToRead
+            completed
+            onHold
+            dropped
+        }
+    }
+`)
+
+export const queryUserAnimeStatusCounts = graphql(/* GraphQL */`
+    query UserAnimeStatusCounts {
+        UserAnimeStatusCounts {
+            watching
+            planToWatch
+            completed
+            onHold
+            dropped
+        }
+    }
+`)
+
 export const mutateAddWork = graphql(/* GraphQL */`
     mutation AddWork($input: UserWorkInput!) {
         AddWork(input: $input) {

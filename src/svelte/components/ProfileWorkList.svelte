@@ -2,21 +2,26 @@
   import { goto } from '$app/navigation';
   import { onMount, tick } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
-  import { fetchUserAnimes, fetchUserAnimeStatusCounts } from '../../services/queries';
-  import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
-  import { Status, type UserAnime } from '../../gql/graphql';
-  import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
+  import { fetchUserWorks, fetchUserWorkStatusCounts } from '../../services/queries';
+  import { WorkStatus } from '../../gql/graphql';
+  import { workSubtitle } from '../../utils/workDisplay';
   import { initializeQueryClient } from '../services/query-client';
   import PosterCard from './PosterCard.svelte';
-  import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
   import PosterGrid from './PosterGrid.svelte';
-  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
+  import SafeImage from './SafeImage.svelte';
+  import WorkStatusControl from './WorkStatusControl.svelte';
 
-  // Initialize query client
+  /*
+    The reading list. Deliberately the same shape as ProfileAnimeList -- tabs,
+    grid and list views, pagination -- because a reader switching between the two
+    should find the same controls in the same places. What differs is the medium:
+    progress is chapters rather than episodes, and the card links to /manga.
+
+    The work behind each entry arrives through federation (UserWork.work), so a
+    row has its title, cover and slug without a second request.
+  */
+
   const queryClient = initializeQueryClient();
-
-  // Subscribe to preferences for title language
-  $: preferences = $preferencesStore;
 
   const PAGE_SIZE_OPTIONS = [24, 48, 72, 100];
 
@@ -28,120 +33,73 @@
     return 24;
   }
 
-  /** Server-prefetched list, counts and resolved status/page. */
+  /** Server-prefetched reading list, counts and resolved status/page. */
   export let ssr: any = null;
-  // The status/list only apply when the server rendered THIS medium; the counts
-  // are fetched for both, so they seed regardless. Without this, switching from
-  // manga would seed the watchlist with a reading status.
-  $: ssrMine = ssr?.medium === 'anime' ? ssr : null;
+  // status/list apply only when the server rendered the manga medium; the counts
+  // are fetched for both media, so they seed either way.
+  $: ssrMine = ssr?.medium === 'manga' ? ssr : null;
 
   let mounted = false;
-  const STATUSES = Object.values(Status);
-  // Seed from what the server resolved and fetched, so the first client render
-  // matches the SSR'd markup and its query key, rather than defaulting and
-  // refetching immediately.
-  let selectedStatus: Status = (ssr?.medium === 'anime' ? (ssr?.status as Status) : null) ?? Status.Plantowatch;
-  let page = (ssr?.medium === 'anime' ? ssr?.page : null) ?? 0;
+  // Reading is the default because it is the shelf a reader checks most -- what
+  // they are in the middle of -- where the anime list opens on Plan to Watch.
+  const STATUSES = Object.values(WorkStatus);
+  // Seeded from what the server resolved, so the first client render matches the
+  // SSR'd markup and its query key instead of defaulting and refetching.
+  let selectedStatus: WorkStatus = (ssr?.medium === 'manga' ? (ssr?.status as WorkStatus) : null) ?? WorkStatus.Reading;
+  let page = (ssr?.medium === 'manga' ? ssr?.page : null) ?? 0;
   let perPage = ssr?.perPage ?? getDefaultPageSize();
 
-  // Status labels
-  const statusLabels: Record<Status, string> = {
-    [Status.Completed]: "Completed",
-    [Status.Dropped]: "Dropped",
-    [Status.Onhold]: "On Hold",
-    [Status.Plantowatch]: "Plan to Watch",
-    [Status.Watching]: "Watching"
+  const statusLabels: Record<WorkStatus, string> = {
+    [WorkStatus.Completed]: 'Completed',
+    [WorkStatus.Dropped]: 'Dropped',
+    [WorkStatus.Onhold]: 'On Hold',
+    [WorkStatus.Plantoread]: 'Plan to Read',
+    [WorkStatus.Reading]: 'Reading',
   };
 
-  // Mutate options shape used when wrapping the consolidated mutations below
-  type MutateCallbacks = {
-    onSuccess?: (data: unknown, variables: unknown) => void;
-  };
-
-  // Client-side only queries and mutations
-  let userAnimesQuery: any;
-  let upsertAnimeMutation: any;
-  let deleteAnimeMutation: any;
+  let userWorksQuery: any;
 
   // Every tab's count in one query, seeded from the server so the numbers are
-  // there on first paint. Created once -- the counts do not move with the
-  // visible tab -- and refreshed by the mutation invalidations below.
+  // there on first paint; refreshed when a status change invalidates it.
   const countsQuery = createQuery(
-    { ...fetchUserAnimeStatusCounts(), initialData: ssr?.animeCounts ?? undefined },
+    { ...fetchUserWorkStatusCounts(), initialData: ssr?.workCounts ?? undefined },
     queryClient,
   );
   $: countsData = ($countsQuery as any)?.data;
   $: counts = {
-    [Status.Watching]: Number(countsData?.watching ?? 0),
-    [Status.Plantowatch]: Number(countsData?.planToWatch ?? 0),
-    [Status.Completed]: Number(countsData?.completed ?? 0),
-    [Status.Onhold]: Number(countsData?.onHold ?? 0),
-    [Status.Dropped]: Number(countsData?.dropped ?? 0),
+    [WorkStatus.Reading]: Number(countsData?.reading ?? 0),
+    [WorkStatus.Plantoread]: Number(countsData?.planToRead ?? 0),
+    [WorkStatus.Completed]: Number(countsData?.completed ?? 0),
+    [WorkStatus.Onhold]: Number(countsData?.onHold ?? 0),
+    [WorkStatus.Dropped]: Number(countsData?.dropped ?? 0),
   } as Record<string, number>;
 
-  // Reactive query input
   $: queryInput = {
     status: selectedStatus,
     limit: perPage,
-    page: page + 1, // Shift from 0-based to 1-based
+    page: page + 1, // list-service pages are 1-based
   };
 
   onMount(() => {
     mounted = true;
   });
 
-  // The list query renders on the server too, seeded from ssr on the first
-  // render whose input matches what the server fetched. Recreated on status or
-  // page change, as before -- initialData only applies to the SSR'd key.
+  // Renders on the server too, seeded from ssr on the first render whose input
+  // matches what the server fetched; recreated on status or page change.
   $: ssrListMatches =
-    !!ssrMine?.animeList &&
+    !!ssrMine?.workList &&
     selectedStatus === ssrMine?.status &&
     page === (ssrMine?.page ?? 0) &&
     perPage === (ssrMine?.perPage ?? perPage);
-  $: userAnimesQuery = createQuery(
-    { ...fetchUserAnimes({ input: queryInput }), initialData: ssrListMatches ? ssrMine.animeList : undefined },
+  $: userWorksQuery = createQuery(
+    { ...fetchUserWorks({ input: queryInput }), initialData: ssrListMatches ? ssrMine.workList : undefined },
     queryClient,
   );
 
-  // Mutations are client-only.
-  $: if (mounted) {
-    // Use consolidated mutations with toast handling
-    upsertAnimeMutation = useAddAnimeWithToast();
-    deleteAnimeMutation = useDeleteAnimeWithToast();
-
-    // Extend mutations with custom query invalidation for user animes
-    const originalUpsertMutate = upsertAnimeMutation.mutate;
-    upsertAnimeMutation.mutate = (variables: unknown, options: MutateCallbacks = {}) => {
-      const originalOnSuccess = options.onSuccess;
-      options.onSuccess = (data, vars) => {
-        // Invalidate both the list and the per-status counts, so the grid and
-        // the tab numbers move together after a status change.
-        queryClient.invalidateQueries({ queryKey: ['user-animes'] });
-        queryClient.invalidateQueries({ queryKey: ['user-anime-status-counts'] });
-        if (originalOnSuccess) originalOnSuccess(data, vars);
-      };
-      return originalUpsertMutate(variables, options);
-    };
-
-    const originalDeleteMutate = deleteAnimeMutation.mutate;
-    deleteAnimeMutation.mutate = (variables: unknown, options: MutateCallbacks = {}) => {
-      const originalOnSuccess = options.onSuccess;
-      options.onSuccess = (data, vars) => {
-        // Invalidate both the list and the per-status counts, so the grid and
-        // the tab numbers move together after a status change.
-        queryClient.invalidateQueries({ queryKey: ['user-animes'] });
-        queryClient.invalidateQueries({ queryKey: ['user-anime-status-counts'] });
-        if (originalOnSuccess) originalOnSuccess(data, vars);
-      };
-      return originalDeleteMutate(variables, options);
-    };
-  }
-
-  // Computed values
-  $: userAnimes = userAnimesQuery ? ($userAnimesQuery.data?.animes || []) : [];
-  $: total = userAnimesQuery ? ($userAnimesQuery.data?.total || 0) : 0;
+  $: userWorks = userWorksQuery ? ($userWorksQuery.data?.works ?? []) : [];
+  $: total = userWorksQuery ? ($userWorksQuery.data?.total ?? 0) : 0;
   $: totalPages = Math.ceil(total / perPage);
-  $: isLoading = userAnimesQuery ? $userAnimesQuery.isLoading : true;
+  $: isLoading = userWorksQuery ? $userWorksQuery.isLoading : true;
   // First time the real tab bar is mounted (skeleton gone), bring the active
   // tab into view -- on mount it does not exist yet.
   $: if (mounted && !isLoading && !scrolledInitial) {
@@ -149,25 +107,22 @@
     scrollActiveTabIntoView();
   }
 
+  // Status and page live in the URL, so a shared or reloaded link lands on the
+  // same shelf. The medium is owned by the wrapper above, under ?medium.
   function updateURL() {
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.set('status', selectedStatus);
-      if (page > 0) {
-        url.searchParams.set('page', (page + 1).toString()); // Convert to 1-based for URL
-      } else {
-        url.searchParams.delete('page');
-      }
-      window.history.pushState({}, '', url.toString());
-    }
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('status', selectedStatus);
+    if (page > 0) url.searchParams.set('page', String(page + 1));
+    else url.searchParams.delete('page');
+    window.history.pushState({}, '', url.toString());
   }
 
   let tabsEl: HTMLElement;
   let scrolledInitial = false;
 
-  // Keep the selected tab on screen. The tab row scrolls horizontally on
-  // narrow viewports, and without this the active tab can sit past the edge --
-  // the one tab a viewer most needs to see, invisible.
+  // Keep the selected tab on screen: the row scrolls horizontally on narrow
+  // viewports, and the active tab is the one that must not fall off the edge.
   async function scrollActiveTabIntoView() {
     await tick();
     const active = tabsEl?.querySelector<HTMLElement>('.tab-btn.active');
@@ -180,7 +135,7 @@
     });
   }
 
-  function handleStatusChange(status: Status) {
+  function handleStatusChange(status: WorkStatus) {
     selectedStatus = status;
     page = 0;
     updateURL();
@@ -189,7 +144,7 @@
 
   function handlePerPageChange(e: Event) {
     const val = parseInt((e.target as HTMLSelectElement).value, 10);
-    if (!isNaN(val)) {
+    if (!Number.isNaN(val)) {
       perPage = val;
       page = 0;
       updateURL();
@@ -206,69 +161,50 @@
     updateURL();
   }
 
-  function navigateToAnime(anime: { id?: string | null; slug?: string | null } | null | undefined) {
-    goto(animeHref(anime));
+  function workHref(work: any): string {
+    return work?.urlSlug ? `/manga/${work.urlSlug}` : '/search';
   }
 
-  function handleDropdownStatusChange(event: CustomEvent) {
-    const { animeId, status } = event.detail;
-    if (upsertAnimeMutation) {
-      $upsertAnimeMutation.mutate({ input: { animeID: animeId, status } });
-    }
-  }
-
-  function handleDelete(event: CustomEvent) {
-    const { animeId } = event.detail;
-    if (deleteAnimeMutation) {
-      $deleteAnimeMutation.mutate(animeId);
-    }
+  function navigateToWork(work: any) {
+    if (work?.urlSlug) goto(`/manga/${work.urlSlug}`);
   }
 
   function readStateFromURL() {
-    if (typeof window !== 'undefined') {
-      const searchParams = new URLSearchParams(window.location.search);
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
 
-      // Set status from URL
-      const statusParam = searchParams.get('status');
-      if (statusParam && Object.values(Status).includes(statusParam as Status)) {
-        selectedStatus = statusParam as Status;
-      }
+    const statusParam = params.get('status');
+    if (statusParam && Object.values(WorkStatus).includes(statusParam as WorkStatus)) {
+      selectedStatus = statusParam as WorkStatus;
+    }
 
-      // Set page from URL (convert from 1-based to 0-based)
-      const pageParam = searchParams.get('page');
-      if (pageParam) {
-        const pageNumber = parseInt(pageParam, 10);
-        if (!isNaN(pageNumber) && pageNumber > 0) {
-          page = pageNumber - 1; // Convert from 1-based to 0-based
-        }
-      } else {
-        page = 0; // Reset to first page if no page param
-      }
+    const pageParam = params.get('page');
+    if (pageParam) {
+      const n = parseInt(pageParam, 10);
+      page = !Number.isNaN(n) && n > 0 ? n - 1 : 0;
+    } else {
+      page = 0;
     }
   }
 
-  // Get URL parameters on mount to set initial status and page
   onMount(() => {
     readStateFromURL();
-
-    // Listen for browser back/forward navigation
-    const handlePopState = () => {
-      readStateFromURL();
-    };
-
+    const onPop = () => readStateFromURL();
     if (typeof window !== 'undefined') {
-      window.addEventListener('popstate', handlePopState);
-
-      // Cleanup on component destroy
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
+      window.addEventListener('popstate', onPop);
+      return () => window.removeEventListener('popstate', onPop);
     }
   });
+
+  const statusColorFor = (status: WorkStatus | null | undefined) =>
+    status === WorkStatus.Reading ? 'var(--weeb-green)'
+    : status === WorkStatus.Completed ? 'var(--weeb-accent)'
+    : status === WorkStatus.Onhold ? 'var(--weeb-amber)'
+    : status === WorkStatus.Dropped ? 'var(--weeb-red)'
+    : 'var(--weeb-fg-muted)';
 </script>
 
 {#if isLoading}
-  <!-- Loading skeleton -->
   <div class="pal-wrapper">
     <div class="status-tabs">
       {#each Array(5) as _}
@@ -283,7 +219,6 @@
   </div>
 {:else}
   <div class="pal-wrapper">
-    <!-- Status Tabs -->
     <div class="list-controls">
       <div class="status-tabs" role="tablist" bind:this={tabsEl}>
         {#each STATUSES as status}
@@ -300,23 +235,18 @@
       </div>
 
       <div class="view-controls">
-        <select class="sort-select" id="palSortSelect">
-          <option value="title">Sort: Title</option>
-          <option value="score">Sort: Score</option>
-          <option value="updated">Sort: Last Updated</option>
-        </select>
         <div class="view-toggle">
           <button
             class="view-btn"
-            id="palListViewBtn"
+            id="pwlListViewBtn"
             title="List view"
             on:click={() => {
-              const listEl = document.querySelector<HTMLElement>('[data-view="list"]');
-              const gridEl = document.querySelector<HTMLElement>('[data-view="grid"]');
-              const listBtn = document.getElementById('palListViewBtn');
-              const gridBtn = document.getElementById('palGridViewBtn');
-              if (listEl) listEl.style.display = 'block';
-              if (gridEl) gridEl.style.display = 'none';
+              const listEl = document.querySelector('[data-work-view="list"]');
+              const gridEl = document.querySelector('[data-work-view="grid"]');
+              const listBtn = document.getElementById('pwlListViewBtn');
+              const gridBtn = document.getElementById('pwlGridViewBtn');
+              if (listEl) (listEl as HTMLElement).style.display = 'block';
+              if (gridEl) (gridEl as HTMLElement).style.display = 'none';
               if (listBtn) listBtn.classList.add('active');
               if (gridBtn) gridBtn.classList.remove('active');
             }}
@@ -327,15 +257,15 @@
           </button>
           <button
             class="view-btn active"
-            id="palGridViewBtn"
+            id="pwlGridViewBtn"
             title="Grid view"
             on:click={() => {
-              const listEl = document.querySelector<HTMLElement>('[data-view="list"]');
-              const gridEl = document.querySelector<HTMLElement>('[data-view="grid"]');
-              const listBtn = document.getElementById('palListViewBtn');
-              const gridBtn = document.getElementById('palGridViewBtn');
-              if (listEl) listEl.style.display = 'none';
-              if (gridEl) gridEl.style.display = 'block';
+              const listEl = document.querySelector('[data-work-view="list"]');
+              const gridEl = document.querySelector('[data-work-view="grid"]');
+              const listBtn = document.getElementById('pwlListViewBtn');
+              const gridBtn = document.getElementById('pwlGridViewBtn');
+              if (listEl) (listEl as HTMLElement).style.display = 'none';
+              if (gridEl) (gridEl as HTMLElement).style.display = 'block';
               if (listBtn) listBtn.classList.remove('active');
               if (gridBtn) gridBtn.classList.add('active');
             }}
@@ -349,45 +279,38 @@
       </div>
     </div>
 
-    {#if userAnimes.length === 0}
-      <!-- Empty State -->
+    {#if userWorks.length === 0}
       <div class="empty-state">
         <div class="empty-icon">
           <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
-            <path d="M9 10h.01M15 10h.01M9.5 15.5a3.5 3.5 0 0 0 5 0"/>
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
           </svg>
         </div>
-        <div class="empty-title">No anime in {statusLabels[selectedStatus].toLowerCase()}</div>
-        <div class="empty-text">Start building your list by browsing anime and adding them to your watchlist.</div>
-        <a href="/" class="btn-browse">Browse Anime</a>
+        <div class="empty-title">No manga in {statusLabels[selectedStatus].toLowerCase()}</div>
+        <div class="empty-text">Start building your reading list by browsing manga and adding them to your shelf.</div>
+        <a href="/search" class="btn-browse">Browse Manga</a>
       </div>
     {:else}
       <!-- List View -->
-      <div data-view="list" style="display: none;">
-        <div class="anime-list">
-          {#each userAnimes as entry}
-            {@const title = getAnimeTitle(entry.anime, preferences.titleLanguage)}
-            {@const image = GetImageFromAnime(entry.anime)}
-            {@const score = entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
-            {@const episodeCount = entry.anime?.episodeCount || 0}
-            {@const progress = entry.watchedEpisodes || 0}
-            {@const pct = episodeCount > 0 ? (progress / episodeCount * 100) : 0}
-            {@const statusColor = entry.status === Status.Watching ? 'var(--weeb-green)'
-              : entry.status === Status.Completed ? 'var(--weeb-accent)'
-              : entry.status === Status.Onhold ? 'var(--weeb-amber)'
-              : entry.status === Status.Dropped ? 'var(--weeb-red)'
-              : 'var(--weeb-fg-muted)'}
+      <div data-work-view="list" style="display: none;">
+        <div class="work-list">
+          {#each userWorks as entry (entry.id)}
+            {@const work = entry.work}
+            {@const title = work?.titleEn || work?.titleJp || 'Untitled'}
+            {@const total_ch = work?.chapters ?? 0}
+            {@const read = entry.chapters ?? 0}
+            {@const pct = total_ch > 0 ? (read / total_ch) * 100 : 0}
+            {@const statusColor = statusColorFor(entry.status)}
             <div
-              class="anime-row"
-              on:click={() => navigateToAnime(entry.anime)}
-              on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateToAnime(entry.anime); } }}
+              class="work-row"
+              on:click={() => navigateToWork(work)}
+              on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateToWork(work); } }}
               role="button"
               tabindex="0"
             >
               <div class="row-poster">
-                {#if image}
-                  <img src={image} alt={title} loading="lazy" />
+                {#if work?.id}
+                  <SafeImage src={work.id} path="works" alt={title} className="row-poster-img" />
                 {:else}
                   <div class="row-poster-placeholder"></div>
                 {/if}
@@ -395,33 +318,25 @@
               <div class="row-main">
                 <div class="row-title">{title}</div>
                 <div class="row-sub">
-                  {#if entry.anime?.type}
-                    <span class="row-type-badge">{entry.anime.type}</span>
-                  {/if}
+                  <span class="row-type-badge">{workSubtitle(work?.type, work?.publishedFrom)}</span>
                   <span style="color: {statusColor}">{statusLabels[entry.status] || ''}</span>
                 </div>
               </div>
-              <div class="row-score {score === null ? 'no-score' : ''}">
-                {#if score !== null}
-                  <span class="star">&#9733;</span> {score.toFixed(1)}
+              <div class="row-score {work?.score == null ? 'no-score' : ''}">
+                {#if work?.score != null}
+                  <span class="star">&#9733;</span> {work.score.toFixed(1)}
                 {:else}
                   &mdash;
                 {/if}
               </div>
               <div class="row-progress">
-                <div class="progress-text">{progress} / {episodeCount || '?'} ep</div>
+                <div class="progress-text">{read} / {total_ch || '?'} ch</div>
                 <div class="progress-bar">
                   <div class="progress-fill" style="width: {pct}%; background: {statusColor};"></div>
                 </div>
               </div>
-              <!-- Presentational wrapper: only stops row navigation events from firing when interacting with the dropdown inside -->
               <div class="row-actions" role="presentation" on:click|stopPropagation on:keydown|stopPropagation>
-                <AnimeStatusDropdown
-                  entry={{ id: entry.id, anime: entry.anime, status: entry.status }}
-                  variant="compact"
-                  on:statusChange={handleDropdownStatusChange}
-                  on:delete={handleDelete}
-                />
+                <WorkStatusControl workId={entry.workID} userWork={{ id: entry.id, status: entry.status }} />
               </div>
             </div>
           {/each}
@@ -429,20 +344,18 @@
       </div>
 
       <!-- Grid View -->
-      <div data-view="grid">
+      <div data-work-view="grid">
         <PosterGrid>
-          {#each userAnimes as entry}
+          {#each userWorks as entry (entry.id)}
+            {@const work = entry.work}
             <PosterCard
-              id={entry.anime?.id}
-              slug={entry.anime?.slug}
-              title={getAnimeTitle(entry.anime, preferences.titleLanguage)}
-              image={GetImageFromAnime(entry.anime)}
-              score={entry.anime?.rating && entry.anime?.rating !== 'N/A' ? parseFloat(entry.anime.rating) : null}
-              status={entry.anime?.status || null}
-              sub={entry.anime?.episodeCount ? `${entry.anime.episodeCount} episodes` : ''}
-              genres={entry.anime?.tags || []}
-              description={entry.anime?.description || ''}
-              episodeCount={entry.anime?.episodeCount}
+              id={work?.id ?? ''}
+              title={work?.titleEn || work?.titleJp || 'Untitled'}
+              image={work?.id ?? ''}
+              imagePath="works"
+              score={work?.score ?? null}
+              sub={workSubtitle(work?.type, work?.publishedFrom)}
+              href={workHref(work)}
               onList={entry.status || null}
             />
           {/each}
@@ -452,11 +365,7 @@
       <!-- Pagination -->
       <div class="pagination">
         <div class="pagination-left">
-          <button
-            class="page-btn"
-            on:click={handlePreviousPage}
-            disabled={page === 0}
-          >
+          <button class="page-btn" on:click={handlePreviousPage} disabled={page === 0}>
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M15 18l-6-6 6-6"/>
             </svg>
@@ -464,16 +373,10 @@
           </button>
 
           {#if totalPages > 1}
-            <span class="page-info">
-              Page {page + 1} of {totalPages}
-            </span>
+            <span class="page-info">Page {page + 1} of {totalPages}</span>
           {/if}
 
-          <button
-            class="page-btn"
-            on:click={handleNextPage}
-            disabled={page + 1 >= totalPages}
-          >
+          <button class="page-btn" on:click={handleNextPage} disabled={page + 1 >= totalPages}>
             <span class="page-btn-label">Next</span>
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M9 18l6-6-6-6"/>
@@ -482,8 +385,8 @@
         </div>
 
         <div class="pagination-right">
-          <label class="per-page-label" for="per-page-select">Show</label>
-          <select id="per-page-select" class="per-page-select" on:change={handlePerPageChange}>
+          <label class="per-page-label" for="pwl-per-page">Show</label>
+          <select id="pwl-per-page" class="per-page-select" on:change={handlePerPageChange}>
             {#each PAGE_SIZE_OPTIONS as opt}
               <option value={opt} selected={opt === perPage}>{opt}</option>
             {/each}
@@ -596,27 +499,6 @@
     gap: 10px;
     flex-shrink: 0;
   }
-  .sort-select {
-    height: 34px;
-    padding: 0 32px 0 12px;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--weeb-fg);
-    cursor: pointer;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    transition: border-color 0.15s;
-  }
-  .sort-select:focus { border-color: var(--weeb-accent); }
-  .sort-select option { background: var(--weeb-surface); color: var(--weeb-fg); }
-
   .view-toggle {
     display: flex;
     border: 1px solid var(--weeb-border);
@@ -640,12 +522,12 @@
   .view-btn:hover:not(.active) { background: var(--weeb-surface-hover); }
 
   /* ── LIST VIEW ──────────────────────────────────────── */
-  .anime-list {
+  .work-list {
     display: flex;
     flex-direction: column;
     gap: 2px;
   }
-  .anime-row {
+  .work-row {
     display: grid;
     grid-template-columns: 44px 1fr 48px 140px 70px;
     align-items: center;
@@ -657,7 +539,7 @@
     transition: border-color 0.15s, background 0.15s;
     cursor: pointer;
   }
-  .anime-row:hover {
+  .work-row:hover {
     border-color: var(--weeb-border);
     background: var(--weeb-surface-hover);
   }
@@ -668,12 +550,10 @@
     overflow: hidden;
     flex-shrink: 0;
   }
-  .row-poster img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-  }
+  /* SafeImage wraps its <img> in a relative div and styles the image itself;
+     this only has to make that wrapper fill the fixed-size poster box, or it
+     collapses and the cover disappears. */
+  .row-poster :global(.relative) { width: 100%; height: 100%; }
   .row-poster-placeholder {
     width: 100%;
     height: 100%;
@@ -872,19 +752,19 @@
   /* ── RESPONSIVE ─────────────────────────────────────── */
   @media (max-width: 1024px) {
     .pal-wrapper { padding: 0 24px; }
-    .anime-row { grid-template-columns: 44px 1fr 48px 120px 70px; }
+    .work-row { grid-template-columns: 44px 1fr 48px 120px 70px; }
   }
 
   @media (max-width: 768px) {
     .pal-wrapper { padding: 0 16px; }
     .list-controls { flex-direction: column; align-items: stretch; }
     .view-controls { justify-content: flex-end; }
-    .anime-row {
+    .work-row {
       grid-template-columns: 40px 1fr 40px 70px;
       gap: 10px;
       padding: 8px 12px;
     }
-    .anime-row .row-progress { display: none; }
+    .work-row .row-progress { display: none; }
     .row-poster { width: 32px; height: 46px; }
     .pagination { flex-direction: column; align-items: stretch; }
     .pagination-left { justify-content: center; }
@@ -893,10 +773,10 @@
   }
 
   @media (max-width: 480px) {
-    .anime-row {
+    .work-row {
       grid-template-columns: 1fr 40px 70px;
     }
-    .anime-row .row-poster { display: none; }
+    .work-row .row-poster { display: none; }
   }
   /* Was an inline margin-top on the grid div. */
   :global(.pal-grid) { margin-top: 20px; }
