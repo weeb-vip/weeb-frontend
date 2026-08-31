@@ -4,9 +4,10 @@ import {
   queryUserDetails,
   queryUserAnimes,
   queryUserAnimeCount,
+  queryUserWorks,
   getCurrentlyAiringWithDatesAndEpisodes
 } from '../../services/api/graphql/queries';
-import { Status } from '../../gql/graphql';
+import { Status, WorkStatus } from '../../gql/graphql';
 
 /** Mirrors the window ProfilePage asks for, so the client reuses this rather
  *  than fetching its own. */
@@ -36,6 +37,14 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
           { input: { status: Status.Plantowatch, limit: 1000, page: 1 } },
           'plan-to-watch list'
         ),
+        // The reading counterpart of the watching list, for the dashboard's
+        // Currently Reading row and its Reading stat. One list is enough here --
+        // the full reading list lives on /profile/anime?medium=manga.
+        fetcher.fetchWithFallback(
+          queryUserWorks,
+          { input: { status: WorkStatus.Reading, limit: 1000, page: 1 } },
+          'reading list'
+        ),
         // Counts only. These three are rendered as integers and nothing reads
         // the rows behind them; asking for the list would pull every episode of
         // every entry to display three numbers.
@@ -55,7 +64,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
           'on-hold count'
         )
       ])
-    : Promise.resolve([null, null, null, null, null, null]);
+    : Promise.resolve([null, null, null, null, null, null, null]);
 
   const airing = fetcher.fetchWithFallback(
     getCurrentlyAiringWithDatesAndEpisodes,
@@ -63,7 +72,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     'currently airing'
   );
 
-  const [[user, watching, planToWatch, completed, dropped, onHold], currentlyAiring] =
+  const [[user, watching, planToWatch, reading, completed, dropped, onHold], currentlyAiring] =
     await Promise.all([watchlist, airing]);
 
   const isTokenExpired = fetcher.wasTokenExpired();
@@ -78,6 +87,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
       user: (user as any)?.UserDetails ?? null,
       watching: (watching as any)?.UserAnimes ?? null,
       planToWatch: (planToWatch as any)?.UserAnimes ?? null,
+      reading: (reading as any)?.UserWorks ?? null,
       completed: (completed as any)?.UserAnimes ?? null,
       dropped: (dropped as any)?.UserAnimes ?? null,
       onHold: (onHold as any)?.UserAnimes ?? null,

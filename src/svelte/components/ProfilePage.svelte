@@ -4,7 +4,7 @@
   import { createQuery, createMutation } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
   import { initializeQueryClient } from '../services/query-client';
-  import { getUser, fetchUserAnimes, fetchUserAnimeCount, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
+  import { getUser, fetchUserAnimes, fetchUserAnimeCount, fetchUserWorks, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
   import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
   import { getAirTimeDisplay, findNextEpisode, getCurrentTime, parseAirTime } from '../../services/airTimeUtils';
   import Button from './Button.svelte';
@@ -15,7 +15,8 @@
   import '@fortawesome/fontawesome-free/css/all.min.css';
   import { configStore } from '../stores/config';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
-  import { Status } from '../../gql/graphql';
+  import { Status, WorkStatus } from '../../gql/graphql';
+  import { workSubtitle } from '../../utils/workDisplay';
 
   /** Prefetched on the server by +page.server.ts. */
   export let ssr: any = null;
@@ -62,6 +63,16 @@
     {
       ...fetchUserAnimes({ input: { status: Status.Plantowatch, limit: 1000, page: 1 } }),
       initialData: ssr?.planToWatch ?? undefined
+    },
+    queryClient
+  );
+
+  // The reading counterpart of the watching list. Its total also feeds the
+  // Reading stat, so the dashboard shows the shelf and its size from one query.
+  const readingQuery = createQuery(
+    {
+      ...fetchUserWorks({ input: { status: WorkStatus.Reading, limit: 1000, page: 1 } }),
+      initialData: ssr?.reading ?? undefined
     },
     queryClient
   );
@@ -127,6 +138,14 @@
   });
 
   // Process watchlist and airing data
+  // Reading, kept out of watchlistAnalysis on purpose: that block is the anime
+  // dashboard's own computation, and threading a second medium through it would
+  // couple two things that only share a page. Works without a slug are dropped
+  // -- the scraper assigns those on its own schedule and an unlinkable card is
+  // worse than a shorter row.
+  $: readingWorks = ($readingQuery.data?.works ?? []).filter((e) => e?.work?.urlSlug);
+  $: readingTotal = Number($readingQuery.data?.total ?? readingWorks.length);
+
   $: watchlistAnalysis = (() => {
     if (!$userQuery) {
       return {
@@ -491,6 +510,10 @@
     <div class="stat-number" style="color:var(--weeb-accent)">{watchlistAnalysis.completed}</div>
     <div class="stat-label"><span class="stat-dot" style="background:var(--weeb-accent)"></span>Completed</div>
   </a>
+  <a href="/profile/anime?medium=manga&status=READING" class="stat-cell">
+    <div class="stat-number" style="color:var(--weeb-purple, var(--weeb-accent))">{readingTotal}</div>
+    <div class="stat-label"><span class="stat-dot" style="background:var(--weeb-purple, var(--weeb-accent))"></span>Reading</div>
+  </a>
   <a href="/profile/anime?status=PLANTOWATCH" class="stat-cell">
     <div class="stat-number" style="color:var(--weeb-fg-secondary)">{watchlistAnalysis.planToWatch}</div>
     <div class="stat-label"><span class="stat-dot" style="background:var(--weeb-fg-muted)"></span>Plan to Watch</div>
@@ -563,6 +586,35 @@
       </div>
     {/if}
   </section>
+
+  <!-- Currently Reading Section -->
+  {#if readingWorks.length > 0}
+    <section class="profile-section">
+      <div class="section-header">
+        <div class="section-header-left">
+          <svg width="18" height="18" fill="none" stroke="var(--weeb-purple, var(--weeb-accent))" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <h2 class="section-title">Currently Reading</h2>
+          <span class="section-count section-count--accent">{readingTotal}</span>
+        </div>
+        <a href="/profile/anime?medium=manga" class="section-link">View All</a>
+      </div>
+
+      <PosterGrid>
+        {#each readingWorks.slice(0, 12) as entry (entry.id)}
+          <PosterCard
+            id={entry.work?.id ?? ''}
+            title={entry.work?.titleEn || entry.work?.titleJp || 'Untitled'}
+            image={entry.work?.id ?? ''}
+            imagePath="works"
+            score={entry.work?.score ?? null}
+            sub={workSubtitle(entry.work?.type, entry.work?.publishedFrom)}
+            href={entry.work?.urlSlug ? `/manga/${entry.work.urlSlug}` : '/search'}
+            onList={entry.status || null}
+          />
+        {/each}
+      </PosterGrid>
+    </section>
+  {/if}
 
   <!-- Empty State -->
   {#if watchlistAnalysis.airingSoon.length === 0 && watchlistAnalysis.recentlyAired.length === 0 && (!watchlistAnalysis.currentlyWatching || watchlistAnalysis.currentlyWatching.length === 0)}

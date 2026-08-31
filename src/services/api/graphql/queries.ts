@@ -358,6 +358,57 @@ export const getWorkBySlug = graphql(/* GraphQL */`
     }
 `)
 
+// A reader's shelf, by status. The reading counterpart of UserAnimes.
+//
+// `work` is resolved through federation (anime-api extends UserWork), so the
+// title, cover and slug a card needs arrive in the same round trip rather than
+// as a lookup per row -- there is no batch works-by-id query to make them from
+// otherwise.
+export const queryUserWorks = graphql(/* GraphQL */`
+    query UserWorks($input: UserWorksInput!) {
+        UserWorks(input: $input) {
+            page
+            limit
+            total
+            works {
+                id
+                userID
+                workID
+                status
+                score
+                chapters
+                volumes
+                createdAt
+                updatedAt
+                work {
+                    id
+                    urlSlug
+                    titleEn
+                    titleJp
+                    type
+                    imageUrl
+                    status
+                    chapters
+                    volumes
+                    score
+                    publishedFrom
+                }
+            }
+        }
+    }
+`)
+
+// Count only, for the status tabs and the dashboard stats: nothing reads the
+// rows behind these, and asking for works would resolve every cover to show one
+// integer.
+export const queryUserWorkCount = graphql(/* GraphQL */`
+    query UserWorkCount($input: UserWorksInput!) {
+        UserWorks(input: $input) {
+            total
+        }
+    }
+`)
+
 export const mutateAddWork = graphql(/* GraphQL */`
     mutation AddWork($input: UserWorkInput!) {
         AddWork(input: $input) {

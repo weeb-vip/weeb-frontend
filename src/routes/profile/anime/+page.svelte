@@ -1,12 +1,12 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import ProfileAnimeList from '../../../svelte/components/ProfileAnimeList.svelte';
+  import ProfileList from '../../../svelte/components/ProfileList.svelte';
 </script>
 
 <Seo
-  title="My Anime List"
-  description="Manage your anime watchlist and track your viewing progress."
+  title="My List"
+  description="Manage your anime watchlist and manga reading list, and track your progress."
   noIndex={true}
 />
 
-<ProfileAnimeList />
+<ProfileList />
