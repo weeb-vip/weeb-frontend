@@ -1,6 +1,8 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
   import ProfileList from '../../../svelte/components/ProfileList.svelte';
+
+  export let data;
 </script>
 
 <Seo
@@ -9,4 +11,4 @@
   noIndex={true}
 />
 
-<ProfileList />
+<ProfileList ssr={data.ssr} />

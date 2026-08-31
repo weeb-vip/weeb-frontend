@@ -17,11 +17,17 @@
 
   type Medium = 'anime' | 'manga';
 
-  let medium: Medium = 'anime';
+  /** Server-prefetched list, counts and resolved medium/status/page. */
+  export let ssr: any = null;
+
+  // Seed from the server's resolved medium so SSR renders the shelf the URL
+  // actually names, not a default that the client then swaps -- which is the
+  // whole reason the data is fetched on the server.
+  let medium: Medium = ssr?.medium === 'manga' ? 'manga' : 'anime';
   let mounted = false;
 
   function readMedium(): Medium {
-    if (typeof window === 'undefined') return 'anime';
+    if (typeof window === 'undefined') return medium;
     return new URLSearchParams(window.location.search).get('medium') === 'manga'
       ? 'manga'
       : 'anime';
@@ -73,27 +79,29 @@
     </div>
   </div>
 
-  {#if !mounted}
-    <!-- Server render defaults to anime; the client picks up ?medium on mount. -->
-    <ProfileAnimeList />
-  {:else if medium === 'manga'}
+  <!-- Rendered by the server's resolved medium, so the shelf is already right
+       on first paint; the key remounts only when the viewer switches. The ssr
+       payload seeds each list's own initialData. -->
+  {#if medium === 'manga'}
     {#key 'manga'}
-      <ProfileWorkList />
+      <ProfileWorkList {ssr} />
     {/key}
   {:else}
     {#key 'anime'}
-      <ProfileAnimeList />
+      <ProfileAnimeList {ssr} />
     {/key}
   {/if}
 </div>
 
 <style>
-  /* The switch is the top level, the status tabs below it the second. A tight
-     gap binds them into one filter header rather than two floating rows. */
+  /* The switch is the top level, the status tabs below it the second. It clears
+     the nav with real breathing room, then sits one tight gap above the tabs so
+     the two read as one filter header rather than a block jammed under the bar. */
   .profile-list {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
+    padding-top: 24px;
   }
 
   /* Carries the same horizontal inset as the list body below, so the switch
@@ -102,15 +110,15 @@
     padding: 0 var(--weeb-section-px, 48px);
   }
 
-  /* A segmented control, sized to its two labels rather than stretched across
-     the page -- it is a mode switch, not a nav bar. */
+  /* A compact segmented control, sized to its two labels -- a mode switch, not a
+     nav bar, so it stays light and lets the tabs and grid carry the weight. */
   .medium-toggle {
     display: inline-flex;
-    gap: 4px;
-    padding: 4px;
+    gap: 3px;
+    padding: 3px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: 11px;
+    border-radius: 10px;
   }
 
   .medium-btn {
@@ -118,11 +126,11 @@
     border: none;
     background: transparent;
     color: var(--weeb-fg-secondary);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: -0.01em;
-    padding: 7px 22px;
-    border-radius: 8px;
+    padding: 6px 18px;
+    border-radius: 7px;
     cursor: pointer;
     transition: background 0.18s ease, color 0.18s ease;
   }
@@ -141,6 +149,7 @@
     .medium-row { padding: 0 24px; }
   }
   @media (max-width: 768px) {
+    .profile-list { padding-top: 16px; }
     .medium-row { padding: 0 16px; }
   }
 </style>

@@ -2,7 +2,6 @@
   import { goto } from '$app/navigation';
   import { onMount, tick } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
-  import { derived } from 'svelte/store';
   import { fetchUserAnimes, fetchUserAnimeStatusCounts } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { Status, type UserAnime } from '../../gql/graphql';
@@ -29,11 +28,21 @@
     return 24;
   }
 
+  /** Server-prefetched list, counts and resolved status/page. */
+  export let ssr: any = null;
+  // The status/list only apply when the server rendered THIS medium; the counts
+  // are fetched for both, so they seed regardless. Without this, switching from
+  // manga would seed the watchlist with a reading status.
+  $: ssrMine = ssr?.medium === 'anime' ? ssr : null;
+
   let mounted = false;
   const STATUSES = Object.values(Status);
-  let selectedStatus = Status.Plantowatch;
-  let page = 0;
-  let perPage = getDefaultPageSize();
+  // Seed from what the server resolved and fetched, so the first client render
+  // matches the SSR'd markup and its query key, rather than defaulting and
+  // refetching immediately.
+  let selectedStatus: Status = (ssr?.medium === 'anime' ? (ssr?.status as Status) : null) ?? Status.Plantowatch;
+  let page = (ssr?.medium === 'anime' ? ssr?.page : null) ?? 0;
+  let perPage = ssr?.perPage ?? getDefaultPageSize();
 
   // Status labels
   const statusLabels: Record<Status, string> = {
@@ -51,13 +60,24 @@
 
   // Client-side only queries and mutations
   let userAnimesQuery: any;
-  // A count per status, so every tab shows its size rather than only the
-  // active one. Created once, keyed on status, and independent of the list
-  // query's page/status input -- these do not move when the visible tab does.
-  let countsStore: any;
-  let counts: Record<string, number> = {};
   let upsertAnimeMutation: any;
   let deleteAnimeMutation: any;
+
+  // Every tab's count in one query, seeded from the server so the numbers are
+  // there on first paint. Created once -- the counts do not move with the
+  // visible tab -- and refreshed by the mutation invalidations below.
+  const countsQuery = createQuery(
+    { ...fetchUserAnimeStatusCounts(), initialData: ssr?.animeCounts ?? undefined },
+    queryClient,
+  );
+  $: countsData = ($countsQuery as any)?.data;
+  $: counts = {
+    [Status.Watching]: Number(countsData?.watching ?? 0),
+    [Status.Plantowatch]: Number(countsData?.planToWatch ?? 0),
+    [Status.Completed]: Number(countsData?.completed ?? 0),
+    [Status.Onhold]: Number(countsData?.onHold ?? 0),
+    [Status.Dropped]: Number(countsData?.dropped ?? 0),
+  } as Record<string, number>;
 
   // Reactive query input
   $: queryInput = {
@@ -70,28 +90,21 @@
     mounted = true;
   });
 
-  $: if (mounted && !countsStore) {
-    const q = createQuery(fetchUserAnimeStatusCounts(), queryClient);
-    countsStore = derived(q, ($q) => {
-      const d = ($q as any)?.data;
-      return {
-        [Status.Watching]: Number(d?.watching ?? 0),
-        [Status.Plantowatch]: Number(d?.planToWatch ?? 0),
-        [Status.Completed]: Number(d?.completed ?? 0),
-        [Status.Onhold]: Number(d?.onHold ?? 0),
-        [Status.Dropped]: Number(d?.dropped ?? 0),
-      } as Record<string, number>;
-    });
-  }
-  $: counts = countsStore ? $countsStore : {};
+  // The list query renders on the server too, seeded from ssr on the first
+  // render whose input matches what the server fetched. Recreated on status or
+  // page change, as before -- initialData only applies to the SSR'd key.
+  $: ssrListMatches =
+    !!ssrMine?.animeList &&
+    selectedStatus === ssrMine?.status &&
+    page === (ssrMine?.page ?? 0) &&
+    perPage === (ssrMine?.perPage ?? perPage);
+  $: userAnimesQuery = createQuery(
+    { ...fetchUserAnimes({ input: queryInput }), initialData: ssrListMatches ? ssrMine.animeList : undefined },
+    queryClient,
+  );
 
-  // Create the query and mutations reactively
+  // Mutations are client-only.
   $: if (mounted) {
-    userAnimesQuery = createQuery(
-      fetchUserAnimes({ input: queryInput }),
-      queryClient
-    );
-
     // Use consolidated mutations with toast handling
     upsertAnimeMutation = useAddAnimeWithToast();
     deleteAnimeMutation = useDeleteAnimeWithToast();
@@ -254,7 +267,7 @@
   });
 </script>
 
-{#if !mounted || isLoading}
+{#if isLoading}
   <!-- Loading skeleton -->
   <div class="pal-wrapper">
     <div class="status-tabs">

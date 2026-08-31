@@ -2,7 +2,6 @@
   import { goto } from '$app/navigation';
   import { onMount, tick } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
-  import { derived } from 'svelte/store';
   import { fetchUserWorks, fetchUserWorkStatusCounts } from '../../services/queries';
   import { WorkStatus } from '../../gql/graphql';
   import { workSubtitle } from '../../utils/workDisplay';
@@ -34,13 +33,21 @@
     return 24;
   }
 
+  /** Server-prefetched reading list, counts and resolved status/page. */
+  export let ssr: any = null;
+  // status/list apply only when the server rendered the manga medium; the counts
+  // are fetched for both media, so they seed either way.
+  $: ssrMine = ssr?.medium === 'manga' ? ssr : null;
+
   let mounted = false;
   // Reading is the default because it is the shelf a reader checks most -- what
   // they are in the middle of -- where the anime list opens on Plan to Watch.
   const STATUSES = Object.values(WorkStatus);
-  let selectedStatus: WorkStatus = WorkStatus.Reading;
-  let page = 0;
-  let perPage = getDefaultPageSize();
+  // Seeded from what the server resolved, so the first client render matches the
+  // SSR'd markup and its query key instead of defaulting and refetching.
+  let selectedStatus: WorkStatus = (ssr?.medium === 'manga' ? (ssr?.status as WorkStatus) : null) ?? WorkStatus.Reading;
+  let page = (ssr?.medium === 'manga' ? ssr?.page : null) ?? 0;
+  let perPage = ssr?.perPage ?? getDefaultPageSize();
 
   const statusLabels: Record<WorkStatus, string> = {
     [WorkStatus.Completed]: 'Completed',
@@ -51,10 +58,21 @@
   };
 
   let userWorksQuery: any;
-  // A count per status, so every tab carries its size, not only the active
-  // one. Created once and independent of the visible tab.
-  let countsStore: any;
-  let counts: Record<string, number> = {};
+
+  // Every tab's count in one query, seeded from the server so the numbers are
+  // there on first paint; refreshed when a status change invalidates it.
+  const countsQuery = createQuery(
+    { ...fetchUserWorkStatusCounts(), initialData: ssr?.workCounts ?? undefined },
+    queryClient,
+  );
+  $: countsData = ($countsQuery as any)?.data;
+  $: counts = {
+    [WorkStatus.Reading]: Number(countsData?.reading ?? 0),
+    [WorkStatus.Plantoread]: Number(countsData?.planToRead ?? 0),
+    [WorkStatus.Completed]: Number(countsData?.completed ?? 0),
+    [WorkStatus.Onhold]: Number(countsData?.onHold ?? 0),
+    [WorkStatus.Dropped]: Number(countsData?.dropped ?? 0),
+  } as Record<string, number>;
 
   $: queryInput = {
     status: selectedStatus,
@@ -66,24 +84,17 @@
     mounted = true;
   });
 
-  $: if (mounted && !countsStore) {
-    const q = createQuery(fetchUserWorkStatusCounts(), queryClient);
-    countsStore = derived(q, ($q) => {
-      const d = ($q as any)?.data;
-      return {
-        [WorkStatus.Reading]: Number(d?.reading ?? 0),
-        [WorkStatus.Plantoread]: Number(d?.planToRead ?? 0),
-        [WorkStatus.Completed]: Number(d?.completed ?? 0),
-        [WorkStatus.Onhold]: Number(d?.onHold ?? 0),
-        [WorkStatus.Dropped]: Number(d?.dropped ?? 0),
-      } as Record<string, number>;
-    });
-  }
-  $: counts = countsStore ? $countsStore : {};
-
-  $: if (mounted) {
-    userWorksQuery = createQuery(fetchUserWorks({ input: queryInput }), queryClient);
-  }
+  // Renders on the server too, seeded from ssr on the first render whose input
+  // matches what the server fetched; recreated on status or page change.
+  $: ssrListMatches =
+    !!ssrMine?.workList &&
+    selectedStatus === ssrMine?.status &&
+    page === (ssrMine?.page ?? 0) &&
+    perPage === (ssrMine?.perPage ?? perPage);
+  $: userWorksQuery = createQuery(
+    { ...fetchUserWorks({ input: queryInput }), initialData: ssrListMatches ? ssrMine.workList : undefined },
+    queryClient,
+  );
 
   $: userWorks = userWorksQuery ? ($userWorksQuery.data?.works ?? []) : [];
   $: total = userWorksQuery ? ($userWorksQuery.data?.total ?? 0) : 0;
@@ -193,7 +204,7 @@
     : 'var(--weeb-fg-muted)';
 </script>
 
-{#if !mounted || isLoading}
+{#if isLoading}
   <div class="pal-wrapper">
     <div class="status-tabs">
       {#each Array(5) as _}
