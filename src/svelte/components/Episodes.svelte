@@ -83,13 +83,24 @@
       : format(d, 'd MMM yyyy');
   }
 
-  function isWatched(episode: any): boolean {
+  /**
+   * Whether one episode is watched.
+   *
+   * The state is passed in rather than read from the component's own scope, so
+   * that the template's `{@const watched = isWatched(...)}` actually depends on
+   * it. Svelte tracks the values a template expression *references*; anything a
+   * called function closes over is invisible to it. Reading watchedNumbers
+   * inside here left the ticks frozen at whatever they were when the rows first
+   * rendered -- the query resolved, the data was correct, and the list never
+   * repainted.
+   */
+  function isWatched(episode: any, numbers: Set<number> | null, count: number): boolean {
     // Per-episode when we have it. The count is a fallback for the moment
     // before that query resolves, and it can only express "up to N" -- which is
     // exactly the limitation this replaces.
-    if (watchedNumbers) return watchedNumbers.has(episode.episodeNumber);
+    if (numbers) return numbers.has(episode.episodeNumber);
 
-    return watchedCount >= episode.episodeNumber;
+    return count >= episode.episodeNumber;
   }
 
   function toggle(episode: any) {
@@ -99,7 +110,7 @@
     // silently claimed 3 and 4 as well.
     dispatch('watch', {
       episodeNumber: episode.episodeNumber,
-      watched: !isWatched(episode),
+      watched: !isWatched(episode, watchedNumbers, watchedCount),
     });
   }
 
@@ -133,7 +144,7 @@
 
   <ol class="ep-list" class:ep-list--trackable={canTrack}>
     {#each visible as episode (episode.id)}
-      {@const watched = isWatched(episode)}
+      {@const watched = isWatched(episode, watchedNumbers, watchedCount)}
       {@const next = nextUp && episode.id === nextUp.id}
       <li
         class="ep-row"

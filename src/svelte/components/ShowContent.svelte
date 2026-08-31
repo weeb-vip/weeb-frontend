@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { format } from 'date-fns';
   import { createQuery, createMutation } from '@tanstack/svelte-query';
+  import { derived, writable } from 'svelte/store';
   import { watchedEpisodes, markEpisodeWatched, unmarkEpisodeWatched } from '../../services/queries';
   import { getQueryClient } from '../services/query-client';
   import SafeImage from './SafeImage.svelte';
@@ -45,13 +46,29 @@
   // Per-episode progress, which the count on userAnime cannot express: it can
   // only say "up to N", so watching 1, 2 and 5 claimed 3 and 4 as well.
   //
-  // Its own query because it is the viewer's data rather than the show's, and
-  // only fetched when there is a viewer with something to fetch.
+  // Created once, like showQueryStore above. Building it inside a reactive
+  // statement makes a fresh query store on every invalidation, so `$query.data`
+  // is read from a store that has not resolved yet and is permanently
+  // undefined -- the episode list then fell back to the count and drew every
+  // episode unwatched, while the rows existed in the database.
+  //
+  // Reactivity comes from a store of options instead, which is what
+  // svelte-query wants: `enabled` has to follow userAnime appearing, since a
+  // signed-out viewer has nothing to fetch and the field is authenticated.
   const episodeQueryClient = getQueryClient();
-  $: watchedQuery = createQuery({
-    ...watchedEpisodes(anime?.id ?? ''),
+  const episodeTracking = writable({ animeId: '', enabled: false });
+  $: episodeTracking.set({
+    animeId: anime?.id ?? '',
     enabled: Boolean(anime?.id) && Boolean(anime?.userAnime),
-  }, episodeQueryClient);
+  });
+
+  const watchedQuery = createQuery(
+    derived(episodeTracking, ($t) => ({
+      ...watchedEpisodes($t.animeId),
+      enabled: $t.enabled,
+    })),
+    episodeQueryClient,
+  );
 
   // Null until the query has answered, so Episodes falls back to the count
   // rather than rendering everything unwatched for a moment -- which would
