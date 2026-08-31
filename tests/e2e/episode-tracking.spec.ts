@@ -32,10 +32,17 @@ import {
 /** How many episodes in, to mark. Far enough that a count fallback is obvious. */
 const TARGET_INDEX = 2;
 
+/**
+ * The tick for one episode number.
+ *
+ * `.first()` because an episode number is not unique on the page: re-scraped
+ * shows carry duplicate rows for the same number, and every one of them renders
+ * the same watched state, so any of them answers the question.
+ */
 function watchButton(page: Page, episodeNumber: number) {
-  return page.getByRole('button', {
-    name: new RegExp(`^Mark episode ${episodeNumber} (watched|unwatched)$`),
-  });
+  return page
+    .getByRole('button', { name: new RegExp(`^Mark episode ${episodeNumber} (watched|unwatched)$`) })
+    .first();
 }
 
 /**
