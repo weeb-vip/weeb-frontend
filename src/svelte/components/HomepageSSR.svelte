@@ -8,6 +8,7 @@
   import { isPhone, isTablet } from '../stores/viewport';
   import PosterCard from './PosterCard.svelte';
   import SectionHeader from './SectionHeader.svelte';
+  import { workSubtitle } from '../../utils/workDisplay';
   import GenrePills from './GenrePills.svelte';
   import PosterGrid from './PosterGrid.svelte';
   import { initializeQueryClient } from '../services/query-client';
@@ -37,8 +38,16 @@
   export let homeData: any;
   export let currentlyAiringData: any;
   export let seasonalData: any;
+  export let publishingWorksData: any = null;
   export let currentSeason: string;
   export let isTokenExpired: boolean = false;
+
+  // Works without a slug are dropped rather than rendered as dead cards: the
+  // scraper assigns slugs on its own schedule, and a row that cannot be clicked
+  // is worse than a shorter row.
+  $: publishingWorks = (publishingWorksData?.currentlyPublishingWorks ?? []).filter(
+    (work: any) => !!work?.urlSlug,
+  );
 
   let selectedSeason = currentSeason;
   let isDropdownOpen = false;
@@ -577,6 +586,26 @@
             episodeCount={anime.episodeCount}
             sub={posterSub(anime)}
             onList={anime.userAnime?.status || null}
+          />
+        {/each}
+      </PosterGrid>
+    </section>
+  {/if}
+
+  <!-- Still Publishing -->
+  {#if publishingWorks.length > 0}
+    <section class="section">
+      <SectionHeader title="Still Publishing" />
+      <PosterGrid>
+        {#each publishingWorks.slice(0, shelfLimit) as work (work.id)}
+          <PosterCard
+            id={work.id}
+            title={work.titleEn || work.titleJp || ''}
+            image={work.id}
+            imagePath="works"
+            score={work.score}
+            sub={workSubtitle(work.type, work.publishedFrom)}
+            href={`/manga/${work.urlSlug}`}
           />
         {/each}
       </PosterGrid>

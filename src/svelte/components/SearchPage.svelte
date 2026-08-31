@@ -9,6 +9,7 @@
   import SafeImage from './SafeImage.svelte';
   import { GetImageFromAnime, animeHref } from '../../services/utils';
   import { AuthStorage } from '../../utils/auth-storage';
+  import { workSubtitle } from '../../utils/workDisplay';
   import { Status } from '../../gql/graphql';
   let searchQuery = '';
   let results: any[] = [];
@@ -45,26 +46,8 @@
   // it is left out rather than shown.
   $: linkableWorks = workResults.filter((w: any) => !!w?.slug);
 
-  // MANGA -> Manga, LIGHT_NOVEL -> Light novel.
-  function readableWorkType(value: string | null | undefined): string {
-    if (!value) return 'Work';
-    const words = value.toLowerCase().split('_');
-    return words[0].charAt(0).toUpperCase() + words[0].slice(1) +
-      (words.length > 1 ? ' ' + words.slice(1).join(' ') : '');
-  }
-
-  function workYear(value: string | null | undefined): string | null {
-    if (!value) return null;
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : String(parsed.getUTCFullYear());
-  }
-
-  // The kind comes first: "Light novel" is what separates this card from the
-  // anime of the same name a row above it.
   function workSub(work: any): string {
-    return [readableWorkType(work?.type), workYear(work?.published_from)]
-      .filter(Boolean)
-      .join(' · ');
+    return workSubtitle(work?.type, work?.published_from);
   }
 
   // Parse JSON string fields from Algolia (genres, studios, licensors come as JSON strings)

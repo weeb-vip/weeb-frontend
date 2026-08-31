@@ -19,17 +19,12 @@
   import WorkStatusControl from './WorkStatusControl.svelte';
   import { GetImageFromAnime } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
+  import { readableWorkType } from '../../utils/workDisplay';
 
   export let work: any = null;
   export let ssrError: string | null = null;
 
-  /** MANGA -> Manga, LIGHT_NOVEL -> Light novel. The wire value is an enum-ish
-      string; the page says it the way a reader would. */
-  function readableType(value: string | null | undefined): string {
-    if (!value) return 'Work';
-    const words = value.toLowerCase().split('_');
-    return words[0].charAt(0).toUpperCase() + words[0].slice(1) + (words.length > 1 ? ' ' + words.slice(1).join(' ') : '');
-  }
+  const readableType = readableWorkType;
 
   function yearOf(value: string | null | undefined): string | null {
     if (!value) return null;

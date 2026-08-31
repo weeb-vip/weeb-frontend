@@ -3,7 +3,8 @@ import { makeSSRFetcher, loggedOutAuth, publicAuth, getCurrentSeason, cookieHead
 import {
   getHomePageData,
   getCurrentlyAiringWithDates,
-  getSeasonalAnime
+  getSeasonalAnime,
+  getCurrentlyPublishingWorks
 } from '../services/api/graphql/queries';
 
 export const load: PageServerLoad = async ({ locals, cookies }) => {
@@ -14,6 +15,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
   let homeData: any = null;
   let currentlyAiringData: any = null;
   let seasonalData: any = null;
+  let publishingWorksData: any = null;
   let ssrError: string | null = null;
 
   const fetcher = makeSSRFetcher(config.graphql_host, cookieHeader);
@@ -21,18 +23,22 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
   try {
     const defaultStartDate = new Date(Date.now() - 60 * 60 * 1000); // 1 hour ago
 
-    const [homeResult, currentlyAiringResult, seasonalResult] = await Promise.allSettled([
+    const [homeResult, currentlyAiringResult, seasonalResult, publishingWorksResult] = await Promise.allSettled([
       fetcher.fetchWithFallback(getHomePageData, { limit: 20 }, 'home data'),
       fetcher.fetchWithFallback(getCurrentlyAiringWithDates, {
         input: { startDate: defaultStartDate, endDate: null, daysInFuture: 7 },
         limit: 10
       }, 'currently airing data'),
-      fetcher.fetchWithFallback(getSeasonalAnime, { season: currentSeason, limit: 14 }, 'seasonal data')
+      fetcher.fetchWithFallback(getSeasonalAnime, { season: currentSeason, limit: 14 }, 'seasonal data'),
+      // Alongside the rest rather than after them: it is an independent shelf,
+      // and settling it in the same batch keeps it off the critical path.
+      fetcher.fetchWithFallback(getCurrentlyPublishingWorks, { limit: 14 }, 'publishing works')
     ]);
 
     homeData = homeResult.status === 'fulfilled' ? homeResult.value : null;
     currentlyAiringData = currentlyAiringResult.status === 'fulfilled' ? currentlyAiringResult.value : null;
     seasonalData = seasonalResult.status === 'fulfilled' ? seasonalResult.value : null;
+    publishingWorksData = publishingWorksResult.status === 'fulfilled' ? publishingWorksResult.value : null;
   } catch (error) {
     console.error('[SSR] Failed to create GraphQL client:', error);
     ssrError = 'Failed to load data';
@@ -56,6 +62,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     homeData,
     currentlyAiringData,
     seasonalData,
+    publishingWorksData,
     currentSeason,
     ssrError,
     isTokenExpired,

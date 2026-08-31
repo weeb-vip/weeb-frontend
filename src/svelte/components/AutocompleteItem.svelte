@@ -1,6 +1,7 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { readableWorkType } from '../../utils/workDisplay';
 
   export let item: any;
   export let onClick: () => void;
@@ -19,13 +20,7 @@
   // MyAnimeList's own host, used only if the cover has not reached the CDN.
   $: imageFallback = isWork && item?.image_url ? item.image_url : '/assets/not found.jpg';
 
-  // MANGA -> Manga, LIGHT_NOVEL -> Light novel.
-  function readableType(value: string | null | undefined): string {
-    if (!value) return 'Work';
-    const words = value.toLowerCase().split('_');
-    return words[0].charAt(0).toUpperCase() + words[0].slice(1) +
-      (words.length > 1 ? ' ' + words.slice(1).join(' ') : '');
-  }
+  const readableType = readableWorkType;
 
   // Anime show a year alone; a work shows what kind of thing it is first,
   // because "Light novel" is the fact that distinguishes it from the anime

@@ -291,6 +291,25 @@ export const getAnimeDetailsBySlug = graphql(/* GraphQL */`
 // It is the reason the page exists -- the other anime made from this work -- and
 // it is usually empty, so a separate request would spend a round trip to learn
 // there is nothing to show.
+// The homepage's reading row: ongoing works, most widely read first.
+//
+// Only the fields a card draws. The synopsis in particular is deliberately
+// absent -- it is the widest column in the table, and a row of twelve covers
+// has nowhere to put it.
+export const getCurrentlyPublishingWorks = graphql(/* GraphQL */`
+    query getCurrentlyPublishingWorks($limit: Int) {
+        currentlyPublishingWorks(limit: $limit) {
+            id
+            urlSlug
+            titleEn
+            titleJp
+            type
+            score
+            publishedFrom
+        }
+    }
+`);
+
 export const getWorkBySlug = graphql(/* GraphQL */`
     query getWorkBySlug($slug: String!) {
         workBySlug(slug: $slug) {
