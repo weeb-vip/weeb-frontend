@@ -1,8 +1,9 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
-  import { fetchUserWorks } from '../../services/queries';
+  import { derived } from 'svelte/store';
+  import { fetchUserWorks, fetchUserWorkStatusCounts } from '../../services/queries';
   import { WorkStatus } from '../../gql/graphql';
   import { workSubtitle } from '../../utils/workDisplay';
   import { initializeQueryClient } from '../services/query-client';
@@ -36,6 +37,7 @@
   let mounted = false;
   // Reading is the default because it is the shelf a reader checks most -- what
   // they are in the middle of -- where the anime list opens on Plan to Watch.
+  const STATUSES = Object.values(WorkStatus);
   let selectedStatus: WorkStatus = WorkStatus.Reading;
   let page = 0;
   let perPage = getDefaultPageSize();
@@ -49,6 +51,10 @@
   };
 
   let userWorksQuery: any;
+  // A count per status, so every tab carries its size, not only the active
+  // one. Created once and independent of the visible tab.
+  let countsStore: any;
+  let counts: Record<string, number> = {};
 
   $: queryInput = {
     status: selectedStatus,
@@ -60,6 +66,21 @@
     mounted = true;
   });
 
+  $: if (mounted && !countsStore) {
+    const q = createQuery(fetchUserWorkStatusCounts(), queryClient);
+    countsStore = derived(q, ($q) => {
+      const d = ($q as any)?.data;
+      return {
+        [WorkStatus.Reading]: Number(d?.reading ?? 0),
+        [WorkStatus.Plantoread]: Number(d?.planToRead ?? 0),
+        [WorkStatus.Completed]: Number(d?.completed ?? 0),
+        [WorkStatus.Onhold]: Number(d?.onHold ?? 0),
+        [WorkStatus.Dropped]: Number(d?.dropped ?? 0),
+      } as Record<string, number>;
+    });
+  }
+  $: counts = countsStore ? $countsStore : {};
+
   $: if (mounted) {
     userWorksQuery = createQuery(fetchUserWorks({ input: queryInput }), queryClient);
   }
@@ -68,6 +89,12 @@
   $: total = userWorksQuery ? ($userWorksQuery.data?.total ?? 0) : 0;
   $: totalPages = Math.ceil(total / perPage);
   $: isLoading = userWorksQuery ? $userWorksQuery.isLoading : true;
+  // First time the real tab bar is mounted (skeleton gone), bring the active
+  // tab into view -- on mount it does not exist yet.
+  $: if (mounted && !isLoading && !scrolledInitial) {
+    scrolledInitial = true;
+    scrollActiveTabIntoView();
+  }
 
   // Status and page live in the URL, so a shared or reloaded link lands on the
   // same shelf. The medium is owned by the wrapper above, under ?medium.
@@ -80,10 +107,28 @@
     window.history.pushState({}, '', url.toString());
   }
 
+  let tabsEl: HTMLElement;
+  let scrolledInitial = false;
+
+  // Keep the selected tab on screen: the row scrolls horizontally on narrow
+  // viewports, and the active tab is the one that must not fall off the edge.
+  async function scrollActiveTabIntoView() {
+    await tick();
+    const active = tabsEl?.querySelector<HTMLElement>('.tab-btn.active');
+    if (!active || !tabsEl) return;
+    const c = tabsEl.getBoundingClientRect();
+    const a = active.getBoundingClientRect();
+    tabsEl.scrollTo({
+      left: tabsEl.scrollLeft + (a.left - c.left) - (c.width - a.width) / 2,
+      behavior: 'smooth',
+    });
+  }
+
   function handleStatusChange(status: WorkStatus) {
     selectedStatus = status;
     page = 0;
     updateURL();
+    scrollActiveTabIntoView();
   }
 
   function handlePerPageChange(e: Event) {
@@ -164,14 +209,16 @@
 {:else}
   <div class="pal-wrapper">
     <div class="list-controls">
-      <div class="status-tabs" role="tablist">
-        {#each Object.values(WorkStatus) as status}
+      <div class="status-tabs" role="tablist" bind:this={tabsEl}>
+        {#each STATUSES as status}
           <button
             class="tab-btn {selectedStatus === status ? 'active' : ''}"
+            role="tab"
+            aria-selected={selectedStatus === status}
             on:click={() => handleStatusChange(status)}
           >
             {statusLabels[status]}
-            <span class="tab-count">{selectedStatus === status ? total : ''}</span>
+            <span class="tab-count" class:is-zero={(counts[status] ?? 0) === 0}>{counts[status] ?? 0}</span>
           </button>
         {/each}
       </div>
@@ -407,20 +454,31 @@
     border-bottom-color: var(--weeb-accent);
   }
   .tab-count {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
+    line-height: 1;
     font-variant-numeric: tabular-nums;
     font-family: var(--weeb-font-mono, monospace);
-    background: var(--weeb-surface);
-    color: var(--weeb-fg-muted);
-    padding: 1px 7px;
-    border-radius: 99px;
+    background: var(--weeb-surface-hover);
+    color: var(--weeb-fg-secondary);
+    padding: 2px 6px;
+    border-radius: 6px;
     font-weight: 600;
-    min-width: 16px;
+    min-width: 18px;
     text-align: center;
+    transition: background 0.15s, color 0.15s, opacity 0.15s;
+  }
+  /* An empty status recedes, so the tabs a viewer actually has content in are
+     what the eye lands on when scanning the row. */
+  /* Muted colour and no pill carry the de-emphasis; the numeral stays legible
+     rather than fading below contrast. */
+  .tab-count.is-zero {
+    background: transparent;
+    color: var(--weeb-fg-muted);
   }
   .tab-btn.active .tab-count {
-    background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
+    background: color-mix(in oklch, var(--weeb-accent) 18%, transparent);
     color: var(--weeb-accent-text);
+    opacity: 1;
   }
 
   /* ── VIEW CONTROLS ──────────────────────────────────── */

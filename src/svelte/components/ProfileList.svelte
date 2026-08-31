@@ -52,23 +52,25 @@
 </script>
 
 <div class="profile-list">
-  <div class="medium-toggle" role="tablist" aria-label="Anime or manga">
-    <button
-      class="medium-btn {medium === 'anime' ? 'active' : ''}"
-      role="tab"
-      aria-selected={medium === 'anime'}
-      on:click={() => select('anime')}
-    >
-      Anime
-    </button>
-    <button
-      class="medium-btn {medium === 'manga' ? 'active' : ''}"
-      role="tab"
-      aria-selected={medium === 'manga'}
-      on:click={() => select('manga')}
-    >
-      Manga
-    </button>
+  <div class="medium-row">
+    <div class="medium-toggle" role="tablist" aria-label="Anime or manga">
+      <button
+        class="medium-btn {medium === 'anime' ? 'active' : ''}"
+        role="tab"
+        aria-selected={medium === 'anime'}
+        on:click={() => select('anime')}
+      >
+        Anime
+      </button>
+      <button
+        class="medium-btn {medium === 'manga' ? 'active' : ''}"
+        role="tab"
+        aria-selected={medium === 'manga'}
+        on:click={() => select('manga')}
+      >
+        Manga
+      </button>
+    </div>
   </div>
 
   {#if !mounted}
@@ -86,22 +88,29 @@
 </div>
 
 <style>
+  /* The switch is the top level, the status tabs below it the second. A tight
+     gap binds them into one filter header rather than two floating rows. */
   .profile-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
+  }
+
+  /* Carries the same horizontal inset as the list body below, so the switch
+     starts on the same left edge as the status tabs. */
+  .medium-row {
+    padding: 0 var(--weeb-section-px, 48px);
   }
 
   /* A segmented control, sized to its two labels rather than stretched across
      the page -- it is a mode switch, not a nav bar. */
   .medium-toggle {
     display: inline-flex;
-    align-self: flex-start;
     gap: 4px;
     padding: 4px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: 12px;
+    border-radius: 11px;
   }
 
   .medium-btn {
@@ -109,20 +118,29 @@
     border: none;
     background: transparent;
     color: var(--weeb-fg-secondary);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    padding: 8px 20px;
+    letter-spacing: -0.01em;
+    padding: 7px 22px;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.18s ease, color 0.18s ease;
   }
 
-  .medium-btn:hover {
+  .medium-btn:hover:not(.active) {
     color: var(--weeb-fg);
+    background: var(--weeb-surface-hover);
   }
 
   .medium-btn.active {
     background: var(--weeb-accent);
     color: #fff;
+  }
+
+  @media (max-width: 1024px) {
+    .medium-row { padding: 0 24px; }
+  }
+  @media (max-width: 768px) {
+    .medium-row { padding: 0 16px; }
   }
 </style>

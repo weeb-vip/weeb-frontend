@@ -398,13 +398,30 @@ export const queryUserWorks = graphql(/* GraphQL */`
     }
 `)
 
-// Count only, for the status tabs and the dashboard stats: nothing reads the
-// rows behind these, and asking for works would resolve every cover to show one
-// integer.
-export const queryUserWorkCount = graphql(/* GraphQL */`
-    query UserWorkCount($input: UserWorksInput!) {
-        UserWorks(input: $input) {
-            total
+// Every status count in one request, for the profile tabs. Replaces a count
+// query per tab: the set of statuses is fixed, so one grouped query answers all
+// of them and a signed-in list page spends one round trip on its tab numbers
+// rather than five.
+export const queryUserWorkStatusCounts = graphql(/* GraphQL */`
+    query UserWorkStatusCounts {
+        UserWorkStatusCounts {
+            reading
+            planToRead
+            completed
+            onHold
+            dropped
+        }
+    }
+`)
+
+export const queryUserAnimeStatusCounts = graphql(/* GraphQL */`
+    query UserAnimeStatusCounts {
+        UserAnimeStatusCounts {
+            watching
+            planToWatch
+            completed
+            onHold
+            dropped
         }
     }
 `)

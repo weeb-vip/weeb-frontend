@@ -1,8 +1,9 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
-  import { fetchUserAnimes } from '../../services/queries';
+  import { derived } from 'svelte/store';
+  import { fetchUserAnimes, fetchUserAnimeStatusCounts } from '../../services/queries';
   import { useAddAnimeWithToast, useDeleteAnimeWithToast } from '../utils/anime-actions';
   import { Status, type UserAnime } from '../../gql/graphql';
   import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
@@ -29,6 +30,7 @@
   }
 
   let mounted = false;
+  const STATUSES = Object.values(Status);
   let selectedStatus = Status.Plantowatch;
   let page = 0;
   let perPage = getDefaultPageSize();
@@ -49,6 +51,11 @@
 
   // Client-side only queries and mutations
   let userAnimesQuery: any;
+  // A count per status, so every tab shows its size rather than only the
+  // active one. Created once, keyed on status, and independent of the list
+  // query's page/status input -- these do not move when the visible tab does.
+  let countsStore: any;
+  let counts: Record<string, number> = {};
   let upsertAnimeMutation: any;
   let deleteAnimeMutation: any;
 
@@ -62,6 +69,21 @@
   onMount(() => {
     mounted = true;
   });
+
+  $: if (mounted && !countsStore) {
+    const q = createQuery(fetchUserAnimeStatusCounts(), queryClient);
+    countsStore = derived(q, ($q) => {
+      const d = ($q as any)?.data;
+      return {
+        [Status.Watching]: Number(d?.watching ?? 0),
+        [Status.Plantowatch]: Number(d?.planToWatch ?? 0),
+        [Status.Completed]: Number(d?.completed ?? 0),
+        [Status.Onhold]: Number(d?.onHold ?? 0),
+        [Status.Dropped]: Number(d?.dropped ?? 0),
+      } as Record<string, number>;
+    });
+  }
+  $: counts = countsStore ? $countsStore : {};
 
   // Create the query and mutations reactively
   $: if (mounted) {
@@ -79,8 +101,10 @@
     upsertAnimeMutation.mutate = (variables: unknown, options: MutateCallbacks = {}) => {
       const originalOnSuccess = options.onSuccess;
       options.onSuccess = (data, vars) => {
-        // Invalidate user animes query to update the list
+        // Invalidate both the list and the per-status counts, so the grid and
+        // the tab numbers move together after a status change.
         queryClient.invalidateQueries({ queryKey: ['user-animes'] });
+        queryClient.invalidateQueries({ queryKey: ['user-anime-status-counts'] });
         if (originalOnSuccess) originalOnSuccess(data, vars);
       };
       return originalUpsertMutate(variables, options);
@@ -90,8 +114,10 @@
     deleteAnimeMutation.mutate = (variables: unknown, options: MutateCallbacks = {}) => {
       const originalOnSuccess = options.onSuccess;
       options.onSuccess = (data, vars) => {
-        // Invalidate user animes query to update the list
+        // Invalidate both the list and the per-status counts, so the grid and
+        // the tab numbers move together after a status change.
         queryClient.invalidateQueries({ queryKey: ['user-animes'] });
+        queryClient.invalidateQueries({ queryKey: ['user-anime-status-counts'] });
         if (originalOnSuccess) originalOnSuccess(data, vars);
       };
       return originalDeleteMutate(variables, options);
@@ -103,6 +129,12 @@
   $: total = userAnimesQuery ? ($userAnimesQuery.data?.total || 0) : 0;
   $: totalPages = Math.ceil(total / perPage);
   $: isLoading = userAnimesQuery ? $userAnimesQuery.isLoading : true;
+  // First time the real tab bar is mounted (skeleton gone), bring the active
+  // tab into view -- on mount it does not exist yet.
+  $: if (mounted && !isLoading && !scrolledInitial) {
+    scrolledInitial = true;
+    scrollActiveTabIntoView();
+  }
 
   function updateURL() {
     if (typeof window !== 'undefined') {
@@ -117,10 +149,29 @@
     }
   }
 
+  let tabsEl: HTMLElement;
+  let scrolledInitial = false;
+
+  // Keep the selected tab on screen. The tab row scrolls horizontally on
+  // narrow viewports, and without this the active tab can sit past the edge --
+  // the one tab a viewer most needs to see, invisible.
+  async function scrollActiveTabIntoView() {
+    await tick();
+    const active = tabsEl?.querySelector<HTMLElement>('.tab-btn.active');
+    if (!active || !tabsEl) return;
+    const c = tabsEl.getBoundingClientRect();
+    const a = active.getBoundingClientRect();
+    tabsEl.scrollTo({
+      left: tabsEl.scrollLeft + (a.left - c.left) - (c.width - a.width) / 2,
+      behavior: 'smooth',
+    });
+  }
+
   function handleStatusChange(status: Status) {
     selectedStatus = status;
     page = 0;
     updateURL();
+    scrollActiveTabIntoView();
   }
 
   function handlePerPageChange(e: Event) {
@@ -221,14 +272,16 @@
   <div class="pal-wrapper">
     <!-- Status Tabs -->
     <div class="list-controls">
-      <div class="status-tabs" role="tablist">
-        {#each Object.values(Status) as status}
+      <div class="status-tabs" role="tablist" bind:this={tabsEl}>
+        {#each STATUSES as status}
           <button
             class="tab-btn {selectedStatus === status ? 'active' : ''}"
+            role="tab"
+            aria-selected={selectedStatus === status}
             on:click={() => handleStatusChange(status)}
           >
             {statusLabels[status]}
-            <span class="tab-count">{selectedStatus === status ? total : ''}</span>
+            <span class="tab-count" class:is-zero={(counts[status] ?? 0) === 0}>{counts[status] ?? 0}</span>
           </button>
         {/each}
       </div>
@@ -496,20 +549,31 @@
     border-bottom-color: var(--weeb-accent);
   }
   .tab-count {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
+    line-height: 1;
     font-variant-numeric: tabular-nums;
     font-family: var(--weeb-font-mono, monospace);
-    background: var(--weeb-surface);
-    color: var(--weeb-fg-muted);
-    padding: 1px 7px;
-    border-radius: 99px;
+    background: var(--weeb-surface-hover);
+    color: var(--weeb-fg-secondary);
+    padding: 2px 6px;
+    border-radius: 6px;
     font-weight: 600;
-    min-width: 16px;
+    min-width: 18px;
     text-align: center;
+    transition: background 0.15s, color 0.15s, opacity 0.15s;
+  }
+  /* An empty status recedes, so the tabs a viewer actually has content in are
+     what the eye lands on when scanning the row. */
+  /* Muted colour and no pill carry the de-emphasis; the numeral stays legible
+     rather than fading below contrast. */
+  .tab-count.is-zero {
+    background: transparent;
+    color: var(--weeb-fg-muted);
   }
   .tab-btn.active .tab-count {
-    background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
+    background: color-mix(in oklch, var(--weeb-accent) 18%, transparent);
     color: var(--weeb-accent-text);
+    opacity: 1;
   }
 
   /* ── VIEW CONTROLS ──────────────────────────────────── */

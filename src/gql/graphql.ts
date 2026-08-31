@@ -653,9 +653,11 @@ export type NewsReference = {
 export type Query = {
   __typename?: 'Query';
   ReadChapters: Array<ReadChapter>;
+  UserAnimeStatusCounts: UserAnimeStatusCounts;
   UserAnimes?: Maybe<UserAnimePaginated>;
   UserDetails: User;
   UserLists?: Maybe<Array<UserList>>;
+  UserWorkStatusCounts: UserWorkStatusCounts;
   UserWorks?: Maybe<UserWorkPaginated>;
   WatchedEpisodes: Array<WatchedEpisode>;
   /** Get anime by ID */
@@ -1085,6 +1087,24 @@ export type UserAnimePaginated = {
   total: Scalars['Int64'];
 };
 
+/**
+ * How many anime the viewer has in each status.
+ *
+ * One field per status rather than a list of (status, count) pairs: the set is
+ * fixed and small, and named fields let a client read watching or completed
+ * directly instead of scanning for it. A status with no entries is a real zero,
+ * not an absent row -- the resolver fills every field so a tab can always show a
+ * number.
+ */
+export type UserAnimeStatusCounts = {
+  __typename?: 'UserAnimeStatusCounts';
+  completed: Scalars['Int64'];
+  dropped: Scalars['Int64'];
+  onHold: Scalars['Int64'];
+  planToWatch: Scalars['Int64'];
+  watching: Scalars['Int64'];
+};
+
 export type UserAnimesInput = {
   limit: Scalars['Int'];
   page: Scalars['Int'];
@@ -1155,6 +1175,16 @@ export type UserWorkPaginated = {
   page: Scalars['Int'];
   total: Scalars['Int64'];
   works: Array<UserWork>;
+};
+
+/** The reading counterpart of UserAnimeStatusCounts. */
+export type UserWorkStatusCounts = {
+  __typename?: 'UserWorkStatusCounts';
+  completed: Scalars['Int64'];
+  dropped: Scalars['Int64'];
+  onHold: Scalars['Int64'];
+  planToRead: Scalars['Int64'];
+  reading: Scalars['Int64'];
 };
 
 export type UserWorksInput = {
@@ -1332,12 +1362,15 @@ export type UserWorksQueryVariables = Exact<{
 
 export type UserWorksQuery = { __typename?: 'Query', UserWorks?: { __typename?: 'UserWorkPaginated', page: number, limit: number, total: any, works: Array<{ __typename?: 'UserWork', id: string, userID: string, workID: string, status?: WorkStatus | null, score?: number | null, chapters?: number | null, volumes?: number | null, createdAt?: string | null, updatedAt?: string | null, work?: { __typename?: 'Work', id: string, urlSlug?: string | null, titleEn?: string | null, titleJp?: string | null, type: string, imageUrl?: string | null, status?: string | null, chapters?: number | null, volumes?: number | null, score?: number | null, publishedFrom?: string | null } | null }> } | null };
 
-export type UserWorkCountQueryVariables = Exact<{
-  input: UserWorksInput;
-}>;
+export type UserWorkStatusCountsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserWorkCountQuery = { __typename?: 'Query', UserWorks?: { __typename?: 'UserWorkPaginated', total: any } | null };
+export type UserWorkStatusCountsQuery = { __typename?: 'Query', UserWorkStatusCounts: { __typename?: 'UserWorkStatusCounts', reading: any, planToRead: any, completed: any, onHold: any, dropped: any } };
+
+export type UserAnimeStatusCountsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type UserAnimeStatusCountsQuery = { __typename?: 'Query', UserAnimeStatusCounts: { __typename?: 'UserAnimeStatusCounts', watching: any, planToWatch: any, completed: any, onHold: any, dropped: any } };
 
 export type AddWorkMutationVariables = Exact<{
   input: UserWorkInput;
@@ -1568,7 +1601,8 @@ export const GetAnimeDetailsBySlugDocument = {"kind":"Document","definitions":[{
 export const GetCurrentlyPublishingWorksDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCurrentlyPublishingWorks"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"currentlyPublishingWorks"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"urlSlug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"publishedFrom"}}]}}]}}]} as unknown as DocumentNode<GetCurrentlyPublishingWorksQuery, GetCurrentlyPublishingWorksQueryVariables>;
 export const GetWorkBySlugDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getWorkBySlug"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"workBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"malId"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"urlSlug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"titleSynonyms"}},{"kind":"Field","name":{"kind":"Name","value":"synopsis"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"publishedFrom"}},{"kind":"Field","name":{"kind":"Name","value":"publishedTo"}},{"kind":"Field","name":{"kind":"Name","value":"demographic"}},{"kind":"Field","name":{"kind":"Name","value":"serialization"}},{"kind":"Field","name":{"kind":"Name","value":"authors"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"ranking"}},{"kind":"Field","name":{"kind":"Name","value":"userWork"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}}]}},{"kind":"Field","name":{"kind":"Name","value":"adaptations"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"24"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"rating"}},{"kind":"Field","name":{"kind":"Name","value":"animeStatus"}},{"kind":"Field","name":{"kind":"Name","value":"episodeCount"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}}]}}]}}]}}]} as unknown as DocumentNode<GetWorkBySlugQuery, GetWorkBySlugQueryVariables>;
 export const UserWorksDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserWorks"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserWorksInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UserWorks"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"works"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"userID"}},{"kind":"Field","name":{"kind":"Name","value":"workID"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"work"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"urlSlug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"publishedFrom"}}]}}]}}]}}]}}]} as unknown as DocumentNode<UserWorksQuery, UserWorksQueryVariables>;
-export const UserWorkCountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserWorkCount"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserWorksInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UserWorks"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}}]}}]}}]} as unknown as DocumentNode<UserWorkCountQuery, UserWorkCountQueryVariables>;
+export const UserWorkStatusCountsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserWorkStatusCounts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UserWorkStatusCounts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"reading"}},{"kind":"Field","name":{"kind":"Name","value":"planToRead"}},{"kind":"Field","name":{"kind":"Name","value":"completed"}},{"kind":"Field","name":{"kind":"Name","value":"onHold"}},{"kind":"Field","name":{"kind":"Name","value":"dropped"}}]}}]}}]} as unknown as DocumentNode<UserWorkStatusCountsQuery, UserWorkStatusCountsQueryVariables>;
+export const UserAnimeStatusCountsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserAnimeStatusCounts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UserAnimeStatusCounts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"watching"}},{"kind":"Field","name":{"kind":"Name","value":"planToWatch"}},{"kind":"Field","name":{"kind":"Name","value":"completed"}},{"kind":"Field","name":{"kind":"Name","value":"onHold"}},{"kind":"Field","name":{"kind":"Name","value":"dropped"}}]}}]}}]} as unknown as DocumentNode<UserAnimeStatusCountsQuery, UserAnimeStatusCountsQueryVariables>;
 export const AddWorkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddWork"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserWorkInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"AddWork"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}}]}}]}}]} as unknown as DocumentNode<AddWorkMutation, AddWorkMutationVariables>;
 export const UpdateWorkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateWork"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserWorkInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UpdateWork"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"chapters"}},{"kind":"Field","name":{"kind":"Name","value":"volumes"}},{"kind":"Field","name":{"kind":"Name","value":"score"}}]}}]}}]} as unknown as DocumentNode<UpdateWorkMutation, UpdateWorkMutationVariables>;
 export const DeleteWorkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteWork"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"DeleteWork"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<DeleteWorkMutation, DeleteWorkMutationVariables>;

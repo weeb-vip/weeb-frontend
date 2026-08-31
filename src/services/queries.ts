@@ -32,8 +32,8 @@ import {
   type UserAnimeCountQueryVariables,
   type UserWorksQuery,
   type UserWorksQueryVariables,
-  type UserWorkCountQuery,
-  type UserWorkCountQueryVariables
+  type UserAnimeStatusCountsQuery,
+  type UserWorkStatusCountsQuery
 } from "../gql/graphql";
 import {
   getAnimeDetailsByID,
@@ -43,7 +43,7 @@ import {
   queryReadChapters, mutateMarkChapterRead, mutateUnmarkChapterRead,
   mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationResendVerificationEmail,
   mutationRegister, mutationLogout, queryCharactersAndStaffByAnimeID, queryUserAnimes, queryUserAnimeCount, queryUserDetails,
-  queryUserWorks, queryUserWorkCount
+  queryUserWorks, queryUserWorkStatusCounts, queryUserAnimeStatusCounts
 } from "./api/graphql/queries";
 
 ;
@@ -658,21 +658,31 @@ export const fetchUserAnimes = (variables: UserAnimesQueryVariables) => ({
   },
 });
 
-export const fetchUserWorkCount = (variables: UserWorkCountQueryVariables) => ({
-  queryKey: ["user-work-count", variables],
-  queryFn: async (): Promise<UserWorkCountQuery["UserWorks"]> => {
-    const client = await AuthenticatedClient();
-    const response = await client.request(queryUserWorkCount, variables);
-    return response.UserWorks;
-  },
-});
-
 export const fetchUserWorks = (variables: UserWorksQueryVariables) => ({
   queryKey: ["user-works", variables],
   queryFn: async (): Promise<UserWorksQuery["UserWorks"]> => {
     const client = await AuthenticatedClient();
     const response = await client.request(queryUserWorks, variables);
     return response.UserWorks;
+  },
+});
+
+// One request for all per-status counts, replacing a count query per tab.
+export const fetchUserAnimeStatusCounts = () => ({
+  queryKey: ["user-anime-status-counts"],
+  queryFn: async (): Promise<UserAnimeStatusCountsQuery["UserAnimeStatusCounts"]> => {
+    const client = await AuthenticatedClient();
+    const response = await client.request(queryUserAnimeStatusCounts, {});
+    return response.UserAnimeStatusCounts;
+  },
+});
+
+export const fetchUserWorkStatusCounts = () => ({
+  queryKey: ["user-work-status-counts"],
+  queryFn: async (): Promise<UserWorkStatusCountsQuery["UserWorkStatusCounts"]> => {
+    const client = await AuthenticatedClient();
+    const response = await client.request(queryUserWorkStatusCounts, {});
+    return response.UserWorkStatusCounts;
   },
 });
 
