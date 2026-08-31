@@ -17,6 +17,7 @@
   import PosterCard from './PosterCard.svelte';
   import { getSafeImageUrl } from '../utils/image';
   import WorkStatusControl from './WorkStatusControl.svelte';
+  import ChapterProgress from './ChapterProgress.svelte';
   import { GetImageFromAnime } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
   import { readableWorkType } from '../../utils/workDisplay';
@@ -159,6 +160,13 @@
                  about a work and nowhere to put it. -->
             <div class="hero-track">
               <WorkStatusControl workId={work.id} userWork={work.userWork ?? null} />
+              {#if work.userWork}
+                <ChapterProgress
+                  workId={work.id}
+                  totalChapters={work.chapters ?? null}
+                  userWork={work.userWork}
+                />
+              {/if}
             </div>
 
             <p class="hero-meta">
@@ -413,6 +421,10 @@
     margin-top: 18px;
   }
   .hero-track {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
     margin-bottom: 14px;
   }
   .hero-meta {
