@@ -22,6 +22,9 @@
   let mounted = false;
   let successMessage = '';
   let errorMessage = '';
+  // A username collision is shown inline on the field rather than in the page
+  // banner -- it is about that one input, and the fix is to change it.
+  let usernameError = '';
 
   // Form data state
   let formData: UpdateUserInput = {
@@ -86,7 +89,15 @@
     },
     onError: (error: any) => {
       debug.error('Profile update failed', error);
-      errorMessage = error?.message || 'Failed to update profile. Please try again.';
+      const gql = error?.response?.errors?.[0];
+      const code = gql?.extensions?.code;
+      const message = gql?.extensions?.message || gql?.message;
+      if (code === 'USERNAME_TAKEN') {
+        usernameError = message || 'That username is already taken.';
+        errorMessage = '';
+      } else {
+        errorMessage = message || 'Failed to update profile. Please try again.';
+      }
       successMessage = '';
     }
   }, queryClient);
@@ -101,6 +112,7 @@
     };
 
     // Clear messages when user starts typing
+    if (name === 'username' && usernameError) usernameError = '';
     if (errorMessage) errorMessage = '';
     if (successMessage) successMessage = '';
   }
@@ -141,8 +153,9 @@
     // them. Requiring them here made them a roadblock in front of changing the
     // username -- the one field the account actually has -- rather than
     // information the product ever asked for.
+    usernameError = '';
     if (!formData.username?.trim()) {
-      errorMessage = 'Username is required.';
+      usernameError = 'Username is required.';
       return;
     }
 
@@ -235,6 +248,7 @@
           placeholder="Username"
           label="Username"
           icon={faUser}
+          error={usernameError}
           required={true}
         />
 
