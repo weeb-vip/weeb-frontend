@@ -11,7 +11,6 @@
   import PosterCard from './PosterCard.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
   import ProfileImageUpload from './ProfileImageUpload.svelte';
-  import { uploadBannerImage } from '../../services/api/upload';
   import PosterGrid from './PosterGrid.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
   import { configStore } from '../stores/config';
@@ -27,9 +26,8 @@
 
   // State
   let showUploadModal = false;
-  let bannerUploading = false;
+  let showBannerModal = false;
   let bannerError = false;
-  let bannerInput: HTMLInputElement;
   /** Set when the avatar image fails to load, so the initial can stand in for
       it. Without this a stale or missing profileImageUrl left a broken <img>
       in place: the URL is truthy, so the initial branch never ran, and the
@@ -136,25 +134,6 @@
     const cdnUserUrl = config?.cdn_user_url || 'https://cdn.weeb.vip/weeb-user-staging';
     // Banners are shown at one large size, so always the full-quality original.
     return `${cdnUserUrl}/${bannerImageUrl}`;
-  }
-
-  async function handleBannerFile(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    bannerUploading = true;
-    bannerError = false;
-    try {
-      const updated = await uploadBannerImage(file);
-      // Merge the returned banner into the cached user so the hero updates
-      // without a full refetch.
-      queryClient.setQueryData(['user'], (prev: any) => ({ ...(prev ?? {}), ...updated }));
-      await queryClient.invalidateQueries({ queryKey: ['user'] });
-    } catch {
-      bannerError = true;
-    } finally {
-      bannerUploading = false;
-      if (bannerInput) bannerInput.value = '';
-    }
   }
 
   onMount(async () => {
@@ -473,24 +452,16 @@
       on:error={() => (bannerError = true)}
     />
   {/if}
-  <input
-    bind:this={bannerInput}
-    type="file"
-    accept="image/png,image/jpeg,image/webp,image/gif"
-    class="sr-only"
-    on:change={handleBannerFile}
-  />
   <button
     type="button"
     class="profile-banner-edit"
-    on:click={() => bannerInput?.click()}
-    disabled={bannerUploading}
+    on:click={() => { bannerError = false; showBannerModal = true; }}
     aria-label="Change banner image"
   >
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
     </svg>
-    <span>{bannerUploading ? 'Uploading…' : 'Change banner'}</span>
+    <span>Change banner</span>
   </button>
 </div>
 
@@ -795,6 +766,13 @@
   isOpen={showUploadModal}
   {queryClient}
   on:close={() => showUploadModal = false}
+/>
+
+<ProfileImageUpload
+  variant="banner"
+  isOpen={showBannerModal}
+  {queryClient}
+  on:close={() => showBannerModal = false}
 />
 
 <style>
