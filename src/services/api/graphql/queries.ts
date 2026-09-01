@@ -829,6 +829,82 @@ export const mutateUpdateUserDetails = graphql(`
 
 // A user's public page, by username. Returns only the header-safe subset -- the
 // backend guarantees no email or sessions can be selected here.
+// Public reads for a user's page, by their id. Not authenticated -- the page
+// above only calls these when the viewed user has opted their lists public.
+export const queryPublicUserAnimeStatusCounts = graphql(`
+    query PublicUserAnimeStatusCounts($userID: String!) {
+        PublicUserAnimeStatusCounts(userID: $userID) {
+            watching
+            planToWatch
+            completed
+            onHold
+            dropped
+        }
+    }
+`)
+
+export const queryPublicUserWorkStatusCounts = graphql(`
+    query PublicUserWorkStatusCounts($userID: String!) {
+        PublicUserWorkStatusCounts(userID: $userID) {
+            reading
+            planToRead
+            completed
+            onHold
+            dropped
+        }
+    }
+`)
+
+export const queryPublicUserAnimes = graphql(`
+    query PublicUserAnimes($userID: String!, $input: UserAnimesInput!) {
+        PublicUserAnimes(userID: $userID, input: $input) {
+            total
+            animes {
+                id
+                animeID
+                status
+                episodes
+                anime {
+                    id
+                    slug
+                    titleEn
+                    titleJp
+                    imageUrl
+                    episodeCount
+                    animeStatus
+                    tags
+                    description
+                }
+            }
+        }
+    }
+`)
+
+export const queryPublicUserWorks = graphql(`
+    query PublicUserWorks($userID: String!, $input: UserWorksInput!) {
+        PublicUserWorks(userID: $userID, input: $input) {
+            total
+            works {
+                id
+                workID
+                status
+                chapters
+                work {
+                    id
+                    urlSlug
+                    titleEn
+                    titleJp
+                    type
+                    imageUrl
+                    score
+                    publishedFrom
+                    chapters
+                }
+            }
+        }
+    }
+`)
+
 export const getUserByUsername = graphql(`
     query getUserByUsername($username: String!) {
         userByUsername(username: $username) {
