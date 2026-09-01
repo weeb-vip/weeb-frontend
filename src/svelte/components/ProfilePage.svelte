@@ -26,6 +26,8 @@
 
   // State
   let showUploadModal = false;
+  let showBannerModal = false;
+  let bannerError = false;
   /** Set when the avatar image fails to load, so the initial can stand in for
       it. Without this a stale or missing profileImageUrl left a broken <img>
       in place: the URL is truthy, so the initial branch never ran, and the
@@ -120,14 +122,18 @@
     if (!profileImageUrl) return undefined;
     const config = configStore.get();
     const cdnUserUrl = config?.cdn_user_url || 'https://cdn.weeb.vip/weeb-user-staging';
-    const suffix = '_64';
-    // Insert suffix before file extension
-    const lastDotIndex = profileImageUrl.lastIndexOf('.');
-    if (lastDotIndex === -1) return `${cdnUserUrl}/${profileImageUrl}${suffix}`;
+    // The hero avatar is shown large, so it uses the full-quality original
+    // rather than the 64px thumbnail the nav uses -- a 64px image scaled up to
+    // this size is visibly soft. The original is what the upload stored.
+    return `${cdnUserUrl}/${profileImageUrl}`;
+  }
 
-    const nameWithoutExt = profileImageUrl.substring(0, lastDotIndex);
-    const extension = profileImageUrl.substring(lastDotIndex);
-    return `${cdnUserUrl}/${nameWithoutExt}${suffix}${extension}`;
+  function getBannerImageUrl(bannerImageUrl: string | null | undefined): string | undefined {
+    if (!bannerImageUrl) return undefined;
+    const config = configStore.get();
+    const cdnUserUrl = config?.cdn_user_url || 'https://cdn.weeb.vip/weeb-user-staging';
+    // Banners are shown at one large size, so always the full-quality original.
+    return `${cdnUserUrl}/${bannerImageUrl}`;
   }
 
   onMount(async () => {
@@ -437,7 +443,27 @@
 </script>
 
 <!-- Profile Banner -->
-<div class="profile-banner"></div>
+<div class="profile-banner">
+  {#if userQuery && $userQuery.data?.bannerImageUrl && !bannerError}
+    <img
+      class="profile-banner-img"
+      src={getBannerImageUrl($userQuery.data.bannerImageUrl)}
+      alt=""
+      on:error={() => (bannerError = true)}
+    />
+  {/if}
+  <button
+    type="button"
+    class="profile-banner-edit"
+    on:click={() => { bannerError = false; showBannerModal = true; }}
+    aria-label="Change banner image"
+  >
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+    </svg>
+    <span>Change banner</span>
+  </button>
+</div>
 
 <!-- Profile Header (overlaps banner) -->
 <header class="profile-header">
@@ -742,6 +768,13 @@
   on:close={() => showUploadModal = false}
 />
 
+<ProfileImageUpload
+  variant="banner"
+  isOpen={showBannerModal}
+  {queryClient}
+  on:close={() => showBannerModal = false}
+/>
+
 <style>
   /* ── Profile Banner ────────────────────────────────────────── */
   .profile-banner {
@@ -753,6 +786,49 @@
       color-mix(in oklch, var(--weeb-bg) 80%, var(--weeb-accent)) 100%
     );
     overflow: hidden;
+  }
+
+  /* The uploaded banner covers the gradient when there is one; the gradient
+     stays as the ground behind it and the fallback when there is not. */
+  .profile-banner-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .profile-banner-edit {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--weeb-fg);
+    background: color-mix(in oklch, var(--weeb-bg) 55%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--weeb-border);
+    border-radius: 999px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.15s ease;
+  }
+  .profile-banner:hover .profile-banner-edit,
+  .profile-banner-edit:focus-visible {
+    opacity: 1;
+  }
+  .profile-banner-edit:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--weeb-bg) 70%, transparent);
+  }
+  .profile-banner-edit:disabled {
+    opacity: 1;
+    cursor: default;
   }
   .profile-banner::before {
     content: '';

@@ -95,3 +95,68 @@ export async function uploadProfileImage(file: File): Promise<any> {
     throw error;
   }
 }
+
+
+export async function uploadBannerImage(file: File): Promise<any> {
+  debug.info('Uploading banner image:', { filename: file.name, type: file.type, size: file.size });
+
+  // Same GraphQL multipart shape as the profile image, pointed at the banner
+  // mutation. The banner is not cropped client-side -- a wide header frames
+  // itself with object-fit -- so the file goes up as chosen.
+  const formData = new FormData();
+  const operations = {
+    query: `
+      mutation UploadBannerImage($image: Upload!) {
+        UploadBannerImage(image: $image) {
+          id
+          username
+          profileImageUrl
+          bannerImageUrl
+          bio
+          accentColor
+          listsPublic
+        }
+      }
+    `,
+    variables: { image: null },
+    operationName: 'UploadBannerImage'
+  };
+  const map = { '0': ['variables.image'] };
+  formData.append('operations', JSON.stringify(operations));
+  formData.append('map', JSON.stringify(map));
+  formData.append('0', file, file.name);
+
+  try {
+    // @ts-ignore
+    const response = await withSpan(
+      'upload banner image',
+      { 'file.size_bytes': file.size, 'file.mime_type': file.type },
+      () =>
+        fetch(global.config.graphql_host, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        })
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      debug.error('Banner upload failed with status:', response.status, errorText);
+      throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    if (result.errors && result.errors.length > 0) {
+      throw new Error(result.errors[0]?.message || 'Upload failed with GraphQL errors');
+    }
+    if (!result.data || !result.data.UploadBannerImage) {
+      throw new Error('No data returned from upload');
+    }
+
+    debug.success('Banner image uploaded successfully');
+    return result.data.UploadBannerImage;
+  } catch (error) {
+    debug.error('Banner image upload failed:', error);
+    throw error;
+  }
+}
