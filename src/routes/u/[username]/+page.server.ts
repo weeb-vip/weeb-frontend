@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { makeSSRFetcher, publicAuth, cookieHeaderFrom } from '$lib/server/ssr-graphql';
 import {
   getUserByUsername,
@@ -28,6 +28,15 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const user = (userRes as any)?.userByUsername ?? null;
   if (!user) {
     throw error(404, 'No such user');
+  }
+
+  // Usernames resolve case-insensitively, so /u/ThatCat and /u/THATCAT both
+  // find the same person. Normalise the address to the one canonical casing the
+  // user actually chose, so a page has a single URL rather than one per casing.
+  // Done before the lists load below, so a redirect never pays for fetches the
+  // canonical request will redo.
+  if (user.username && username !== user.username) {
+    throw redirect(308, `/u/${encodeURIComponent(user.username)}`);
   }
 
   // Only the current statuses ride the page as full rows; the rest of the
