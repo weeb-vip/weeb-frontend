@@ -171,9 +171,12 @@
 
     const img = new Image();
     img.onload = () => {
-      // Set canvas size to match crop size exactly
-      canvas.width = 400;
-      canvas.height = 400;
+      // The stored original. Larger than the on-screen crop so the profile
+      // page and public page have a sharp image to show; the 32/64 thumbnails
+      // are still derived from it for the small avatars.
+      const OUTPUT = 800;
+      canvas.width = OUTPUT;
+      canvas.height = OUTPUT;
 
       // Calculate scale factors
       const displayToOriginalScaleX = img.width / imageSize.width;
@@ -187,14 +190,14 @@
       // Create circular clipping path
       ctx.save();
       ctx.beginPath();
-      ctx.arc(200, 200, 200, 0, Math.PI * 2);
+      ctx.arc(OUTPUT / 2, OUTPUT / 2, OUTPUT / 2, 0, Math.PI * 2);
       ctx.clip();
 
       // Draw cropped and scaled image within the circular clip
       ctx.drawImage(
         img,
         originalCropX, originalCropY, originalCropSize, originalCropSize,
-        0, 0, 400, 400
+        0, 0, OUTPUT, OUTPUT
       );
 
       ctx.restore();

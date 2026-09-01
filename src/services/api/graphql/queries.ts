@@ -794,6 +794,10 @@ export const queryUserDetails = graphql(`
             language
             email
             profileImageUrl
+            bannerImageUrl
+            bio
+            accentColor
+            listsPublic
             active_sessions {
                 id
                 ip_address
@@ -815,6 +819,42 @@ export const mutateUpdateUserDetails = graphql(`
             language
             email
             profileImageUrl
+            bannerImageUrl
+            bio
+            accentColor
+            listsPublic
+        }
+    }
+`)
+
+// A user's public page, by username. Returns only the header-safe subset -- the
+// backend guarantees no email or sessions can be selected here.
+export const getUserByUsername = graphql(`
+    query getUserByUsername($username: String!) {
+        userByUsername(username: $username) {
+            id
+            username
+            firstname
+            lastname
+            profileImageUrl
+            bannerImageUrl
+            bio
+            accentColor
+            listsPublic
+        }
+    }
+`)
+
+export const mutateUploadBannerImage = graphql(`
+    mutation UploadBannerImage($image: Upload!) {
+        UploadBannerImage(image: $image) {
+            id
+            username
+            profileImageUrl
+            bannerImageUrl
+            bio
+            accentColor
+            listsPublic
         }
     }
 `)
@@ -829,6 +869,10 @@ export const mutateUploadProfileImage = graphql(`
             language
             email
             profileImageUrl
+            bannerImageUrl
+            bio
+            accentColor
+            listsPublic
         }
     }
 `)

@@ -29,8 +29,23 @@
     lastname: '',
     username: '',
     email: '',
-    language: Language.En
+    language: Language.En,
+    bio: '',
+    accentColor: '',
+    listsPublic: false
   };
+
+  // The curated set the accent picker offers. A token name is stored, not a raw
+  // colour, so a page can only ever theme itself from this palette.
+  const ACCENT_OPTIONS: { name: string; label: string; value: string }[] = [
+    { name: 'violet', label: 'Violet', value: 'oklch(55% 0.16 298)' },
+    { name: 'blue', label: 'Blue', value: 'oklch(58% 0.15 250)' },
+    { name: 'cyan', label: 'Cyan', value: 'oklch(64% 0.12 210)' },
+    { name: 'green', label: 'Green', value: 'oklch(62% 0.15 150)' },
+    { name: 'amber', label: 'Amber', value: 'oklch(72% 0.14 75)' },
+    { name: 'rose', label: 'Rose', value: 'oklch(62% 0.18 20)' },
+    { name: 'pink', label: 'Pink', value: 'oklch(64% 0.18 350)' }
+  ];
 
   // Client-side only queries
   let userQuery: any;
@@ -47,7 +62,10 @@
       lastname: $userQuery.data.lastname || '',
       username: $userQuery.data.username || '',
       email: $userQuery.data.email || '',
-      language: $userQuery.data.language || Language.En
+      language: $userQuery.data.language || Language.En,
+      bio: $userQuery.data.bio || '',
+      accentColor: $userQuery.data.accentColor || '',
+      listsPublic: $userQuery.data.listsPublic ?? false
     };
   }
 
@@ -99,6 +117,18 @@
     if (successMessage) successMessage = '';
   }
 
+  function selectAccent(name: string) {
+    formData = { ...formData, accentColor: formData.accentColor === name ? '' : name };
+    if (errorMessage) errorMessage = '';
+    if (successMessage) successMessage = '';
+  }
+
+  function toggleListsPublic() {
+    formData = { ...formData, listsPublic: !formData.listsPublic };
+    if (errorMessage) errorMessage = '';
+    if (successMessage) successMessage = '';
+  }
+
   function handleSubmit(event: Event) {
     event.preventDefault();
 
@@ -123,6 +153,9 @@
     if (formData.username !== $userQuery.data.username) changedFields.username = formData.username;
     if (formData.email !== $userQuery.data.email) changedFields.email = formData.email;
     if (formData.language !== $userQuery.data.language) changedFields.language = formData.language;
+    if ((formData.bio || '') !== ($userQuery.data.bio || '')) changedFields.bio = formData.bio || '';
+    if ((formData.accentColor || '') !== ($userQuery.data.accentColor || '')) changedFields.accentColor = formData.accentColor || '';
+    if (formData.listsPublic !== ($userQuery.data.listsPublic ?? false)) changedFields.listsPublic = formData.listsPublic;
 
     // If nothing changed, show message
     if (Object.keys(changedFields).length === 0) {
@@ -231,6 +264,63 @@
             <option value={Language.En}>English</option>
             <option value={Language.Th}>Thai</option>
           </select>
+        </div>
+
+        <!-- Public page customization -->
+        <div class="pt-2">
+          <h2 class="text-sm font-semibold text-weeb-fg mb-1">Your public page</h2>
+          <p class="text-xs text-weeb-fg-muted mb-4">
+            How <span class="font-mono">/u/{formData.username || 'you'}</span> looks to anyone who visits.
+          </p>
+
+          <div>
+            <label for="bio" class="block text-sm font-medium text-weeb-fg-secondary mb-2">Bio</label>
+            <textarea
+              id="bio"
+              name="bio"
+              rows="2"
+              maxlength="300"
+              value={formData.bio || ''}
+              on:input={(e) => { formData = { ...formData, bio: (e.target as HTMLTextAreaElement).value }; if (successMessage) successMessage = ''; }}
+              placeholder="A line about you"
+              class="w-full px-3 py-2 border border-weeb-border rounded-md bg-weeb-surface text-weeb-fg placeholder:text-weeb-fg-muted focus:outline-none focus:ring-2 focus:ring-weeb-accent focus:border-weeb-accent transition-colors resize-none"
+            ></textarea>
+            <div class="mt-1 text-right text-xs text-weeb-fg-muted font-mono">{(formData.bio || '').length}/300</div>
+          </div>
+
+          <div class="mt-4">
+            <span class="block text-sm font-medium text-weeb-fg-secondary mb-2">Accent colour</span>
+            <div class="flex flex-wrap gap-2">
+              {#each ACCENT_OPTIONS as opt}
+                <button
+                  type="button"
+                  title={opt.label}
+                  aria-label={opt.label}
+                  aria-pressed={formData.accentColor === opt.name}
+                  on:click={() => selectAccent(opt.name)}
+                  class="w-8 h-8 rounded-full transition-transform hover:scale-110 {formData.accentColor === opt.name ? 'ring-2 ring-offset-2 ring-offset-weeb-bg ring-weeb-fg' : ''}"
+                  style="background: {opt.value}"
+                ></button>
+              {/each}
+            </div>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between gap-4">
+            <div>
+              <span class="block text-sm font-medium text-weeb-fg-secondary">Show my lists</span>
+              <span class="block text-xs text-weeb-fg-muted">Let visitors see your watch and read lists. Your header is always public.</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={!!formData.listsPublic}
+              aria-label="Show my lists on my public page"
+              on:click={toggleListsPublic}
+              class="relative shrink-0 w-11 h-6 rounded-full transition-colors {formData.listsPublic ? 'bg-weeb-accent' : 'bg-weeb-surface-hover'}"
+            >
+              <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform {formData.listsPublic ? 'translate-x-5' : ''}"></span>
+            </button>
+          </div>
         </div>
 
         {#if successMessage}
