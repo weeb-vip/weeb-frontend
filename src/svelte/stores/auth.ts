@@ -31,10 +31,18 @@ function createLoggedInStore() {
       console.log('🔍 setLoggedIn called with userData:', userData);
       update(state => ({ ...state, isLoggedIn: true, isAuthInitialized: true }));
 
-      // Identify user in PostHog for analytics
+      // Identify the person in PostHog, with the email and username set on the
+      // profile -- not just the id. Only defined fields are sent: the login
+      // mutation returns id alone, and passing email: undefined there would
+      // blank the email a later user fetch had already set (identify merges by
+      // distinct_id, so the fuller call wins as long as this one does not
+      // overwrite it with nothing).
       if (userData?.id) {
+        const properties: Record<string, string> = {};
+        if (userData.email) properties.email = userData.email;
+        if (userData.username) properties.username = userData.username;
         console.log('📊 About to identify user in PostHog:', userData);
-        identifyUser(userData.id, {});
+        identifyUser(userData.id, properties);
       } else {
         console.warn('⚠️ setLoggedIn called without user data - skipping PostHog identification');
       }
