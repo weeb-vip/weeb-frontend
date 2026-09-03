@@ -95,6 +95,15 @@
     >
     <a href="/airing" aria-current={$page.url.pathname.startsWith('/airing') ? 'page' : undefined}>Airing</a>
     <a href="/search" aria-current={$page.url.pathname.startsWith('/search') ? 'page' : undefined}>Browse</a>
+    <!-- /manga covers the detail route as well as the shelf, so reading a
+         manga keeps its nav item lit. A light novel's detail page lives under
+         /manga too and lights this one rather than its own; one row cannot
+         have two detail URLs, and the alternative is neither lit. -->
+    <a href="/manga" aria-current={$page.url.pathname.startsWith('/manga') ? 'page' : undefined}>Manga</a>
+    <a
+      href="/light-novels"
+      aria-current={$page.url.pathname.startsWith('/light-novels') ? 'page' : undefined}>Light novels</a
+    >
   </div>
 
   <!-- Search -->

@@ -310,6 +310,90 @@ export const getCurrentlyPublishingWorks = graphql(/* GraphQL */`
     }
 `);
 
+// The work browse shelves: three sorts in one round trip.
+//
+// Aliased rather than three requests, because /manga and /light-novels render
+// all three at once and three sequential SSR fetches would put their latencies
+// end to end on every page load.
+//
+// The selection set is repeated across the three aliases and again in
+// getWorksByType below. That is the same deliberate duplication as the
+// getAnimeDetails pair above -- this codebase uses no fragments, because the
+// client-preset's masking would force useFragment() through every consumer --
+// and queries.test.ts compares the two documents so the next divergence fails
+// in CI rather than in a page that quietly stops drawing a field.
+//
+// Only what a card draws. Synopsis is deliberately absent: it is the widest
+// column in the table and a shelf of twenty covers has nowhere to put it.
+export const getWorksOverview = graphql(/* GraphQL */`
+    query getWorksOverview($popular: WorksInput!, $rated: WorksInput!, $newest: WorksInput!) {
+        popular: works(input: $popular) {
+            total
+            works {
+                id
+                urlSlug
+                titleEn
+                titleJp
+                type
+                status
+                score
+                members
+                publishedFrom
+            }
+        }
+        rated: works(input: $rated) {
+            total
+            works {
+                id
+                urlSlug
+                titleEn
+                titleJp
+                type
+                status
+                score
+                members
+                publishedFrom
+            }
+        }
+        newest: works(input: $newest) {
+            total
+            works {
+                id
+                urlSlug
+                titleEn
+                titleJp
+                type
+                status
+                score
+                members
+                publishedFrom
+            }
+        }
+    }
+`);
+
+// One shelf in full, paged -- what "See all" opens.
+export const getWorksByType = graphql(/* GraphQL */`
+    query getWorksByType($input: WorksInput!) {
+        works(input: $input) {
+            total
+            page
+            perPage
+            works {
+                id
+                urlSlug
+                titleEn
+                titleJp
+                type
+                status
+                score
+                members
+                publishedFrom
+            }
+        }
+    }
+`);
+
 export const getWorkBySlug = graphql(/* GraphQL */`
     query getWorkBySlug($slug: String!) {
         workBySlug(slug: $slug) {
