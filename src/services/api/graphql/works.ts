@@ -1,51 +1,10 @@
 /**
- * The works queries behind /manga and /light-novels.
+ * How the work browse pages are shaped: which kinds go on which shelf, and
+ * which sorts each shelf offers.
  *
- * Plain strings rather than `graphql()` documents, unlike everything in
- * queries.ts. The client preset types documents against a schema fetched from
- * the staging gateway at codegen time, and `works` landed there only just now
- * -- so these move into queries.ts on the next codegen run. Nothing else has
- * to change; the shapes here are already what the generated documents would be.
+ * Definitions only. The queries themselves live in queries.ts with every other
+ * document, so codegen types them.
  */
-
-const WORK_FIELDS = /* GraphQL */ `
-  id
-  urlSlug
-  titleEn
-  titleJp
-  type
-  status
-  score
-  members
-  publishedFrom
-`;
-
-/**
- * The shelf view: three sorts in one round trip.
- *
- * Aliased rather than three requests, because the page renders all three at
- * once and three sequential SSR fetches would put their latencies end to end
- * on every page load.
- */
-export const getWorksOverview = /* GraphQL */ `
-  query getWorksOverview($popular: WorksInput!, $rated: WorksInput!, $newest: WorksInput!) {
-    popular: works(input: $popular) { total works { ${WORK_FIELDS} } }
-    rated: works(input: $rated) { total works { ${WORK_FIELDS} } }
-    newest: works(input: $newest) { total works { ${WORK_FIELDS} } }
-  }
-`;
-
-/** The paged view behind a shelf's "See all". */
-export const getWorksByType = /* GraphQL */ `
-  query getWorksByType($input: WorksInput!) {
-    works(input: $input) {
-      total
-      page
-      perPage
-      works { ${WORK_FIELDS} }
-    }
-  }
-`;
 
 /**
  * How the catalogue's ten kinds divide into the two shelves readers get.
@@ -53,7 +12,7 @@ export const getWorksByType = /* GraphQL */ `
  * A reader looking for a novel does not distinguish a light novel from a
  * novel, and one looking for a comic does not care whether MyAnimeList filed
  * it as a manga, a manhwa, a one-shot or a doujinshi. Two shelves, then, and
- * the scraper's finer labels stay available on each work's own page.
+ * the scraper's finer labels stay on each card and on each work's own page.
  *
  * The comics shelf is defined as everything the novels shelf is not, so a kind
  * MyAnimeList invents tomorrow lands somewhere rather than nowhere. That is

@@ -1,11 +1,7 @@
 import type { Cookies } from '@sveltejs/kit';
 import { makeSSRFetcher, loggedOutAuth, publicAuth, cookieHeaderFrom } from './ssr-graphql';
-import {
-  getWorksOverview,
-  getWorksByType,
-  isWorkSort,
-  WORK_SHELVES,
-} from '../../services/api/graphql/works';
+import { getWorksOverview, getWorksByType } from '../../services/api/graphql/queries';
+import { isWorkSort, WORK_SHELVES } from '../../services/api/graphql/works';
 
 /**
  * The shared load for the work browse pages.
