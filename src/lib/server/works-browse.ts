@@ -58,7 +58,7 @@ export async function loadWorksBrowse({ types, excludeTypes, url, locals, cookie
     ...(excludeTypes ? { excludeTypes: [...excludeTypes] } : {}),
   };
   const label = types ? types.join('+') : `not ${excludeTypes?.join('+')}`;
-  const base = { auth: publicAuth(auth), sort, ssrError };
+  const base = { auth: publicAuth(auth), sort };
 
   if (sort) {
     let result: any = null;
@@ -70,6 +70,15 @@ export async function loadWorksBrowse({ types, excludeTypes, url, locals, cookie
       );
     } catch (error) {
       console.error(`[SSR] Failed to fetch works for ${label}/${sort}:`, error);
+      ssrError = 'Failed to load';
+    }
+
+    // A null result is a failure, not an empty shelf. fetchWithFallback
+    // swallows the error and returns null rather than throwing, so without
+    // this check a rejected query renders as "nothing here" -- which is a lie
+    // the reader cannot tell from an actually empty catalogue, and which hid a
+    // schema mismatch behind a plausible-looking page.
+    if (!ssrError && !result?.works) {
       ssrError = 'Failed to load';
     }
 
@@ -102,6 +111,13 @@ export async function loadWorksBrowse({ types, excludeTypes, url, locals, cookie
     );
   } catch (error) {
     console.error(`[SSR] Failed to fetch shelves for ${label}:`, error);
+    ssrError = 'Failed to load';
+  }
+
+  // As above: no result means the request failed, not that the shelves are
+  // empty. Checked against the first alias rather than the wrapper, because a
+  // partial response with one alias missing is also a failure.
+  if (!ssrError && !result?.popular) {
     ssrError = 'Failed to load';
   }
 
