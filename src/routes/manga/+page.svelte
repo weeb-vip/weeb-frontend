@@ -3,15 +3,18 @@
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
   import WorksBrowsePage from '../../svelte/components/WorksBrowsePage.svelte';
+  import { shelfLabel } from '../../services/api/graphql/works';
 
   export let data;
 
   const SITE_URL = 'https://weeb.vip';
   const canonical = `${SITE_URL}/manga`;
 
-  // Only page one is canonical to itself; deeper pages point back at it rather
-  // than competing with it for the same query.
-  $: pageTitle = data.page > 1 ? `Manga — page ${data.page}` : 'Manga';
+  // The shelf a reader opened, and how deep, both belong in the tab title --
+  // it is what tells two open tabs of this page apart.
+  $: pageTitle = data.sort
+    ? `Manga · ${shelfLabel(data.sort)}${data.page > 1 ? ` — page ${data.page}` : ''}`
+    : 'Manga';
 
   $: schemas = [
     breadcrumbSchema([
@@ -32,10 +35,11 @@
   heading="Manga"
   blurb="Series, one-shots and everything anime gets adapted from."
   basePath="/manga"
+  shelves={data.shelves}
   works={data.works}
+  sort={data.sort}
   total={data.total}
   page={data.page}
   totalPages={data.totalPages}
-  sort={data.sort}
   ssrError={data.ssrError}
 />

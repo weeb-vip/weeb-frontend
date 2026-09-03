@@ -1,53 +1,76 @@
 /**
- * The paged works query behind /manga and /light-novels.
+ * The works queries behind /manga and /light-novels.
  *
- * A plain string rather than a `graphql()` document, unlike everything in
+ * Plain strings rather than `graphql()` documents, unlike everything in
  * queries.ts. The client preset types documents against a schema fetched from
- * the staging gateway at codegen time, and `works` does not exist there until
- * anime-api ships -- so running codegen today would fail on this query and
- * writing it as a typed document would not compile. graphql-request takes a
- * string just as happily, and `fetchWithFallback` is typed `any`.
- *
- * Move it into queries.ts once the API is deployed to staging and codegen can
- * see the field. Nothing else has to change; the shape here is already what the
- * generated document would be.
+ * the staging gateway at codegen time, and `works` landed there only just now
+ * -- so these move into queries.ts on the next codegen run. Nothing else has
+ * to change; the shapes here are already what the generated documents would be.
  */
+
+const WORK_FIELDS = /* GraphQL */ `
+  id
+  urlSlug
+  titleEn
+  titleJp
+  type
+  status
+  score
+  members
+  publishedFrom
+`;
+
+/**
+ * The shelf view: three sorts in one round trip.
+ *
+ * Aliased rather than three requests, because the page renders all three at
+ * once and three sequential SSR fetches would put their latencies end to end
+ * on every page load.
+ */
+export const getWorksOverview = /* GraphQL */ `
+  query getWorksOverview($popular: WorksInput!, $rated: WorksInput!, $newest: WorksInput!) {
+    popular: works(input: $popular) { total works { ${WORK_FIELDS} } }
+    rated: works(input: $rated) { total works { ${WORK_FIELDS} } }
+    newest: works(input: $newest) { total works { ${WORK_FIELDS} } }
+  }
+`;
+
+/** The paged view behind a shelf's "See all". */
 export const getWorksByType = /* GraphQL */ `
   query getWorksByType($input: WorksInput!) {
     works(input: $input) {
       total
       page
       perPage
-      works {
-        id
-        urlSlug
-        titleEn
-        titleJp
-        type
-        imageUrl
-        status
-        score
-        members
-        volumes
-        chapters
-        publishedFrom
-        demographic
-        authors
-      }
+      works { ${WORK_FIELDS} }
     }
   }
 `;
 
-/** Sorts the browse pages offer, matching WorksInput.sortBy on the API. */
-export const WORK_SORTS = [
-  { value: 'POPULARITY', label: 'Most popular' },
-  { value: 'SCORE', label: 'Highest rated' },
-  { value: 'NEWEST', label: 'Newest' },
-  { value: 'TITLE', label: 'A–Z' }
+/**
+ * The three shelves, in the order they appear.
+ *
+ * Popularity leads because it is the only one of the three every row has:
+ * score is absent on roughly one work in ten and publishedFrom on more, so
+ * opening with either would lead the page with whatever the scraper has not
+ * filled in yet.
+ *
+ * The API also offers TITLE. It is deliberately not here -- an alphabetical
+ * wall of 53,000 manga is a sorted list, not a shelf worth browsing, and it
+ * answers no question a reader arrives with.
+ */
+export const WORK_SHELVES = [
+  { key: 'popular', sort: 'POPULARITY', label: 'Most popular' },
+  { key: 'rated', sort: 'SCORE', label: 'Highest rated' },
+  { key: 'newest', sort: 'NEWEST', label: 'Newest' }
 ] as const;
 
-export type WorkSort = (typeof WORK_SORTS)[number]['value'];
+export type WorkSort = (typeof WORK_SHELVES)[number]['sort'];
 
 export function isWorkSort(value: string | null): value is WorkSort {
-  return !!value && WORK_SORTS.some((s) => s.value === value);
+  return !!value && WORK_SHELVES.some((s) => s.sort === value);
+}
+
+export function shelfLabel(sort: string): string {
+  return WORK_SHELVES.find((s) => s.sort === sort)?.label ?? 'Most popular';
 }

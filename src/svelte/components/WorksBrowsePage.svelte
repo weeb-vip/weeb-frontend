@@ -1,45 +1,59 @@
 <script lang="ts">
+  import SectionHeader from './SectionHeader.svelte';
+  import PosterGrid from './PosterGrid.svelte';
   import PosterCard from './PosterCard.svelte';
+  import { isPhone, isTablet } from '../stores/viewport';
   import { workSubtitle } from '../../utils/workDisplay';
-  import { WORK_SORTS } from '../../services/api/graphql/works';
+  import { shelfLabel } from '../../services/api/graphql/works';
 
   /**
-   * The browse grid behind /manga and /light-novels.
+   * The shelves behind /manga and /light-novels.
    *
    * One component for both, parameterised by heading and the works it is
    * handed. The pages differ in copy and in the type they load; nothing about
-   * the grid, the sort control or the pager is per-type.
+   * the shelves, the grid or the pager is per-type.
+   *
+   * Laid out as the homepage lays out its shelves -- full-bleed sections
+   * separated by a rule, SectionHeader over PosterGrid -- so a reader who
+   * arrives from the homepage is on the same page they were already reading.
+   * The alternative was a centred column with its own grid, which is how the
+   * poster grid came to disagree with itself on four pages before PosterGrid
+   * existed.
    */
 
   export let heading: string;
   export let blurb: string = '';
-  /** Where the sort and page links point -- '/manga' or '/light-novels'. */
   export let basePath: string;
 
+  /** Shelf mode: one entry per sort. Null in paged mode. */
+  export let shelves: { sort: string; label: string; works: any[] }[] | null = null;
+  /** Paged mode. */
   export let works: any[] = [];
+  export let sort: string | null = null;
   export let total: number = 0;
   export let page: number = 1;
   export let totalPages: number = 0;
-  export let sort: string = 'POPULARITY';
   export let ssrError: string | null = null;
+
+  // Matches the homepage exactly, so a shelf holds the same number of cards
+  // wherever it appears.
+  $: shelfLimit = $isPhone ? 6 : $isTablet ? 12 : 20;
 
   // A work with no slug has no page to link to -- workBySlug is the only
   // lookup the schema exposes, so a card for one is a guaranteed 404. The
-  // scraper is still filling these in, so this is a live condition rather
-  // than a theoretical one.
-  $: linkable = works.filter((w: any) => !!w?.urlSlug);
-  $: hiddenCount = works.length - linkable.length;
+  // scraper is still filling these in, so this is live rather than theoretical.
+  const linkable = (list: any[]) => list.filter((w: any) => !!w?.urlSlug);
 
-  function href(nextPage: number, nextSort: string): string {
+  function pageHref(nextPage: number): string {
     const params = new URLSearchParams();
+    if (sort) params.set('sort', sort);
     if (nextPage > 1) params.set('page', String(nextPage));
-    if (nextSort !== 'POPULARITY') params.set('sort', nextSort);
     const qs = params.toString();
     return qs ? `${basePath}?${qs}` : basePath;
   }
 
   // A window around the current page rather than 2,219 links. First and last
-  // are always reachable so the ends of the shelf are one click away.
+  // stay reachable so the ends of the shelf are one click away.
   $: pageWindow = (() => {
     if (totalPages <= 1) return [] as number[];
     const span = 2;
@@ -51,162 +65,210 @@
   })();
 </script>
 
-<section class="works-browse">
-  <header class="browse-header">
-    <h1>{heading}</h1>
-    {#if blurb}<p class="blurb">{blurb}</p>{/if}
-    {#if total > 0}
-      <p class="count">{total.toLocaleString()} titles</p>
-    {/if}
-  </header>
-
-  {#if ssrError}
-    <p class="browse-error" role="alert">Couldn’t load this page. Try again in a moment.</p>
-  {:else if linkable.length === 0}
-    <p class="browse-empty">Nothing here yet.</p>
-  {:else}
-    <nav class="sorts" aria-label="Sort">
-      {#each WORK_SORTS as option}
-        <a
-          class="sort"
-          class:active={option.value === sort}
-          aria-current={option.value === sort ? 'true' : undefined}
-          href={href(1, option.value)}
-        >{option.label}</a>
-      {/each}
-    </nav>
-
-    <div class="results-grid">
-      {#each linkable as work (work.id)}
-        <PosterCard
-          id={work.id || ''}
-          title={work.titleEn || work.titleJp || ''}
-          image={work.id || ''}
-          imagePath="works"
-          score={work.score}
-          sub={workSubtitle(work.type, work.publishedFrom)}
-          description={work.synopsis || ''}
-          href={`/manga/${work.urlSlug}`}
-        />
-      {/each}
-    </div>
-
-    {#if hiddenCount > 0}
-      <!-- Said plainly rather than silently dropping them, so a short page
-           does not look like a bug. -->
-      <p class="hidden-note">{hiddenCount} more not yet ready to show.</p>
-    {/if}
-
-    {#if totalPages > 1}
-      <nav class="pager" aria-label="Pagination">
-        {#if page > 1}
-          <a class="page-link" href={href(page - 1, sort)} rel="prev">Previous</a>
-        {/if}
-        {#each pageWindow as p, i}
-          {#if i > 0 && p - pageWindow[i - 1] > 1}
-            <span class="gap" aria-hidden="true">…</span>
-          {/if}
-          <a
-            class="page-link"
-            class:active={p === page}
-            aria-current={p === page ? 'page' : undefined}
-            href={href(p, sort)}
-          >{p}</a>
-        {/each}
-        {#if page < totalPages}
-          <a class="page-link" href={href(page + 1, sort)} rel="next">Next</a>
-        {/if}
-      </nav>
-    {/if}
+<!-- Standing in for a banner: the name of the shelf, one line on what is on
+     it, and how much of it there is. No image -- a hero here would push the
+     first row of covers below the fold, and the covers are what a reader came
+     for. In the paged view the same block carries which shelf you opened, so
+     it orients rather than repeating itself. -->
+<header class="page-head">
+  <h1>{heading}</h1>
+  {#if blurb}<p class="blurb">{blurb}</p>{/if}
+  {#if total > 0}
+    <p class="head-meta">
+      {total.toLocaleString()} titles{#if sort}{' · '}{shelfLabel(sort)}, page {page} of {totalPages.toLocaleString()}{/if}
+    </p>
   {/if}
-</section>
+</header>
+
+{#if ssrError}
+  <section class="section">
+    <p class="notice" role="alert">Couldn’t load this page. Try again in a moment.</p>
+  </section>
+{:else if sort}
+  <!-- Paged view: one shelf in full. -->
+  <section class="section">
+    <SectionHeader title={shelfLabel(sort)} href={basePath} linkText="← All shelves" />
+
+    {#if linkable(works).length === 0}
+      <p class="notice">Nothing on this page.</p>
+    {:else}
+      <PosterGrid>
+        {#each linkable(works) as work (work.id)}
+          <PosterCard
+            id={work.id}
+            title={work.titleEn || work.titleJp || ''}
+            image={work.id}
+            imagePath="works"
+            score={work.score}
+            sub={workSubtitle(work.type, work.publishedFrom)}
+            href={`/manga/${work.urlSlug}`}
+          />
+        {/each}
+      </PosterGrid>
+
+      {#if totalPages > 1}
+        <nav class="pager" aria-label="Pagination">
+          {#if page > 1}
+            <a class="page-link" href={pageHref(page - 1)} rel="prev">Previous</a>
+          {/if}
+          {#each pageWindow as p, i}
+            {#if i > 0 && p - pageWindow[i - 1] > 1}
+              <span class="gap" aria-hidden="true">…</span>
+            {/if}
+            <a
+              class="page-link"
+              class:active={p === page}
+              aria-current={p === page ? 'page' : undefined}
+              href={pageHref(p)}
+            >{p}</a>
+          {/each}
+          {#if page < totalPages}
+            <a class="page-link" href={pageHref(page + 1)} rel="next">Next</a>
+          {/if}
+        </nav>
+      {/if}
+    {/if}
+  </section>
+{:else if shelves}
+  <!-- Shelf view: the three sorts, each a section. -->
+  {#each shelves as shelf (shelf.sort)}
+    {@const items = linkable(shelf.works).slice(0, shelfLimit)}
+    {#if items.length > 0}
+      <section class="section">
+        <SectionHeader
+          title={shelf.label}
+          href="{basePath}?sort={shelf.sort}"
+          linkText="See all →"
+        />
+        <PosterGrid>
+          {#each items as work (work.id)}
+            <PosterCard
+              id={work.id}
+              title={work.titleEn || work.titleJp || ''}
+              image={work.id}
+              imagePath="works"
+              score={work.score}
+              sub={workSubtitle(work.type, work.publishedFrom)}
+              href={`/manga/${work.urlSlug}`}
+            />
+          {/each}
+        </PosterGrid>
+      </section>
+    {/if}
+  {/each}
+
+  {#if shelves.every((s) => linkable(s.works).length === 0)}
+    <section class="section">
+      <p class="notice">Nothing here yet.</p>
+    </section>
+  {/if}
+{/if}
 
 <style>
-  .works-browse {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 1.5rem 1rem 3rem;
+  /* Full-bleed, matching the homepage's sections: the shelves are the page,
+     and a max-width column would strand cards on the wide displays this
+     catalogue is most often browsed on. The rule between sections is what
+     separates one shelf from the next -- no card, no box. */
+  .section {
+    padding: 48px var(--weeb-section-px, 48px);
   }
 
-  .browse-header h1 {
+  .section + .section {
+    border-top: 1px solid var(--weeb-border, oklch(28% 0.015 275));
+  }
+
+  /* Sits on the page's own background rather than in a card, and carries the
+     same horizontal padding as the shelves so the h1 lines up with the first
+     cover beneath it. The rule is the section rhythm starting here rather than
+     a border drawn around the block. */
+  .page-head {
+    padding: 40px var(--weeb-section-px, 48px) 28px;
+    border-bottom: 1px solid var(--weeb-border, oklch(28% 0.015 275));
+  }
+
+  .page-head h1 {
     margin: 0;
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--weeb-fg, oklch(95% 0.005 265));
   }
 
   .blurb {
-    margin: 0.5rem 0 0;
-    max-width: 60ch;
-    opacity: 0.8;
+    margin: 10px 0 0;
+    max-width: 62ch;
+    color: var(--weeb-fg-secondary, oklch(70% 0.01 270));
+    font-size: 15px;
+    line-height: 1.6;
   }
 
-  .count {
-    margin: 0.25rem 0 0;
-    font-size: 0.875rem;
-    opacity: 0.65;
+  .head-meta {
+    margin: 12px 0 0;
+    color: var(--weeb-fg-muted, oklch(62% 0.01 270));
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
   }
 
-  .sorts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 1.25rem 0;
-  }
-
-  .sort {
-    padding: 0.35rem 0.75rem;
-    border-radius: 999px;
-    border: 1px solid currentColor;
-    font-size: 0.875rem;
-    text-decoration: none;
-    opacity: 0.7;
-  }
-
-  .sort.active {
-    opacity: 1;
-    font-weight: 600;
-  }
-
-  .results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 1rem;
-  }
-
-  .hidden-note,
-  .browse-empty,
-  .browse-error {
-    margin-top: 1.5rem;
-    font-size: 0.875rem;
-    opacity: 0.7;
+  .notice {
+    margin: 0;
+    color: var(--weeb-fg-muted, oklch(62% 0.01 270));
+    font-size: 14px;
   }
 
   .pager {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.4rem;
-    margin-top: 2rem;
+    gap: 8px;
+    margin-top: 32px;
   }
 
   .page-link {
-    min-width: 2.25rem;
-    padding: 0.4rem 0.6rem;
-    border-radius: 0.375rem;
-    border: 1px solid currentColor;
+    min-width: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--weeb-border, oklch(28% 0.015 275));
+    border-radius: 8px;
+    color: var(--weeb-fg-secondary, oklch(70% 0.01 270));
+    font-size: 14px;
     text-align: center;
     text-decoration: none;
-    font-size: 0.875rem;
-    opacity: 0.7;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .page-link:hover {
+    background: var(--weeb-surface-hover, oklch(26% 0.022 275));
+    border-color: var(--weeb-accent, oklch(55% 0.16 298));
+    color: var(--weeb-fg, oklch(95% 0.005 265));
   }
 
   .page-link.active {
-    opacity: 1;
-    font-weight: 700;
+    background: var(--weeb-accent, oklch(55% 0.16 298));
+    border-color: var(--weeb-accent, oklch(55% 0.16 298));
+    color: var(--weeb-fg, oklch(95% 0.005 265));
+    font-weight: 600;
   }
 
   .gap {
-    padding: 0 0.15rem;
-    opacity: 0.5;
+    padding: 0 2px;
+    color: var(--weeb-fg-muted, oklch(62% 0.01 270));
+  }
+
+  @media (max-width: 767px) {
+    .section {
+      padding: var(--weeb-section-py, 32px) var(--weeb-section-px, 24px);
+    }
+    .page-head {
+      padding: 28px var(--weeb-section-px, 24px) 20px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .section {
+      padding: var(--weeb-section-py, 24px) var(--weeb-section-px, 16px);
+    }
+    .page-head {
+      padding: 24px var(--weeb-section-px, 16px) 18px;
+    }
   }
 </style>
