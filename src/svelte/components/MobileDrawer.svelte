@@ -180,7 +180,15 @@
   // No "My Profile" row: the user card at the top of the drawer is the link to
   // /profile, and a second one a row below it was the same destination twice.
   const userLinks = [
-    { href: '/profile/anime', label: 'My Anime List', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
+    // "My List", not "My Anime List" or the desktop menu's "Watchlist": the
+    // page behind it is one list with an Anime | Manga switch, and both of the
+    // old names picked a side. Nothing is watched on the manga half.
+    //
+    // One row rather than two. Two would be two links to the same page with
+    // different ?medium= params, and whichever sat second would read as the
+    // lesser of the pair -- which is the thing the peer switcher on the page
+    // exists to avoid.
+    { href: '/profile/anime', label: 'My List', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
     { href: '/settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
   ];
 
