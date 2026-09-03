@@ -104,8 +104,9 @@
     { href: '/light-novels', label: 'Light novels', icon: 'M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 016.5 22H20v-5M4 19.5V4.5A2.5 2.5 0 016.5 2H20v15' },
   ];
 
+  // No "My Profile" row: the user card at the top of the drawer is the link to
+  // /profile, and a second one a row below it was the same destination twice.
   const userLinks = [
-    { href: '/profile', label: 'My Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
     { href: '/profile/anime', label: 'My Anime List', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
     { href: '/settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
   ];
@@ -161,17 +162,27 @@
       </div>
 
       <!-- User card (if logged in) -->
-      {#if isLoggedIn && user}
+      <!-- The only way to the profile from this drawer. The Account list below
+           used to carry a "My Profile" row as well, pointing at the same page
+           one row further down.
+
+           Gated on isLoggedIn rather than on the user query having resolved,
+           because the Account list is gated that way too: requiring `user`
+           here while listing account links there meant a slow or failed user
+           query left the drawer with no route to the profile at all. -->
+      {#if isLoggedIn}
         <a href="/profile" on:click={handleLinkClick} class="drawer-user-card">
           <ProfileAvatar
-            username={user.username}
-            profileImageUrl={user.profileImageUrl}
+            username={user?.username ?? ''}
+            profileImageUrl={user?.profileImageUrl}
             size="md"
             linkToProfile={false}
           />
           <div class="drawer-user-info">
-            <span class="drawer-user-name">{user.username}</span>
-            <span class="drawer-user-sub">{user.firstname} {user.lastname}</span>
+            <span class="drawer-user-name">{user?.username ?? 'My Profile'}</span>
+            {#if user?.firstname || user?.lastname}
+              <span class="drawer-user-sub">{user.firstname} {user.lastname}</span>
+            {/if}
           </div>
           <svg class="drawer-user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 18l6-6-6-6" />
