@@ -24,14 +24,14 @@
 
 <Seo
   title={pageTitle}
-  description="Browse light novels — the source behind a great many of the season's anime."
+  description="Browse light novels and novels — the source behind a great many of the season's anime."
 />
 
 <StructuredData {schemas} />
 
 <WorksBrowsePage
   heading="Light novels"
-  blurb="The source behind a great many of the season's anime."
+  blurb="Light novels and novels — the source behind a great many of the season's anime."
   basePath="/light-novels"
   shelves={data.shelves}
   works={data.works}

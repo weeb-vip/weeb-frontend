@@ -10,9 +10,9 @@ import {
 /**
  * The shared load for the work browse pages.
  *
- * /manga and /light-novels differ by one type string and their copy;
- * everything else -- the two view modes, paging, sort validation, the fetch --
- * is identical. Two copies of this would drift the way workSubtitle's three
+ * /manga and /light-novels differ by which kinds they scope to and their
+ * copy; everything else -- the two view modes, paging, sort validation, the
+ * fetch -- is identical. Two copies of this would drift the way workSubtitle's three
  * copies did.
  *
  * Two views from one route rather than two:
@@ -30,13 +30,16 @@ export const SHELF_SIZE = 20;
 export const PER_PAGE = 24;
 
 export interface WorksBrowseLoad {
-  type: string;
+  /** Kinds to include; omit to mean every kind. */
+  types?: readonly string[];
+  /** Kinds to leave out, for the shelf that means "everything else". */
+  excludeTypes?: readonly string[];
   url: URL;
   locals: App.Locals;
   cookies: Cookies;
 }
 
-export async function loadWorksBrowse({ type, url, locals, cookies }: WorksBrowseLoad) {
+export async function loadWorksBrowse({ types, excludeTypes, url, locals, cookies }: WorksBrowseLoad) {
   const { auth, config } = locals;
   const fetcher = makeSSRFetcher(config.graphql_host, cookieHeaderFrom(cookies));
 
@@ -50,18 +53,23 @@ export async function loadWorksBrowse({ type, url, locals, cookies }: WorksBrows
   const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
 
   let ssrError: string | null = null;
-  const base = { auth: publicAuth(auth), type, sort, ssrError };
+  const scope = {
+    ...(types ? { types: [...types] } : {}),
+    ...(excludeTypes ? { excludeTypes: [...excludeTypes] } : {}),
+  };
+  const label = types ? types.join('+') : `not ${excludeTypes?.join('+')}`;
+  const base = { auth: publicAuth(auth), sort, ssrError };
 
   if (sort) {
     let result: any = null;
     try {
       result = await fetcher.fetchWithFallback(
         getWorksByType,
-        { input: { type, page: page - 1, perPage: PER_PAGE, sortBy: sort } },
-        `${type} ${sort} page ${page}`,
+        { input: { ...scope, page: page - 1, perPage: PER_PAGE, sortBy: sort } },
+        `${label} ${sort} page ${page}`,
       );
     } catch (error) {
-      console.error(`[SSR] Failed to fetch works for ${type}/${sort}:`, error);
+      console.error(`[SSR] Failed to fetch works for ${label}/${sort}:`, error);
       ssrError = 'Failed to load';
     }
 
@@ -82,7 +90,7 @@ export async function loadWorksBrowse({ type, url, locals, cookies }: WorksBrows
 
   let result: any = null;
   try {
-    const input = (sortBy: string) => ({ type, page: 0, perPage: SHELF_SIZE, sortBy });
+    const input = (sortBy: string) => ({ ...scope, page: 0, perPage: SHELF_SIZE, sortBy });
     result = await fetcher.fetchWithFallback(
       getWorksOverview,
       {
@@ -90,15 +98,15 @@ export async function loadWorksBrowse({ type, url, locals, cookies }: WorksBrows
         rated: input('SCORE'),
         newest: input('NEWEST'),
       },
-      `${type} shelves`,
+      `${label} shelves`,
     );
   } catch (error) {
-    console.error(`[SSR] Failed to fetch shelves for ${type}:`, error);
+    console.error(`[SSR] Failed to fetch shelves for ${label}:`, error);
     ssrError = 'Failed to load';
   }
 
   // Each shelf carries its own total, and they are all the same number -- the
-  // count for the type. Taken from the first that answered rather than a
+  // count for the scope. Taken from the first that answered rather than a
   // fourth query for it.
   const shelves = WORK_SHELVES.map((shelf) => ({
     sort: shelf.sort,

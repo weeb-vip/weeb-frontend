@@ -26,14 +26,14 @@
 
 <Seo
   title={pageTitle}
-  description="Browse manga — series, one-shots and everything anime gets adapted from."
+  description="Browse manga, manhwa, manhua and one-shots — everything anime gets adapted from."
 />
 
 <StructuredData {schemas} />
 
 <WorksBrowsePage
   heading="Manga"
-  blurb="Series, one-shots and everything anime gets adapted from."
+  blurb="Manga, manhwa, manhua and one-shots — everything anime gets adapted from."
   basePath="/manga"
   shelves={data.shelves}
   works={data.works}

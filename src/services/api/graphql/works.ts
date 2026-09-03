@@ -48,6 +48,20 @@ export const getWorksByType = /* GraphQL */ `
 `;
 
 /**
+ * How the catalogue's ten kinds divide into the two shelves readers get.
+ *
+ * A reader looking for a novel does not distinguish a light novel from a
+ * novel, and one looking for a comic does not care whether MyAnimeList filed
+ * it as a manga, a manhwa, a one-shot or a doujinshi. Two shelves, then, and
+ * the scraper's finer labels stay available on each work's own page.
+ *
+ * The comics shelf is defined as everything the novels shelf is not, so a kind
+ * MyAnimeList invents tomorrow lands somewhere rather than nowhere. That is
+ * also the honest reading of "everything else is a manga".
+ */
+export const NOVEL_TYPES = ['LIGHT_NOVEL', 'NOVEL', 'WEB_NOVEL'] as const;
+
+/**
  * The three shelves, in the order they appear.
  *
  * Popularity leads because it is the only one of the three every row has:
