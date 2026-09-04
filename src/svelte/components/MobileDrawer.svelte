@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { derived } from 'svelte/store';
   import { createQuery } from '@tanstack/svelte-query';
@@ -33,14 +34,86 @@
       isLoggedIn = state.isLoggedIn;
     });
 
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    }
+    if (isOpen) lockBody();
     return () => {
       unsubscribe();
-      document.body.style.overflow = '';
+      unlockBody();
     };
   });
+
+  // overflow: hidden alone does not hold on iOS Safari -- the page keeps
+  // scrolling under the drawer. Pinning the body and restoring the offset on
+  // close is the only thing that works there, and it costs nothing elsewhere.
+  let savedScrollY = 0;
+  let bodyLocked = false;
+
+  function lockBody() {
+    if (typeof document === 'undefined' || bodyLocked) return;
+    savedScrollY = window.scrollY;
+    const b = document.body.style;
+    b.position = 'fixed';
+    b.top = `-${savedScrollY}px`;
+    b.left = '0';
+    b.right = '0';
+    b.overflow = 'hidden';
+    bodyLocked = true;
+  }
+
+  function unlockBody() {
+    if (typeof document === 'undefined' || !bodyLocked) return;
+    const b = document.body.style;
+    b.position = '';
+    b.top = '';
+    b.left = '';
+    b.right = '';
+    b.overflow = '';
+    bodyLocked = false;
+    window.scrollTo(0, savedScrollY);
+  }
+
+  // Focus was never moved into the panel, so a keyboard user tabbed through
+  // the page behind an open drawer and Escape dropped them at the top of the
+  // document. This puts focus on the close button, keeps Tab inside the panel,
+  // and hands focus back to whatever opened it -- the hamburger.
+  function trapFocus(node: HTMLElement) {
+    const opener = document.activeElement as HTMLElement | null;
+    const SELECTOR =
+      'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
+    const focusable = () =>
+      [...node.querySelectorAll<HTMLElement>(SELECTOR)].filter(
+        (el) => el.offsetParent !== null || el === document.activeElement,
+      );
+
+    (node.querySelector<HTMLElement>('.drawer-close') ?? node).focus();
+
+    function onKeydown(event: KeyboardEvent) {
+      if (event.key !== 'Tab') return;
+      const items = focusable();
+      if (items.length === 0) return;
+
+      const first = items[0];
+      const last = items[items.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    node.addEventListener('keydown', onKeydown);
+
+    return {
+      destroy() {
+        node.removeEventListener('keydown', onKeydown);
+        // Only if the opener is still in the document; a logout navigates away.
+        if (opener?.isConnected) opener.focus();
+      },
+    };
+  }
 
   // Create the query during component init (context is only available
   // here) with a reactive enabled flag — lazily calling useUser() from a
@@ -53,9 +126,9 @@
 
   $: if (typeof window !== 'undefined') {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockBody();
     } else {
-      document.body.style.overflow = '';
+      unlockBody();
     }
   }
 
@@ -104,11 +177,30 @@
     { href: '/light-novels', label: 'Light novels', icon: 'M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 016.5 22H20v-5M4 19.5V4.5A2.5 2.5 0 016.5 2H20v15' },
   ];
 
+  // No "My Profile" row: the user card at the top of the drawer is the link to
+  // /profile, and a second one a row below it was the same destination twice.
   const userLinks = [
-    { href: '/profile', label: 'My Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-    { href: '/profile/anime', label: 'My Anime List', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
+    // "My List", not "My Anime List" or the desktop menu's "Watchlist": the
+    // page behind it is one list with an Anime | Manga switch, and both of the
+    // old names picked a side. Nothing is watched on the manga half.
+    //
+    // One row rather than two. Two would be two links to the same page with
+    // different ?medium= params, and whichever sat second would read as the
+    // lesser of the pair -- which is the thing the peer switcher on the page
+    // exists to avoid.
+    { href: '/profile/anime', label: 'My List', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
     { href: '/settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
   ];
+
+  // The drawer gave no indication of where you were, while the desktop header
+  // has always marked the current item. Home matches exactly; everything else
+  // matches by prefix so a detail page keeps its section lit.
+  function isActive(href: string, pathname: string): boolean {
+    const path = href.split('?')[0];
+    if (path === '/') return pathname === '/';
+
+    return pathname.startsWith(path);
+  }
 
   async function handleLogout() {
     try {
@@ -136,8 +228,16 @@
     role="presentation"
     transition:fade={{ duration: 200, easing: cubicOut }}
   >
+    <!-- A dialog, and announced as one. Without the role and label a screen
+         reader got no indication anything had opened; tabindex makes the panel
+         itself a focus fallback when it holds no focusable child. -->
     <div
       class="drawer-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menu"
+      tabindex="-1"
+      use:trapFocus
       transition:fly={{ x: '100%', duration: 280, easing: cubicOut, opacity: 1 }}
     >
       <!-- Header -->
@@ -154,24 +254,34 @@
           <span class="drawer-logo-text">weeb.vip</span>
         </a>
         <button class="drawer-close" on:click={onClose} aria-label="Close menu">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
       <!-- User card (if logged in) -->
-      {#if isLoggedIn && user}
+      <!-- The only way to the profile from this drawer. The Account list below
+           used to carry a "My Profile" row as well, pointing at the same page
+           one row further down.
+
+           Gated on isLoggedIn rather than on the user query having resolved,
+           because the Account list is gated that way too: requiring `user`
+           here while listing account links there meant a slow or failed user
+           query left the drawer with no route to the profile at all. -->
+      {#if isLoggedIn}
         <a href="/profile" on:click={handleLinkClick} class="drawer-user-card">
           <ProfileAvatar
-            username={user.username}
-            profileImageUrl={user.profileImageUrl}
+            username={user?.username ?? ''}
+            profileImageUrl={user?.profileImageUrl}
             size="md"
             linkToProfile={false}
           />
           <div class="drawer-user-info">
-            <span class="drawer-user-name">{user.username}</span>
-            <span class="drawer-user-sub">{user.firstname} {user.lastname}</span>
+            <span class="drawer-user-name">{user?.username ?? 'My Profile'}</span>
+            {#if user?.firstname || user?.lastname}
+              <span class="drawer-user-sub">{user.firstname} {user.lastname}</span>
+            {/if}
           </div>
           <svg class="drawer-user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 18l6-6-6-6" />
@@ -180,10 +290,16 @@
       {/if}
 
       <!-- Navigation -->
-      <nav class="drawer-nav">
-        <div class="drawer-nav-label">Navigate</div>
+      <nav class="drawer-nav" aria-label="Primary">
         {#each navLinks as link}
-          <a href={link.href} on:click={handleLinkClick} class="drawer-nav-item">
+          {@const active = isActive(link.href, $page.url.pathname)}
+          <a
+            href={link.href}
+            on:click={handleLinkClick}
+            class="drawer-nav-item"
+            class:active
+            aria-current={active ? 'page' : undefined}
+          >
             <svg class="drawer-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d={link.icon} />
             </svg>
@@ -197,7 +313,14 @@
         <div class="drawer-nav">
           <div class="drawer-nav-label">Account</div>
           {#each userLinks as link}
-            <a href={link.href} on:click={handleLinkClick} class="drawer-nav-item">
+            {@const active = isActive(link.href, $page.url.pathname)}
+            <a
+              href={link.href}
+              on:click={handleLinkClick}
+              class="drawer-nav-item"
+              class:active
+              aria-current={active ? 'page' : undefined}
+            >
               <svg class="drawer-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d={link.icon} />
               </svg>
@@ -207,9 +330,24 @@
         </div>
       {/if}
 
-      <!-- Settings -->
+      <!-- Sign in sits directly under the navigation rather than at the foot of
+           the panel. It is the primary action for a signed-out visitor, and the
+           flex spacer below used to strand it past a quarter-panel of empty
+           space where nothing drew the eye toward it. -->
+      {#if !isLoggedIn}
+        <div class="drawer-auth">
+          <button class="drawer-btn-primary" on:click={handleLoginClick}>
+            Login
+          </button>
+          <button class="drawer-btn-ghost" on:click={handleRegisterClick}>
+            Register
+          </button>
+        </div>
+      {/if}
+
+      <!-- Preferences -->
       <div class="drawer-settings">
-        <div class="drawer-nav-label">Settings</div>
+        <div class="drawer-nav-label">Preferences</div>
         <div class="drawer-setting-row">
           <span>Title Language</span>
           <button
@@ -217,7 +355,7 @@
             on:click={() => preferencesStore.toggleTitleLanguage()}
             aria-label="Toggle title language"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
             </svg>
             <span>{$preferencesStore.titleLanguage === 'english' ? 'EN' : 'JP'}</span>
@@ -240,21 +378,9 @@
         </div>
       {/if}
 
-      <!-- Auth buttons (if not logged in) -->
-      {#if !isLoggedIn}
-        <div class="drawer-auth">
-          <button class="drawer-btn-primary" on:click={handleLoginClick}>
-            Login
-          </button>
-          <button class="drawer-btn-ghost" on:click={handleRegisterClick}>
-            Register
-          </button>
-        </div>
-      {/if}
-
       <!-- Footer -->
       <div class="drawer-footer">
-        <span>v{version}</span>
+        <span>{version}</span>
       </div>
     </div>
   </div>
@@ -281,6 +407,9 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    /* Without this, scrolling past the end of the drawer chains to the page
+       behind it. */
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
   }
@@ -308,12 +437,15 @@
   }
   .drawer-logo-text {
     font-weight: 700;
-    font-size: 17px;
+    font-size: 20px;
     letter-spacing: -0.02em;
   }
+  /* 44x44 is the iOS minimum and this is the most-tapped control in a panel
+     that only ever renders on touch. The icon inside stays 20px. */
   .drawer-close {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
+    margin-right: -8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -372,7 +504,7 @@
   }
   .drawer-nav-label {
     padding: 8px 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -393,6 +525,17 @@
     background: var(--weeb-surface);
     color: var(--weeb-fg);
   }
+  /* The same accent the desktop header uses for aria-current, so the current
+     page is marked identically whichever nav you opened. Weight carries it as
+     well as colour: a list item distinguished only by hue is unreadable to
+     anyone who cannot separate the two. */
+  .drawer-nav-item.active {
+    color: var(--weeb-accent-text);
+    font-weight: 600;
+  }
+  .drawer-nav-item.active .drawer-nav-icon {
+    color: var(--weeb-accent-text);
+  }
   .drawer-nav-icon {
     flex-shrink: 0;
     color: var(--weeb-fg-muted);
@@ -411,7 +554,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 20px;
+    padding: 2px 20px;
     font-size: 15px;
     font-weight: 500;
     color: var(--weeb-fg-secondary);
@@ -419,8 +562,13 @@
   .drawer-lang-toggle {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 6px 12px;
+    /* Padded to the 44px touch minimum without growing the chip's visual
+       weight: the row it sits in keeps its height because the label beside it
+       is centred against the same box. */
+    min-height: 44px;
+    padding: 6px 14px;
     border-radius: var(--weeb-radius);
     background: var(--weeb-surface);
     color: var(--weeb-fg-secondary);
@@ -482,19 +630,22 @@
     padding: 8px 20px 16px;
     border-top: 1px solid var(--weeb-border);
   }
+  /* Reads as an ordinary row until touched. Red on rest made the destructive
+     action the most salient element in the panel, outranking the accent. */
   .drawer-logout-btn {
     display: flex;
     align-items: center;
     gap: 14px;
     width: 100%;
+    min-height: 44px;
     padding: 12px 0;
     font-size: 15px;
     font-weight: 500;
-    color: var(--weeb-red);
-    transition: opacity 0.15s;
+    color: var(--weeb-fg-secondary);
+    transition: color 0.15s;
   }
-  .drawer-logout-btn:hover, .drawer-logout-btn:active {
-    opacity: 0.8;
+  .drawer-logout-btn:hover, .drawer-logout-btn:active, .drawer-logout-btn:focus-visible {
+    color: var(--weeb-red);
   }
 
   /* Footer */

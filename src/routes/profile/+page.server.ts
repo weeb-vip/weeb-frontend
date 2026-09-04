@@ -3,7 +3,8 @@ import { makeSSRFetcher, loggedOutAuth, publicAuth, cookieHeaderFrom } from '$li
 import {
   queryUserDetails,
   queryUserAnimes,
-  queryUserAnimeCount,
+  queryUserAnimeStatusCounts,
+  queryUserWorkStatusCounts,
   queryUserWorks,
   getCurrentlyAiringWithDatesAndEpisodes
 } from '../../services/api/graphql/queries';
@@ -24,47 +25,45 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
   // Every watchlist query needs the signed-in user, so a signed-out visit has
   // nothing to prefetch and should not spend seven requests finding that out.
   // The airing window is public, so it is still worth fetching.
+  // Two count queries and two short lists, where this used to be three count
+  // queries and three lists of up to a thousand entries each.
+  //
+  // queryUserAnimes selects every episode of every entry, synopses included,
+  // so `limit: 1000` on the watching and plan-to-watch lists pulled tens of
+  // thousands of episode rows into this response. The counts had already been
+  // cut down to `total` alone for exactly that reason; the lists had not.
+  //
+  // What the rows were for:
+  //   - a Set of ids, to pick out which currently-airing shows are on the list
+  //   - the entries behind those shows
+  //   - `.total`, for the stat row
+  //
+  // The totals now come from the status-count queries the list page uses, which
+  // return every status in one request. The airing cross-reference no longer
+  // needs a watchlist at all: currentlyAiring already carries `userAnime` per
+  // show, which is how the homepage builds its own "airing from your list" with
+  // no extra query. That leaves only the rows actually rendered -- six watching
+  // cards and twelve reading ones.
   const watchlist = auth.isLoggedIn
     ? Promise.all([
         fetcher.fetchWithFallback(queryUserDetails, {}, 'user details'),
+        // Six, because the dashboard renders six. These are the only entries
+        // whose episodes are read, for the next-episode line on each card.
         fetcher.fetchWithFallback(
           queryUserAnimes,
-          { input: { status: Status.Watching, limit: 1000, page: 1 } },
+          { input: { status: Status.Watching, limit: 6, page: 1 } },
           'watching list'
         ),
-        fetcher.fetchWithFallback(
-          queryUserAnimes,
-          { input: { status: Status.Plantowatch, limit: 1000, page: 1 } },
-          'plan-to-watch list'
-        ),
-        // The reading counterpart of the watching list, for the dashboard's
-        // Currently Reading row and its Reading stat. One list is enough here --
-        // the full reading list lives on /profile/anime?medium=manga.
+        // Twelve, matching the Currently Reading row.
         fetcher.fetchWithFallback(
           queryUserWorks,
-          { input: { status: WorkStatus.Reading, limit: 1000, page: 1 } },
+          { input: { status: WorkStatus.Reading, limit: 12, page: 1 } },
           'reading list'
         ),
-        // Counts only. These three are rendered as integers and nothing reads
-        // the rows behind them; asking for the list would pull every episode of
-        // every entry to display three numbers.
-        fetcher.fetchWithFallback(
-          queryUserAnimeCount,
-          { input: { status: Status.Completed, limit: 1, page: 1 } },
-          'completed count'
-        ),
-        fetcher.fetchWithFallback(
-          queryUserAnimeCount,
-          { input: { status: Status.Dropped, limit: 1, page: 1 } },
-          'dropped count'
-        ),
-        fetcher.fetchWithFallback(
-          queryUserAnimeCount,
-          { input: { status: Status.Onhold, limit: 1, page: 1 } },
-          'on-hold count'
-        )
+        fetcher.fetchWithFallback(queryUserAnimeStatusCounts, {}, 'anime status counts'),
+        fetcher.fetchWithFallback(queryUserWorkStatusCounts, {}, 'work status counts')
       ])
-    : Promise.resolve([null, null, null, null, null, null, null]);
+    : Promise.resolve([null, null, null, null, null]);
 
   const airing = fetcher.fetchWithFallback(
     getCurrentlyAiringWithDatesAndEpisodes,
@@ -72,7 +71,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     'currently airing'
   );
 
-  const [[user, watching, planToWatch, reading, completed, dropped, onHold], currentlyAiring] =
+  const [[user, watching, reading, animeCounts, workCounts], currentlyAiring] =
     await Promise.all([watchlist, airing]);
 
   const isTokenExpired = fetcher.wasTokenExpired();
@@ -86,11 +85,9 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     ssr: {
       user: (user as any)?.UserDetails ?? null,
       watching: (watching as any)?.UserAnimes ?? null,
-      planToWatch: (planToWatch as any)?.UserAnimes ?? null,
       reading: (reading as any)?.UserWorks ?? null,
-      completed: (completed as any)?.UserAnimes ?? null,
-      dropped: (dropped as any)?.UserAnimes ?? null,
-      onHold: (onHold as any)?.UserAnimes ?? null,
+      animeCounts: (animeCounts as any)?.UserAnimeStatusCounts ?? null,
+      workCounts: (workCounts as any)?.UserWorkStatusCounts ?? null,
       currentlyAiring: currentlyAiring ?? null,
       // The client rebuilds the same window; passing the bounds keeps its query
       // key identical to the one these results belong to.

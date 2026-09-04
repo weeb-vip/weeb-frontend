@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte';
+  import { configStore } from '../stores/config';
 
   export let username: string = '';
   export let profileImageUrl: string | null = null;
@@ -9,7 +10,17 @@
 
   let imageError = false;
 
-  const config = getContext<{ cdn_user_url: string } | undefined>('config') || { cdn_user_url: '' };
+  // Context first, then the store ConfigProvider itself reads from.
+  //
+  // The store fallback is what makes this component work outside a
+  // ConfigProvider. Only the desktop header wraps one, so every other consumer
+  // -- the mobile drawer among them -- got cdn_user_url: '' and built a
+  // relative URL that 404s. The <img> error handler then swapped in the
+  // initial, so the avatar looked deliberate rather than broken.
+  const config = getContext<{ cdn_user_url: string } | undefined>('config') ??
+    (configStore.get() as { cdn_user_url?: string } | undefined) ??
+    undefined;
+  const cdnUserUrl: string = config?.cdn_user_url || 'https://cdn.weeb.vip/users';
 
   function getInitial(): string {
     if (!username) return '?';
@@ -27,11 +38,11 @@
     const suffix = size === 'lg' ? '_64' : '_32';
     // Insert suffix before file extension
     const lastDotIndex = profileImageUrl.lastIndexOf('.');
-    if (lastDotIndex === -1) return `${config.cdn_user_url}/${profileImageUrl}${suffix}`;
+    if (lastDotIndex === -1) return `${cdnUserUrl}/${profileImageUrl}${suffix}`;
 
     const nameWithoutExt = profileImageUrl.substring(0, lastDotIndex);
     const extension = profileImageUrl.substring(lastDotIndex);
-    return `${config.cdn_user_url}/${nameWithoutExt}${suffix}${extension}`;
+    return `${cdnUserUrl}/${nameWithoutExt}${suffix}${extension}`;
   }
 
   function handleImageError() {
