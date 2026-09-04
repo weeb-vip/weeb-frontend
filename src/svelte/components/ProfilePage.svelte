@@ -4,7 +4,7 @@
   import { createQuery, createMutation } from '@tanstack/svelte-query';
   import { format } from 'date-fns';
   import { initializeQueryClient } from '../services/query-client';
-  import { getUser, fetchUserAnimes, fetchUserAnimeCount, fetchUserWorks, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
+  import { getUser, fetchUserAnimes, fetchUserAnimeStatusCounts, fetchUserWorkStatusCounts, fetchUserWorks, fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
   import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
   import { getAirTimeDisplay, findNextEpisode, getCurrentTime, parseAirTime } from '../../services/airTimeUtils';
   import Button from './Button.svelte';
@@ -56,58 +56,39 @@
   );
   const watchingQuery = createQuery(
     {
-      ...fetchUserAnimes({ input: { status: Status.Watching, limit: 1000, page: 1 } }),
+      // Six, because six cards are rendered. These are the only entries whose
+      // episodes are read -- for the next-episode line on each card.
+      ...fetchUserAnimes({ input: { status: Status.Watching, limit: 6, page: 1 } }),
       initialData: ssr?.watching ?? undefined
     },
     queryClient
   );
-  const planToWatchQuery = createQuery(
-    {
-      ...fetchUserAnimes({ input: { status: Status.Plantowatch, limit: 1000, page: 1 } }),
-      initialData: ssr?.planToWatch ?? undefined
-    },
-    queryClient
-  );
-
-  // The reading counterpart of the watching list. Its total also feeds the
-  // Reading stat, so the dashboard shows the shelf and its size from one query.
+  // Reading, for the Currently Reading row. Twelve, matching what the row
+  // renders; its total comes from the work counts below rather than from the
+  // length of this page.
   const readingQuery = createQuery(
     {
-      ...fetchUserWorks({ input: { status: WorkStatus.Reading, limit: 1000, page: 1 } }),
+      ...fetchUserWorks({ input: { status: WorkStatus.Reading, limit: 12, page: 1 } }),
       initialData: ssr?.reading ?? undefined
     },
     queryClient
   );
 
-  // Completed, dropped and on-hold are rendered as numbers only -- nothing
-  // reads the rows behind them -- so these ask for the count alone.
+  // Every status in one request each, which is what /profile/anime already
+  // does. These replaced three separate count queries and retired the
+  // plan-to-watch list outright: its thousand entries existed to produce a
+  // total and a set of ids, and both are cheaper elsewhere -- the total here,
+  // the ids from currentlyAiring's own userAnime field.
   //
-  // They previously fetched up to 1000 entries each, and every entry carried
-  // its anime and every episode of that anime with synopses. For the heaviest
-  // account that was roughly 30,000 episode rows pulled across three requests
-  // to display three integers.
-  //
-  // The count is also the correct one. animes.length stops at the page limit,
-  // so a user with 3,460 completed was shown 1000.
-  const completedQuery = createQuery(
-    {
-      ...fetchUserAnimeCount({ input: { status: Status.Completed, limit: 1, page: 1 } }),
-      initialData: ssr?.completed ?? undefined
-    },
+  // The lists behind these numbers are not fetched. A dashboard showing "412
+  // completed" has no use for 412 rows, and the rows are expensive: every
+  // entry carries its anime and every episode of it, synopses included.
+  const animeCountsQuery = createQuery(
+    { ...fetchUserAnimeStatusCounts(), initialData: ssr?.animeCounts ?? undefined },
     queryClient
   );
-  const droppedQuery = createQuery(
-    {
-      ...fetchUserAnimeCount({ input: { status: Status.Dropped, limit: 1, page: 1 } }),
-      initialData: ssr?.dropped ?? undefined
-    },
-    queryClient
-  );
-  const onHoldQuery = createQuery(
-    {
-      ...fetchUserAnimeCount({ input: { status: Status.Onhold, limit: 1, page: 1 } }),
-      initialData: ssr?.onHold ?? undefined
-    },
+  const workCountsQuery = createQuery(
+    { ...fetchUserWorkStatusCounts(), initialData: ssr?.workCounts ?? undefined },
     queryClient
   );
   const currentlyAiringQuery = createQuery(
@@ -150,7 +131,7 @@
   // -- the scraper assigns those on its own schedule and an unlinkable card is
   // worse than a shorter row.
   $: readingWorks = ($readingQuery.data?.works ?? []).filter((e) => e?.work?.urlSlug);
-  $: readingTotal = Number($readingQuery.data?.total ?? readingWorks.length);
+  $: readingTotal = Number($workCountsQuery.data?.reading ?? $readingQuery.data?.total ?? readingWorks.length);
 
   $: watchlistAnalysis = (() => {
     if (!$userQuery) {
@@ -167,10 +148,9 @@
     }
 
     // Check if data is still loading
-    const isLoading = $watchingQuery.isLoading || $planToWatchQuery.isLoading || $currentlyAiringQuery.isLoading;
+    const isLoading = $watchingQuery.isLoading || $currentlyAiringQuery.isLoading;
 
     const watching = $watchingQuery.data?.animes || [];
-    const planToWatch = $planToWatchQuery.data?.animes || [];
     const currentlyAiringShows = $currentlyAiringQuery.data?.currentlyAiring || [];
 
     // Create lookup map of currently airing shows by ID
@@ -181,7 +161,23 @@
       }
     });
 
-    const allWatchlistShows = [...watching, ...planToWatch];
+    // The watchlist entries among the shows airing in this window, built from
+    // the airing payload rather than from the watchlist.
+    //
+    // Both loops below want the same thing: the intersection of the viewer's
+    // list with these 25 shows. currentlyAiring already carries userAnime per
+    // show, so the intersection is a filter over 25 rather than a Set built
+    // from a thousand rows -- the same trick the homepage uses for "airing from
+    // your list". Shaped like a watchlist entry so everything downstream reads
+    // unchanged.
+    //
+    // Watching and plan-to-watch only, matching what the two lists used to
+    // contain: a completed or dropped show airing this week is not something
+    // the dashboard was ever surfacing.
+    const ON_LIST = new Set(['WATCHING', 'PLANTOWATCH']);
+    const allWatchlistShows = currentlyAiringShows
+      .filter((anime: any) => anime?.userAnime && ON_LIST.has(String(anime.userAnime.status).toUpperCase()))
+      .map((anime: any) => ({ ...anime.userAnime, anime }));
     const airingSoon: any[] = [];
     const recentlyAired: any[] = [];
     const now = getCurrentTime();
@@ -425,11 +421,11 @@
       // JavaScript's 53-bit integer limit. Left as strings, the summed TOTAL
       // tile concatenates instead of adding: 6, 53, 294, 1, 1 rendered as
       // 65329411. Codegen types Int64 as `any`, so nothing catches this.
-      watching: Number($watchingQuery.data?.total ?? watching.length),
-      planToWatch: Number($planToWatchQuery.data?.total ?? planToWatch.length),
-      completed: Number($completedQuery.data?.total ?? 0),
-      dropped: Number($droppedQuery.data?.total ?? 0),
-      onHold: Number($onHoldQuery.data?.total ?? 0),
+      watching: Number($animeCountsQuery.data?.watching ?? watching.length),
+      planToWatch: Number($animeCountsQuery.data?.planToWatch ?? 0),
+      completed: Number($animeCountsQuery.data?.completed ?? 0),
+      dropped: Number($animeCountsQuery.data?.dropped ?? 0),
+      onHold: Number($animeCountsQuery.data?.onHold ?? 0),
       airingSoon: airingSoon.slice(0, 12),
       recentlyAired: recentlyAired.slice(0, 6),
       currentlyWatching,
