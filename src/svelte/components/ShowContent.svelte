@@ -557,27 +557,38 @@
                      engines which language it is, and screen readers which voice to use. -->
                 <p class="hero-title-jp" lang="ja">{anime.titleJp}</p>
               {/if}
-            </div>
-          </div>
-
-          <div class="hero-panel-body">
-            <!-- Under the title, not above it. The name identifies the show;
-                 format, year and studio qualify it. -->
-            <p class="hero-meta">
-              {anime.type || "TV"} Series &middot; {getYearUTC(anime.startDate)}
-              {#if anime.studios && anime.studios.length > 0}
-                &middot; {Array.isArray(anime.studios) ? anime.studios[0] : anime.studios}
-              {/if}
-              <!-- Which run of the series this is, when it is known. Sits with
-                   the other qualifiers rather than beside the title: the name
-                   already says which show, this says which part of it.
+              <!-- Which run of the series this is: under the name, not in the
+                   qualifier line below the panel. That line holds facts about
+                   the production -- format, year, studio -- while this says
+                   which part of the series you are looking at, which is part of
+                   identifying it. It also survives a phone, where two short
+                   words in the title column always fit; as a fourth qualifier on
+                   a line that already wraps it was left stranded on its own row.
 
                    Absent for most of the catalogue. The season is derived from
                    the air dates TheTVDB and MyAnimeList agree on, and that
                    derivation refuses rather than guesses -- so an unknown
                    season renders as nothing at all, never as "Season ?". -->
               {#if seasonLabel}
-                &middot; {seasonLabel}
+                <p class="hero-season">{seasonLabel}</p>
+              {/if}
+            </div>
+          </div>
+
+          <div class="hero-panel-body">
+            <!-- Under the title, not above it. The name identifies the show;
+                 format, year and studio qualify it. -->
+            <!-- One element per qualifier, so the line can break between them
+                 and never inside one. As a single run of text it broke wherever
+                 it ran out of room, which on a phone meant "Season" ending a
+                 line and the "2" sitting alone on the next. The separators are
+                 drawn by CSS between adjacent items, so an absent studio or
+                 season cannot strand a dot. -->
+            <p class="hero-meta">
+              <span class="hero-meta-item">{anime.type || "TV"} Series</span>
+              <span class="hero-meta-item">{getYearUTC(anime.startDate)}</span>
+              {#if anime.studios && anime.studios.length > 0}
+                <span class="hero-meta-item">{Array.isArray(anime.studios) ? anime.studios[0] : anime.studios}</span>
               {/if}
             </p>
 
@@ -1019,8 +1030,25 @@
   /* The band under the identity pair, centred. Centring is what makes it read as
      a caption to the pair above rather than a second column of its own. */
   .hero-panel-body {
-    margin-top: 18px;
+    /* The gap between the name and this band, and the rhythm inside it, are
+       these two numbers and nothing else. They used to be the sum of whatever
+       margins the children happened to carry -- 8 above the meta line, 24 under
+       the tags, 16 above the action, plus 24 under the Japanese title and this
+       rule's own margin -- which compounded into a 40px gulf under the name and
+       left the meta line and the tags touching. Flex gap cannot compound, so
+       the reset below is what keeps it honest. */
+    margin-top: 20px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .hero-panel-body > .hero-meta,
+  .hero-panel-body > .hero-source,
+  .hero-panel-body > :global(.hero-tags),
+  .hero-panel-body > .hero-actions {
+    margin: 0;
   }
   .hero-panel-body :global(.hero-tags),
   .hero-panel-body :global(.platforms-container) {
@@ -1051,17 +1079,6 @@
     width: 320px;
   }
 
-  /* The band under the identity row. Tags, watch-on marks and the action are
-     about the show, not about its name, so they get the panel's width instead
-     of the text column's -- which is what leaves the space beside the poster
-     empty rather than stranded. */
-  .hero-panel-body {
-    margin-top: 16px;
-  }
-
-  .hero-actions {
-    margin-top: 16px;
-  }
 
   /* Next-episode block: the schedule leads the data panel. */
   /* No trailing rule any more: the border and the padding under it existed to
@@ -1116,11 +1133,10 @@
        width and a 96px poster beside a ~900px column stops being the subject and
        becomes a stamp, so it scales with the room it is given. */
     .hero-poster { width: clamp(96px, 12vw, 148px); }
-    .hero-panel .hero-title { margin-bottom: 2px; }
-    .hero-panel .hero-meta { margin-top: 6px; }
-    .hero-panel-body { margin-top: 12px; }
-    .hero-panel .hero-tags { margin-bottom: 10px; }
-    .hero-panel .hero-actions { margin-top: 10px; }
+    .hero-panel .hero-title { margin-bottom: 4px; }
+    /* Only the two numbers the body is built from, so the rhythm tightens
+       without any child gaining a margin of its own again. */
+    .hero-panel .hero-panel-body { margin-top: 16px; gap: 10px; }
 
     /* The schedule collapses from a four-row block to one line. It is the same
        information -- state, episode, air time, countdown -- read across instead
@@ -1228,6 +1244,38 @@
     color: var(--weeb-fg-muted);
     text-transform: uppercase;
     margin-top: 8px;
+    /* Flex rather than a text run: wrapping now happens between qualifiers
+       instead of at whatever space falls at the edge. justify-content repeats
+       the centring .hero-panel-body sets, which text-align no longer reaches
+       once the children are flex items. */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 2px;
+  }
+
+  .hero-meta-item {
+    white-space: nowrap;
+  }
+
+  /* Between adjacent items only, so the first on the line carries no dot and a
+     missing qualifier removes its separator with it. */
+  .hero-meta-item + .hero-meta-item::before {
+    content: "\00b7";
+    margin: 0 0.5em;
+  }
+
+  /* Accent, not muted: this is the one fact up here that is not the name, and
+     it earns colour by being the thing a reader scans for when a series has
+     several entries. Same accent the header uses for its active link. */
+  .hero-season {
+    font-family: var(--weeb-font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--weeb-accent-text);
+    margin-top: 6px;
   }
 
   .hero-title {
@@ -1243,7 +1291,6 @@
   .hero-title-jp {
     font-size: 15px;
     color: var(--weeb-fg-muted);
-    margin-bottom: 24px;
     font-weight: 400;
   }
 
