@@ -27,6 +27,19 @@
   // Subscribe to preferences for reactive title updates
   $: preferences = $preferencesStore;
   $: animeTitle = anime ? getAnimeTitle(anime, preferences.titleLanguage) : '';
+
+  // "Season 2", or "Special" for TheTVDB's season 0.
+  //
+  // Null and 0 are different answers and must not collapse: null is "we do not
+  // know", which shows nothing, while 0 is the specials season and shows as
+  // "Special". A truthiness check would render neither, which is why this
+  // tests for null explicitly.
+  $: seasonLabel = (() => {
+    const n = anime?.seasonNumber;
+    if (n === null || n === undefined) return '';
+
+    return n === 0 ? 'Special' : `Season ${n}`;
+  })();
   export let animeId: string;
   export let ssrAnimeData: any = null;
   export let ssrCharactersData: any = null;
@@ -554,6 +567,17 @@
               {anime.type || "TV"} Series &middot; {getYearUTC(anime.startDate)}
               {#if anime.studios && anime.studios.length > 0}
                 &middot; {Array.isArray(anime.studios) ? anime.studios[0] : anime.studios}
+              {/if}
+              <!-- Which run of the series this is, when it is known. Sits with
+                   the other qualifiers rather than beside the title: the name
+                   already says which show, this says which part of it.
+
+                   Absent for most of the catalogue. The season is derived from
+                   the air dates TheTVDB and MyAnimeList agree on, and that
+                   derivation refuses rather than guesses -- so an unknown
+                   season renders as nothing at all, never as "Season ?". -->
+              {#if seasonLabel}
+                &middot; {seasonLabel}
               {/if}
             </p>
 
