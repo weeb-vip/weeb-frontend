@@ -87,6 +87,7 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
             studios
             animeStatus
             episodeCount
+            seasonNumber
             episodes {
                 id
                 animeId
@@ -207,6 +208,7 @@ export const getAnimeDetailsBySlug = graphql(/* GraphQL */`
             studios
             animeStatus
             episodeCount
+            seasonNumber
             episodes {
                 id
                 animeId
