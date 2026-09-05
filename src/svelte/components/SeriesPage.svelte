@@ -2,7 +2,7 @@
   import PosterCard from './PosterCard.svelte';
   import PosterGrid from './PosterGrid.svelte';
   import KeyArtStage from './KeyArtStage.svelte';
-  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, collapseSeasonParts } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
   /** Every anime sharing the series id, oldest first as the API returns them. */
@@ -20,12 +20,17 @@
    * honest remainder: most of the catalogue has no derived season, and a page
    * that quietly dropped them would claim a series is smaller than it is.
    */
+  // A season split across two cours is one season, so only the original of
+  // each is listed. See collapseSeasonParts for why the rule is the TheTVDB
+  // season rather than the title.
+  $: shown = collapseSeasonParts(entries);
+
   $: groups = (() => {
     const numbered = new Map<number, any[]>();
     const specials: any[] = [];
     const unplaced: any[] = [];
 
-    for (const entry of entries) {
+    for (const entry of shown) {
       const season = entry?.seasonNumber;
       if (season === null || season === undefined) {
         unplaced.push(entry);
@@ -69,7 +74,7 @@
   // Assembled here rather than from inline {#if} blocks in the markup, which
   // swallowed the spaces around them and rendered "13 entriesacross 5 seasons".
   $: summary = [
-    `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`,
+    `${shown.length} ${shown.length === 1 ? 'entry' : 'entries'}`,
     seasonCount > 0 ? `across ${seasonCount} ${seasonCount === 1 ? 'season' : 'seasons'}` : '',
   ]
     .filter(Boolean)
@@ -78,7 +83,7 @@
   // The span the series covers, from the entries we can date. One year when
   // everything landed in the same one, rather than "2016 – 2016".
   $: years = (() => {
-    const all = entries
+    const all = shown
       .map((e) => getYearUTC(e.startDate))
       .filter((y) => y && y !== 'TBA')
       .sort();
@@ -95,7 +100,7 @@
    * earliest of anything for series that never had a TV run.
    */
   $: anchor = (() => {
-    const byDate = [...entries].sort((a, b) => {
+    const byDate = [...shown].sort((a, b) => {
       if (!a.startDate && !b.startDate) return 0;
       if (!a.startDate) return 1;
       if (!b.startDate) return -1;

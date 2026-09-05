@@ -54,6 +54,62 @@ export function seriesHref(seriesId: string | null | undefined, slug?: string | 
 }
 
 /**
+ * Drops the later halves of a split-cour season, keeping the original.
+ *
+ * MyAnimeList files each broadcast run separately, so a season shown in two
+ * cours is two anime -- "Attack on Titan Season 3" and "Season 3 Part 2" are
+ * one season of one show. TheTVDB keeps them together, and that is the signal
+ * used here: same series, same season, and every entry a TV run. Titles are not
+ * consulted, because they do not carry it. "Durarara!! x2 Shou / Ten / Ketsu"
+ * says nothing about parts, and both halves of SAO's War of Underworld and of
+ * JoJo's Stardust Crusaders are filed under identical titles. A "Part N" string
+ * match finds 141 anime of which only 31 share a season, so it would miss those
+ * and fire on unrelated ones.
+ *
+ * Only whole-TV seasons collapse. A season holding a TV run and a special is
+ * not a split cour -- it is a show and its extras, and hiding the extras would
+ * lose them.
+ *
+ * `keepIds` is how the anime being viewed survives. Someone reading the page
+ * for Part 2 still has to see where they are, even though the list no longer
+ * offers Part 2 as a destination.
+ */
+export function collapseSeasonParts(entries: any[], keepIds: string[] = []): any[] {
+  const keep = new Set(keepIds.filter(Boolean));
+  const bySeason = new Map<number, any[]>();
+
+  for (const entry of entries) {
+    const season = entry?.seasonNumber;
+    // Null is "we do not know" and 0 is the specials season. Neither is a
+    // broadcast run that can be split, so both are left alone.
+    if (season === null || season === undefined || season === 0) continue;
+    if (!bySeason.has(season)) bySeason.set(season, []);
+    bySeason.get(season)!.push(entry);
+  }
+
+  const dropped = new Set<string>();
+  for (const group of bySeason.values()) {
+    if (group.length < 2) continue;
+    if (!group.every((e) => (e.type || "").toLowerCase() === "tv")) continue;
+
+    const ordered = [...group].sort((a, b) => {
+      if (!a.startDate && !b.startDate) return 0;
+      if (!a.startDate) return 1;
+      if (!b.startDate) return -1;
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
+
+    // The original is the one that aired first; everything after it is a later
+    // half of the same season.
+    for (const entry of ordered.slice(1)) {
+      if (!keep.has(entry.id)) dropped.add(entry.id);
+    }
+  }
+
+  return entries.filter((entry) => !dropped.has(entry?.id));
+}
+
+/**
  * The series page for an anime, or "" when it belongs to no series we know.
  *
  * Derives the readable half of the URL from the same-series list the show page

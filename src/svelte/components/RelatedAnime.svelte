@@ -1,6 +1,6 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
-  import { getYearUTC, seasonLabel, seriesLinkFor } from '../../services/utils';
+  import { getYearUTC, seasonLabel, seriesLinkFor, collapseSeasonParts } from '../../services/utils';
 
   /** RelatedAnime entries: { relation, anime }. */
   export let related: any[] = [];
@@ -40,6 +40,13 @@
     const sameSeries = byKind.get('SAME_SERIES');
     if (sameSeries && current) {
       sameSeries.push({ ...current, isCurrent: true });
+    }
+
+    // A season split across two cours is one season, so the timeline lists only
+    // the original of each. The anime being viewed is kept whatever it is: on
+    // the page for a Part 2, the reader still has to see where they are.
+    if (sameSeries) {
+      byKind.set('SAME_SERIES', collapseSeasonParts(sameSeries, current ? [current.id] : []));
     }
 
     const kinds = [...byKind.keys()].sort((a, b) => {
