@@ -5,11 +5,11 @@
   import { page } from '$app/stores';
   import { QueryClientProvider } from '@tanstack/svelte-query';
   import { getQueryClient, createQueryClient } from '$lib/services/query-client';
-  import Header from '$lib/components/shell/Header.svelte';
-  import Footer from '$lib/components/shell/Footer.svelte';
-  import GlobalToaster from '$lib/components/shell/GlobalToaster.svelte';
-  import AnimeNotificationProvider from '$lib/components/shell/AnimeNotificationProvider.svelte';
-  import MobileDrawer from '$lib/components/shell/MobileDrawer.svelte';
+  import Header from '$lib/components/shell/Header';
+  import Footer from '$lib/components/shell/Footer';
+  import GlobalToaster from '$lib/components/shell/GlobalToaster';
+  import AnimeNotificationProvider from '$lib/components/shell/AnimeNotificationProvider';
+  import MobileDrawer from '$lib/components/shell/MobileDrawer';
   import {
     initGlobalErrorHandlers,
     initPostHogWhenConfigured,

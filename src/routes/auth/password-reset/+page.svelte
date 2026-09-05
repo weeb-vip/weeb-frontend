@@ -1,9 +1,9 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
   import { goto } from '$app/navigation';
-  import AuthCard from '$lib/components/auth/AuthCard.svelte';
-  import Button from '$lib/components/primitives/Button.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import AuthCard from '$lib/components/auth/AuthCard';
+  import Button from '$lib/components/primitives/Button';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
   import type { ActionData, PageData } from './$types';
 
   /**

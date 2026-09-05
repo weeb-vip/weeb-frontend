@@ -14,9 +14,11 @@ it that has a single caller. Page code -- a page's bloc and its pure-logic
 modules -- lives beside the `+page.svelte` that uses it, in `src/routes/`.
 
 ```
-src/lib/components/<group>/   views + their blocs, grouped by kind
-src/lib/components/__stories__/   every story, its fixtures, and the offline stubs
-src/lib/components/__tests__/     unit tests for component-adjacent logic
+src/lib/components/<group>/<Component>/
+                              one folder per component (see below)
+src/lib/components/<group>/   modules two components in the group share
+src/lib/components/__stories__/
+                              page stories, shared fixtures, the offline stubs
 src/lib/stores/               store singletons
 src/lib/actions/              Svelte actions
 src/lib/composables/          shared rune helpers
@@ -38,8 +40,9 @@ the sidebar are the same map: `primitives/` is `Primitives/`, and `cards/`,
 group: the `Pages/` tier of the sidebar is driven by stories that import the
 routes themselves.
 
-Import across groups with `$lib/components/<group>/Foo.svelte`; import within a
-group relatively (`./Foo.svelte`). A bloc always sits beside its view.
+Import any component through its folder: `$lib/components/<group>/Foo`, which
+resolves via that folder's `index.ts`. Only files *inside* a component's own
+folder import each other relatively (`./Foo.bloc.svelte`).
 
 The data layer is three named layers, not three files called `queries`:
 
@@ -49,6 +52,82 @@ The data layer is three named layers, not three files called `queries`:
 - `services/query-hooks.ts` -- `useX()` Svelte Query hooks over those options,
   with cache invalidation and store side effects. This is what components call.
 
+## One folder per component
+
+Every component is a folder named for it, inside its group:
+
+```
+src/lib/components/primitives/Button/
+  index.ts             the public entry: the component AND its types
+  Button.svelte        markup, props, scoped styles, direct wiring
+  Button.logic.ts      pure functions, types and constants
+  Button.stories.ts
+  Button.test.ts       (only where one exists)
+
+src/lib/components/shell/Header/
+  index.ts
+  Header.svelte
+  Header.bloc.svelte.ts
+  Header.stories.ts
+```
+
+`index.ts` is the only entry anything outside the folder uses. It re-exports the
+component as the default plus every type, interface and helper the component's
+API is written in, so a call site needs one specifier for both:
+
+```ts
+import Chip, { type ChipTone } from '$lib/components/primitives/Chip';
+```
+
+A story lives with its component and keeps its `title:` unchanged, so the
+Storybook sidebar is still the map the group folders draw. What stays in
+`__stories__/` is what serves many components: the `Pages/` stories (their views
+are routes, not library components), the shared fixtures
+(`show-fixtures.ts`, `profileFixtures.ts`, `auth-stubs.ts`), `StoryContainer`,
+the demo wrappers and the `offline/` stubs.
+
+A module that two components in a group share is not one component's logic, so
+it sits at the group root beside the folders rather than inside one of them:
+`cards/Card.bloc.svelte.ts`, `profile/MediaList.bloc.svelte.ts`,
+`show/ShowContent.rules.ts`, `auth/auth-shared.ts`.
+
+### Naming the logic module
+
+| file | what goes in it |
+| --- | --- |
+| `Foo.bloc.svelte.ts` | a bloc: `$state`, ports, intents |
+| `Foo.logic.ts` | pure functions, types and constants -- no runes |
+
+Both are named for the component and distinguished by an infix, and the infix is
+not optional: `Foo.svelte.ts` would be imported as `'./Foo.svelte'`, which is the
+component. Keep `.svelte.ts` on anything using runes -- they only compile there
+-- and use a plain `.ts` for everything else, so ts-jest can import it directly.
+
+Only create one where there is something to put in it. A component whose props
+interface is its entire type surface keeps that interface in the `.svelte`; a
+file that exists to re-export one interface is noise.
+
+### Components hold no logic
+
+A `.svelte` may contain `$props()`, markup, scoped `<style>`, and direct wiring
+-- `onclick={() => bloc.toggle()}`, an event adapter, a portal action, a DOM
+measurement. Everything that *decides* something moves out:
+
+- `$derived` that formats or chooses
+- ternaries picking a label, a class or a size out of a prop
+- `.filter` / `.map` / `.sort` over data
+- date and number formatting
+- conditional class maps
+
+Where the component has a bloc, that is where they go. Where it is presentational,
+they go in `Foo.logic.ts` as pure functions -- **not** a bloc class; a component
+with no state does not get given some.
+
+The test is whether a reader can see what the component *renders* without reading
+how anything is *decided*. Judgement still applies: `class:active={tab.active}`
+and `{item.label}` are markup, and a single comparison read straight off a prop
+(`const isInert = $derived(isLoading || disabled)`) is not worth a function.
+
 ## The BLoC split
 
 Business logic lives in a **bloc** — a plain class in a `.svelte.ts` module.
@@ -57,9 +136,11 @@ intents back to it. Views hold no business rules, no fetching, and no store
 singletons.
 
 ```
-components/shell/TitleLanguageToggle.svelte          <- view: renders bloc state, calls bloc intents
-components/shell/TitleLanguageToggle.bloc.svelte.ts  <- bloc: state, derived labels, intents
-components/__stories__/TitleLanguageToggle.stories.ts <- drives the view with a stubbed bloc
+components/shell/TitleLanguageToggle/
+  index.ts                            <- the public entry
+  TitleLanguageToggle.svelte          <- view: renders bloc state, calls bloc intents
+  TitleLanguageToggle.bloc.svelte.ts  <- bloc: state, derived labels, intents
+  TitleLanguageToggle.stories.ts      <- drives the view with a stubbed bloc
 ```
 
 A bloc exposes three things and nothing else:
@@ -129,7 +210,8 @@ Note the import specifier: a `Foo.bloc.svelte.ts` module is imported as
 
 Purely presentational components — the ones that take data in and render it,
 holding no state beyond transient UI detail — stay plain prop components. A bloc
-for `Button` or `Tag` would be ceremony around nothing.
+for `Button` or `Tag` would be ceremony around nothing; what they get instead,
+where they decide anything at all, is a `Foo.logic.ts` of pure functions.
 
 Give a component a bloc when it does any of:
 
@@ -155,9 +237,10 @@ live in `src/lib/components/`.
 The exception is a page module a *library* component depends on. That
 dependency is what makes it shared, so it moves into the library group of the
 component that needs it, never the other way around: `Login.bloc.svelte.ts` and
-`Register.bloc.svelte.ts` are in `components/auth/` because
-`LoginRegisterModal` composes them, and `ShowContent.rules.ts` is in
+`Register.bloc.svelte.ts` sit at the root of `components/auth/` because
+`LoginRegisterModal` composes them, and `ShowContent.rules.ts` at the root of
 `components/show/` because `ShowInformation` and `ShowSectionNav` read it.
+Neither has a view in the library, so neither gets a folder.
 Nothing under `src/lib/` may import from `src/routes/`.
 
 Three things follow from a route being the view:
@@ -225,13 +308,15 @@ a second dialog.
 
 ## Stories
 
-Every component gets a story in `src/lib/components/__stories__/`, named
-`<Component>.stories.ts`. Stories drive the view directly:
+Every component gets a story in its own folder, named `<Component>.stories.ts`,
+and imports the view relatively (`./Foo.svelte`). Page stories stay in
+`src/lib/components/__stories__/`, next to the fixtures they share. Stories drive
+the view directly:
 
 - Presentational components: pass props.
 - Bloc-backed components: pass `bloc: new FooBloc(<stub ports>)`.
 - Pages: import the route's `+page.svelte` and pass `bloc` plus a `data`
-  fixture. These live under the `Pages/` title. `Seo` renders in every one of
+  fixture. These live in `__stories__/` under the `Pages/` title. `Seo` renders in every one of
   them, so `.storybook/preview.ts` supplies a default `$page` store; a story
   whose canonical URL is worth reading overrides
   `parameters.sveltekit_experimental.stores.page`.

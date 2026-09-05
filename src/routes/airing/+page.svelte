@@ -2,14 +2,14 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
-  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
-  import Select from '$lib/components/primitives/Select.svelte';
+  import ChipGroup from '$lib/components/primitives/ChipGroup';
+  import EmptyState from '$lib/components/primitives/EmptyState';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
+  import Skeleton from '$lib/components/primitives/Skeleton';
+  import Select from '$lib/components/primitives/Select';
   import { CurrentlyAiringPageBloc } from './CurrentlyAiringPage.bloc.svelte';
   import type { AiringShow } from './CurrentlyAiringPage.schedule';
-  import type { ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
+  import type { ChipGroupItem } from '$lib/components/primitives/ChipGroup';
 
   /**
    * What is airing, as a forward-looking schedule or as a month calendar.

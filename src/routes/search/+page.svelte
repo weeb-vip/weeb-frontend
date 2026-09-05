@@ -1,15 +1,15 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
   import { onMount } from 'svelte';
-  import PosterCard from '$lib/components/cards/PosterCard.svelte';
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
-  import Pagination from '$lib/components/primitives/Pagination.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
-  import Score from '$lib/components/primitives/Score.svelte';
-  import Select from '$lib/components/primitives/Select.svelte';
-  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
-  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
-  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
+  import Pagination from '$lib/components/primitives/Pagination';
+  import EmptyState from '$lib/components/primitives/EmptyState';
+  import Score from '$lib/components/primitives/Score';
+  import Select from '$lib/components/primitives/Select';
+  import Skeleton from '$lib/components/primitives/Skeleton';
+  import ChipGroup from '$lib/components/primitives/ChipGroup';
+  import SafeImage from '$lib/components/primitives/SafeImage';
   import { GetImageFromAnime } from '$lib/services/utils';
   import { getStatusColor, getStatusLabel } from '$lib/utils/status';
   import { SearchPageBloc } from './SearchPage.bloc.svelte';

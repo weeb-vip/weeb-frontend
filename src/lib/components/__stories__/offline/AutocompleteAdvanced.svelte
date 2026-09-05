@@ -1,9 +1,9 @@
 <script lang="ts">
-  import AutocompleteAdvanced from '$lib/components/shell/AutocompleteAdvanced.svelte';
+  import AutocompleteAdvanced from '$lib/components/shell/AutocompleteAdvanced';
   import {
     AutocompleteAdvancedBloc,
     type SearchPort,
-  } from '$lib/components/shell/AutocompleteAdvanced.bloc.svelte';
+  } from '$lib/components/shell/AutocompleteAdvanced';
 
   /**
    * Storybook's stand-in for the header's search box (see ./README.md).

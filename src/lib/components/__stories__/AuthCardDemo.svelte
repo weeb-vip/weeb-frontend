@@ -1,7 +1,7 @@
 <script lang="ts">
-  import AuthCard from '$lib/components/auth/AuthCard.svelte';
-  import Button from '$lib/components/primitives/Button.svelte';
-  import FormInput from '$lib/components/primitives/FormInput.svelte';
+  import AuthCard from '$lib/components/auth/AuthCard';
+  import Button from '$lib/components/primitives/Button';
+  import FormInput from '$lib/components/primitives/FormInput';
 
   /**
    * The shell with the content its real call sites put in it.

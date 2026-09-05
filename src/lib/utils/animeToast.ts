@@ -1,5 +1,5 @@
 import { toast } from 'svelte-sonner';
-import AnimeToast from '$lib/components/tracking/AnimeToast.svelte';
+import AnimeToast from '$lib/components/tracking/AnimeToast';
 
 interface AnimeData {
   id?: string | number;

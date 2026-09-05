@@ -1,12 +1,12 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import PosterCard from '$lib/components/cards/PosterCard.svelte';
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
-  import ProfileImageUpload from '$lib/components/profile/ProfileImageUpload.svelte';
-  import ProfileAvatar from '$lib/components/profile/ProfileAvatar.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
-  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
-  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
+  import ProfileImageUpload from '$lib/components/profile/ProfileImageUpload';
+  import ProfileAvatar from '$lib/components/profile/ProfileAvatar';
+  import EmptyState from '$lib/components/primitives/EmptyState';
+  import Skeleton from '$lib/components/primitives/Skeleton';
+  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton';
   import { ProfilePageBloc, type ProfileShelfCard } from './ProfilePage.bloc.svelte';
 
   /**

@@ -1,11 +1,11 @@
 <script lang="ts">
   import { readable } from 'svelte/store';
-  import UserProfileWrapper from '$lib/components/profile/UserProfileWrapper.svelte';
+  import UserProfileWrapper from '$lib/components/profile/UserProfileWrapper';
   import {
     UserProfileWrapperBloc,
     type AuthPort,
     type UserQueryPort,
-  } from '$lib/components/profile/UserProfileWrapper.bloc.svelte';
+  } from '$lib/components/profile/UserProfileWrapper';
 
   /**
    * Storybook's stand-in for UserProfileHandler (see ./README.md).

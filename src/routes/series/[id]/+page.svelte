@@ -2,11 +2,11 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
-  import PosterCard from '$lib/components/cards/PosterCard.svelte';
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
-  import KeyArtStage from '$lib/components/show/KeyArtStage.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
+  import KeyArtStage from '$lib/components/show/KeyArtStage';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
+  import EmptyState from '$lib/components/primitives/EmptyState';
   import { GetImageFromAnime, seriesHref } from '$lib/services/utils';
   import { SeriesPageBloc, type SeriesEntry } from './SeriesPage.bloc.svelte';
 

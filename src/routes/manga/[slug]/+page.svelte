@@ -19,13 +19,13 @@
     candidates, credits, stats, adaptations — is the bloc's call; this renders
     it and owns the treatment.
   */
-  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
-  import PosterCard from '$lib/components/cards/PosterCard.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import WorkStatusControl from '$lib/components/tracking/WorkStatusControl.svelte';
-  import ChapterProgress from '$lib/components/tracking/ChapterProgress.svelte';
+  import SafeImage from '$lib/components/primitives/SafeImage';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
+  import PosterCard from '$lib/components/cards/PosterCard';
+  import EmptyState from '$lib/components/primitives/EmptyState';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
+  import WorkStatusControl from '$lib/components/tracking/WorkStatusControl';
+  import ChapterProgress from '$lib/components/tracking/ChapterProgress';
   import { GetImageFromAnime } from '$lib/services/utils';
   import { MangaContentBloc, type Work } from './MangaContent.bloc.svelte';
 

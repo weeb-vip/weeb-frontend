@@ -7,15 +7,20 @@ import type { PluginOption } from "vite";
  * instead. See src/lib/components/__stories__/offline/README.md for why the
  * substitution happens here rather than in the story.
  *
- * Keyed by file name; the swap only applies to imports made *by Header.svelte*,
- * so every other consumer -- AutocompleteAdvanced's own story included --
- * resolves the real module.
+ * Keyed by component name; the swap only applies to imports made *by
+ * Header.svelte*, so every other consumer -- AutocompleteAdvanced's own story
+ * included -- resolves the real module.
+ *
+ * Header reaches its siblings through their folder entry points
+ * (`$lib/components/shell/AuthInitializer`), so the specifier's last segment is
+ * the bare component name. A `.svelte` suffix is tolerated too, so a direct
+ * file import would still be caught.
  */
 const OFFLINE_HEADER_CHROME = [
-  "AuthInitializer.svelte",
-  "LoginModalHandler.svelte",
-  "UserProfileHandler.svelte",
-  "AutocompleteAdvanced.svelte",
+  "AuthInitializer",
+  "LoginModalHandler",
+  "UserProfileHandler",
+  "AutocompleteAdvanced",
 ];
 
 // Storybook is always invoked from the project root (`yarn storybook`,
@@ -31,14 +36,15 @@ function offlineHeaderChrome(): PluginOption {
     // Ahead of vite-plugin-svelte, or the real file is resolved first.
     enforce: "pre",
     resolveId(source: string, importer?: string) {
-      if (!importer || !importer.endsWith(path.join("src", "lib", "components", "shell", "Header.svelte"))) {
+      const headerView = path.join("src", "lib", "components", "shell", "Header", "Header.svelte");
+      if (!importer || !importer.endsWith(headerView)) {
         return null;
       }
 
-      const name = source.split("/").pop();
+      const name = source.split("/").pop()?.replace(/\.svelte$/, "");
       if (!name || !OFFLINE_HEADER_CHROME.includes(name)) return null;
 
-      return path.join(STUB_DIR, name);
+      return path.join(STUB_DIR, `${name}.svelte`);
     },
   };
 }

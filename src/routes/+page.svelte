@@ -1,13 +1,13 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import HeroBanner from '$lib/components/home/HeroBanner.svelte';
-  import HeroBannerSkeleton from '$lib/components/home/HeroBannerSkeleton.svelte';
-  import HeroAiringRail from '$lib/components/home/HeroAiringRail.svelte';
-  import PosterCard from '$lib/components/cards/PosterCard.svelte';
-  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
-  import SectionHeader from '$lib/components/primitives/SectionHeader.svelte';
-  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
+  import HeroBanner from '$lib/components/home/HeroBanner';
+  import HeroBannerSkeleton from '$lib/components/home/HeroBannerSkeleton';
+  import HeroAiringRail from '$lib/components/home/HeroAiringRail';
+  import PosterCard from '$lib/components/cards/PosterCard';
+  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
+  import SectionHeader from '$lib/components/primitives/SectionHeader';
+  import ChipGroup from '$lib/components/primitives/ChipGroup';
   import { BROWSE_GENRE_LINKS } from '$lib/data/genres';
   import { HomepageBloc, type HomeAnime, type PublishingWork } from './HomepageSSR.bloc.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';

@@ -1,6 +1,6 @@
 # Offline header chrome
 
-`src/lib/components/shell/Header.svelte` renders four children with no injection seam of their
+`src/lib/components/shell/Header/Header.svelte` renders four children with no injection seam of their
 own: `AuthInitializer`, `LoginModalHandler`, `UserProfileHandler` and
 `AutocompleteAdvanced`. Between them they run a GraphQL user query, fetch
 `/config.json` and stand up an Algolia client — so opening `Design System/Header`

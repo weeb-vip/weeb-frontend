@@ -1,13 +1,13 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
-  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import AnimeCalendarPopover from '$lib/components/tracking/AnimeCalendarPopover.svelte';
+  import ChipGroup from '$lib/components/primitives/ChipGroup';
+  import Skeleton from '$lib/components/primitives/Skeleton';
+  import EmptyState from '$lib/components/primitives/EmptyState';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
+  import AnimeCalendarPopover from '$lib/components/tracking/AnimeCalendarPopover';
   import { AiringCalendarBloc } from './AiringCalendar.bloc.svelte';
   import type { AiringShow } from '../CurrentlyAiringPage.schedule';
-  import type { ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
+  import type { ChipGroupItem } from '$lib/components/primitives/ChipGroup';
 
   /**
    * The airing schedule as a month or week grid.

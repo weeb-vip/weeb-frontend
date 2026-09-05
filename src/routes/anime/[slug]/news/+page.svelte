@@ -3,9 +3,9 @@
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
   import { untrack } from 'svelte';
-  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
-  import AnimeNews from '$lib/components/show/AnimeNews.svelte';
-  import ChipGroup, { type ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
+  import SafeImage from '$lib/components/primitives/SafeImage';
+  import AnimeNews from '$lib/components/show/AnimeNews';
+  import ChipGroup, { type ChipGroupItem } from '$lib/components/primitives/ChipGroup';
   import { AnimeNewsPageBloc, type AnimeNewsPageData } from './AnimeNewsPage.bloc.svelte';
 
   /**

@@ -1,9 +1,9 @@
 <script lang="ts">
-  import SectionHeader from '$lib/components/primitives/SectionHeader.svelte';
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
-  import PosterCard from '$lib/components/cards/PosterCard.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import SectionHeader from '$lib/components/primitives/SectionHeader';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
+  import PosterCard from '$lib/components/cards/PosterCard';
+  import EmptyState from '$lib/components/primitives/EmptyState';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
   import {
     WorksBrowseBloc,
     type WorkShelf,

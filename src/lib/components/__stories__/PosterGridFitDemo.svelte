@@ -1,7 +1,7 @@
 <script lang="ts">
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
-  import PosterCard from '$lib/components/cards/PosterCard.svelte';
-  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
+  import PosterCard from '$lib/components/cards/PosterCard';
+  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton';
   import { noCardTracking } from '$lib/components/cards/Card.bloc.svelte';
 
   /**

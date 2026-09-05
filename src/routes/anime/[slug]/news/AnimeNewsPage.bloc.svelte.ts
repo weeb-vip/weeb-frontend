@@ -4,7 +4,7 @@ import { goto } from '$app/navigation';
 import { isFeatureEnabled } from '$lib/utils/analytics';
 import { GetImageFromAnime, getYearUTC } from '$lib/services/utils';
 import { getSafeImageUrl } from '$lib/utils/image';
-import type { FeatureFlagPort } from '$lib/components/show/StreamingPlatforms.bloc.svelte';
+import type { FeatureFlagPort } from '$lib/components/show/StreamingPlatforms';
 
 /* ── Ports ───────────────────────────────────────────────────────────────── */
 

@@ -1,10 +1,10 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
   import { faEnvelope, faUser } from '@fortawesome/free-solid-svg-icons';
-  import AuthCard from '$lib/components/auth/AuthCard.svelte';
-  import Button from '$lib/components/primitives/Button.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import FormInput from '$lib/components/primitives/FormInput.svelte';
+  import AuthCard from '$lib/components/auth/AuthCard';
+  import Button from '$lib/components/primitives/Button';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
+  import FormInput from '$lib/components/primitives/FormInput';
   import { PasswordResetRequestBloc } from './PasswordResetRequest.bloc.svelte';
 
   /**

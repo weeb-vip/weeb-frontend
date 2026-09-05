@@ -3,12 +3,12 @@
   import StructuredData from '$lib/StructuredData.svelte';
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
   import { fly } from 'svelte/transition';
-  import PosterCard from '$lib/components/cards/PosterCard.svelte';
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
-  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
-  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
-  import ChipGroup, { type ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
+  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton';
+  import EmptyState from '$lib/components/primitives/EmptyState';
+  import SafeImage from '$lib/components/primitives/SafeImage';
+  import ChipGroup, { type ChipGroupItem } from '$lib/components/primitives/ChipGroup';
   import { SeasonPageBloc, type SeasonalAnime } from './SeasonPage.bloc.svelte';
 
   /**

@@ -4,7 +4,7 @@
    * snippet with more than one root element. This renders the real grid with a
    * given number of stand-in tiles so the column behaviour is what is on show.
    */
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
 
   let {
     minHeight = null,

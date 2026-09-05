@@ -282,3 +282,13 @@ export function heroImageSources(animeId: string | null | undefined, imageUrl: (
   if (!animeId) return [];
   return [imageUrl(animeId, 'banners'), imageUrl(animeId)];
 }
+
+/**
+ * The licensors row. The API sends either a list or an already-joined string,
+ * and a row with nothing in it is absent rather than blank -- "Licensors: --"
+ * asserts we looked and there were none.
+ */
+export function licensorList(licensors: unknown): string | null {
+  if (Array.isArray(licensors)) return licensors.join(', ');
+  return (licensors as string | null | undefined) ?? null;
+}

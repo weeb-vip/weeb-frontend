@@ -29,10 +29,10 @@ import { animeNotificationStore } from '$lib/stores/animeNotifications';
 import { configStore } from '$lib/stores/config';
 import { getAnimeTitle, preferencesStore, type TitleLanguage } from '$lib/stores/preferences';
 import { getSafeImageUrl } from '$lib/utils/image';
-import { defaultQueryClient } from '$lib/components/tracking/WorkStatusControl.bloc.svelte';
-import type { ConfigPort, NotificationsPort } from '$lib/components/home/HeroBanner.bloc.svelte';
-import type { FeatureFlagPort } from '$lib/components/show/StreamingPlatforms.bloc.svelte';
-import type { WatchIntent } from '$lib/components/show/Episodes.bloc.svelte';
+import { defaultQueryClient } from '$lib/components/tracking/WorkStatusControl';
+import type { ConfigPort, NotificationsPort } from '$lib/components/home/HeroBanner';
+import type { FeatureFlagPort } from '$lib/components/show/StreamingPlatforms';
+import type { WatchIntent } from '$lib/components/show/Episodes';
 import {
   CHARACTERS,
   EPISODES,

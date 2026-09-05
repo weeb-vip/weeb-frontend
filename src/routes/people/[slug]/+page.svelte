@@ -2,10 +2,10 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
-  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
+  import SafeImage from '$lib/components/primitives/SafeImage';
+  import EmptyState from '$lib/components/primitives/EmptyState';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
+  import ChipGroup from '$lib/components/primitives/ChipGroup';
   import { VoiceActorPageBloc, type Staff } from './VoiceActorPage.bloc.svelte';
 
   /**

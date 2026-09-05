@@ -1,8 +1,8 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import ProfileAnimeList from '$lib/components/profile/ProfileAnimeList.svelte';
-  import ProfileWorkList from '$lib/components/profile/ProfileWorkList.svelte';
-  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
+  import ProfileAnimeList from '$lib/components/profile/ProfileAnimeList';
+  import ProfileWorkList from '$lib/components/profile/ProfileWorkList';
+  import ChipGroup from '$lib/components/primitives/ChipGroup';
   import { ProfileListBloc } from './ProfileList.bloc.svelte';
   import type { MediaListBloc } from '$lib/components/profile/MediaList.bloc.svelte';
 

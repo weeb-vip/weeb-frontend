@@ -2,12 +2,12 @@
   import Seo from '$lib/Seo.svelte';
   import { faUser, faEnvelope, faGlobe, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
   import Fa from 'svelte-fa';
-  import Button from '$lib/components/primitives/Button.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import FormInput from '$lib/components/primitives/FormInput.svelte';
-  import FormTextarea from '$lib/components/primitives/FormTextarea.svelte';
-  import Select from '$lib/components/primitives/Select.svelte';
-  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
+  import Button from '$lib/components/primitives/Button';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
+  import FormInput from '$lib/components/primitives/FormInput';
+  import FormTextarea from '$lib/components/primitives/FormTextarea';
+  import Select from '$lib/components/primitives/Select';
+  import Skeleton from '$lib/components/primitives/Skeleton';
   import { ProfileSettingsBloc, type ProfileFormField } from '$lib/components/profile/ProfileSettings.bloc.svelte';
 
   /**

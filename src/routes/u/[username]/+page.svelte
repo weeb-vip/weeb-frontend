@@ -1,9 +1,9 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import PosterCard from '$lib/components/cards/PosterCard.svelte';
-  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
-  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
-  import ProfileAvatar from '$lib/components/profile/ProfileAvatar.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard';
+  import PosterGrid from '$lib/components/primitives/PosterGrid';
+  import EmptyState from '$lib/components/primitives/EmptyState';
+  import ProfileAvatar from '$lib/components/profile/ProfileAvatar';
   import { PublicUserPageBloc, type PublicUserCard } from './PublicUserPage.bloc.svelte';
 
   /**

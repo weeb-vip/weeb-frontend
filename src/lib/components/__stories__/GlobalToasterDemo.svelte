@@ -1,8 +1,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { toast } from 'svelte-sonner';
-  import GlobalToaster from '$lib/components/shell/GlobalToaster.svelte';
-  import { GlobalToasterBloc, fixedViewport } from '$lib/components/shell/GlobalToaster.bloc.svelte';
+  import GlobalToaster from '$lib/components/shell/GlobalToaster';
+  import { GlobalToasterBloc, fixedViewport } from '$lib/components/shell/GlobalToaster';
 
   /**
    * The toaster renders nothing until something calls `toast()`, so every story

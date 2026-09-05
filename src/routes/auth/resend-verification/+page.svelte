@@ -1,12 +1,12 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import QueryProvider from '$lib/components/shell/QueryProvider.svelte';
+  import QueryProvider from '$lib/components/shell/QueryProvider';
   import { onDestroy } from 'svelte';
   import { faUser } from '@fortawesome/free-solid-svg-icons';
-  import AuthCard from '$lib/components/auth/AuthCard.svelte';
-  import Button from '$lib/components/primitives/Button.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import FormInput from '$lib/components/primitives/FormInput.svelte';
+  import AuthCard from '$lib/components/auth/AuthCard';
+  import Button from '$lib/components/primitives/Button';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
+  import FormInput from '$lib/components/primitives/FormInput';
   import { ResendVerificationBloc } from './ResendVerification.bloc.svelte';
 
   /**

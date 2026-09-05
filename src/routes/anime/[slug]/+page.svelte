@@ -3,23 +3,23 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { animeSchema, breadcrumbSchema } from '$lib/structured-data';
-  import QueryProvider from '$lib/components/shell/QueryProvider.svelte';
+  import QueryProvider from '$lib/components/shell/QueryProvider';
   import { untrack } from 'svelte';
   import { format } from 'date-fns';
-  import AnimeNews from '$lib/components/show/AnimeNews.svelte';
-  import CharactersWithStaff from '$lib/components/show/CharactersWithStaff.svelte';
-  import Episodes from '$lib/components/show/Episodes.svelte';
-  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import RelatedAnime from '$lib/components/show/RelatedAnime.svelte';
-  import ShowContentSkeleton from '$lib/components/show/ShowContentSkeleton.svelte';
-  import ShowHero from '$lib/components/show/ShowHero.svelte';
-  import ShowInformation from '$lib/components/show/ShowInformation.svelte';
-  import ShowQuickInfo from '$lib/components/show/ShowQuickInfo.svelte';
-  import ShowSchedulePanel from '$lib/components/show/ShowSchedulePanel.svelte';
-  import ShowSection from '$lib/components/show/ShowSection.svelte';
-  import ShowSectionNav from '$lib/components/show/ShowSectionNav.svelte';
-  import ShowStickyHeader from '$lib/components/show/ShowStickyHeader.svelte';
-  import ShowSynopsis from '$lib/components/show/ShowSynopsis.svelte';
+  import AnimeNews from '$lib/components/show/AnimeNews';
+  import CharactersWithStaff from '$lib/components/show/CharactersWithStaff';
+  import Episodes from '$lib/components/show/Episodes';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner';
+  import RelatedAnime from '$lib/components/show/RelatedAnime';
+  import ShowContentSkeleton from '$lib/components/show/ShowContentSkeleton';
+  import ShowHero from '$lib/components/show/ShowHero';
+  import ShowInformation from '$lib/components/show/ShowInformation';
+  import ShowQuickInfo from '$lib/components/show/ShowQuickInfo';
+  import ShowSchedulePanel from '$lib/components/show/ShowSchedulePanel';
+  import ShowSection from '$lib/components/show/ShowSection';
+  import ShowSectionNav from '$lib/components/show/ShowSectionNav';
+  import ShowStickyHeader from '$lib/components/show/ShowStickyHeader';
+  import ShowSynopsis from '$lib/components/show/ShowSynopsis';
   import { ShowContentBloc, NEWS_LIMIT } from './ShowContent.bloc.svelte';
 
   /**
