@@ -5,14 +5,14 @@
   import { animeSchema, breadcrumbSchema } from '$lib/structured-data';
   import ShowContentWithProvider from '../../../svelte/components/ShowContentWithProvider.svelte';
 
-  export let data;
+  let { data }: { data: any } = $props();
 
   const SITE_URL = 'https://weeb.vip';
 
   // Canonical host, not the request origin: these URLs identify the entity, and must
   // match the canonical tag rather than whichever deployment served the page.
-  $: canonical = `${SITE_URL}/anime/${data.animeSlug}`;
-  $: schemas = [
+  const canonical = $derived(`${SITE_URL}/anime/${data.animeSlug}`);
+  const schemas = $derived([
     data.animeSchemaSource
       ? animeSchema(data.animeSchemaSource, canonical, new URL(data.animeImage, $page.url.origin).toString())
       : null,
@@ -20,7 +20,7 @@
       { name: 'Home', url: `${SITE_URL}/` },
       { name: data.animeTitle, url: canonical }
     ])
-  ];
+  ]);
 </script>
 
 <Seo
