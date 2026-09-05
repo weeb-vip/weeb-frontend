@@ -3,31 +3,45 @@
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { readableWorkType } from '../../utils/workDisplay';
 
-  export let item: any;
-  export let onClick: () => void;
-  export let active = false;
-  export let id: string | undefined = undefined;
+  /**
+   * Presentational -- no bloc. One row of the search panel: it renders a hit
+   * and reports that it was chosen. Which row is highlighted, and what
+   * choosing one does, belong to `AutocompleteAdvancedBloc`.
+   */
+  let {
+    item,
+    onClick,
+    active = false,
+    id = undefined
+  }: {
+    item: any;
+    onClick: () => void;
+    active?: boolean;
+    id?: string | undefined;
+  } = $props();
 
   // Works come from a different index and are tagged at the source, so this
   // never has to infer which one a hit came from by sniffing its fields.
-  $: isWork = item?.__kind === 'work';
+  const isWork = $derived(item?.__kind === 'work');
 
   // SafeImage takes a record id and the CDN folder it lives in, and builds the
   // URL itself -- handing it a finished URL gets that URL encoded into another
   // one. Works are stored under works/; anime posters sit at the CDN root here.
-  $: imageSrc = isWork ? (item?.id ?? '') : GetImageFromAnime(item);
-  $: imagePath = isWork ? 'works' : '';
+  const imageSrc = $derived(isWork ? (item?.id ?? '') : GetImageFromAnime(item));
+  const imagePath = $derived(isWork ? 'works' : '');
   // MyAnimeList's own host, used only if the cover has not reached the CDN.
-  $: imageFallback = isWork && item?.image_url ? item.image_url : '/assets/not found.jpg';
-
-  const readableType = readableWorkType;
+  const imageFallback = $derived(
+    isWork && item?.image_url ? item.image_url : '/assets/not found.jpg'
+  );
 
   // Anime show a year alone; a work shows what kind of thing it is first,
   // because "Light novel" is the fact that distinguishes it from the anime
   // sitting a few rows above it under the same name.
-  $: subtitle = isWork
-    ? [readableType(item?.type), getYearUTC(item?.published_from)].filter(Boolean).join(' · ')
-    : getYearUTC(item?.start_date);
+  const subtitle = $derived(
+    isWork
+      ? [readableWorkType(item?.type), getYearUTC(item?.published_from)].filter(Boolean).join(' · ')
+      : getYearUTC(item?.start_date)
+  );
 </script>
 
 <li
@@ -36,8 +50,8 @@
   class:ac-item-active={active}
   data-autocomplete-item
   {id}
-  on:click={onClick}
-  on:keypress={(e) => { if (e.key === 'Enter') onClick(); }}
+  onclick={onClick}
+  onkeypress={(e) => { if (e.key === 'Enter') onClick(); }}
   role="option"
   aria-selected={active}
   tabindex="-1"

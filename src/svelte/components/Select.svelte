@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, tick } from 'svelte';
+  import { tick } from 'svelte';
 
   /**
    * A select that looks like the rest of the product.
@@ -15,30 +15,44 @@
    * happens when it opens.
    */
 
-  export let value: string | number = '';
-  export let options: Array<{ value: string | number; label: string }> = [];
-  export let ariaLabel: string = 'Select an option';
-  /** Rendered when nothing matches `value`, e.g. a cleared filter. */
-  export let placeholder: string = 'Select';
-  export let disabled: boolean = false;
-  export let className: string = '';
-  /** Which edge the menu lines up with when it would otherwise leave the viewport. */
-  export let align: 'left' | 'right' = 'left';
+  export type SelectOption = { value: string | number; label: string };
 
-  const dispatch = createEventDispatcher();
+  let {
+    /** Bindable, so `bind:value` keeps working the way the native select did. */
+    value = $bindable<string | number>(''),
+    options = [],
+    ariaLabel = 'Select an option',
+    /** Rendered when nothing matches `value`, e.g. a cleared filter. */
+    placeholder = 'Select',
+    disabled = false,
+    className = '',
+    /** Which edge the menu lines up with when it would otherwise leave the viewport. */
+    align = 'left',
+    /** Fired only when an option is committed -- not while arrowing through them. */
+    onChange,
+  }: {
+    value?: string | number;
+    options?: SelectOption[];
+    ariaLabel?: string;
+    placeholder?: string;
+    disabled?: boolean;
+    className?: string;
+    align?: 'left' | 'right';
+    onChange?: (detail: { value: string | number }) => void;
+  } = $props();
 
-  let open = false;
-  let triggerEl: HTMLButtonElement;
-  let menuEl: HTMLDivElement;
+  let open = $state(false);
+  let triggerEl = $state<HTMLButtonElement | null>(null);
+  let menuEl = $state<HTMLDivElement | null>(null);
   // Which option the keyboard is on. Separate from the selected value, because
   // arrowing through a list should not commit anything until Enter.
-  let activeIndex = -1;
-  let menuTop = 0;
-  let menuLeft = 0;
-  let menuMinWidth = 0;
+  let activeIndex = $state(-1);
+  let menuTop = $state(0);
+  let menuLeft = $state(0);
+  let menuMinWidth = $state(0);
 
-  $: selected = options.find((o) => String(o.value) === String(value));
-  $: label = selected?.label ?? placeholder;
+  const selected = $derived(options.find((o) => String(o.value) === String(value)));
+  const label = $derived(selected?.label ?? placeholder);
 
   // Menus are placed as fixed and portalled to <body>. An absolutely positioned
   // menu is clipped by any ancestor with overflow, and these sit inside a
@@ -91,7 +105,7 @@
     const option = options[index];
     if (!option) return;
     value = option.value;
-    dispatch('change', { value: option.value });
+    onChange?.({ value: option.value });
     closeMenu();
   }
 
@@ -171,9 +185,9 @@
 </script>
 
 <svelte:window
-  on:pointerdown={onWindowPointerDown}
-  on:scroll|capture={onWindowScroll}
-  on:resize={onWindowScroll}
+  onpointerdown={onWindowPointerDown}
+  onscrollcapture={onWindowScroll}
+  onresize={onWindowScroll}
 />
 
 <button
@@ -185,8 +199,8 @@
   aria-haspopup="listbox"
   aria-expanded={open}
   aria-label={ariaLabel}
-  on:click={() => (open ? closeMenu(false) : openMenu())}
-  on:keydown={onTriggerKeydown}
+  onclick={() => (open ? closeMenu(false) : openMenu())}
+  onkeydown={onTriggerKeydown}
 >
   <span class="wv-select-label">{label}</span>
   <svg class="wv-select-chevron" class:wv-select-chevron--open={open} width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -213,8 +227,8 @@
         data-index={i}
         role="option"
         aria-selected={String(option.value) === String(value)}
-        on:click={() => choose(i)}
-        on:mouseenter={() => (activeIndex = i)}
+        onclick={() => choose(i)}
+        onmouseenter={() => (activeIndex = i)}
       >
         <span class="wv-select-option-label">{option.label}</span>
         {#if String(option.value) === String(value)}

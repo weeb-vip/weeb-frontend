@@ -1,64 +1,39 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { isFeatureEnabled } from '../../utils/analytics';
+  import { StreamingPlatformsBloc } from './StreamingPlatforms.bloc.svelte';
 
-  export let platforms: Array<{ platform: string; name?: string | null; url: string }> | null | undefined = undefined;
+  /** The rows the API gave us, or nothing when this show has no listings. */
+  export type StreamingPlatform = { platform: string; name?: string | null; url: string };
 
-  /**
-   * Centre the logos on mobile. Only the anime page wants this — its hero-meta
-   * centres at 768px, so a left-aligned row would sit off-axis there. The
-   * homepage banner keeps its text left-aligned at every width, so centring
-   * the logos breaks that column instead of matching it.
-   */
-  export let centerOnMobile = false;
+  let {
+    platforms = undefined,
+    /**
+     * Centre the logos on mobile. Only the anime page wants this -- its hero-meta
+     * centres at 768px, so a left-aligned row would sit off-axis there. The
+     * homepage banner keeps its text left-aligned at every width, so centring
+     * the logos breaks that column instead of matching it.
+     */
+    centerOnMobile = false,
+    /** Defaults to the real PostHog gate; stories inject a stub that just answers. */
+    bloc = new StreamingPlatformsBloc(),
+  }: {
+    platforms?: StreamingPlatform[] | null;
+    centerOnMobile?: boolean;
+    bloc?: StreamingPlatformsBloc;
+  } = $props();
 
-  // Client-driven flag gate. This is empty during SSR (the flag is client-only).
-  // On a hard load PostHog hasn't loaded flags when onMount runs, and its
-  // onFeatureFlags event can fire once while the flag still reads false, then
-  // never re-fire — so re-check on a short interval until the flag resolves.
-  let enabled = false;
-  onMount(() => {
-    let tries = 0;
-    const check = () => { enabled = isFeatureEnabled('animeschedule-integration'); return enabled; };
-    if (check()) return;
-    const iv = setInterval(() => { if (check() || ++tries >= 25) clearInterval(iv); }, 250);
-    return () => clearInterval(iv);
-  });
-
-  // Locally-bundled brand logos (static/assets/streams). AnimeSchedule's own
-  // logo CDN 403s on hotlinking, so we self-host. Platforms without a bundled
-  // logo fall back to the platform name text.
-  const platformIcons: Record<string, string> = {
-    crunchyroll: '/assets/streams/crunchyroll.svg',
-    netflix: '/assets/streams/netflix.svg',
-    amazon: '/assets/streams/amazon.svg',
-    'prime video': '/assets/streams/amazon.svg',
-    primevideo: '/assets/streams/amazon.svg',
-    hulu: '/assets/streams/hulu.svg',
-    apple: '/assets/streams/apple.svg',
-    'apple tv': '/assets/streams/apple.svg',
-    appletv: '/assets/streams/apple.svg',
-    youtube: '/assets/streams/youtube.svg',
-    bilibili: '/assets/streams/bilibili.svg',
-  };
-
-  function ensureUrl(url: string): string {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    return `https://${url}`;
-  }
+  // The teardown comes straight back out of the bloc, so the interval never
+  // outlives the component.
+  $effect(() => bloc.watchFlag());
 </script>
 
-{#if enabled && platforms && platforms.length > 0}
+{#if bloc.enabled && platforms && platforms.length > 0}
   <div class="streaming-platforms">
     <span class="label">Watch on</span>
     <div class="platforms-list" class:center-mobile={centerOnMobile}>
       {#each platforms as platform}
-        {@const key = platform.platform.toLowerCase()}
         {@const name = platform.name || platform.platform}
         <a
-          href={ensureUrl(platform.url)}
+          href={bloc.hrefFor(platform.url)}
           target="_blank"
           rel="noopener noreferrer"
           class="platform-link"
@@ -66,7 +41,7 @@
           aria-label={`Watch on ${name}`}
         >
           <img
-            src={platformIcons[key] || '/assets/streams/generic.svg'}
+            src={bloc.iconFor(platform.platform)}
             alt=""
             class="platform-icon"
             loading="lazy"

@@ -13,13 +13,21 @@
     what lets a shelf of seven and a page of forty look like the same grid.
   */
 
-  /** Reserve height so the layout does not jump while a page loads. */
-  export let minHeight: string | null = null;
-  /** Dim the grid during a refetch, without collapsing it. */
-  export let loading = false;
+  import type { Snippet } from 'svelte';
 
-  let className = '';
-  export { className as class };
+  let {
+    /** Reserve height so the layout does not jump while a page loads. */
+    minHeight = null,
+    /** Dim the grid during a refetch, without collapsing it. */
+    loading = false,
+    class: className = '',
+    children,
+  }: {
+    minHeight?: string | null;
+    loading?: boolean;
+    class?: string;
+    children?: Snippet;
+  } = $props();
 </script>
 
 <div
@@ -27,7 +35,7 @@
   class:loading
   style={minHeight ? `min-height: ${minHeight};` : ''}
 >
-  <slot />
+  {@render children?.()}
 </div>
 
 <style>

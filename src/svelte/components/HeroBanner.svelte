@@ -1,192 +1,53 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import Button from './Button.svelte';
   import AnimeActions from './AnimeActions.svelte';
   import SafeImage from './SafeImage.svelte';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { animeHref } from '../../services/utils';
-  import { getSafeImageUrl } from '../utils/image';
   import type { EpisodeTiming } from '../../services/airTimeUtils';
-  import { configStore } from '../stores/config';
-  import { animeNotificationStore } from '../stores/animeNotifications';
-  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
-  import { loggedInStore } from '../stores/auth';
+  import { HeroBannerBloc } from './HeroBanner.bloc.svelte';
 
-  export let anime: any;
-  /**
-   * The episode timing resolved once in HomepageSSR.processCurrentlyAiring.
-   * Null on the fallback banner (top-rated), which has no schedule at all.
-   */
-  export let timing: EpisodeTiming | null = null;
+  let {
+    anime,
+    timing = null,
+    bloc: injected
+  }: {
+    anime: any;
+    /**
+     * The episode timing resolved once in HomepageSSR.processCurrentlyAiring.
+     * Null on the fallback banner (top-rated), which has no schedule at all.
+     */
+    timing?: EpisodeTiming | null;
+    bloc?: HeroBannerBloc;
+  } = $props();
 
-  let imageSources: string[] = [];
-  let bgLoaded = false;
-  let showJstPopover = false;
-  let currentAnimeId: string | null = null;
-  let supportsWebP = false;
-
-  /**
-   * TheTVDB banner art is roughly 16:9 and the hero is a 100svh box, so on a
-   * phone the only way to cover that shape is to crop the banner to a narrow
-   * vertical strip of itself -- usually a piece of background with the subject
-   * outside the frame. A poster is 2:3 and fills a tall viewport natively. From
-   * a tablet up the hero is wide enough for the banner to read as composed, so
-   * it keeps priority there.
-   *
-   * Safe to decide on the client: SafeImage resolves its source after mount and
-   * emits no <img> during SSR, so there is nothing to flash or swap.
-   */
-  const PHONE_QUERY = '(max-width: 767px)';
-  let isPhone = false;
-
-  // Get timing data from the shared anime notification store
-  $: timingData = $animeNotificationStore.timingData[anime.id];
-  $: workerCountdown = $animeNotificationStore.countdowns[anime.id];
-
-  // Computed timing values (matching React HeroBanner logic)
-  $: hasTimingData = Boolean(timingData || workerCountdown);
-  $: airDateTime = timingData?.airDateTime || "";
-  $: airingToday = timingData?.isAiringToday || false;
-  $: currentlyAiring = timingData?.isCurrentlyAiring || workerCountdown?.isAiring || false;
-  $: alreadyAired = timingData?.hasAlreadyAired || workerCountdown?.hasAired || false;
-  $: countdown = timingData?.countdown || workerCountdown?.countdown || "";
-  $: progress = timingData?.progress || workerCountdown?.progress;
-
-
-  // Episode info from worker
-  $: episode = timingData?.episode;
-  $: episodeTitle = episode ? (episode.titleEn || episode.titleJp || "Next Episode") : (hasTimingData ? "Next Episode" : "No upcoming episodes");
-  $: episodeNumber = episode?.episodeNumber ? `${episode.episodeNumber}` : "";
-
-  // Check WebP support
-  function checkWebPSupport(): Promise<boolean> {
-    return new Promise((resolve) => {
-      const webP = new Image();
-      webP.onload = webP.onerror = () => resolve(webP.height === 2);
-      webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
-    });
-  }
-
-  // Initialize config on mount
-  onMount(async () => {
-    await configStore.init();
-
-    // Check WebP support
-    supportsWebP = await checkWebPSupport();
-    console.log('🖼️ WebP support:', supportsWebP);
-  });
-
-  // Separate from the async onMount above: Svelte ignores a cleanup function
-  // returned from an async callback, so the listener would never be removed.
-  onMount(() => {
-    const mq = window.matchMedia(PHONE_QUERY);
-    isPhone = mq.matches;
-    const onChange = (event: MediaQueryListEvent) => (isPhone = event.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  });
-
-  // Generate ordered list of image sources to try
-  function generateImageSources(phone: boolean): string[] {
-    const sources: string[] = [];
-
-    // Both are keyed by anime id: banners/<id> for the tvdb artwork synced by
-    // thetvdb-enrichment, <id> at the root for the poster. Built through
-    // getSafeImageUrl so they follow config.cdn_url. Hardcoding the host meant
-    // local and staging read production artwork, which hid the fact that staging
-    // had no banners of its own.
-    if (anime.id) {
-      // TheTVDB's 680x1000 series poster, synced by thetvdb-enrichment.
-      const tvdbPoster = getSafeImageUrl(anime.id, 'posters');
-      // TheTVDB's wide background artwork.
-      const banner = getSafeImageUrl(anime.id, 'banners');
-      // The scraper's MyAnimeList image at the bucket root -- 225px wide, so it
-      // is the last resort at hero scale rather than a peer of the other two.
-      const malImage = getSafeImageUrl(anime.id);
-
-      if (phone) {
-        // Tall box: prefer tall art, and prefer the high-resolution one.
-        sources.push(tvdbPoster, malImage, banner);
-      } else {
-        // Wide box: the banner is composed for this shape. A poster cropped to
-        // a wide frame still beats a 225px image blown up to fill it.
-        sources.push(banner, tvdbPoster, malImage);
-      }
+  const ownBloc = new HeroBannerBloc({
+    get anime() {
+      return anime;
+    },
+    get timing() {
+      return timing;
     }
+  });
+  const bloc = $derived(injected ?? ownBloc);
 
-    return sources;
-  }
-
-  // Update sources when anime changes
-  $: {
-    if (currentAnimeId !== anime.id) {
-      currentAnimeId = anime.id;
-      bgLoaded = false;
-      imageSources = generateImageSources(isPhone);
-    }
-  }
-
-  // Regenerate sources when WebP support is detected
-  $: if (supportsWebP && currentAnimeId === anime.id) {
-    imageSources = generateImageSources(isPhone);
-  }
-
-  // ...and when the viewport crosses the breakpoint, so a rotate or a resized
-  // window re-picks rather than keeping art chosen for the other shape.
-  $: if (currentAnimeId === anime.id) {
-    imageSources = generateImageSources(isPhone);
-  }
-
-  // A phone never needs 1600px of hero art.
-  $: heroCdnWidth = isPhone ? 800 : 1600;
-
-  $: title = getAnimeTitle(anime, $preferencesStore.titleLanguage);
-
-  // Show titles range from "Chiikawa" to "The Exiled Heavy Knight Knows How to
-  // Game the System". At one fixed Display size the long ones run to three lines
-  // and shove the panel's top edge up by ~150px, which is visible as a jump when
-  // the rail retargets the banner. Stepping the size by length keeps the panel
-  // roughly one height. Computed during render, so SSR emits the final size and
-  // there is no measure-then-resize flash.
-  $: titleTier = title.length > 40 ? 'long' : title.length > 18 ? 'mid' : 'short';
-
-  // Display values come from the resolved timing when there is one. The worker
-  // store is kept only for `progress`, which nothing else computes; using it for
-  // the countdown too is what put "18H" in the badge while the rail beside it
-  // read "Airing in 19h" for the same episode.
-  $: liveNow = timing ? timing.isLive : currentlyAiring;
-  $: airedAlready = timing ? timing.hasAired : alreadyAired;
-  $: badgeCountdown = timing ? timing.countdown : countdown;
-  $: hasSchedule = Boolean(timing) || hasTimingData;
-
-  // "Airing Soon" was attached to anything neither airing nor already aired, so
-  // it shipped over an episode nineteen hours away. Soon has to mean soon; past
-  // a few hours the honest label is just what the thing is.
-  const SOON_MS = 6 * 60 * 60 * 1000;
-  $: upcomingLabel = timing && timing.airDateTime.getTime() - Date.now() <= SOON_MS
-    ? 'Airing Soon'
-    : 'Next Episode';
-
-  function handleImageChosen(event: CustomEvent) {
-    console.log('🖼️ HeroBanner image chosen:', event.detail);
-    bgLoaded = true;
-  }
-
+  // Config, the WebP probe and the phone breakpoint. All three were onMounts;
+  // the media listener is the one with a teardown, and it now has one.
+  $effect(() => bloc.init());
 </script>
 
 <div class="hero">
-  {#if imageSources.length > 0}
-    <div class="hero-bg-image" style="opacity: {bgLoaded ? 1 : 0};">
+  {#if bloc.imageSources.length > 0}
+    <div class="hero-bg-image" style="opacity: {bloc.bgLoaded ? 1 : 0};">
       <SafeImage
-        sources={imageSources}
+        sources={bloc.imageSources}
         alt=""
         loading="eager"
         priority={true}
         fallbackSrc="/assets/not found.jpg"
         perTryTimeoutMs={3000}
         className="hero-bg-cover"
-        cdnWidth={heroCdnWidth}
-        on:chosen={handleImageChosen}
+        cdnWidth={bloc.heroCdnWidth}
+        onChosen={() => bloc.imageChosen()}
       />
     </div>
   {/if}
@@ -198,22 +59,22 @@
 
   <!-- Content -->
   <div class="hero-content">
-    {#if hasSchedule && liveNow}
-      <div class="hero-badge hero-badge--progress" style="--progress-factor: {progress !== undefined ? progress : 0};">
+    {#if bloc.hasSchedule && bloc.liveNow}
+      <div class="hero-badge hero-badge--progress" style="--progress-factor: {bloc.progress !== undefined ? bloc.progress : 0};">
         <span class="badge-track"></span>
         <span class="badge-label"><span class="dot"></span> Currently Airing</span>
-        {#if badgeCountdown}
-          <span class="badge-countdown">{badgeCountdown}</span>
+        {#if bloc.badgeCountdown}
+          <span class="badge-countdown">{bloc.badgeCountdown}</span>
         {/if}
       </div>
-    {:else if hasSchedule && !liveNow && !airedAlready}
+    {:else if bloc.hasSchedule && !bloc.liveNow && !bloc.airedAlready}
       <div class="hero-badge">
-        <span class="badge-label"><span class="dot"></span> {upcomingLabel}</span>
-        {#if badgeCountdown && badgeCountdown !== "AIRING NOW" && !badgeCountdown.includes("JUST")}
-          <span class="badge-countdown">{badgeCountdown}</span>
+        <span class="badge-label"><span class="dot"></span> {bloc.upcomingLabel}</span>
+        {#if bloc.showUpcomingCountdown}
+          <span class="badge-countdown">{bloc.badgeCountdown}</span>
         {/if}
       </div>
-    {:else if hasSchedule && airedAlready}
+    {:else if bloc.hasSchedule && bloc.airedAlready}
       <div class="hero-badge" style="background: var(--weeb-green);">
         <span class="badge-label"><span class="dot" style="background: white;"></span> Recently Aired</span>
       </div>
@@ -222,49 +83,49 @@
     <!-- h2, not h1: this is one rotating featured item, so as an h1 the homepage's
          primary heading changed with whatever the carousel happened to show. The
          page-level h1 lives in HomepageSSR. -->
-    <h2 class="t-{titleTier}">{title}</h2>
+    <h2 class="t-{bloc.titleTier}">{bloc.title}</h2>
 
-    {#if anime.description}
-      <p class="hero-desc">{anime.description}</p>
+    {#if bloc.description}
+      <p class="hero-desc">{bloc.description}</p>
     {/if}
 
     <div class="hero-meta">
-      {#if episodeNumber}
-        <span>Episode {episodeNumber}</span>
+      {#if bloc.episodeNumber}
+        <span>Episode {bloc.episodeNumber}</span>
       {/if}
-      {#if timing}
+      {#if bloc.timing}
         <span class="air-time"
-          >Airs {timing.localTime}{#if timing.localZone}&nbsp;<span class="air-time-zone"
-            >{timing.localZone}</span
+          >Airs {bloc.timing.localTime}{#if bloc.timing.localZone}&nbsp;<span class="air-time-zone"
+            >{bloc.timing.localZone}</span
           >{/if}</span
         >
-        {#if timing.broadcastSlot}
+        {#if bloc.timing.broadcastSlot}
           <button
             type="button"
             class="tz-toggle"
-            aria-expanded={showJstPopover}
+            aria-expanded={bloc.showJstPopover}
             aria-controls="hero-broadcast-slot"
-            on:click={() => (showJstPopover = !showJstPopover)}>Broadcast time</button
+            onclick={() => bloc.toggleJstPopover()}>Broadcast time</button
           >
         {/if}
-      {:else if anime.broadcast}
-        <span class="air-time">{anime.broadcast}</span>
+      {:else if bloc.anime.broadcast}
+        <span class="air-time">{bloc.anime.broadcast}</span>
       {/if}
-      {#if showJstPopover && timing?.broadcastSlot}
+      {#if bloc.showJstPopover && bloc.timing?.broadcastSlot}
         <p class="tz-popover" id="hero-broadcast-slot">
-          Broadcast slot: {timing.broadcastSlot}. Times above are in your local timezone.
+          Broadcast slot: {bloc.timing.broadcastSlot}. Times above are in your local timezone.
         </p>
       {/if}
     </div>
 
     <div class="hero-platforms">
-      <StreamingPlatforms platforms={anime.streamingPlatforms} />
+      <StreamingPlatforms platforms={bloc.anime.streamingPlatforms} />
     </div>
 
     <div class="hero-actions">
-      <a href={animeHref(anime)} class="btn-primary">View Details</a>
+      <a href={animeHref(bloc.anime)} class="btn-primary">View Details</a>
       <AnimeActions
-        {anime}
+        anime={bloc.anime}
         variant="hero"
       />
     </div>
@@ -273,7 +134,7 @@
          List" read as a wall rather than an offer. One line, only while signed
          out, and only once auth has resolved so it does not flash at returning
          visitors. Claims nothing the product does not already do. -->
-    {#if $loggedInStore.isAuthInitialized && !$loggedInStore.isLoggedIn}
+    {#if bloc.showSignUpLine}
       <p class="hero-value">Free account &mdash; track every episode and get notified the moment one airs.</p>
     {/if}
   </div>

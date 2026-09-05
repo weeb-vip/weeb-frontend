@@ -1,7 +1,18 @@
 <script lang="ts">
-  export let title: string;
-  export let href: string = '';
-  export let linkText: string = '';
+  import type { Snippet } from 'svelte';
+
+  let {
+    title,
+    href = '',
+    linkText = '',
+    children,
+  }: {
+    title: string;
+    href?: string;
+    linkText?: string;
+    /** Optional trailing content, rendered after the title and link. */
+    children?: Snippet;
+  } = $props();
 </script>
 
 <div class="section-header">
@@ -9,7 +20,7 @@
   {#if href && linkText}
     <a {href}>{linkText}</a>
   {/if}
-  <slot />
+  {@render children?.()}
 </div>
 
 <style>

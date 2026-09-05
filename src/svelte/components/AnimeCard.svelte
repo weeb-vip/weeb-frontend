@@ -1,38 +1,80 @@
+<script lang="ts" module>
+  export type AnimeCardStyle =
+    | 'default'
+    | 'hover-transparent'
+    | 'hover'
+    | 'transparent'
+    | 'long'
+    | 'detail'
+    | 'episode';
+
+  export interface AnimeCardAirTime {
+    show: boolean;
+    text: string;
+    variant?: 'countdown' | 'scheduled' | 'aired' | 'airing';
+  }
+</script>
+
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import type { Snippet } from 'svelte';
   import SafeImage from './SafeImage.svelte';
   import ScrollingText from './ScrollingText.svelte';
   import ScrollingTags from './ScrollingTags.svelte';
   import { STATUS_LABELS } from '../utils/status';
-  import { analytics } from '../../utils/analytics';
   import { animeHref } from '../../services/utils';
+  import { realCardTracking, type CardTrackingPort } from './Card.bloc.svelte';
 
-  export let style: 'default' | 'hover-transparent' | 'hover' | 'transparent' | 'long' | 'detail' | 'episode' = 'default';
-  export let forceListLayout: boolean = false;
-  export let title: string;
-  export let episodes: number | string;
-  export let episodeLength: string;
-  export let year: string;
-  export let image: string;
-  export let id: string | null | undefined;
-  // Optional: callers that have not been given the slug yet fall back to
-  // /show/<id>, which permanently redirects.
-  export let slug: string | null | undefined = undefined;
-  export let className: string = '';
-  export let airTime: {
-    show: boolean;
-    text: string;
-    variant?: 'countdown' | 'scheduled' | 'aired' | 'airing';
-  } | undefined = undefined;
-  export let entry: { status?: string } | null = null;
-
-  // Episode specific props
-  export let airdate: string = '';
-  export let episodeTitle: string = '';
-  export let episodeNumber: string = '';
-
-  // Tags/genres for card display
-  export let tags: string[] = [];
+  /**
+   * Presentational -- no bloc. Everything it draws arrives as a prop, its title
+   * included: whoever owns the title-language preference resolves it (see
+   * Card.bloc). The one side effect is the analytics ping on the title link --
+   * a report of what the reader just did rather than state this component owns
+   * -- and that arrives as the same module's shared port.
+   */
+  let {
+    style = 'default',
+    forceListLayout = false,
+    title,
+    episodes,
+    episodeLength,
+    year,
+    image,
+    id,
+    // Optional: callers that have not been given the slug yet fall back to
+    // /show/<id>, which permanently redirects.
+    slug = undefined,
+    className = '',
+    airTime = undefined,
+    entry = null,
+    // Episode specific props
+    airdate = '',
+    episodeTitle = '',
+    episodeNumber = '',
+    // Tags/genres for card display
+    tags = [],
+    /** Controls rendered under the metadata on the `detail` and `episode` styles. */
+    options,
+    track = realCardTracking,
+  }: {
+    style?: AnimeCardStyle;
+    forceListLayout?: boolean;
+    title: string;
+    episodes: number | string;
+    episodeLength: string;
+    year: string;
+    image: string;
+    id: string | null | undefined;
+    slug?: string | null | undefined;
+    className?: string;
+    airTime?: AnimeCardAirTime | undefined;
+    entry?: { status?: string } | null;
+    airdate?: string;
+    episodeTitle?: string;
+    episodeNumber?: string;
+    tags?: string[];
+    options?: Snippet;
+    track?: CardTrackingPort;
+  } = $props();
 
   const statusLabels = STATUS_LABELS;
 
@@ -91,8 +133,8 @@
     return { value: 'TBA', isTBA: true };
   }
 
-  $: durationDisplay = getEstimatedDuration();
-  $: episodeDisplay = getEpisodeDisplay();
+  const durationDisplay = $derived(getEstimatedDuration());
+  const episodeDisplay = $derived(getEpisodeDisplay());
 </script>
 
 <div class="flex {forceListLayout ? 'flex-row' : 'sm:flex-row md:flex-col'} rounded-md shadow w-full justify-center transition-all duration-300 {className} relative h-full" style="background: var(--weeb-surface);">
@@ -105,19 +147,19 @@
   {/if}
 
   <a href={animeHref({ id, slug })}
-     on:click={() => analytics.animeViewed(id || '', title)}
+     onclick={() => track(id || '', title)}
      class="flex flex-col {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md h-full flex-shrink-0 flex-grow-0 w-32' : 'flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}" style="background: var(--weeb-surface);">
     <SafeImage
             src={image}
             alt={title}
-            className="{forceListLayout ? 'object-cover h-full relative' : 'aspect-2/3 object-cover w-full h-full relative'}"
+            className={forceListLayout ? 'object-cover h-full relative' : 'aspect-2/3 object-cover w-full h-full relative'}
             fallbackSrc="/assets/not found.jpg"
     />
   </a>
 
   {#if style === 'detail'}
     <div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group">
-      <a href={animeHref({ id, slug })} on:click={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full flex-grow">
+      <a href={animeHref({ id, slug })} onclick={() => track(id || '', title)} class="flex overflow-hidden flex-col w-full flex-grow">
         <ScrollingText
                 text={title}
                 className="text-md font-bold text-weeb-fg"
@@ -150,14 +192,14 @@
 
       <!-- Always positioned at bottom -->
       <div class="flex flex-wrap gap-2 options w-full mt-auto pt-3 {forceListLayout ? 'justify-start' : 'justify-center'}">
-        <slot name="options"></slot>
+        {@render options?.()}
       </div>
     </div>
   {/if}
 
   {#if style === 'episode'}
     <div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group">
-      <a href={animeHref({ id, slug })} on:click={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full flex-grow">
+      <a href={animeHref({ id, slug })} onclick={() => track(id || '', title)} class="flex flex-col overflow-hidden w-full flex-grow">
         <ScrollingText
                 text={title}
                 className="text-md font-bold text-weeb-fg"
@@ -192,7 +234,7 @@
 
       <!-- Always positioned at bottom -->
       <div class="flex flex-wrap gap-2 options w-full mt-auto pt-3 {forceListLayout ? 'justify-start' : 'justify-center'}">
-        <slot name="options"></slot>
+        {@render options?.()}
       </div>
     </div>
   {/if}

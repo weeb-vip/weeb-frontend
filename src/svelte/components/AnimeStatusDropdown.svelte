@@ -1,283 +1,146 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
-  import { fade, scale } from 'svelte/transition';
-  import { initializeQueryClient } from '../services/query-client';
-  import { STATUS_LABELS, STATUS_OPTIONS } from '../utils/status';
+  import { scale } from 'svelte/transition';
+  import { clickOutside } from '../actions/clickOutside';
+  import { anchoredPosition } from '../actions/anchoredPosition';
+  import {
+    AnimeStatusDropdownBloc,
+    type AnimeStatusDropdownEntry,
+    type AnimeStatusDropdownVariant
+  } from './AnimeStatusDropdown.bloc.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
 
-  export let entry: {
-    id: string;
-    anime?: {
-      id?: string;
-    };
-    status?: string;
-  };
-  export let variant: 'default' | 'compact' | 'hero' | 'icon-only' = 'default';
-  export let className: string = '';
-  export let buttonClassName: string = '';
+  let {
+    entry,
+    variant = 'default',
+    className = '',
+    buttonClassName = '',
+    /** The reader picked a new status for this entry. */
+    onStatusChange,
+    /** The reader asked for this entry to leave their list. */
+    onDelete,
+    bloc: injected
+  }: {
+    entry: AnimeStatusDropdownEntry;
+    variant?: AnimeStatusDropdownVariant;
+    className?: string;
+    buttonClassName?: string;
+    onStatusChange?: (detail: { animeId: string; status: string }) => void;
+    onDelete?: (detail: { animeId: string }) => void;
+    bloc?: AnimeStatusDropdownBloc;
+  } = $props();
 
-  const dispatch = createEventDispatcher();
-
-  let isMenuOpen = false;
-  let buttonElement: HTMLButtonElement;
-  let menuElement: HTMLDivElement;
-  let queryClient: any = null;
-  let isClient = false;
-  let activeIndex: number | null = null;
-  let menuTop = 0;
-  let menuLeft = 0;
-  let menuPortalTarget: HTMLElement | null = null;
-
-  // Portal action — moves menu to document.body so position:fixed works
-  // regardless of parent transforms/stacking contexts
-  function portalMenu(node: HTMLElement) {
-    menuPortalTarget = document.body;
-    menuPortalTarget.appendChild(node);
-    return {
-      destroy() {
-        if (node.parentNode) {
-          node.parentNode.removeChild(node);
-        }
-      }
-    };
-  }
-
-  const statusLabels = STATUS_LABELS;
-  const statusOptions = STATUS_OPTIONS;
-
-  onMount(async () => {
-    try {
-      queryClient = initializeQueryClient();
-      isClient = true;
-    } catch (error) {
-      console.warn('Failed to initialize query client:', error);
-      isClient = true;
+  const ownBloc = new AnimeStatusDropdownBloc({
+    get entry() {
+      return entry;
+    },
+    get variant() {
+      return variant;
+    },
+    get buttonClassName() {
+      return buttonClassName;
+    },
+    get onStatusChange() {
+      return onStatusChange;
+    },
+    get onDelete() {
+      return onDelete;
     }
   });
+  const bloc = $derived(injected ?? ownBloc);
 
-  function getContainerClasses() {
-    const base = "flex flex-row relative items-center gap-2 justify-center";
-    switch (variant) {
-      case 'compact':
-        return `${base} w-full`;
-      case 'hero':
-        return base;
-      case 'icon-only':
-        return "relative inline-block text-left";
-      default:
-        return base;
-    }
-  }
+  let buttonElement = $state<HTMLButtonElement | undefined>();
 
-  function getButtonClasses() {
-    if (buttonClassName) {
-      return `asd-btn ${buttonClassName}`;
-    }
-    switch (variant) {
-      case 'compact':
-        return 'asd-btn asd-btn--compact';
-      case 'hero':
-        return 'asd-btn asd-btn--hero';
-      case 'icon-only':
-        return 'asd-btn asd-btn--icon';
-      default:
-        return 'asd-btn';
-    }
-  }
+  $effect(() => bloc.init());
 
-  // getMenuItemClasses removed — now using scoped .asd-menu-item CSS
-
-  let menuOpenAbove = false;
-
-  function toggleMenu(e?: MouseEvent) {
-    if (!isMenuOpen) {
-      // Try multiple strategies to find the button element
-      let btn: HTMLElement | null = null;
-
-      // Strategy 1: event.currentTarget (most reliable during event handling)
-      if (e?.currentTarget instanceof HTMLElement) {
-        btn = e.currentTarget;
+  // The menu is portalled to <body> so `position: fixed` survives any
+  // transformed ancestor; both actions below are told about that explicitly --
+  // the trigger is `ignore`d rather than being a DOM ancestor, and the anchor
+  // is passed as a getter because it binds after this element is configured.
+  function portalMenu(node: HTMLElement) {
+    document.body.appendChild(node);
+    return {
+      destroy() {
+        node.parentNode?.removeChild(node);
       }
-      // Strategy 2: event.target — walk up to find the button
-      if (!btn && e?.target instanceof HTMLElement) {
-        btn = (e.target as HTMLElement).closest('button');
-      }
-      // Strategy 3: bind:this fallback
-      if (!btn) {
-        btn = buttonElement;
-      }
-
-      if (btn) {
-        const rect = btn.getBoundingClientRect();
-
-        const menuHeight = 280;
-        const viewportHeight = window.innerHeight;
-        const spaceBelow = viewportHeight - rect.bottom;
-        const spaceAbove = rect.top;
-
-        if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
-          menuTop = rect.top - menuHeight;
-          menuOpenAbove = true;
-        } else {
-          menuTop = rect.bottom;
-          menuOpenAbove = false;
-        }
-
-        if (menuTop < 8) menuTop = 8;
-        if (menuTop + menuHeight > viewportHeight - 8) {
-          menuTop = viewportHeight - menuHeight - 8;
-        }
-
-        menuLeft = rect.left;
-        const menuWidth = 200;
-        if (menuLeft + menuWidth > window.innerWidth - 8) {
-          menuLeft = window.innerWidth - menuWidth - 8;
-        }
-
-      }
-    }
-    isMenuOpen = !isMenuOpen;
-  }
-
-  function closeMenu() {
-    isMenuOpen = false;
-  }
-
-  function handleClickOutside(event: MouseEvent) {
-    if (buttonElement && menuElement) {
-      if (!buttonElement.contains(event.target as Node) && !menuElement.contains(event.target as Node)) {
-        closeMenu();
-      }
-    }
-  }
-
-  function onChangeStatus(newStatus: string) {
-    dispatch('statusChange', {
-      animeId: entry.anime?.id || '',
-      status: newStatus
-    });
-    closeMenu();
-  }
-
-  function onDeleteAnime() {
-    console.log('🗑️ AnimeStatusDropdown onDeleteAnime called - entry ID:', entry.id, 'anime ID:', entry.anime?.id);
-    dispatch('delete', {
-      animeId: entry.anime?.id || ''  // Pass entry.id which is now the anime ID from AnimeActions
-    });
-    console.log('🗑️ Delete event dispatched with ID:', entry.anime?.id);
-  }
-
-  function handleMouseEnter(index: number) {
-    activeIndex = index;
-  }
-
-  function handleMouseLeave() {
-    activeIndex = null;
-  }
-
-  $: if (typeof window !== 'undefined') {
-    if (isMenuOpen) {
-      document.addEventListener('click', handleClickOutside);
-    } else {
-      document.removeEventListener('click', handleClickOutside);
-    }
+    };
   }
 </script>
 
-<svelte:window on:click={handleClickOutside} />
+{#snippet menu(showHeader: boolean)}
+  <div
+    use:portalMenu
+    use:clickOutside={{ handler: () => bloc.closeMenu(), ignore: () => buttonElement }}
+    use:anchoredPosition={{ anchor: () => buttonElement, minWidth: 180, margin: 8 }}
+    class="asd-menu"
+    transition:scale={{ duration: 100, start: 0.95 }}
+  >
+    {#if showHeader}
+      <div class="asd-menu-header">Change Status</div>
+    {/if}
+    {#each bloc.statusOptions as statusOption}
+      <button
+        class="asd-menu-item"
+        class:asd-menu-item--active={bloc.isSelected(statusOption)}
+        onclick={(event) => {
+          event.stopPropagation();
+          bloc.selectStatus(statusOption);
+        }}
+      >
+        <span>{bloc.labelFor(statusOption)}</span>
+        {#if bloc.isSelected(statusOption)}
+          <svg class="asd-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-7"/></svg>
+        {/if}
+      </button>
+    {/each}
+    <div class="asd-menu-divider"></div>
+    <button
+      class="asd-menu-item asd-menu-item--danger"
+      onclick={(event) => {
+        event.stopPropagation();
+        bloc.removeFromList();
+      }}
+    >
+      <svg class="asd-trash" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5.3 4V2.7a1 1 0 011-1h3.4a1 1 0 011 1V4m1.6 0v8.7a1.3 1.3 0 01-1.3 1.3H5a1.3 1.3 0 01-1.3-1.3V4h8.6z"/></svg>
+      Remove from list
+    </button>
+  </div>
+{/snippet}
 
-{#if variant === 'icon-only'}
-  <div class="{getContainerClasses()} {className}">
-    <div class="asd-wrap">
+<div class="{bloc.containerClasses} {className}">
+  <div class="asd-wrap">
+    {#if bloc.variant === 'icon-only'}
       <button
         bind:this={buttonElement}
-        class={getButtonClasses()}
-        title="Status: {statusLabels[entry.status ?? 'PLANTOWATCH']}"
-        on:click={toggleMenu}
+        class={bloc.buttonClasses}
+        title="Status: {bloc.currentLabel}"
+        aria-haspopup="menu"
+        aria-expanded={bloc.isMenuOpen}
+        onclick={() => bloc.toggleMenu()}
       >
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="3" r="1"/><circle cx="8" cy="8" r="1"/><circle cx="8" cy="13" r="1"/></svg>
       </button>
 
-      {#if isMenuOpen}
-        <div
-          bind:this={menuElement}
-          use:portalMenu
-          class="asd-menu"
-          style="position: fixed; z-index: 9999; top: {menuTop}px; left: {menuLeft}px; min-width: 180px; max-height: calc(100vh - 16px); overflow-y: auto; background: var(--weeb-surface, oklch(22% 0.02 275)); border: 1px solid var(--weeb-border, oklch(28% 0.015 275)); border-radius: 8px; padding: 4px; box-shadow: 0 8px 32px oklch(0% 0 0 / 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--weeb-fg, var(--weeb-fg));"
-          transition:scale={{duration: 100, start: 0.95}}
-        >
-          <div class="asd-menu-header" style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--weeb-fg-muted, oklch(45% 0.01 270)); padding: 8px 10px 4px;">Change Status</div>
-          {#each statusOptions as statusOption, index}
-            <button
-              style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; background: transparent; color: inherit; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; {entry.status === statusOption ? 'background: color-mix(in oklch, var(--weeb-accent) 8%, transparent); color: var(--weeb-accent, var(--weeb-accent));' : ''}"
-              on:click={() => onChangeStatus(statusOption)}
-              on:mouseenter={() => handleMouseEnter(index)}
-              on:mouseleave={handleMouseLeave}
-            >
-              <span>{statusLabels[statusOption]}</span>
-              {#if entry.status === statusOption}
-                <svg style="width: 14px; height: 14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-7"/></svg>
-              {/if}
-            </button>
-          {/each}
-          <div style="height: 1px; background: var(--weeb-border, oklch(28% 0.015 275)); margin: 4px 0;"></div>
-          <button
-            style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: none; background: transparent; color: var(--weeb-red, oklch(55% 0.2 25)); font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left;"
-            on:click={onDeleteAnime}
-          >
-            <svg style="width: 14px; height: 14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5.3 4V2.7a1 1 0 011-1h3.4a1 1 0 011 1V4m1.6 0v8.7a1.3 1.3 0 01-1.3 1.3H5a1.3 1.3 0 01-1.3-1.3V4h8.6z"/></svg>
-            Remove from list
-          </button>
-        </div>
+      {#if bloc.isMenuOpen}
+        {@render menu(true)}
       {/if}
-    </div>
-  </div>
-{:else}
-  <div class="{getContainerClasses()} {className}">
-    <div class="asd-wrap">
+    {:else}
       <button
         bind:this={buttonElement}
-        class={getButtonClasses()}
-        on:click={toggleMenu}
+        class={bloc.buttonClasses}
+        aria-haspopup="menu"
+        aria-expanded={bloc.isMenuOpen}
+        onclick={() => bloc.toggleMenu()}
       >
-        <span class="asd-label">{statusLabels[entry.status ?? 'PLANTOWATCH']}</span>
-        <svg class="asd-chevron" class:asd-chevron--open={isMenuOpen} viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        <span class="asd-label">{bloc.currentLabel}</span>
+        <svg class="asd-chevron" class:asd-chevron--open={bloc.isMenuOpen} viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
       </button>
 
-      {#if isMenuOpen}
-        <div
-          bind:this={menuElement}
-          use:portalMenu
-          class="asd-menu"
-          style="position: fixed; z-index: 9999; top: {menuTop}px; left: {menuLeft}px; min-width: 180px; max-height: calc(100vh - 16px); overflow-y: auto; background: var(--weeb-surface, oklch(22% 0.02 275)); border: 1px solid var(--weeb-border, oklch(28% 0.015 275)); border-radius: 8px; padding: 4px; box-shadow: 0 8px 32px oklch(0% 0 0 / 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--weeb-fg, var(--weeb-fg));"
-          transition:scale={{duration: 100, start: 0.95}}
-        >
-          {#each statusOptions as statusOption, index}
-            <button
-              style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; background: transparent; color: inherit; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; {entry.status === statusOption ? 'background: color-mix(in oklch, var(--weeb-accent) 8%, transparent); color: var(--weeb-accent, var(--weeb-accent));' : ''}"
-              on:click|stopPropagation={() => onChangeStatus(statusOption)}
-              on:mouseenter={() => handleMouseEnter(statusOptions.length + 1 + index)}
-              on:mouseleave={handleMouseLeave}
-            >
-              <span>{statusLabels[statusOption]}</span>
-              {#if entry.status === statusOption}
-                <svg style="width: 14px; height: 14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-7"/></svg>
-              {/if}
-            </button>
-          {/each}
-          <div style="height: 1px; background: var(--weeb-border, oklch(28% 0.015 275)); margin: 4px 0;"></div>
-          <button
-            style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: none; background: transparent; color: var(--weeb-red, oklch(55% 0.2 25)); font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left;"
-            on:click|stopPropagation={onDeleteAnime}
-          >
-            <svg style="width: 14px; height: 14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5.3 4V2.7a1 1 0 011-1h3.4a1 1 0 011 1V4m1.6 0v8.7a1.3 1.3 0 01-1.3 1.3H5a1.3 1.3 0 01-1.3-1.3V4h8.6z"/></svg>
-            Remove from list
-          </button>
-        </div>
+      {#if bloc.isMenuOpen}
+        {@render menu(false)}
       {/if}
-    </div>
+    {/if}
   </div>
-{/if}
+</div>
 
 <style>
   .asd-wrap {

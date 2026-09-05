@@ -1,10 +1,5 @@
 <script lang="ts">
-  import { invalidateAll } from '$app/navigation';
-  import { createMutation } from '@tanstack/svelte-query';
-  import { toast } from 'svelte-sonner';
-  import { getQueryClient } from '../services/query-client';
-  import { upsertWork } from '../../services/queries';
-  import { WorkStatus } from '../../gql/graphql';
+  import { ChapterProgressBloc } from './ChapterProgress.bloc.svelte';
 
   /**
    * How far through a work the reader is, in chapters.
@@ -19,81 +14,35 @@
    * something you have not added is a state with nowhere to keep it.
    */
 
-  export let workId: string;
-  /** The work's chapter total, or null when the source never recorded one. */
-  export let totalChapters: number | null = null;
-  /** The viewer's row, present only when the work is tracked. */
-  export let userWork: {
-    status?: string | null;
-    score?: number | null;
-    chapters?: number | null;
-    volumes?: number | null;
-  } | null = null;
-
-  const queryClient = getQueryClient();
-
-  // Local, so the stepper answers immediately rather than after a round trip.
-  let read: number = userWork?.chapters ?? 0;
-
-  // Follow the server only when it actually changes, so a re-read of the prop
-  // after our own successful write does not stamp on what the reader just set --
-  // the same reason WorkStatusControl tracks its previous server value.
-  let serverRead: number = userWork?.chapters ?? 0;
-  $: {
-    const incoming = userWork?.chapters ?? 0;
-    if (incoming !== serverRead) {
-      serverRead = incoming;
-      read = incoming;
-    }
-  }
-
-  $: max = totalChapters && totalChapters > 0 ? totalChapters : null;
-  $: pct = max ? Math.min(100, Math.round((read / max) * 100)) : 0;
-  $: atStart = read <= 0;
-  $: atEnd = max != null && read >= max;
-
-  const save = createMutation({
-    mutationFn: async (next: number) =>
-      upsertWork().mutationFn({
-        input: {
-          workID: workId,
-          // Carry the rest of the row, or a chapters-only write would blank the
-          // status and score the reader already set.
-          status: (userWork?.status ?? undefined) as WorkStatus | undefined,
-          score: userWork?.score ?? undefined,
-          volumes: userWork?.volumes ?? undefined,
-          chapters: next,
-        },
-      }),
-    onSuccess: async () => {
-      queryClient.invalidateQueries();
-      await invalidateAll();
-    },
-    onError: (error: any) => {
-      read = serverRead; // put it back to what the server still believes
-      toast.error(String(error?.message ?? 'Could not save your progress'));
-    },
-  });
-
-  function commit(next: number) {
-    let value = Math.max(0, Math.round(next));
-    if (max != null) value = Math.min(value, max);
-    if (value === read) return;
-    read = value;
-    $save.mutate(value);
-  }
-
-  function onInput(event: Event) {
-    const raw = parseInt((event.target as HTMLInputElement).value, 10);
-    commit(Number.isNaN(raw) ? 0 : raw);
-  }
+  let {
+    workId,
+    /** The work's chapter total, or null when the source never recorded one. */
+    totalChapters = null,
+    /** The viewer's row, present only when the work is tracked. */
+    userWork = null,
+    /**
+     * Defaults to a bloc reading this component's props, so the call site is
+     * unchanged. Stories and tests inject one with stub ports.
+     */
+    bloc = new ChapterProgressBloc({ work: () => ({ workId, totalChapters, userWork }) }),
+  }: {
+    workId: string;
+    totalChapters?: number | null;
+    userWork?: {
+      status?: string | null;
+      score?: number | null;
+      chapters?: number | null;
+      volumes?: number | null;
+    } | null;
+    bloc?: ChapterProgressBloc;
+  } = $props();
 </script>
 
 <div class="chapter-progress">
   <div class="cp-head">
     <span class="cp-label">Chapters read</span>
     <span class="cp-count">
-      <span class="num">{read}</span>{#if max}<span class="cp-sep">/</span><span class="num cp-total">{max}</span>{/if}
+      <span class="num">{bloc.read}</span>{#if bloc.max}<span class="cp-sep">/</span><span class="num cp-total">{bloc.max}</span>{/if}
     </span>
   </div>
 
@@ -102,8 +51,8 @@
       type="button"
       class="cp-step"
       aria-label="One chapter fewer"
-      disabled={atStart || $save.isPending}
-      on:click={() => commit(read - 1)}
+      disabled={bloc.atStart || bloc.busy}
+      onclick={() => bloc.step(-1)}
     >
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10" /></svg>
     </button>
@@ -113,27 +62,27 @@
       type="number"
       inputmode="numeric"
       min="0"
-      max={max ?? undefined}
+      max={bloc.max ?? undefined}
       aria-label="Chapters read"
-      value={read}
-      disabled={$save.isPending}
-      on:change={onInput}
+      value={bloc.read}
+      disabled={bloc.busy}
+      onchange={(event) => bloc.setReadFromText(event.currentTarget.value)}
     />
 
     <button
       type="button"
       class="cp-step"
       aria-label="One chapter more"
-      disabled={atEnd || $save.isPending}
-      on:click={() => commit(read + 1)}
+      disabled={bloc.atEnd || bloc.busy}
+      onclick={() => bloc.step(1)}
     >
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 5v10M5 10h10" /></svg>
     </button>
   </div>
 
-  {#if max}
-    <div class="cp-bar" role="progressbar" aria-valuenow={read} aria-valuemin={0} aria-valuemax={max}>
-      <div class="cp-fill" style="--p: {pct / 100}"></div>
+  {#if bloc.max}
+    <div class="cp-bar" role="progressbar" aria-valuenow={bloc.read} aria-valuemin={0} aria-valuemax={bloc.max}>
+      <div class="cp-fill" style="--p: {bloc.percent / 100}"></div>
     </div>
   {/if}
 </div>

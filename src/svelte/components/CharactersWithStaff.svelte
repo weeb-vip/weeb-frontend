@@ -1,134 +1,63 @@
 <script lang="ts">
-  import { createQuery } from '@tanstack/svelte-query';
   import SafeImage from './SafeImage.svelte';
-  import { getCharactersAndStaffByAnimeID } from '../../services/queries';
+  import EmptyState from './EmptyState.svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
+  import Tabs from './Tabs.svelte';
+  import {
+    CharactersWithStaffBloc,
+    type CharacterEntry,
+  } from './CharactersWithStaff.bloc.svelte';
 
-  export let animeId: string;
-  export let ssrCharactersData: any = null;
-
-  type FilterType = 'all' | 'main' | 'supporting' | 'minor';
-
-  const filterOptions: { key: FilterType; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'main', label: 'Main' },
-    { key: 'supporting', label: 'Supporting' },
-    { key: 'minor', label: 'Minor' }
-  ];
-
-  let filter: FilterType = 'all';
-  let expandedCharacters = new Set<string>();
-
-  // Create query store only if no SSR data
-  const charactersQuery = createQuery({
-    ...getCharactersAndStaffByAnimeID(animeId),
-    enabled: !ssrCharactersData
-  });
-
-  // Use SSR data if available, otherwise use client-side query
-  $: data = ssrCharactersData ? ssrCharactersData.charactersAndStaffByAnimeId : $charactersQuery.data;
-  $: isLoading = ssrCharactersData ? false : $charactersQuery.isLoading;
-  $: isError = ssrCharactersData ? false : $charactersQuery.isError;
-
-  $: filteredData = (() => {
-    if (!data) return [];
-
-    // Create a stable sorted copy of the data first
-    const stableData = [...data].sort((a, b) => {
-      // Sort by character importance first (main > supporting > minor)
-      const getRolePriority = (role: string) => {
-        const roleStr = role?.toLowerCase() || '';
-        if (roleStr.includes('main') || roleStr.includes('protagonist')) return 3;
-        if (roleStr.includes('supporting')) return 2;
-        return 1;
-      };
-
-      const aPriority = getRolePriority(a.character.role || '');
-      const bPriority = getRolePriority(b.character.role || '');
-
-      if (aPriority !== bPriority) {
-        return bPriority - aPriority; // Higher priority first
-      }
-
-      // Then sort by name for consistent ordering
-      return (a.character.name || '').localeCompare(b.character.name || '');
-    });
-
-    if (filter === 'all') return stableData;
-
-    return stableData.filter(entry => {
-      const role = entry.character.role?.toLowerCase() || '';
-      switch (filter) {
-        case 'main':
-          return role.includes('main') || role.includes('protagonist');
-        case 'supporting':
-          return role.includes('supporting');
-        case 'minor':
-          return !role.includes('main') && !role.includes('supporting') && !role.includes('protagonist');
-        default:
-          return true;
-      }
-    });
-  })();
-
-  function toggleCharacterExpanded(characterName: string) {
-    const newSet = new Set(expandedCharacters);
-    if (newSet.has(characterName)) {
-      newSet.delete(characterName);
-    } else {
-      newSet.add(characterName);
-    }
-    expandedCharacters = newSet;
-  }
-
-  function getCharacterCardSize(role: string) {
-    const roleStr = role?.toLowerCase() || '';
-    if (roleStr.includes('main') || roleStr.includes('protagonist')) {
-      return 'main'; // Larger cards for main characters
-    } else if (roleStr.includes('supporting')) {
-      return 'supporting'; // Medium cards
-    }
-    return 'minor'; // Smaller cards for minor characters
-  }
-
-  function getRoleColor(role: string) {
-    const roleStr = role?.toLowerCase() || '';
-    if (roleStr.includes('main') || roleStr.includes('protagonist')) {
-      return 'text-weeb-accent-text bg-weeb-surface';
-    } else if (roleStr.includes('supporting')) {
-      return 'text-weeb-green bg-weeb-green/10';
-    }
-    return 'text-weeb-fg-muted bg-weeb-bg-elevated/50';
-  }
+  /**
+   * The cast of a show, with the voice actors behind it.
+   *
+   * A view over the bloc: it decides what is on screen and which cards are
+   * open, this renders it.
+   */
+  let {
+    animeId,
+    /** The loader's payload, when the page was rendered with the cast already in hand. */
+    ssrCharactersData = null,
+    bloc = new CharactersWithStaffBloc({ source: () => ({ animeId, ssrCharactersData }) }),
+  }: {
+    animeId: string;
+    ssrCharactersData?: { charactersAndStaffByAnimeId?: CharacterEntry[] | null } | null;
+    bloc?: CharactersWithStaffBloc;
+  } = $props();
 </script>
 
-{#if isLoading}
+{#if bloc.isLoading}
   <div class="chars-loading">
     <div class="chars-spinner"></div>
   </div>
-{:else if isError || !data || data.length === 0}
-  <div class="chars-empty">No character data available.</div>
+{:else if bloc.isError}
+  <!-- A failed fetch is not an empty cast: the show may well have one, so this
+       says what happened and offers the retry rather than asserting there is
+       nobody to list. -->
+  <ErrorBanner
+    message="Couldn't load the cast."
+    detail={bloc.errorDetail}
+    retrying={bloc.isRetrying}
+    onRetry={() => bloc.retry()}
+  />
+{:else if bloc.isEmpty}
+  <EmptyState size="compact" message="No character data available." />
 {:else}
   <div class="chars-root">
-    <!-- Filter pills -->
-    <div class="chars-filters">
-      {#each filterOptions as { key, label }}
-        <button
-          on:click={() => filter = key}
-          class="filter-pill"
-          class:active={filter === key}
-        >
-          {label}
-        </button>
-      {/each}
-    </div>
+    <Tabs
+      items={bloc.filters.map((option) => ({ value: option.value, label: option.label }))}
+      value={bloc.filter}
+      onChange={(value) => bloc.selectFilter(value)}
+      variant="pill"
+      ariaLabel="Filter characters by role"
+    />
 
     <!-- Character Grid -->
     <div class="chars-grid">
-      {#each filteredData as entry, idx (entry.character.name || `char-${idx}`)}
-        {@const isExpanded = expandedCharacters.has(entry.character.name || '')}
-        {@const hasMultipleVAs = entry.staff && entry.staff.length > 1}
-        {@const primaryVA = entry.staff?.[0]}
-        {@const roleClass = (entry.character.role || '').toLowerCase().includes('main') || (entry.character.role || '').toLowerCase().includes('protagonist') ? 'main' : 'supporting'}
+      {#each bloc.visible as entry, idx (entry.character.name || `char-${idx}`)}
+        {@const isExpanded = bloc.isExpanded(entry)}
+        {@const hasMultipleVAs = bloc.hasMultipleVoiceActors(entry)}
+        {@const primaryVA = bloc.primaryVoiceActor(entry)}
 
         <div class="char-card" class:expanded={isExpanded}>
           <!-- Main card content -->
@@ -140,11 +69,11 @@
             role={hasMultipleVAs ? 'button' : undefined}
             class="char-card-main"
             aria-expanded={hasMultipleVAs ? isExpanded : undefined}
-            on:click={() => hasMultipleVAs && toggleCharacterExpanded(entry.character.name || '')}
+            onclick={() => bloc.toggleExpanded(entry)}
           >
             <div class="char-portrait char-portrait-{idx % 8}">
               <SafeImage
-                src={entry.character.id}
+                src={entry.character.id ?? ''}
                 path="characters"
                 alt={entry.character.name || ''}
                 className="char-portrait-img"
@@ -152,7 +81,7 @@
             </div>
             <div class="char-info">
               <div class="char-name">{entry.character.name || 'Unknown'}</div>
-              <div class="char-role" class:main={roleClass === 'main'}>
+              <div class="char-role" class:main={bloc.isLeadRole(entry)}>
                 {entry.character.role || 'Character'}
               </div>
               {#if primaryVA}
@@ -180,7 +109,7 @@
               {/if}
               {#if hasMultipleVAs}
                 <div class="char-va-more">
-                  +{entry.staff.length - 1} more VA{entry.staff.length - 1 > 1 ? 's' : ''}
+                  +{(entry.staff?.length ?? 0) - 1} more VA{(entry.staff?.length ?? 0) - 1 > 1 ? 's' : ''}
                   <svg class="expand-icon" class:rotated={isExpanded} width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M2.5 4L5 6.5L7.5 4"/>
                   </svg>
@@ -190,7 +119,7 @@
           </svelte:element>
 
           <!-- Expanded VA list -->
-          {#if isExpanded && entry.staff && entry.staff.length > 1}
+          {#if isExpanded && entry.staff}
             <div class="char-va-list">
               {#each entry.staff as va, vaIdx}
                 <a class="va-chip" class:active={vaIdx === 0} href={`/people/${va.slug || va.id}`}>
@@ -206,8 +135,12 @@
       {/each}
     </div>
 
-    {#if filteredData.length === 0}
-      <div class="chars-empty">No characters found for this filter.</div>
+    {#if bloc.isFilteredOut}
+      <EmptyState
+        size="compact"
+        message="No characters found for this filter."
+        action={{ label: 'Show all', onClick: () => bloc.selectFilter('all'), variant: 'ghost' }}
+      />
     {/if}
   </div>
 {/if}
@@ -232,32 +165,6 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-  }
-
-  .chars-filters {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .filter-pill {
-    padding: 6px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--weeb-border);
-    background: transparent;
-    color: var(--weeb-fg-secondary);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .filter-pill:hover {
-    border-color: var(--weeb-accent);
-    color: var(--weeb-fg);
-  }
-  .filter-pill.active {
-    background: var(--weeb-accent);
-    border-color: var(--weeb-accent);
-    color: white;
   }
 
   .chars-grid {
@@ -442,13 +349,6 @@
     color: var(--weeb-fg-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-
-  .chars-empty {
-    text-align: center;
-    padding: 32px 0;
-    color: var(--weeb-fg-muted);
-    font-size: 14px;
   }
 
   /* Responsive */

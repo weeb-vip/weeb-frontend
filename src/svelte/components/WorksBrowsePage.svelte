@@ -2,9 +2,13 @@
   import SectionHeader from './SectionHeader.svelte';
   import PosterGrid from './PosterGrid.svelte';
   import PosterCard from './PosterCard.svelte';
-  import { isPhone, isTablet } from '../stores/viewport';
-  import { workSubtitle } from '../../utils/workDisplay';
-  import { shelfLabel } from '../../services/api/graphql/works';
+  import EmptyState from './EmptyState.svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
+  import {
+    WorksBrowsePageBloc,
+    type WorkShelf,
+    type WorkSummary,
+  } from './WorksBrowsePage.bloc.svelte';
 
   /**
    * The shelves behind /manga and /light-novels.
@@ -19,50 +23,54 @@
    * The alternative was a centred column with its own grid, which is how the
    * poster grid came to disagree with itself on four pages before PosterGrid
    * existed.
+   *
+   * A view over the bloc: which shelves have anything on them, how many cards
+   * each holds at this breakpoint and where the pager points are its calls.
    */
-
-  export let heading: string;
-  export let blurb: string = '';
-  export let basePath: string;
-
-  /** Shelf mode: one entry per sort. Null in paged mode. */
-  export let shelves: { sort: string; label: string; works: any[] }[] | null = null;
-  /** Paged mode. */
-  export let works: any[] = [];
-  export let sort: string | null = null;
-  export let total: number = 0;
-  export let page: number = 1;
-  export let totalPages: number = 0;
-  export let ssrError: string | null = null;
-
-  // Matches the homepage exactly, so a shelf holds the same number of cards
-  // wherever it appears.
-  $: shelfLimit = $isPhone ? 6 : $isTablet ? 12 : 20;
-
-  // A work with no slug has no page to link to -- workBySlug is the only
-  // lookup the schema exposes, so a card for one is a guaranteed 404. The
-  // scraper is still filling these in, so this is live rather than theoretical.
-  const linkable = (list: any[]) => list.filter((w: any) => !!w?.urlSlug);
-
-  function pageHref(nextPage: number): string {
-    const params = new URLSearchParams();
-    if (sort) params.set('sort', sort);
-    if (nextPage > 1) params.set('page', String(nextPage));
-    const qs = params.toString();
-    return qs ? `${basePath}?${qs}` : basePath;
-  }
-
-  // A window around the current page rather than 2,219 links. First and last
-  // stay reachable so the ends of the shelf are one click away.
-  $: pageWindow = (() => {
-    if (totalPages <= 1) return [] as number[];
-    const span = 2;
-    const pages = new Set<number>([1, totalPages]);
-    for (let p = page - span; p <= page + span; p++) {
-      if (p >= 1 && p <= totalPages) pages.add(p);
-    }
-    return [...pages].sort((a, b) => a - b);
-  })();
+  let {
+    heading,
+    blurb = '',
+    basePath,
+    /** Shelf mode: one entry per sort. Null in paged mode. */
+    shelves = null,
+    /** Paged mode. */
+    works = [],
+    sort = null,
+    total = 0,
+    page = 1,
+    totalPages = 0,
+    ssrError = null,
+    /**
+     * Defaults to a bloc reading this component's props, so the two route call
+     * sites are unchanged and the server frame already has its shelves.
+     */
+    bloc = new WorksBrowsePageBloc({
+      source: () => ({
+        heading,
+        blurb,
+        basePath,
+        shelves,
+        works,
+        sort,
+        total,
+        page,
+        totalPages,
+        ssrError,
+      }),
+    }),
+  }: {
+    heading: string;
+    blurb?: string;
+    basePath: string;
+    shelves?: WorkShelf[] | null;
+    works?: WorkSummary[];
+    sort?: string | null;
+    total?: number;
+    page?: number;
+    totalPages?: number;
+    ssrError?: string | null;
+    bloc?: WorksBrowsePageBloc;
+  } = $props();
 </script>
 
 <!-- Standing in for a banner: the name of the shelf, one line on what is on
@@ -71,95 +79,100 @@
      for. In the paged view the same block carries which shelf you opened, so
      it orients rather than repeating itself. -->
 <header class="page-head">
-  <h1>{heading}</h1>
-  {#if blurb}<p class="blurb">{blurb}</p>{/if}
-  {#if total > 0}
-    <p class="head-meta">
-      {total.toLocaleString()} titles{#if sort}{' · '}{shelfLabel(sort)}, page {page} of {totalPages.toLocaleString()}{/if}
-    </p>
-  {/if}
+  <h1>{bloc.heading}</h1>
+  {#if bloc.blurb}<p class="blurb">{bloc.blurb}</p>{/if}
+  {#if bloc.headMeta}<p class="head-meta">{bloc.headMeta}</p>{/if}
 </header>
 
-{#if ssrError}
+{#if bloc.mode === 'error'}
   <section class="section">
-    <p class="notice" role="alert">Couldn’t load this page. Try again in a moment.</p>
+    <ErrorBanner message="Couldn’t load this page. Try again in a moment." />
   </section>
-{:else if sort}
+{:else if bloc.mode === 'paged'}
   <!-- Paged view: one shelf in full. -->
   <section class="section">
-    <SectionHeader title={shelfLabel(sort)} href={basePath} linkText="← All shelves" />
+    <SectionHeader title={bloc.shelfTitle} href={bloc.basePath} linkText="← All shelves" />
 
-    {#if linkable(works).length === 0}
-      <p class="notice">Nothing on this page.</p>
+    {#if bloc.pageWorks.length === 0}
+      <EmptyState
+        size="compact"
+        heading="Nothing on this page"
+        message="This page of the shelf is empty."
+        action={{ label: '← All shelves', href: bloc.basePath, variant: 'ghost' }}
+      />
     {:else}
       <PosterGrid>
-        {#each linkable(works) as work (work.id)}
+        {#each bloc.pageWorks as work (work.id)}
           <PosterCard
-            id={work.id}
+            id={work.id ?? ''}
             title={work.titleEn || work.titleJp || ''}
-            image={work.id}
+            image={work.id ?? ''}
             imagePath="works"
             score={work.score}
-            sub={workSubtitle(work.type, work.publishedFrom)}
-            href={`/manga/${work.urlSlug}`}
+            sub={bloc.subtitleFor(work)}
+            href={bloc.hrefForWork(work)}
           />
         {/each}
       </PosterGrid>
 
-      {#if totalPages > 1}
+      {#if bloc.totalPages > 1}
+        <!-- Real links, not buttons: this pager is crawled, and a shelf page
+             has to be reachable without JavaScript. That is why it is not the
+             shared Pagination, which is callback-driven. -->
         <nav class="pager" aria-label="Pagination">
-          {#if page > 1}
-            <a class="page-link" href={pageHref(page - 1)} rel="prev">Previous</a>
+          {#if bloc.page > 1}
+            <a class="page-link" href={bloc.hrefForPage(bloc.page - 1)} rel="prev">Previous</a>
           {/if}
-          {#each pageWindow as p, i}
-            {#if i > 0 && p - pageWindow[i - 1] > 1}
+          {#each bloc.pageWindow as p, i (p)}
+            {#if i > 0 && p - bloc.pageWindow[i - 1] > 1}
               <span class="gap" aria-hidden="true">…</span>
             {/if}
             <a
               class="page-link"
-              class:active={p === page}
-              aria-current={p === page ? 'page' : undefined}
-              href={pageHref(p)}
-            >{p}</a>
+              class:active={p === bloc.page}
+              aria-current={p === bloc.page ? 'page' : undefined}
+              href={bloc.hrefForPage(p)}>{p}</a
+            >
           {/each}
-          {#if page < totalPages}
-            <a class="page-link" href={pageHref(page + 1)} rel="next">Next</a>
+          {#if bloc.page < bloc.totalPages}
+            <a class="page-link" href={bloc.hrefForPage(bloc.page + 1)} rel="next">Next</a>
           {/if}
         </nav>
       {/if}
     {/if}
   </section>
-{:else if shelves}
+{:else if bloc.mode === 'shelves'}
   <!-- Shelf view: the three sorts, each a section. -->
-  {#each shelves as shelf (shelf.sort)}
-    {@const items = linkable(shelf.works).slice(0, shelfLimit)}
-    {#if items.length > 0}
-      <section class="section">
-        <SectionHeader
-          title={shelf.label}
-          href="{basePath}?sort={shelf.sort}"
-          linkText="See all →"
-        />
-        <PosterGrid>
-          {#each items as work (work.id)}
-            <PosterCard
-              id={work.id}
-              title={work.titleEn || work.titleJp || ''}
-              image={work.id}
-              imagePath="works"
-              score={work.score}
-              sub={workSubtitle(work.type, work.publishedFrom)}
-              href={`/manga/${work.urlSlug}`}
-            />
-          {/each}
-        </PosterGrid>
-      </section>
-    {/if}
+  {#each bloc.shelves as shelf (shelf.sort)}
+    <section class="section">
+      <SectionHeader
+        title={shelf.label}
+        href="{bloc.basePath}?sort={shelf.sort}"
+        linkText="See all →"
+      />
+      <PosterGrid>
+        {#each shelf.works as work (work.id)}
+          <PosterCard
+            id={work.id ?? ''}
+            title={work.titleEn || work.titleJp || ''}
+            image={work.id ?? ''}
+            imagePath="works"
+            score={work.score}
+            sub={bloc.subtitleFor(work)}
+            href={bloc.hrefForWork(work)}
+          />
+        {/each}
+      </PosterGrid>
+    </section>
   {/each}
 
-  {#if shelves.every((s) => linkable(s.works).length === 0)}
+  {#if bloc.shelvesAreEmpty}
     <section class="section">
-      <p class="notice">Nothing here yet.</p>
+      <EmptyState
+        heading="Nothing here yet"
+        message="The catalogue is still being filled in. Check back shortly."
+        action={{ label: 'Browse anime', href: '/search', variant: 'ghost' }}
+      />
     </section>
   {/if}
 {/if}
@@ -208,12 +221,6 @@
     color: var(--weeb-fg-muted, oklch(62% 0.01 270));
     font-size: 13px;
     font-variant-numeric: tabular-nums;
-  }
-
-  .notice {
-    margin: 0;
-    color: var(--weeb-fg-muted, oklch(62% 0.01 270));
-    font-size: 14px;
   }
 
   .pager {

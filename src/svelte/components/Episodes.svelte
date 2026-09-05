@@ -1,154 +1,84 @@
 <script lang="ts">
-  import { format, isDate } from 'date-fns';
-  import { createEventDispatcher, tick } from 'svelte';
+  import { EpisodesBloc, type EpisodeLike, type WatchIntent } from './Episodes.bloc.svelte';
 
-  export let episodes: any[];
-  /**
-   * How many episodes the viewer has watched, as the aggregate on their list
-   * entry. Only a fallback now: it can express "up to N" and nothing else, so
-   * watchedNumbers wins wherever it is available.
-   */
-  export let watchedCount: number = 0;
-  /**
-   * Episode numbers the viewer has actually finished.
-   *
-   * Null means the caller has no per-episode data -- signed out, or still
-   * loading -- and the component falls back to watchedCount. That fallback is
-   * what keeps the list honest during the moment before the query resolves,
-   * rather than showing every episode unwatched and inviting a click that
-   * un-marks something.
-   */
-  export let watchedNumbers: Set<number> | null = null;
-  /** False when the show is not on the viewer's list. The control is then absent
-   *  rather than disabled: a dead button teaches nothing, and the page already
-   *  had two of them. */
-  export let canTrack: boolean = false;
-  export let pending: boolean = false;
+  let {
+    episodes,
+    /**
+     * How many episodes the viewer has watched, as the aggregate on their list
+     * entry. Only a fallback now: it can express "up to N" and nothing else, so
+     * watchedNumbers wins wherever it is available.
+     */
+    watchedCount = 0,
+    /**
+     * Episode numbers the viewer has actually finished.
+     *
+     * Null means the caller has no per-episode data -- signed out, or still
+     * loading -- and the list falls back to watchedCount. That fallback is what
+     * keeps the list honest during the moment before the query resolves, rather
+     * than showing every episode unwatched and inviting a click that un-marks
+     * something.
+     */
+    watchedNumbers = null,
+    /** False when the show is not on the viewer's list. The control is then absent
+     *  rather than disabled: a dead button teaches nothing, and the page already
+     *  had two of them. */
+    canTrack = false,
+    pending = false,
+    /** Replaces the old `watch` event. The parent decides what marking means. */
+    onWatch,
+    /**
+     * Defaults to a bloc reading this component's props, so call sites pass
+     * data and nothing else. Stories inject one with a pinned clock.
+     */
+    bloc = new EpisodesBloc({
+      source: () => ({ episodes, watchedCount, watchedNumbers, canTrack, pending }),
+      watch: (intent) => onWatch?.(intent),
+      // Anchor to the list rather than the document: the reader asked for less
+      // list, not for the top of the page. Collapsing 136 rows removes ~15,000px
+      // from above the viewport, so without this they are returned to the footer
+      // of a page they were reading the middle of.
+      scrollToTop: () => listTop?.scrollIntoView({ block: 'start', behavior: 'auto' }),
+    }),
+  }: {
+    episodes: EpisodeLike[];
+    watchedCount?: number;
+    watchedNumbers?: Set<number> | null;
+    canTrack?: boolean;
+    pending?: boolean;
+    onWatch?: (intent: WatchIntent) => void;
+    bloc?: EpisodesBloc;
+  } = $props();
 
-  const dispatch = createEventDispatcher<{
-    watch: { episodeNumber: number; watched: boolean };
-  }>();
-
-  /** Rendered before the reader asks for more. A 500-episode show shipped every
-   *  row into the SSR payload -- 796KB for Naruto, 960KB for Bleach -- on a
-   *  product whose third principle is that fast beats rich. */
-  const INITIAL_ROWS = 24;
-
-  let expanded = false;
-  /** The list's own top. Collapsing 136 rows removes ~15,000px from above the
-   *  viewport, so without this the reader is returned to the footer of a page
-   *  they were reading the middle of. */
-  let listTop: HTMLElement;
-  /** Newest first by default: the recurring question is "did the latest one
-   *  drop", not "what was episode 1". Ascending is one click away for anyone
-   *  starting a show, which is the other real reading order. */
-  let newestFirst = true;
-
-  $: ordered = episodes
-    ? [...episodes].sort((a, b) =>
-        newestFirst ? b.episodeNumber - a.episodeNumber : a.episodeNumber - b.episodeNumber
-      )
-    : [];
-
-  $: visible = expanded ? ordered : ordered.slice(0, INITIAL_ROWS);
-  $: hiddenCount = ordered.length - visible.length;
-
-  function airDateOf(episode: any): Date | null {
-    if (!episode?.airDate) return null;
-    const d = new Date(episode.airDate);
-    return isDate(d) && !Number.isNaN(d.getTime()) ? d : null;
-  }
-
-  function isAired(episode: any): boolean {
-    const d = airDateOf(episode);
-    return d ? d < new Date() : false;
-  }
-
-  /** The first episode that has not aired. It is the one the whole page is
-   *  about, and it used to be distinguishable only by 0.5 opacity on a 13px
-   *  numeral. */
-  $: nextUp = episodes
-    ? [...episodes]
-        .filter(e => !isAired(e))
-        .sort((a, b) => a.episodeNumber - b.episodeNumber)[0]
-    : undefined;
-
-  function label(episode: any): string {
-    const d = airDateOf(episode);
-    if (!d) return 'TBA';
-    // The next episode carries a local time; the rest only need a date. Times are
-    // rendered in the viewer's zone, which is the whole point of storing them.
-    return nextUp && episode.id === nextUp.id
-      ? format(d, 'd MMM, h:mm a')
-      : format(d, 'd MMM yyyy');
-  }
-
-  /**
-   * Whether one episode is watched.
-   *
-   * The state is passed in rather than read from the component's own scope, so
-   * that the template's `{@const watched = isWatched(...)}` actually depends on
-   * it. Svelte tracks the values a template expression *references*; anything a
-   * called function closes over is invisible to it. Reading watchedNumbers
-   * inside here left the ticks frozen at whatever they were when the rows first
-   * rendered -- the query resolved, the data was correct, and the list never
-   * repainted.
-   */
-  function isWatched(episode: any, numbers: Set<number> | null, count: number): boolean {
-    // Per-episode when we have it. The count is a fallback for the moment
-    // before that query resolves, and it can only express "up to N" -- which is
-    // exactly the limitation this replaces.
-    if (numbers) return numbers.has(episode.episodeNumber);
-
-    return count >= episode.episodeNumber;
-  }
-
-  function toggle(episode: any) {
-    if (!canTrack || pending) return;
-    // The episode itself, not a new high-water mark. Watching 1, 2 and 5 is a
-    // thing people do, and the old model could only say "up to 5" -- which
-    // silently claimed 3 and 4 as well.
-    dispatch('watch', {
-      episodeNumber: episode.episodeNumber,
-      watched: !isWatched(episode, watchedNumbers, watchedCount),
-    });
-  }
-
-  async function collapse() {
-    expanded = false;
-    // After the rows are gone, not before: scrolling into the old layout lands
-    // the reader at an offset the shrinking document immediately clamps away,
-    // which measured as the list toolbar sitting under the sticky tab bar.
-    await tick();
-    // Anchor to the list rather than the document: the reader asked for less
-    // list, not for the top of the page.
-    listTop?.scrollIntoView({ block: 'start', behavior: 'auto' });
-  }
+  /** The list's own top, for the bloc's post-collapse scroll. */
+  let listTop = $state<HTMLElement | null>(null);
 </script>
 
 <div class="ep-section" bind:this={listTop}>
   <div class="ep-toolbar">
     <span class="ep-count">
-      {ordered.length}
-      {ordered.length === 1 ? 'episode' : 'episodes'}{#if canTrack} &middot; {watchedCount} watched{/if}
+      {bloc.countLabel}{#if bloc.canTrack} &middot; {bloc.watchedCount} watched{/if}
     </span>
     <button
       type="button"
       class="ep-sort"
-      aria-pressed={newestFirst}
-      on:click={() => (newestFirst = !newestFirst)}
+      aria-pressed={bloc.newestFirst}
+      onclick={() => bloc.toggleSort()}
     >
-      {newestFirst ? 'Newest first' : 'Oldest first'}
+      {bloc.sortLabel}
     </button>
   </div>
 
-  <ol class="ep-list" class:ep-list--trackable={canTrack}>
-    {#each visible as episode (episode.id)}
-      {@const watched = isWatched(episode, watchedNumbers, watchedCount)}
-      {@const next = nextUp && episode.id === nextUp.id}
+  <ol class="ep-list" class:ep-list--trackable={bloc.canTrack}>
+    <!-- The watched flag and the next-up flag are read through the bloc, whose
+         getters read the props: runes track every signal read while the row
+         renders, including the ones a called method reads, so the ticks repaint
+         when the watched-episodes query finally answers. -->
+    {#each bloc.visible as episode (episode.id)}
+      {@const watched = bloc.isWatched(episode)}
+      {@const next = bloc.isNextUp(episode)}
       <li
         class="ep-row"
-        class:ep-row--future={!isAired(episode)}
+        class:ep-row--future={!bloc.isAired(episode)}
         class:ep-row--watched={watched}
         class:ep-row--next={next}
       >
@@ -162,20 +92,18 @@
         </span>
 
         <span class="ep-date">
-          {#if next}<span class="ep-next-dot" aria-hidden="true"></span>{/if}{label(episode)}
+          {#if next}<span class="ep-next-dot" aria-hidden="true"></span>{/if}{bloc.dateLabel(episode)}
         </span>
 
-        {#if canTrack}
+        {#if bloc.canTrack}
           <button
             type="button"
             class="ep-watch"
             class:is-on={watched}
-            disabled={pending}
+            disabled={bloc.pending}
             aria-pressed={watched}
-            aria-label={watched
-              ? `Mark episode ${episode.episodeNumber} unwatched`
-              : `Mark episode ${episode.episodeNumber} watched`}
-            on:click={() => toggle(episode)}
+            aria-label={bloc.watchLabel(episode)}
+            onclick={() => bloc.toggleWatched(episode)}
           >
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
               <path d="M5 10.5l3.2 3.2L15 7" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -187,12 +115,12 @@
     {/each}
   </ol>
 
-  {#if hiddenCount > 0}
-    <button type="button" class="ep-more" on:click={() => (expanded = true)}>
-      Show all {ordered.length} episodes
+  {#if bloc.hiddenCount > 0}
+    <button type="button" class="ep-more" onclick={() => bloc.expand()}>
+      Show all {bloc.total} episodes
     </button>
-  {:else if expanded}
-    <button type="button" class="ep-more" on:click={collapse}>
+  {:else if bloc.expanded}
+    <button type="button" class="ep-more" onclick={() => bloc.collapse()}>
       Show fewer
     </button>
   {/if}

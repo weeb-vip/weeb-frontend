@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import Button from '../Button.svelte';
 
 const meta = {
-  title: 'Design System/Button',
+  title: 'Primitives/Button',
   component: Button,
   tags: ['autodocs'],
   argTypes: {
@@ -20,6 +20,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The primary action. */
 export const Accent: Story = {
   args: {
     color: 'blue',
@@ -30,6 +31,7 @@ export const Accent: Story = {
   },
 };
 
+/** The quiet, bordered variant for secondary actions. */
 export const Ghost: Story = {
   args: {
     color: 'transparent',
@@ -40,6 +42,7 @@ export const Ghost: Story = {
   },
 };
 
+/** Destructive actions, e.g. removing an entry from a list. */
 export const Danger: Story = {
   args: {
     color: 'red',
@@ -50,6 +53,7 @@ export const Danger: Story = {
   },
 };
 
+/** In flight: a spinner replaces the label and clicks are ignored. */
 export const Loading: Story = {
   args: {
     color: 'blue',
@@ -60,6 +64,7 @@ export const Loading: Story = {
   },
 };
 
+/** Unavailable: dimmed, and `onClick` never fires. */
 export const Disabled: Story = {
   args: {
     color: 'blue',

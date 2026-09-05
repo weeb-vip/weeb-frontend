@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import GenrePills from '../GenrePills.svelte';
 
 const meta = {
-  title: 'Design System/GenrePills',
+  title: 'Primitives/GenrePills',
   component: GenrePills,
   tags: ['autodocs'],
 } satisfies Meta<typeof GenrePills>;
@@ -10,6 +10,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The full genre list, wrapping onto as many rows as it needs. */
 export const Default: Story = {
   args: {
     genres: [

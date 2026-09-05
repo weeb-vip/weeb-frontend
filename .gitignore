@@ -34,3 +34,6 @@ playwright-report
 
 .svelte-kit/
 build/
+
+# Storybook build output
+storybook-static/

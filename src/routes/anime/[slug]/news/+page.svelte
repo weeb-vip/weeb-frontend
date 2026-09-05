@@ -2,131 +2,63 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
+  import { untrack } from 'svelte';
   import SafeImage from '../../../../svelte/components/SafeImage.svelte';
   import AnimeNews from '../../../../svelte/components/AnimeNews.svelte';
-  import { GetImageFromAnime, getYearUTC } from '../../../../services/utils';
-  import { getSafeImageUrl } from '../../../../svelte/utils/image';
-  import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
-  import { isFeatureEnabled } from '../../../../utils/analytics';
-
-  export let data;
-
-  // Behind the same flag as the section on the anime page. `resolved` distinguishes
-  // "flags haven't loaded yet" from "flag is off" — without it the page would flash a
-  // not-available message on every load while PostHog is still fetching.
-  let newsEnabled = false;
-  let resolved = false;
-  onMount(() => {
-    let tries = 0;
-    const check = () => { newsEnabled = isFeatureEnabled('anime-news'); return newsEnabled; };
-    if (check()) { resolved = true; return; }
-    const iv = setInterval(() => {
-      if (check() || ++tries >= 25) { resolved = true; clearInterval(iv); }
-    }, 250);
-    return () => clearInterval(iv);
-  });
+  import { AnimeNewsPageBloc, type AnimeNewsPageData } from '../../../../svelte/components/AnimeNewsPage.bloc.svelte';
 
   /**
-   * Banner candidates, same order as the show page: the tvdb artwork synced to the CDN
-   * first, the poster as a fallback. Note GetImageFromAnime returns a CDN *slug*, not a
-   * URL — SafeImage resolves it. Handing it anime.imageUrl (a MyAnimeList address) is
-   * why the image was broken.
+   * Every news story for one anime, filtered by category and paged, both of
+   * which live in the URL.
    */
-  $: bannerSources = data.anime
-    ? [
-        getSafeImageUrl(data.anime.id, 'banners'),
-        getSafeImageUrl(GetImageFromAnime(data.anime))
-      ].filter(Boolean)
-    : [];
+  let {
+    data,
+    bloc: injected = undefined,
+  }: {
+    /** `animeImage` is the loader's, for the social card -- the page never draws it. */
+    data: AnimeNewsPageData & { animeImage?: string };
+    bloc?: AnimeNewsPageBloc;
+  } = $props();
 
-  $: studio = Array.isArray(data.anime?.studios) ? data.anime.studios[0] : data.anime?.studios;
+  const bloc = untrack(() => injected) ?? new AnimeNewsPageBloc();
 
-  /**
-   * Filters are worth showing only once there's enough to filter. Below this a chip row
-   * is decoration: with three stories you can read every headline faster than you can
-   * decide which chip to press.
-   */
-  const MIN_ITEMS_FOR_FILTERS = 8;
+  // Bound in the init body rather than an $effect: effects do not run during
+  // SSR, and this page is server-rendered down to the chips. The closure keeps
+  // the bloc on the live prop when you navigate from one show's news to
+  // another's without unmounting.
+  bloc.bindData(() => data);
 
-  /**
-   * Page size. Paging is a display cut, not a fetch: the gateway's `news` field takes no
-   * arguments, so every story arrives in one response regardless. Real server-side paging
-   * needs limit/offset on anime-api first.
-   */
-  const PAGE_SIZE = 10;
-
-  $: news = data.news ?? [];
-
-  // Counts come from the FULL set, not the filtered one — a chip reading "Staff 1" has to
-  // keep saying 1 after you select it, or the numbers move as you click them.
-  $: counts = news.reduce((acc: Record<string, number>, n: any) => {
-    const c = (n?.category || '').toLowerCase();
-    if (c) acc[c] = (acc[c] || 0) + 1;
-    return acc;
-  }, {});
-
-  $: categories = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-  $: showFilters = news.length >= MIN_ITEMS_FOR_FILTERS && categories.length >= 2;
-
-  // Selection lives in the URL so a filtered view can be shared and survives a reload.
-  $: selected = $page.url.searchParams.get('category');
-  $: filtered = selected ? news.filter((n: any) => (n?.category || '').toLowerCase() === selected) : news;
-
-  $: pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  // Clamped, so ?page=99 or a page that no longer exists after filtering lands on the
-  // last real page instead of rendering an empty list.
-  $: current = Math.min(Math.max(1, Number($page.url.searchParams.get('page')) || 1), pageCount);
-  $: visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
-  $: firstShown = filtered.length === 0 ? 0 : (current - 1) * PAGE_SIZE + 1;
-  $: lastShown = Math.min(current * PAGE_SIZE, filtered.length);
-
-  function navigate(params: { category?: string | null; page?: number | null }) {
-    const url = new URL($page.url);
-    if ('category' in params) {
-      if (params.category) url.searchParams.set('category', params.category);
-      else url.searchParams.delete('category');
-      // Changing the filter invalidates the page number — page 2 of "all" is rarely
-      // page 2 of a category, and silently keeping it strands you on an empty view.
-      url.searchParams.delete('page');
-    }
-    if ('page' in params) {
-      if (params.page && params.page > 1) url.searchParams.set('page', String(params.page));
-      else url.searchParams.delete('page');
-    }
-    goto(`${url.pathname}${url.search}`, { replaceState: true, noScroll: true, keepFocus: true });
-  }
-
-  const select = (category: string | null) => navigate({ category });
-  const goPage = (n: number) => navigate({ page: n });
-
-  const label = (c: string) => c.charAt(0).toUpperCase() + c.slice(1);
+  // The flag poll's teardown comes straight back out of the bloc.
+  $effect(() => bloc.watchFlag());
 
   const SITE_URL = 'https://weeb.vip';
+
+  const total = $derived((data.news ?? []).length);
   // Trailing "." on a title would otherwise produce "…Last Stand.." in the description.
-  $: descTitle = data.animeTitle.replace(/\.+$/, '');
-  $: breadcrumbs = breadcrumbSchema([
-    { name: 'Home', url: `${SITE_URL}/` },
-    { name: data.animeTitle, url: `${SITE_URL}/anime/${data.animeSlug}` },
-    { name: 'News', url: `${SITE_URL}/anime/${data.animeSlug}/news` }
-  ]);
+  const descTitle = $derived(data.animeTitle.replace(/\.+$/, ''));
+  const breadcrumbs = $derived(
+    breadcrumbSchema([
+      { name: 'Home', url: `${SITE_URL}/` },
+      { name: data.animeTitle, url: `${SITE_URL}/anime/${data.animeSlug}` },
+      { name: 'News', url: `${SITE_URL}/anime/${data.animeSlug}/news` }
+    ])
+  );
 </script>
 
 <Seo
   title={`${data.animeTitle} — News`}
-  description={`All ${news.length} news ${news.length === 1 ? 'story' : 'stories'} for ${descTitle}.`}
+  description={`All ${total} news ${total === 1 ? 'story' : 'stories'} for ${descTitle}.`}
   image={data.animeImage}
 />
 
 <StructuredData schemas={[breadcrumbs]} />
 
 <div class="news-page">
-  <a class="back" href={`/anime/${data.animeSlug}`}>
+  <a class="back" href={bloc.backHref}>
     <svg viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 6H3" /><path d="M5.5 3.5L3 6l2.5 2.5" />
     </svg>
-    Back to {data.animeTitle}
+    Back to {bloc.title}
   </a>
 
   <!-- A scaled-down version of the show page's hero: enough to identify the anime when
@@ -134,10 +66,10 @@
        or details grid, so it reads as a page ABOUT the news rather than the show page
        with news bolted on. -->
   <header class="hero">
-    {#if bannerSources.length}
+    {#if bloc.bannerSources.length}
       <div class="hero-bg" aria-hidden="true">
         <SafeImage
-          sources={bannerSources}
+          sources={bloc.bannerSources}
           alt=""
           loading="eager"
           fallbackSrc="/assets/not found.jpg"
@@ -149,8 +81,8 @@
     <div class="hero-inner">
       <div class="hero-poster">
         <SafeImage
-          src={data.anime ? GetImageFromAnime(data.anime) : ''}
-          alt={data.animeTitle}
+          src={bloc.posterSource}
+          alt={bloc.title}
           className="hero-poster-img"
           fallbackSrc="/assets/not found.jpg"
         />
@@ -160,77 +92,77 @@
         <span class="kicker">
           News
           <span class="dot">·</span>
-          {news.length} {news.length === 1 ? 'story' : 'stories'}
+          {bloc.storyCount}
         </span>
-        <h1>{data.animeTitle}</h1>
-        {#if data.animeTitleJp}<span class="jp" lang="ja">{data.animeTitleJp}</span>{/if}
+        <h1>{bloc.title}</h1>
+        {#if bloc.titleJp}<span class="jp" lang="ja">{bloc.titleJp}</span>{/if}
         <span class="sub">
-          {#if getYearUTC(data.anime?.startDate)}{getYearUTC(data.anime.startDate)}{/if}
-          {#if studio}<span class="dot">·</span>{studio}{/if}
+          {bloc.year}
+          {#if bloc.studio}<span class="dot">·</span>{bloc.studio}{/if}
         </span>
       </div>
     </div>
   </header>
 
-  {#if !newsEnabled}
+  {#if !bloc.newsEnabled}
     <!-- Nothing while flags resolve, then a plain message. The hero above stays either
          way, so a direct link still tells you which anime you asked about. -->
-    {#if resolved}
+    {#if bloc.flagsResolved}
       <p class="error">News isn't available yet.</p>
     {/if}
-  {:else if data.ssrError}
+  {:else if bloc.hasError}
     <p class="error">Couldn't load news right now. Try again in a moment.</p>
   {:else}
-    {#if showFilters}
+    {#if bloc.showFilters}
       <div class="filters" role="group" aria-label="Filter by category">
-        <button class="chip" class:on={!selected} on:click={() => select(null)}>
-          All <span class="n">{news.length}</span>
+        <button class="chip" class:on={!bloc.selected} onclick={() => bloc.selectCategory(null)}>
+          All <span class="n">{bloc.total}</span>
         </button>
-        {#each categories as c (c)}
+        {#each bloc.categories as c (c)}
           <button
             class="chip cat"
-            class:on={selected === c}
+            class:on={bloc.selected === c}
             style="--c: {`var(--cat-${c}, var(--weeb-fg-muted))`}"
-            on:click={() => select(c)}
+            onclick={() => bloc.selectCategory(c)}
           >
-            {label(c)} <span class="n">{counts[c]}</span>
+            {bloc.label(c)} <span class="n">{bloc.counts[c]}</span>
           </button>
         {/each}
       </div>
 
     {/if}
 
-    {#if filtered.length}
+    {#if bloc.filtered.length}
       <span class="resultline">
-        Showing {firstShown}–{lastShown} of {filtered.length}{#if selected} · {label(selected)}{/if}
+        Showing {bloc.firstShown}–{bloc.lastShown} of {bloc.filtered.length}{#if bloc.selected} · {bloc.label(bloc.selected)}{/if}
       </span>
     {/if}
 
-    {#if selected && filtered.length === 0}
+    {#if bloc.isEmptyCategory}
       <!-- Reachable from a shared link after the data changes, even though a zero-count
            chip is never rendered. -->
       <div class="empty">
-        <strong>No {label(selected).toLowerCase()} stories</strong>
-        <span>Nothing in this category yet for {data.animeTitle}.</span>
-        <button class="reset" on:click={() => select(null)}>Show all {news.length}</button>
+        <strong>No {bloc.label(bloc.selected ?? '').toLowerCase()} stories</strong>
+        <span>Nothing in this category yet for {bloc.title}.</span>
+        <button class="reset" onclick={() => bloc.selectCategory(null)}>Show all {bloc.total}</button>
       </div>
     {:else}
       <!-- No limit prop: the page has already cut the list, and AnimeNews regroups by
            month over whatever it is handed, so each page gets its own headers. -->
-      <AnimeNews news={visible} />
+      <AnimeNews news={bloc.visible} />
 
-      {#if pageCount > 1}
+      {#if bloc.pageCount > 1}
         <nav class="pager" aria-label="News pages">
-          <button class="pg nav" disabled={current === 1} on:click={() => goPage(current - 1)} aria-label="Previous page">←</button>
-          {#each Array(pageCount) as _, i (i)}
+          <button class="pg nav" disabled={bloc.current === 1} onclick={() => bloc.goToPage(bloc.current - 1)} aria-label="Previous page">←</button>
+          {#each bloc.pageNumbers as n (n)}
             <button
               class="pg"
-              class:on={current === i + 1}
-              aria-current={current === i + 1 ? 'page' : undefined}
-              on:click={() => goPage(i + 1)}
-            >{i + 1}</button>
+              class:on={bloc.current === n}
+              aria-current={bloc.current === n ? 'page' : undefined}
+              onclick={() => bloc.goToPage(n)}
+            >{n}</button>
           {/each}
-          <button class="pg nav" disabled={current === pageCount} on:click={() => goPage(current + 1)} aria-label="Next page">→</button>
+          <button class="pg nav" disabled={bloc.current === bloc.pageCount} onclick={() => bloc.goToPage(bloc.current + 1)} aria-label="Next page">→</button>
         </nav>
       {/if}
     {/if}

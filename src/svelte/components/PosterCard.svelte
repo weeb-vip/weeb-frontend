@@ -1,30 +1,60 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import SafeImage from './SafeImage.svelte';
   import { getSafeImageUrl } from '../utils/image';
-  import { analytics } from '../../utils/analytics';
   import { animeHref } from '../../services/utils';
-  import { normalizeStatus, type AnimeStatus } from '../utils/status';
+  import { normalizeStatus } from '../utils/status';
+  import { realCardTracking, type CardTrackingPort } from './Card.bloc.svelte';
 
-  export let id: string;
-  // Optional: callers that have not been given the slug yet fall back to
-  // /show/<id>, which permanently redirects.
-  export let slug: string | null | undefined = undefined;
-  export let title: string;
-  export let image: string;
-  // Which CDN folder the poster lives in. Anime posters are the default; works
-  // are stored under works/ by image-sync, and passing the id without this
-  // would ask the CDN for an anime poster that does not exist.
-  export let imagePath: string = 'posters';
-  export let score: number | string | null = null;
-  export let status: string | null = null;
-  export let sub: string = '';
-  export let href: string = '';
-  export let genres: string[] = [];
-  export let description: string = '';
-  export let episodeCount: number | null = null;
-  export let onList: string | null = null;
+  /**
+   * Presentational -- no bloc. The homepage renders 54 of these; anything that
+   * fetched or held state here would do so 54 times over -- which is also why
+   * the analytics ping arrives as Card.bloc's shared port rather than as a
+   * per-card bloc, and why the title arrives already resolved from whoever
+   * owns the title-language preference.
+   */
+  let {
+    id,
+    // Optional: callers that have not been given the slug yet fall back to
+    // /show/<id>, which permanently redirects.
+    slug = undefined,
+    title,
+    image,
+    // Which CDN folder the poster lives in. Anime posters are the default; works
+    // are stored under works/ by image-sync, and passing the id without this
+    // would ask the CDN for an anime poster that does not exist.
+    imagePath = 'posters',
+    score = null,
+    status = null,
+    sub = '',
+    href = '',
+    genres = [],
+    description = '',
+    episodeCount = null,
+    onList = null,
+    /** Anything a call site wants under the sub-line -- a progress bar, a control. */
+    children,
+    track = realCardTracking,
+  }: {
+    id: string;
+    slug?: string | null | undefined;
+    title: string;
+    image: string;
+    imagePath?: string;
+    score?: number | string | null;
+    status?: string | null;
+    sub?: string;
+    href?: string;
+    genres?: string[];
+    description?: string;
+    episodeCount?: number | null;
+    /** The viewer's own list status, if the show is on it. */
+    onList?: string | null;
+    children?: Snippet;
+    track?: CardTrackingPort;
+  } = $props();
 
-  $: normalizedStatus = normalizeStatus(onList);
+  const normalizedStatus = $derived(normalizeStatus(onList));
 
   // Prefer TheTVDB's 680x1000 series poster over the scraper's MyAnimeList
   // image, which MAL serves at 225px wide -- soft on any 2x display at card
@@ -33,13 +63,15 @@
   //
   // Costs no extra request: SafeImage resolves candidates in order and stops at
   // the first that loads.
-  $: posterSources = image ? [getSafeImageUrl(image, imagePath), getSafeImageUrl(image)] : [];
+  const posterSources = $derived(
+    image ? [getSafeImageUrl(image, imagePath), getSafeImageUrl(image)] : []
+  );
 </script>
 
 <a
   class="poster-card"
   href={href || animeHref({ id, slug })}
-  on:click={() => analytics.animeViewed(id, title)}
+  onclick={() => track(id, title)}
 >
   <div class="poster">
     <SafeImage
@@ -106,7 +138,7 @@
   {#if sub}
     <div class="poster-sub">{sub}</div>
   {/if}
-  <slot />
+  {@render children?.()}
 </a>
 
 <style>

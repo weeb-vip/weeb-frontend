@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import SafeImage from './SafeImage.svelte';
   import { getSafeImageUrl } from '../utils/image';
 
@@ -15,21 +16,30 @@
     own rather than inside a feature.
   */
 
-  /** Anime id. Artwork is banners/<id>, with that anime's poster as fallback. */
-  export let imageId: string | null | undefined = null;
-  /**
-   * Full viewport suits a page whose subject is the artwork. A page whose
-   * subject is a list wants to show some of the list.
-   */
-  export let minHeight = '100svh';
+  let {
+    /** Anime id. Artwork is banners/<id>, with that anime's poster as fallback. */
+    imageId = null,
+    /**
+     * Full viewport suits a page whose subject is the artwork. A page whose
+     * subject is a list wants to show some of the list.
+     */
+    minHeight = '100svh',
+    /** What sits on the stage. Slotted content from a call site arrives here. */
+    children,
+  }: {
+    imageId?: string | null;
+    minHeight?: string;
+    children?: Snippet;
+  } = $props();
 
   // Both keyed by anime id: banners/<id> for the TheTVDB artwork synced by
   // thetvdb-enrichment, <id> at the root for the poster. Through
   // getSafeImageUrl so they follow config.cdn_url -- hardcoding the host meant
   // local and staging read production artwork, which hid staging having no
   // banners of its own.
-  $: sources = imageId ? [getSafeImageUrl(imageId, 'banners'), getSafeImageUrl(imageId)] : [];
-
+  const sources = $derived(
+    imageId ? [getSafeImageUrl(imageId, 'banners'), getSafeImageUrl(imageId)] : []
+  );
 </script>
 
 <section class="key-art" style="min-height: calc({minHeight} + var(--art-fade));">
@@ -52,7 +62,7 @@
   <div class="key-art__scrim-bottom"></div>
 
   <div class="key-art__stage">
-    <slot />
+    {@render children?.()}
   </div>
 </section>
 

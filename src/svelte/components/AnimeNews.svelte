@@ -1,4 +1,6 @@
 <script lang="ts">
+  import EmptyState from './EmptyState.svelte';
+
   /**
    * AI-researched news for an anime, as a dated timeline rail.
    *
@@ -6,17 +8,21 @@
    * summarised by the research pipeline, not our own reporting, so the source is
    * always named and the link always leaves the site.
    */
-  export let news: any[] = [];
-
-  /**
-   * How many entries to render. The show page passes 5 — twelve items is more
-   * page than the section deserves above Episodes. `null` renders everything,
-   * which is what /anime/[slug]/news does.
-   */
-  export let limit: number | null = null;
-
-  /** Where "View all" points. Omitted (on the all-news page itself) hides the link. */
-  export let viewAllHref: string | null = null;
+  let {
+    news = [],
+    /**
+     * How many entries to render. The show page passes 5 — twelve items is more
+     * page than the section deserves above Episodes. `null` renders everything,
+     * which is what /anime/[slug]/news does.
+     */
+    limit = null,
+    /** Where "View all" points. Omitted (on the all-news page itself) hides the link. */
+    viewAllHref = null,
+  }: {
+    news?: any[];
+    limit?: number | null;
+    viewAllHref?: string | null;
+  } = $props();
 
   // Category → colour. Semantic rather than decorative: the reader learns the
   // code once. The set is NOT closed — the research model can emit anything —
@@ -98,23 +104,23 @@
    * relative order and collect in a trailing "Undated" group — one of the twelve
    * staging items has none, and it must never render as "Invalid Date".
    */
-  $: usable = (news || []).filter((n) => n && (n.title || '').trim());
+  const usable = $derived((news || []).filter((n) => n && (n.title || '').trim()));
 
   // Sort before slicing — "latest 5" must mean the 5 newest, not the first 5
   // the API happened to return. Undated items trail the dated ones.
-  $: ordered = (() => {
+  const ordered = $derived.by(() => {
     const dated = usable
       .map((n) => ({ item: n, date: parseDate(n.publishedDate) }))
       .filter((x) => x.date !== null) as { item: any; date: Date }[];
     dated.sort((a, b) => b.date.getTime() - a.date.getTime());
     const undated = usable.filter((n) => parseDate(n.publishedDate) === null);
     return [...dated.map((d) => d.item), ...undated];
-  })();
+  });
 
-  $: visible = limit === null ? ordered : ordered.slice(0, limit);
-  $: hiddenCount = Math.max(0, usable.length - visible.length);
+  const visible = $derived(limit === null ? ordered : ordered.slice(0, limit));
+  const hiddenCount = $derived(Math.max(0, usable.length - visible.length));
 
-  $: groups = (() => {
+  const groups = $derived.by(() => {
     const out: { label: string; items: any[] }[] = [];
     for (const item of visible) {
       const d = parseDate(item.publishedDate);
@@ -124,7 +130,7 @@
       else out.push({ label, items: [item] });
     }
     return out;
-  })();
+  });
 
   function dayLabel(value: string | null | undefined): string {
     const d = parseDate(value);
@@ -230,10 +236,14 @@
     {/if}
   </div>
 {:else}
-  <div class="news-empty">
-    <strong>No news yet</strong>
-    <span>We'll add stories here as they're found.</span>
-  </div>
+  <!-- The shared empty surface rather than a dashed box of its own: this one
+       said the same thing in different type to every other "nothing here yet"
+       on the site. -->
+  <EmptyState
+    size="compact"
+    heading="No news yet"
+    message="We'll add stories here as they're found."
+  />
 {/if}
 
 <style>
@@ -535,25 +545,6 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
-  }
-
-  .news-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 26px 14px;
-    text-align: center;
-    border: 1px dashed var(--weeb-border);
-    border-radius: var(--weeb-radius);
-  }
-  .news-empty strong {
-    font-size: 14px;
-    font-weight: 600;
-  }
-  .news-empty span {
-    font-size: 13px;
-    color: var(--weeb-fg-muted);
   }
 
   @media (prefers-reduced-motion: reduce) {

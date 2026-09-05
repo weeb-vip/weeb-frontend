@@ -1,15 +1,20 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  let {
+    tags = [],
+    className = '',
+    /** Pixels per second, so a long tag list scrolls at the same pace as a short one. */
+    scrollSpeed = 50,
+  }: {
+    tags?: string[];
+    className?: string;
+    scrollSpeed?: number;
+  } = $props();
 
-  export let tags: string[] = [];
-  export let className: string = '';
-  export let scrollSpeed: number = 50;
-
-  let containerRef: HTMLDivElement;
-  let contentRef: HTMLDivElement;
-  let isOverflowing = false;
-  let isHovered = false;
-  let animationDuration = 3;
+  let containerRef = $state<HTMLDivElement | null>(null);
+  let contentRef = $state<HTMLDivElement | null>(null);
+  let isOverflowing = $state(false);
+  let isHovered = $state(false);
+  let animationDuration = $state(3);
 
   function checkOverflow() {
     if (!containerRef || !contentRef) return;
@@ -20,33 +25,33 @@
     isOverflowing = contentWidth > containerWidth;
 
     if (isOverflowing) {
-      const scrollDistance = contentWidth + 32;
-      animationDuration = scrollDistance / scrollSpeed;
+      // Scroll distance is the content plus the 2rem gap the keyframes translate by.
+      animationDuration = (contentWidth + 32) / scrollSpeed;
     }
   }
 
-  onMount(() => {
-    setTimeout(checkOverflow, 100);
+  // Re-measures on mount, whenever the tags change, and on resize. The
+  // timeouts give layout a frame to settle before offsetWidth is read.
+  $effect(() => {
+    void tags;
+    void scrollSpeed;
+    if (!containerRef || !contentRef) return;
+
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+    const initialTimer = setTimeout(checkOverflow, 100);
 
     const handleResize = () => {
-      setTimeout(checkOverflow, 100);
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(checkOverflow, 100);
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(initialTimer);
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
+    };
   });
-
-  $: if (tags && containerRef) {
-    setTimeout(checkOverflow, 100);
-  }
-
-  function handleMouseEnter() {
-    isHovered = true;
-  }
-
-  function handleMouseLeave() {
-    isHovered = false;
-  }
 </script>
 
 <!-- Wrapper is presentational: hover handlers only toggle a decorative
@@ -55,8 +60,8 @@
   bind:this={containerRef}
   class="overflow-hidden whitespace-nowrap relative {className}"
   role="presentation"
-  on:mouseenter={handleMouseEnter}
-  on:mouseleave={handleMouseLeave}
+  onmouseenter={() => (isHovered = true)}
+  onmouseleave={() => (isHovered = false)}
 >
   <!-- Static content with gradient fade -->
   <div

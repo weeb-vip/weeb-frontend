@@ -1,74 +1,41 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { untrack } from 'svelte';
   import AutocompleteAdvanced from '../svelte/components/AutocompleteAdvanced.svelte';
   import LoginModalHandler from '../svelte/components/LoginModalHandler.svelte';
   import UserProfileHandler from '../svelte/components/UserProfileHandler.svelte';
   import AuthInitializer from '../svelte/components/AuthInitializer.svelte';
   import TitleLanguageToggle from '../svelte/components/TitleLanguageToggle.svelte';
-  import { onDestroy } from 'svelte';
+  import { HeaderBloc } from './Header.bloc.svelte';
 
-  export let ssrAuth: any;
-  /** When true the bar starts transparent over page artwork and takes its glass
-      on scroll. Pages without artwork behind the nav leave this false. */
-  export let overlay: boolean = false;
+  let {
+    ssrAuth,
+    overlay = false,
+    bloc: injected = undefined
+  }: {
+    ssrAuth: any;
+    /** When true the bar starts transparent over page artwork and takes its
+        glass on scroll. Pages without artwork behind the nav leave this false. */
+    overlay?: boolean;
+    bloc?: HeaderBloc;
+  } = $props();
 
-  // Distance over which the bar earns its glass back.
-  const SOLID_OVER = 220;
+  const bloc = untrack(() => injected ?? new HeaderBloc({ overlay }));
 
-  // Scroll events do not arrive one per frame: a single wheel tick can move
-  // scrollY by 200px in ONE event, which drove this straight from 0 to 1 in a
-  // single frame and read as the background popping in. Mapping it more gradually
-  // does not help, because the input itself is a jump. So scroll only sets a
-  // TARGET and a rAF loop eases the rendered value toward it -- the fade becomes
-  // a property of the animation rather than of how the input is delivered.
-  let navSolid = overlay ? 0 : 1;
-  let navTarget = navSolid;
-  let raf = 0;
+  // `overlay` is derived from the route at the call site, so it changes under
+  // us on navigation.
+  $effect(() => bloc.setOverlay(overlay));
 
-  const EASE = 0.14; // per-frame approach; settles in ~250ms at 60fps
-
-  function step() {
-    const delta = navTarget - navSolid;
-    if (Math.abs(delta) < 0.002) {
-      navSolid = navTarget;
-      raf = 0;
-      return;
-    }
-    navSolid += delta * EASE;
-    raf = requestAnimationFrame(step);
-  }
-
-  function onScroll() {
-    navTarget = Math.min(1, Math.max(0, window.scrollY / SOLID_OVER));
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      navSolid = navTarget;
-      return;
-    }
-    if (!raf) raf = requestAnimationFrame(step);
-  }
-
-  onDestroy(() => {
-    if (raf) cancelAnimationFrame(raf);
-  });
-
-  function getCurrentSeason(): string {
-    const now = new Date();
-    const month = now.getMonth();
-    const year = now.getFullYear();
-    if (month >= 0 && month <= 2) return `WINTER_${year}`;
-    if (month >= 3 && month <= 5) return `SPRING_${year}`;
-    if (month >= 6 && month <= 8) return `SUMMER_${year}`;
-    return `FALL_${year}`;
-  }
+  // The frame loop the bloc runs has to stop with the component.
+  $effect(() => () => bloc.destroy());
 </script>
 
-<svelte:window on:scroll={overlay ? onScroll : undefined} />
+<svelte:window onscroll={bloc.overlay ? () => bloc.scrolled(window.scrollY) : undefined} />
 
 <nav
   class="nav"
-  class:nav--overlay={overlay}
-  class:nav--glass={!overlay || navSolid > 0.02}
-  style="--nav-solid: {navSolid}"
+  class:nav--overlay={bloc.overlay}
+  class:nav--glass={bloc.hasGlass}
+  style="--nav-solid: {bloc.solid}"
   id="main-header"
   aria-label="Main"
 >
@@ -88,22 +55,16 @@
 
   <!-- Nav Links (desktop only) -->
   <div class="nav-links">
-    <a href="/" aria-current={$page.url.pathname === '/' ? 'page' : undefined}>Home</a>
-    <a
-      href={`/season/${getCurrentSeason()}`}
-      aria-current={$page.url.pathname.startsWith('/season') ? 'page' : undefined}>Season</a
-    >
-    <a href="/airing" aria-current={$page.url.pathname.startsWith('/airing') ? 'page' : undefined}>Airing</a>
-    <a href="/search" aria-current={$page.url.pathname.startsWith('/search') ? 'page' : undefined}>Browse</a>
+    <a href="/" aria-current={bloc.isCurrent('/') ? 'page' : undefined}>Home</a>
+    <a href={bloc.seasonHref} aria-current={bloc.isCurrent('/season') ? 'page' : undefined}>Season</a>
+    <a href="/airing" aria-current={bloc.isCurrent('/airing') ? 'page' : undefined}>Airing</a>
+    <a href="/search" aria-current={bloc.isCurrent('/search') ? 'page' : undefined}>Browse</a>
     <!-- /manga covers the detail route as well as the shelf, so reading a
          manga keeps its nav item lit. A light novel's detail page lives under
          /manga too and lights this one rather than its own; one row cannot
          have two detail URLs, and the alternative is neither lit. -->
-    <a href="/manga" aria-current={$page.url.pathname.startsWith('/manga') ? 'page' : undefined}>Manga</a>
-    <a
-      href="/light-novels"
-      aria-current={$page.url.pathname.startsWith('/light-novels') ? 'page' : undefined}>Light novels</a
-    >
+    <a href="/manga" aria-current={bloc.isCurrent('/manga') ? 'page' : undefined}>Manga</a>
+    <a href="/light-novels" aria-current={bloc.isCurrent('/light-novels') ? 'page' : undefined}>Light novels</a>
   </div>
 
   <!-- Search -->

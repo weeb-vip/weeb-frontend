@@ -1,32 +1,25 @@
-<script>
+<script lang="ts">
   import { Toaster } from 'svelte-sonner';
-  import { onMount } from 'svelte';
+  import { GlobalToasterBloc } from './GlobalToaster.bloc.svelte';
 
-  let isMobile = false;
-  let position = 'top-right';
+  /**
+   * The app's one toast surface, mounted by the root layout. Everything else
+   * calls `toast()` from svelte-sonner; this decides where the stack sits and
+   * dresses it in the design tokens.
+   */
+  let { bloc = new GlobalToasterBloc() }: { bloc?: GlobalToasterBloc } = $props();
 
-  onMount(() => {
-    const checkScreenSize = () => {
-      isMobile = window.innerWidth <= 768;
-      position = isMobile ? 'top-center' : 'top-right';
-    };
-
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-
-    return () => {
-      window.removeEventListener('resize', checkScreenSize);
-    };
-  });
+  // The media-query listener comes back out of the bloc as a teardown.
+  $effect(() => bloc.watchViewport());
 </script>
 
 <!-- Global Toaster Configuration -->
 <Toaster
-  {position}
+  position={bloc.position}
   class="toaster-container"
   toastOptions={{
     duration: 6000,
-    className: 'custom-toast',
+    class: 'custom-toast',
     style: 'width: 20rem; max-width: 20rem; min-width: 20rem;'
   }}
 />

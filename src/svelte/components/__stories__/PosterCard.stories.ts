@@ -1,11 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import PosterCard from '../PosterCard.svelte';
+import { noCardTracking } from '../Card.bloc.svelte';
 import StoryContainer from './StoryContainer.svelte';
 
 const meta = {
-  title: 'Design System/PosterCard',
+  title: 'Composites/Cards/PosterCard',
   component: PosterCard,
   tags: ['autodocs'],
+  args: {
+    track: noCardTracking,
+  },
   parameters: {
     layout: 'centered',
   },
@@ -30,6 +34,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The full card: score, airing dot, and the hover panel behind it. */
 export const Default: Story = {
   args: {
     id: '154587',
@@ -45,6 +50,7 @@ export const Default: Story = {
   },
 };
 
+/** Nothing rated yet, so the score badge is absent and the dot reads upcoming. */
 export const WithoutScore: Story = {
   args: {
     id: '21',
@@ -60,6 +66,7 @@ export const WithoutScore: Story = {
   },
 };
 
+/** Finished airing: no status dot, and three genres in the hover panel. */
 export const WithGenres: Story = {
   args: {
     id: '5114',
@@ -75,6 +82,7 @@ export const WithGenres: Story = {
   },
 };
 
+/** On the viewer's list as watching -- the green corner tab wins over the dot. */
 export const Watching: Story = {
   args: {
     ...Default.args,
@@ -82,6 +90,7 @@ export const Watching: Story = {
   },
 };
 
+/** Completed: the accent tab, with a tick. */
 export const Completed: Story = {
   args: {
     id: '5114',
@@ -95,6 +104,7 @@ export const Completed: Story = {
   },
 };
 
+/** Planned: the amber tab, with a bookmark. */
 export const PlanToWatch: Story = {
   args: {
     ...Default.args,
@@ -103,6 +113,7 @@ export const PlanToWatch: Story = {
   },
 };
 
+/** Dropped: the red tab, with a cross. */
 export const Dropped: Story = {
   args: {
     ...Default.args,
@@ -111,10 +122,62 @@ export const Dropped: Story = {
   },
 };
 
+/** On hold: the muted tab, with a pause. */
 export const OnHold: Story = {
   args: {
     ...Default.args,
     title: 'On Hold Anime',
     onList: 'on_hold',
+  },
+};
+
+/** A title long enough to clamp to two lines, which is the card's fixed budget. */
+export const LongTitle: Story = {
+  args: {
+    ...Default.args,
+    title: 'The Exiled Heavy Knight Knows How to Game the System and Will Not Be Returning to the Capital',
+    sub: '12 ep \u00B7 Studio Deen',
+  },
+};
+
+/**
+ * No artwork: `placeholderTitle` means SafeImage draws a titled panel rather
+ * than the bright not-found illustration, which would out-shout the real
+ * posters beside it.
+ */
+export const MissingImage: Story = {
+  args: {
+    id: '0',
+    title: 'A Show With No Poster',
+    image: '',
+    score: null,
+    status: null,
+    sub: 'TBA',
+    href: '#',
+  },
+};
+
+/** Bare metadata: no score, no genres, no synopsis -- the hover panel is empty. */
+export const Minimal: Story = {
+  args: {
+    id: '9253',
+    title: 'Steins;Gate',
+    image: 'https://cdn.myanimelist.net/images/anime/1935/127974.jpg',
+    href: '#',
+  },
+};
+
+/**
+ * A work rather than an anime: `imagePath` points the CDN at works/, since the
+ * same id under posters/ would be a poster that does not exist.
+ */
+export const WorkPoster: Story = {
+  args: {
+    id: 'work-1',
+    title: 'Chainsaw Man, Vol. 1',
+    image: 'work-1',
+    imagePath: 'works',
+    sub: '11 volumes',
+    href: '#',
   },
 };

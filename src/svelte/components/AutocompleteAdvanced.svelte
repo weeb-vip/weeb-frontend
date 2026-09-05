@@ -1,363 +1,112 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import { animate, stagger } from 'motion';
   import AutocompleteItem from './AutocompleteItem.svelte';
-  import { configStore } from '../stores/config';
-  import { analytics } from '../../utils/analytics';
-  import { animeHref } from '../../services/utils';
+  import EmptyState from './EmptyState.svelte';
+  import { clickOutside } from '../actions/clickOutside';
+  import { AutocompleteAdvancedBloc } from './AutocompleteAdvanced.bloc.svelte';
 
-  // Dynamic imports for SSR compatibility
-  let algoliasearch: any = null;
-  let createAutocomplete: any = null;
-  let getAlgoliaResults: any = null;
-  let searchClient: any = null;
+  /**
+   * The view: markup, animation and the two inputs. Everything about what a
+   * query returns, which row is highlighted and where a result goes lives in
+   * the bloc.
+   */
+  let { bloc = new AutocompleteAdvancedBloc() }: { bloc?: AutocompleteAdvancedBloc } = $props();
 
-  let autocompleteInstance: any = null;
-  let isClient = false;
-  let isFocused = false;
-  let isLoading = true;
-  let autocompleteState: any = { isOpen: false, collections: [] };
+  let desktopInputRef = $state<HTMLInputElement | null>(null);
+  let mobileInputRef = $state<HTMLInputElement | null>(null);
+  let desktopFormRef = $state<HTMLDivElement | null>(null);
+  let mobileFormRef = $state<HTMLDivElement | null>(null);
+  let desktopPanelRef = $state<HTMLDivElement | null>(null);
+  let mobilePanelRef = $state<HTMLDivElement | null>(null);
 
-  let desktopInputRef: HTMLInputElement;
-  let mobileInputRef: HTMLInputElement;
-  let desktopFormRef: HTMLDivElement;
-  let mobileFormRef: HTMLDivElement;
-  let desktopPanelRef: HTMLDivElement;
-  let mobilePanelRef: HTMLDivElement;
-  let resultsListRefs: HTMLElement[] = [];
+  // The text in the box. The bloc's `query` is the search backend's idea of
+  // it, which arrives a tick later; binding the input to that would fight the
+  // user's typing.
+  let text = $state('');
 
-  // Keyboard navigation: the currently highlighted result (-1 = none). The
-  // panel is rendered twice (mobile + desktop) but only one is visible, so a
-  // single flat index drives both; per-device option ids keep the DOM valid.
-  let activeIndex = -1;
+  onMount(() => {
+    bloc.init();
 
-  // Anime and works are separate indices, so Algolia ranks each on its own and
-  // the two scores are not comparable. Blending them into one list would mean
-  // inventing an order; they stay grouped in the order the sources are
-  // declared, each internally ranked by Algolia.
-  $: groups = (autocompleteState.collections || [])
-    .map((c: any) => ({
-      sourceId: c?.source?.sourceId,
-      items: filterValidItems(c?.items || []),
-    }))
-    .filter((g: any) => g.items.length > 0);
+    return () => {
+      bloc.destroy();
+      removeDesktopBackdrop();
+    };
+  });
 
-  // Still one flat index across every group, because the highlight moves
-  // through the whole panel rather than restarting per section.
-  $: flatItems = groups.flatMap((g: any) => g.items);
-
-  // Headings only once there is more than one group, so a query that matches
-  // no works looks exactly as it did before works were searchable.
-  $: rows = (() => {
-    const out: any[] = [];
-    let index = 0;
-    for (const group of groups) {
-      if (groups.length > 1) {
-        out.push({ kind: 'header', sourceId: group.sourceId });
-      }
-      for (const item of group.items) {
-        out.push({ kind: 'item', item, index: index++ });
-      }
-    }
-
-    return out;
-  })();
-
-  const GROUP_LABELS: Record<string, string> = {
-    data: 'Anime',
-    works: 'Manga & light novels',
-  };
-
-  // Keep the highlight in range as results change under the user.
-  $: if (activeIndex >= flatItems.length) activeIndex = flatItems.length - 1;
+  /** Whichever of the two panels is actually on screen; both are in the DOM. */
+  function visiblePanel(): HTMLElement | null {
+    if (typeof window === 'undefined') return null;
+    return window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
+  }
 
   function activeDevice(): 'desktop' | 'mobile' {
     return typeof window !== 'undefined' && window.innerWidth >= 640 ? 'desktop' : 'mobile';
   }
 
-  function scrollActiveIntoView() {
-    if (activeIndex < 0 || typeof document === 'undefined') return;
-    const el = document.getElementById(`ac-opt-${activeDevice()}-${activeIndex}`);
-    el?.scrollIntoView({ block: 'nearest' });
-  }
-
-
-  onMount(async () => {
-    // Only run on client-side
-    if (typeof window === 'undefined') return;
-
-    try {
-      // Initialize config store - fetch from HTTP and wait for it
-      await configStore.init();
-    } catch (error) {
-      console.error('Failed to initialize config store:', error);
-    }
-
-    const initializeAlgolia = async () => {
-
-      try {
-        const algoliasearchModule = await import('algoliasearch/lite');
-        const autocompleteModule = await import('@algolia/autocomplete-core');
-        const presetModule = await import('@algolia/autocomplete-preset-algolia');
-
-        // Handle both default and named exports for algoliasearch
-        if ('default' in algoliasearchModule && typeof algoliasearchModule.default === 'function') {
-          algoliasearch = algoliasearchModule.default;
-        } else if (typeof algoliasearchModule === 'function') {
-          algoliasearch = algoliasearchModule;
-        } else if (algoliasearchModule.liteClient) {
-          algoliasearch = algoliasearchModule.liteClient;
-        } else {
-          throw new Error('Unable to find algoliasearch function in module');
-        }
-
-        createAutocomplete = autocompleteModule.createAutocomplete;
-        getAlgoliaResults = presetModule.getAlgoliaResults;
-
-        // Modules loaded successfully
-
-        if (typeof algoliasearch !== 'function') {
-          throw new Error('algoliasearch is not a function: ' + typeof algoliasearch);
-        }
-
-        searchClient = algoliasearch("A2HF2P5C6X", "45216ed5ac3f9e0a478d3c354d353d58");
-        // Search client created successfully
-
-        autocompleteInstance = createAutocomplete({
-          onStateChange({ state }) {
-            autocompleteState = state;
-          },
-          getSources() {
-            return [
-              {
-                sourceId: "data",
-                getItemInputValue({ item }) {
-                  return item.title_en;
-                },
-                getItems({ query }) {
-                  if (!query) {
-                    return [];
-                  }
-
-                  // Get config from the Svelte store with fallback
-                  const config = configStore.get();
-                  const indexName = config?.algolia_index || 'anime-staging';
-
-                  return getAlgoliaResults({
-                    searchClient,
-                    queries: [
-                      {
-                        indexName,
-                        query,
-                        params: {
-                          hitsPerPage: 20,
-                        },
-                      },
-                    ],
-                  });
-                },
-              },
-              {
-                sourceId: "works",
-                getItemInputValue({ item }) {
-                  return item.title_en;
-                },
-                getItems({ query }) {
-                  if (!query) {
-                    return [];
-                  }
-
-                  const config = configStore.get();
-                  const worksIndex = config?.algolia_works_index;
-                  // No works index configured means anything running an older
-                  // config just keeps getting anime results, rather than
-                  // erroring on an index that does not exist.
-                  if (!worksIndex) {
-                    return [];
-                  }
-
-                  return getAlgoliaResults({
-                    searchClient,
-                    queries: [
-                      {
-                        indexName: worksIndex,
-                        query,
-                        params: {
-                          // Fewer than anime deliberately. Anime is what people
-                          // come here for; works are the answer to "where did
-                          // this come from", so they earn a few rows, not half
-                          // the panel.
-                          hitsPerPage: 4,
-                        },
-                      },
-                    ],
-                    // Tagged here rather than inferred from the fields, so the
-                    // item component never has to guess which index a hit came
-                    // from to decide where it links.
-                    transformResponse({ hits }) {
-                      return (hits[0] || []).map((hit: any) => ({
-                        ...hit,
-                        __kind: 'work',
-                      }));
-                    },
-                  });
-                },
-              },
-            ];
-          },
-        });
-
-        // Autocomplete instance created successfully
-
-        isClient = true;
-        isLoading = false;
-        // Algolia initialized successfully
-
-        // Add environment event listeners for both mobile and desktop
-        const cleanupFunctions: Array<() => void> = [];
-
-        // Setup mobile environment props
-        if (mobileFormRef && mobileInputRef && mobilePanelRef) {
-          const mobileEnvProps = autocompleteInstance.getEnvironmentProps({
-            formElement: mobileFormRef,
-            inputElement: mobileInputRef,
-            panelElement: mobilePanelRef,
-          });
-
-          window.addEventListener("touchstart", mobileEnvProps.onTouchStart);
-          window.addEventListener("touchmove", mobileEnvProps.onTouchMove);
-
-          cleanupFunctions.push(() => {
-            window.removeEventListener("touchstart", mobileEnvProps.onTouchStart);
-            window.removeEventListener("touchmove", mobileEnvProps.onTouchMove);
-          });
-        }
-
-        // Setup desktop environment props
-        if (desktopFormRef && desktopInputRef && desktopPanelRef) {
-          const desktopEnvProps = autocompleteInstance.getEnvironmentProps({
-            formElement: desktopFormRef,
-            inputElement: desktopInputRef,
-            panelElement: desktopPanelRef,
-          });
-
-          window.addEventListener("mousedown", desktopEnvProps.onMouseDown);
-
-          cleanupFunctions.push(() => {
-            window.removeEventListener("mousedown", desktopEnvProps.onMouseDown);
-          });
-        }
-
-        return () => {
-          cleanupFunctions.forEach(cleanup => cleanup());
-        };
-      } catch (error) {
-        console.error('Failed to initialize Algolia (Svelte):', error);
-        // Still set isClient to true to show a non-disabled input
-        isClient = true;
-      }
-    };
-
-    console.log('Autocomplete component mounting (Svelte), isClient:', isClient);
-    initializeAlgolia();
+  // Keep the highlighted option in view as the arrows walk past the fold.
+  $effect(() => {
+    const index = bloc.activeIndex;
+    if (index < 0 || typeof document === 'undefined') return;
+    document.getElementById(`ac-opt-${activeDevice()}-${index}`)?.scrollIntoView({ block: 'nearest' });
   });
-
-  onDestroy(() => {
-    // Clean up desktop backdrop when component is destroyed
-    removeDesktopBackdrop();
-  });
-
-  function handleItemClick(item: any) {
-    if (autocompleteInstance) {
-      autocompleteInstance.setIsOpen(false);
-      autocompleteInstance.setQuery('');
-    }
-    // Navigate to show page
-    if (typeof window !== 'undefined') {
-      // url_slug: algolia stores the CDC payload verbatim, not camelCase.
-      const slug = item?.url_slug ?? item?.slug;
-      if (item?.__kind === 'work') {
-        // A work has no id-based route to fall back on -- workBySlug is the
-        // only lookup the schema exposes -- so a work with no slug has nowhere
-        // to go and is left alone rather than sent to a certain 404.
-        if (slug) {
-          goto(`/manga/${slug}`);
-        }
-      } else {
-        goto(animeHref({ id: item?.id, slug }));
-      }
-    }
-    if (desktopInputRef) desktopInputRef.blur();
-    if (mobileInputRef) mobileInputRef.blur();
-  }
 
   function createDesktopBackdrop() {
     if (typeof window === 'undefined') return;
 
     // Remove existing backdrop
-    const existing = document.getElementById('desktop-search-backdrop');
-    if (existing) existing.remove();
+    document.getElementById('desktop-search-backdrop')?.remove();
 
     // Create backdrop element at body level (outside header constraints)
     const backdrop = document.createElement('div');
     backdrop.id = 'desktop-search-backdrop';
     backdrop.className = 'fixed inset-0 bg-weeb-surface/50 bg-weeb-bg/50 backdrop-blur-sm';
-    backdrop.style.cssText = 'z-index: 35; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); opacity: 0;'; // Start invisible
+    backdrop.style.cssText =
+      'z-index: 35; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); opacity: 0;'; // Start invisible
     backdrop.setAttribute('role', 'presentation');
+    backdrop.addEventListener('click', () => desktopInputRef?.blur());
 
-    backdrop.addEventListener('click', () => {
-      if (desktopInputRef) desktopInputRef.blur();
-    });
-
-    // Add to body (bypasses header container constraints)
     document.body.appendChild(backdrop);
-
-    // Animate backdrop in with Motion
-    animate(backdrop,
-      { opacity: [0, 1] },
-      { duration: 0.3, ease: 'easeOut' }
-    );
+    animate(backdrop, { opacity: [0, 1] }, { duration: 0.3, ease: 'easeOut' });
   }
 
   function removeDesktopBackdrop() {
     if (typeof window === 'undefined') return;
     const backdrop = document.getElementById('desktop-search-backdrop');
-    if (backdrop) {
-      // Animate backdrop out before removing
-      animate(backdrop,
-        { opacity: [1, 0] },
-        { duration: 0.2, ease: 'easeIn' }
-      ).then(() => {
-        backdrop.remove();
-      });
+    if (!backdrop) return;
+    // Animate backdrop out before removing
+    animate(backdrop, { opacity: [1, 0] }, { duration: 0.2, ease: 'easeIn' }).then(() =>
+      backdrop.remove()
+    );
+  }
+
+  function animatePanelOut() {
+    const panel = visiblePanel();
+    if (panel && bloc.isPanelOpen) {
+      animate(panel, { opacity: [1, 0], y: [0, -10] }, { duration: 0.2, ease: 'easeOut' });
     }
   }
 
   function handleFocus() {
-    isFocused = true;
-    if (autocompleteInstance) {
-      autocompleteInstance.setIsOpen(true);
-    }
+    bloc.focus();
+
     // Create backdrop for desktop only, bypassing header constraints
-    if (typeof window !== 'undefined' && window.innerWidth >= 1024) { // lg breakpoint
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
       createDesktopBackdrop();
     }
 
     // Animate search input container on focus
     const container = window.innerWidth >= 640 ? desktopFormRef : mobileFormRef;
     if (container) {
-      animate(container,
-        { scale: [1, 1.02, 1] },
-        { type: 'spring', stiffness: 300, damping: 25 }
-      );
+      animate(container, { scale: [1, 1.02, 1] }, { type: 'spring', stiffness: 300, damping: 25 });
     }
 
     // Animate panel opening when results appear
     setTimeout(() => {
-      const panel = window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
-      if (panel && autocompleteState.isOpen) {
-        animate(panel,
+      const panel = visiblePanel();
+      if (panel && bloc.isPanelOpen) {
+        animate(
+          panel,
           { opacity: [0, 1], y: [-10, 0], scale: [0.95, 1] },
           { type: 'spring', stiffness: 400, damping: 30 }
         );
@@ -366,106 +115,29 @@
   }
 
   function handleBlur() {
-    // Animate panel closing before hiding
-    const panel = window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
-    if (panel && autocompleteState.isOpen) {
-      animate(panel,
-        { opacity: [1, 0], y: [0, -10] },
-        { duration: 0.2, ease: 'easeOut' }
-      );
-    }
+    animatePanelOut();
+    bloc.blur();
+    removeDesktopBackdrop();
+  }
 
-    // Delay to allow click events to fire and animation to complete
-    setTimeout(() => {
-      isFocused = false;
-      activeIndex = -1;
-      if (autocompleteInstance) {
-        autocompleteInstance.setIsOpen(false);
-      }
+  function handleKeydown(event: KeyboardEvent) {
+    const outcome = bloc.keydown(event.key);
+
+    if (outcome === 'moved' || outcome === 'submitted') event.preventDefault();
+    if (outcome === 'dismissed') animatePanelOut();
+    if (outcome === 'submitted') text = '';
+    if (outcome === 'submitted' || outcome === 'dismissed') {
       removeDesktopBackdrop();
-    }, 200);
-  }
-
-  function handleKeyDown(event: KeyboardEvent) {
-    const len = flatItems.length;
-
-    if (event.key === 'ArrowDown') {
-      if (!autocompleteState.isOpen) return;
-      event.preventDefault();
-      activeIndex = len === 0 ? -1 : (activeIndex + 1) % len;
-      scrollActiveIntoView();
-      return;
-    }
-
-    if (event.key === 'ArrowUp') {
-      if (!autocompleteState.isOpen) return;
-      event.preventDefault();
-      activeIndex = len === 0 ? -1 : (activeIndex <= 0 ? len - 1 : activeIndex - 1);
-      scrollActiveIntoView();
-      return;
-    }
-
-    if (event.key === 'Enter') {
-      // A highlighted result wins; otherwise fall through to a full search.
-      if (activeIndex >= 0 && flatItems[activeIndex]) {
-        event.preventDefault();
-        handleItemClick(flatItems[activeIndex]);
-      } else if (autocompleteState.query) {
-        event.preventDefault();
-        const query = autocompleteState.query;
-        analytics.searchPerformed(query.trim(), flatItems.length);
-        if (autocompleteInstance) {
-          autocompleteInstance.setIsOpen(false);
-          autocompleteInstance.setQuery('');
-        }
-        (event.target as HTMLInputElement).blur();
-        goto(`/search?query=${encodeURIComponent(query)}`);
-      }
-      return;
-    }
-
-    if (event.key === 'Escape') {
-      // Animate panel closing on escape
-      const panel = window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
-      if (panel && autocompleteState.isOpen) {
-        animate(panel,
-          { opacity: [1, 0], y: [0, -10] },
-          { duration: 0.2, ease: 'easeOut' }
-        );
-      }
-
-      activeIndex = -1;
-      setTimeout(() => {
-        isFocused = false;
-        if (autocompleteInstance) {
-          autocompleteInstance.setIsOpen(false);
-        }
-        removeDesktopBackdrop();
-        (event.target as HTMLInputElement).blur();
-      }, 200);
+      (event.currentTarget as HTMLInputElement).blur();
     }
   }
 
-  function handleInputChange(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    // Results are about to change; drop the highlight so it can't point at a
-    // stale row (Enter would otherwise open the wrong show).
-    activeIndex = -1;
-    if (autocompleteInstance) {
-      console.log('Setting query on autocomplete instance');
-      autocompleteInstance.setQuery(value);
-      autocompleteInstance.refresh();
-    } else {
-      console.log('No autocomplete instance available');
-    }
+  function handleSelect(item: unknown) {
+    text = '';
+    bloc.select(item);
+    desktopInputRef?.blur();
+    mobileInputRef?.blur();
   }
-
-  function filterValidItems(items: any[]): any[] {
-    return items.filter((item) => item != null);
-  }
-
-  $: inputProps = autocompleteInstance?.getInputProps({}) || {};
-  $: rootProps = autocompleteInstance?.getRootProps({}) || {};
 
   // Total time the entrance stagger may span, regardless of how many results
   // came back. A fixed per-item delay does not scale: at 0.05s, twenty results
@@ -476,22 +148,15 @@
   const RESULTS_STAGGER_BUDGET_S = 0.12;
 
   function animateResultsIn() {
-    // Only the panel actually on screen; both are in the DOM at all times.
-    const panel = window.innerWidth >= 640 ? desktopPanelRef : mobilePanelRef;
+    const panel = visiblePanel();
     const items = panel ? [...panel.querySelectorAll('[data-autocomplete-item]')] : [];
     if (items.length === 0 || typeof animate !== 'function') return;
 
     try {
-      const animationOptions: any = {
-        type: 'spring',
-        stiffness: 300,
-        damping: 25
-      };
-
+      const animationOptions: any = { type: 'spring', stiffness: 300, damping: 25 };
       if (typeof stagger === 'function') {
         animationOptions.delay = stagger(RESULTS_STAGGER_BUDGET_S / items.length);
       }
-
       animate(items, { opacity: [0, 1], y: [12, 0] }, animationOptions);
     } catch (e) {
       // Silently fail - animations are not critical
@@ -504,42 +169,79 @@
   // character, which is what made the search feel slow. Refining a query now
   // swaps the contents in place.
   let resultsPanelWasOpen = false;
-  $: {
-    const hasResults = (autocompleteState.collections || []).some(
-      (c: any) => (c?.items?.length ?? 0) > 0
-    );
-    const panelShowing = Boolean(autocompleteState.isOpen) && hasResults;
+  $effect(() => {
+    const panelShowing = bloc.isPanelOpen && bloc.hasResults;
 
     if (panelShowing && !resultsPanelWasOpen) {
       // Let Svelte flush the items into the panel before measuring them.
       setTimeout(animateResultsIn, 0);
     }
     resultsPanelWasOpen = panelShowing;
-  }
+  });
 
   // Svelte action for mobile backdrop animation
   function animateBackdrop(node: HTMLElement) {
-    // Animate in
-    animate(node,
-      { opacity: [0, 1] },
-      { duration: 0.3, ease: 'easeOut' }
-    );
+    animate(node, { opacity: [0, 1] }, { duration: 0.3, ease: 'easeOut' });
 
     return {
       destroy() {
         // Animate out (if still mounted)
         if (node.parentNode) {
-          animate(node,
-            { opacity: [1, 0] },
-            { duration: 0.2, ease: 'easeIn' }
-          );
+          animate(node, { opacity: [1, 0] }, { duration: 0.2, ease: 'easeIn' });
         }
       }
     };
   }
 </script>
 
-{#if isLoading}
+{#snippet searchIcon()}
+  <svg aria-hidden="true" focusable="false" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+{/snippet}
+
+<!-- One panel body, rendered into whichever of the two shells is on screen.
+     The mobile and desktop copies had drifted apart line by line. -->
+{#snippet panelBody(device: 'mobile' | 'desktop')}
+  <div class="ac-panel-divider"></div>
+  {#if bloc.hasResults}
+    <ul class="ac-results-list" role="listbox" id={`ac-listbox-${device}`} aria-label="Search results">
+      {#each bloc.rows as row (row.kind === 'header' ? `h-${row.sourceId}` : row.item.objectID)}
+        {#if row.kind === 'header'}
+          <li class="ac-group-label" role="presentation">
+            {bloc.groupLabel(row.sourceId)}
+          </li>
+        {:else}
+          <AutocompleteItem
+            item={row.item}
+            id={`ac-opt-${device}-${row.index}`}
+            active={bloc.activeIndex === row.index}
+            onClick={() => handleSelect(row.item)}
+          />
+        {/if}
+      {/each}
+    </ul>
+  {:else if bloc.query}
+    <EmptyState icon={searchIcon} size="compact" message={`No results for '${bloc.query}'`} />
+  {/if}
+  {#if bloc.query}
+    <div class="ac-footer">
+      <a
+        href={bloc.searchAllHref}
+        class="ac-footer-link"
+        onclick={(event) => {
+          event.preventDefault();
+          text = '';
+          bloc.searchAll();
+        }}
+      >
+        Search for '{bloc.query}'
+      </a>
+    </div>
+  {/if}
+{/snippet}
+
+{#if bloc.status === 'loading'}
   <!-- Loading skeleton -->
   <div class="ac-skeleton-wrap">
     <div class="ac-skeleton-pill">
@@ -547,34 +249,16 @@
       <div class="ac-skeleton-spinner"></div>
     </div>
   </div>
-{:else if !isClient}
-  <!-- Fallback placeholder -->
-  <div class="ac-fallback-wrap">
-    <input
-      type="text"
-      placeholder="Search anime..."
-      disabled
-      class="ac-fallback-input"
-    />
-    <svg aria-hidden="true" focusable="false" class="ac-fallback-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-  </div>
-{:else if !autocompleteInstance}
-  <!-- If Algolia failed to load, show a simple input without autocomplete -->
+{:else if bloc.status === 'unavailable'}
+  <!-- Algolia could not be reached: a plain input that still runs a full
+       search, rather than a dead search box. -->
   <div class="ac-fallback-wrap">
     <input
       type="text"
       placeholder="Search anime..."
       class="ac-simple-input"
-      on:keydown={(e) => {
-        if (e.key === 'Enter') {
-          const query = e.currentTarget.value;
-          if (query.trim()) {
-            analytics.searchPerformed(query.trim(), 0);
-            goto(`/search?query=${encodeURIComponent(query.trim())}`);
-          }
-        }
+      onkeydown={(e) => {
+        if (e.key === 'Enter') bloc.searchFor(e.currentTarget.value);
       }}
     />
     <svg aria-hidden="true" focusable="false" class="ac-fallback-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -584,98 +268,62 @@
 {:else}
 
   <!-- Mobile backdrop overlay when focused -->
-  {#if isFocused}
+  {#if bloc.isFocused}
     <div
       class="ac-mobile-backdrop"
       role="presentation"
-      on:click={() => {
-        if (mobileInputRef) mobileInputRef.blur();
-      }}
-      on:keydown={() => {}}
+      onclick={() => mobileInputRef?.blur()}
+      onkeydown={() => {}}
       use:animateBackdrop
     ></div>
   {/if}
 
   <!-- Mobile: nearly full-screen search -->
-  <div class="ac-mobile-container" class:ac-mobile-container--focused={isFocused}>
+  <div class="ac-mobile-container" class:ac-mobile-container--focused={bloc.isFocused}>
     <div
       bind:this={mobileFormRef}
       class="ac-mobile-form"
-      class:ac-mobile-form--open={isFocused && autocompleteState.isOpen}
-      class:ac-mobile-form--focused={isFocused && !autocompleteState.isOpen}
+      class:ac-mobile-form--open={bloc.isPanelOpen}
+      class:ac-mobile-form--focused={bloc.isFocused && !bloc.isPanelOpen}
       style="transform-origin: center top;"
-      {...rootProps}
+      use:clickOutside={{
+        handler: () => mobileInputRef?.blur(),
+        enabled: bloc.isFocused,
+        event: 'pointerdown'
+      }}
     >
       <svg aria-hidden="true" focusable="false" class="ac-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
       <input
         bind:this={mobileInputRef}
+        bind:value={text}
         class="ac-input ac-input--mobile"
-        class:ac-input--panel-open={isFocused && autocompleteState.isOpen}
-        class:ac-input--focused={isFocused && !autocompleteState.isOpen}
-        on:focus={handleFocus}
-        on:blur={handleBlur}
-        on:keydown={handleKeyDown}
-        on:input={handleInputChange}
-        {...inputProps}
+        class:ac-input--panel-open={bloc.isPanelOpen}
+        class:ac-input--focused={bloc.isFocused && !bloc.isPanelOpen}
+        onfocus={handleFocus}
+        onblur={handleBlur}
+        onkeydown={handleKeydown}
+        oninput={(e) => bloc.input(e.currentTarget.value)}
         id="search-desktop"
-        placeholder={isFocused ? "Search anime..." : "Search"}
+        placeholder={bloc.isFocused ? 'Search anime...' : 'Search'}
         aria-label="Search anime"
         role="combobox"
-        aria-expanded={isFocused && autocompleteState.isOpen && flatItems.length > 0}
+        aria-expanded={bloc.isPanelOpen && bloc.hasResults}
         aria-controls="ac-listbox-mobile"
         aria-autocomplete="list"
-        aria-activedescendant={activeIndex >= 0 ? `ac-opt-mobile-${activeIndex}` : undefined}
+        aria-activedescendant={bloc.activeIndex >= 0 ? `ac-opt-mobile-${bloc.activeIndex}` : undefined}
       />
-      {#if !isFocused}
+      {#if !bloc.isFocused}
         <span class="ac-kbd">/</span>
       {/if}
-      {#if isFocused && autocompleteState.isOpen}
+      {#if bloc.isPanelOpen}
         <div
           bind:this={mobilePanelRef}
           class="ac-panel ac-panel--mobile"
           style="transform-origin: center top;"
         >
-          <div class="ac-panel-divider"></div>
-          {#if flatItems.length > 0}
-            <ul class="ac-results-list" role="listbox" id="ac-listbox-mobile" aria-label="Search results">
-              {#each rows as row (row.kind === 'header' ? `h-${row.sourceId}` : row.item.objectID)}
-                {#if row.kind === 'header'}
-                  <li class="ac-group-label" role="presentation">
-                    {GROUP_LABELS[row.sourceId] ?? row.sourceId}
-                  </li>
-                {:else}
-                  <AutocompleteItem
-                    item={row.item}
-                    id={`ac-opt-mobile-${row.index}`}
-                    active={activeIndex === row.index}
-                    onClick={() => handleItemClick(row.item)}
-                  />
-                {/if}
-              {/each}
-            </ul>
-          {:else if autocompleteState.query}
-            <div class="ac-empty">
-              <svg aria-hidden="true" focusable="false" class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span>No results for '{autocompleteState.query}'</span>
-            </div>
-          {/if}
-          {#if autocompleteState.query}
-            <div class="ac-footer">
-              <a
-                href="/search?query={encodeURIComponent(autocompleteState.query)}"
-                class="ac-footer-link"
-                on:click|preventDefault={() => {
-                  goto(`/search?query=${encodeURIComponent(autocompleteState.query)}`);
-                }}
-              >
-                Search for '{autocompleteState.query}'
-              </a>
-            </div>
-          {/if}
+          {@render panelBody('mobile')}
         </div>
       {/if}
     </div>
@@ -684,80 +332,46 @@
   <!-- Desktop: floating, always-visible search -->
   <div
     class="ac-desktop-container"
-    class:ac-desktop-container--open={isFocused && autocompleteState.isOpen}
+    class:ac-desktop-container--open={bloc.isPanelOpen}
     bind:this={desktopFormRef}
     style="transform-origin: center top;"
-    {...rootProps}
+    use:clickOutside={{
+      handler: () => desktopInputRef?.blur(),
+      enabled: bloc.isFocused,
+      event: 'mousedown'
+    }}
   >
     <svg aria-hidden="true" focusable="false" class="ac-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
     <input
       bind:this={desktopInputRef}
+      bind:value={text}
       class="ac-input ac-input--desktop"
-      class:ac-input--panel-open={isFocused && autocompleteState.isOpen}
-      on:focus={handleFocus}
-      on:blur={handleBlur}
-      on:keydown={handleKeyDown}
-      on:input={handleInputChange}
-      {...inputProps}
+      class:ac-input--panel-open={bloc.isPanelOpen}
+      onfocus={handleFocus}
+      onblur={handleBlur}
+      onkeydown={handleKeydown}
+      oninput={(e) => bloc.input(e.currentTarget.value)}
       placeholder="Search anime..."
       aria-label="Search anime"
       role="combobox"
-      aria-expanded={isFocused && autocompleteState.isOpen && flatItems.length > 0}
+      aria-expanded={bloc.isPanelOpen && bloc.hasResults}
       aria-controls="ac-listbox-desktop"
       aria-autocomplete="list"
-      aria-activedescendant={activeIndex >= 0 ? `ac-opt-desktop-${activeIndex}` : undefined}
+      aria-activedescendant={bloc.activeIndex >= 0 ? `ac-opt-desktop-${bloc.activeIndex}` : undefined}
     />
-    {#if !isFocused}
+    {#if !bloc.isFocused}
       <span class="ac-kbd">/</span>
     {/if}
     <div class="ac-desktop-panel-anchor">
-      {#if isFocused && autocompleteState.isOpen}
+      {#if bloc.isPanelOpen}
         <div
           bind:this={desktopPanelRef}
           class="ac-panel ac-panel--desktop"
           style="transform-origin: center top;"
         >
-          <div class="ac-panel-divider"></div>
-          {#if flatItems.length > 0}
-            <ul class="ac-results-list" role="listbox" id="ac-listbox-desktop" aria-label="Search results">
-              {#each rows as row (row.kind === 'header' ? `h-${row.sourceId}` : row.item.objectID)}
-                {#if row.kind === 'header'}
-                  <li class="ac-group-label" role="presentation">
-                    {GROUP_LABELS[row.sourceId] ?? row.sourceId}
-                  </li>
-                {:else}
-                  <AutocompleteItem
-                    item={row.item}
-                    id={`ac-opt-desktop-${row.index}`}
-                    active={activeIndex === row.index}
-                    onClick={() => handleItemClick(row.item)}
-                  />
-                {/if}
-              {/each}
-            </ul>
-          {:else if autocompleteState.query}
-            <div class="ac-empty">
-              <svg aria-hidden="true" focusable="false" class="ac-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span>No results for '{autocompleteState.query}'</span>
-            </div>
-          {/if}
-          {#if autocompleteState.query}
-            <div class="ac-footer">
-              <a
-                href="/search?query={encodeURIComponent(autocompleteState.query)}"
-                class="ac-footer-link"
-                on:click|preventDefault={() => {
-                  goto(`/search?query=${encodeURIComponent(autocompleteState.query)}`);
-                }}
-              >
-                Search for '{autocompleteState.query}'
-              </a>
-            </div>
-          {/if}
+          {@render panelBody('desktop')}
         </div>
       {/if}
     </div>
@@ -841,19 +455,6 @@
   /* ── Fallback / disabled states ── */
   .ac-fallback-wrap {
     position: relative;
-  }
-
-  .ac-fallback-input {
-    width: 100%;
-    height: 38px;
-    padding: 0 40px 0 16px;
-    border: 1px solid var(--_ac-border);
-    border-radius: 19px;
-    background: var(--_ac-bg-elevated);
-    color: var(--_ac-fg-muted);
-    font-family: var(--_ac-font);
-    font-size: 14px;
-    outline: none;
   }
 
   .ac-simple-input {
@@ -1139,26 +740,6 @@
      own top padding is already doing the work. */
   .ac-group-label:first-child {
     padding-top: 2px;
-  }
-
-  /* ── Empty state ── */
-  .ac-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 32px 16px;
-    color: var(--_ac-fg-muted);
-    font-family: var(--_ac-font);
-    font-size: 14px;
-    text-align: center;
-  }
-
-  .ac-empty-icon {
-    height: 24px;
-    width: 24px;
-    color: var(--_ac-fg-muted);
   }
 
   /* ── Footer ── */

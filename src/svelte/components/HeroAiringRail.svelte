@@ -1,23 +1,42 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
   import { GetImageFromAnime, animeHref } from '../../services/utils';
-  import { analytics } from '../../utils/analytics';
-  import { getAnimeTitle, preferencesStore } from '../stores/preferences';
+  import {
+    realCardTracking,
+    realTitleLanguage,
+    titleFor,
+    type CardTrackingPort,
+    type TitleLanguagePort,
+  } from './Card.bloc.svelte';
 
-  /** Entries from HomepageSSR's sortedCurrentlyAiring. */
-  export let entries: any[] = [];
-  export let activeId: string | null = null;
+  /**
+   * Presentational -- no bloc. Every row is drawn from the entry it is given;
+   * the timings were resolved once in HomepageSSR, and hovering a row only
+   * hands the entry back to whoever owns the banner.
+   *
+   * The two singletons it does need -- the title-language preference and the
+   * analytics ping -- arrive as ports from Card.bloc, which is where the other
+   * three anime cards get them too. This one resolves its own titles because
+   * HomepageSSR hands it whole records rather than strings.
+   */
+  let {
+    /** Entries from HomepageSSR's sortedCurrentlyAiring. */
+    entries = [],
+    activeId = null,
+    /** Hovering or focusing an entry retargets the banner behind this rail. */
+    onSelect = () => {},
+    titleLanguage = realTitleLanguage,
+    track = realCardTracking,
+  }: {
+    entries?: any[];
+    activeId?: string | null;
+    onSelect?: (info: any) => void;
+    titleLanguage?: TitleLanguagePort;
+    track?: CardTrackingPort;
+  } = $props();
 
-  /** Hovering or focusing an entry retargets the banner behind this rail. */
-  export let onSelect: (info: any) => void = () => {};
-
-  // This rail is the homepage's only schedule surface, so it carries everything
-  // the old Airing This Week strip showed with the data this query returns:
-  // episode, local air time, countdown and live state. Eight entries; the last
-  // two are desktop-only casualties of panel height, and Full schedule owns
-  // completeness either way.
   const LIMIT = 8;
-  $: shown = entries.slice(0, LIMIT);
+  const shown = $derived(entries.slice(0, LIMIT));
 
   // Every field here comes off the one EpisodeTiming resolved in
   // HomepageSSR.processCurrentlyAiring. The rail no longer formats a time or
@@ -82,9 +101,9 @@
             class:is-active={activeId === entry.anime.id}
             href={animeHref(entry.anime)}
             aria-current={activeId === entry.anime.id ? 'true' : undefined}
-            on:mouseenter={() => onSelect(entry.airingInfo)}
-            on:focus={() => onSelect(entry.airingInfo)}
-            on:click={() => analytics.animeViewed(entry.anime.id, entry.anime.titleEn)}
+            onmouseenter={() => onSelect(entry.airingInfo)}
+            onfocus={() => onSelect(entry.airingInfo)}
+            onclick={() => track(entry.anime.id, titleFor(entry.anime, titleLanguage()))}
           >
             <span class="rail-art">
               <SafeImage
@@ -98,7 +117,7 @@
 
             <span class="rail-body">
               <span class="rail-name">
-                {getAnimeTitle(entry.anime, $preferencesStore.titleLanguage)}
+                {titleFor(entry.anime, titleLanguage())}
               </span>
               <span class="rail-line">
                 {#if m.episode}<span class="rail-ep">{m.episode}</span>{/if}

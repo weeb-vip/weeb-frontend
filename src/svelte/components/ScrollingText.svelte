@@ -1,60 +1,59 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  let {
+    text,
+    className = '',
+    maxWidth = '100%',
+    /** Pixels per second, so long and short titles scroll at the same pace. */
+    scrollSpeed = 50,
+  }: {
+    text: string;
+    className?: string;
+    maxWidth?: string;
+    scrollSpeed?: number;
+  } = $props();
 
-  export let text: string;
-  export let className: string = '';
-  export let maxWidth: string = '100%';
-  export let scrollSpeed: number = 50; // pixels per second for consistent speed
-
-  let containerRef: HTMLDivElement;
-  let measureRef: HTMLSpanElement;
-  let isOverflowing = false;
-  let isHovered = false;
-  let animationDuration = 3; // calculated duration based on text width
+  let containerRef = $state<HTMLDivElement | null>(null);
+  let measureRef = $state<HTMLSpanElement | null>(null);
+  let isOverflowing = $state(false);
+  let isHovered = $state(false);
+  let animationDuration = $state(3);
 
   function checkOverflow() {
     if (!containerRef || !measureRef) return;
 
     const containerWidth = containerRef.offsetWidth;
     const textWidth = measureRef.scrollWidth;
-    const wasOverflowing = isOverflowing;
 
     isOverflowing = textWidth > containerWidth;
 
-    // Calculate animation duration based on text width for consistent speed
     if (isOverflowing) {
-      // Distance to scroll = textWidth + some padding (2rem = 32px)
-      const scrollDistance = textWidth + 32;
-      animationDuration = scrollDistance / scrollSpeed;
+      // Scroll distance is the text plus the 2rem gap the keyframes translate by.
+      animationDuration = (textWidth + 32) / scrollSpeed;
     }
   }
 
-  onMount(() => {
-    setTimeout(checkOverflow, 100); // Give time for layout
+  // Re-measures on mount, whenever the text changes, and on resize. The
+  // timeouts give layout a frame to settle before offsetWidth is read.
+  $effect(() => {
+    void text;
+    void scrollSpeed;
+    if (!containerRef || !measureRef) return;
 
-    // Recheck on window resize
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+    const initialTimer = setTimeout(checkOverflow, 100);
+
     const handleResize = () => {
-      setTimeout(checkOverflow, 100); // Small delay to ensure layout is updated
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(checkOverflow, 100);
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(initialTimer);
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
+    };
   });
-
-  // Recheck when text changes
-  $: if (text && containerRef) {
-    setTimeout(checkOverflow, 100);
-  }
-
-  function handleMouseEnter() {
-    console.log('Mouse enter - text:', text, 'isOverflowing:', isOverflowing);
-    isHovered = true;
-  }
-
-  function handleMouseLeave() {
-    console.log('Mouse leave');
-    isHovered = false;
-  }
 </script>
 
 <!-- Wrapper is presentational: hover handlers only toggle a decorative
@@ -64,8 +63,8 @@
   class="overflow-hidden whitespace-nowrap relative {className}"
   style="max-width: {maxWidth}"
   role="presentation"
-  on:mouseenter={handleMouseEnter}
-  on:mouseleave={handleMouseLeave}
+  onmouseenter={() => (isHovered = true)}
+  onmouseleave={() => (isHovered = false)}
 >
   <!-- Hidden measurement element -->
   <span

@@ -1,115 +1,55 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
-  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
-  import { animeHref } from '../../services/utils';
+  import {
+    AnimeToastBloc,
+    type AnimeToastStatus,
+    type ToastAnime,
+    type ToastEpisode
+  } from './AnimeToast.bloc.svelte';
 
-  export let anime: {
-    id?: string | number;
-    slug?: string | null;
-    titleEn?: string;
-    titleJp?: string;
-    imageUrl?: string;
-  };
-  export let episode: {
-    episodeNumber?: number;
-    titleEn?: string;
-    titleJp?: string;
-  };
-  export let status: 'airing-soon' | 'airing' | 'finished' | 'warning';
-  export let timeInfo: string = '';
+  let {
+    anime,
+    episode,
+    status,
+    timeInfo = '',
+    bloc: injected
+  }: {
+    anime: ToastAnime;
+    episode: ToastEpisode;
+    status: AnimeToastStatus;
+    /** The line under the episode -- "Airs in 20m", "Aired 2h ago". */
+    timeInfo?: string;
+    bloc?: AnimeToastBloc;
+  } = $props();
 
-  let isMobile = false;
-
-  onMount(() => {
-    // Check if mobile/tablet including iPads
-    const checkIfMobile = () => {
-      // Check for touch capability (includes iPads)
-      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-      // Check viewport width (less than lg breakpoint)
-      const isNarrowScreen = window.innerWidth < 1024;
-
-      // Check for iPad specifically (including iPad Pro)
-      const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && hasTouch;
-
-      // Check for other tablets and mobile devices
-      const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-      return isNarrowScreen || isIPad || (hasTouch && isMobileUserAgent);
-    };
-
-    isMobile = checkIfMobile();
-
-    const handleResize = () => {
-      isMobile = checkIfMobile();
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+  const ownBloc = new AnimeToastBloc({
+    get anime() {
+      return anime;
+    },
+    get episode() {
+      return episode;
+    },
+    get status() {
+      return status;
+    }
   });
+  const bloc = $derived(injected ?? ownBloc);
 
-  function handleShowClick(e: MouseEvent) {
-    e.stopPropagation();
-    if (anime.id) {
-      goto(animeHref({ id: String(anime.id), slug: anime.slug }));
-    }
-  }
-
-  function handleContainerClick(e: MouseEvent) {
-    // On desktop, clicking the container navigates to the show
-    if (!isMobile && anime.id) {
-      goto(animeHref({ id: String(anime.id), slug: anime.slug }));
-    }
-  }
-
-  const title = getAnimeTitle(anime, $preferencesStore.titleLanguage);
-  const episodeTitle = episode?.titleEn || episode?.titleJp || '';
-  const episodeNumber = episode?.episodeNumber || '?';
-
-  const statusConfig = {
-    'airing-soon': {
-      icon: 'fa-clock',
-      color: 'text-weeb-accent-text',
-      bgColor: 'bg-weeb-surface',
-      borderColor: 'border-weeb-border'
-    },
-    'airing': {
-      icon: 'fa-play-circle',
-      color: 'text-weeb-green',
-      bgColor: 'bg-weeb-green/10',
-      borderColor: 'border-weeb-green'
-    },
-    'finished': {
-      icon: 'fa-check-circle',
-      color: 'text-weeb-violet',
-      bgColor: 'bg-weeb-violet/10',
-      borderColor: 'border-weeb-violet'
-    },
-    'warning': {
-      icon: 'fa-bell',
-      color: 'text-weeb-amber',
-      bgColor: 'bg-weeb-amber/10',
-      borderColor: 'border-weeb-amber'
-    }
-  };
-
-  const config = statusConfig[status];
+  $effect(() => bloc.watchViewport());
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="anime-toast-content"
-  class:clickable={!isMobile}
-  on:click={handleContainerClick}
+  class:clickable={!bloc.isCompact}
+  onclick={() => bloc.activateCard()}
 >
   <!-- Anime Image -->
   <div class="toast-poster">
-    {#if anime.imageUrl}
+    {#if bloc.imageUrl}
       <img
-        src={anime.imageUrl}
-        alt={title}
+        src={bloc.imageUrl}
+        alt={bloc.title}
         class="toast-poster-img"
         loading="lazy"
       />
@@ -122,22 +62,22 @@
 
   <!-- Content -->
   <div class="toast-body">
-    <div class="toast-title">{title}</div>
+    <div class="toast-title">{bloc.title}</div>
     <div class="toast-episode">
-      <span class="toast-ep-num">Episode {episodeNumber}</span>
-      {#if episodeTitle}
+      <span class="toast-ep-num">Episode {bloc.episodeNumber}</span>
+      {#if bloc.episodeTitle}
         <span class="toast-dot">·</span>
-        <span class="toast-ep-title">{episodeTitle}</span>
+        <span class="toast-ep-title">{bloc.episodeTitle}</span>
       {/if}
     </div>
     {#if timeInfo}
-      <div class="toast-status toast-status-{status}">
+      <div class="toast-status toast-status-{bloc.status}">
         <svg class="toast-status-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          {#if status === 'finished'}
+          {#if bloc.status === 'finished'}
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
-          {:else if status === 'airing'}
+          {:else if bloc.status === 'airing'}
             <polygon points="5 3 19 12 5 21 5 3"/>
-          {:else if status === 'warning'}
+          {:else if bloc.status === 'warning'}
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           {:else}
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
@@ -149,24 +89,24 @@
   </div>
 
   <!-- Status indicator -->
-  {#if isMobile}
+  {#if bloc.isCompact}
     <button
-      on:click={handleShowClick}
+      onclick={(event) => bloc.activateButton(event)}
       class="toast-action"
       type="button"
-      title="Go to {title} page"
-      aria-label="Go to {title} page"
+      title={bloc.goToShowLabel}
+      aria-label={bloc.goToShowLabel}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
     </button>
   {:else}
-    <div class="toast-indicator toast-indicator-{status}">
+    <div class="toast-indicator toast-indicator-{bloc.status}">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        {#if status === 'finished'}
+        {#if bloc.status === 'finished'}
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
-        {:else if status === 'airing'}
+        {:else if bloc.status === 'airing'}
           <polygon points="5 3 19 12 5 21 5 3"/>
-        {:else if status === 'warning'}
+        {:else if bloc.status === 'warning'}
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         {:else}
           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
