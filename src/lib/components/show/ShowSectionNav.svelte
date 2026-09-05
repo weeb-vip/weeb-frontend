@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Tabs, { type TabItem } from '$lib/components/primitives/Tabs.svelte';
+  import ChipGroup, { type ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
   import type { SectionTab } from './ShowContent.rules';
 
   /**
@@ -29,7 +29,7 @@
     height?: number;
   } = $props();
 
-  const items = $derived(sections as TabItem[]);
+  const items = $derived(sections as ChipGroupItem[]);
 </script>
 
 <nav
@@ -40,7 +40,7 @@
   bind:clientHeight={height}
 >
   <div class="tab-bar-inner">
-    <Tabs {items} value={active} onChange={onSelect} variant="underline" mode="toggle" />
+    <ChipGroup {items} value={active} onSelect={onSelect} variant="underline" mode="toggle" />
   </div>
 </nav>
 
@@ -66,7 +66,7 @@
      is wider than a small phone. Scroll them inside the bar rather than letting
      them widen the document -- an overflowing tab bar scrolls the whole page
      sideways. */
-  .tab-bar-inner :global(.tabs) {
+  .tab-bar-inner :global(.chipgroup--underline) {
     min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
@@ -74,16 +74,18 @@
     /* The strip draws the bar's rule; a second one inside it doubles up. */
     border-bottom: none;
   }
-  .tab-bar-inner :global(.tabs)::-webkit-scrollbar {
+  .tab-bar-inner :global(.chipgroup--underline)::-webkit-scrollbar {
     display: none;
   }
-  .tab-bar-inner :global(.tab) {
+  /* Carried past ChipGroup's own underline skin, which is one class heavier
+     than a bare `:global(.cg-item)` would be. */
+  .tab-bar-inner :global(.chipgroup--underline .chip.cg-item) {
     flex: none;
     padding: 10px 20px;
     font-size: 13px;
     border-bottom: 2px solid transparent;
   }
-  .tab-bar-inner :global(.tab.active) {
+  .tab-bar-inner :global(.chipgroup--underline .chip.cg-item.selected) {
     color: var(--weeb-fg);
     border-bottom-color: var(--weeb-accent);
   }

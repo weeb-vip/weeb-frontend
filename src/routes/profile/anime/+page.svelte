@@ -2,7 +2,7 @@
   import Seo from '$lib/Seo.svelte';
   import ProfileAnimeList from '$lib/components/profile/ProfileAnimeList.svelte';
   import ProfileWorkList from '$lib/components/profile/ProfileWorkList.svelte';
-  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
   import { ProfileListBloc } from './ProfileList.bloc.svelte';
   import type { MediaListBloc } from '$lib/components/profile/MediaList.bloc.svelte';
 
@@ -41,10 +41,10 @@
 
 <div class="profile-list">
   <div class="medium-row">
-    <Tabs
+    <ChipGroup
       items={bloc.tabs}
       value={bloc.medium}
-      onChange={(value) => bloc.select(value)}
+      onSelect={(value) => bloc.select(value)}
       variant="segmented"
       ariaLabel="Anime or manga"
     />

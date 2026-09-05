@@ -77,7 +77,7 @@
   ></button>
 
   <div
-    class="calendar-popover"
+    class="calendar-popover weeb-floating"
     use:clickOutside={{ handler: () => bloc.closePopover(), ignore: () => buttonRef }}
     use:anchoredPosition={{
       anchor: () => buttonRef,
@@ -123,17 +123,17 @@
 <style>
   /* Viewport coordinates: `anchoredPosition` sets top/left as a fixed element,
      which is why no scroll offset belongs anywhere near this. */
+  /* This was the one surface already drawn correctly, so `.weeb-floating` is
+     its values -- ground, hairline, radius-lg, --weeb-shadow-dropdown -- lifted
+     out for the other six to share. It outranks a menu, so it takes the popover
+     layer rather than the dropdown one. */
   .calendar-popover {
     position: fixed;
-    z-index: 50;
+    z-index: var(--weeb-z-popover);
     width: 420px;
     max-height: 70vh;
     overflow-y: auto;
     padding: 12px;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg);
-    box-shadow: var(--weeb-shadow-dropdown);
     transition: background 0.3s, border-color 0.3s;
   }
 

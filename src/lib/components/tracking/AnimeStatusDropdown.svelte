@@ -71,7 +71,7 @@
     use:portalMenu
     use:clickOutside={{ handler: () => bloc.closeMenu(), ignore: () => buttonElement }}
     use:anchoredPosition={{ anchor: () => buttonElement, minWidth: 180, margin: 8 }}
-    class="asd-menu"
+    class="asd-menu weeb-floating"
     transition:scale={{ duration: 100, start: 0.95 }}
   >
     {#if showHeader}
@@ -204,16 +204,17 @@
     transform: rotate(180deg);
   }
 
+  /* Ground, border, radius and shadow are `.weeb-floating`. This used to write
+     out the literal value of --weeb-shadow-dropdown and sit at z-index 9999 --
+     which put a status menu above the modal layer, so a menu left open behind a
+     dialog painted over it. It is a menu anchored to a control, so it takes the
+     dropdown layer like every other one. */
   .asd-menu {
     position: fixed;
     min-width: 180px;
     max-height: calc(100vh - 16px);
     overflow-y: auto;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
-    box-shadow: 0 8px 24px oklch(0% 0 0 / 0.4);
-    z-index: 9999;
+    z-index: var(--weeb-z-dropdown);
     padding: 4px;
   }
 
@@ -250,11 +251,15 @@
     color: var(--weeb-accent-text);
     font-weight: 600;
   }
+  /* The destructive row in a menu is red TEXT on the shared red tint, never a
+     filled red button -- see DESIGN_SYSTEM's "Destructive actions". The hover
+     wash is --weeb-red-tint, the same 12% every other red ground uses; it was
+     mixed here by hand at 10%. */
   .asd-menu-item--danger {
     color: var(--weeb-red);
   }
   .asd-menu-item--danger:hover {
-    background: color-mix(in oklch, var(--weeb-red), transparent 90%);
+    background: var(--weeb-red-tint);
     color: var(--weeb-red);
   }
 

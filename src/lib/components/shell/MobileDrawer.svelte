@@ -3,6 +3,7 @@
   import { fade, fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import ProfileAvatar from '$lib/components/profile/ProfileAvatar.svelte';
+  import { dialogSurface } from '$lib/actions/dialog';
   import { MobileDrawerBloc } from './MobileDrawer.bloc.svelte';
 
   let { bloc: injected = undefined }: { bloc?: MobileDrawerBloc } = $props();
@@ -13,80 +14,29 @@
 
   const version = __APP_VERSION__;
 
-  // The page behind a modal surface must not scroll with it. The bloc owns
-  // the pin; this is the subscription that drives it, and the teardown that
-  // guarantees the body is released even if the drawer is destroyed open.
-  $effect(() => {
-    bloc.isOpen;
-    bloc.syncBodyScroll();
-
-    return () => bloc.releaseBodyScroll();
-  });
-
-  // Focus was never moved into the panel, so a keyboard user tabbed through
-  // the page behind an open drawer and Escape dropped them at the top of the
-  // document. This puts focus on the close button, keeps Tab inside the panel,
-  // and hands focus back to whatever opened it -- the hamburger.
-  function trapFocus(node: HTMLElement) {
-    const opener = document.activeElement as HTMLElement | null;
-    const SELECTOR =
-      'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
-
-    const focusable = () =>
-      [...node.querySelectorAll<HTMLElement>(SELECTOR)].filter(
-        (el) => el.offsetParent !== null || el === document.activeElement,
-      );
-
-    (node.querySelector<HTMLElement>('.drawer-close') ?? node).focus();
-
-    function onKeydown(event: KeyboardEvent) {
-      if (event.key !== 'Tab') return;
-      const items = focusable();
-      if (items.length === 0) return;
-
-      const first = items[0];
-      const last = items[items.length - 1];
-
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    node.addEventListener('keydown', onKeydown);
-
-    return {
-      destroy() {
-        node.removeEventListener('keydown', onKeydown);
-        // Only if the opener is still in the document; a logout navigates away.
-        if (opener?.isConnected) opener.focus();
-      },
-    };
-  }
-
   function handleBackdropClick(event: MouseEvent) {
     if (event.target === event.currentTarget) {
       bloc.close();
     }
   }
-
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      bloc.handleEscape();
-    }
-  }
 </script>
-
-<svelte:window onkeydown={handleKeydown} />
 
 {#if bloc.isOpen}
   <!-- Backdrop is purely presentational; click-to-dismiss has keyboard
-       equivalents via the Escape handler and the close button. -->
+       equivalents via the Escape handler and the close button.
+
+       The portal, the focus trap, the Escape key and the page pin are all
+       `dialogSurface` -- the same action `Modal` uses. The drawer used to write
+       its own of each, which is two focus traps to keep correct forever. Focus
+       still lands on the close button rather than the logo link above it, and
+       the pin still comes through the bloc so a story can pass a no-op. -->
   <div
-    class="drawer-backdrop"
+    class="weeb-overlay-backdrop drawer-backdrop"
+    use:dialogSurface={{
+      onClose: () => bloc.close(),
+      initialFocus: '.drawer-close',
+      scrollLock: bloc.scrollLock
+    }}
     onclick={handleBackdropClick}
     role="presentation"
     transition:fade={{ duration: 200, easing: cubicOut }}
@@ -100,7 +50,6 @@
       aria-modal="true"
       aria-label="Menu"
       tabindex="-1"
-      use:trapFocus
       transition:fly={{ x: '100%', duration: 280, easing: cubicOut, opacity: 1 }}
     >
       <!-- Header -->
@@ -250,13 +199,12 @@
 {/if}
 
 <style>
+  /* Inset, scrim and blur come from `.weeb-overlay-backdrop`, which is the same
+     backdrop Modal uses -- this file used to spell the identical two values out
+     a second time. The layer is the drawer's own: over the page, under a modal,
+     which is what lets the login dialog open from inside the drawer. */
   .drawer-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    background: oklch(0% 0 0 / 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    z-index: var(--weeb-z-drawer);
   }
 
   .drawer-panel {

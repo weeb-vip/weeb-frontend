@@ -1,10 +1,24 @@
+<script lang="ts" module>
+  /**
+   * 440 / 560 / 720. There used to be no size API at all: the card was 440px
+   * and the escape hatch was silently dead -- `:global(.weeb-modal-card)`
+   * declares `max-width` at the same specificity a utility class does and wins
+   * on order, so `className="max-w-2xl"` measured 440px and the image cropper
+   * was squeezed into a dialog meant for a sign-in form.
+   */
+  export type ModalSize = 'sm' | 'md' | 'lg';
+</script>
+
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { dialogSurface } from '$lib/actions/dialog';
 
   let {
     isOpen = false,
     showCloseButton = true,
     backdropCloseable = true,
+    /** `sm` is a form; `md` a list; `lg` something you work inside, like the cropper. */
+    size = 'sm',
     className = '',
     /** Asked to dismiss -- by the close button, the backdrop, or Escape. */
     onClose,
@@ -13,6 +27,7 @@
     isOpen?: boolean;
     showCloseButton?: boolean;
     backdropCloseable?: boolean;
+    size?: ModalSize;
     className?: string;
     onClose?: () => void;
     children?: Snippet;
@@ -35,101 +50,27 @@
       closeModal();
     }
   }
-
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && isOpen) {
-      closeModal();
-    }
-  }
-
-  // Prevent body scroll while the dialog is up, and always give it back --
-  // including when the component is destroyed mid-open.
-  $effect(() => {
-    if (!isOpen) return;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  });
-
-  // Portal action - moves element to body level
-  function portal(node: HTMLElement) {
-    document.body.appendChild(node);
-
-    return {
-      destroy() {
-        if (node.parentNode) {
-          node.parentNode.removeChild(node);
-        }
-      }
-    };
-  }
-
-  const FOCUSABLE = [
-    'a[href]', 'button:not([disabled])', 'input:not([disabled])',
-    'select:not([disabled])', 'textarea:not([disabled])', '[tabindex]:not([tabindex="-1"])'
-  ].join(',');
-
-  function focusable(node: HTMLElement): HTMLElement[] {
-    return Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE))
-      .filter((el) => el.offsetParent !== null || el === document.activeElement);
-  }
-
-  // Trap Tab focus within the modal, move focus in on open, and restore it on
-  // close so keyboard users can't tab into the (inert) page behind the dialog.
-  function trapFocus(node: HTMLElement) {
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-
-    // Defer initial focus to the next frame. The `portal` action on the parent
-    // backdrop runs *after* this one (children mount first) and appendChild's
-    // the subtree to <body> — moving a node blurs whatever we focused, kicking
-    // focus back to <body>. Focusing after the move lands is what makes it stick.
-    const raf = requestAnimationFrame(() => {
-      const initial = focusable(node)[0] ?? node;
-      initial.focus();
-    });
-
-    function onKeydown(e: KeyboardEvent) {
-      if (e.key !== 'Tab') return;
-      const items = focusable(node);
-      if (items.length === 0) {
-        e.preventDefault();
-        return;
-      }
-      const first = items[0];
-      const last = items[items.length - 1];
-      const active = document.activeElement;
-
-      if (e.shiftKey && (active === first || !node.contains(active))) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && active === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-
-    node.addEventListener('keydown', onKeydown);
-
-    return {
-      destroy() {
-        cancelAnimationFrame(raf);
-        node.removeEventListener('keydown', onKeydown);
-        // Restore focus to whatever opened the modal.
-        previouslyFocused?.focus?.();
-      }
-    };
-  }
 </script>
-
-<svelte:window onkeydown={handleKeydown} />
 
 {#if isOpen && mounted}
   <!-- Backdrop is purely presentational; click-to-dismiss has a keyboard
-       equivalent via the window-level Escape handler above. -->
-  <div use:portal class="weeb-modal-backdrop" onclick={handleBackdropClick} role="presentation">
+       equivalent via the Escape handling inside `dialogSurface`. That action is
+       the portal, the focus trap, the Escape key and the page pin -- the same
+       four MobileDrawer gets, from the same place. -->
+  <div
+    use:dialogSurface={{ onClose: closeModal }}
+    class="weeb-overlay-backdrop weeb-modal-backdrop"
+    onclick={handleBackdropClick}
+    role="presentation"
+  >
     <div class="weeb-modal-container">
-      <div class="weeb-modal-card {className}" use:trapFocus tabindex="-1" role="dialog" aria-modal="true" aria-label="Dialog">
+      <div
+        class="weeb-modal-card weeb-floating weeb-floating--dialog weeb-modal-card--{size} {className}"
+        tabindex="-1"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Dialog"
+      >
         {#if showCloseButton}
           <button type="button" class="weeb-modal-close" onclick={closeModal} aria-label="Close modal">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -144,21 +85,18 @@
 {/if}
 
 <style>
-  /* Global styles required for portal - elements are moved to document.body */
+  /* Global styles required for portal - elements are moved to document.body.
+     The scrim, blur and inset come from `.weeb-overlay-backdrop`. */
   :global(.weeb-modal-backdrop) {
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    background: oklch(0% 0 0 / 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    z-index: var(--weeb-z-modal);
     animation: weeb-modal-fadeIn 0.2s ease;
   }
 
+  /* No layer of its own: it is a child of the backdrop, which already IS the
+     modal layer, and the 201 it used to carry said otherwise for no reason. */
   :global(.weeb-modal-container) {
     position: fixed;
     inset: 0;
-    z-index: 201;
     overflow-y: auto;
     display: flex;
     min-height: 100%;
@@ -167,16 +105,19 @@
     padding: 16px;
   }
 
+  /* Ground, border, radius and shadow all come from `.weeb-floating`; the
+     dialog modifier is what keeps the card on --weeb-bg-elevated, so the
+     --weeb-surface form fields inside it stay visible. What is left here is
+     the card's own geometry. */
   :global(.weeb-modal-card) {
     position: relative;
     width: 100%;
-    max-width: 440px;
-    background: var(--weeb-bg-elevated);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg);
-    box-shadow: 0 8px 32px oklch(0% 0 0 / 0.4), 0 2px 8px oklch(0% 0 0 / 0.3);
     animation: weeb-modal-slideUp 0.25s ease;
   }
+
+  :global(.weeb-modal-card--sm) { max-width: 440px; }
+  :global(.weeb-modal-card--md) { max-width: 560px; }
+  :global(.weeb-modal-card--lg) { max-width: 720px; }
 
   :global(.weeb-modal-close) {
     position: absolute;
@@ -214,7 +155,10 @@
   }
 
   @media (max-width: 480px) {
-    :global(.weeb-modal-card) {
+    /* Compounded with `.weeb-floating` deliberately: the recipe lives in a
+       stylesheet whose load order relative to this component's chunk is not
+       guaranteed, and a media query buys no specificity. */
+    :global(.weeb-modal-card.weeb-floating) {
       max-width: 100%;
       border-radius: var(--weeb-radius-lg) var(--weeb-radius-lg) 0 0;
       align-self: flex-end;

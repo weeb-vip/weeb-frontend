@@ -8,8 +8,7 @@
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
-  import Tabs, { type TabItem } from '$lib/components/primitives/Tabs.svelte';
-  import FilterPills from '$lib/components/primitives/FilterPills.svelte';
+  import ChipGroup, { type ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
   import { SeasonPageBloc, type SeasonalAnime } from './SeasonPage.bloc.svelte';
 
   /**
@@ -60,16 +59,16 @@
 
   $effect(() => bloc.init());
 
-  /* The season strip, as Tabs items. The emoji rides along in a lookup rather
-     than on the item, because TabItem's `icon` is a FontAwesome definition and
-     these are characters. */
-  const seasonItems = $derived<TabItem[]>(
+  /* The season strip, as ChipGroup items. The emoji rides along in a lookup
+     rather than on the item, because ChipGroupItem's `icon` is a FontAwesome
+     definition and these are characters. */
+  const seasonItems = $derived<ChipGroupItem[]>(
     bloc.seasonTabs.map((tab) => ({ value: tab.key, label: tab.label }))
   );
   const seasonIcons = $derived(new Map(bloc.seasonTabs.map((tab) => [tab.key, tab.icon])));
   const activeSeasonKey = $derived(bloc.seasonTabs.find((tab) => tab.active)?.key ?? '');
 
-  const yearItems = $derived<TabItem[]>(
+  const yearItems = $derived<ChipGroupItem[]>(
     bloc.yearOptions.map((option) => ({ value: option.key, label: String(option.year) }))
   );
   const activeYearKey = $derived(bloc.yearOptions.find((option) => option.active)?.key ?? '');
@@ -101,8 +100,8 @@
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path d="M9 10h.01M15 10h.01M9.5 15.5a3.5 3.5 0 0 1 5 0"/></svg>
 {/snippet}
 
-{#snippet seasonIcon(item: TabItem)}
-  <span class="season-tab-icon" aria-hidden="true">{seasonIcons.get(item.value) ?? ''}</span>
+{#snippet seasonIcon(item: ChipGroupItem)}
+  <span class="season-tab-icon" aria-hidden="true">{seasonIcons.get(item.value ?? '') ?? ''}</span>
 {/snippet}
 
 {#snippet brokenCircle()}
@@ -123,15 +122,15 @@
       Not a tablist. These navigate to /season/<key>; they reveal no panel, so
       tab/tablist semantics would misdescribe them -- and `role="tab"` also
       overrides the implicit button role, which is what an assistive tech (and
-      season.spec.ts) looks for. Hence Tabs' `mode="toggle"`, which leaves plain
-      buttons, plus `activeMarker="current"` for the aria-current that marks the
-      season being shown.
+      season.spec.ts) looks for. Hence ChipGroup's `mode="toggle"`, which leaves
+      plain buttons, plus `activeMarker="current"` for the aria-current that
+      marks the season being shown.
     -->
     <div class="season-tabs">
-      <Tabs
+      <ChipGroup
         items={seasonItems}
         value={activeSeasonKey}
-        onChange={(key) => bloc.goToSeason(key)}
+        onSelect={(key) => bloc.goToSeason(key)}
         variant="segmented"
         mode="toggle"
         activeMarker="current"
@@ -154,10 +153,10 @@
       <!-- Same strip, same primitive: this was a third copy of the segmented
            look. Mono digits are the one thing it keeps of its own. -->
       <div class="year-selector">
-        <Tabs
+        <ChipGroup
           items={yearItems}
           value={activeYearKey}
-          onChange={(key) => bloc.goToSeason(key)}
+          onSelect={(key) => bloc.goToSeason(key)}
           variant="segmented"
           mode="toggle"
           activeMarker="current"
@@ -224,18 +223,18 @@
   </div>
 
   {#if bloc.allTags.length > 0}
-    <!-- Multi-select: every selected tag has to match, so this is FilterPills,
-         not Tabs. /search's genre facets are the same row and the same
-         component. -->
+    <!-- Multi-select: every selected tag has to match, so `select="multi"`.
+         /search's genre facets are the same row and the same component. -->
     <div class="tag-filter">
-      <FilterPills
+      <ChipGroup
+        select="multi"
         items={bloc.visibleTags.map((facet) => ({
           value: facet.tag,
           label: facet.tag,
           count: facet.count,
         }))}
         isSelected={(tag) => bloc.isTagSelected(tag)}
-        onToggle={(tag) => bloc.toggleTag(tag)}
+        onSelect={(tag) => bloc.toggleTag(tag)}
         clear={bloc.hasTagFilter ? { onClear: () => bloc.clearTags() } : undefined}
         more={bloc.hasHiddenTags
           ? {
@@ -341,7 +340,7 @@
     flex-wrap: wrap;
   }
 
-  /* Both strips are Primitives/Tabs now; these wrappers only place them. */
+  /* Both strips are Primitives/ChipGroup now; these wrappers only place them. */
   .season-tabs {
     display: flex;
     min-width: 0;
@@ -388,7 +387,7 @@
 
   /* Years read as data, so they keep the mono face the rest of this page's
      figures use. Everything else about the strip is the primitive's. */
-  .year-selector :global(.tab) {
+  .year-selector :global(.chipgroup--segmented .chip.cg-item) {
     font-family: var(--weeb-font-mono);
     font-weight: 600;
   }
@@ -562,8 +561,8 @@
   }
 
   /* ── Tag filter ──
-     The row itself is Primitives/FilterPills, which also carries the clear and
-     "+N more" pills. The old copy here hardcoded `oklch(100% 0 0 / 0.2)` on the
+     The row itself is Primitives/ChipGroup, which also carries the clear and
+     "+N more" chips. The old copy here hardcoded `oklch(100% 0 0 / 0.2)` on the
      selected count badge, which the design system forbids outright. */
   .tag-filter {
     margin-bottom: 24px;

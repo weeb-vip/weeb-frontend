@@ -63,6 +63,37 @@
   --weeb-amber:          oklch(72% 0.14 85);
   --weeb-red:            oklch(60% 0.18 25);
 
+  /* ── Severity tints ──
+     ONE recipe for "this box carries a status colour", derived from the status
+     token itself: the hue at 12% is the ground, at 45% the hairline, at 20% a
+     focus ring. There used to be two palettes inside the same toast stack --
+     ErrorBanner mixed 12%/45% off the tokens while AnimeToast hardcoded
+     oklch(62% 0.17 145 / 0.1) green, oklch(75% 0.15 80 / …) amber and
+     oklch(62% 0.14 300 / …) violet: different alpha stops AND different hues
+     from the tokens they were meant to match. FormInput had the same problem in
+     miniature. Reference these; never mix a fresh one. */
+  --weeb-accent-tint:    color-mix(in oklch, var(--weeb-accent) 12%, transparent);
+  --weeb-accent-edge:    color-mix(in oklch, var(--weeb-accent) 45%, transparent);
+  --weeb-accent-ring:    color-mix(in oklch, var(--weeb-accent) 20%, transparent);
+  --weeb-red-tint:       color-mix(in oklch, var(--weeb-red) 12%, transparent);
+  --weeb-red-edge:       color-mix(in oklch, var(--weeb-red) 45%, transparent);
+  --weeb-red-ring:       color-mix(in oklch, var(--weeb-red) 20%, transparent);
+  --weeb-amber-tint:     color-mix(in oklch, var(--weeb-amber) 12%, transparent);
+  --weeb-amber-edge:     color-mix(in oklch, var(--weeb-amber) 45%, transparent);
+  --weeb-green-tint:     color-mix(in oklch, var(--weeb-green) 12%, transparent);
+  --weeb-green-edge:     color-mix(in oklch, var(--weeb-green) 45%, transparent);
+
+  /* ── Layering ──
+     Five floating surfaces used to pick five numbers with nothing to compare
+     them against -- 50, 70, 150, 200 and one 9999 that put a status menu above
+     the modal layer. These are the whole scale; a floating surface takes the
+     token for what it IS, never a literal. */
+  --weeb-z-dropdown:     50;   /* menus anchored to a control: Select, status, profile */
+  --weeb-z-popover:      60;   /* anchored panels that outrank a menu */
+  --weeb-z-drawer:       100;  /* the mobile drawer: over the page, under a dialog */
+  --weeb-z-modal:        200;  /* the modal backdrop and its card */
+  --weeb-z-toast:        300;  /* the toast stack, readable over everything else */
+
   /* ── Typography ── */
   --weeb-font:           -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --weeb-font-mono:      'JetBrains Mono', ui-monospace, Menlo, monospace;
@@ -124,6 +155,12 @@
   --weeb-panel-blur:     blur(28px) saturate(0.9);
   --weeb-glass-blur:     blur(24px) saturate(1.4);
 
+  /* The ground behind a dialog. Modal and MobileDrawer each wrote these two
+     values out by hand, identically; `.weeb-overlay-backdrop` below is the one
+     backdrop and these are what it is made of. */
+  --weeb-overlay-scrim:  oklch(0% 0 0 / 0.6);
+  --weeb-overlay-blur:   blur(4px);
+
   /* ── Spacing (section padding) ── */
   --weeb-section-px:     48px;
   --weeb-section-py:     40px;
@@ -145,4 +182,182 @@
     --weeb-section-px: 16px;
     --weeb-section-py: 24px;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Recipes
+
+   Three shapes that more than one component has to draw, and that had drifted
+   into a copy per component. Reusing the tokens is not the same as reusing the
+   rule -- five files agreeing about a shadow are still five shadows -- so the
+   rule itself lives here, in the one stylesheet that is always loaded, and a
+   component composes the class rather than restating it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── The floating surface ──
+   Every menu, popover, toast and dialog card is the same object at a different
+   size: elevated ground, hairline border, the large radius, one shadow. There
+   were four shadows and three radii across seven surfaces before this. */
+.weeb-floating {
+  background: var(--weeb-surface);
+  border: 1px solid var(--weeb-border);
+  border-radius: var(--weeb-radius-lg);
+  box-shadow: var(--weeb-shadow-dropdown);
+}
+
+/* A dialog card is the same recipe on the darker ground, because it is the one
+   floating surface that CONTAINS form fields -- and a field's own background is
+   --weeb-surface, which would vanish into it. */
+.weeb-floating--dialog {
+  background: var(--weeb-bg-elevated);
+}
+
+/* ── The dialog backdrop ──
+   Modal and MobileDrawer are two presentations over one dialog; this is the
+   half of it that is CSS. The z-index is not here: each surface takes its own
+   layer token, so the drawer sits under a modal rather than beside it. */
+.weeb-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--weeb-overlay-scrim);
+  backdrop-filter: var(--weeb-overlay-blur);
+  -webkit-backdrop-filter: var(--weeb-overlay-blur);
+}
+
+/* ── The form field ──
+   44px, radius 8, 15px text, a 1.5px border. FormInput used to own these rules
+   privately, which is why the settings page grew a 42px/rounded-md/16px/1px
+   <select> and a 6px/16px <textarea> beside it: three field languages in one
+   form. They live here so FormInput, FormTextarea and Select's `field` variant
+   are the same field. */
+.weeb-form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.weeb-form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--weeb-fg-secondary);
+  letter-spacing: 0.01em;
+  margin-bottom: 6px;
+}
+
+.weeb-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.weeb-form-input,
+.weeb-form-textarea {
+  width: 100%;
+  background: var(--weeb-surface);
+  border: 1.5px solid var(--weeb-border);
+  border-radius: var(--weeb-radius);
+  font-family: var(--weeb-font);
+  font-size: 15px;
+  color: var(--weeb-fg);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.weeb-form-input {
+  height: 44px;
+  padding: 0 16px;
+}
+
+/* The same field, given more than one line: the horizontal padding matches and
+   the vertical padding is what centres a single line at 44px. */
+.weeb-form-textarea {
+  padding: 12px 16px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 76px;
+}
+
+.weeb-form-input::placeholder,
+.weeb-form-textarea::placeholder {
+  color: var(--weeb-fg-muted);
+}
+
+.weeb-form-input:focus,
+.weeb-form-textarea:focus {
+  border-color: var(--weeb-accent);
+  box-shadow: 0 0 0 3px var(--weeb-accent-ring);
+}
+
+.weeb-form-input.has-icon {
+  padding-left: 40px;
+}
+
+.weeb-form-input.has-toggle {
+  padding-right: 44px;
+}
+
+.weeb-form-input.has-error,
+.weeb-form-textarea.has-error {
+  border-color: var(--weeb-red);
+  background: var(--weeb-red-tint);
+}
+
+.weeb-form-input.has-error:focus,
+.weeb-form-textarea.has-error:focus {
+  border-color: var(--weeb-red);
+  box-shadow: 0 0 0 3px var(--weeb-red-ring);
+}
+
+.weeb-form-input.is-disabled,
+.weeb-form-textarea.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.weeb-input-icon-left {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  color: var(--weeb-fg-muted);
+}
+
+.weeb-password-toggle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--weeb-fg-muted);
+  transition: color 0.2s;
+  padding: 0;
+}
+
+.weeb-password-toggle:hover {
+  color: var(--weeb-fg-secondary);
+}
+
+.weeb-form-error {
+  font-size: 12px;
+  color: var(--weeb-red);
+  margin-top: 4px;
+}
+
+/* A live character count under a field. Mono and tabular so the number does not
+   shuffle its own width as it counts. */
+.weeb-form-count {
+  margin-top: 4px;
+  text-align: right;
+  font-size: 12px;
+  font-family: var(--weeb-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--weeb-fg-muted);
 }

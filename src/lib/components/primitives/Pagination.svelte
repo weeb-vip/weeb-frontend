@@ -9,6 +9,8 @@
    *
    * Presentational -- no bloc. The owner of the query owns the page number.
    */
+  import Select from './Select.svelte';
+
   let {
     page,
     totalPages,
@@ -30,18 +32,12 @@
     label?: string;
   } = $props();
 
-  /**
-   * Two paginators on one page would otherwise collide on the select's id, and
-   * a label pointing at the wrong control is worse than no label.
-   */
-  const selectId = $props.id();
-
   const hasPrev = $derived(page > 0);
   const hasNext = $derived(page + 1 < totalPages);
   const showPerPage = $derived(perPage !== undefined && perPageOptions.length > 0);
 
-  function handlePerPage(event: Event & { currentTarget: HTMLSelectElement }): void {
-    const next = Number(event.currentTarget.value);
+  function handlePerPage(detail: { value: string | number }): void {
+    const next = Number(detail.value);
     if (!Number.isNaN(next)) onPerPageChange?.(next);
   }
 </script>
@@ -85,12 +81,18 @@
 
   {#if showPerPage}
     <div class="pg-right">
-      <label class="pg-per-label" for={selectId}>Show</label>
-      <select id={selectId} class="pg-per-select" value={perPage} onchange={handlePerPage}>
-        {#each perPageOptions as opt (opt)}
-          <option value={opt}>{opt}</option>
-        {/each}
-      </select>
+      <span class="pg-per-label">Show</span>
+      <!-- `Select`, not a native <select>. This primitive was the last place in
+           the app that dropped a white OS menu onto a dark page, and it did it
+           on every paginated list in the product. The trigger is a button, so
+           the visible "Show … per page" words can no longer be a <label for>;
+           the control names itself instead. -->
+      <Select
+        value={perPage ?? ''}
+        options={perPageOptions.map((opt) => ({ value: opt, label: String(opt) }))}
+        ariaLabel="Results per page"
+        onChange={handlePerPage}
+      />
       <span class="pg-per-label">per page</span>
     </div>
   {/if}
@@ -138,8 +140,10 @@
     color: var(--weeb-fg);
     background: var(--weeb-surface-hover);
   }
+  /* 0.5, which is what every other disabled control in the app sits at. This
+     was the one exception at 0.4. */
   .pg-btn:disabled {
-    opacity: 0.4;
+    opacity: 0.5;
     cursor: not-allowed;
   }
   .pg-btn:focus-visible {
@@ -158,30 +162,11 @@
     font-size: 0.75rem;
     color: var(--weeb-fg-muted);
   }
-  .pg-per-select {
-    height: 32px;
-    padding: 0 28px 0 10px;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
-    color: var(--weeb-fg);
-    font-size: 0.8rem;
-    font-family: var(--weeb-font-mono, monospace);
+  /* Select brings its own pill; the only thing left to say is that the count
+     inside it is a number, and reads as one. */
+  .pg-right :global(.wv-select-label) {
+    font-family: var(--weeb-font-mono);
     font-variant-numeric: tabular-nums;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    transition: border-color 0.15s;
-  }
-  .pg-per-select:focus {
-    outline: none;
-    border-color: var(--weeb-accent);
-  }
-  .pg-per-select option {
-    background: var(--weeb-surface);
-    color: var(--weeb-fg);
   }
 
   /* Narrow: the row stacks and the button labels drop, leaving the two arrows

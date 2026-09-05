@@ -109,107 +109,11 @@
   {/if}
 </div>
 
-<style>
-  /* Global styles for portal compatibility */
-  :global(.weeb-form-field) {
-    display: flex;
-    flex-direction: column;
-  }
-
-  :global(.weeb-form-label) {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--weeb-fg-secondary);
-    letter-spacing: 0.01em;
-    margin-bottom: 6px;
-  }
-
-  :global(.weeb-input-wrapper) {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  :global(.weeb-form-input) {
-    width: 100%;
-    height: 44px;
-    padding: 0 16px;
-    background: var(--weeb-surface);
-    border: 1.5px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
-    font-size: 15px;
-    color: var(--weeb-fg);
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  :global(.weeb-form-input::placeholder) {
-    color: var(--weeb-fg-muted);
-  }
-
-  :global(.weeb-form-input:focus) {
-    border-color: var(--weeb-accent);
-    box-shadow: 0 0 0 3px color-mix(in oklch, var(--weeb-accent) 20%, transparent);
-  }
-
-  :global(.weeb-form-input.has-icon) {
-    padding-left: 40px;
-  }
-
-  :global(.weeb-form-input.has-toggle) {
-    padding-right: 44px;
-  }
-
-  :global(.weeb-form-input.has-error) {
-    border-color: var(--weeb-red);
-    background: oklch(20% 0.03 25);
-  }
-
-  :global(.weeb-form-input.has-error:focus) {
-    border-color: var(--weeb-red);
-    box-shadow: 0 0 0 3px oklch(40% 0.1 25 / 0.2);
-  }
-
-  :global(.weeb-form-input.is-disabled) {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  :global(.weeb-input-icon-left) {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    pointer-events: none;
-    color: var(--weeb-fg-muted);
-  }
-
-  :global(.weeb-password-toggle) {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--weeb-fg-muted);
-    transition: color 0.2s;
-    padding: 0;
-  }
-
-  :global(.weeb-password-toggle:hover) {
-    color: var(--weeb-fg-secondary);
-  }
-
-  :global(.weeb-form-error) {
-    font-size: 12px;
-    color: var(--weeb-red);
-    margin-top: 4px;
-  }
-</style>
+<!-- No <style> block. The field recipe -- .weeb-form-field / -label /
+     .weeb-input-wrapper / .weeb-form-input and its modifiers / .weeb-input-icon-left /
+     .weeb-password-toggle / .weeb-form-error -- lives in src/styles/design-tokens.css,
+     because FormInput is no longer the only thing that draws a field: FormTextarea and
+     Select's `field` variant are the same 44px / radius-8 / 15px / 1.5px control, and a
+     rule owned privately by one component is how the settings form ended up with three
+     of them. The error tint is --weeb-red-tint / --weeb-red-ring there, not the
+     hardcoded oklch(20% 0.03 25) and oklch(40% 0.1 25 / 0.2) this file used to carry. -->

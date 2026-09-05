@@ -59,7 +59,7 @@ export const TouchLink: Story = {
   args: { label: 'Slice of Life', href: '/search?genre=Slice%20of%20Life', touch: true },
 };
 
-/** With an `onclick` it is a button. This is the shape Tabs and FilterPills need. */
+/** With an `onclick` it is a button. This is the shape `ChipGroup` builds its rows from. */
 export const Selectable: Story = {
   args: { label: 'Currently airing', onclick: () => {}, selected: true, count: 128, ariaPressed: true },
 };

@@ -5,7 +5,7 @@
   import { untrack } from 'svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import AnimeNews from '$lib/components/show/AnimeNews.svelte';
-  import Tabs, { type TabItem } from '$lib/components/primitives/Tabs.svelte';
+  import ChipGroup, { type ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
   import { AnimeNewsPageBloc, type AnimeNewsPageData } from './AnimeNewsPage.bloc.svelte';
 
   /**
@@ -35,7 +35,7 @@
   /* "All" is the empty value, so deselecting a category is just picking it.
      `--cat-*` are declared on .news-page below and inherit down into the
      buttons, so the accent resolves without the page knowing the category list. */
-  const categoryItems = $derived<TabItem[]>([
+  const categoryItems = $derived<ChipGroupItem[]>([
     { value: '', label: 'All', count: bloc.total },
     ...bloc.categories.map((c) => ({
       value: c,
@@ -129,19 +129,20 @@
   {:else}
     {#if bloc.showFilters}
       <!-- Single-select: one category at a time, "All" being none of them. So
-           Tabs' pill variant in toggle mode -- these set what the list shows
-           rather than revealing a panel, and stay plain buttons. Each category
-           carries its own colour through TabItem.accent, which draws the leading
-           dot and tints the selected wash; that is all `.chip.cat` ever did. -->
+           ChipGroup's pill variant in toggle mode -- these set what the list
+           shows rather than revealing a panel, and stay plain buttons. Each
+           category carries its own colour through ChipGroupItem.accent, which
+           draws the leading dot and tints the selected wash; that is all
+           `.chip.cat` ever did. The `.filters .chip` hook anime-news.spec.ts
+           selects on is `Chip`'s own class -- the items ARE chips now. -->
       <div class="filters">
-        <Tabs
+        <ChipGroup
           items={categoryItems}
           value={bloc.selected ?? ''}
-          onChange={(value) => bloc.selectCategory(value || null)}
+          onSelect={(value) => bloc.selectCategory(value || null)}
           variant="pill"
           mode="toggle"
           ariaLabel="Filter by category"
-          itemClass="chip"
         />
       </div>
     {/if}
@@ -301,8 +302,8 @@
   }
   .dot { color: var(--weeb-fg-muted); opacity: 0.6; }
 
-  /* The chips themselves are Primitives/Tabs' pill variant; this places the row
-     and, below 480px, makes it scroll rather than stack. */
+  /* The chips themselves are Primitives/ChipGroup's pill variant; this places
+     the row and, below 480px, makes it scroll rather than stack. */
   .filters { display: flex; min-width: 0; }
 
   .resultline {
@@ -377,8 +378,8 @@
     .news-page { padding-left: 16px; padding-right: 16px; }
     /* Chips scroll rather than wrap into a tall block that pushes the list off screen. */
     .filters { overflow-x: auto; padding-bottom: 3px; }
-    .filters :global(.tabs) { flex-wrap: nowrap; }
-    .filters :global(.tab) { flex: none; }
+    .filters :global(.chipgroup) { flex-wrap: nowrap; }
+    .filters :global(.cg-item) { flex: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {

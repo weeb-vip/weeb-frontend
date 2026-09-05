@@ -25,8 +25,11 @@
 />
 
 <style>
+  /* The top of the layering scale. A toast is a report on something the
+     reader just did, so it has to be readable over whatever is on top --
+     including a dialog, which at 150 against the modal layer's 200 it was not. */
   :global(.toaster-container) {
-    z-index: 150 !important;
+    z-index: var(--weeb-z-toast) !important;
   }
 
   /* Position below sticky nav */
@@ -43,17 +46,23 @@
     }
   }
 
-  /* ── Base toast (all toasts) ── */
+  /* ── Base toast (all toasts) ──
+     The floating-surface recipe, restated rather than composed: sonner owns
+     this element's class attribute and its own `[data-sonner-toast]` rules load
+     after ours, so these four have to carry `!important`. They are the same
+     four values `.weeb-floating` sets, read from the same tokens -- the shadow
+     was a bespoke two-layer one and the radius disagreed with the custom
+     toast's 14px. */
   :global([data-sonner-toast]) {
     background: var(--weeb-surface) !important;
     border: 1px solid var(--weeb-border) !important;
-    border-radius: var(--weeb-radius) !important;
+    border-radius: var(--weeb-radius-lg) !important;
+    box-shadow: var(--weeb-shadow-dropdown) !important;
     color: var(--weeb-fg) !important;
     font-family: var(--weeb-font) !important;
     font-size: 0.875rem !important;
     padding: 12px 16px !important;
     backdrop-filter: blur(20px) !important;
-    box-shadow: 0 8px 32px oklch(0% 0 0 / 0.4), 0 2px 8px oklch(0% 0 0 / 0.2) !important;
     width: 22rem !important;
     max-width: 22rem !important;
     min-width: 22rem !important;
@@ -63,15 +72,21 @@
   }
 
   /* ── Custom anime toasts ── */
+  /* Same surface as every other toast; only the padding differs, because the
+     content is a 48px poster row rather than a line of text. The 14px radius
+     that used to be here was the third radius in a stack of two. */
   :global([data-sonner-toast][data-custom="true"]) {
-    background: var(--weeb-surface) !important;
-    border: 1px solid var(--weeb-border) !important;
-    border-radius: 14px !important;
     padding: 10px 14px !important;
     width: 22rem !important;
     max-width: 22rem !important;
     min-width: 22rem !important;
   }
+
+  /* ── Severity ──
+     The shared severity recipe, expressed as a 3px rule down the leading edge
+     rather than as a tint: the toast is already a card on its own ground, so a
+     full tint would restate it. Same tokens as ErrorBanner's grounds and
+     AnimeToast's indicator rings -- one palette across the whole stack. */
 
   /* ── Error toast ── */
   :global([data-sonner-toast][data-type="error"]) {

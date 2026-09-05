@@ -137,14 +137,14 @@ be the same component.
 | `--weeb-pill-min-height` | 32px | Dense filter rows |
 | `--weeb-pill-min-height-touch` | 44px | A strip that is a page's primary way through it |
 
-Two heights, and only two. `Tabs` reaches the taller one with `size="touch"` —
-which is what the season strips and the homepage tag row use.
+Two heights, and only two. `ChipGroup` reaches the taller one with
+`size="touch"` — which is what the season strips and the homepage tag row use.
 
 ### Count badge
 
-One treatment, shared by `Tabs` and `FilterPills`: mono, tabular numerals, on
-`--weeb-surface-hover`, tinted with the accent while its pill is selected, and
-transparent at `0` so an empty facet recedes.
+One treatment, `Chip`'s: mono, tabular numerals, on `--weeb-surface-hover`,
+tinted with the chip's own colour while it is selected, and transparent at `0`
+so an empty facet recedes.
 
 | Token | Value |
 |---|---|
@@ -155,6 +155,46 @@ transparent at `0` so an empty facet recedes.
 
 ---
 
+## Severity tints
+
+One recipe for "this box carries a status colour", derived from the status
+token itself. Never mix a fresh one, and never write the alpha stops by hand:
+`AnimeToast` used to hardcode `oklch(62% 0.17 145 / 0.1)` where `--weeb-green`
+is `oklch(65% 0.15 155)`, which put two green palettes inside one toast stack.
+
+| Stop | Token | Value | Usage |
+|---|---|---|---|
+| Ground | `--weeb-<hue>-tint` | the hue at 12% | The box's own background |
+| Hairline | `--weeb-<hue>-edge` | the hue at 45% | Its border, or a ring |
+| Ring | `--weeb-<hue>-ring` | the hue at 20% | A 3px focus glow (accent, red) |
+
+`<hue>` is `accent`, `red`, `amber` or `green`. Three surfaces express the same
+severities three ways and all three read from these: `ErrorBanner` as a tinted
+box, `AnimeToast` as a tinted indicator ring, `GlobalToaster` as a 3px rule down
+the toast's leading edge. Which shape is right depends on what the surface
+already is -- a toast is a card already, so it takes the edge, not a full tint.
+
+---
+
+## Destructive actions
+
+Red is not one treatment. Which one is right is decided by where the decision
+is being made, not by how bad it is:
+
+| Context | Treatment | Example |
+|---|---|---|
+| A committed action in a form or dialog footer | Filled red `Button` | Delete account |
+| A row in a menu | Red **text**, `--weeb-red-tint` on hover | "Remove from list" in `AnimeStatusDropdown` |
+| A row that only turns red under the pointer | Neutral at rest, `--weeb-red` on hover/focus | Sign out in `MobileDrawer` |
+| Something that already failed | `ErrorBanner severity="error"` | An upload that did not go through |
+
+A menu row is never a filled red button: a menu is a list of peers, and filling
+one of them makes the destructive option the most salient thing on screen --
+which is the opposite of what a destructive option should be. Equally, a failure
+box is never a hand-mixed red: it is `ErrorBanner`, which owns the 12%/45% pair.
+
+---
+
 ## Shadows
 
 | Token | Value |
@@ -162,6 +202,60 @@ transparent at `0` so an empty facet recedes.
 | `--weeb-shadow-card` | `0 12px 32px oklch(0% 0 0 / 0.4)` |
 | `--weeb-shadow-poster` | `0 20px 60px oklch(0% 0 0 / 0.5)` |
 | `--weeb-shadow-dropdown` | `0 8px 24px oklch(0% 0 0 / 0.4)` |
+
+---
+
+## Layering
+
+Every floating surface takes a layer token for what it **is**. There is no
+sixth number: five surfaces choosing their own gave 50, 70, 150, 200 and a 9999
+that put a status menu above the modal layer.
+
+| Token | Value | Surface |
+|---|---|---|
+| `--weeb-z-dropdown` | 50 | Menus anchored to a control: `Select`, `AnimeStatusDropdown`, `ProfileDropdown` |
+| `--weeb-z-popover` | 60 | Anchored panels that outrank a menu: `AnimeCalendarPopover` |
+| `--weeb-z-drawer` | 100 | `MobileDrawer` -- over the page, under a dialog, so the login modal can open from inside it |
+| `--weeb-z-modal` | 200 | The modal backdrop and its card |
+| `--weeb-z-toast` | 300 | The toast stack. A report on what you just did has to be readable over whatever is on top, including a dialog |
+
+---
+
+## The floating surface
+
+One recipe, one class: `.weeb-floating` in `design-tokens.css`.
+
+```css
+background: var(--weeb-surface);
+border: 1px solid var(--weeb-border);
+border-radius: var(--weeb-radius-lg);
+box-shadow: var(--weeb-shadow-dropdown);
+```
+
+Every menu, popover, toast and dialog card composes it -- there used to be four
+shadows and three radii across seven surfaces. `.weeb-floating--dialog` is the
+same recipe on `--weeb-bg-elevated`, and exists for exactly one reason: a dialog
+card is the only floating surface that CONTAINS form fields, whose own ground is
+`--weeb-surface` and which would otherwise vanish into it.
+
+`.weeb-overlay-backdrop` is the other half of a dialog -- fixed inset,
+`--weeb-overlay-scrim`, `--weeb-overlay-blur`. `Modal` and `MobileDrawer` both
+use it; they used to spell the same two values out separately.
+
+---
+
+## The form field
+
+44px tall, `--weeb-radius`, 15px text, a 1.5px border. The recipe is
+`.weeb-form-*` in `design-tokens.css`, not inside `FormInput`, because three
+components draw the same field: `FormInput`, `FormTextarea` (the same field
+given more than one line) and `Select` with `variant="field"`. When `FormInput`
+owned the rules privately, the settings form grew a 42px/`rounded-md`/16px/1px
+`<select>` and a 6px/16px `<textarea>` beside it -- three field languages in one
+form.
+
+An icon belongs **inside** the field (`icon` on `FormInput` or `Select`), never
+in the label beside it.
 
 ## Overlay / Frosted Glass
 
@@ -204,23 +298,46 @@ opposite — one at a time, never both.
 | `size` | `sm \| md` | 11px dense metadata, or 12px (the pill token) |
 | `touch` | boolean | The taller of the two heights |
 | `selected` | boolean | The accent wash |
+| `tintAtRest` | boolean | `true` tints border, text and ground at rest (a chip that STATES something). `false` leaves the chip neutral until selected, colouring only the dot and the wash |
+| `ghost` | boolean | Transparent ground, with the hover tinted from the chip's own colour. What a row you switch on and off sits on |
 | `dot` | boolean | A leading dot in the chip's own colour |
 | `count` | number | The shared count badge. `0` renders, muted |
 | `mono` | boolean | Mono tabular numerals |
 | `leading` | Snippet | An icon before the label |
 
-### ChipRow
+### ChipGroup
 
-A wrapping row of `Chip`s, at `--weeb-pill-row-gap`.
+**The** row. Every selectable or linked strip in the app is this component: it
+replaced `Tabs` (single-select, three skins), `FilterPills` (multi-select) and
+`ChipRow` (links), which each re-declared the pill off the same `--weeb-pill-*`
+tokens `Chip` already owns. The item is always a `Chip`, so the `pill` variant
+adds no shape at all — only the row gap.
 
 | Prop | Type | Description |
 |---|---|---|
-| `items` | `{ label, href?, title? }[]` | |
-| `tone` / `size` / `touch` | | Applied to every chip |
+| `items` | `ChipGroupItem[]` | `{ value?, label, count?, icon?, title?, disabled?, accent?, href? }`. `value` defaults to `label` |
+| `select` | `single \| multi \| none` | One at a time, any number, or a row that selects nothing (links) |
+| `variant` | `pill \| segmented \| underline` | `Chip` as drawn; the boxed switches; the underlined tabs |
+| `value` | string | `single`: the selected item's `value` |
+| `isSelected` | `(value) => boolean` | `multi`: whether a chip is on. A predicate, so a `Set` caller needs no accessor |
+| `onSelect` | `(value) => void` | A chip was activated |
+| `mode` | `tabs \| toggle` | `single` only: a real tablist (arrow keys, one tab stop) or a group of buttons |
+| `activeMarker` | `pressed \| current` | `toggle` only: `aria-pressed` for a mode switch, `aria-current="page"` for a strip that NAVIGATES |
+| `size` | `sm \| md \| touch` | 11px dense, 12px default, or the 44px target |
+| `tone` | `ChipTone` | Applied to every chip, for a row that states rather than selects |
+| `iconOnly` | boolean | Hides labels. Each item then needs a `title` |
+| `clear` | `{ label?, onClear }` | The leading Clear chip. Pass it only while something is on |
+| `more` | `{ hiddenCount, expanded, onToggle, collapseLabel? }` | The "+N more" chip. No `collapseLabel` makes the reveal one-way |
 | `ariaLabel` | string | Names the row |
+| `itemContent` | `Snippet<[item]>` | Full control of a chip's contents — the inline SVGs the pages use |
+| `class` / `itemClass` | string | Extra classes on the row / on every chip. The clear and more chips also get `<itemClass>--clear` / `--more` |
 
-The homepage's "Browse by Tag" row is this over `$lib/data/genres`. The genre
-taxonomy is data; a presentational primitive does not own it.
+The homepage's "Browse by Tag" row is `select="none"` over `$lib/data/genres`.
+The genre taxonomy is data; a presentational primitive does not own it.
+
+An item's `accent` is what lets the news categories tell four colours apart
+while staying one chip: it draws the leading dot and tints the selected wash,
+and leaves the resting chip neutral.
 
 ### Score
 
@@ -268,23 +385,6 @@ implementation — `ShowSection` and `RelatedAnime` used to write their own.
 | `id` | string | For `aria-labelledby` |
 | `href` / `linkText` | string | Optional trailing link |
 
-### FilterPills
-
-One **multi-select** filter row — pills that turn on and off independently, with
-optional counts, an optional leading "Clear" and an optional trailing
-"+N more". The sibling of `Tabs`, which is single-select; reach for that one when
-exactly one item can be picked.
-
-| Prop | Type | Description |
-|---|---|---|
-| `items` | `FilterPillItem[]` | `{ value, label, count? }` |
-| `isSelected` | `(value) => boolean` | Whether a pill is on |
-| `onToggle` | `(value) => void` | |
-| `clear` | `{ label?, onClear }` | The leading Clear pill. Pass it only while something is on |
-| `more` | `{ hiddenCount, expanded, onToggle, collapseLabel? }` | The "+N more" pill. No `collapseLabel` makes the reveal one-way |
-| `ariaLabel` | string | Names the row |
-| `class` / `pillClass` | string | Extra classes on the row / on every pill |
-
 ### HeroBanner
 
 Full-width hero with blurred anime background, badges, title, action buttons, and poster overlay.
@@ -300,10 +400,46 @@ Action button with color variants.
 | Prop | Type | Description |
 |---|---|---|
 | `color` | `'blue' \| 'red' \| 'transparent'` | Button color variant |
-| `label` | string | Button text |
+| `children` | Snippet | Button text |
 | `icon` | string/component | Optional icon |
 | `status` | string | Optional status indicator |
 | `disabled` | boolean | Disabled state |
+
+### Modal
+
+The dialog. Content-only children, wrapped: `LoginRegisterModal` and
+`ProfileImageUpload` render a body and let this own the backdrop, the layer, the
+portal, the focus trap, Escape and the page pin -- all of which come from the
+`dialogSurface` action it shares with `MobileDrawer`.
+
+| Prop | Type | Description |
+|---|---|---|
+| `isOpen` | boolean | |
+| `size` | `sm \| md \| lg` | 440 / 560 / 720. `sm` is a form, `lg` is something you work inside |
+| `showCloseButton` | boolean | The corner dismiss |
+| `backdropCloseable` | boolean | Off for a dialog that must be dismissed deliberately |
+| `className` | string | Extra classes. NOT a way to set the width -- that is `size` |
+| `onClose` | `() => void` | Asked to dismiss, by any of the three routes |
+
+### Select
+
+The select that does not open a white OS menu on a dark page.
+
+| Prop | Type | Description |
+|---|---|---|
+| `value` | string/number | Bindable |
+| `options` | `{ value, label }[]` | |
+| `variant` | `pill \| field` | The 32px filter control, or the 44px form field |
+| `icon` | `IconDefinition` | A leading icon inside the control |
+| `placeholder` | string | Shown when nothing matches `value` |
+| `align` | `left \| right` | Which edge the menu lines up with |
+| `disabled` | boolean | |
+| `onChange` | `({ value }) => void` | Fires on commit, not while arrowing |
+
+### FormTextarea
+
+`FormInput` with more than one line, off the same `.weeb-form-*` recipe. A
+`maxlength` caps the value and turns on the character count under the field.
 
 ### SafeImage
 
@@ -348,3 +484,13 @@ For new components, prefer scoped `<style>` blocks using `var(--weeb-*)` directl
    - Amber (`--weeb-amber`) — upcoming, warning
    - Red (`--weeb-red`) — error, danger, dropped
 6. **Do not hardcode oklch values** — always reference the CSS custom properties.
+   Status tints come from the `-tint` / `-edge` / `-ring` tokens, not from a
+   fresh `color-mix` and never from a literal `oklch()`.
+7. **Take the layer token, not a number** — `--weeb-z-*` is the whole scale.
+8. **Compose the recipe, not the tokens** — `.weeb-floating`,
+   `.weeb-overlay-backdrop` and `.weeb-form-*` exist so a surface is drawn once.
+   Reusing the tokens is not the same as reusing the rule.
+9. **Focus is visible everywhere.** `base.scss` sets a 2px accent ring as the
+   floor. A component may author a better one (`FormInput`'s 3px glow); it may
+   not author `outline: none` and put a 1px border-colour change in its place.
+10. **Disabled is `opacity: 0.5`** — one value, everywhere.

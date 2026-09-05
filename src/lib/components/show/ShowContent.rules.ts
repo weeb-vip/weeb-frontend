@@ -80,7 +80,7 @@ export const NEWS = 'news';
 export const EPISODES = 'episodes';
 export const CHARACTERS = 'characters';
 
-/** One entry of the section nav. Shaped for `Tabs`' `TabItem`. */
+/** One entry of the section nav. Shaped for `ChipGroup`'s `ChipGroupItem`. */
 export interface SectionTab {
   value: string;
   label: string;

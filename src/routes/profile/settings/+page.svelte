@@ -5,6 +5,8 @@
   import Button from '$lib/components/primitives/Button.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import FormInput from '$lib/components/primitives/FormInput.svelte';
+  import FormTextarea from '$lib/components/primitives/FormTextarea.svelte';
+  import Select from '$lib/components/primitives/Select.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
   import { ProfileSettingsBloc, type ProfileFormField } from '$lib/components/profile/ProfileSettings.bloc.svelte';
 
@@ -116,22 +118,21 @@
           icon={faEnvelope}
         />
 
-        <div>
-          <label for="language" class="block text-sm font-medium text-weeb-fg-secondary mb-2">
-            <Fa icon={faGlobe} class="mr-2" />
-            Language
-          </label>
-          <select
-            id="language"
-            name="language"
+        <!-- `Select variant="field"`, so this is the same 44px control as the
+             four FormInputs above it rather than a 42px/rounded-md/16px/1px
+             near-miss with a white OS menu inside. The globe sits INSIDE the
+             field, the way every other icon on this form does; as part of the
+             label it wrapped onto a line of its own. -->
+        <div class="weeb-form-field">
+          <span class="weeb-form-label" id="language-label">Language</span>
+          <Select
+            variant="field"
+            icon={faGlobe}
             value={bloc.form.language}
-            onchange={(e) => bloc.setLanguage(e.currentTarget.value)}
-            class="w-full px-3 py-2 border border-weeb-border rounded-md shadow-sm bg-weeb-surface text-weeb-fg focus:outline-none focus:ring-2 focus:ring-weeb-accent focus:border-weeb-accent transition-colors duration-200"
-          >
-            {#each bloc.languages as language (language.value)}
-              <option value={language.value}>{language.label}</option>
-            {/each}
-          </select>
+            options={bloc.languages}
+            ariaLabel="Language"
+            onChange={(detail) => bloc.setLanguage(String(detail.value))}
+          />
         </div>
 
         <!-- Public page customization -->
@@ -141,22 +142,18 @@
             How <span class="font-mono">/u/{bloc.form.username || 'you'}</span> looks to anyone who visits.
           </p>
 
-          <div>
-            <label for="bio" class="block text-sm font-medium text-weeb-fg-secondary mb-2">Bio</label>
-            <textarea
-              id="bio"
-              name="bio"
-              rows="2"
-              maxlength={bloc.bioLimit}
-              value={bloc.form.bio}
-              oninput={(e) => bloc.setField('bio', e.currentTarget.value)}
-              placeholder="A line about you"
-              class="w-full px-3 py-2 border border-weeb-border rounded-md bg-weeb-surface text-weeb-fg placeholder:text-weeb-fg-muted focus:outline-none focus:ring-2 focus:ring-weeb-accent focus:border-weeb-accent transition-colors resize-none"
-            ></textarea>
-            <div class="mt-1 text-right text-xs text-weeb-fg-muted font-mono">
-              {bloc.bioLength}/{bloc.bioLimit}
-            </div>
-          </div>
+          <!-- The bio is a FormTextarea, which is FormInput given more than one
+               line. Hand-rolled, it was a third field language on this form. -->
+          <FormTextarea
+            id="bio"
+            name="bio"
+            label="Bio"
+            rows={2}
+            maxlength={bloc.bioLimit}
+            value={bloc.form.bio}
+            onInput={(detail) => bloc.setField('bio', detail.value)}
+            placeholder="A line about you"
+          />
 
           <div class="mt-4">
             <span class="block text-sm font-medium text-weeb-fg-secondary mb-2">Accent colour</span>

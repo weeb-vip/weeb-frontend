@@ -11,7 +11,7 @@
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
-  import Tabs, { type TabItem } from '$lib/components/primitives/Tabs.svelte';
+  import ChipGroup, { type ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
   import type { MediaListBloc, MediaListRow } from './MediaList.bloc.svelte';
 
   /**
@@ -47,7 +47,7 @@
    */
   function scrollActiveTabIntoView(): void {
     const container = tabsEl?.querySelector<HTMLElement>('[role="tablist"]');
-    const active = container?.querySelector<HTMLElement>('.tab.active');
+    const active = container?.querySelector<HTMLElement>('.cg-item.selected');
     if (!container || !active) return;
     const c = container.getBoundingClientRect();
     const a = active.getBoundingClientRect();
@@ -89,22 +89,22 @@
   {:else}
     <div class="pml-controls">
       <div class="pml-tabs" bind:this={tabsEl}>
-        <Tabs
+        <ChipGroup
           items={bloc.tabs}
           value={bloc.status}
-          onChange={(value) => bloc.selectStatus(value)}
+          onSelect={(value) => bloc.selectStatus(value)}
           variant="underline"
           ariaLabel={bloc.config.tabsLabel}
         />
       </div>
 
-      <Tabs
+      <ChipGroup
         items={[
           { value: 'list', label: 'List', title: 'List view' },
           { value: 'grid', label: 'Grid', title: 'Grid view' },
         ]}
         value={bloc.view}
-        onChange={(value) => bloc.setView(value === 'list' ? 'list' : 'grid')}
+        onSelect={(value) => bloc.setView(value === 'list' ? 'list' : 'grid')}
         variant="segmented"
         mode="toggle"
         iconOnly
@@ -213,7 +213,7 @@
   {/if}
 </div>
 
-{#snippet viewIcon(item: TabItem)}
+{#snippet viewIcon(item: ChipGroupItem)}
   {#if item.value === 'list'}
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
       <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />

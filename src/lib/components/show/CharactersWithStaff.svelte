@@ -3,7 +3,7 @@
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
   import {
     CharactersWithStaffBloc,
     type CharacterEntry,
@@ -45,10 +45,10 @@
   <EmptyState size="compact" message="No character data available." />
 {:else}
   <div class="chars-root">
-    <Tabs
+    <ChipGroup
       items={bloc.filters.map((option) => ({ value: option.value, label: option.label }))}
       value={bloc.filter}
-      onChange={(value) => bloc.selectFilter(value)}
+      onSelect={(value) => bloc.selectFilter(value)}
       variant="pill"
       ariaLabel="Filter characters by role"
     />

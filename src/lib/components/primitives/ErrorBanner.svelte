@@ -105,26 +105,29 @@
   }
 
   /* The tint is the same hue as the border at low alpha, so the box reads as
-     one object rather than a coloured rule around neutral copy. */
+     one object rather than a coloured rule around neutral copy. The 12%/45%
+     pair this file used to mix inline IS the shared severity recipe now -- the
+     `-tint` / `-edge` tokens -- so the toast that lands beside this banner and
+     the field that goes red under it are the same red at the same strength. */
   .eb--error {
     color: var(--weeb-red);
-    background: color-mix(in oklch, var(--weeb-red) 12%, transparent);
-    border-color: color-mix(in oklch, var(--weeb-red) 45%, transparent);
+    background: var(--weeb-red-tint);
+    border-color: var(--weeb-red-edge);
   }
   .eb--warning {
     color: var(--weeb-amber);
-    background: color-mix(in oklch, var(--weeb-amber) 12%, transparent);
-    border-color: color-mix(in oklch, var(--weeb-amber) 45%, transparent);
+    background: var(--weeb-amber-tint);
+    border-color: var(--weeb-amber-edge);
   }
   .eb--success {
     color: var(--weeb-green);
-    background: color-mix(in oklch, var(--weeb-green) 12%, transparent);
-    border-color: color-mix(in oklch, var(--weeb-green) 45%, transparent);
+    background: var(--weeb-green-tint);
+    border-color: var(--weeb-green-edge);
   }
   .eb--info {
     color: var(--weeb-accent-text);
-    background: color-mix(in oklch, var(--weeb-accent) 12%, transparent);
-    border-color: color-mix(in oklch, var(--weeb-accent) 45%, transparent);
+    background: var(--weeb-accent-tint);
+    border-color: var(--weeb-accent-edge);
   }
 
   .eb-icon {

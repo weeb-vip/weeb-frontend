@@ -214,25 +214,33 @@
     justify-content: center;
     border: 1px solid var(--weeb-border);
   }
+  /* The shared severity recipe: the status hue at 12% for the ground and 45%
+     for the ring, exactly as ErrorBanner and GlobalToaster express it. These
+     four used to be hardcoded oklch() -- 62% 0.17 145 green against a
+     --weeb-green of 65% 0.15 155, and 75% 0.15 80 amber against a --weeb-amber
+     of 72% 0.14 85 -- at their own 0.1/0.3 alpha stops. Two severity palettes,
+     both inside the same toast stack. */
   .toast-indicator-airing-soon {
     color: var(--weeb-accent-text);
-    background: color-mix(in oklch, var(--weeb-accent) 10%, transparent);
-    border-color: color-mix(in oklch, var(--weeb-accent) 30%, transparent);
+    background: var(--weeb-accent-tint);
+    border-color: var(--weeb-accent-edge);
   }
   .toast-indicator-airing {
     color: var(--weeb-green);
-    background: oklch(62% 0.17 145 / 0.1);
-    border-color: oklch(62% 0.17 145 / 0.3);
+    background: var(--weeb-green-tint);
+    border-color: var(--weeb-green-edge);
   }
+  /* `--weeb-violet` is an alias of the accent now, so "finished" takes the
+     accent tint: one colour, rather than a near-miss of it. */
   .toast-indicator-finished {
     color: var(--weeb-violet);
-    background: oklch(62% 0.14 300 / 0.1);
-    border-color: oklch(62% 0.14 300 / 0.3);
+    background: var(--weeb-accent-tint);
+    border-color: var(--weeb-accent-edge);
   }
   .toast-indicator-warning {
     color: var(--weeb-amber);
-    background: oklch(75% 0.15 80 / 0.1);
-    border-color: oklch(75% 0.15 80 / 0.3);
+    background: var(--weeb-amber-tint);
+    border-color: var(--weeb-amber-edge);
   }
 
   /* Mobile action button */

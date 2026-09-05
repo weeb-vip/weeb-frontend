@@ -8,8 +8,7 @@
   import Score from '$lib/components/primitives/Score.svelte';
   import Select from '$lib/components/primitives/Select.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
-  import Tabs from '$lib/components/primitives/Tabs.svelte';
-  import FilterPills from '$lib/components/primitives/FilterPills.svelte';
+  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import { GetImageFromAnime } from '$lib/services/utils';
   import { getStatusColor, getStatusLabel } from '$lib/utils/status';
@@ -96,24 +95,25 @@
         </div>
       {:else if bloc.hasGenres}
         <!-- The same multi-select row as /season's tag filter, off the same
-             primitive. `pillClass` keeps the .genre-tag / .genre-tag--more
+             primitive. `itemClass` keeps the .genre-tag / .genre-tag--more
              hooks browse-search.spec.ts selects on. The reveal here is one-way,
-             so `more` gets no collapseLabel and the pill retires once used. -->
-        <FilterPills
+             so `more` gets no collapseLabel and the chip retires once used. -->
+        <ChipGroup
+          select="multi"
           items={bloc.visibleGenres.map((genre) => ({
             value: genre.name,
             label: genre.name,
             count: genre.count,
           }))}
           isSelected={(name) => bloc.isGenreSelected(name)}
-          onToggle={(name) => bloc.toggleGenre(name)}
+          onSelect={(name) => bloc.toggleGenre(name)}
           more={{
             hiddenCount: bloc.hiddenGenreCount,
             expanded: bloc.showAllGenres,
             onToggle: () => bloc.revealAllGenres(),
           }}
           ariaLabel="Filter by genre"
-          pillClass="genre-tag"
+          itemClass="genre-tag"
         />
       {/if}
     </div>
@@ -164,13 +164,13 @@
   {#if bloc.hasSearched}
     <div class="results-header">
       <p class="results-count">{bloc.resultsSummary}</p>
-      <Tabs
+      <ChipGroup
         variant="segmented"
         mode="toggle"
         iconOnly
         items={VIEW_MODES}
         value={bloc.viewMode}
-        onChange={(mode) => bloc.setViewMode(mode)}
+        onSelect={(mode) => bloc.setViewMode(mode)}
         ariaLabel="View mode"
       >
         {#snippet itemContent(item)}
@@ -186,7 +186,7 @@
             </svg>
           {/if}
         {/snippet}
-      </Tabs>
+      </ChipGroup>
     </div>
   {/if}
 
@@ -476,7 +476,7 @@
     margin-right: 4px;
   }
   /* Only the loading skeletons live here now -- the facet row itself is
-     Primitives/FilterPills, which owns the pill, the count badge and the
+     Primitives/ChipGroup, which owns the chip, the count badge and the
      "+N more". */
   .genre-scroll {
     display: flex;

@@ -42,8 +42,18 @@
   </button>
 
   {#if bloc.isOpen}
-    <div class="absolute right-0 mt-2 w-72 bg-weeb-surface rounded-lg shadow-lg border border-weeb-border py-2 z-50">
+    <!-- Ground, border, radius and shadow are `.weeb-floating`: the same
+         surface the Select and status menus are drawn on. This used to reach
+         for Tailwind's own `rounded-lg` and `shadow-lg`, which are neither the
+         product's radius nor its shadow. -->
+    <div class="profile-menu weeb-floating absolute right-0 mt-2 w-72 py-2">
       <ProfileMenuContent {user} isMobile={false} onClose={() => bloc.close()} />
     </div>
   {/if}
 </div>
+
+<style>
+  .profile-menu {
+    z-index: var(--weeb-z-dropdown);
+  }
+</style>

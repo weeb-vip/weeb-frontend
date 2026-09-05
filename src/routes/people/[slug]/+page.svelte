@@ -5,7 +5,7 @@
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
   import { VoiceActorPageBloc, type Staff } from './VoiceActorPage.bloc.svelte';
 
   /**
@@ -127,11 +127,11 @@
       <div class="va-roles-head">
         <h2 class="va-section-heading" id="roles-heading">Roles</h2>
         {#if bloc.showFilters}
-          <Tabs
+          <ChipGroup
             variant="pill"
             items={bloc.filterOptions}
             value={bloc.filter}
-            onChange={(value) => bloc.selectFilter(value)}
+            onSelect={(value) => bloc.selectFilter(value)}
             ariaLabel="Filter roles"
           />
         {/if}

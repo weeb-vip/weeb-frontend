@@ -70,7 +70,7 @@
 {:else}
   <!-- Signed out, desktop: Login/Register buttons -->
   <div class="flex items-center space-x-3">
-    <Button color="blue" label="Login" onClick={() => bloc.requestLogin()} />
-    <Button color="transparent" label="Register" onClick={() => bloc.requestRegister()} />
+    <Button color="blue" onClick={() => bloc.requestLogin()}>Login</Button>
+    <Button color="transparent" onClick={() => bloc.requestRegister()}>Register</Button>
   </div>
 {/if}

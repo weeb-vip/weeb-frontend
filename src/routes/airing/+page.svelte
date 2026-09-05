@@ -2,13 +2,14 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
-  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
+  import Select from '$lib/components/primitives/Select.svelte';
   import { CurrentlyAiringPageBloc } from './CurrentlyAiringPage.bloc.svelte';
   import type { AiringShow } from './CurrentlyAiringPage.schedule';
-  import type { TabItem } from '$lib/components/primitives/Tabs.svelte';
+  import type { ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
 
   /**
    * What is airing, as a forward-looking schedule or as a month calendar.
@@ -43,7 +44,7 @@
     ])
   ]);
 
-  const VIEWS: TabItem[] = [
+  const VIEWS: ChipGroupItem[] = [
     { value: 'schedule', label: 'Schedule' },
     { value: 'calendar', label: 'Calendar' },
   ];
@@ -61,7 +62,7 @@
 
 <StructuredData {schemas} />
 
-{#snippet viewIcon(item: TabItem)}
+{#snippet viewIcon(item: ChipGroupItem)}
   <span class="tab-svg" aria-hidden="true">
     {#if item.value === 'schedule'}
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -83,25 +84,24 @@
       </div>
 
       <div class="page-header-controls">
-        <Tabs
+        <ChipGroup
           items={VIEWS}
           value={bloc.view}
-          onChange={(value) => bloc.selectView(value)}
+          onSelect={(value) => bloc.selectView(value)}
           variant="segmented"
           ariaLabel="Schedule or calendar"
           itemContent={viewIcon}
         />
 
-        <select
-          class="tz-select"
+        <!-- `Select`, not a native <select>: this one sits in a dark filter bar
+             and dropped a white OS menu out of it. -->
+        <Select
+          className="tz-select"
           value={bloc.timezone}
-          onchange={(event) => bloc.selectTimezone(event.currentTarget.value)}
-          aria-label="Timezone"
-        >
-          {#each bloc.timezones as tz (tz.value)}
-            <option value={tz.value}>{tz.label}</option>
-          {/each}
-        </select>
+          options={bloc.timezones}
+          ariaLabel="Timezone"
+          onChange={(detail) => bloc.selectTimezone(String(detail.value))}
+        />
 
         <button
           type="button"
@@ -442,30 +442,20 @@
     flex-wrap: wrap;
   }
 
-  /* The view switch is Tabs in its segmented skin; only the inline icon needs
+  /* The view switch is ChipGroup in its segmented skin; only the inline icon needs
      saying here. */
   .tab-svg { display: inline-flex; }
 
   /* ---- Timezone Select ---- */
-  .tz-select {
-    height: 34px;
-    padding: 0 30px 0 10px;
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
+  /* Select brings the pill, the chevron and the focus ring. The offset it
+     shows is a number, so it keeps the mono tabular figures this row had. */
+  .page-header-controls :global(.tz-select) {
     background: var(--weeb-surface);
-    color: var(--weeb-fg-secondary);
-    font-size: 13px;
+  }
+  .page-header-controls :global(.tz-select .wv-select-label) {
     font-family: var(--weeb-font-mono);
     font-variant-numeric: tabular-nums;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    cursor: pointer;
-    transition: border-color 0.15s;
   }
-  .tz-select:focus { outline: none; border-color: var(--weeb-accent); }
 
   /* ---- My List Toggle ---- */
   .toggle-wrap {

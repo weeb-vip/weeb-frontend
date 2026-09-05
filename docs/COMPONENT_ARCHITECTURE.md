@@ -204,6 +204,25 @@ ribbon and an "on the air" mark are drawn in one place each.
 
 Never hardcode `oklch()` values — reference the `--weeb-*` tokens.
 
+## Two presentations, one behaviour
+
+A dialog is not a component, it is a set of behaviours: portal out of whatever
+clipped ancestor it was declared in, hold focus, close on Escape, pin the page.
+`Modal` and `MobileDrawer` look nothing alike and both need all four, so the
+four live in one action -- `actions/dialog.ts` -- and each component supplies
+only its markup. They used to be two independent implementations, which is two
+focus traps to keep correct forever.
+
+Where a behaviour needs to differ, it is a parameter rather than a fork: the
+drawer focuses its close button (`initialFocus`) instead of the first focusable,
+and takes its page pin as a port so a story can pass a no-op. The pin itself is
+ref-counted at module scope, because the two surfaces overlap -- opening the
+login modal from the drawer leaves both mounted while the drawer's outro runs.
+
+The same rule applies to what a dialog CONTAINS: `LoginRegisterModal` is
+content-only and `Modal` wraps it. A component that renders its own backdrop is
+a second dialog.
+
 ## Stories
 
 Every component gets a story in `src/lib/components/__stories__/`, named

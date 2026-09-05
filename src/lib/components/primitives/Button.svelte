@@ -27,15 +27,8 @@
     type?: 'button' | 'submit' | 'reset';
     /** A FontAwesome icon rendered before the label. */
     icon?: IconDefinition | null;
-    /** The label. Prefer this over `label`. */
+    /** The label. */
     children?: Snippet;
-    /**
-     * Legacy plain-string label, kept for the call sites that still pass one.
-     * `children` wins when both are given.
-     */
-    label?: string;
-    /** Legacy companion to `label`. */
-    showLabel?: boolean;
     onClick?: () => void;
     /** Layout only -- a class here must not restyle the variant. */
     className?: string;
@@ -76,8 +69,6 @@
     type = 'button',
     icon = null,
     children,
-    label = '',
-    showLabel = true,
     onClick = () => {},
     className = '',
     status = 'idle',
@@ -148,11 +139,7 @@
     {#if icon}
       <Fa {icon} />
     {/if}
-    {#if children}
-      {@render children()}
-    {:else if showLabel && label}
-      <span>{label}</span>
-    {/if}
+    {@render children?.()}
   </span>
 {/snippet}
 

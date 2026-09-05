@@ -1,21 +1,34 @@
+<script lang="ts" module>
+  export type SelectOption = { value: string | number; label: string };
+
+  /**
+   * Which control this is standing in for.
+   *
+   * `pill` is the dense filter control -- 32px, 16px radius, 13px/500 -- which
+   * is the shape the search and airing filter rows want. `field` is the form
+   * field: FormInput's 44px / radius-8 / 15px / 1.5px border, so a Select can
+   * sit in a form row beside an input and read as the same control.
+   *
+   * There used to be only the pill, which is why four native <select>s -- and
+   * their white OS menus -- survived in places a 32px filter pill could not go.
+   */
+  export type SelectVariant = 'pill' | 'field';
+</script>
+
 <script lang="ts">
   import { tick } from 'svelte';
+  import Fa from 'svelte-fa';
+  import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
   /**
    * A select that looks like the rest of the product.
    *
    * A native <select> renders its closed state from CSS and its open list from
-   * the operating system. The pill matched the design; the list that dropped
-   * out of it was a white OS menu with a blue highlight, sitting on a dark
-   * page. That half cannot be styled at all, which is the whole reason this
-   * exists.
-   *
-   * The trigger deliberately keeps the native pill's exact measurements -- 32px
-   * tall, 16px radius, 13px/500 -- so replacing a <select> changes only what
-   * happens when it opens.
+   * the operating system. The closed state matched the design; the list that
+   * dropped out of it was a white OS menu with a blue highlight, sitting on a
+   * dark page. That half cannot be styled at all, which is the whole reason
+   * this exists.
    */
-
-  export type SelectOption = { value: string | number; label: string };
 
   let {
     /** Bindable, so `bind:value` keeps working the way the native select did. */
@@ -26,6 +39,10 @@
     placeholder = 'Select',
     disabled = false,
     className = '',
+    /** The dense filter control, or a form field. */
+    variant = 'pill',
+    /** A leading icon inside the control, the way FormInput carries one. */
+    icon = null,
     /** Which edge the menu lines up with when it would otherwise leave the viewport. */
     align = 'left',
     /** Fired only when an option is committed -- not while arrowing through them. */
@@ -37,6 +54,8 @@
     placeholder?: string;
     disabled?: boolean;
     className?: string;
+    variant?: SelectVariant;
+    icon?: IconDefinition | null;
     align?: 'left' | 'right';
     onChange?: (detail: { value: string | number }) => void;
   } = $props();
@@ -193,7 +212,7 @@
 <button
   bind:this={triggerEl}
   type="button"
-  class="wv-select-trigger {className}"
+  class="wv-select-trigger wv-select-trigger--{variant} {className}"
   class:wv-select-trigger--open={open}
   {disabled}
   aria-haspopup="listbox"
@@ -202,6 +221,9 @@
   onclick={() => (open ? closeMenu(false) : openMenu())}
   onkeydown={onTriggerKeydown}
 >
+  {#if icon}
+    <span class="wv-select-icon" aria-hidden="true"><Fa {icon} /></span>
+  {/if}
   <span class="wv-select-label">{label}</span>
   <svg class="wv-select-chevron" class:wv-select-chevron--open={open} width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
     <path d="m6 9 6 6 6-6" />
@@ -212,7 +234,7 @@
   <div
     bind:this={menuEl}
     use:portal
-    class="wv-select-menu"
+    class="wv-select-menu weeb-floating"
     style="top: {menuTop}px; left: {menuLeft}px; min-width: {menuMinWidth}px;"
     role="listbox"
     aria-label={ariaLabel}
@@ -242,31 +264,58 @@
 {/if}
 
 <style>
-  /* Trigger: the native pill's measurements exactly, so swapping a <select>
-     for this changes nothing until it opens. */
+  /* Trigger: whichever control it is standing in for, measured exactly, so
+     swapping a <select> for this changes nothing until it opens. */
   .wv-select-trigger {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    font-family: var(--weeb-font);
+    color: var(--weeb-fg-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s, box-shadow 0.2s;
+  }
+
+  /* The filter pill. */
+  .wv-select-trigger--pill {
     height: 32px;
     padding: 0 10px 0 12px;
     border: 1px solid var(--weeb-border);
     border-radius: 16px;
-    font-family: var(--weeb-font);
     font-size: 13px;
     font-weight: 500;
-    color: var(--weeb-fg-secondary);
     background: transparent;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: border-color 0.15s, color 0.15s;
   }
+
+  /* The form field: FormInput's own measurements, so a Select drops into a form
+     row without the row growing a third field language. */
+  .wv-select-trigger--field {
+    display: flex;
+    width: 100%;
+    height: 44px;
+    padding: 0 12px 0 16px;
+    border: 1.5px solid var(--weeb-border);
+    border-radius: var(--weeb-radius);
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--weeb-fg);
+    background: var(--weeb-surface);
+    text-align: left;
+  }
+  .wv-select-trigger--field .wv-select-label {
+    flex: 1;
+  }
+
   .wv-select-trigger:hover:not(:disabled) {
     border-color: var(--weeb-fg-muted);
     color: var(--weeb-fg);
   }
+  /* No `outline: none` here. base.scss sets a 2px accent ring as the floor for
+     anything focusable, and this used to opt out of it and offer a 1px border
+     colour change instead -- which is not a focus indicator. The border change
+     stays, on top of the ring. */
   .wv-select-trigger:focus-visible {
-    outline: none;
     border-color: var(--weeb-accent);
   }
   /* Open reads as accent rather than merely hovered: the menu is a modal-ish
@@ -285,6 +334,12 @@
     text-overflow: ellipsis;
   }
 
+  .wv-select-icon {
+    display: flex;
+    flex-shrink: 0;
+    color: var(--weeb-fg-muted);
+  }
+
   .wv-select-chevron {
     flex-shrink: 0;
     color: var(--weeb-fg-muted);
@@ -295,20 +350,15 @@
     color: var(--weeb-accent-text);
   }
 
-  /* Menu: the same floating-surface language as the search panel -- elevated
-     background, hairline border, downward shadow. */
+  /* Ground, border, radius and shadow are `.weeb-floating` -- the one floating
+     surface every menu, popover and toast is drawn on. This used to carry its
+     own two-layer shadow and its own layer number (70). */
   .wv-select-menu {
     position: fixed;
-    z-index: 70;
+    z-index: var(--weeb-z-dropdown);
     max-height: 320px;
     overflow-y: auto;
     padding: 4px;
-    background: var(--weeb-bg-elevated);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg);
-    box-shadow:
-      0 20px 40px -8px oklch(0% 0 0 / 0.45),
-      0 8px 16px -4px oklch(0% 0 0 / 0.3);
     animation: wv-select-in 0.16s ease-out forwards;
     transform-origin: center top;
   }
@@ -340,7 +390,7 @@
      both write to. Using :hover as well would light two rows at once when the
      mouse rests over the list while arrowing through it. */
   .wv-select-option--active {
-    background: var(--weeb-surface-hover, rgba(255, 255, 255, 0.06));
+    background: var(--weeb-surface-hover);
     color: var(--weeb-fg);
   }
   .wv-select-option--selected {
@@ -348,7 +398,7 @@
   }
   .wv-select-option:focus-visible {
     outline: none;
-    background: var(--weeb-surface-hover, rgba(255, 255, 255, 0.06));
+    background: var(--weeb-surface-hover);
   }
 
   .wv-select-check {

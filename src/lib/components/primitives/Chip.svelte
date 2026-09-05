@@ -57,8 +57,21 @@
     color = undefined,
     /** Raises the pill to the touch height, for a row that is a primary way through a page. */
     touch = false,
-    /** The selected/active state: the accent wash, shared with Tabs' pill variant. */
+    /** The selected/active state: the accent wash. */
     selected = false,
+    /**
+     * Where the chip's own colour shows. `true` tints border, text and ground
+     * at rest -- a chip that STATES something ("airing", "TV"). `false` leaves
+     * the chip neutral until it is selected, colouring only the dot and the
+     * selected wash -- a filter row whose items each stand for a colour.
+     */
+    tintAtRest = true,
+    /**
+     * Transparent ground rather than the surface, with the hover tinted from
+     * the chip's own colour instead of lifting to `--weeb-surface-hover`. What
+     * a row of chips you can switch on and off sits on: nothing until it is on.
+     */
+    ghost = false,
     /** A leading dot in the chip's own colour. */
     dot = false,
     /** Rendered as the shared count badge. `0` still renders, muted. */
@@ -70,6 +83,11 @@
     ariaLabel = undefined,
     ariaPressed = undefined,
     ariaCurrent = undefined,
+    ariaSelected = undefined,
+    /** ARIA role override -- `tab`, for a chip inside a real tablist. */
+    role = undefined,
+    /** Roving tabindex, for a chip inside a real tablist. */
+    tabindex = undefined,
     /** Leading content -- an icon. Sized by the caller; 12px is the house size. */
     leading,
     /** The label, when it is richer than a string. Wins over `label`. */
@@ -84,6 +102,8 @@
     color?: string | undefined;
     touch?: boolean;
     selected?: boolean;
+    tintAtRest?: boolean;
+    ghost?: boolean;
     dot?: boolean;
     count?: number | null;
     mono?: boolean;
@@ -92,6 +112,9 @@
     ariaLabel?: string | undefined;
     ariaPressed?: boolean | undefined;
     ariaCurrent?: 'page' | 'true' | undefined;
+    ariaSelected?: boolean | undefined;
+    role?: string | undefined;
+    tabindex?: number | undefined;
     leading?: Snippet;
     children?: Snippet;
     class?: string;
@@ -99,11 +122,15 @@
 
   const chipColor = $derived(color ?? TONE_COLORS[tone]);
   const chipStyle = $derived(`--chip-color: ${chipColor};`);
+  /** Has a colour of its own -- which drives the dot and the selected wash. */
+  const colored = $derived(tone !== 'neutral' || color != null);
   const chipClass = $derived(
     [
       'chip',
       `chip--${size}`,
-      tone !== 'neutral' || color ? 'chip--toned' : '',
+      colored ? 'chip--colored' : '',
+      colored && tintAtRest ? 'chip--toned' : '',
+      ghost ? 'chip--ghost' : '',
       touch ? 'chip--touch' : '',
       mono ? 'chip--mono' : '',
       selected ? 'selected' : '',
@@ -155,9 +182,12 @@
     style={chipStyle}
     {title}
     {disabled}
+    {role}
+    {tabindex}
     aria-label={ariaLabel}
     aria-pressed={ariaPressed}
     aria-current={ariaCurrent}
+    aria-selected={ariaSelected}
     {onclick}
   >
     {@render body()}
@@ -221,12 +251,24 @@
     background: color-mix(in oklch, var(--chip-color) 12%, transparent);
   }
 
+  /* Transparent ground: a chip in a row you switch on and off shows nothing
+     until it is on, so the selected wash is the only fill in the row. */
+  .chip--ghost:not(.chip--toned) {
+    background: transparent;
+  }
+
   /* Interactive only. A static chip is not a target and must not light up. */
   a.chip:hover:not(.selected):not(.is-disabled),
   button.chip:hover:not(.selected):not(:disabled) {
     border-color: var(--chip-color);
     color: var(--weeb-fg);
     background: var(--weeb-surface-hover);
+  }
+  /* A ghost chip has no ground to lift, so its hover is a wash of its own
+     colour -- the same gesture as the selected state, at a quarter strength. */
+  a.chip--ghost:hover:not(.selected):not(.is-disabled),
+  button.chip--ghost:hover:not(.selected):not(:disabled) {
+    background: color-mix(in oklch, var(--chip-color) 8%, transparent);
   }
   a.chip:focus-visible,
   button.chip:focus-visible {
@@ -240,8 +282,8 @@
     cursor: pointer;
   }
 
-  /* The selected state, shared with Tabs' pill variant: a wash of the chip's
-     own colour rather than a second border weight. */
+  /* The selected state: a wash of the chip's own colour rather than a second
+     border weight. Every selectable row in the app is this rule. */
   .chip.selected {
     background: color-mix(in oklch, var(--chip-color) 18%, transparent);
     border-color: var(--chip-color);
@@ -250,7 +292,7 @@
   /* A chip with a colour of its own keeps the neutral foreground when selected:
      the wash and the dot already say which one it is, and four different text
      colours in one row would not. */
-  .chip--toned.selected {
+  .chip--colored.selected {
     color: var(--weeb-fg);
     border-color: color-mix(in oklch, var(--chip-color) 65%, transparent);
     background: color-mix(in oklch, var(--chip-color) 15%, transparent);
@@ -269,7 +311,7 @@
     background: var(--chip-color);
     flex-shrink: 0;
   }
-  .chip:not(.chip--toned):not(.selected) .chip-dot {
+  .chip:not(.chip--colored):not(.selected) .chip-dot {
     background: var(--weeb-fg-muted);
   }
 
@@ -283,6 +325,9 @@
   .chip-count {
     font-family: var(--weeb-font-mono);
     font-size: var(--weeb-pill-count-font-size);
+    /* Its own, so a skin that gives the chip a taller line (the underline row)
+       does not stretch the badge with it. */
+    line-height: 1;
     font-variant-numeric: tabular-nums;
     font-weight: 600;
     min-width: var(--weeb-pill-count-min-width);
@@ -290,19 +335,21 @@
     padding: var(--weeb-pill-count-padding);
     border-radius: var(--weeb-pill-count-radius);
     background: var(--weeb-surface-hover);
-    color: var(--weeb-fg-muted);
+    color: var(--weeb-fg-secondary);
+    transition: background 0.15s, color 0.15s;
   }
   .chip-count.is-zero {
     background: transparent;
-    opacity: 0.5;
+    color: var(--weeb-fg-muted);
   }
   .chip.selected .chip-count {
-    background: color-mix(in oklch, var(--chip-color) 30%, transparent);
+    background: color-mix(in oklch, var(--chip-color) 18%, transparent);
     color: var(--weeb-accent-text);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .chip {
+    .chip,
+    .chip-count {
       transition: none;
     }
   }

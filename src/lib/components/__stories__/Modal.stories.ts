@@ -22,12 +22,33 @@ const dialogBody = createRawSnippet(() => ({
   `,
 }));
 
+/** Wide content, so a size story shows the size rather than a narrow column in it. */
+const wideBody = createRawSnippet(() => ({
+  render: () => `
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--weeb-fg);">
+        Crop your picture
+      </h2>
+      <div style="height: 220px; border-radius: var(--weeb-radius); background: repeating-linear-gradient(45deg, var(--weeb-surface), var(--weeb-surface) 12px, var(--weeb-surface-hover) 12px, var(--weeb-surface-hover) 24px);"></div>
+      <p style="margin: 0; font-size: 13px; color: var(--weeb-fg-secondary);">
+        The card's max-width is the only thing that changes between these three.
+      </p>
+    </div>
+  `,
+}));
+
 const meta = {
   title: 'Primitives/Modal',
   component: Modal,
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',
+  },
+  argTypes: {
+    size: {
+      control: 'inline-radio',
+      options: ['sm', 'md', 'lg'],
+    },
   },
 } satisfies Meta<typeof Modal>;
 
@@ -65,5 +86,36 @@ export const Closed: Story = {
   args: {
     isOpen: false,
     children: dialogBody,
+  },
+};
+
+/** 440px, the default: a form you fill in and dismiss. */
+export const SizeSmall: Story = {
+  args: {
+    isOpen: true,
+    size: 'sm',
+    children: wideBody,
+  },
+};
+
+/** 560px: a list, or a form with two columns. */
+export const SizeMedium: Story = {
+  args: {
+    isOpen: true,
+    size: 'md',
+    children: wideBody,
+  },
+};
+
+/**
+ * 720px: something you work inside, like the image cropper. Before `size`
+ * existed the cropper passed `className="max-w-2xl"` and still measured 440px,
+ * because the card declares its own max-width at the same specificity.
+ */
+export const SizeLarge: Story = {
+  args: {
+    isOpen: true,
+    size: 'lg',
+    children: wideBody,
   },
 };

@@ -19,6 +19,7 @@ import {
   type UserQueryPort
 } from '$lib/components/profile/UserProfileWrapper.bloc.svelte';
 import type { PreferencesPort } from './TitleLanguageToggle.bloc.svelte';
+import { createBodyScrollLock, type ScrollLockPort } from '$lib/actions/dialog';
 
 export interface DrawerStatePort extends Readable<boolean> {
   close(): void;
@@ -30,47 +31,16 @@ export type RoutePort = Readable<string>;
 /**
  * Pinning the page behind the drawer.
  *
- * `overflow: hidden` alone does not hold on iOS Safari -- the page keeps
- * scrolling under the drawer. Pinning the body and restoring the offset on
- * close is the only thing that works there, and it costs nothing elsewhere.
+ * The lock itself moved to `$lib/actions/dialog`, beside the rest of the dialog
+ * machinery the drawer and the modal now share -- it had to become ref-counted,
+ * because the two overlap: opening the login modal from the drawer leaves both
+ * mounted for as long as the drawer's outro runs.
  *
- * A port because a story that renders the open drawer must not pin the
- * Storybook canvas.
+ * The port stays a constructor dependency: a story that renders the open drawer
+ * must not pin the Storybook canvas, so it passes a no-op.
  */
-export interface BodyScrollPort {
-  lock(): void;
-  unlock(): void;
-}
-
-export function createBodyScrollLock(): BodyScrollPort {
-  let savedScrollY = 0;
-  let locked = false;
-
-  return {
-    lock() {
-      if (typeof document === 'undefined' || locked) return;
-      savedScrollY = window.scrollY;
-      const b = document.body.style;
-      b.position = 'fixed';
-      b.top = `-${savedScrollY}px`;
-      b.left = '0';
-      b.right = '0';
-      b.overflow = 'hidden';
-      locked = true;
-    },
-    unlock() {
-      if (typeof document === 'undefined' || !locked) return;
-      const b = document.body.style;
-      b.position = '';
-      b.top = '';
-      b.left = '';
-      b.right = '';
-      b.overflow = '';
-      locked = false;
-      window.scrollTo(0, savedScrollY);
-    }
-  };
-}
+export type BodyScrollPort = ScrollLockPort;
+export { createBodyScrollLock };
 
 export interface DrawerLink {
   href: string;
@@ -236,10 +206,9 @@ export class MobileDrawerBloc {
     this.#drawer.close();
   }
 
-  /** Escape only closes something that is open. */
-  handleEscape(): void {
-    if (this.isOpen) this.close();
-  }
+  // Escape is `dialogSurface`'s: the action is only alive while the drawer is,
+  // so the "only close what is open" guard this bloc used to carry is now
+  // structural rather than a check.
 
   toggleTitleLanguage(): void {
     this.#preferences.toggleTitleLanguage();
@@ -259,16 +228,12 @@ export class MobileDrawerBloc {
     return this.#signOut.signOut(() => this.close());
   }
 
-  /** Called by the view whenever `isOpen` changes, and on teardown. */
-  syncBodyScroll(): void {
-    if (this.isOpen) {
-      this.#bodyScroll.lock();
-    } else {
-      this.#bodyScroll.unlock();
-    }
-  }
-
-  releaseBodyScroll(): void {
-    this.#bodyScroll.unlock();
+  /**
+   * Handed to `dialogSurface`, which locks on open and releases on teardown --
+   * including when the drawer is destroyed while still open. The bloc owns
+   * WHICH lock (the real pin, or a story's no-op); the action owns when.
+   */
+  get scrollLock(): BodyScrollPort {
+    return this.#bodyScroll;
   }
 }

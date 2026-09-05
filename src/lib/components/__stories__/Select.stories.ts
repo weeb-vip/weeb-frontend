@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
+import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import Select from '$lib/components/primitives/Select.svelte';
+import StoryContainer from './StoryContainer.svelte';
 
 const STATUSES = [
   { value: '', label: 'Any status' },
@@ -19,6 +21,10 @@ const meta = {
     align: {
       control: 'inline-radio',
       options: ['left', 'right'],
+    },
+    variant: {
+      control: 'inline-radio',
+      options: ['pill', 'field'],
     },
   },
 } satisfies Meta<typeof Select>;
@@ -85,4 +91,54 @@ export const RightAligned: Story = {
     ariaLabel: 'Filter by status',
     align: 'right',
   },
+};
+
+/**
+ * The `field` variant: FormInput's 44px / radius-8 / 15px / 1.5px border, so a
+ * Select can sit in a form row without the row growing a second field shape.
+ * The settings form kept a native <select> -- white OS menu and all -- because
+ * until this existed the only thing on offer was a 32px filter pill.
+ */
+export const FieldVariant: Story = {
+  args: {
+    variant: 'field',
+    value: 'en',
+    options: [
+      { value: 'en', label: 'English' },
+      { value: 'ja', label: '日本語' },
+      { value: 'es', label: 'Español' },
+    ],
+    ariaLabel: 'Language',
+  },
+  decorators: [() => ({ Component: StoryContainer, props: { width: '360px' } })],
+};
+
+/** A leading icon inside the control, the way FormInput carries one. */
+export const FieldWithIcon: Story = {
+  args: {
+    variant: 'field',
+    icon: faGlobe,
+    value: 'en',
+    options: [
+      { value: 'en', label: 'English' },
+      { value: 'ja', label: '日本語' },
+    ],
+    ariaLabel: 'Language',
+  },
+  decorators: [() => ({ Component: StoryContainer, props: { width: '360px' } })],
+};
+
+/** A field with nothing chosen yet: the placeholder stands in at field scale. */
+export const FieldPlaceholder: Story = {
+  args: {
+    variant: 'field',
+    value: '',
+    options: [
+      { value: 'en', label: 'English' },
+      { value: 'ja', label: '日本語' },
+    ],
+    placeholder: 'Choose a language',
+    ariaLabel: 'Language',
+  },
+  decorators: [() => ({ Component: StoryContainer, props: { width: '360px' } })],
 };

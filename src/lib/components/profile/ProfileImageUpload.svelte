@@ -1,6 +1,7 @@
 <script lang="ts">
   import Modal from '$lib/components/primitives/Modal.svelte';
   import Button from '$lib/components/primitives/Button.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import {
     ProfileImageUploadBloc,
     type ProfileImageVariant,
@@ -62,7 +63,11 @@
   onmouseup={() => bloc.endDrag()}
 />
 
-<Modal {isOpen} onClose={() => bloc.close()} className="max-w-2xl max-h-[90vh]">
+<!-- `size`, not a utility class. This used to pass className="max-w-2xl
+     max-h-[90vh]" and measure 440px regardless: Modal declares its own
+     max-width at the same specificity and won on order, so the one dialog in
+     the app you WORK inside was squeezed into a sign-in form's width. -->
+<Modal {isOpen} size="lg" onClose={() => bloc.close()}>
   <div class="cropper">
     <h3 class="cropper-title">{bloc.preset.title}</h3>
 
@@ -167,7 +172,12 @@
     <canvas bind:this={canvas} class="hidden"></canvas>
 
     {#if bloc.uploadError}
-      <div class="cropper-error" role="alert">{bloc.uploadError}</div>
+      <!-- The failure box is ErrorBanner, not a third red tint. It used to mix
+           its own 10%/40% red -- close enough to ErrorBanner's 12%/45% to look
+           like a mistake and far enough to look like one. -->
+      <div class="cropper-error">
+        <ErrorBanner message={bloc.uploadError} />
+      </div>
     {/if}
 
     <div class="cropper-footer">
@@ -183,15 +193,11 @@
             Saved
           </span>
         {:else}
-          <Button color="transparent" label="Cancel" onClick={() => bloc.close()} showLabel={true} />
+          <Button color="transparent" onClick={() => bloc.close()}>Cancel</Button>
           {#if bloc.previewUrl}
-            <Button
-              color="blue"
-              label={bloc.isUploading ? 'Uploading…' : 'Save'}
-              onClick={() => bloc.save(canvas)}
-              showLabel={true}
-              status={bloc.saveStatus}
-            />
+            <Button color="blue" onClick={() => bloc.save(canvas)} status={bloc.saveStatus}>
+              {bloc.isUploading ? 'Uploading…' : 'Save'}
+            </Button>
           {/if}
         {/if}
       </div>
@@ -200,9 +206,14 @@
 </Modal>
 
 <style>
+  /* The card has no padding of its own -- whatever it wraps owns its own inset,
+     which is how `LoginRegisterModal` works too. This never declared one, so
+     the cropper ran edge to edge; at 440px that read as cramped and at 720px it
+     reads as unfinished. */
   .cropper {
     display: flex;
     flex-direction: column;
+    padding: 28px;
   }
 
   .cropper-title {
@@ -405,14 +416,9 @@
   }
 
   /* ── Error + footer ───────────────────────────────────── */
+  /* Spacing only: the box itself is ErrorBanner. */
   .cropper-error {
     margin-top: 16px;
-    padding: 10px 14px;
-    font-size: 0.85rem;
-    color: var(--weeb-red);
-    background: color-mix(in oklch, var(--weeb-red) 10%, transparent);
-    border: 1px solid color-mix(in oklch, var(--weeb-red) 40%, transparent);
-    border-radius: var(--weeb-radius);
   }
 
   .cropper-footer {
@@ -456,6 +462,7 @@
   .hidden { display: none; }
 
   @media (max-width: 640px) {
+    .cropper { padding: 20px; }
     .cropper-footer { flex-direction: column-reverse; align-items: stretch; gap: 14px; }
     .footer-actions { justify-content: flex-end; }
     .link-btn { text-align: center; }

@@ -7,9 +7,8 @@
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
   import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
   import SectionHeader from '$lib/components/primitives/SectionHeader.svelte';
-  import ChipRow from '$lib/components/primitives/ChipRow.svelte';
+  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
   import { BROWSE_GENRE_LINKS } from '$lib/data/genres';
-  import Tabs from '$lib/components/primitives/Tabs.svelte';
   import { HomepageBloc, type HomeAnime, type PublishingWork } from './HomepageSSR.bloc.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -142,13 +141,13 @@
            both. This strip swaps the shelf in place rather than navigating, so
            it stays on aria-pressed. -->
       <div class="season-tabs">
-        <Tabs
+        <ChipGroup
           items={bloc.seasonOptions.map((season) => ({
             value: season,
             label: bloc.seasonLabel(season),
           }))}
           value={bloc.selectedSeason}
-          onChange={(season) => bloc.selectSeason(season)}
+          onSelect={(season) => bloc.selectSeason(season)}
           variant="segmented"
           mode="toggle"
           size="touch"
@@ -230,8 +229,9 @@
     <SectionHeader title="Browse by Tag" />
     <!-- The genre list is data (`$lib/data/genres`) and the row is Chips; it
          used to be sixteen names hardcoded as a default prop inside the
-         presentational component that drew them. -->
-    <ChipRow items={BROWSE_GENRE_LINKS} touch ariaLabel="Browse by tag" />
+         presentational component that drew them. `select="none"` is the row
+         that picks nothing: every chip is a link out to /search. -->
+    <ChipGroup items={BROWSE_GENRE_LINKS} select="none" size="touch" ariaLabel="Browse by tag" />
   </section>
 </div>
 
@@ -289,7 +289,7 @@
   .section-header-with-tabs :global(.section-header) {
     margin-bottom: 0;
   }
-  /* The strip itself is Primitives/Tabs; this only places it. */
+  /* The strip itself is Primitives/ChipGroup; this only places it. */
   .season-tabs {
     display: flex;
   }

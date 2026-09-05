@@ -2,6 +2,7 @@
   import AnimeActions from '$lib/components/tracking/AnimeActions.svelte';
   import AiringIndicator from '$lib/components/primitives/AiringIndicator.svelte';
   import Chip from '$lib/components/primitives/Chip.svelte';
+  import Select from '$lib/components/primitives/Select.svelte';
 
   /**
    * The strip under the hero: the facts as chips on the left, the viewer's own
@@ -46,6 +47,12 @@
   } = $props();
 
   const SCORES = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+  // `Select` takes its options as data. The blank one is "no score yet", which
+  // is what the native <select>'s empty <option> was.
+  const SCORE_OPTIONS = [
+    { value: '', label: 'Score' },
+    ...SCORES.map((value) => ({ value, label: String(value) })),
+  ];
 </script>
 
 <div class="quick-info">
@@ -85,18 +92,18 @@
     <div class="quick-info__tracking">
       <AnimeActions {anime} variant="default" />
 
-      <select
-        class="qi-select"
-        aria-label="Your score"
+      <!-- `Select`, not a native <select>: the closed pill matched the design
+           and the list that dropped out of it was a white OS menu on a dark
+           page. -->
+      <Select
+        className="qi-select"
+        ariaLabel="Your score"
+        placeholder="Score"
         value={score}
+        options={SCORE_OPTIONS}
         disabled={!canTrack || pending}
-        onchange={(event) => onScore((event.currentTarget as HTMLSelectElement).value)}
-      >
-        <option value="">Score</option>
-        {#each SCORES as value}
-          <option {value}>{value}</option>
-        {/each}
-      </select>
+        onChange={(detail) => onScore(String(detail.value))}
+      />
 
       <div class="qi-progress">
         <button
@@ -176,27 +183,19 @@
     flex-shrink: 0;
   }
 
-  .qi-select {
-    height: 32px;
-    padding: 0 8px;
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
+  /* Select brings the pill and the disabled state. What is left is this row's
+     own: the score is a number, so it is set in mono, and the control keeps a
+     floor width so the strip does not reflow between "Score" and "10". */
+  .quick-info__tracking :global(.qi-select) {
+    min-width: 72px;
+    /* The chevron holds the right edge instead of floating in the slack the
+       floor width leaves when the label is a single digit. */
+    justify-content: space-between;
     background: var(--weeb-surface);
-    color: var(--weeb-fg);
+  }
+  .quick-info__tracking :global(.qi-select .wv-select-label) {
     font-family: var(--weeb-font-mono);
-    font-size: 12px;
     font-weight: 600;
-    outline: none;
-    cursor: pointer;
-    min-width: 60px;
-    appearance: auto;
-  }
-  .qi-select:focus {
-    border-color: var(--weeb-accent);
-  }
-  .qi-select:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
   }
 
   .qi-progress {

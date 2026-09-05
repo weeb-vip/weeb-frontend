@@ -1,13 +1,13 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import ChipGroup from '$lib/components/primitives/ChipGroup.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import AnimeCalendarPopover from '$lib/components/tracking/AnimeCalendarPopover.svelte';
   import { AiringCalendarBloc } from './AiringCalendar.bloc.svelte';
   import type { AiringShow } from '../CurrentlyAiringPage.schedule';
-  import type { TabItem } from '$lib/components/primitives/Tabs.svelte';
+  import type { ChipGroupItem } from '$lib/components/primitives/ChipGroup.svelte';
 
   /**
    * The airing schedule as a month or week grid.
@@ -32,7 +32,7 @@
 
   $effect(() => bloc.init());
 
-  const MODES: TabItem[] = [
+  const MODES: ChipGroupItem[] = [
     { value: 'month', label: 'Month' },
     { value: 'week', label: 'Week' },
   ];
@@ -66,10 +66,10 @@
 
 <div class="max-w-screen-xl mx-auto relative py-8 px-0">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-    <Tabs
+    <ChipGroup
       items={MODES}
       value={bloc.viewMode}
-      onChange={(value) => bloc.selectViewMode(value)}
+      onSelect={(value) => bloc.selectViewMode(value)}
       variant="segmented"
       ariaLabel="Month or week"
     />
