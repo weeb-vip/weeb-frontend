@@ -6,7 +6,7 @@
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import Tabs from '$lib/components/primitives/Tabs.svelte';
-  import { VoiceActorPageBloc, type Staff } from '$lib/components/pages/VoiceActorPage.bloc.svelte';
+  import { VoiceActorPageBloc, type Staff } from './VoiceActorPage.bloc.svelte';
 
   /**
    * A voice actor's page: who they are, and everything they have voiced.
@@ -229,7 +229,7 @@
     flex-shrink: 0;
     width: 168px;
     aspect-ratio: 3 / 4;
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     overflow: hidden;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
@@ -359,7 +359,7 @@
     flex-direction: column;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     overflow: hidden;
   }
 
@@ -377,7 +377,7 @@
     flex-shrink: 0;
     width: 42px;
     height: 62px;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
     overflow: hidden;
     background: var(--weeb-bg-elevated);
   }
@@ -411,7 +411,7 @@
   .va-char-role {
     align-self: flex-start;
     padding: 2px 8px;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
     background: var(--weeb-bg-elevated);
     color: var(--weeb-fg-muted);
     font-size: 11px;
@@ -478,7 +478,7 @@
     align-items: center;
     gap: 10px;
     padding: 10px 20px;
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     border: 1px solid var(--weeb-border);
     background: var(--weeb-surface);
     color: var(--weeb-fg-secondary);

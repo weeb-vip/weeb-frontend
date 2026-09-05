@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import EmailVerification from '../../../routes/auth/verification/+page.svelte';
-import { EmailVerificationBloc } from '$lib/components/pages/EmailVerification.bloc.svelte';
+import { EmailVerificationBloc } from '../../../routes/auth/verification/EmailVerification.bloc.svelte';
 import type { VerifyEmailPort } from '$lib/components/auth/auth-shared';
 import { failsWith, frozenClock, pending, resendIn, routeWith, type ResendStoryState } from './auth-stubs';
 

@@ -27,7 +27,7 @@
   import WorkStatusControl from '$lib/components/tracking/WorkStatusControl.svelte';
   import ChapterProgress from '$lib/components/tracking/ChapterProgress.svelte';
   import { GetImageFromAnime } from '$lib/services/utils';
-  import { MangaContentBloc, type Work } from '$lib/components/pages/MangaContent.bloc.svelte';
+  import { MangaContentBloc, type Work } from './MangaContent.bloc.svelte';
 
   let {
     data,
@@ -226,7 +226,7 @@
   .work :focus-visible {
     outline: 2px solid var(--weeb-accent);
     outline-offset: 3px;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
   }
 
   /* ---- hero ----
@@ -320,7 +320,7 @@
   .hero-panel {
     max-width: 640px;
     padding: 20px;
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     background: var(--weeb-panel-bg);
     backdrop-filter: var(--weeb-panel-blur);
     -webkit-backdrop-filter: var(--weeb-panel-blur);
@@ -334,7 +334,7 @@
   .hero-cover {
     flex: 0 0 116px;
     aspect-ratio: 2 / 3;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     overflow: hidden;
     box-shadow: var(--weeb-shadow-poster);
   }
@@ -431,7 +431,7 @@
     gap: 8px 28px;
     margin: 0;
     padding: 14px 18px;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
   }
@@ -503,7 +503,7 @@
     display: inline-block;
     margin-top: 8px;
     padding: 7px 18px;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     background: var(--weeb-accent);
     color: white;
     font-size: 14px;

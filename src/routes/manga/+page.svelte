@@ -2,7 +2,7 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
-  import WorksBrowsePage from '$lib/components/pages/WorksBrowsePage.svelte';
+  import WorksBrowse from '../works/WorksBrowse.svelte';
   import { shelfLabel } from '$lib/services/api/graphql/works';
 
   let { data }: { data: any } = $props();
@@ -33,7 +33,7 @@
 
 <StructuredData {schemas} />
 
-<WorksBrowsePage
+<WorksBrowse
   heading="Manga"
   blurb="Manga, manhwa, manhua and one-shots — everything anime gets adapted from."
   basePath="/manga"

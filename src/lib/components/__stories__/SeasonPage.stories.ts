@@ -6,7 +6,7 @@ import {
   type SeasonPageDeps,
   type SeasonalAnime,
   type SeasonalQueryPort,
-} from '$lib/components/pages/SeasonPage.bloc.svelte';
+} from '../../../routes/season/[season]/SeasonPage.bloc.svelte';
 
 /** Fixed clock, so "jump to current season" is offered consistently. */
 const NOW = new Date('2026-03-11T12:00:00Z');

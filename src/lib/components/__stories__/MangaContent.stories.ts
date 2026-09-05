@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { readable } from 'svelte/store';
 import MangaContent from '../../../routes/manga/[slug]/+page.svelte';
-import { MangaContentBloc, type Work } from '$lib/components/pages/MangaContent.bloc.svelte';
+import { MangaContentBloc, type Work } from '../../../routes/manga/[slug]/MangaContent.bloc.svelte';
 
 /** Preferences, pinned. The real store touches localStorage on construction. */
 const english = readable({ titleLanguage: 'english' as const });

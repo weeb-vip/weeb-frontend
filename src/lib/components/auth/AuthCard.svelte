@@ -131,7 +131,7 @@
   .logo-mark {
     width: 48px;
     height: 48px;
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     background: linear-gradient(135deg, var(--weeb-accent), var(--weeb-violet));
     display: flex;
     align-items: center;
@@ -147,7 +147,7 @@
   .logo-block:focus-visible {
     outline: 2px solid var(--weeb-accent);
     outline-offset: 4px;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
   }
 
   /* --- Card --- */

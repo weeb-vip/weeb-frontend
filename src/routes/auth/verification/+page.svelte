@@ -4,7 +4,7 @@
   import { onDestroy, onMount } from 'svelte';
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import { EmailVerificationBloc } from '$lib/components/pages/EmailVerification.bloc.svelte';
+  import { EmailVerificationBloc } from './EmailVerification.bloc.svelte';
   import { VERIFY_BANNER } from '$lib/components/auth/auth-shared';
 
   /**

@@ -213,7 +213,7 @@
     backdrop-filter: var(--weeb-panel-blur);
     -webkit-backdrop-filter: var(--weeb-panel-blur);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     box-shadow: var(--weeb-shadow-card, 0 12px 32px oklch(0% 0 0 / 0.4));
   }
   .hero-badge {
@@ -273,7 +273,7 @@
     z-index: 1;
     margin-left: 4px;
     padding: 1px 6px;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
     background: color-mix(in oklch, var(--weeb-bg) 45%, transparent);
     font-family: var(--weeb-font-mono);
     font-size: 12px;
@@ -385,7 +385,7 @@
     align-items: center;
     min-height: 44px;
     padding: 10px 24px;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     font-size: 14px;
     font-weight: 600;
     background: var(--weeb-accent);

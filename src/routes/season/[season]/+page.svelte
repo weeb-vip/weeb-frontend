@@ -8,7 +8,9 @@
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
-  import { SeasonPageBloc, type SeasonalAnime } from '$lib/components/pages/SeasonPage.bloc.svelte';
+  import Tabs, { type TabItem } from '$lib/components/primitives/Tabs.svelte';
+  import FilterPills from '$lib/components/primitives/FilterPills.svelte';
+  import { SeasonPageBloc, type SeasonalAnime } from './SeasonPage.bloc.svelte';
 
   /**
    * Everything that aired in one season, with a tag filter over it.
@@ -58,6 +60,20 @@
 
   $effect(() => bloc.init());
 
+  /* The season strip, as Tabs items. The emoji rides along in a lookup rather
+     than on the item, because TabItem's `icon` is a FontAwesome definition and
+     these are characters. */
+  const seasonItems = $derived<TabItem[]>(
+    bloc.seasonTabs.map((tab) => ({ value: tab.key, label: tab.label }))
+  );
+  const seasonIcons = $derived(new Map(bloc.seasonTabs.map((tab) => [tab.key, tab.icon])));
+  const activeSeasonKey = $derived(bloc.seasonTabs.find((tab) => tab.active)?.key ?? '');
+
+  const yearItems = $derived<TabItem[]>(
+    bloc.yearOptions.map((option) => ({ value: option.key, label: String(option.year) }))
+  );
+  const activeYearKey = $derived(bloc.yearOptions.find((option) => option.active)?.key ?? '');
+
   const SITE_URL = 'https://weeb.vip';
 
   const canonical = $derived(`${SITE_URL}/season/${data.season}`);
@@ -85,6 +101,10 @@
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path d="M9 10h.01M15 10h.01M9.5 15.5a3.5 3.5 0 0 1 5 0"/></svg>
 {/snippet}
 
+{#snippet seasonIcon(item: TabItem)}
+  <span class="season-tab-icon" aria-hidden="true">{seasonIcons.get(item.value) ?? ''}</span>
+{/snippet}
+
 {#snippet brokenCircle()}
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
 {/snippet}
@@ -103,22 +123,22 @@
       Not a tablist. These navigate to /season/<key>; they reveal no panel, so
       tab/tablist semantics would misdescribe them -- and `role="tab"` also
       overrides the implicit button role, which is what an assistive tech (and
-      season.spec.ts) looks for. Plain buttons, with aria-current marking the
+      season.spec.ts) looks for. Hence Tabs' `mode="toggle"`, which leaves plain
+      buttons, plus `activeMarker="current"` for the aria-current that marks the
       season being shown.
     -->
     <div class="season-tabs">
-      {#each bloc.seasonTabs as tab (tab.season)}
-        <button
-          type="button"
-          class="season-tab"
-          class:active={tab.active}
-          aria-current={tab.active ? 'page' : undefined}
-          onclick={() => bloc.goToSeason(tab.key)}
-        >
-          <span class="season-tab-icon" aria-hidden="true">{tab.icon}</span>
-          {tab.label}
-        </button>
-      {/each}
+      <Tabs
+        items={seasonItems}
+        value={activeSeasonKey}
+        onChange={(key) => bloc.goToSeason(key)}
+        variant="segmented"
+        mode="toggle"
+        activeMarker="current"
+        size="touch"
+        ariaLabel="Season"
+        itemContent={seasonIcon}
+      />
     </div>
 
     <div class="season-nav">
@@ -131,17 +151,19 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
 
+      <!-- Same strip, same primitive: this was a third copy of the segmented
+           look. Mono digits are the one thing it keeps of its own. -->
       <div class="year-selector">
-        {#each bloc.yearOptions as option (option.year)}
-          <button
-            type="button"
-            class="year-tab"
-            class:active={option.active}
-            onclick={() => bloc.goToSeason(option.key)}
-          >
-            {option.year}
-          </button>
-        {/each}
+        <Tabs
+          items={yearItems}
+          value={activeYearKey}
+          onChange={(key) => bloc.goToSeason(key)}
+          variant="segmented"
+          mode="toggle"
+          activeMarker="current"
+          size="touch"
+          ariaLabel="Year"
+        />
       </div>
 
       <button
@@ -202,36 +224,29 @@
   </div>
 
   {#if bloc.allTags.length > 0}
+    <!-- Multi-select: every selected tag has to match, so this is FilterPills,
+         not Tabs. /search's genre facets are the same row and the same
+         component. -->
     <div class="tag-filter">
-      <div class="tag-filter-row">
-        {#if bloc.hasTagFilter}
-          <button type="button" class="tag-pill tag-pill--clear" onclick={() => bloc.clearTags()}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            Clear
-          </button>
-        {/if}
-        {#each bloc.visibleTags as facet (facet.tag)}
-          <button
-            type="button"
-            class="tag-pill"
-            class:active={bloc.isTagSelected(facet.tag)}
-            aria-pressed={bloc.isTagSelected(facet.tag)}
-            onclick={() => bloc.toggleTag(facet.tag)}
-          >
-            {facet.tag}
-            <span class="tag-count">{facet.count}</span>
-          </button>
-        {/each}
-        {#if bloc.hasHiddenTags}
-          <button
-            type="button"
-            class="tag-pill tag-pill--toggle"
-            onclick={() => bloc.toggleShowAllTags()}
-          >
-            {bloc.showAllTags ? 'Show less' : `+${bloc.hiddenTagCount} more`}
-          </button>
-        {/if}
-      </div>
+      <FilterPills
+        items={bloc.visibleTags.map((facet) => ({
+          value: facet.tag,
+          label: facet.tag,
+          count: facet.count,
+        }))}
+        isSelected={(tag) => bloc.isTagSelected(tag)}
+        onToggle={(tag) => bloc.toggleTag(tag)}
+        clear={bloc.hasTagFilter ? { onClear: () => bloc.clearTags() } : undefined}
+        more={bloc.hasHiddenTags
+          ? {
+              hiddenCount: bloc.hiddenTagCount,
+              expanded: bloc.showAllTags,
+              onToggle: () => bloc.toggleShowAllTags(),
+              collapseLabel: 'Show less',
+            }
+          : undefined}
+        ariaLabel="Filter by tag"
+      />
     </div>
   {/if}
 
@@ -326,42 +341,10 @@
     flex-wrap: wrap;
   }
 
+  /* Both strips are Primitives/Tabs now; these wrappers only place them. */
   .season-tabs {
     display: flex;
-    gap: 2px;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: 10px;
-    padding: 4px;
-  }
-
-  .season-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 18px;
-    border: none;
-    border-radius: 8px;
-    background: none;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--weeb-fg-secondary);
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.18s;
-    white-space: nowrap;
-  }
-
-  .season-tab:hover:not(.active) {
-    color: var(--weeb-fg);
-    background: var(--weeb-surface-hover);
-  }
-
-  .season-tab.active {
-    background: var(--weeb-accent);
-    color: white;
-    font-weight: 600;
+    min-width: 0;
   }
 
   .season-tab-icon {
@@ -376,10 +359,11 @@
     margin-left: auto;
   }
 
+  /* Matched to the strips beside it, which are now on the 44px touch target. */
   .season-arrow {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--weeb-radius-full);
     border: 1px solid var(--weeb-border);
     background: var(--weeb-surface);
     color: var(--weeb-fg-secondary);
@@ -399,36 +383,14 @@
 
   .year-selector {
     display: flex;
-    gap: 4px;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: 10px;
-    padding: 4px;
+    min-width: 0;
   }
 
-  .year-tab {
-    padding: 6px 14px;
-    border: none;
-    border-radius: 7px;
-    background: none;
+  /* Years read as data, so they keep the mono face the rest of this page's
+     figures use. Everything else about the strip is the primitive's. */
+  .year-selector :global(.tab) {
     font-family: var(--weeb-font-mono);
-    font-size: 13px;
     font-weight: 600;
-    color: var(--weeb-fg-muted);
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-
-  .year-tab:hover:not(.active) {
-    color: var(--weeb-fg);
-    background: var(--weeb-surface-hover);
-  }
-
-  .year-tab.active {
-    background: var(--weeb-accent);
-    color: white;
   }
 
   /* ── Stats bar ── */
@@ -482,7 +444,7 @@
     padding: 12px 16px;
     background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     margin-bottom: 32px;
     overflow-x: auto;
     scrollbar-width: none;
@@ -510,7 +472,7 @@
     align-items: center;
     gap: 10px;
     padding: 6px 14px 6px 8px;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     text-decoration: none;
     color: inherit;
     transition: background 0.15s;
@@ -594,78 +556,17 @@
     font-weight: 600;
     color: var(--weeb-fg-muted);
     padding: 6px 14px;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
   }
 
-  /* ── Tag filter ── */
+  /* ── Tag filter ──
+     The row itself is Primitives/FilterPills, which also carries the clear and
+     "+N more" pills. The old copy here hardcoded `oklch(100% 0 0 / 0.2)` on the
+     selected count badge, which the design system forbids outright. */
   .tag-filter {
     margin-bottom: 24px;
-  }
-  .tag-filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-  }
-  .tag-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: var(--weeb-radius-full, 20px);
-    border: 1px solid var(--weeb-border);
-    background: transparent;
-    color: var(--weeb-fg-secondary);
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .tag-pill:hover {
-    border-color: var(--weeb-accent);
-    color: var(--weeb-fg);
-    background: var(--weeb-surface);
-  }
-  .tag-pill.active {
-    background: var(--weeb-accent);
-    border-color: var(--weeb-accent);
-    color: white;
-  }
-  .tag-pill.active .tag-count {
-    background: oklch(100% 0 0 / 0.2);
-    color: white;
-  }
-  .tag-count {
-    font-family: var(--weeb-font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    padding: 1px 6px;
-    border-radius: 10px;
-    background: var(--weeb-surface);
-    color: var(--weeb-fg-muted);
-  }
-  .tag-pill--clear {
-    border-color: var(--weeb-red);
-    color: var(--weeb-red);
-    gap: 4px;
-  }
-  .tag-pill--clear:hover {
-    background: var(--weeb-red);
-    border-color: var(--weeb-red);
-    color: white;
-  }
-  .tag-pill--toggle {
-    border-style: dashed;
-    color: var(--weeb-fg-muted);
-  }
-  .tag-pill--toggle:hover {
-    border-style: solid;
-    border-color: var(--weeb-accent);
-    color: var(--weeb-accent-text);
   }
 
   /* Poster grid: see PosterGrid.svelte. Skeletons and empty states are the
@@ -710,7 +611,7 @@
     .top-strip {
       padding: 10px 12px;
       gap: 12px;
-      border-radius: var(--weeb-radius, 8px);
+      border-radius: var(--weeb-radius);
       margin-bottom: 24px;
     }
 
@@ -720,12 +621,12 @@
   }
 
   @media (max-width: 480px) {
-    .season-tabs {
-      overflow-x: auto;
-    }
-
+    /* The segmented boxes do not wrap; they scroll. */
+    .season-tabs,
     .year-selector {
+      max-width: 100%;
       overflow-x: auto;
+      scrollbar-width: none;
     }
   }
 </style>

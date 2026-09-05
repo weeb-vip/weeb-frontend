@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { readable } from 'svelte/store';
 import PublicUserPage from '../../../routes/u/[username]/+page.svelte';
-import { PublicUserPageBloc } from '$lib/components/pages/PublicUserPage.bloc.svelte';
+import { PublicUserPageBloc } from '../../../routes/u/[username]/PublicUserPage.bloc.svelte';
 import { ANIME_COUNTS, ANIME_ENTRIES, LONG_TITLE, WORK_COUNTS, WORK_ENTRIES, animeEntry } from './profileFixtures';
 
 /** Someone else's profile: header always public, lists only when they opted in. */

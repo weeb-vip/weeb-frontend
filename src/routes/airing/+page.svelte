@@ -6,8 +6,8 @@
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
-  import { CurrentlyAiringPageBloc } from '$lib/components/pages/CurrentlyAiringPage.bloc.svelte';
-  import type { AiringShow } from '$lib/components/pages/CurrentlyAiringPage.schedule';
+  import { CurrentlyAiringPageBloc } from './CurrentlyAiringPage.bloc.svelte';
+  import type { AiringShow } from './CurrentlyAiringPage.schedule';
   import type { TabItem } from '$lib/components/primitives/Tabs.svelte';
 
   /**
@@ -596,7 +596,7 @@
     padding: 12px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     transition: background 0.15s, border-color 0.15s, transform 0.15s;
     scroll-snap-align: start;
     text-decoration: none;
@@ -737,7 +737,7 @@
     padding: 14px 24px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     color: var(--weeb-fg-secondary);
     font-family: var(--weeb-font);
     font-size: 14px;
@@ -770,7 +770,7 @@
   .calendar-card {
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     overflow: hidden;
     transition: opacity 0.2s;
   }
@@ -917,7 +917,7 @@
   .cal-side-panel {
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     overflow: hidden;
     position: sticky;
     top: 72px;

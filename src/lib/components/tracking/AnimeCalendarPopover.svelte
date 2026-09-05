@@ -93,7 +93,7 @@
     padding: 12px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     box-shadow: var(--weeb-shadow-dropdown);
     transition: background 0.3s, border-color 0.3s;
   }

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import ProfilePage from '../../../routes/profile/+page.svelte';
-import { ProfilePageBloc, type ProfileDataPort, type ProfileConfigPort } from '$lib/components/pages/ProfilePage.bloc.svelte';
+import { ProfilePageBloc, type ProfileDataPort, type ProfileConfigPort } from '../../../routes/profile/ProfilePage.bloc.svelte';
 import { ANIME_COUNTS, ANIME_ENTRIES, WORK_COUNTS, WORK_ENTRIES, freshClient } from './profileFixtures';
 
 /** The dashboard, driven entirely through the bloc's six stubbed queries. */

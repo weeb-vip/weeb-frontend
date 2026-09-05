@@ -156,7 +156,7 @@
     padding: 0 12px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     color: var(--weeb-fg);
     font-size: 13px;
     font-weight: 600;
@@ -211,7 +211,7 @@
     overflow-y: auto;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     box-shadow: 0 8px 24px oklch(0% 0 0 / 0.4);
     z-index: 9999;
     padding: 4px;
@@ -235,7 +235,7 @@
     padding: 8px 12px;
     background: none;
     border: none;
-    border-radius: calc(var(--weeb-radius, 8px) - 2px);
+    border-radius: calc(var(--weeb-radius) - 2px);
     color: var(--weeb-fg-secondary);
     font-size: 13px;
     cursor: pointer;

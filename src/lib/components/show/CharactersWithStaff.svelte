@@ -177,7 +177,7 @@
     display: flex;
     flex-direction: column;
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     background: var(--weeb-bg-elevated);
     transition: border-color 0.15s, background 0.15s;
     overflow: hidden;
@@ -210,7 +210,7 @@
   .char-portrait {
     width: 48px;
     height: 48px;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
@@ -219,7 +219,7 @@
     width: 48px !important;
     height: 48px !important;
     object-fit: cover;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
   }
   .char-portrait-0 { background: linear-gradient(135deg, oklch(28% 0.06 280), oklch(18% 0.04 300)); }
   .char-portrait-1 { background: linear-gradient(135deg, oklch(32% 0.08 260), oklch(20% 0.05 280)); }

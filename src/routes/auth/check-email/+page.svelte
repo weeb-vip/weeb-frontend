@@ -4,7 +4,7 @@
   import { onDestroy, onMount } from 'svelte';
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
-  import { CheckEmailBloc } from '$lib/components/pages/CheckEmail.bloc.svelte';
+  import { CheckEmailBloc } from './CheckEmail.bloc.svelte';
 
   /**
    * The screen straight after registering: what to do next, and how to get

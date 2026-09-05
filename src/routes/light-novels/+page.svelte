@@ -2,7 +2,7 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
-  import WorksBrowsePage from '$lib/components/pages/WorksBrowsePage.svelte';
+  import WorksBrowse from '../works/WorksBrowse.svelte';
   import { shelfLabel } from '$lib/services/api/graphql/works';
 
   let { data }: { data: any } = $props();
@@ -31,7 +31,7 @@
 
 <StructuredData {schemas} />
 
-<WorksBrowsePage
+<WorksBrowse
   heading="Light novels"
   blurb="Light novels and novels — the source behind a great many of the season's anime."
   basePath="/light-novels"

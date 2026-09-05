@@ -5,7 +5,7 @@
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import FormInput from '$lib/components/primitives/FormInput.svelte';
-  import { LoginBloc } from '$lib/components/pages/Login.bloc.svelte';
+  import { LoginBloc } from '$lib/components/auth/Login.bloc.svelte';
   import { VERIFY_BANNER } from '$lib/components/auth/auth-shared';
 
   /**

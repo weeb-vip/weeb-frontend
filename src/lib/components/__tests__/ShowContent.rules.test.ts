@@ -22,7 +22,7 @@ import {
   tabBarTop,
   trackingInput,
   watchedNumbersFrom,
-} from '$lib/components/pages/ShowContent.rules';
+} from '$lib/components/show/ShowContent.rules';
 
 /** A settled query that answered with a record. */
 const answered = (anime: any) => ({ data: { anime }, isLoading: false, isError: false });

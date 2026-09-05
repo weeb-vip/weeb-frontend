@@ -249,7 +249,7 @@
     color: white;
     font-size: 12px;
     padding: 2px 8px;
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     font-weight: 500;
     box-shadow: var(--weeb-shadow-card);
     z-index: 10;

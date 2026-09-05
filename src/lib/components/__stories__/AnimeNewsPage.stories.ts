@@ -7,7 +7,7 @@ import {
   type AnimeNewsPageData,
   type FeatureFlagPort,
   type RoutePort,
-} from '$lib/components/pages/AnimeNewsPage.bloc.svelte';
+} from '../../../routes/anime/[slug]/news/AnimeNewsPage.bloc.svelte';
 
 /**
  * The real gate asks PostHog and then polls until the flag resolves. A story

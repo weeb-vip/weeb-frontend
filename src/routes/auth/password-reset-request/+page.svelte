@@ -4,7 +4,7 @@
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import FormInput from '$lib/components/primitives/FormInput.svelte';
-  import { PasswordResetRequestBloc } from '$lib/components/pages/PasswordResetRequest.bloc.svelte';
+  import { PasswordResetRequestBloc } from './PasswordResetRequest.bloc.svelte';
 
   /**
    * "I forgot my password".

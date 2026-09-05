@@ -135,7 +135,7 @@
   .es--panel {
     background: var(--weeb-bg-elevated, var(--weeb-surface));
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
   }
   .es--panel.es--default { padding: 40px 24px; }
   .es--panel.es--hero { padding: 64px 24px; }
@@ -154,7 +154,7 @@
   .es-icon--circle {
     width: 64px;
     height: 64px;
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     background: var(--weeb-surface);
     opacity: 1;
   }
@@ -196,7 +196,7 @@
     margin-top: 20px;
     height: 36px;
     padding: 0 20px;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     font-family: inherit;
     font-size: 0.85rem;
     font-weight: 600;

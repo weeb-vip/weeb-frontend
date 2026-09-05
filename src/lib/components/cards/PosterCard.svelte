@@ -153,7 +153,7 @@
   .poster {
     aspect-ratio: 2/3;
     width: 100%;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     background: var(--weeb-surface);
     overflow: hidden;
     position: relative;
@@ -297,7 +297,7 @@
   }
   .hover-genre {
     padding: 2px 7px;
-    border-radius: var(--weeb-radius-full, 999px);
+    border-radius: var(--weeb-radius-full);
     background: var(--weeb-border);
     border: 1px solid var(--weeb-border);
     font-size: 12px;

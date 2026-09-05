@@ -99,7 +99,7 @@
     gap: 10px;
     padding: 11px 14px;
     border: 1px solid;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     font-size: 13px;
     line-height: 1.5;
   }
@@ -159,7 +159,7 @@
     padding: 0 12px;
     background: none;
     border: 1px solid currentColor;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
     color: inherit;
     font-family: inherit;
     font-size: 12px;

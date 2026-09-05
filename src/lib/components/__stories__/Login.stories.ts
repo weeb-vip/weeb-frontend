@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import Login from '../../../routes/auth/login/+page.svelte';
-import { LoginBloc } from '$lib/components/pages/Login.bloc.svelte';
+import { LoginBloc } from '$lib/components/auth/Login.bloc.svelte';
 import { ResendBloc } from '$lib/components/auth/auth-resend.svelte';
 import type { LoginPort } from '$lib/components/auth/auth-shared';
 import {

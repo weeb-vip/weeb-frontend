@@ -1,8 +1,8 @@
 import { fromStore, readable, type Readable } from 'svelte/store';
 import { loggedInStore, loginModalStore } from '$lib/stores/auth';
 import { ResendBloc } from './auth-resend.svelte';
-import { LoginBloc } from '$lib/components/pages/Login.bloc.svelte';
-import { RegisterBloc } from '$lib/components/pages/Register.bloc.svelte';
+import { LoginBloc } from './Login.bloc.svelte';
+import { RegisterBloc } from './Register.bloc.svelte';
 import { realNavigate, type NavigatePort } from './auth-shared';
 
 export type AuthMode = 'login' | 'register';

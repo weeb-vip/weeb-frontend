@@ -399,8 +399,8 @@
     --_ac-border: var(--weeb-border, oklch(28% 0.015 275));
     --_ac-accent: var(--weeb-accent, var(--weeb-accent));
     --_ac-accent-hover: var(--weeb-accent-hover, oklch(62% 0.16 280));
-    --_ac-radius: var(--weeb-radius, 8px);
-    --_ac-radius-lg: var(--weeb-radius-lg, 12px);
+    --_ac-radius: var(--weeb-radius);
+    --_ac-radius-lg: var(--weeb-radius-lg);
     --_ac-font: var(--weeb-font, system-ui, -apple-system, sans-serif);
     --_ac-font-mono: var(--weeb-font-mono, 'JetBrains Mono', monospace);
   }

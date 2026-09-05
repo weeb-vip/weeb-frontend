@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import ShowSectionNav from '$lib/components/show/ShowSectionNav.svelte';
-import { sectionTabs } from '$lib/components/pages/ShowContent.rules';
+import { sectionTabs } from '$lib/components/show/ShowContent.rules';
 
 const meta = {
   title: 'Composites/Show/ShowSectionNav',

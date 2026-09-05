@@ -173,7 +173,7 @@
     max-width: 440px;
     background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     box-shadow: 0 8px 32px oklch(0% 0 0 / 0.4), 0 2px 8px oklch(0% 0 0 / 0.3);
     animation: weeb-modal-slideUp 0.25s ease;
   }
@@ -189,7 +189,7 @@
     justify-content: center;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     color: var(--weeb-fg-muted);
     cursor: pointer;
     transition: color 0.15s, background 0.15s, border-color 0.15s;
@@ -216,7 +216,7 @@
   @media (max-width: 480px) {
     :global(.weeb-modal-card) {
       max-width: 100%;
-      border-radius: var(--weeb-radius-lg, 12px) var(--weeb-radius-lg, 12px) 0 0;
+      border-radius: var(--weeb-radius-lg) var(--weeb-radius-lg) 0 0;
       align-self: flex-end;
       margin-top: auto;
     }

@@ -8,10 +8,11 @@
   import Select from '$lib/components/primitives/Select.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
   import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import FilterPills from '$lib/components/primitives/FilterPills.svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import { GetImageFromAnime } from '$lib/services/utils';
   import { getStatusColor, getStatusLabel } from '$lib/utils/status';
-  import { SearchPageBloc } from '$lib/components/pages/SearchPage.bloc.svelte';
+  import { SearchPageBloc } from './SearchPage.bloc.svelte';
 
   /**
    * /search — the browse-and-search page.
@@ -93,24 +94,26 @@
           {/each}
         </div>
       {:else if bloc.hasGenres}
-        <div class="genre-scroll">
-          {#each bloc.visibleGenres as genre (genre.name)}
-            <button
-              class="genre-tag"
-              class:selected={bloc.isGenreSelected(genre.name)}
-              aria-pressed={bloc.isGenreSelected(genre.name)}
-              onclick={() => bloc.toggleGenre(genre.name)}
-            >
-              {genre.name}
-              <span class="genre-tag-count">{genre.count.toLocaleString()}</span>
-            </button>
-          {/each}
-          {#if bloc.hiddenGenreCount > 0 && !bloc.showAllGenres}
-            <button class="genre-tag genre-tag--more" onclick={() => bloc.revealAllGenres()}>
-              +{bloc.hiddenGenreCount} more
-            </button>
-          {/if}
-        </div>
+        <!-- The same multi-select row as /season's tag filter, off the same
+             primitive. `pillClass` keeps the .genre-tag / .genre-tag--more
+             hooks browse-search.spec.ts selects on. The reveal here is one-way,
+             so `more` gets no collapseLabel and the pill retires once used. -->
+        <FilterPills
+          items={bloc.visibleGenres.map((genre) => ({
+            value: genre.name,
+            label: genre.name,
+            count: genre.count,
+          }))}
+          isSelected={(name) => bloc.isGenreSelected(name)}
+          onToggle={(name) => bloc.toggleGenre(name)}
+          more={{
+            hiddenCount: bloc.hiddenGenreCount,
+            expanded: bloc.showAllGenres,
+            onToggle: () => bloc.revealAllGenres(),
+          }}
+          ariaLabel="Filter by genre"
+          pillClass="genre-tag"
+        />
       {/if}
     </div>
 
@@ -481,52 +484,14 @@
     white-space: nowrap;
     margin-right: 4px;
   }
+  /* Only the loading skeletons live here now -- the facet row itself is
+     Primitives/FilterPills, which owns the pill, the count badge and the
+     "+N more". */
   .genre-scroll {
     display: flex;
-    gap: 6px;
+    gap: var(--weeb-pill-row-gap);
     flex-wrap: wrap;
     align-items: center;
-  }
-  .genre-tag {
-    display: inline-flex;
-    align-items: center;
-    height: 32px;
-    padding: 0 14px;
-    border-radius: 16px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--weeb-fg-secondary);
-    border: 1px solid var(--weeb-border);
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-    font-family: var(--weeb-font);
-  }
-  .genre-tag:hover {
-    border-color: var(--weeb-accent);
-    color: var(--weeb-fg);
-    background: color-mix(in oklch, var(--weeb-accent) 8%, transparent);
-  }
-  .genre-tag.selected {
-    background: color-mix(in oklch, var(--weeb-accent) 15%, transparent);
-    border-color: var(--weeb-accent);
-    color: var(--weeb-accent-text);
-  }
-  .genre-tag--more {
-    border-style: dashed;
-    color: var(--weeb-fg-muted);
-  }
-  .genre-tag-count {
-    margin-left: 6px;
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--weeb-fg-muted);
-    opacity: 0.7;
-  }
-  .genre-tag.selected .genre-tag-count {
-    color: var(--weeb-accent-text);
-    opacity: 0.8;
   }
 
   /* Active Filters */
@@ -550,7 +515,10 @@
     gap: 6px;
     height: 28px;
     padding: 0 10px;
-    border-radius: 14px;
+    /* Fully round off the token, not a hand-computed half-height. Deliberately
+       smaller than a filter pill: this is an applied filter you remove, not one
+       you turn on. */
+    border-radius: var(--weeb-pill-radius);
     font-size: 12px;
     font-weight: 500;
     background: color-mix(in oklch, var(--weeb-accent) 12%, transparent);
@@ -698,7 +666,7 @@
   .list-tag {
     font-size: 10px;
     padding: 1px 6px;
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     background: color-mix(in oklch, var(--weeb-accent) 10%, transparent);
     color: var(--weeb-fg-secondary);
     border: 1px solid color-mix(in oklch, var(--weeb-accent) 15%, transparent);
@@ -717,7 +685,7 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
     padding: 3px 8px;
-    border-radius: var(--weeb-radius-full, 999px);
+    border-radius: var(--weeb-radius-full);
     color: var(--badge-color, var(--weeb-fg-secondary));
     border: 1px solid var(--badge-color, var(--weeb-border));
     background: color-mix(in oklch, var(--badge-color, var(--weeb-surface)) 8%, transparent);

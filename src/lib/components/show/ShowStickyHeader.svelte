@@ -145,7 +145,7 @@
     width: 36px;
     height: 56px;
     object-fit: cover;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
     flex-shrink: 0;
   }
 

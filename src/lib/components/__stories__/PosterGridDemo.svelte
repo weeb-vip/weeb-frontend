@@ -37,7 +37,7 @@
   }
   .demo-poster {
     aspect-ratio: 2 / 3;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
   }

@@ -125,6 +125,53 @@ export const Pills: Story = {
   },
 };
 
+/**
+ * The season strips on / and /season. `toggle` mode leaves plain buttons -- no
+ * `role="tab"` overriding the implicit button role -- `activeMarker="current"`
+ * marks the season being shown with aria-current="page" because these NAVIGATE
+ * rather than reveal a panel, and `size="touch"` is the 44px target the homepage
+ * copy of this strip used to carry alone.
+ */
+export const SegmentedNavigationTouch: Story = {
+  args: {
+    items: [
+      { value: 'WINTER_2026', label: 'Winter' },
+      { value: 'SPRING_2026', label: 'Spring' },
+      { value: 'SUMMER_2026', label: 'Summer' },
+      { value: 'FALL_2026', label: 'Fall' },
+    ],
+    value: 'SPRING_2026',
+    onChange: () => {},
+    variant: 'segmented',
+    mode: 'toggle',
+    activeMarker: 'current',
+    size: 'touch',
+    ariaLabel: 'Season',
+  },
+};
+
+/**
+ * The news category chips: pills with counts, each standing for its own colour.
+ * `accent` draws the leading dot and tints the selected wash with it, so four
+ * categories stay tellable apart without four bespoke chip classes.
+ */
+export const PillsWithAccentsAndCounts: Story = {
+  args: {
+    items: [
+      { value: 'all', label: 'All', count: 48 },
+      { value: 'announcement', label: 'Announcement', count: 19, accent: 'var(--weeb-accent)' },
+      { value: 'release', label: 'Release', count: 14, accent: 'var(--weeb-green)' },
+      { value: 'staff', label: 'Staff', count: 9, accent: 'var(--weeb-violet)' },
+      { value: 'reception', label: 'Reception', count: 6, accent: 'var(--weeb-amber)' },
+    ],
+    value: 'release',
+    onChange: () => {},
+    variant: 'pill',
+    mode: 'toggle',
+    ariaLabel: 'Filter by category',
+  },
+};
+
 /** A disabled item is skipped by both the pointer and the arrow keys. */
 export const WithDisabledItem: Story = {
   args: {

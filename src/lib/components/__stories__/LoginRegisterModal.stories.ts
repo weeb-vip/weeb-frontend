@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import { readable } from 'svelte/store';
 import LoginRegisterModal from '$lib/components/auth/LoginRegisterModal.svelte';
 import { LoginRegisterModalBloc } from '$lib/components/auth/LoginRegisterModal.bloc.svelte';
-import { LoginBloc } from '$lib/components/pages/Login.bloc.svelte';
-import { RegisterBloc } from '$lib/components/pages/Register.bloc.svelte';
+import { LoginBloc } from '$lib/components/auth/Login.bloc.svelte';
+import { RegisterBloc } from '$lib/components/auth/Register.bloc.svelte';
 import { ResendBloc } from '$lib/components/auth/auth-resend.svelte';
 import type { LoginPort, RegisterPort } from '$lib/components/auth/auth-shared';
 import {

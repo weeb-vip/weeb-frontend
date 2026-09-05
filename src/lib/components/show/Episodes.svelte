@@ -148,7 +148,7 @@
     padding: 0 12px;
     background: none;
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     font-family: var(--weeb-font);
     font-size: 12px;
     font-weight: 600;
@@ -182,7 +182,7 @@
     grid-template-columns: minmax(0, 1fr);
     background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     overflow: hidden;
   }
 
@@ -295,7 +295,7 @@
   .ep-next-dot {
     width: 6px;
     height: 6px;
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     background: var(--weeb-green);
     flex: none;
   }
@@ -308,7 +308,7 @@
     justify-content: center;
     background: none;
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     color: var(--weeb-fg-muted);
     cursor: pointer;
     transition: color 0.15s, border-color 0.15s, background 0.15s;
@@ -341,7 +341,7 @@
     display: block;
     background: none;
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     font-family: var(--weeb-font);
     font-size: 14px;
     font-weight: 600;

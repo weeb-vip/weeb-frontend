@@ -5,7 +5,7 @@
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import FormInput from '$lib/components/primitives/FormInput.svelte';
-  import { RegisterBloc } from '$lib/components/pages/Register.bloc.svelte';
+  import { RegisterBloc } from '$lib/components/auth/Register.bloc.svelte';
 
   /**
    * The sign-up page.

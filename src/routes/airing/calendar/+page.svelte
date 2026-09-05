@@ -5,8 +5,8 @@
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import AnimeCalendarPopover from '$lib/components/tracking/AnimeCalendarPopover.svelte';
-  import { AiringCalendarBloc } from '$lib/components/pages/AiringCalendar.bloc.svelte';
-  import type { AiringShow } from '$lib/components/pages/CurrentlyAiringPage.schedule';
+  import { AiringCalendarBloc } from './AiringCalendar.bloc.svelte';
+  import type { AiringShow } from '../CurrentlyAiringPage.schedule';
   import type { TabItem } from '$lib/components/primitives/Tabs.svelte';
 
   /**

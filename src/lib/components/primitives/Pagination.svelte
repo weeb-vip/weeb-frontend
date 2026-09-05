@@ -125,7 +125,7 @@
     padding: 0 14px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     color: var(--weeb-fg-secondary);
     font-family: var(--weeb-font);
     font-size: 0.8rem;
@@ -163,7 +163,7 @@
     padding: 0 28px 0 10px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     color: var(--weeb-fg);
     font-size: 0.8rem;
     font-family: var(--weeb-font-mono, monospace);

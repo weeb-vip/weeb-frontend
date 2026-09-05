@@ -47,7 +47,7 @@
   :global([data-sonner-toast]) {
     background: var(--weeb-surface) !important;
     border: 1px solid var(--weeb-border) !important;
-    border-radius: var(--weeb-radius, 8px) !important;
+    border-radius: var(--weeb-radius) !important;
     color: var(--weeb-fg) !important;
     font-family: var(--weeb-font) !important;
     font-size: 0.875rem !important;
@@ -129,7 +129,7 @@
     background: var(--weeb-accent) !important;
     color: white !important;
     border: none !important;
-    border-radius: var(--weeb-radius, 8px) !important;
+    border-radius: var(--weeb-radius) !important;
     padding: 6px 14px !important;
     font-size: 0.8125rem !important;
     font-weight: 600 !important;

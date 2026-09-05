@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { readable } from 'svelte/store';
-import WorksBrowsePage from '$lib/components/pages/WorksBrowsePage.svelte';
+import WorksBrowse from '../../../routes/works/WorksBrowse.svelte';
 import {
-  WorksBrowsePageBloc,
+  WorksBrowseBloc,
   type ViewportPort,
   type WorkShelf,
   type WorkSummary,
-} from '$lib/components/pages/WorksBrowsePage.bloc.svelte';
+} from '../../../routes/works/WorksBrowse.bloc.svelte';
 
 /**
  * The viewport store, pinned. The real one is matchMedia, so a story that
@@ -69,7 +69,7 @@ function bloc(
   }>,
   tier: 'desktop' | 'tablet' | 'phone' = 'desktop',
 ) {
-  return new WorksBrowsePageBloc({
+  return new WorksBrowseBloc({
     source: () => ({
       heading: 'Manga',
       blurb: 'Manga, manhwa, manhua and one-shots — everything anime gets adapted from.',
@@ -95,10 +95,10 @@ const base = {
 
 const meta = {
   title: 'Pages/WorksBrowsePage',
-  component: WorksBrowsePage,
+  component: WorksBrowse,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
-} satisfies Meta<typeof WorksBrowsePage>;
+} satisfies Meta<typeof WorksBrowse>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

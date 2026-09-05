@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { readable } from 'svelte/store';
 import SeriesPage from '../../../routes/series/[id]/+page.svelte';
-import { SeriesPageBloc, type SeriesEntry } from '$lib/components/pages/SeriesPage.bloc.svelte';
+import { SeriesPageBloc, type SeriesEntry } from '../../../routes/series/[id]/SeriesPage.bloc.svelte';
 
 /**
  * The preferences store, replaced by a fixed answer. The real one reads and

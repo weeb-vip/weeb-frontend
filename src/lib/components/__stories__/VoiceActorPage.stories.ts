@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import VoiceActorPage from '../../../routes/people/[slug]/+page.svelte';
-import { VoiceActorPageBloc, type RoleEntry, type Staff } from '$lib/components/pages/VoiceActorPage.bloc.svelte';
+import { VoiceActorPageBloc, type RoleEntry, type Staff } from '../../../routes/people/[slug]/VoiceActorPage.bloc.svelte';
 
 function role(id: number, name: string, roleLabel: string, anime: string | null): RoleEntry {
   return {

@@ -8,7 +8,7 @@ import {
   toggleGenre,
   writeSearchUrl,
   type SearchUrlState,
-} from '$lib/components/pages/SearchPage.urlState';
+} from './SearchPage.urlState';
 
 /**
  * The /search page's URL sync.

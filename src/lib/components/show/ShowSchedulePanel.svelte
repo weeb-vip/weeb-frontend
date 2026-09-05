@@ -103,7 +103,7 @@
     backdrop-filter: var(--weeb-panel-blur);
     -webkit-backdrop-filter: var(--weeb-panel-blur);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     box-shadow: var(--weeb-shadow-card, 0 12px 32px oklch(0% 0 0 / 0.4));
     padding: 20px;
   }
@@ -172,7 +172,7 @@
     padding: 10px 12px;
     background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     box-shadow: var(--weeb-shadow-dropdown);
   }
   .slot-popover__slot {

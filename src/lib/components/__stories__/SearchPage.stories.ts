@@ -7,8 +7,8 @@ import {
   type CatalogSearchResponse,
   type RoutePort,
   type UserListPort,
-} from '$lib/components/pages/SearchPage.bloc.svelte';
-import type { GenreFacet, Hit } from '$lib/components/pages/SearchPage.results';
+} from '../../../routes/search/SearchPage.bloc.svelte';
+import type { GenreFacet, Hit } from '../../../routes/search/SearchPage.results';
 
 /**
  * A real address bar, in memory.

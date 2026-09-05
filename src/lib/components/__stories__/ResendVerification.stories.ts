@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import ResendVerification from '../../../routes/auth/resend-verification/+page.svelte';
-import { ResendVerificationBloc } from '$lib/components/pages/ResendVerification.bloc.svelte';
+import { ResendVerificationBloc } from '../../../routes/auth/resend-verification/ResendVerification.bloc.svelte';
 import { ResendBloc } from '$lib/components/auth/auth-resend.svelte';
 import type { ResendVerificationPort } from '$lib/components/auth/auth-shared';
 import { failsWith, frozenClock, pending } from './auth-stubs';

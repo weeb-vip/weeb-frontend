@@ -177,7 +177,7 @@
   :global(.weeb-auth-modal .logo-mark) {
     width: 40px;
     height: 40px;
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     background: linear-gradient(135deg, var(--weeb-accent), var(--weeb-violet));
     display: flex;
     align-items: center;
@@ -222,7 +222,7 @@
     font-family: inherit;
     padding: 7px 13px;
     border: none;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
     cursor: pointer;
     transition: filter 0.15s;
   }
@@ -309,7 +309,7 @@
     font-weight: 600;
     letter-spacing: 0.01em;
     border: none;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -339,7 +339,7 @@
     height: 18px;
     border: 2px solid oklch(100% 0 0 / 0.3);
     border-top-color: white;
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     animation: weeb-auth-spin 0.7s linear infinite;
   }
   @keyframes -global-weeb-auth-spin {

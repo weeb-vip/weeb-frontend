@@ -67,11 +67,43 @@
   --weeb-font:           -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --weeb-font-mono:      'JetBrains Mono', ui-monospace, Menlo, monospace;
 
-  /* ── Radii ── */
+  /* ── Radii ──
+     These load globally from this file, so any `var(--weeb-radius*, <fallback>)`
+     fallback is dead code -- and the fallbacks had drifted: --weeb-radius-full
+     appeared as 9999px, 999px and once as 20px, which is where the pills started
+     disagreeing about their own shape. Reference the token bare. */
   --weeb-radius:         8px;
   --weeb-radius-lg:      12px;
   --weeb-radius-sm:      4px;
   --weeb-radius-full:    9999px;
+
+  /* ── Pills ──
+     ONE pill shape, shared by every pill-shaped control: Tabs' `pill` variant
+     (single-select), FilterPills (multi-select) and GenrePills (links). The same
+     visual used to be defined four times over -- radius 9999px / 20px / 20px /
+     16px, three font sizes and two weights.
+
+     Two heights, and only two: dense filter rows sit at --weeb-pill-min-height,
+     and a strip that is a page's primary way through it (the season strips, the
+     homepage tag row) takes --weeb-pill-min-height-touch. */
+  --weeb-pill-radius:           var(--weeb-radius-full);
+  --weeb-pill-padding-y:        6px;
+  --weeb-pill-padding-x:        14px;
+  /* Gap between a pill's own parts (dot, label, count). */
+  --weeb-pill-gap:              6px;
+  /* Gap between pills in a row. */
+  --weeb-pill-row-gap:          8px;
+  --weeb-pill-font-size:        12px;
+  --weeb-pill-font-weight:      600;
+  --weeb-pill-min-height:       32px;
+  --weeb-pill-min-height-touch: 44px;
+
+  /* The count badge a pill or tab carries. One treatment; it used to be three
+     (2px 6px / radius 6px, 1px 6px / radius 10px, and a bare 11px span). */
+  --weeb-pill-count-radius:     var(--weeb-radius-full);
+  --weeb-pill-count-padding:    2px 6px;
+  --weeb-pill-count-font-size:  10px;
+  --weeb-pill-count-min-width:  18px;
 
   /* ── Shadows ── */
   /* Scrim for small labels laid directly over cover art. Key art is routinely

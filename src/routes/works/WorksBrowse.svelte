@@ -5,10 +5,10 @@
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import {
-    WorksBrowsePageBloc,
+    WorksBrowseBloc,
     type WorkShelf,
     type WorkSummary,
-  } from './WorksBrowsePage.bloc.svelte';
+  } from './WorksBrowse.bloc.svelte';
 
   /**
    * The shelves behind /manga and /light-novels.
@@ -44,7 +44,7 @@
      * Defaults to a bloc reading this component's props, so the two route call
      * sites are unchanged and the server frame already has its shelves.
      */
-    bloc = new WorksBrowsePageBloc({
+    bloc = new WorksBrowseBloc({
       source: () => ({
         heading,
         blurb,
@@ -69,7 +69,7 @@
     page?: number;
     totalPages?: number;
     ssrError?: string | null;
-    bloc?: WorksBrowsePageBloc;
+    bloc?: WorksBrowseBloc;
   } = $props();
 </script>
 

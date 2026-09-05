@@ -166,7 +166,7 @@
     color: var(--weeb-fg-secondary);
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     white-space: nowrap;
     flex-shrink: 0;
     line-height: 1;

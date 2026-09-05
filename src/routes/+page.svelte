@@ -8,7 +8,8 @@
   import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
   import SectionHeader from '$lib/components/primitives/SectionHeader.svelte';
   import GenrePills from '$lib/components/primitives/GenrePills.svelte';
-  import { HomepageBloc, type HomeAnime, type PublishingWork } from '$lib/components/pages/HomepageSSR.bloc.svelte';
+  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import { HomepageBloc, type HomeAnime, type PublishingWork } from './HomepageSSR.bloc.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
 
   /**
@@ -133,18 +134,25 @@
         href="/season/{bloc.selectedSeason}"
         linkText="Full season →"
       />
+      <!-- The same segmented strip as /season's, now off the same primitive.
+           The two had drifted into different padding, type size, weight, radius
+           and hover colour while doing one job; the only value worth keeping was
+           this one's 44px touch target, which `size="touch"` now carries for
+           both. This strip swaps the shelf in place rather than navigating, so
+           it stays on aria-pressed. -->
       <div class="season-tabs">
-        {#each bloc.seasonOptions as season (season)}
-          <button
-            type="button"
-            class="season-tab"
-            class:active={bloc.selectedSeason === season}
-            aria-pressed={bloc.selectedSeason === season}
-            onclick={() => bloc.selectSeason(season)}
-          >
-            {bloc.seasonLabel(season)}
-          </button>
-        {/each}
+        <Tabs
+          items={bloc.seasonOptions.map((season) => ({
+            value: season,
+            label: bloc.seasonLabel(season),
+          }))}
+          value={bloc.selectedSeason}
+          onChange={(season) => bloc.selectSeason(season)}
+          variant="segmented"
+          mode="toggle"
+          size="touch"
+          ariaLabel="Season"
+        />
       </div>
     </div>
     <PosterGrid>
@@ -277,30 +285,9 @@
   .section-header-with-tabs :global(.section-header) {
     margin-bottom: 0;
   }
+  /* The strip itself is Primitives/Tabs; this only places it. */
   .season-tabs {
     display: flex;
-    gap: 6px;
-  }
-  .season-tab {
-    min-height: 44px;
-    padding: 6px 14px;
-    border-radius: var(--weeb-radius, 8px);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--weeb-fg-secondary);
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: color 0.15s, background 0.15s;
-    font-family: inherit;
-  }
-  .season-tab:hover {
-    color: var(--weeb-fg);
-    background: var(--weeb-surface);
-  }
-  .season-tab.active {
-    color: white;
-    background: var(--weeb-accent);
   }
 
   /* --- RESPONSIVE --- */
@@ -308,8 +295,12 @@
     .section {
       padding: var(--weeb-section-py, 32px) var(--weeb-section-px, 24px);
     }
+    /* The segmented box does not wrap, so on a narrow screen it scrolls -- the
+       same thing /season's copy of this strip does. */
     .season-tabs {
-      flex-wrap: wrap;
+      max-width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
   }
   @media (max-width: 400px) {

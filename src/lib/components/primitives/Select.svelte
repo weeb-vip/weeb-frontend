@@ -305,7 +305,7 @@
     padding: 4px;
     background: var(--weeb-bg-elevated);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     box-shadow:
       0 20px 40px -8px oklch(0% 0 0 / 0.45),
       0 8px 16px -4px oklch(0% 0 0 / 0.3);
@@ -326,7 +326,7 @@
     width: 100%;
     padding: 8px 10px;
     border: none;
-    border-radius: var(--weeb-radius-sm, 8px);
+    border-radius: var(--weeb-radius-sm);
     background: transparent;
     font-family: var(--weeb-font);
     font-size: 13px;

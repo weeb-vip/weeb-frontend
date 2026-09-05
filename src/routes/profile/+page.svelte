@@ -7,7 +7,7 @@
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
-  import { ProfilePageBloc, type ProfileShelfCard } from '$lib/components/pages/ProfilePage.bloc.svelte';
+  import { ProfilePageBloc, type ProfileShelfCard } from './ProfilePage.bloc.svelte';
 
   /**
    * The dashboard at /profile: who you are, what your library adds up to, and
@@ -424,7 +424,7 @@
   .btn-settings {
     height: 34px; padding: 0 16px;
     background: var(--weeb-surface); border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px); color: var(--weeb-fg-secondary);
+    border-radius: var(--weeb-radius); color: var(--weeb-fg-secondary);
     font-size: 0.8rem; font-weight: 500; cursor: pointer;
     display: flex; align-items: center; gap: 6px;
     transition: border-color 0.15s, color 0.15s;
@@ -438,7 +438,7 @@
     display: flex; gap: 0;
     margin: 24px var(--weeb-section-px, 48px) 0;
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     overflow: hidden;
   }
   .stat-cell {

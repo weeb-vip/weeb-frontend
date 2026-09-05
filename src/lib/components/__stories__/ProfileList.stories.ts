@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import ProfileList from '../../../routes/profile/anime/+page.svelte';
-import { ProfileListBloc, type MediumUrlPort } from '$lib/components/pages/ProfileList.bloc.svelte';
+import { ProfileListBloc, type MediumUrlPort } from '../../../routes/profile/anime/ProfileList.bloc.svelte';
 import { createAnimeListBloc } from '$lib/components/profile/ProfileAnimeList.bloc.svelte';
 import { createWorkListBloc } from '$lib/components/profile/ProfileWorkList.bloc.svelte';
 import {

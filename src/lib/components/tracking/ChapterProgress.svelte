@@ -142,7 +142,7 @@
     height: 34px;
     flex-shrink: 0;
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     background: var(--weeb-surface);
     color: var(--weeb-fg);
     cursor: pointer;
@@ -177,7 +177,7 @@
     color: var(--weeb-fg);
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     outline: none;
     transition: border-color 0.15s;
   }

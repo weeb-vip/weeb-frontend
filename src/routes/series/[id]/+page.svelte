@@ -8,7 +8,7 @@
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import { GetImageFromAnime, seriesHref } from '$lib/services/utils';
-  import { SeriesPageBloc, type SeriesEntry } from '$lib/components/pages/SeriesPage.bloc.svelte';
+  import { SeriesPageBloc, type SeriesEntry } from './SeriesPage.bloc.svelte';
 
   /**
    * Every anime sharing a series id, laid out season by season.

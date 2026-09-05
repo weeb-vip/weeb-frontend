@@ -11,7 +11,7 @@ import {
   type PublishingWork,
   type SeasonalQueryPort,
   type ViewportPort,
-} from '$lib/components/pages/HomepageSSR.bloc.svelte';
+} from '../../../routes/HomepageSSR.bloc.svelte';
 
 /** Fixed clock: the hero countdown and the rail are the same every render. */
 const NOW = new Date('2026-03-11T12:00:00Z');

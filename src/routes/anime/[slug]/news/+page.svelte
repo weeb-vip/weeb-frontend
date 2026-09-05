@@ -5,7 +5,8 @@
   import { untrack } from 'svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import AnimeNews from '$lib/components/show/AnimeNews.svelte';
-  import { AnimeNewsPageBloc, type AnimeNewsPageData } from '$lib/components/pages/AnimeNewsPage.bloc.svelte';
+  import Tabs, { type TabItem } from '$lib/components/primitives/Tabs.svelte';
+  import { AnimeNewsPageBloc, type AnimeNewsPageData } from './AnimeNewsPage.bloc.svelte';
 
   /**
    * Every news story for one anime, filtered by category and paged, both of
@@ -30,6 +31,19 @@
 
   // The flag poll's teardown comes straight back out of the bloc.
   $effect(() => bloc.watchFlag());
+
+  /* "All" is the empty value, so deselecting a category is just picking it.
+     `--cat-*` are declared on .news-page below and inherit down into the
+     buttons, so the accent resolves without the page knowing the category list. */
+  const categoryItems = $derived<TabItem[]>([
+    { value: '', label: 'All', count: bloc.total },
+    ...bloc.categories.map((c) => ({
+      value: c,
+      label: bloc.label(c),
+      count: bloc.counts[c],
+      accent: `var(--cat-${c}, var(--weeb-fg-muted))`,
+    })),
+  ]);
 
   const SITE_URL = 'https://weeb.vip';
 
@@ -114,22 +128,22 @@
     <p class="error">Couldn't load news right now. Try again in a moment.</p>
   {:else}
     {#if bloc.showFilters}
-      <div class="filters" role="group" aria-label="Filter by category">
-        <button class="chip" class:on={!bloc.selected} onclick={() => bloc.selectCategory(null)}>
-          All <span class="n">{bloc.total}</span>
-        </button>
-        {#each bloc.categories as c (c)}
-          <button
-            class="chip cat"
-            class:on={bloc.selected === c}
-            style="--c: {`var(--cat-${c}, var(--weeb-fg-muted))`}"
-            onclick={() => bloc.selectCategory(c)}
-          >
-            {bloc.label(c)} <span class="n">{bloc.counts[c]}</span>
-          </button>
-        {/each}
+      <!-- Single-select: one category at a time, "All" being none of them. So
+           Tabs' pill variant in toggle mode -- these set what the list shows
+           rather than revealing a panel, and stay plain buttons. Each category
+           carries its own colour through TabItem.accent, which draws the leading
+           dot and tints the selected wash; that is all `.chip.cat` ever did. -->
+      <div class="filters">
+        <Tabs
+          items={categoryItems}
+          value={bloc.selected ?? ''}
+          onChange={(value) => bloc.selectCategory(value || null)}
+          variant="pill"
+          mode="toggle"
+          ariaLabel="Filter by category"
+          itemClass="chip"
+        />
       </div>
-
     {/if}
 
     {#if bloc.filtered.length}
@@ -287,48 +301,9 @@
   }
   .dot { color: var(--weeb-fg-muted); opacity: 0.6; }
 
-  .filters { display: flex; flex-wrap: wrap; gap: 7px; }
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font: inherit;
-    font-size: 12.5px;
-    font-weight: 500;
-    padding: 5px 13px;
-    border-radius: 20px;
-    border: 1px solid var(--weeb-border);
-    background: transparent;
-    color: var(--weeb-fg-secondary);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
-  }
-  .chip:hover { border-color: var(--weeb-surface-hover); color: var(--weeb-fg); }
-  .chip:focus-visible { outline: 2px solid var(--weeb-accent-hover); outline-offset: 2px; }
-  .chip .n {
-    font-family: var(--weeb-font-mono);
-    font-size: 10.5px;
-    color: var(--weeb-fg-muted);
-    font-variant-numeric: tabular-nums;
-  }
-  .chip.cat::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: var(--weeb-radius-full);
-    background: var(--c);
-    flex: none;
-  }
-  .chip.on {
-    color: var(--weeb-fg);
-    border-color: color-mix(in oklch, var(--weeb-accent) 60%, transparent);
-    background: color-mix(in oklch, var(--weeb-accent) 16%, transparent);
-  }
-  .chip.cat.on {
-    border-color: color-mix(in oklch, var(--c) 65%, transparent);
-    background: color-mix(in oklch, var(--c) 15%, transparent);
-  }
+  /* The chips themselves are Primitives/Tabs' pill variant; this places the row
+     and, below 480px, makes it scroll rather than stack. */
+  .filters { display: flex; min-width: 0; }
 
   .resultline {
     font-family: var(--weeb-font-mono);
@@ -354,8 +329,10 @@
     color: var(--weeb-accent-text);
     background: transparent;
     border: 1px solid color-mix(in oklch, var(--weeb-accent) 45%, transparent);
-    border-radius: 20px;
-    padding: 5px 14px;
+    /* The same pill shape as everything else, rather than a fifth 20px. */
+    border-radius: var(--weeb-pill-radius);
+    padding: var(--weeb-pill-padding-y) var(--weeb-pill-padding-x);
+    min-height: var(--weeb-pill-min-height);
     margin-top: 3px;
     cursor: pointer;
   }
@@ -399,11 +376,12 @@
   @media (max-width: 480px) {
     .news-page { padding-left: 16px; padding-right: 16px; }
     /* Chips scroll rather than wrap into a tall block that pushes the list off screen. */
-    .filters { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; }
-    .chip { flex: none; }
+    .filters { overflow-x: auto; padding-bottom: 3px; }
+    .filters :global(.tabs) { flex-wrap: nowrap; }
+    .filters :global(.tab) { flex: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .back, .back svg, .chip { transition: none; }
+    .back, .back svg { transition: none; }
   }
 </style>

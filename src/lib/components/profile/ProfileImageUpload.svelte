@@ -233,7 +233,7 @@
     padding: 28px 24px;
     text-align: center;
     border: 1.5px dashed var(--weeb-border);
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     background: var(--weeb-surface);
     cursor: pointer;
     transition: border-color 0.15s ease, background 0.15s ease;
@@ -281,7 +281,7 @@
   .frame-wrap {
     position: relative;
     user-select: none;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     overflow: hidden;
   }
   .frame-img {
@@ -301,7 +301,7 @@
     transition: box-shadow 0.2s ease;
   }
   .crop--circle {
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
   }
   .crop:focus-visible {
     outline: none;
@@ -362,7 +362,7 @@
   .rail {
     position: relative;
     height: 6px;
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     background: var(--weeb-surface-hover);
   }
   .rail-fill {
@@ -412,7 +412,7 @@
     color: var(--weeb-red);
     background: color-mix(in oklch, var(--weeb-red) 10%, transparent);
     border: 1px solid color-mix(in oklch, var(--weeb-red) 40%, transparent);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
   }
 
   .cropper-footer {

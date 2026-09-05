@@ -15,7 +15,7 @@ const dialogBody = createRawSnippet(() => ({
       <p style="margin: 0; font-size: 14px; color: var(--weeb-fg-secondary);">
         Track what you are watching and pick up where you left off.
       </p>
-      <button type="button" style="align-self: flex-start; min-height: 44px; padding: 7px 18px; border: none; border-radius: var(--weeb-radius, 8px); background: var(--weeb-accent); color: white; font-size: 14px; font-weight: 600; cursor: pointer;">
+      <button type="button" style="align-self: flex-start; min-height: 44px; padding: 7px 18px; border: none; border-radius: var(--weeb-radius); background: var(--weeb-accent); color: white; font-size: 14px; font-weight: 600; cursor: pointer;">
         Continue
       </button>
     </div>

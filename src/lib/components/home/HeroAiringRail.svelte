@@ -140,7 +140,7 @@
   .rail {
     position: absolute;
     z-index: 4;
-    border-radius: var(--weeb-radius-lg, 12px);
+    border-radius: var(--weeb-radius-lg);
     background: var(--weeb-panel-bg, var(--weeb-surface));
     backdrop-filter: var(--weeb-panel-blur);
     -webkit-backdrop-filter: var(--weeb-panel-blur);
@@ -183,7 +183,7 @@
   .rail-all:focus-visible {
     outline: 2px solid var(--weeb-accent-text);
     outline-offset: 2px;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
   }
 
   .rail-list {
@@ -196,7 +196,7 @@
     display: flex;
     gap: 10px;
     width: 100%;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     background: transparent;
     text-decoration: none;
     color: inherit;
@@ -214,7 +214,7 @@
   .rail-art {
     flex: 0 0 auto;
     aspect-ratio: 2 / 3;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
     overflow: hidden;
     background: var(--weeb-surface);
   }

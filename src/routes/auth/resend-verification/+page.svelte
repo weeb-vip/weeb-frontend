@@ -6,7 +6,7 @@
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import FormInput from '$lib/components/primitives/FormInput.svelte';
-  import { ResendVerificationBloc } from '$lib/components/pages/ResendVerification.bloc.svelte';
+  import { ResendVerificationBloc } from './ResendVerification.bloc.svelte';
 
   /**
    * The standalone "send me another verification link" page.

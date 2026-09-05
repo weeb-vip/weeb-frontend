@@ -4,7 +4,7 @@
   import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ProfileAvatar from '$lib/components/profile/ProfileAvatar.svelte';
-  import { PublicUserPageBloc, type PublicUserCard } from '$lib/components/pages/PublicUserPage.bloc.svelte';
+  import { PublicUserPageBloc, type PublicUserCard } from './PublicUserPage.bloc.svelte';
 
   /**
    * Someone else's profile.

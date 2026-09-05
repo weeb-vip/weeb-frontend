@@ -23,13 +23,13 @@ import {
   groupShowsByDay,
   isoDayInZone,
   type AiringShow,
-} from './CurrentlyAiringPage.schedule';
+} from '../CurrentlyAiringPage.schedule';
 import {
   browserLocalZone,
   type AiringQueryPort,
   type ClockPort,
   type LocalZonePort,
-} from './CurrentlyAiringPage.bloc.svelte';
+} from '../CurrentlyAiringPage.bloc.svelte';
 
 export type CalendarViewMode = 'month' | 'week';
 

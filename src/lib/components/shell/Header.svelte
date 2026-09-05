@@ -183,7 +183,7 @@
     align-items: center;
     min-height: 44px;
     padding: 6px 14px;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     font-size: 14px;
     font-weight: 500;
     color: var(--weeb-fg-secondary);

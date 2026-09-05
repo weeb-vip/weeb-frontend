@@ -103,8 +103,50 @@ All values are `oklch()`. Reference via `var(--weeb-*)` in scoped styles or `wee
 | `--weeb-radius` | 8px | Default (cards, inputs) |
 | `--weeb-radius-lg` | 12px | Large cards, modals |
 | `--weeb-radius-sm` | 4px | Small elements, chips |
-| `--weeb-radius-full` | 9999px | Avatars, circles |
-| _(hardcoded)_ | 20px | Genre pills |
+| `--weeb-radius-full` | 9999px | Avatars, circles, pills |
+
+Reference these **bare** — `var(--weeb-radius)`, never `var(--weeb-radius, 8px)`.
+This file is imported globally, so a fallback can never fire; every one of the
+~100 that existed was dead code, and they had drifted (`--weeb-radius-full`
+written as `9999px`, `999px` and once as `20px`; `--weeb-radius-sm` as `4px`,
+`6px` and `8px`). That `20px` is why the pills used to disagree about their own
+shape.
+
+---
+
+## Pills
+
+There is **one** pill. `Tabs`' `pill` variant (single-select), `FilterPills`
+(multi-select) and `GenrePills` (links to `/search`) all read these tokens, so
+they cannot drift apart again. Anything else pill-shaped — the news page's "Show
+all" reset, say — takes the same tokens rather than inventing a radius.
+
+| Token | Value | Usage |
+|---|---|---|
+| `--weeb-pill-radius` | `var(--weeb-radius-full)` | The pill's own radius |
+| `--weeb-pill-padding-y` / `-x` | 6px / 14px | Pill padding |
+| `--weeb-pill-gap` | 6px | Between a pill's parts (dot, label, count) |
+| `--weeb-pill-row-gap` | 8px | Between pills in a row |
+| `--weeb-pill-font-size` | 12px | |
+| `--weeb-pill-font-weight` | 600 | |
+| `--weeb-pill-min-height` | 32px | Dense filter rows |
+| `--weeb-pill-min-height-touch` | 44px | A strip that is a page's primary way through it |
+
+Two heights, and only two. `Tabs` reaches the taller one with `size="touch"` —
+which is what the season strips and the homepage tag row use.
+
+### Count badge
+
+One treatment, shared by `Tabs` and `FilterPills`: mono, tabular numerals, on
+`--weeb-surface-hover`, tinted with the accent while its pill is selected, and
+transparent at `0` so an empty facet recedes.
+
+| Token | Value |
+|---|---|
+| `--weeb-pill-count-radius` | `var(--weeb-radius-full)` |
+| `--weeb-pill-count-padding` | 2px 6px |
+| `--weeb-pill-count-font-size` | 10px |
+| `--weeb-pill-count-min-width` | 18px |
 
 ---
 
@@ -166,11 +208,29 @@ Section title with an optional "View all" link.
 
 ### GenrePills
 
-Horizontally scrolling genre pill list.
+Wrapping row of genre pills. The link-flavoured pill: each is an `<a>` to
+`/search?genre=`, not a toggle. Shape from the pill tokens, at the touch height.
 
 | Prop | Type | Description |
 |---|---|---|
 | `genres` | string[] | List of genre names |
+
+### FilterPills
+
+One **multi-select** filter row — pills that turn on and off independently, with
+optional counts, an optional leading "Clear" and an optional trailing
+"+N more". The sibling of `Tabs`, which is single-select; reach for that one when
+exactly one item can be picked.
+
+| Prop | Type | Description |
+|---|---|---|
+| `items` | `FilterPillItem[]` | `{ value, label, count? }` |
+| `isSelected` | `(value) => boolean` | Whether a pill is on |
+| `onToggle` | `(value) => void` | |
+| `clear` | `{ label?, onClear }` | The leading Clear pill. Pass it only while something is on |
+| `more` | `{ hiddenCount, expanded, onToggle, collapseLabel? }` | The "+N more" pill. No `collapseLabel` makes the reveal one-way |
+| `ariaLabel` | string | Names the row |
+| `class` / `pillClass` | string | Extra classes on the row / on every pill |
 
 ### HeroBanner
 

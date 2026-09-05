@@ -9,7 +9,7 @@ import {
   toGenreFacets,
   yearOptions,
   type NormalizedHit,
-} from '$lib/components/pages/SearchPage.results';
+} from './SearchPage.results';
 
 /**
  * Turning Algolia's answer into what /search renders. The anime index stores

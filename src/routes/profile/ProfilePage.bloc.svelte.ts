@@ -11,7 +11,7 @@ import {
 } from '$lib/services/query-options';
 import { GetImageFromAnime } from '$lib/services/utils';
 import { getAirTimeDisplay, findNextEpisode, getCurrentTime, parseAirTime } from '$lib/services/airTimeUtils';
-import { Status, WorkStatus } from '../../../gql/graphql';
+import { Status, WorkStatus } from '../../gql/graphql';
 import { workSubtitle } from '$lib/utils/workDisplay';
 import { configStore } from '$lib/stores/config';
 import { preferencesStore, getAnimeTitle, type TitleLanguage } from '$lib/stores/preferences';

@@ -16,7 +16,7 @@ import {
   upcomingDayGroups,
   type AiringEntry,
   type AiringShow,
-} from '$lib/components/pages/CurrentlyAiringPage.schedule';
+} from './CurrentlyAiringPage.schedule';
 
 /**
  * These rules used to live inside a 1444-line component, where the only way to

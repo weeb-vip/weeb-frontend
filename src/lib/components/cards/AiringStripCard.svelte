@@ -101,7 +101,7 @@
     padding: 14px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s;
     text-decoration: none;

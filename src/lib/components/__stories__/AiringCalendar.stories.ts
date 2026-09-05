@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import AiringCalendar from '../../../routes/airing/calendar/+page.svelte';
 import { createQueryClient } from '$lib/services/query-client';
-import { AiringCalendarBloc, type AiringCalendarDeps } from '$lib/components/pages/AiringCalendar.bloc.svelte';
-import type { AiringShow } from '$lib/components/pages/CurrentlyAiringPage.schedule';
-import type { AiringQueryPort } from '$lib/components/pages/CurrentlyAiringPage.bloc.svelte';
+import { AiringCalendarBloc, type AiringCalendarDeps } from '../../../routes/airing/calendar/AiringCalendar.bloc.svelte';
+import type { AiringShow } from '../../../routes/airing/CurrentlyAiringPage.schedule';
+import type { AiringQueryPort } from '../../../routes/airing/CurrentlyAiringPage.bloc.svelte';
 
 /** Fixed clock, so "today" is always the same ringed square. */
 const NOW = new Date('2026-03-11T12:00:00Z');

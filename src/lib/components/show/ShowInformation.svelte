@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatDateUTC } from '$lib/services/utils';
-  import { allStudios } from '$lib/components/pages/ShowContent.rules';
+  import { allStudios } from './ShowContent.rules';
 
   /**
    * The reference block: everything about the record that is not the story.

@@ -5,8 +5,8 @@ import {
   CurrentlyAiringPageBloc,
   type AiringQueryPort,
   type CurrentlyAiringDeps,
-} from '$lib/components/pages/CurrentlyAiringPage.bloc.svelte';
-import type { AiringShow } from '$lib/components/pages/CurrentlyAiringPage.schedule';
+} from '../../../routes/airing/CurrentlyAiringPage.bloc.svelte';
+import type { AiringShow } from '../../../routes/airing/CurrentlyAiringPage.schedule';
 
 /**
  * A fixed clock, so the countdowns, the "Today" badge and which square is

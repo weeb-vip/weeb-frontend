@@ -20,7 +20,7 @@
   import ShowSectionNav from '$lib/components/show/ShowSectionNav.svelte';
   import ShowStickyHeader from '$lib/components/show/ShowStickyHeader.svelte';
   import ShowSynopsis from '$lib/components/show/ShowSynopsis.svelte';
-  import { ShowContentBloc, NEWS_LIMIT } from '$lib/components/pages/ShowContent.bloc.svelte';
+  import { ShowContentBloc, NEWS_LIMIT } from './ShowContent.bloc.svelte';
 
   /**
    * The anime detail page.

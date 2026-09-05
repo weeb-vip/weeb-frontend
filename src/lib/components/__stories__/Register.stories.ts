@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import Register from '../../../routes/auth/register/+page.svelte';
-import { RegisterBloc } from '$lib/components/pages/Register.bloc.svelte';
+import { RegisterBloc } from '$lib/components/auth/Register.bloc.svelte';
 import type { RegisterPort } from '$lib/components/auth/auth-shared';
 import { failsWith, pending } from './auth-stubs';
 

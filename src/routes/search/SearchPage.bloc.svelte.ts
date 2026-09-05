@@ -6,7 +6,7 @@ import { configStore } from '$lib/stores/config';
 import { AuthStorage } from '$lib/utils/auth-storage';
 import { animeHref } from '$lib/services/utils';
 import { workSubtitle } from '$lib/utils/workDisplay';
-import { Status } from '../../../gql/graphql';
+import { Status } from '../../gql/graphql';
 import {
   filterAndSortHits,
   listExcerpt,

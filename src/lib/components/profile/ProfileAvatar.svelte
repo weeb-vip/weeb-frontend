@@ -143,7 +143,7 @@
   /* The hero face. Sized by its wrapper, so the page owns the dimensions and
      their breakpoints. */
   .avatar-hero {
-    border-radius: var(--weeb-radius-full, 9999px);
+    border-radius: var(--weeb-radius-full);
     border: 4px solid var(--weeb-bg);
     /* The gradient is the ground the initials sit on, and what shows through
        while a picture loads. */

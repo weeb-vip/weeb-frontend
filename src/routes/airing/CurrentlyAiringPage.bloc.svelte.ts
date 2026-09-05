@@ -13,7 +13,7 @@ import { GetImageFromAnime, animeHref } from '$lib/services/utils';
 import { getSafeImageUrl, resizeCdnUrl } from '$lib/utils/image';
 import { getAnimeTitle, preferencesStore, type TitleLanguage } from '$lib/stores/preferences';
 import { useAddAnimeWithToast } from '$lib/utils/anime-actions';
-import { Status } from '../../../gql/graphql';
+import { Status } from '../../gql/graphql';
 import { getCurrentSeason, getSeasonDisplayName } from '$lib/utils/seasonUtils';
 import {
   buildCalendarGrid,

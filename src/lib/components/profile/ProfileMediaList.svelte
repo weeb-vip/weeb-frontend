@@ -277,7 +277,7 @@
     padding: 10px 16px;
     background: var(--weeb-surface);
     border: 1px solid transparent;
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     transition: border-color 0.15s, background 0.15s;
     cursor: pointer;
   }

@@ -18,18 +18,25 @@
   .genre-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--weeb-pill-row-gap);
   }
+  /* The link-flavoured pill: the same shape as Tabs' `pill` variant and
+     FilterPills, off the same tokens, but an <a> to /search rather than a
+     toggle. It used to hardcode `border-radius: 20px` -- written as though
+     --weeb-radius-full meant 20px, which is the drift the tokens exist to stop.
+     Kept at the touch height: this is the homepage's "Browse by Tag" row, a
+     primary way into the catalogue rather than a dense filter strip. */
   .genre-pill {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
-    padding: 8px 16px;
-    border-radius: 20px;
+    gap: var(--weeb-pill-gap);
+    min-height: var(--weeb-pill-min-height-touch);
+    padding: var(--weeb-pill-padding-y) var(--weeb-pill-padding-x);
+    border-radius: var(--weeb-pill-radius);
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--weeb-pill-font-size);
+    font-weight: var(--weeb-pill-font-weight);
     color: var(--weeb-fg-secondary);
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s, background 0.15s;
@@ -39,5 +46,9 @@
     border-color: var(--weeb-accent);
     color: var(--weeb-fg);
     background: var(--weeb-surface-hover);
+  }
+  .genre-pill:focus-visible {
+    outline: 2px solid var(--weeb-accent);
+    outline-offset: 2px;
   }
 </style>

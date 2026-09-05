@@ -3,7 +3,7 @@
   import ProfileAnimeList from '$lib/components/profile/ProfileAnimeList.svelte';
   import ProfileWorkList from '$lib/components/profile/ProfileWorkList.svelte';
   import Tabs from '$lib/components/primitives/Tabs.svelte';
-  import { ProfileListBloc } from '$lib/components/pages/ProfileList.bloc.svelte';
+  import { ProfileListBloc } from './ProfileList.bloc.svelte';
   import type { MediaListBloc } from '$lib/components/profile/MediaList.bloc.svelte';
 
   /*

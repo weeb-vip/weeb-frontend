@@ -46,7 +46,7 @@ export type WorksBrowseAccessor = () => {
   ssrError: string | null;
 };
 
-export interface WorksBrowsePageDeps {
+export interface WorksBrowseDeps {
   source?: WorksBrowseAccessor;
   viewport?: ViewportPort;
 }
@@ -97,7 +97,7 @@ export function pageWindow(page: number, totalPages: number, span = 2): number[]
  * breakpoint question -- and to hold the pager arithmetic, which is the one
  * part of this page with an off-by-one to get wrong.
  */
-export class WorksBrowsePageBloc {
+export class WorksBrowseBloc {
   readonly #source: WorksBrowseAccessor;
   readonly #phone: { current: boolean };
   readonly #tablet: { current: boolean };
@@ -116,7 +116,7 @@ export class WorksBrowsePageBloc {
       ssrError: null,
     }),
     viewport = { isPhone, isTablet },
-  }: WorksBrowsePageDeps = {}) {
+  }: WorksBrowseDeps = {}) {
     this.#source = source;
     this.#phone = fromStore(viewport.isPhone);
     this.#tablet = fromStore(viewport.isTablet);

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import PasswordResetRequest from '../../../routes/auth/password-reset-request/+page.svelte';
-import { PasswordResetRequestBloc } from '$lib/components/pages/PasswordResetRequest.bloc.svelte';
+import { PasswordResetRequestBloc } from '../../../routes/auth/password-reset-request/PasswordResetRequest.bloc.svelte';
 import type { PasswordResetRequestPort } from '$lib/components/auth/auth-shared';
 import { failsWith, pending } from './auth-stubs';
 

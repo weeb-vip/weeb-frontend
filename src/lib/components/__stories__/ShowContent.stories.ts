@@ -5,7 +5,7 @@ import {
   ShowContentBloc,
   type ShowContentDeps,
   type ViewportPort,
-} from '$lib/components/pages/ShowContent.bloc.svelte';
+} from '../../../routes/anime/[slug]/ShowContent.bloc.svelte';
 import { CHARACTERS, FULL_ANIME, MINIMAL_ANIME, TRACKED_ANIME, UNAIRED_ANIME } from './show-fixtures';
 
 /**

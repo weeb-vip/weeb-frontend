@@ -29,8 +29,8 @@
 
     <!-- Buttons -->
     <div style="display: flex; gap: 10px;">
-      <div class="skeleton-line" style="width: 120px; height: 40px; border-radius: var(--weeb-radius, 8px);"></div>
-      <div class="skeleton-line" style="width: 100px; height: 40px; border-radius: var(--weeb-radius, 8px);"></div>
+      <div class="skeleton-line" style="width: 120px; height: 40px; border-radius: var(--weeb-radius);"></div>
+      <div class="skeleton-line" style="width: 100px; height: 40px; border-radius: var(--weeb-radius);"></div>
     </div>
   </div>
 </div>

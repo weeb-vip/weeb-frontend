@@ -9,6 +9,10 @@ this document is about code shape.
 Everything shared lives under `src/lib/`, reached through SvelteKit's built-in
 `$lib` alias. There are no other path aliases.
 
+`src/lib/components/` is a **reusable-only component library**: nothing goes in
+it that has a single caller. Page code -- a page's bloc and its pure-logic
+modules -- lives beside the `+page.svelte` that uses it, in `src/routes/`.
+
 ```
 src/lib/components/<group>/   views + their blocs, grouped by kind
 src/lib/components/__stories__/   every story, its fixtures, and the offline stubs
@@ -20,13 +24,18 @@ src/lib/utils/                framework-free helpers
 src/lib/services/             the data layer (see below)
 src/lib/server/               server-only modules
 src/lib/client/               browser-only modules
+
+src/routes/<route>/           the +page.svelte, its bloc, its pure-logic
+                              modules and their unit tests
+src/routes/works/             a shared page body with no +page file, so no URL
 ```
 
 The component groups mirror the Storybook sidebar one-for-one, so the tree and
 the sidebar are the same map: `primitives/` is `Primitives/`, and `cards/`,
 `show/`, `tracking/`, `profile/`, `home/`, `auth/`, `shell/` are the
-`Composites/<Area>/` tiers (`shell/` is `App Shell`). `pages/` holds the page
-blocs and the two genuinely shared page bodies, matching the `Pages/` tier.
+`Composites/<Area>/` tiers (`shell/` is `App Shell`). There is no `pages/`
+group: the `Pages/` tier of the sidebar is driven by stories that import the
+routes themselves.
 
 Import across groups with `$lib/components/<group>/Foo.svelte`; import within a
 group relatively (`./Foo.svelte`). A bloc always sits beside its view.
@@ -135,10 +144,20 @@ has exactly one, so it lives in its route: the `+page.svelte` **is** the page,
 markup, scoped styles and all. There is no `SearchPage.svelte` for
 `/search/+page.svelte` to delegate to.
 
-The bloc does not move. `SearchPage.bloc.svelte.ts` and its friends stay in
-`src/lib/components/pages/` -- they are the reusable, testable half, imported
-by tests and by the route, and the split is the same one as anywhere else: the
-route file is the view.
+The bloc moves with it. `SearchPage.bloc.svelte.ts` and its friends sit in
+`src/routes/search/`, next to the `+page.svelte` that is their view -- they are
+the testable half, imported by the route, by its tests and by the story, and
+the split is the same one as anywhere else: the route file is the view. A
+module with one page as its only caller is not library code, so it does not
+live in `src/lib/components/`.
+
+The exception is a page module a *library* component depends on. That
+dependency is what makes it shared, so it moves into the library group of the
+component that needs it, never the other way around: `Login.bloc.svelte.ts` and
+`Register.bloc.svelte.ts` are in `components/auth/` because
+`LoginRegisterModal` composes them, and `ShowContent.rules.ts` is in
+`components/show/` because `ShowInformation` and `ShowSectionNav` read it.
+Nothing under `src/lib/` may import from `src/routes/`.
 
 Three things follow from a route being the view:
 
@@ -151,8 +170,12 @@ Three things follow from a route being the view:
   `{#key data.season}<SeasonPage … />` is now a `$derived` bloc keyed on the
   param, with the markup keyed on the same value. `/season/[season]` and
   `/anime/[slug]` both do this.
-- **Genuinely shared bodies stay components.** `WorksBrowsePage` renders both
-  `/manga` and `/light-novels`, so it is reusable and stays where it is.
+- **A body shared by two routes is still page code.** `WorksBrowse.svelte`
+  renders both `/manga` and `/light-novels`, so it cannot live in either route
+  folder -- but two pages is not a library either. It sits in
+  `src/routes/works/`, a folder with no `+page` file and therefore no URL
+  (`/works` 404s). Each route keeps its own `Seo`, copy and loader and imports
+  the body from `../works/WorksBrowse.svelte`.
 
 ## Runes, not legacy syntax
 

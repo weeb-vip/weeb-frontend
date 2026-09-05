@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import CheckEmail from '../../../routes/auth/check-email/+page.svelte';
-import { CheckEmailBloc } from '$lib/components/pages/CheckEmail.bloc.svelte';
+import { CheckEmailBloc } from '../../../routes/auth/check-email/CheckEmail.bloc.svelte';
 import { resendIn, routeWith, type ResendStoryState } from './auth-stubs';
 
 function checkEmailBloc(query: string, resend: ResendStoryState = 'idle') {

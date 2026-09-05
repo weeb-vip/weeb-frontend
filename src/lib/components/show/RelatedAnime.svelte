@@ -202,7 +202,7 @@
     padding: 10px;
     background: var(--weeb-surface);
     border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+    border-radius: var(--weeb-radius);
     text-decoration: none;
     color: inherit;
     transition: background 0.15s, border-color 0.15s;
@@ -227,7 +227,7 @@
     flex-shrink: 0;
     width: 40px;
     height: 56px;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
     overflow: hidden;
     background: var(--weeb-bg-elevated);
   }
@@ -274,7 +274,7 @@
     font-size: 10px;
     font-weight: 600;
     padding: 1px 6px;
-    border-radius: var(--weeb-radius-sm, 4px);
+    border-radius: var(--weeb-radius-sm);
     background: var(--weeb-bg-elevated);
     color: var(--weeb-fg-muted);
     white-space: nowrap;

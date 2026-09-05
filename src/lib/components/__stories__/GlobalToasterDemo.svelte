@@ -44,7 +44,7 @@
     font: inherit;
     font-size: 13px;
     padding: 7px 14px;
-    border-radius: var(--weeb-radius-sm, 6px);
+    border-radius: var(--weeb-radius-sm);
     border: 1px solid var(--weeb-border);
     background: var(--weeb-surface);
     color: var(--weeb-fg);

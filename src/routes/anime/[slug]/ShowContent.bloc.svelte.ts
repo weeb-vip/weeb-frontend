@@ -57,7 +57,7 @@ import {
   watchedNumbersFrom,
   type SectionTab,
   type ShowStatus,
-} from './ShowContent.rules';
+} from '$lib/components/show/ShowContent.rules';
 
 export const NEWS_FLAG = 'anime-news';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import Tabs, { type TabItem } from '$lib/components/primitives/Tabs.svelte';
-  import type { SectionTab } from '$lib/components/pages/ShowContent.rules';
+  import type { SectionTab } from './ShowContent.rules';
 
   /**
    * The bar pinned under the nav that says which part of the page you are in.
