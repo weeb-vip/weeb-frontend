@@ -761,14 +761,14 @@
 <ProfileImageUpload
   isOpen={showUploadModal}
   {queryClient}
-  on:close={() => showUploadModal = false}
+  onClose={() => (showUploadModal = false)}
 />
 
 <ProfileImageUpload
   variant="banner"
   isOpen={showBannerModal}
   {queryClient}
-  on:close={() => showBannerModal = false}
+  onClose={() => (showBannerModal = false)}
 />
 
 <style>

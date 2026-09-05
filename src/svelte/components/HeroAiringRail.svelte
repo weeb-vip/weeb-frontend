@@ -4,20 +4,25 @@
   import { analytics } from '../../utils/analytics';
   import { getAnimeTitle, preferencesStore } from '../stores/preferences';
 
-  /** Entries from HomepageSSR's sortedCurrentlyAiring. */
-  export let entries: any[] = [];
-  export let activeId: string | null = null;
+  /**
+   * Presentational -- no bloc. Every row is drawn from the entry it is given;
+   * the timings were resolved once in HomepageSSR, and hovering a row only
+   * hands the entry back to whoever owns the banner.
+   */
+  let {
+    /** Entries from HomepageSSR's sortedCurrentlyAiring. */
+    entries = [],
+    activeId = null,
+    /** Hovering or focusing an entry retargets the banner behind this rail. */
+    onSelect = () => {},
+  }: {
+    entries?: any[];
+    activeId?: string | null;
+    onSelect?: (info: any) => void;
+  } = $props();
 
-  /** Hovering or focusing an entry retargets the banner behind this rail. */
-  export let onSelect: (info: any) => void = () => {};
-
-  // This rail is the homepage's only schedule surface, so it carries everything
-  // the old Airing This Week strip showed with the data this query returns:
-  // episode, local air time, countdown and live state. Eight entries; the last
-  // two are desktop-only casualties of panel height, and Full schedule owns
-  // completeness either way.
   const LIMIT = 8;
-  $: shown = entries.slice(0, LIMIT);
+  const shown = $derived(entries.slice(0, LIMIT));
 
   // Every field here comes off the one EpisodeTiming resolved in
   // HomepageSSR.processCurrentlyAiring. The rail no longer formats a time or
@@ -82,9 +87,9 @@
             class:is-active={activeId === entry.anime.id}
             href={animeHref(entry.anime)}
             aria-current={activeId === entry.anime.id ? 'true' : undefined}
-            on:mouseenter={() => onSelect(entry.airingInfo)}
-            on:focus={() => onSelect(entry.airingInfo)}
-            on:click={() => analytics.animeViewed(entry.anime.id, entry.anime.titleEn)}
+            onmouseenter={() => onSelect(entry.airingInfo)}
+            onfocus={() => onSelect(entry.airingInfo)}
+            onclick={() => analytics.animeViewed(entry.anime.id, entry.anime.titleEn)}
           >
             <span class="rail-art">
               <SafeImage

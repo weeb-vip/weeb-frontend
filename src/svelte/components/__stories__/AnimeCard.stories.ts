@@ -26,6 +26,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The bare poster tile: artwork and nothing else. */
 export const Default: Story = {
   args: {
     id: '154587',
@@ -39,6 +40,7 @@ export const Default: Story = {
   },
 };
 
+/** The metadata card: episode count, duration and year beside the poster. */
 export const DetailStyle: Story = {
   args: {
     id: '5114',
@@ -52,6 +54,7 @@ export const DetailStyle: Story = {
   },
 };
 
+/** The episode card the calendar popover renders, with a countdown. */
 export const EpisodeStyle: Story = {
   args: {
     id: '52991',
@@ -69,6 +72,7 @@ export const EpisodeStyle: Story = {
   },
 };
 
+/** Already on the viewer's list, so the card wears its status badge. */
 export const WithWatchlistStatus: Story = {
   args: {
     id: '1735',
@@ -83,6 +87,7 @@ export const WithWatchlistStatus: Story = {
   },
 };
 
+/** Airing right now: the broadcast line turns amber. */
 export const WithAiringBadge: Story = {
   args: {
     id: '21',
@@ -94,5 +99,58 @@ export const WithAiringBadge: Story = {
     style: 'detail',
     airTime: { show: true, text: 'Airing Now', variant: 'airing' },
     tags: ['Action', 'Comedy', 'Sci-Fi'],
+  },
+};
+
+/**
+ * Nothing announced yet: episodes fall back to TBA and the duration is the
+ * muted, italic estimate rather than a measured figure.
+ */
+export const UnknownCounts: Story = {
+  args: {
+    id: '58567',
+    title: 'Kaijuu 8-gou Season 3',
+    episodes: 0,
+    episodeLength: '',
+    year: '',
+    image: 'https://cdn.myanimelist.net/images/anime/1975/143867.jpg',
+    style: 'detail',
+    tags: ['Action', 'Sci-Fi'],
+  },
+};
+
+/** A title that outruns its column, so ScrollingText has something to do. */
+export const LongTitle: Story = {
+  args: {
+    id: '52347',
+    title: 'The Exiled Heavy Knight Knows How to Game the System and Will Not Be Returning to the Capital',
+    episodes: 12,
+    episodeLength: '24 min',
+    year: '2024',
+    image: 'https://cdn.myanimelist.net/images/anime/1015/138006.jpg',
+    style: 'detail',
+    tags: ['Action', 'Adventure', 'Comedy', 'Fantasy', 'Isekai'],
+  },
+};
+
+/** No artwork at all: SafeImage falls through to its own placeholder. */
+export const MissingImage: Story = {
+  args: {
+    id: '0',
+    title: 'A Show With No Poster',
+    episodes: 12,
+    episodeLength: '24 min',
+    year: '2024',
+    image: '',
+    style: 'detail',
+    tags: ['Drama'],
+  },
+};
+
+/** The list layout the calendar popover uses: poster left, text right, always. */
+export const ForcedListLayout: Story = {
+  args: {
+    ...EpisodeStyle.args,
+    forceListLayout: true,
   },
 };

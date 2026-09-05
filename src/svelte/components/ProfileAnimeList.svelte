@@ -210,15 +210,15 @@
     goto(animeHref(anime));
   }
 
-  function handleDropdownStatusChange(event: CustomEvent) {
-    const { animeId, status } = event.detail;
+  function handleDropdownStatusChange(detail: { animeId: string; status: string }) {
+    const { animeId, status } = detail;
     if (upsertAnimeMutation) {
       $upsertAnimeMutation.mutate({ input: { animeID: animeId, status } });
     }
   }
 
-  function handleDelete(event: CustomEvent) {
-    const { animeId } = event.detail;
+  function handleDelete(detail: { animeId: string }) {
+    const { animeId } = detail;
     if (deleteAnimeMutation) {
       $deleteAnimeMutation.mutate(animeId);
     }
@@ -419,8 +419,8 @@
                 <AnimeStatusDropdown
                   entry={{ id: entry.id, anime: entry.anime, status: entry.status }}
                   variant="compact"
-                  on:statusChange={handleDropdownStatusChange}
-                  on:delete={handleDelete}
+                  onStatusChange={handleDropdownStatusChange}
+                  onDelete={handleDelete}
                 />
               </div>
             </div>

@@ -1,310 +1,132 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { createMutation } from '@tanstack/svelte-query';
-  import { uploadProfileImage, uploadBannerImage } from '../../services/api/upload';
   import Modal from './Modal.svelte';
   import Button from './Button.svelte';
-  import debug from '../../utils/debug';
+  import {
+    ProfileImageUploadBloc,
+    type ProfileImageVariant,
+    type QueryCachePort
+  } from './ProfileImageUpload.bloc.svelte';
 
-  export let isOpen = false;
-  export let queryClient: any;
+  let {
+    isOpen = false,
+    queryClient,
+    variant = 'avatar',
+    /** The cropper asked to be dismissed -- cancelled, or done. */
+    onClose,
+    bloc: injected
+  }: {
+    isOpen?: boolean;
+    queryClient?: QueryCachePort;
+    /** `avatar` is the square, circle-clipped picture; `banner` the 4:1 strip. */
+    variant?: ProfileImageVariant;
+    onClose?: () => void;
+    bloc?: ProfileImageUploadBloc;
+  } = $props();
 
-  /**
-   * One cropper for both the avatar and the banner.
-   *
-   * They are the same interaction -- pick a file, frame a crop, export it --
-   * differing only in the box's shape and where the result goes. So `variant`
-   * switches the aspect (a square vs a 4:1 strip), whether the export is clipped
-   * to a circle, the output size, the minimum accepted source, and which upload
-   * it calls, rather than a second component copying the drag maths.
-   */
-  export let variant: 'avatar' | 'banner' = 'avatar';
-
-  const PRESETS = {
-    avatar: {
-      aspect: 1,
-      circular: true,
-      output: { w: 800, h: 800 },
-      min: { w: 400, h: 400 },
-      title: 'Frame your picture',
-      fileName: 'profile.jpg',
-      upload: uploadProfileImage,
+  const ownBloc = new ProfileImageUploadBloc({
+    get variant() {
+      return variant;
     },
-    banner: {
-      aspect: 4,
-      circular: false,
-      output: { w: 1600, h: 400 },
-      min: { w: 800, h: 200 },
-      title: 'Frame your banner',
-      fileName: 'banner.jpg',
-      upload: uploadBannerImage,
+    get cache() {
+      return queryClient;
     },
-  } as const;
-
-  $: preset = PRESETS[variant];
-
-  const dispatch = createEventDispatcher();
-
-  let previewUrl: string | null = null;
-  let naturalSize = { width: 0, height: 0 };
-  let imageSize = { width: 0, height: 0 }; // on-screen display size
-  // The crop is stored by its width; height is derived from the variant's
-  // aspect, so a square and a strip are the same state.
-  let crop = { x: 0, y: 0, width: 0 };
-  let isDragging = false;
-  let dragStart = { x: 0, y: 0 };
-  let dragActive = false; // a file is over the dropzone
-  let justSaved = false;
-  let fileInput: HTMLInputElement;
-  let canvas: HTMLCanvasElement;
-  /** Shown to the user when an upload fails. debug.* is compiled out of
-      production, so anything reported only through it is reported to nobody. */
-  let uploadError: string | null = null;
-
-  const uploadMutation = createMutation({
-    mutationFn: async (blob: Blob) => {
-      const file = new File([blob], preset.fileName, { type: 'image/jpeg' });
-      return await preset.upload(file);
-    },
-    onSuccess: (data) => {
-      uploadError = null;
-      // Merge rather than replace, so uploading one image does not drop the
-      // other's URL from the cached user.
-      queryClient.setQueryData(['user'], (prev: any) => ({ ...(prev ?? {}), ...data }));
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      // A beat of confirmation before the modal leaves, so the commit is not
-      // just a spinner and then silence at the highest-stakes moment.
-      justSaved = true;
-      setTimeout(handleClose, 900);
-    },
-    onError: (error: any) => {
-      debug.error('Failed to upload image:', error);
-      uploadError = error?.message ? `Upload failed: ${error.message}` : 'Upload failed. Please try again.';
+    get onClose() {
+      return onClose;
     }
-  }, queryClient);
+  });
+  const bloc = $derived(injected ?? ownBloc);
 
-  function resetState() {
-    previewUrl = null;
-    uploadError = null;
-    justSaved = false;
-    naturalSize = { width: 0, height: 0 };
-    imageSize = { width: 0, height: 0 };
-    crop = { x: 0, y: 0, width: 0 };
+  let fileInput = $state<HTMLInputElement | undefined>();
+  let canvas = $state<HTMLCanvasElement | undefined>();
+
+  /** Mouse and touch report a point differently; the bloc only wants the point. */
+  function pointOf(event: MouseEvent | TouchEvent): { x: number; y: number } {
+    return 'touches' in event
+      ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
+      : { x: event.clientX, y: event.clientY };
   }
 
-  function handleClose() {
-    dispatch('close');
-    resetState();
-  }
-
-  function handleFileSelect(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file && file.type.startsWith('image/')) processFile(file);
-  }
-  function handleDrop(event: DragEvent) {
-    event.preventDefault();
-    dragActive = false;
-    const file = event.dataTransfer?.files[0];
-    if (file && file.type.startsWith('image/')) processFile(file);
-  }
-
-  function processFile(file: File) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const url = e.target?.result as string;
-      const img = new Image();
-      img.onload = () => {
-        // Reject anything too small to produce a crisp result rather than
-        // silently upscaling it into a blurry one.
-        if (img.width < preset.min.w || img.height < preset.min.h) {
-          uploadError = `That image is ${img.width}×${img.height}. Use one at least ${preset.min.w}×${preset.min.h}.`;
-          return;
-        }
-        uploadError = null;
-        previewUrl = url;
-        naturalSize = { width: img.width, height: img.height };
-
-        // Fit the preview into the modal.
-        const maxW = window.innerWidth > 640 ? 600 : window.innerWidth - 80;
-        const maxH = window.innerHeight * (preset.circular ? 0.46 : 0.42);
-        let dw = img.width;
-        let dh = img.height;
-        if (dw > maxW || dh > maxH) {
-          const scale = Math.min(maxW / dw, maxH / dh);
-          dw *= scale;
-          dh *= scale;
-        }
-        imageSize = { width: dw, height: dh };
-
-        // Open zoomed out: the largest box of the right aspect that fits, centred.
-        const w = Math.min(dw, dh * preset.aspect);
-        crop = { width: w, x: (dw - w) / 2, y: (dh - w / preset.aspect) / 2 };
-      };
-      img.src = url;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  $: cropHeight = crop.width / preset.aspect;
-  // Width is the binding dimension: the largest box of this aspect that fits is
-  // the one whose height is the image height (or whose width is the image width,
-  // whichever is smaller).
-  $: maxCropWidth = Math.min(imageSize.width, imageSize.height * preset.aspect);
-  $: minCropWidth = maxCropWidth * 0.5;
-  // Zoom, not box size: a smaller box means a tighter frame, so 100% is the
-  // smallest box (most zoomed in). Right on the slider is more zoom, which is
-  // what every zoom control does.
-  $: zoomPct = maxCropWidth > minCropWidth
-    ? ((maxCropWidth - crop.width) / (maxCropWidth - minCropWidth)) * 100
-    : 0;
-  $: zoomX = crop.width > 0 ? maxCropWidth / crop.width : 1;
-  // The actual resolution being kept from the source, in real pixels -- the one
-  // number that tells the viewer whether their crop will be sharp.
-  $: keptW = imageSize.width > 0 ? Math.round(crop.width * (naturalSize.width / imageSize.width)) : 0;
-  $: keptH = Math.round(keptW / preset.aspect);
-
-  function handleStart(event: MouseEvent | TouchEvent) {
-    isDragging = true;
-    const cx = 'touches' in event ? event.touches[0].clientX : event.clientX;
-    const cy = 'touches' in event ? event.touches[0].clientY : event.clientY;
-    dragStart = { x: cx - crop.x, y: cy - crop.y };
-  }
-  function handleMove(event: MouseEvent | TouchEvent) {
-    if (!isDragging) return;
-    const cx = 'touches' in event ? event.touches[0].clientX : event.clientX;
-    const cy = 'touches' in event ? event.touches[0].clientY : event.clientY;
-    const x = Math.max(0, Math.min(cx - dragStart.x, imageSize.width - crop.width));
-    const y = Math.max(0, Math.min(cy - dragStart.y, imageSize.height - cropHeight));
-    crop = { ...crop, x, y };
-  }
-  function handleEnd() {
-    isDragging = false;
-  }
-
-  // Arrow keys nudge the crop, so positioning is not mouse-only.
   function handleCropKeydown(event: KeyboardEvent) {
     const step = event.shiftKey ? 20 : 4;
-    let { x, y } = crop;
-    if (event.key === 'ArrowLeft') x -= step;
-    else if (event.key === 'ArrowRight') x += step;
-    else if (event.key === 'ArrowUp') y -= step;
-    else if (event.key === 'ArrowDown') y += step;
+    if (event.key === 'ArrowLeft') bloc.nudge(-step, 0);
+    else if (event.key === 'ArrowRight') bloc.nudge(step, 0);
+    else if (event.key === 'ArrowUp') bloc.nudge(0, -step);
+    else if (event.key === 'ArrowDown') bloc.nudge(0, step);
     else return;
     event.preventDefault();
-    crop = {
-      ...crop,
-      x: Math.max(0, Math.min(x, imageSize.width - crop.width)),
-      y: Math.max(0, Math.min(y, imageSize.height - cropHeight)),
-    };
-  }
-
-  function setWidth(w: number) {
-    const width = Math.max(minCropWidth, Math.min(w, maxCropWidth));
-    const h = width / preset.aspect;
-    crop = {
-      width,
-      x: Math.min(crop.x, Math.max(0, imageSize.width - width)),
-      y: Math.min(crop.y, Math.max(0, imageSize.height - h))
-    };
-  }
-  function handleZoom(event: Event) {
-    const z = Number((event.target as HTMLInputElement).value) / 100; // 0 out .. 1 in
-    setWidth(maxCropWidth - z * (maxCropWidth - minCropWidth));
-  }
-
-  function chooseNewImage() {
-    resetState();
-    fileInput?.click();
-  }
-
-  async function cropAndUpload() {
-    if (!previewUrl || !canvas) return;
-    uploadError = null;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const img = new Image();
-    img.onload = () => {
-      canvas.width = preset.output.w;
-      canvas.height = preset.output.h;
-
-      const scale = naturalSize.width / imageSize.width; // uniform; preview keeps aspect
-      const sx = crop.x * scale;
-      const sy = crop.y * scale;
-      const sw = crop.width * scale;
-      const sh = cropHeight * scale;
-
-      ctx.save();
-      if (preset.circular) {
-        // Clip the export to a circle for the avatar; the export is JPEG with no
-        // alpha, so anything outside would otherwise fill black.
-        ctx.beginPath();
-        ctx.arc(preset.output.w / 2, preset.output.h / 2, preset.output.w / 2, 0, Math.PI * 2);
-        ctx.clip();
-      }
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, preset.output.w, preset.output.h);
-      ctx.restore();
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          uploadError = null;
-          $uploadMutation.mutate(blob);
-        } else {
-          uploadError = 'Could not process that image. Try a different file.';
-        }
-      }, 'image/jpeg', 0.9);
-    };
-    img.src = previewUrl;
   }
 </script>
 
-<svelte:window on:mousemove={handleMove} on:mouseup={handleEnd} />
+<svelte:window
+  onmousemove={(event) => bloc.dragTo(pointOf(event))}
+  onmouseup={() => bloc.endDrag()}
+/>
 
-<Modal {isOpen} onClose={handleClose} className="max-w-2xl max-h-[90vh]">
+<Modal {isOpen} onClose={() => bloc.close()} className="max-w-2xl max-h-[90vh]">
   <div class="cropper">
-    <h3 class="cropper-title">{preset.title}</h3>
+    <h3 class="cropper-title">{bloc.preset.title}</h3>
 
     <div class="cropper-body">
-      {#if !previewUrl}
+      {#if !bloc.previewUrl}
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
         <div
-          class="dropzone {dragActive ? 'is-active' : ''}"
-          on:drop={handleDrop}
-          on:dragover={(e) => { e.preventDefault(); dragActive = true; }}
-          on:dragleave={() => (dragActive = false)}
-          on:click={() => fileInput?.click()}
-          on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput?.click(); } }}
+          class="dropzone {bloc.dragActive ? 'is-active' : ''}"
+          ondrop={(event) => {
+            event.preventDefault();
+            bloc.acceptFile(event.dataTransfer?.files[0]);
+          }}
+          ondragover={(event) => {
+            event.preventDefault();
+            bloc.setDragActive(true);
+          }}
+          ondragleave={() => bloc.setDragActive(false)}
+          onclick={() => fileInput?.click()}
+          onkeydown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              fileInput?.click();
+            }
+          }}
           role="button"
           tabindex="0"
-          aria-label={preset.title}
+          aria-label={bloc.preset.title}
         >
           <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 15V3m0 0L8 7m4-4l4 4" />
             <path d="M20 15v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4" />
           </svg>
-          <p class="dropzone-primary">{dragActive ? 'Drop to use this image' : 'Drop an image, or click to choose'}</p>
+          <p class="dropzone-primary">{bloc.dragActive ? 'Drop to use this image' : 'Drop an image, or click to choose'}</p>
           <p class="dropzone-hint">
-            PNG · JPG{#if variant === 'banner'} · WEBP{/if} &nbsp;·&nbsp; at least <span class="num">{preset.min.w}×{preset.min.h}</span>
+            PNG · JPG{#if bloc.variant === 'banner'} · WEBP{/if} &nbsp;·&nbsp; at least <span class="num">{bloc.preset.min.w}×{bloc.preset.min.h}</span>
           </p>
-          <input bind:this={fileInput} type="file" class="hidden" accept="image/*" on:change={handleFileSelect} />
+          <input
+            bind:this={fileInput}
+            type="file"
+            class="hidden"
+            accept="image/*"
+            onchange={(event) => bloc.acceptFile((event.currentTarget as HTMLInputElement).files?.[0])}
+          />
         </div>
       {:else}
         <div class="stage">
-          <div class="frame-wrap" style="width: {imageSize.width}px; height: {imageSize.height}px; max-width: 100%;">
-            <img src={previewUrl} alt="Preview" class="frame-img" style="width: {imageSize.width}px; height: {imageSize.height}px;" draggable="false" />
+          <div class="frame-wrap" style="width: {bloc.imageSize.width}px; height: {bloc.imageSize.height}px; max-width: 100%;">
+            <img src={bloc.previewUrl} alt="Preview" class="frame-img" style="width: {bloc.imageSize.width}px; height: {bloc.imageSize.height}px;" draggable="false" />
             <!-- The kept region: an accent frame is the one selection on screen,
                  the scrim outside darkens the rest so the kept picture is the
                  brightest thing -- the product's own rule, here too. -->
             <div
-              class="crop {preset.circular ? 'crop--circle' : ''}"
-              style="left: {crop.x}px; top: {crop.y}px; width: {crop.width}px; height: {cropHeight}px;"
-              on:mousedown={handleStart}
-              on:touchstart={handleStart}
-              on:keydown={handleCropKeydown}
+              class="crop {bloc.preset.circular ? 'crop--circle' : ''}"
+              style="left: {bloc.crop.x}px; top: {bloc.crop.y}px; width: {bloc.crop.width}px; height: {bloc.cropHeight}px;"
+              onmousedown={(event) => bloc.startDrag(pointOf(event))}
+              ontouchstart={(event) => bloc.startDrag(pointOf(event))}
+              ontouchmove={(event) => bloc.dragTo(pointOf(event))}
+              ontouchend={() => bloc.endDrag()}
+              onkeydown={handleCropKeydown}
               role="button"
               tabindex="0"
               aria-label="Drag or arrow-key to position the crop"
             >
-              {#if !preset.circular}
+              {#if !bloc.preset.circular}
                 <!-- Rule-of-thirds guides: a framing instrument, not decoration. -->
                 <span class="guide guide--v" style="left: 33.33%"></span>
                 <span class="guide guide--v" style="left: 66.66%"></span>
@@ -319,22 +141,22 @@
           <div class="controls">
             <div class="readout">
               <span class="readout-label">Keeping</span>
-              <span class="num readout-dims">{keptW}<span class="readout-x">×</span>{keptH}</span>
-              <span class="num readout-zoom">{zoomX.toFixed(1)}×</span>
+              <span class="num readout-dims">{bloc.keptSize.width}<span class="readout-x">×</span>{bloc.keptSize.height}</span>
+              <span class="num readout-zoom">{bloc.zoomFactor.toFixed(1)}×</span>
             </div>
             <div class="rail">
-              <div class="rail-fill" style="width: {zoomPct}%"></div>
+              <div class="rail-fill" style="width: {bloc.zoomPercent}%"></div>
               <input
                 class="rail-input"
                 type="range"
                 min="0"
                 max="100"
                 step="1"
-                value={zoomPct}
-                on:input={handleZoom}
+                value={bloc.zoomPercent}
+                oninput={(event) => bloc.setZoom(Number((event.currentTarget as HTMLInputElement).value))}
                 aria-label="Zoom"
               />
-              <div class="rail-thumb" style="left: {zoomPct}%"></div>
+              <div class="rail-thumb" style="left: {bloc.zoomPercent}%"></div>
             </div>
             <p class="controls-hint">Drag the frame to reposition · slider or arrow keys to fine-tune</p>
           </div>
@@ -344,31 +166,31 @@
 
     <canvas bind:this={canvas} class="hidden"></canvas>
 
-    {#if uploadError}
-      <div class="cropper-error" role="alert">{uploadError}</div>
+    {#if bloc.uploadError}
+      <div class="cropper-error" role="alert">{bloc.uploadError}</div>
     {/if}
 
     <div class="cropper-footer">
-      {#if previewUrl && !justSaved}
-        <button type="button" class="link-btn" on:click={chooseNewImage}>Choose different image</button>
+      {#if bloc.previewUrl && !bloc.justSaved}
+        <button type="button" class="link-btn" onclick={() => bloc.chooseNewImage(() => fileInput?.click())}>Choose different image</button>
       {:else}
         <span></span>
       {/if}
       <div class="footer-actions">
-        {#if justSaved}
+        {#if bloc.justSaved}
           <span class="saved">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10.5l3.2 3.2L15 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Saved
           </span>
         {:else}
-          <Button color="transparent" label="Cancel" onClick={handleClose} showLabel={true} />
-          {#if previewUrl}
+          <Button color="transparent" label="Cancel" onClick={() => bloc.close()} showLabel={true} />
+          {#if bloc.previewUrl}
             <Button
               color="blue"
-              label={$uploadMutation.isPending ? 'Uploading…' : 'Save'}
-              onClick={cropAndUpload}
+              label={bloc.isUploading ? 'Uploading…' : 'Save'}
+              onClick={() => bloc.save(canvas)}
               showLabel={true}
-              status={$uploadMutation.isPending ? 'loading' : uploadError ? 'error' : 'idle'}
+              status={bloc.saveStatus}
             />
           {/if}
         {/if}

@@ -13,6 +13,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** Mid-season: a progress bar under the title and the next slot on the right. */
 export const Default: Story = {
   args: {
     id: '154587',
@@ -26,6 +27,7 @@ export const Default: Story = {
   },
 };
 
+/** On air now: the LIVE flag replaces the countdown. */
 export const Live: Story = {
   args: {
     id: '52991',
@@ -39,6 +41,7 @@ export const Live: Story = {
   },
 };
 
+/** Halfway, and carrying the viewer's own local air time. */
 export const HalfwayThrough: Story = {
   args: {
     id: '21',
@@ -53,6 +56,7 @@ export const HalfwayThrough: Story = {
   },
 };
 
+/** Episode count unannounced: no denominator, so the progress bar is dropped. */
 export const WithoutTotal: Story = {
   args: {
     id: '51009',
@@ -63,5 +67,36 @@ export const WithoutTotal: Story = {
     isLive: false,
     currentEpisode: 1,
     totalEpisodes: 0,
+  },
+};
+
+/** A title wider than the card, which ellipsises on one line. */
+export const LongTitle: Story = {
+  args: {
+    ...Default.args,
+    title: 'The Exiled Heavy Knight Knows How to Game the System',
+  },
+};
+
+/** No artwork: the poster slot keeps its gradient rather than collapsing. */
+export const MissingImage: Story = {
+  args: {
+    ...Default.args,
+    id: '0',
+    title: 'A Show With No Poster',
+    image: '',
+  },
+};
+
+/**
+ * The hover callbacks that replaced the forwarded `on:mouseenter` /
+ * `on:mouseleave` directives -- a runes component cannot forward a bare DOM
+ * event, so the parent gets props instead.
+ */
+export const WithHoverCallbacks: Story = {
+  args: {
+    ...Default.args,
+    onMouseEnter: () => console.log('pointer entered the card'),
+    onMouseLeave: () => console.log('pointer left the card'),
   },
 };

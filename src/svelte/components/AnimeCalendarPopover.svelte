@@ -1,131 +1,107 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { format } from 'date-fns';
   import AnimeCard from './AnimeCard.svelte';
-  import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
-  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
+  import { clickOutside } from '../actions/clickOutside';
+  import { anchoredPosition } from '../actions/anchoredPosition';
+  import { GetImageFromAnime, getYearUTC } from '../../services/utils';
+  import { AnimeCalendarPopoverBloc } from './AnimeCalendarPopover.bloc.svelte';
 
-  export let anime: any;
-  export let isOpen: boolean = false;
-  export let position: { top: number; left: number } = { top: 0, left: 0 };
+  let {
+    anime,
+    bloc: injected
+  }: {
+    anime: any;
+    bloc?: AnimeCalendarPopoverBloc;
+  } = $props();
 
-  let buttonRef: HTMLButtonElement;
-  let popoverRef: HTMLDivElement;
-
-  // Format air time display
-  $: airTimeText = anime.episodeAirTime ? format(anime.episodeAirTime, "h:mm a") : null;
-
-  function togglePopover() {
-    if (!isOpen && buttonRef) {
-      const rect = buttonRef.getBoundingClientRect();
-      const isMobile = window.innerWidth < 768;
-
-      console.log('Button rect:', rect);
-      console.log('Window scroll:', window.scrollX, window.scrollY);
-
-      // Simple positioning: directly below the button
-      let top = rect.bottom + window.scrollY + 8;
-      let left = rect.left + window.scrollX;
-
-      console.log('Initial position:', { top, left });
-
-      // On mobile, try to center the popover
-      if (isMobile) {
-        const panelWidth = Math.min(window.innerWidth - 32, 350);
-        left = rect.left + window.scrollX - (panelWidth - rect.width) / 2;
-
-        // Keep it on screen
-        const margin = 16;
-        if (left < margin) left = margin;
-        if (left + panelWidth > window.innerWidth - margin) {
-          left = window.innerWidth - panelWidth - margin;
-        }
-      }
-
-      position = { top, left };
-      console.log('Final position:', position);
+  const ownBloc = new AnimeCalendarPopoverBloc({
+    get anime() {
+      return anime;
     }
-    isOpen = !isOpen;
-  }
+  });
+  const bloc = $derived(injected ?? ownBloc);
 
-  function closePopover() {
-    isOpen = false;
-  }
+  let buttonRef = $state<HTMLButtonElement | undefined>();
 
-  function handleClickOutside(event: MouseEvent) {
-    if (popoverRef && !popoverRef.contains(event.target as Node) &&
-        buttonRef && !buttonRef.contains(event.target as Node)) {
-      closePopover();
-    }
-  }
-
-  function navigateToShow() {
-    goto(animeHref(anime));
-  }
-
-  $: if (typeof window !== 'undefined') {
-    if (isOpen) {
-      document.addEventListener('click', handleClickOutside);
-    } else {
-      document.removeEventListener('click', handleClickOutside);
-    }
-  }
+  $effect(() => bloc.watchViewport());
 </script>
-
-<svelte:window on:beforeunload={() => {
-  if (typeof document !== 'undefined') {
-    document.removeEventListener('click', handleClickOutside);
-  }
-}} />
 
 <button
   bind:this={buttonRef}
-  on:click={togglePopover}
-  title="{getAnimeTitle(anime, $preferencesStore.titleLanguage)} (Ep {anime.episodes[0]?.episodeNumber || '?'}){airTimeText ? ` at ${airTimeText}` : ''}"
+  onclick={() => bloc.togglePopover()}
+  title={bloc.buttonTitle}
+  aria-expanded={bloc.isOpen}
   class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col"
 >
   <span class="truncate">
-    {getAnimeTitle(anime, $preferencesStore.titleLanguage)} (Ep {anime.episodes[0]?.episodeNumber || "?"})
+    {bloc.title} (Ep {bloc.episodeNumber})
   </span>
-  {#if airTimeText}
+  {#if bloc.airTimeText}
     <span class="text-weeb-fg-muted text-xs font-medium">
-      {airTimeText}
+      {bloc.airTimeText}
     </span>
   {/if}
 </button>
 
-{#if isOpen}
-  <!-- Mobile backdrop for easier closing -->
-  {#if typeof window !== 'undefined' && window.innerWidth < 768}
-    <button
-      type="button"
-      class="fixed inset-0 bg-black/20 z-40 md:hidden cursor-default"
-      aria-label="Close popover"
-      on:click={closePopover}
-    ></button>
-  {/if}
+{#if bloc.isOpen}
+  <!-- Phone backdrop: a bigger target for dismissing than the card's own edge.
+       Hidden from md up by the utility, so no viewport is measured to decide. -->
+  <button
+    type="button"
+    class="fixed inset-0 bg-black/20 z-40 md:hidden cursor-default"
+    aria-label="Close popover"
+    onclick={() => bloc.closePopover()}
+  ></button>
 
   <div
-    bind:this={popoverRef}
-    class="fixed z-50 bg-weeb-surface border border-weeb-border rounded-lg shadow-lg p-3 transition-colors duration-300
-           max-h-[70vh] overflow-y-auto"
-    style="top: {position.top}px; left: {position.left}px; width: {typeof window !== 'undefined' && window.innerWidth < 768 ? Math.min(window.innerWidth - 32, 350) : 420}px;"
+    class="calendar-popover"
+    use:clickOutside={{ handler: () => bloc.closePopover(), ignore: () => buttonRef }}
+    use:anchoredPosition={{
+      anchor: () => buttonRef,
+      align: bloc.isCompact ? 'center' : 'left',
+      gap: 8,
+      margin: bloc.isCompact ? 16 : 8
+    }}
   >
     <AnimeCard
       style="episode"
       forceListLayout={true}
-      id={anime.id}
-      slug={anime.slug}
-      title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
-      tags={anime.tags || []}
-      episodes={anime.episodeCount || 0}
-      episodeLength={anime.duration ? anime.duration.replace(/per.+?$/, "") : "?"}
-      image={GetImageFromAnime(anime)}
+      id={bloc.anime.id}
+      slug={bloc.anime.slug}
+      title={bloc.title}
+      tags={bloc.anime.tags || []}
+      episodes={bloc.anime.episodeCount || 0}
+      episodeLength={bloc.episodeLength}
+      image={GetImageFromAnime(bloc.anime)}
       className="hover:cursor-pointer"
-      year={getYearUTC(anime.startDate)}
-      airdate={anime.episodeAirTime ? format(anime.episodeAirTime, "EEE MMM do 'at' h:mm a") : anime.episodes[0]?.airDate ? format(new Date(anime.episodes[0].airDate), "EEE MMM do") : "Unknown"}
-      episodeTitle={anime.episodes[0]?.titleEn || anime.episodes[0]?.titleJp || "Unknown"}
-      episodeNumber={anime.episodes[0]?.episodeNumber?.toString() || "Unknown"}
+      year={getYearUTC(bloc.anime.startDate)}
+      airdate={bloc.airDateLabel}
+      episodeTitle={bloc.episodeTitle}
+      episodeNumber={bloc.episodeNumber}
     />
   </div>
 {/if}
+
+<style>
+  /* Viewport coordinates: `anchoredPosition` sets top/left as a fixed element,
+     which is why no scroll offset belongs anywhere near this. */
+  .calendar-popover {
+    position: fixed;
+    z-index: 50;
+    width: 420px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 12px;
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius-lg, 12px);
+    box-shadow: var(--weeb-shadow-dropdown);
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  @media (max-width: 767px) {
+    .calendar-popover {
+      width: 350px;
+      max-width: calc(100vw - 32px);
+    }
+  }
+</style>

@@ -3,29 +3,54 @@
   import { analytics } from '../../utils/analytics';
   import { animeHref } from '../../services/utils';
 
-  export let id: string;
-  // Optional: callers that have not been given the slug yet fall back to
-  // /show/<id>, which permanently redirects.
-  export let slug: string | null | undefined = undefined;
-  export let title: string;
-  export let image: string;
-  export let episodeText: string = '';
-  export let timeText: string = '';
-  export let localTime: string = '';
-  export let isLive: boolean = false;
-  export let currentEpisode: number = 0;
-  export let totalEpisodes: number = 0;
+  /**
+   * Presentational -- no bloc. It used to forward bare `on:mouseenter` /
+   * `on:mouseleave` to its parent; runes components cannot forward DOM
+   * directives, so the two are callback props now.
+   */
+  let {
+    id,
+    // Optional: callers that have not been given the slug yet fall back to
+    // /show/<id>, which permanently redirects.
+    slug = undefined,
+    title,
+    image,
+    episodeText = '',
+    timeText = '',
+    localTime = '',
+    isLive = false,
+    currentEpisode = 0,
+    totalEpisodes = 0,
+    /** Pointer entered the card -- the airing strip uses this to preview a show. */
+    onMouseEnter,
+    onMouseLeave,
+  }: {
+    id: string;
+    slug?: string | null | undefined;
+    title: string;
+    image: string;
+    episodeText?: string;
+    timeText?: string;
+    localTime?: string;
+    isLive?: boolean;
+    currentEpisode?: number;
+    totalEpisodes?: number;
+    onMouseEnter?: (event: MouseEvent) => void;
+    onMouseLeave?: (event: MouseEvent) => void;
+  } = $props();
 
-  $: progress = totalEpisodes > 0 ? Math.min((currentEpisode / totalEpisodes) * 100, 100) : 0;
-  $: hasProgress = currentEpisode > 0 && totalEpisodes > 0;
+  const progress = $derived(
+    totalEpisodes > 0 ? Math.min((currentEpisode / totalEpisodes) * 100, 100) : 0
+  );
+  const hasProgress = $derived(currentEpisode > 0 && totalEpisodes > 0);
 </script>
 
 <a
   class="airing-card"
   href={animeHref({ id, slug })}
-  on:click={() => analytics.animeViewed(id, title)}
-  on:mouseenter
-  on:mouseleave
+  onclick={() => analytics.animeViewed(id, title)}
+  onmouseenter={onMouseEnter}
+  onmouseleave={onMouseLeave}
 >
   <div class="airing-poster">
     <SafeImage
