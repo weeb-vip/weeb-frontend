@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { readable } from 'svelte/store';
-import MangaContent from '../MangaContent.svelte';
+import MangaContent from '../../../routes/manga/[slug]/+page.svelte';
 import { MangaContentBloc, type Work } from '../MangaContent.bloc.svelte';
 
 /** Preferences, pinned. The real store touches localStorage on construction. */
@@ -61,6 +61,9 @@ const meta = {
   component: MangaContent,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
+  // The loader payload. Each story injects the bloc that draws the work, so
+  // what this carries is the title, the social card and the breadcrumb.
+  args: { data: { slug: 'vinland-saga', workTitle: 'Vinland Saga' } },
 } satisfies Meta<typeof MangaContent>;
 
 export default meta;
@@ -68,13 +71,12 @@ type Story = StoryObj<typeof meta>;
 
 /** A complete record: credits, the stats strip, a synopsis and two adaptations. */
 export const Populated: Story = {
-  args: { work: WORK, bloc: bloc(WORK) },
+  args: { bloc: bloc(WORK) },
 };
 
 /** The common case -- most manga were never adapted, so this is the EmptyState. */
 export const NoAdaptations: Story = {
   args: {
-    work: { ...WORK, adaptations: [] },
     bloc: bloc({ ...WORK, adaptations: [] }),
   },
 };
@@ -82,7 +84,6 @@ export const NoAdaptations: Story = {
 /** A finished run: the published range closes rather than reading "ongoing". */
 export const FinishedRun: Story = {
   args: {
-    work: { ...WORK, status: 'Finished', publishedTo: '2024-11-25' },
     bloc: bloc({ ...WORK, status: 'Finished', publishedTo: '2024-11-25' }),
   },
 };
@@ -90,7 +91,6 @@ export const FinishedRun: Story = {
 /** Already on the shelf, so the chapter stepper joins the status control. */
 export const Tracked: Story = {
   args: {
-    work: { ...WORK, userWork: { status: 'READING', chapters: 84 } },
     bloc: bloc({ ...WORK, userWork: { status: 'READING', chapters: 84 } }),
   },
 };
@@ -98,12 +98,6 @@ export const Tracked: Story = {
 /** A barely-scraped record: no counts, no credits, no synopsis. */
 export const SparseRecord: Story = {
   args: {
-    work: {
-      id: 'work-2',
-      titleEn: 'A work the backfill has barely touched',
-      type: 'ONE_SHOT',
-      adaptations: [],
-    },
     bloc: bloc({
       id: 'work-2',
       titleEn: 'A work the backfill has barely touched',
@@ -116,7 +110,11 @@ export const SparseRecord: Story = {
 /** The loader failed: the shared ErrorBanner, with the way home under it. */
 export const LoadFailed: Story = {
   args: {
-    ssrError: 'workBySlug returned 502',
+    data: {
+      slug: 'vinland-saga',
+      workTitle: 'Vinland Saga',
+      ssrError: 'workBySlug returned 502',
+    },
     bloc: bloc(null, 'workBySlug returned 502'),
   },
 };
@@ -124,21 +122,6 @@ export const LoadFailed: Story = {
 /** A title and credits wide enough to test the hero panel's wrapping. */
 export const LongTitles: Story = {
   args: {
-    work: {
-      ...WORK,
-      titleEn:
-        'I Was Reincarnated as the Seventh Prince, So I Will Optimise My Magic However I Please',
-      titleJp: '転生したら第七王子だったので、気ままに魔術を極めます',
-      authors: ['Kenkyo na Circle', 'Ishikawa, Mitsuki', 'A Third Credited Author Besides'],
-      serialization: 'Weekly Shounen Magazine (Kodansha, Tokyo)',
-      adaptations: [
-        adaptation(
-          3,
-          'I Was Reincarnated as the Seventh Prince and Will Optimise My Magic However I Please',
-          2024,
-        ),
-      ],
-    },
     bloc: bloc({
       ...WORK,
       titleEn:

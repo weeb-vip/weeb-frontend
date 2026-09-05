@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { writable } from 'svelte/store';
-import SearchPage from '../SearchPage.svelte';
+import SearchPage from '../../../routes/search/+page.svelte';
 import {
   SearchPageBloc,
   type CatalogSearchPort,

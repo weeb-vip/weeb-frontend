@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import CurrentlyAiringPage from '../CurrentlyAiringPage.svelte';
+import CurrentlyAiringPage from '../../../routes/airing/+page.svelte';
 import { createQueryClient } from '../../services/query-client';
 import {
   CurrentlyAiringPageBloc,
@@ -96,6 +96,9 @@ const meta = {
   component: CurrentlyAiringPage,
   parameters: { layout: 'fullscreen' },
   tags: ['autodocs'],
+  // Every story injects a bloc, so the loader payload is only what the page's
+  // own fallback bloc would have read. An empty one keeps the contract honest.
+  args: { data: { ssrData: null } },
 } satisfies Meta<typeof CurrentlyAiringPage>;
 
 export default meta;

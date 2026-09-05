@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import EmailVerification from '../EmailVerification.svelte';
+import EmailVerification from '../../../routes/auth/verification/+page.svelte';
 import { EmailVerificationBloc } from '../EmailVerification.bloc.svelte';
 import type { VerifyEmailPort } from '../auth-shared';
 import { failsWith, frozenClock, pending, resendIn, routeWith, type ResendStoryState } from './auth-stubs';
@@ -18,7 +18,7 @@ function verificationBloc(query: string, verify: VerifyEmailPort, resend: Resend
 }
 
 const meta = {
-  title: 'Composites/Auth/EmailVerification',
+  title: 'Pages/EmailVerification',
   component: EmailVerification,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

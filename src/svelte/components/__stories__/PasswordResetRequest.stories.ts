@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import PasswordResetRequest from '../PasswordResetRequest.svelte';
+import PasswordResetRequest from '../../../routes/auth/password-reset-request/+page.svelte';
 import { PasswordResetRequestBloc } from '../PasswordResetRequest.bloc.svelte';
 import type { PasswordResetRequestPort } from '../auth-shared';
 import { failsWith, pending } from './auth-stubs';
@@ -19,7 +19,7 @@ function resetBloc(options: { request?: PasswordResetRequestPort; fill?: boolean
 }
 
 const meta = {
-  title: 'Composites/Auth/PasswordResetRequest',
+  title: 'Pages/PasswordResetRequest',
   component: PasswordResetRequest,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

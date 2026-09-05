@@ -1,6 +1,6 @@
 import { readable } from 'svelte/store';
 import type { Meta, StoryObj } from '@storybook/svelte';
-import HomepageSSR from '../HomepageSSR.svelte';
+import HomepageSSR from '../../../routes/+page.svelte';
 import { createQueryClient } from '../../services/query-client';
 import {
   HomepageBloc,
@@ -163,6 +163,9 @@ const meta = {
   component: HomepageSSR,
   parameters: { layout: 'fullscreen' },
   tags: ['autodocs'],
+  // The season the page was rendered for. Every story injects a bloc, so this
+  // is the loader payload the page's own fallback bloc would have read.
+  args: { data: { currentSeason: 'SPRING_2026' } },
 } satisfies Meta<typeof HomepageSSR>;
 
 export default meta;
@@ -170,13 +173,12 @@ type Story = StoryObj<typeof meta>;
 
 /** The whole page: airing hero and rail, then every shelf. */
 export const Populated: Story = {
-  args: { currentSeason: 'SPRING_2026', bloc: bloc('ok') },
+  args: { bloc: bloc('ok') },
 };
 
 /** Every query still in flight: the season shelf shows its placeholders. */
 export const Loading: Story = {
   args: {
-    currentSeason: 'SPRING_2026',
     bloc: bloc('never', {}, (b) => b.selectSeason('SUMMER_2026')),
   },
 };
@@ -187,20 +189,18 @@ export const Loading: Story = {
  */
 export const NothingAiring: Story = {
   args: {
-    currentSeason: 'SPRING_2026',
     bloc: bloc('ok', { airing: stubAiring('empty') }),
   },
 };
 
 /** Every query answered with nothing: no hero at all, just the tag browser. */
 export const EverythingEmpty: Story = {
-  args: { currentSeason: 'SPRING_2026', bloc: bloc('empty') },
+  args: { bloc: bloc('empty') },
 };
 
 /** Switched to a season the page was not rendered with -- placeholders, then cards. */
 export const SeasonSwitched: Story = {
   args: {
-    currentSeason: 'SPRING_2026',
     bloc: bloc('ok', {}, (b) => b.selectSeason('SUMMER_2026')),
   },
 };
@@ -211,7 +211,6 @@ export const SeasonSwitched: Story = {
  */
 export const SignedOut: Story = {
   args: {
-    currentSeason: 'SPRING_2026',
     bloc: bloc('ok', {
       auth: readable({ isLoggedIn: false, isAuthInitialized: true }),
       airing: (startDate, endDate, days, limit) => ({
@@ -227,7 +226,6 @@ export const SignedOut: Story = {
 /** A phone caps each shelf at six, so a section is three rows rather than ten. */
 export const PhoneShelves: Story = {
   args: {
-    currentSeason: 'SPRING_2026',
     bloc: bloc('ok', { viewport: viewport('phone') }),
   },
 };
@@ -235,7 +233,6 @@ export const PhoneShelves: Story = {
 /** A tablet sits between the two, at twelve. */
 export const TabletShelves: Story = {
   args: {
-    currentSeason: 'SPRING_2026',
     bloc: bloc('ok', { viewport: viewport('tablet') }),
   },
 };

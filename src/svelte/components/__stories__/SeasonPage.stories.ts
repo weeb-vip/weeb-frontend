@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import SeasonPage from '../SeasonPage.svelte';
+import SeasonPage from '../../../routes/season/[season]/+page.svelte';
 import { createQueryClient } from '../../services/query-client';
 import {
   SeasonPageBloc,
@@ -86,6 +86,9 @@ const meta = {
   component: SeasonPage,
   parameters: { layout: 'fullscreen' },
   tags: ['autodocs'],
+  // The loader payload. The stories inject their own bloc, so what this feeds
+  // is the page title, the breadcrumb, and the key the markup remounts on.
+  args: { data: { season: 'SPRING_2026', displayName: 'Spring 2026' } },
 } satisfies Meta<typeof SeasonPage>;
 
 export default meta;
@@ -93,27 +96,27 @@ type Story = StoryObj<typeof meta>;
 
 /** A full season: the top-five strip, the tag facets, and the grid. */
 export const Populated: Story = {
-  args: { season: 'SPRING_2026', bloc: bloc('ok') },
+  args: { bloc: bloc('ok') },
 };
 
 /** Waiting on the query -- sixteen poster placeholders, one shared shape. */
 export const Loading: Story = {
-  args: { season: 'SPRING_2026', bloc: bloc('never') },
+  args: { bloc: bloc('never') },
 };
 
 /** The season loaded, and it is genuinely empty. */
 export const NoTitles: Story = {
-  args: { season: 'SPRING_2026', bloc: bloc('empty') },
+  args: { bloc: bloc('empty') },
 };
 
 /** The fetch failed: a distinct message from "this season is empty", with a retry. */
 export const FetchFailed: Story = {
-  args: { season: 'SPRING_2026', bloc: bloc('fail') },
+  args: { bloc: bloc('fail') },
 };
 
 /** Filtering narrows the grid, and the counter shows the denominator. */
 export const TagFiltered: Story = {
-  args: { season: 'SPRING_2026', bloc: bloc('ok', {}, (b) => b.toggleTag('Comedy')) },
+  args: { bloc: bloc('ok', {}, (b) => b.toggleTag('Comedy')) },
 };
 
 /**
@@ -122,7 +125,6 @@ export const TagFiltered: Story = {
  */
 export const FilteredToNothing: Story = {
   args: {
-    season: 'SPRING_2026',
     bloc: bloc('ok', {}, (b) => {
       b.toggleTag('Music');
       b.toggleTag('Sports');
@@ -132,7 +134,7 @@ export const FilteredToNothing: Story = {
 
 /** All the facets, rather than the first twelve. */
 export const AllTagsExpanded: Story = {
-  args: { season: 'SPRING_2026', bloc: bloc('ok', {}, (b) => b.toggleShowAllTags()) },
+  args: { bloc: bloc('ok', {}, (b) => b.toggleShowAllTags()) },
 };
 
 /**
@@ -141,7 +143,7 @@ export const AllTagsExpanded: Story = {
  */
 export const ADifferentSeason: Story = {
   args: {
-    season: 'WINTER_2025',
+    data: { season: 'WINTER_2025', displayName: 'Winter 2025' },
     bloc: bloc('ok', {
       source: () => ({ season: 'WINTER_2025', seasonalData: null, ssrError: null }),
     }),
@@ -151,7 +153,6 @@ export const ADifferentSeason: Story = {
 /** The season the clock says we are in -- no "jump to current season" link. */
 export const CurrentSeason: Story = {
   args: {
-    season: 'SPRING_2026',
     bloc: bloc('ok', {
       source: () => ({ season: 'SPRING_2026', seasonalData: null, ssrError: null }),
     }),
@@ -161,8 +162,11 @@ export const CurrentSeason: Story = {
 /** The loader failed on the server; the page still renders the chrome. */
 export const ServerLoadFailed: Story = {
   args: {
-    season: 'SPRING_2026',
-    ssrError: 'Seasonal query timed out',
+    data: {
+      season: 'SPRING_2026',
+      displayName: 'Spring 2026',
+      ssrError: 'Seasonal query timed out',
+    },
     bloc: bloc('empty', {
       source: () => ({
         season: 'SPRING_2026',

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { readable } from 'svelte/store';
-import ShowContent from '../ShowContent.svelte';
+import ShowContent from '../../../routes/anime/[slug]/+page.svelte';
 import {
   ShowContentBloc,
   type ShowContentDeps,
@@ -63,6 +63,18 @@ const meta = {
   component: ShowContent,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
+  // The loader payload. Each story injects the bloc that renders the show, so
+  // what this carries is the id the page keys on, plus title and social card.
+  args: {
+    data: {
+      animeId: 'a1',
+      animeSlug: 'a-show',
+      animeTitle: 'A show',
+      animeDescription: 'A show, and something about it.',
+      animeImage: '/assets/og-image.jpg',
+      animeSchemaSource: null,
+    },
+  },
 } satisfies Meta<typeof ShowContent>;
 
 export default meta;
@@ -70,25 +82,24 @@ type Story = StoryObj<typeof meta>;
 
 /** Nothing from the loader and a query still in flight: the page's own skeleton. */
 export const Loading: Story = {
-  args: { animeId: 'a1', bloc: bloc() },
+  args: { bloc: bloc() },
 };
 
 /** The loader failed and the client fetch has not rescued it yet. */
 export const Failed: Story = {
   args: {
-    animeId: 'a1',
     bloc: bloc({ error: { message: 'Unable to reach the gateway' } }),
   },
 };
 
 /** Everything present: art, schedule, news, 28 episodes, cast, related, references. */
 export const Populated: Story = {
-  args: { animeId: FULL_ANIME.id, bloc: bloc({ anime: FULL_ANIME }) },
+  args: { bloc: bloc({ anime: FULL_ANIME }) },
 };
 
 /** Signed in and part way through, so the score and the episode stepper are live. */
 export const OnMyList: Story = {
-  args: { animeId: TRACKED_ANIME.id, bloc: bloc({ anime: TRACKED_ANIME }) },
+  args: { bloc: bloc({ anime: TRACKED_ANIME }) },
 };
 
 /**
@@ -97,20 +108,18 @@ export const OnMyList: Story = {
  */
 export const MinimalRecord: Story = {
   args: {
-    animeId: MINIMAL_ANIME.id,
     bloc: bloc({ anime: MINIMAL_ANIME, characters: { charactersAndStaffByAnimeId: [] } }),
   },
 };
 
 /** Announced but not broadcast: no end date, one unaired episode, a countdown. */
 export const Unaired: Story = {
-  args: { animeId: UNAIRED_ANIME.id, bloc: bloc({ anime: UNAIRED_ANIME }) },
+  args: { bloc: bloc({ anime: UNAIRED_ANIME }) },
 };
 
 /** The news flag off. The section and its tab both vanish, stories or not. */
 export const NewsFlagOff: Story = {
   args: {
-    animeId: FULL_ANIME.id,
     bloc: bloc({ anime: FULL_ANIME }, { flags: { isEnabled: () => false } }),
   },
 };

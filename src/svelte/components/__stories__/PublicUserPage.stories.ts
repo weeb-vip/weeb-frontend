@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { readable } from 'svelte/store';
-import PublicUserPage from '../PublicUserPage.svelte';
+import PublicUserPage from '../../../routes/u/[username]/+page.svelte';
 import { PublicUserPageBloc } from '../PublicUserPage.bloc.svelte';
 import { ANIME_COUNTS, ANIME_ENTRIES, LONG_TITLE, WORK_COUNTS, WORK_ENTRIES, animeEntry } from './profileFixtures';
 
@@ -43,14 +43,13 @@ type Story = StoryObj<typeof meta>;
 
 /** A public profile with both shelves filled and the viewer's chosen accent. */
 export const Populated: Story = {
-  args: { user: USER, lists: LISTS, bloc: bloc(USER, LISTS) },
+  args: { data: { user: USER, lists: LISTS }, bloc: bloc(USER, LISTS) },
 };
 
 /** Lists kept private: the header still renders, the shelves do not. */
 export const PrivateLists: Story = {
   args: {
-    user: { ...USER, listsPublic: false },
-    lists: null,
+    data: { user: { ...USER, listsPublic: false }, lists: null },
     bloc: bloc({ ...USER, listsPublic: false }, null),
   },
 };
@@ -58,8 +57,10 @@ export const PrivateLists: Story = {
 /** Public, but nothing on either shelf yet. */
 export const EmptyLists: Story = {
   args: {
-    user: USER,
-    lists: { watching: { animes: [] }, reading: { works: [] }, animeCounts: {}, workCounts: {} },
+    data: {
+      user: USER,
+      lists: { watching: { animes: [] }, reading: { works: [] }, animeCounts: {}, workCounts: {} },
+    },
     bloc: bloc(USER, { watching: { animes: [] }, reading: { works: [] }, animeCounts: {}, workCounts: {} }),
   },
 };
@@ -67,8 +68,10 @@ export const EmptyLists: Story = {
 /** No picture, no banner, no bio, no accent: the initials and the default hero. */
 export const BareProfile: Story = {
   args: {
-    user: { username: 'newcomer', listsPublic: true },
-    lists: { watching: { animes: [] }, reading: { works: [] } },
+    data: {
+      user: { username: 'newcomer', listsPublic: true },
+      lists: { watching: { animes: [] }, reading: { works: [] } },
+    },
     bloc: bloc({ username: 'newcomer', listsPublic: true }, { watching: { animes: [] }, reading: { works: [] } }),
   },
 };
@@ -76,8 +79,10 @@ export const BareProfile: Story = {
 /** Titles long enough to wrap a card, and a bio that runs to the limit. */
 export const LongText: Story = {
   args: {
-    user: { ...USER, bio: `${LONG_TITLE} -- and that is only the first one.` },
-    lists: { ...LISTS, watching: { animes: [animeEntry('long', LONG_TITLE)] } },
+    data: {
+      user: { ...USER, bio: `${LONG_TITLE} -- and that is only the first one.` },
+      lists: { ...LISTS, watching: { animes: [animeEntry('long', LONG_TITLE)] } },
+    },
     bloc: bloc(
       { ...USER, bio: `${LONG_TITLE} -- and that is only the first one.` },
       { ...LISTS, watching: { animes: [animeEntry('long', LONG_TITLE)] } },

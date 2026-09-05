@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { readable } from 'svelte/store';
-import SeriesPage from '../SeriesPage.svelte';
+import SeriesPage from '../../../routes/series/[id]/+page.svelte';
 import { SeriesPageBloc, type SeriesEntry } from '../SeriesPage.bloc.svelte';
 
 /**
@@ -49,6 +49,9 @@ const meta = {
   component: SeriesPage,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
+  // The loader payload. Each story injects the bloc that actually renders the
+  // groups, so what this carries is the page's title, canonical and breadcrumb.
+  args: { data: { seriesId: '1', seriesSlug: 'frieren', seriesTitle: 'Frieren' } },
 } satisfies Meta<typeof SeriesPage>;
 
 export default meta;
@@ -57,8 +60,6 @@ type Story = StoryObj<typeof meta>;
 /** The ordinary case: numbered seasons, then specials, then what could not be placed. */
 export const Populated: Story = {
   args: {
-    entries: FULL_SERIES,
-    seriesTitle: 'Frieren',
     bloc: bloc(FULL_SERIES),
   },
 };
@@ -66,8 +67,6 @@ export const Populated: Story = {
 /** A series with one entry -- the summary line has to stay grammatical. */
 export const SingleEntry: Story = {
   args: {
-    entries: [FULL_SERIES[0]],
-    seriesTitle: 'Frieren',
     bloc: bloc([FULL_SERIES[0]]),
   },
 };
@@ -75,8 +74,6 @@ export const SingleEntry: Story = {
 /** Nothing derived a season for any of them, so everything lands in "Other entries". */
 export const NoSeasonsDerived: Story = {
   args: {
-    entries: FULL_SERIES.map((e) => ({ ...e, seasonNumber: null })),
-    seriesTitle: 'Frieren',
     bloc: bloc(FULL_SERIES.map((e) => ({ ...e, seasonNumber: null }))),
   },
 };
@@ -84,8 +81,7 @@ export const NoSeasonsDerived: Story = {
 /** A series id that resolves to nothing: the empty state, not a blank page. */
 export const NoEntries: Story = {
   args: {
-    entries: [],
-    seriesTitle: 'An empty series',
+    data: { seriesId: '9', seriesTitle: 'An empty series' },
     bloc: bloc([]),
   },
 };
@@ -93,7 +89,7 @@ export const NoEntries: Story = {
 /** The loader failed -- the shared ErrorBanner rather than a bare line of grey text. */
 export const LoadFailed: Story = {
   args: {
-    ssrError: 'anime-api returned 503',
+    data: { seriesId: '1', seriesTitle: 'Frieren', ssrError: 'anime-api returned 503' },
     bloc: bloc([], 'anime-api returned 503'),
   },
 };
@@ -101,21 +97,7 @@ export const LoadFailed: Story = {
 /** Titles wider than a card: the grid must not reflow around the longest one. */
 export const LongTitles: Story = {
   args: {
-    entries: [
-      entry(
-        '1',
-        'The Exiled Heavy Knight Knows How to Game the System and Will Not Be Returning to the Capital',
-        1,
-        '2024-01-05',
-      ),
-      entry(
-        '2',
-        'That Time I Got Reincarnated as a Slime and Then Got a Second Season of Considerable Length',
-        2,
-        '2025-01-05',
-      ),
-    ],
-    seriesTitle: 'A series with a great deal to say',
+    data: { seriesId: '2', seriesTitle: 'A series with a great deal to say' },
     bloc: bloc([
       entry(
         '1',

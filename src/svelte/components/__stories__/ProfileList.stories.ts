@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import ProfileList from '../ProfileList.svelte';
+import ProfileList from '../../../routes/profile/anime/+page.svelte';
 import { ProfileListBloc, type MediumUrlPort } from '../ProfileList.bloc.svelte';
 import { createAnimeListBloc } from '../ProfileAnimeList.bloc.svelte';
 import { createWorkListBloc } from '../ProfileWorkList.bloc.svelte';
@@ -49,6 +49,8 @@ function workBloc(result: StubResult = 'ok') {
 const meta = {
   title: 'Pages/ProfileList',
   component: ProfileList,
+  // The list blocs are injected, so nothing reads the server payload here.
+  args: { data: { ssr: null } },
   tags: ['autodocs'],
 } satisfies Meta<typeof ProfileList>;
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import ResendVerification from '../ResendVerification.svelte';
+import ResendVerification from '../../../routes/auth/resend-verification/+page.svelte';
 import { ResendVerificationBloc } from '../ResendVerification.bloc.svelte';
 import { ResendBloc } from '../auth-resend.svelte';
 import type { ResendVerificationPort } from '../auth-shared';
@@ -17,7 +17,7 @@ function resendBloc(options: { send?: ResendVerificationPort; typed?: string; su
 }
 
 const meta = {
-  title: 'Composites/Auth/ResendVerification',
+  title: 'Pages/ResendVerification',
   component: ResendVerification,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

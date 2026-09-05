@@ -38,6 +38,30 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    /**
+     * A page store for every story.
+     *
+     * The `Pages/*` stories mount the route's own `+page.svelte` -- the route
+     * file *is* the page now -- so each of them renders `Seo`, which reads
+     * `$page.url` for the request origin and the canonical path. The SvelteKit
+     * framework mock leaves that store empty unless a story fills it, and an
+     * empty one throws on `.url`. A site-root default keeps every story
+     * rendering; the ones whose canonical URL is worth reading override
+     * `sveltekit_experimental.stores.page` with their own.
+     */
+    sveltekit_experimental: {
+      stores: {
+        page: {
+          url: new URL('https://weeb.vip/'),
+          params: {},
+          route: { id: null },
+          status: 200,
+          error: null,
+          data: {},
+          form: null,
+        },
+      },
+    },
     // The sidebar follows the architecture rather than the alphabet:
     // Primitives (no domain vocabulary, composable anywhere), then Composites
     // (domain surfaces built from them, grouped by the area they belong to),

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import Register from '../Register.svelte';
+import Register from '../../../routes/auth/register/+page.svelte';
 import { RegisterBloc } from '../Register.bloc.svelte';
 import type { RegisterPort } from '../auth-shared';
 import { failsWith, pending } from './auth-stubs';
@@ -29,7 +29,7 @@ function registerBloc(options: {
 }
 
 const meta = {
-  title: 'Composites/Auth/Register',
+  title: 'Pages/Register',
   component: Register,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import Login from '../Login.svelte';
+import Login from '../../../routes/auth/login/+page.svelte';
 import { LoginBloc } from '../Login.bloc.svelte';
 import { ResendBloc } from '../auth-resend.svelte';
 import type { LoginPort } from '../auth-shared';
@@ -41,7 +41,7 @@ function loginBloc(options: {
 }
 
 const meta = {
-  title: 'Composites/Auth/Login',
+  title: 'Pages/Login',
   component: Login,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import CheckEmail from '../CheckEmail.svelte';
+import CheckEmail from '../../../routes/auth/check-email/+page.svelte';
 import { CheckEmailBloc } from '../CheckEmail.bloc.svelte';
 import { resendIn, routeWith, type ResendStoryState } from './auth-stubs';
 
@@ -8,7 +8,7 @@ function checkEmailBloc(query: string, resend: ResendStoryState = 'idle') {
 }
 
 const meta = {
-  title: 'Composites/Auth/CheckEmail',
+  title: 'Pages/CheckEmail',
   component: CheckEmail,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

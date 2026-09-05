@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import ProfilePage from '../ProfilePage.svelte';
+import ProfilePage from '../../../routes/profile/+page.svelte';
 import { ProfilePageBloc, type ProfileDataPort, type ProfileConfigPort } from '../ProfilePage.bloc.svelte';
 import { ANIME_COUNTS, ANIME_ENTRIES, WORK_COUNTS, WORK_ENTRIES, freshClient } from './profileFixtures';
 
@@ -82,6 +82,9 @@ const meta = {
   component: ProfilePage,
   parameters: { layout: 'fullscreen' },
   tags: ['autodocs'],
+  // The stories inject their own bloc; `FromServerData` is the one that puts a
+  // real payload through, and it does so via the bloc's own source.
+  args: { data: { ssr: null } },
 } satisfies Meta<typeof ProfilePage>;
 
 export default meta;

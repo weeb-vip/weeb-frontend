@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import ProfileSettings from '../ProfileSettings.svelte';
+import ProfileSettings from '../../../routes/profile/settings/+page.svelte';
 import { ProfileSettingsBloc, type ProfileSettingsPort } from '../ProfileSettings.bloc.svelte';
 import { Language } from '../../../gql/graphql';
 import { freshClient } from './profileFixtures';

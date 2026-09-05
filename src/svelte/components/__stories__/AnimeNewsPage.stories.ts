@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import { writable } from 'svelte/store';
-import AnimeNewsPage from '../AnimeNewsPage.svelte';
+import AnimeNewsPage from '../../../routes/anime/[slug]/news/+page.svelte';
 import {
   AnimeNewsPageBloc,
   type AnimeNewsItem,

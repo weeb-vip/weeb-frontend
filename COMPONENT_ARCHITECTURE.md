@@ -93,6 +93,32 @@ Give a component a bloc when it does any of:
 - owns state that outlives a single render (open/closed, selection, pagination)
 - runs side effects (timers, observers, `window`/`document`, navigation)
 
+## Pages are routes, not components
+
+`src/svelte/components/` is for things with more than one caller. A page body
+has exactly one, so it lives in its route: the `+page.svelte` **is** the page,
+markup, scoped styles and all. There is no `SearchPage.svelte` for
+`/search/+page.svelte` to delegate to.
+
+The bloc does not move. `SearchPage.bloc.svelte.ts` and its friends stay in
+`src/svelte/components/` -- they are the reusable, testable half, imported by
+tests and by the route, and the split is the same one as anywhere else: the
+route file is the view.
+
+Three things follow from a route being the view:
+
+- **Props are the loader's.** The route keeps `let { data } = $props()` and
+  reads the payload off it; the bloc's `source` accessor closes over `data`, so
+  the server frame still renders complete. Stories inject `bloc` alongside a
+  `data` fixture.
+- **A `{#key}` on a route param has to become explicit.** SvelteKit reuses one
+  `+page.svelte` across a param change, so what used to be
+  `{#key data.season}<SeasonPage … />` is now a `$derived` bloc keyed on the
+  param, with the markup keyed on the same value. `/season/[season]` and
+  `/anime/[slug]` both do this.
+- **Genuinely shared bodies stay components.** `WorksBrowsePage` renders both
+  `/manga` and `/light-novels`, so it is reusable and stays where it is.
+
 ## Runes, not legacy syntax
 
 New and refactored components use Svelte 5 runes:
@@ -120,6 +146,11 @@ Every component gets a story in `src/svelte/components/__stories__/`, named
 
 - Presentational components: pass props.
 - Bloc-backed components: pass `bloc: new FooBloc(<stub ports>)`.
+- Pages: import the route's `+page.svelte` and pass `bloc` plus a `data`
+  fixture. These live under the `Pages/` title. `Seo` renders in every one of
+  them, so `.storybook/preview.ts` supplies a default `$page` store; a story
+  whose canonical URL is worth reading overrides
+  `parameters.sveltekit_experimental.stores.page`.
 
 Cover the states that actually differ — empty, loading, error, populated,
 overflowing — not just the happy path. Each story gets a one-line doc comment
@@ -127,12 +158,19 @@ explaining what it is showing.
 
 ## Gates
 
-Both must pass before a change lands:
+All of these must pass before a change lands:
 
 ```bash
-yarn check           # svelte-check: must stay at 0 errors
-yarn build-storybook # must build clean
+yarn check            # svelte-check: must stay at 0 errors
+yarn test             # jest
+yarn build-storybook  # must build clean
+yarn storybook:smoke  # against a running Storybook: must report 0 failing
 ```
+
+`build-storybook` only **compiles** stories — it never mounts one, so a clean
+build is not evidence that anything renders. `storybook:smoke`
+(`scripts/smoke-stories.mjs`) drives a real browser over every story and is the
+gate that actually catches a broken render. Run it against `yarn storybook`.
 
 Storybook requires the Node version in `.nvmrc` (v24.19.0); it refuses to run on
 Node 18.

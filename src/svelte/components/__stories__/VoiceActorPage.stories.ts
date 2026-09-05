@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import VoiceActorPage from '../VoiceActorPage.svelte';
+import VoiceActorPage from '../../../routes/people/[slug]/+page.svelte';
 import { VoiceActorPageBloc, type RoleEntry, type Staff } from '../VoiceActorPage.bloc.svelte';
 
 function role(id: number, name: string, roleLabel: string, anime: string | null): RoleEntry {
@@ -57,6 +57,9 @@ const meta = {
   component: VoiceActorPage,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
+  // The loader payload. Each story injects the bloc that renders the credits,
+  // so what this carries is the page title, canonical and breadcrumb.
+  args: { data: { staffPath: 'sawashiro-miyuki', staffName: 'Sawashiro, Miyuki' } },
 } satisfies Meta<typeof VoiceActorPage>;
 
 export default meta;
@@ -64,18 +67,17 @@ type Story = StoryObj<typeof meta>;
 
 /** The ordinary page: profile, counts, filters, and the first page of roles. */
 export const Populated: Story = {
-  args: { staff: STAFF, bloc: bloc(STAFF) },
+  args: { bloc: bloc(STAFF) },
 };
 
 /** A small page size, so the reveal button and its "N left" count are on screen. */
 export const Paginated: Story = {
-  args: { staff: STAFF, bloc: bloc(STAFF, null, 6) },
+  args: { bloc: bloc(STAFF, null, 6) },
 };
 
 /** The "Main" filter applied -- the reveal resets with it, by design. */
 export const FilteredToMain: Story = {
   args: {
-    staff: STAFF,
     bloc: (() => {
       const b = bloc(STAFF, null, 6);
       b.selectFilter('main');
@@ -87,7 +89,6 @@ export const FilteredToMain: Story = {
 /** Every credit is a lead, so there is no choice to offer and no filter strip. */
 export const SingleBucket: Story = {
   args: {
-    staff: { ...STAFF, roles: MANY_ROLES.filter((r) => r.character.role === 'Main').slice(0, 4) },
     bloc: bloc({
       ...STAFF,
       roles: MANY_ROLES.filter((r) => r.character.role === 'Main').slice(0, 4),
@@ -98,7 +99,6 @@ export const SingleBucket: Story = {
 /** Scraped but with no credits yet: the shared EmptyState under the heading. */
 export const NoRoles: Story = {
   args: {
-    staff: { ...STAFF, roles: [] },
     bloc: bloc({ ...STAFF, roles: [] }),
   },
 };
@@ -106,18 +106,6 @@ export const NoRoles: Story = {
 /** A profile whose scraped fields are the empty strings the scraper writes. */
 export const SparseProfile: Story = {
   args: {
-    staff: {
-      id: 'staff-2',
-      givenName: 'Unknown',
-      familyName: 'Actor',
-      language: '',
-      birthday: '',
-      birthPlace: '',
-      bloodType: '',
-      hobbies: '',
-      summary: '',
-      roles: MANY_ROLES.slice(0, 3),
-    },
     bloc: bloc({
       id: 'staff-2',
       givenName: 'Unknown',
@@ -135,29 +123,19 @@ export const SparseProfile: Story = {
 
 /** The loader failed: the shared ErrorBanner rather than a bare grey line. */
 export const LoadFailed: Story = {
-  args: { ssrError: 'staff-api returned 500', bloc: bloc(null, 'staff-api returned 500') },
+  args: {
+    data: {
+      staffPath: 'sawashiro-miyuki',
+      staffName: 'Sawashiro, Miyuki',
+      ssrError: 'staff-api returned 500',
+    },
+    bloc: bloc(null, 'staff-api returned 500'),
+  },
 };
 
 /** Long character names and long anime titles -- both clamp rather than reflow. */
 export const LongTitles: Story = {
   args: {
-    staff: {
-      ...STAFF,
-      roles: [
-        role(
-          1,
-          'Cornelia li Britannia, Second Princess of the Holy Empire',
-          'Main',
-          'The Exiled Heavy Knight Knows How to Game the System and Will Not Return',
-        ),
-        role(
-          2,
-          'A Character Whose Scraped Name Simply Kept Going And Going',
-          'Supporting',
-          'That Time I Got Reincarnated as a Slime, Season Three, Second Cour',
-        ),
-      ],
-    },
     bloc: bloc({
       ...STAFF,
       roles: [

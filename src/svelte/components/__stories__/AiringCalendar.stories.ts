@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import AiringCalendar from '../AiringCalendar.svelte';
+import AiringCalendar from '../../../routes/airing/calendar/+page.svelte';
 import { createQueryClient } from '../../services/query-client';
 import { AiringCalendarBloc, type AiringCalendarDeps } from '../AiringCalendar.bloc.svelte';
 import type { AiringShow } from '../CurrentlyAiringPage.schedule';
@@ -89,6 +89,9 @@ const meta = {
   component: AiringCalendar,
   parameters: { layout: 'fullscreen' },
   tags: ['autodocs'],
+  // Every story injects a bloc, so the loader payload is only what the page's
+  // own fallback bloc would have read.
+  args: { data: { ssrData: null, ssrError: null } },
 } satisfies Meta<typeof AiringCalendar>;
 
 export default meta;
