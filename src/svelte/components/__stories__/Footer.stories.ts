@@ -13,4 +13,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The site footer, with the build version pulled from `__APP_VERSION__`. */
 export const Default: Story = {};

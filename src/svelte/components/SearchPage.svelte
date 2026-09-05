@@ -633,7 +633,7 @@
         bind:value={selectedStatus}
         options={STATUSES}
         ariaLabel="Filter by status"
-        on:change={() => performSearch()}
+        onChange={() => performSearch()}
       />
 
       <!-- Year -->
@@ -641,7 +641,7 @@
         bind:value={selectedYear}
         options={yearSelectOptions}
         ariaLabel="Filter by year"
-        on:change={() => performSearch()}
+        onChange={() => performSearch()}
       />
 
       <!-- Sort -->
@@ -921,7 +921,7 @@
             bind:value={perPage}
             options={pageSizeSelectOptions}
             ariaLabel="Results per page"
-            on:change={() => { currentPage = 0; performSearch(false); }}
+            onChange={() => { currentPage = 0; performSearch(false); }}
           />
           <span class="per-page-label">per page</span>
         </div>

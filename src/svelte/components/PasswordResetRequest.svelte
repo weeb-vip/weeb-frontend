@@ -40,8 +40,8 @@
     }
   });
 
-  function handleInputChange(event: CustomEvent) {
-    const { value, originalEvent } = event.detail;
+  function handleInputChange(detail: { value: string; originalEvent: Event }) {
+    const { value, originalEvent } = detail;
     const target = originalEvent?.target as HTMLInputElement;
 
     if (!target) return;
@@ -165,7 +165,7 @@
               name="username"
               type="text"
               value={formData.username}
-              on:input={handleInputChange}
+              onInput={handleInputChange}
               placeholder="Username"
               label="Username"
               icon={iconUser}
@@ -178,7 +178,7 @@
               name="email"
               type="email"
               value={formData.email}
-              on:input={handleInputChange}
+              onInput={handleInputChange}
               placeholder="Email address"
               label="Email address"
               icon={iconEnvelope}

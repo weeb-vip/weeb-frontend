@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import Fa from 'svelte-fa';
   import {
     faSpinner,
@@ -7,36 +6,54 @@
     faExclamationCircle,
   } from '@fortawesome/free-solid-svg-icons';
 
-  export let color: 'blue' | 'red' | 'transparent' | '' = 'blue';
-  export let label: string = '';
-  export let icon: string = '';
-  export let onClick: () => void = () => {};
-  export let showLabel: boolean = true;
-  export let className: string = '';
-  export let status: 'idle' | 'loading' | 'success' | 'error' = 'idle';
-  export let onResetStatus: (() => void) | undefined = undefined;
-  export let disabled: boolean = false;
+  type ButtonStatus = 'idle' | 'loading' | 'success' | 'error';
 
-  let internalStatus: 'idle' | 'loading' | 'success' | 'error' = 'idle';
-  let buttonRef: HTMLButtonElement;
+  let {
+    color = 'blue',
+    label = '',
+    icon = '',
+    onClick = () => {},
+    showLabel = true,
+    className = '',
+    status = 'idle',
+    onResetStatus,
+    disabled = false,
+  }: {
+    color?: 'blue' | 'red' | 'transparent' | '';
+    label?: string;
+    /** Raw SVG markup rendered in place of the label. */
+    icon?: string;
+    onClick?: () => void;
+    showLabel?: boolean;
+    className?: string;
+    status?: ButtonStatus;
+    /** Called once the transient success/error state has been shown. */
+    onResetStatus?: () => void;
+    disabled?: boolean;
+  } = $props();
 
-  $: {
-    if (status) {
-      internalStatus = status;
-      if (status !== 'idle') {
-        setTimeout(() => {
-          internalStatus = 'idle';
-          onResetStatus?.();
-        }, 2000);
-      }
-    }
-  }
+  // The caller's status shows immediately, including on the first paint; success
+  // and error are transient, so after two seconds the button falls back to idle
+  // on its own. `expired` is that local override and nothing else.
+  let expired = $state(false);
+  const internalStatus = $derived<ButtonStatus>(expired ? 'idle' : status);
+
+  $effect(() => {
+    expired = false;
+    if (status === 'idle') return;
+
+    const timer = setTimeout(() => {
+      expired = true;
+      onResetStatus?.();
+    }, 2000);
+    return () => clearTimeout(timer);
+  });
 
   const colorClasses = {
     blue: 'btn-accent',
     red: 'btn-danger',
     transparent: 'btn-ghost',
-    '': ''
+    '': '',
   };
 
   function handleClick() {
@@ -47,8 +64,7 @@
 </script>
 
 <button
-  bind:this={buttonRef}
-  on:click={handleClick}
+  onclick={handleClick}
   disabled={internalStatus === 'loading' || disabled}
   class="btn {colorClasses[color]} {className} {internalStatus === 'loading' ? 'cursor-not-allowed' : 'cursor-pointer'}"
 >

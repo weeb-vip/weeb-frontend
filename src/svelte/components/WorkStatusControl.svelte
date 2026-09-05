@@ -102,8 +102,8 @@
     return fallback;
   }
 
-  function onChange(event: CustomEvent<{ value: string | number }>) {
-    const next = String(event.detail.value);
+  function onChange(detail: { value: string | number }) {
+    const next = String(detail.value);
     status = next;
 
     if (next === NOT_TRACKING) {
@@ -122,7 +122,7 @@
     ariaLabel="Reading status"
     placeholder="Not tracking"
     disabled={$save.isPending || $remove.isPending}
-    on:change={onChange}
+    {onChange}
   />
 </div>
 

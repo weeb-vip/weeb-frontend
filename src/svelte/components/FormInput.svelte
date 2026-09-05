@@ -1,25 +1,43 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Fa from 'svelte-fa';
   import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
   import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
-  export let id: string;
-  export let name: string;
-  export let type: 'text' | 'email' | 'password' = 'text';
-  export let value: string = '';
-  export let placeholder: string = '';
-  export let label: string = '';
-  export let icon: IconDefinition | null = null;
-  export let error: string = '';
-  export let required: boolean = false;
-  export let disabled: boolean = false;
-  export let className: string = '';
-  export let showPasswordToggle: boolean = false;
+  /** What a keystroke reports back: the new value, plus the raw DOM event so a
+   * caller with several fields can still read `target.name`. */
+  export type FormInputDetail = { value: string; originalEvent: Event };
 
-  let isPasswordVisible = false;
+  let {
+    id,
+    name,
+    type = 'text',
+    value = $bindable(''),
+    placeholder = '',
+    label = '',
+    icon = null,
+    error = '',
+    required = false,
+    disabled = false,
+    className = '',
+    showPasswordToggle = false,
+    onInput,
+  }: {
+    id: string;
+    name: string;
+    type?: 'text' | 'email' | 'password';
+    value?: string;
+    placeholder?: string;
+    label?: string;
+    icon?: IconDefinition | null;
+    error?: string;
+    required?: boolean;
+    disabled?: boolean;
+    className?: string;
+    showPasswordToggle?: boolean;
+    onInput?: (detail: FormInputDetail) => void;
+  } = $props();
 
-  const dispatch = createEventDispatcher();
+  let isPasswordVisible = $state(false);
 
   function togglePasswordVisibility() {
     isPasswordVisible = !isPasswordVisible;
@@ -28,40 +46,10 @@
   function handleInput(event: Event) {
     const target = event.target as HTMLInputElement;
     value = target.value;
-    dispatch('input', { value, originalEvent: event });
+    onInput?.({ value, originalEvent: event });
   }
 
-  // Computed values
-  $: hasIcon = icon || showPasswordToggle;
-  $: iconPaddingClass = icon ? 'pl-10' : 'pl-4';
-  $: passwordTogglePaddingClass = showPasswordToggle ? 'pr-10' : 'pr-4';
-
-  // Base classes for all inputs
-  $: baseInputClasses = `
-    w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300
-    bg-weeb-surface text-weeb-fg
-    ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-  `.trim();
-
-  // Error and normal state classes
-  $: stateClasses = error
-    ? 'border-weeb-red focus:ring-red-400'
-    : 'border-weeb-border focus:border-weeb-accent';
-
-  // Label classes - show label if provided, otherwise use sr-only
-  $: labelClasses = label
-    ? 'block text-sm font-medium mb-2 text-weeb-fg-secondary'
-    : 'sr-only';
-
-  $: inputClasses = `
-    ${baseInputClasses}
-    ${stateClasses}
-    ${iconPaddingClass}
-    ${passwordTogglePaddingClass}
-    ${className}
-  `.trim();
-
-  $: inputType = showPasswordToggle && isPasswordVisible ? 'text' : type;
+  const inputType = $derived(showPasswordToggle && isPasswordVisible ? 'text' : type);
 </script>
 
 <div class="weeb-form-field">
@@ -88,7 +76,7 @@
       {name}
       type={inputType}
       {value}
-      on:input={handleInput}
+      oninput={handleInput}
       {placeholder}
       {required}
       {disabled}
@@ -105,7 +93,7 @@
       <button
         type="button"
         class="weeb-password-toggle"
-        on:click={togglePasswordVisibility}
+        onclick={togglePasswordVisibility}
         tabindex="-1"
       >
         <Fa icon={isPasswordVisible ? faEyeSlash : faEye} />

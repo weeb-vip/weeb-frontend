@@ -1,21 +1,33 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
+  import type { Snippet } from 'svelte';
 
-  export let isOpen = false;
-  export let showCloseButton = true;
-  export let backdropCloseable = true;
-  export let className = '';
+  let {
+    isOpen = false,
+    showCloseButton = true,
+    backdropCloseable = true,
+    className = '',
+    /** Asked to dismiss -- by the close button, the backdrop, or Escape. */
+    onClose,
+    children,
+  }: {
+    isOpen?: boolean;
+    showCloseButton?: boolean;
+    backdropCloseable?: boolean;
+    className?: string;
+    onClose?: () => void;
+    children?: Snippet;
+  } = $props();
 
-  const dispatch = createEventDispatcher();
+  // The portal appends to <body>, so nothing renders until we are on the
+  // client and there is a body to append to.
+  let mounted = $state(false);
 
-  let mounted = false;
-
-  onMount(() => {
+  $effect(() => {
     mounted = true;
   });
 
   function closeModal() {
-    dispatch('close');
+    onClose?.();
   }
 
   function handleBackdropClick(e: MouseEvent) {
@@ -30,14 +42,15 @@
     }
   }
 
-  // Prevent body scroll when modal is open
-  $: if (typeof document !== 'undefined') {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
+  // Prevent body scroll while the dialog is up, and always give it back --
+  // including when the component is destroyed mid-open.
+  $effect(() => {
+    if (!isOpen) return;
+    document.body.style.overflow = 'hidden';
+    return () => {
       document.body.style.overflow = '';
-    }
-  }
+    };
+  });
 
   // Portal action - moves element to body level
   function portal(node: HTMLElement) {
@@ -109,22 +122,22 @@
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 {#if isOpen && mounted}
   <!-- Backdrop is purely presentational; click-to-dismiss has a keyboard
        equivalent via the window-level Escape handler above. -->
-  <div use:portal class="weeb-modal-backdrop" on:click={handleBackdropClick} role="presentation">
+  <div use:portal class="weeb-modal-backdrop" onclick={handleBackdropClick} role="presentation">
     <div class="weeb-modal-container">
       <div class="weeb-modal-card {className}" use:trapFocus tabindex="-1" role="dialog" aria-modal="true" aria-label="Dialog">
         {#if showCloseButton}
-          <button type="button" class="weeb-modal-close" on:click={closeModal} aria-label="Close modal">
+          <button type="button" class="weeb-modal-close" onclick={closeModal} aria-label="Close modal">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         {/if}
-        <slot />
+        {@render children?.()}
       </div>
     </div>
   </div>

@@ -102,8 +102,8 @@
     }
   }, queryClient);
 
-  function handleInputChange(event: CustomEvent) {
-    const { value, originalEvent } = event.detail;
+  function handleInputChange(detail: { value: string; originalEvent: Event }) {
+    const { value, originalEvent } = detail;
     const name = (originalEvent.target as HTMLInputElement).name;
 
     formData = {
@@ -219,7 +219,7 @@
             name="firstname"
             type="text"
             value={formData.firstname || ''}
-            on:input={handleInputChange}
+            onInput={handleInputChange}
             placeholder="First Name"
             label="First Name"
             icon={faUser}
@@ -231,7 +231,7 @@
             name="lastname"
             type="text"
             value={formData.lastname || ''}
-            on:input={handleInputChange}
+            onInput={handleInputChange}
             placeholder="Last Name"
             label="Last Name"
             icon={faUser}
@@ -244,7 +244,7 @@
           name="username"
           type="text"
           value={formData.username || ''}
-          on:input={handleInputChange}
+          onInput={handleInputChange}
           placeholder="Username"
           label="Username"
           icon={faUser}
@@ -257,7 +257,7 @@
           name="email"
           type="email"
           value={formData.email || ''}
-          on:input={handleInputChange}
+          onInput={handleInputChange}
           placeholder="Email Address (optional)"
           label="Email Address"
           icon={faEnvelope}

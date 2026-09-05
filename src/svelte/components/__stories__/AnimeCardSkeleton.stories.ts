@@ -26,6 +26,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The default poster card placeholder. */
 export const Default: Story = {
   args: {
     style: 'default',
@@ -33,6 +34,7 @@ export const Default: Story = {
   },
 };
 
+/** The wider detail-page variant, with a fourth copy line. */
 export const DetailStyle: Story = {
   args: {
     style: 'detail',
@@ -40,6 +42,7 @@ export const DetailStyle: Story = {
   },
 };
 
+/** The episode variant, whose copy lines are fixed rather than derived. */
 export const EpisodeStyle: Story = {
   args: {
     style: 'episode',
@@ -47,6 +50,7 @@ export const EpisodeStyle: Story = {
   },
 };
 
+/** Forced into a row on every breakpoint, as the profile lists render it. */
 export const ListLayout: Story = {
   args: {
     style: 'detail',

@@ -1,9 +1,11 @@
 <script lang="ts">
-  export let genres: string[] = [
-    'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror',
-    'Mecha', 'Music', 'Mystery', 'Psychological', 'Romance', 'Sci-Fi',
-    'Slice of Life', 'Sports', 'Supernatural', 'Thriller'
-  ];
+  let {
+    genres = [
+      'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror',
+      'Mecha', 'Music', 'Mystery', 'Psychological', 'Romance', 'Sci-Fi',
+      'Slice of Life', 'Sports', 'Supernatural', 'Thriller'
+    ],
+  }: { genres?: string[] } = $props();
 </script>
 
 <div class="genre-row">

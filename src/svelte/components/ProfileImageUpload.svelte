@@ -260,7 +260,7 @@
 
 <svelte:window on:mousemove={handleMove} on:mouseup={handleEnd} />
 
-<Modal {isOpen} on:close={handleClose} className="max-w-2xl max-h-[90vh]">
+<Modal {isOpen} onClose={handleClose} className="max-w-2xl max-h-[90vh]">
   <div class="cropper">
     <h3 class="cropper-title">{preset.title}</h3>
 

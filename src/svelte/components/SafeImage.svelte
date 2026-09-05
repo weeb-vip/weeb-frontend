@@ -1,67 +1,90 @@
 <script lang="ts">
   import { getSafeImageUrl, resizeCdnUrl } from '../utils/image';
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { untrack } from 'svelte';
   import debug from '../../utils/debug';
 
-  // Original props
-  export let src: string = '';
-  export let alt: string = '';
-  export let fallbackSrc: string = '/assets/not found.jpg';
-  /**
-   * When set, a total load failure renders a titled panel instead of loading
-   * fallbackSrc. `/assets/not found.jpg` is a bright white illustration: on this
-   * near-black ground it became the highest-contrast object in the viewport, so
-   * on a page whose thesis is "cover art carries the product" the missing art
-   * out-shouted the real art. It is also indistinguishable from a poster, so a
-   * reader cannot tell "no artwork" from "the artwork looks like that".
-   */
-  export let placeholderTitle: string | null = null;
-  export let path: string = '';
-  export let priority: boolean = false;
-  export let className: string = '';
-  export let style: string = '';
-  export let width: string | number | undefined = undefined;
-  export let height: string | number | undefined = undefined;
-  export let loading: 'lazy' | 'eager' | undefined = undefined;
-  /** Intended device-pixel width. When set, CDN sources are routed through
-   * Cloudflare Image Resizing (production only). Undefined = full-res (unchanged). */
-  export let cdnWidth: number | undefined = undefined;
-
-  // New ordered loading props (like RacyImage)
-  /** Ordered list of candidate URLs (first has highest priority) */
-  export let sources: string[] = [];
-
-  /** Optional: reject by URL pattern (e.g., 404 placeholders) */
-  export let rejectPatterns: (string | RegExp)[] = [
-    /(?:^|\/)(?:404|not[-_]?found|error)\.(?:png|jpe?g|webp|gif|svg)$/i,
-    /(?:^|\/)(?:placeholder|default)\.(?:png|jpe?g|webp|gif|svg)$/i
-  ];
-
-  /** Custom acceptance check (URL + decoded dimensions) */
-  export let accept: (img: HTMLImageElement, url: string) => boolean = (img, url) => {
-    for (const pat of rejectPatterns) {
-      const re = typeof pat === 'string' ? new RegExp(pat) : pat;
-      if (re.test(url)) return false;
-    }
-    // Reject tiny "error sprite" assets
-    if (img.naturalWidth <= 2 && img.naturalHeight <= 2) return false;
-    return true;
+  /** What `onChosen` reports: the URL that won, and why it was the one. */
+  export type ChosenDetail = {
+    src: string | null;
+    reason: 'load' | 'last-source' | 'already-loaded' | 'retry-same' | 'same-already-loaded' | 'placeholder' | 'all-failed';
   };
 
-  /** Per-attempt timeout (ms). 0/undefined = no timeout per image */
-  export let perTryTimeoutMs: number = 3000;
+  let {
+    src = '',
+    alt = '',
+    fallbackSrc = '/assets/not found.jpg',
+    /**
+     * When set, a total load failure renders a titled panel instead of loading
+     * fallbackSrc. `/assets/not found.jpg` is a bright white illustration: on this
+     * near-black ground it became the highest-contrast object in the viewport, so
+     * on a page whose thesis is "cover art carries the product" the missing art
+     * out-shouted the real art. It is also indistinguishable from a poster, so a
+     * reader cannot tell "no artwork" from "the artwork looks like that".
+     */
+    placeholderTitle = null,
+    path = '',
+    priority = false,
+    className = '',
+    style = '',
+    width = undefined,
+    height = undefined,
+    loading = undefined,
+    /** Intended device-pixel width. When set, CDN sources are routed through
+     * Cloudflare Image Resizing (production only). Undefined = full-res (unchanged). */
+    cdnWidth = undefined,
+    /** Ordered list of candidate URLs (first has highest priority) */
+    sources = [],
+    /** Optional: reject by URL pattern (e.g., 404 placeholders) */
+    rejectPatterns = [
+      /(?:^|\/)(?:404|not[-_]?found|error)\.(?:png|jpe?g|webp|gif|svg)$/i,
+      /(?:^|\/)(?:placeholder|default)\.(?:png|jpe?g|webp|gif|svg)$/i
+    ],
+    /** Custom acceptance check (URL + decoded dimensions) */
+    accept = (img: HTMLImageElement, url: string) => {
+      for (const pat of rejectPatterns) {
+        const re = typeof pat === 'string' ? new RegExp(pat) : pat;
+        if (re.test(url)) return false;
+      }
+      // Reject tiny "error sprite" assets
+      if (img.naturalWidth <= 2 && img.naturalHeight <= 2) return false;
+      return true;
+    },
+    /** Per-attempt timeout (ms). 0/undefined = no timeout per image */
+    perTryTimeoutMs = 3000,
+    /** Called once a candidate has been settled on -- including the failure
+     * cases, where `src` is the fallback or null. */
+    onChosen,
+  }: {
+    src?: string;
+    alt?: string;
+    fallbackSrc?: string;
+    placeholderTitle?: string | null;
+    path?: string;
+    priority?: boolean;
+    className?: string;
+    style?: string;
+    width?: string | number;
+    height?: string | number;
+    loading?: 'lazy' | 'eager';
+    cdnWidth?: number;
+    sources?: string[];
+    rejectPatterns?: (string | RegExp)[];
+    accept?: (img: HTMLImageElement, url: string) => boolean;
+    perTryTimeoutMs?: number;
+    onChosen?: (detail: ChosenDetail) => void;
+  } = $props();
 
-  const dispatch = createEventDispatcher();
+  const actualLoading = $derived(loading || (priority ? 'eager' : 'lazy'));
 
-  $: actualLoading = loading || (priority ? 'eager' : 'lazy');
-
-  let isLoaded = false;
-  let isError = false;
-  let showPlaceholder = false;
-  let chosenSrc: string | null = null;
+  let isLoaded = $state(false);
+  let isError = $state(false);
+  let showPlaceholder = $state(false);
+  let chosenSrc = $state<string | null>(null);
+  let domImageLoaded = $state(false); // Track when the DOM <img> has loaded
+  // Bookkeeping the template never reads, so plain locals: making these state
+  // would only add reactivity nothing subscribes to.
   let destroyed = false;
   let runId = 0;
-  let domImageLoaded = false; // Track when the DOM <img> has loaded
   let mounted = false; // Track if component is mounted
   let isLoadingInProgress = false; // Prevent concurrent loads
   const imgs: HTMLImageElement[] = [];
@@ -112,11 +135,11 @@
     if (sources.length > 0) {
       // Use provided sources array - don't process if already full URLs
       orderedSources = sources.map(s => {
-        // If it's already a full URL (http/https), use as-is
-        if (s.startsWith('http://') || s.startsWith('https://')) {
+        // Already a complete URL -- http(s), or an inline data:/blob: source --
+        // so there is no CDN key to build. Anything else is a record id.
+        if (/^(?:https?:|data:|blob:)/i.test(s)) {
           return s;
         }
-        // Otherwise, process through getSafeImageUrl
         return getSafeImageUrl(s, path);
       });
     } else if (src) {
@@ -162,9 +185,9 @@
     if (newFirstSource === chosenSrc && domImageLoaded) {
       // Same image already loaded, no need to reload
       debug.log('Same image source already loaded, skipping reload');
-      debug.log(`  Dispatching 'chosen' event for already-loaded image: ${chosenSrc}`);
-      // Dispatch event so parent knows image is ready (important if parent reset bgLoaded)
-      dispatch('chosen', { src: chosenSrc, reason: 'already-loaded' });
+      debug.log(`  Reporting the already-loaded image: ${chosenSrc}`);
+      // Report it so the parent knows the image is ready (important if it reset bgLoaded)
+      onChosen?.({ src: chosenSrc, reason: 'already-loaded' });
       isLoadingInProgress = false;
       return;
     }
@@ -216,12 +239,12 @@
         // Same image but DOM hasn't loaded it yet - this might be a retry
         debug.log('Same image but DOM not loaded, resetting domImageLoaded');
         domImageLoaded = false;
-        dispatch('chosen', { src: chosenSrc, reason: 'retry-same' });
+        onChosen?.({ src: chosenSrc, reason: 'retry-same' });
       } else {
-        // Same image, already loaded in DOM - still dispatch event for parent
+        // Same image, already loaded in DOM - still notify the parent
         debug.log('Same image already loaded in DOM, keeping current state');
-        debug.log('Dispatching chosen event so parent knows image is ready');
-        dispatch('chosen', { src: chosenSrc, reason: 'same-already-loaded' });
+        debug.log('Reporting the chosen image so the parent knows it is ready');
+        onChosen?.({ src: chosenSrc, reason: 'same-already-loaded' });
         isLoadingInProgress = false;
         return;
       }
@@ -234,7 +257,7 @@
       // for every show TheTVDB does not carry, and blurred every one of them.
       isError = false;
       const isLastSource = best.index === orderedSources.length - 1;
-      dispatch('chosen', {
+      onChosen?.({
         src: chosenSrc,
         reason: isLastSource && orderedSources.length > 1 ? 'last-source' : 'load'
       });
@@ -253,7 +276,7 @@
         domImageLoaded = true;
         isError = true;
         isLoaded = true;
-        dispatch('chosen', { src: null, reason: 'placeholder' });
+        onChosen?.({ src: null, reason: 'placeholder' });
       } else {
         if (fallbackSrc !== previousSrc) {
           chosenSrc = fallbackSrc ?? null;
@@ -261,18 +284,19 @@
         }
         isError = true;
         isLoaded = true;
-        dispatch('chosen', { src: chosenSrc, reason: 'all-failed' });
+        onChosen?.({ src: chosenSrc, reason: 'all-failed' });
       }
     }
     isLoadingInProgress = false;
   }
 
-  // Track previous values to detect actual changes (initialize in onMount to avoid pre-mount comparisons)
+  // Track previous values to detect actual changes (initialised on mount to avoid pre-mount comparisons)
   let prevSrc = '';
   let prevSources: string[] = [];
   let prevPath = '';
 
-  onMount(() => {
+  // Runs once: every read below is untracked, so nothing here re-subscribes.
+  $effect(() => {
     mounted = true;
 
     // Reset all state on mount to handle View Transitions properly
@@ -294,9 +318,9 @@
     imgs.length = 0;
 
     // Initialize tracking with current values
-    prevSrc = src;
-    prevSources = sources;
-    prevPath = path;
+    prevSrc = untrack(() => src);
+    prevSources = untrack(() => sources);
+    prevPath = untrack(() => path);
 
     // Small delay to ensure DOM is ready after View Transitions
     requestAnimationFrame(() => {
@@ -345,40 +369,40 @@
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      destroyed = true;
       window.removeEventListener('pageshow', handlePageShow);
       window.removeEventListener('swipe-navigation-restored', handleSwipeNavigationRestored);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      for (const img of imgs) {
+        img.onload = null;
+        img.onerror = null;
+      }
     };
   });
 
-  onDestroy(() => {
-    destroyed = true;
-    for (const img of imgs) {
-      img.onload = null;
-      img.onerror = null;
-    }
-  });
-
-  // Re-enable reactive statements with better guards
-  // Only trigger if mounted AND the values have actually changed from what we tracked
-  $: {
-    if (!mounted) break $;
-
+  // Reload only when the props that actually name an image change. This effect
+  // is declared after the mount one, so on the first flush `mounted` is already
+  // true and the prev* values already match -- it is a no-op until a real change.
+  $effect(() => {
+    const nextSrc = src;
+    const nextPath = path;
     const sourcesStr = JSON.stringify(sources);
+
+    if (!mounted) return;
+
     const prevSourcesStr = JSON.stringify(prevSources);
+    if (nextSrc === prevSrc && sourcesStr === prevSourcesStr && nextPath === prevPath) return;
 
-    if (src !== prevSrc || sourcesStr !== prevSourcesStr || path !== prevPath) {
-      debug.log(`=== Props changed after mount ===`);
-      if (src !== prevSrc) debug.log(`  src: ${prevSrc} -> ${src}`);
-      if (sourcesStr !== prevSourcesStr) debug.log(`  sources changed`);
-      if (path !== prevPath) debug.log(`  path: ${prevPath} -> ${path}`);
+    debug.log(`=== Props changed after mount ===`);
+    if (nextSrc !== prevSrc) debug.log(`  src: ${prevSrc} -> ${nextSrc}`);
+    if (sourcesStr !== prevSourcesStr) debug.log(`  sources changed`);
+    if (nextPath !== prevPath) debug.log(`  path: ${prevPath} -> ${nextPath}`);
 
-      prevSrc = src;
-      prevSources = [...sources];
-      prevPath = path;
-      tryInOrder();
-    }
-  }
+    prevSrc = nextSrc;
+    prevSources = [...sources];
+    prevPath = nextPath;
+    untrack(() => tryInOrder());
+  });
 
   // Fallback error handler for simple mode
   function handleSimpleError() {
@@ -389,21 +413,18 @@
       domImageLoaded = true;
       isError = true;
       isLoaded = true;
-      dispatch('error', { src: null });
       return;
     }
     chosenSrc = fallbackSrc;
     domImageLoaded = false; // Reset to load fallback
     isError = true;
     isLoaded = true;
-    dispatch('error', { src: chosenSrc });
   }
 
   function handleSimpleLoad() {
     debug.log(`DOM image loaded: ${chosenSrc}`);
     isLoaded = true;
     domImageLoaded = true; // Image fully loaded in DOM
-    dispatch('load', { src: chosenSrc });
   }
 </script>
 
@@ -433,8 +454,8 @@
       fetchpriority={priority ? 'high' : 'auto'}
       data-original-src={getSafeImageUrl(src, path)}
       data-sources={sources.length > 0 ? JSON.stringify(sources) : undefined}
-      on:error={handleSimpleError}
-      on:load={handleSimpleLoad}
+      onerror={handleSimpleError}
+      onload={handleSimpleLoad}
     />
   {/if}
 </div>

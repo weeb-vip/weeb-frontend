@@ -246,7 +246,7 @@
         label={!isRegisterState ? 'Username or email' : 'Email'}
         error={validationErrors.username}
         required={true}
-        on:input={(e) => handleChange('username', e.detail.value)}
+        onInput={(e) => handleChange('username', e.value)}
       />
     </div>
 
@@ -261,7 +261,7 @@
         error={validationErrors.password}
         required={true}
         showPasswordToggle={true}
-        on:input={(e) => handleChange('password', e.detail.value)}
+        onInput={(e) => handleChange('password', e.value)}
       />
     </div>
 
@@ -277,7 +277,7 @@
           error={validationErrors.confirmPassword}
           required={true}
           showPasswordToggle={true}
-          on:input={(e) => handleChange('confirmPassword', e.detail.value)}
+          onInput={(e) => handleChange('confirmPassword', e.value)}
         />
       </div>
     {/if}

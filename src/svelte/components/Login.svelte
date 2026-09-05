@@ -68,8 +68,8 @@
     $resendMutation.mutate({ username: formData.username });
   }
 
-  function handleInputChange(event: CustomEvent) {
-    const { value, originalEvent } = event.detail;
+  function handleInputChange(detail: { value: string; originalEvent: Event }) {
+    const { value, originalEvent } = detail;
     const target = originalEvent?.target as HTMLInputElement;
 
     if (!target) return;
@@ -144,7 +144,7 @@
             name="username"
             type="text"
             value={formData.username}
-            on:input={handleInputChange}
+            onInput={handleInputChange}
             placeholder="your_username"
             label="Username or email"
             required
@@ -159,7 +159,7 @@
             name="password"
             type="password"
             value={formData.password}
-            on:input={handleInputChange}
+            onInput={handleInputChange}
             placeholder="Enter your password"
             label="Password"
             required

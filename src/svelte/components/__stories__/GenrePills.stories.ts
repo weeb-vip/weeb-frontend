@@ -10,6 +10,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The full genre list, wrapping onto as many rows as it needs. */
 export const Default: Story = {
   args: {
     genres: [

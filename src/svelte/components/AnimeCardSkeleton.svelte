@@ -1,6 +1,17 @@
 <script lang="ts">
-  export let style: 'default' | 'hover-transparent' | 'hover' | 'transparent' | 'long' | 'detail' | 'episode' = 'default';
-  export let forceListLayout: boolean = false;
+  type SkeletonStyle =
+    | 'default'
+    | 'hover-transparent'
+    | 'hover'
+    | 'transparent'
+    | 'long'
+    | 'detail'
+    | 'episode';
+
+  let {
+    style = 'default',
+    forceListLayout = false,
+  }: { style?: SkeletonStyle; forceListLayout?: boolean } = $props();
 
   function getSkeletonLayout(style: string, forceListLayout: boolean) {
     const bg = style === 'transparent' ? 'bg-transparent' : 'bg-weeb-surface';
@@ -45,7 +56,7 @@
     }
   }
 
-  $: layout = getSkeletonLayout(style, forceListLayout);
+  const layout = $derived(getSkeletonLayout(style, forceListLayout));
 </script>
 
 <div class={layout.container}>

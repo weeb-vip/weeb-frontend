@@ -78,8 +78,8 @@
     return Object.keys(errors).length === 0;
   }
 
-  function handleInputChange(event: CustomEvent) {
-    const { value, originalEvent } = event.detail;
+  function handleInputChange(detail: { value: string; originalEvent: Event }) {
+    const { value, originalEvent } = detail;
     const target = originalEvent?.target as HTMLInputElement;
 
     if (!target) return;
@@ -152,7 +152,7 @@
             name="username"
             type="email"
             value={formData.username}
-            on:input={handleInputChange}
+            onInput={handleInputChange}
             placeholder="you@example.com"
             label="Email"
             error={validationErrors.username}
@@ -170,7 +170,7 @@
             name="password"
             type="password"
             value={formData.password}
-            on:input={handleInputChange}
+            onInput={handleInputChange}
             placeholder="At least 6 characters"
             label="Password"
             error={validationErrors.password}
@@ -202,7 +202,7 @@
             name="confirmPassword"
             type="password"
             value={formData.confirmPassword}
-            on:input={handleInputChange}
+            onInput={handleInputChange}
             placeholder="Re-enter your password"
             label="Confirm password"
             error={validationErrors.confirmPassword}

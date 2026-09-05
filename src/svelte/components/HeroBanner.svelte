@@ -167,8 +167,8 @@
     ? 'Airing Soon'
     : 'Next Episode';
 
-  function handleImageChosen(event: CustomEvent) {
-    console.log('🖼️ HeroBanner image chosen:', event.detail);
+  function handleImageChosen(detail: { src: string | null; reason: string }) {
+    console.log('🖼️ HeroBanner image chosen:', detail);
     bgLoaded = true;
   }
 
@@ -186,7 +186,7 @@
         perTryTimeoutMs={3000}
         className="hero-bg-cover"
         cdnWidth={heroCdnWidth}
-        on:chosen={handleImageChosen}
+        onChosen={handleImageChosen}
       />
     </div>
   {/if}

@@ -353,8 +353,8 @@
     imageSources = generateImageSources();
   }
 
-  function handleImageChosen(event: CustomEvent) {
-    console.log('🖼️ ShowContent background image chosen:', event.detail);
+  function handleImageChosen(detail: { src: string | null; reason: string }) {
+    console.log('🖼️ ShowContent background image chosen:', detail);
     bgLoaded = true;
     console.log('🖼️ bgLoaded set to true, wrapper should be visible now');
   }
@@ -505,7 +505,7 @@
             perTryTimeoutMs={3000}
             className="hero-banner__bg-img"
             style=""
-            on:chosen={handleImageChosen}
+            onChosen={handleImageChosen}
           />
         </div>
       {/if}

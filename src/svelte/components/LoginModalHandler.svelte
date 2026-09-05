@@ -51,7 +51,7 @@
 </script>
 
 {#if isClient}
-  <Modal {isOpen} on:close={closeModal}>
+  <Modal {isOpen} onClose={closeModal}>
     {#if QueryClientProvider && queryClient}
       <svelte:component this={QueryClientProvider} client={queryClient}>
         <LoginRegisterModal closeFn={closeModal} />

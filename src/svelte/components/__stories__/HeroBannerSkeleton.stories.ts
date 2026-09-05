@@ -13,4 +13,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The hero's placeholder: shimmering background, badge, title, meta and buttons. */
 export const Default: Story = {};

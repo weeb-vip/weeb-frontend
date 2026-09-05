@@ -85,8 +85,8 @@
   // offered: a missing banner falls through to the poster and then the cover,
   // and a portrait shown at banner treatment looks like a mistake.
   let heroIsBanner = false;
-  function handleHeroChosen(event: CustomEvent) {
-    heroIsBanner = typeof event.detail?.src === 'string' && event.detail.src.includes('/banners/');
+  function handleHeroChosen(detail: { src: string | null; reason: string }) {
+    heroIsBanner = typeof detail?.src === 'string' && detail.src.includes('/banners/');
   }
   $: authors = (work?.authors ?? []) as string[];
   $: publishedRange = published(work?.publishedFrom, work?.publishedTo, work?.status);
@@ -127,7 +127,7 @@
             perTryTimeoutMs={3000}
             className="hero-bg-img"
             style=""
-            on:chosen={handleHeroChosen}
+            onChosen={handleHeroChosen}
           />
         </div>
       {/if}
