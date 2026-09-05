@@ -1,552 +1,91 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { createQuery } from '@tanstack/svelte-query';
-  import { format } from 'date-fns';
-  import { utc } from '@date-fns/utc/utc';
-  import SafeImage from './SafeImage.svelte';
-  import { initializeQueryClient } from '../services/query-client';
-  import { fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
-  import { useAddAnimeWithToast } from '../utils/anime-actions';
-  import { Status } from '../../gql/graphql';
-  import { GetImageFromAnime, getYearUTC, animeHref } from '../../services/utils';
-  import { getSafeImageUrl, resizeCdnUrl } from '../utils/image';
-  import { findNextEpisode, getAirTimeDisplay } from '../../services/airTimeUtils';
-  import { animeNotificationService } from '../../services/animeNotifications';
-  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
-  import { getCurrentSeason, getSeasonDisplayName } from '../../utils/seasonUtils';
+  import Tabs from './Tabs.svelte';
+  import EmptyState from './EmptyState.svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
+  import Skeleton from './Skeleton.svelte';
+  import { CurrentlyAiringPageBloc } from './CurrentlyAiringPage.bloc.svelte';
+  import type { AiringShow } from './CurrentlyAiringPage.schedule';
+  import type { TabItem } from './Tabs.svelte';
 
-  // SSR props
-  export let ssrData: any = null;
+  /**
+   * What is airing, as a forward-looking schedule or as a month calendar.
+   *
+   * A view over the bloc: it owns the date ranges, the buckets, the grid, the
+   * timezone and the filters; this renders them. Notably the view switch and
+   * the my-list filter are plain reactive state now -- they used to be
+   * implemented by querying the document and assigning `style.display`.
+   */
+  let {
+    ssrData = null,
+    bloc = new CurrentlyAiringPageBloc({ source: () => ({ ssrData }) }),
+  }: {
+    ssrData?: { currentlyAiring?: AiringShow[] | null } | null;
+    bloc?: CurrentlyAiringPageBloc;
+  } = $props();
 
-  // Initialize query client
-  const queryClient = initializeQueryClient();
+  $effect(() => bloc.init());
 
-  // Fetch from start of current month to end of next month — shared by schedule + calendar
-  const now = new Date();
-  const initialStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
-  const initialEndDate = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-
-  // Track the query date range so we can expand it when calendar navigates
-  let queryStartDate = initialStartDate;
-  let queryEndDate = initialEndDate;
-
-  // Create TanStack Query stores with SSR data
-  const currentlyAiringQuery = createQuery({
-    ...fetchCurrentlyAiringWithDatesAndEpisodes(queryStartDate, queryEndDate, undefined, 100),
-    initialData: ssrData,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    staleTime: 2 * 60 * 1000,
-  }, queryClient);
-
-  // Track loading state for calendar month navigation
-  let calendarLoading = false;
-
-  // Store additional anime data fetched for other months (merged with main query data)
-  let additionalAnimeData: any[] = [];
-
-  // Fetch additional data when calendar navigates outside current range
-  async function fetchMonthData(year: number, month: number) {
-    const monthStart = new Date(year, month, 1);
-    const monthEnd = new Date(year, month + 1, 0);
-
-    // Check if the requested month is already within our query range
-    if (monthStart >= queryStartDate && monthEnd <= queryEndDate) return;
-
-    // Expand the range to include the new month
-    if (monthStart < queryStartDate) queryStartDate = monthStart;
-    if (monthEnd > queryEndDate) queryEndDate = monthEnd;
-
-    calendarLoading = true;
-    try {
-      const newQueryOpts = fetchCurrentlyAiringWithDatesAndEpisodes(queryStartDate, queryEndDate, undefined, 200);
-      const result = await queryClient.fetchQuery(newQueryOpts);
-      // Merge the new data into our additional store
-      if (result?.currentlyAiring) {
-        additionalAnimeData = result.currentlyAiring;
-      }
-    } catch (err) {
-      console.error('Failed to fetch calendar data:', err);
-    } finally {
-      calendarLoading = false;
-    }
-  }
-
-  // Create enhanced mutations with toast handling
-  const upsertAnimeMutation = useAddAnimeWithToast();
-
-  // Process currently airing data for airing page with categories
-  function processCurrentlyAiring(data: any) {
-    if (!data?.currentlyAiring) return [];
-
-    const now = new Date();
-    const currentlyAiringShows = data.currentlyAiring || [];
-    const processedAnime: any[] = [];
-    const seenKeys = new Set<string>();
-
-    // Process each anime — expand ALL episodes into separate entries for schedule + calendar
-    currentlyAiringShows.forEach((anime: any) => {
-      if (!anime) return;
-
-      // Collect all episodes to process (both nextEpisode and episodes array)
-      const allEpisodes: any[] = [];
-      if (anime.episodes && anime.episodes.length > 0) {
-        allEpisodes.push(...anime.episodes);
-      } else if (anime.nextEpisode) {
-        allEpisodes.push(anime.nextEpisode);
-      }
-
-      allEpisodes.forEach((episode: any) => {
-        if (!episode || (!episode.airDate && !episode.airTime)) return;
-
-        const episodeAirTime = episode.airTime ? new Date(episode.airTime) : new Date(episode.airDate);
-
-        // Deduplicate: same anime + same episode number
-        const dedupeKey = `${anime.id}-ep${episode.episodeNumber}`;
-        if (seenKeys.has(dedupeKey)) return;
-        seenKeys.add(dedupeKey);
-
-        const airTimeInfo = getAirTimeDisplay(episode.airDate, anime.broadcast) || {
-          show: true,
-          text: episodeAirTime <= now
-            ? "Recently aired"
-            : `${format(episodeAirTime, "EEE")} at ${format(episodeAirTime, "h:mm a")}`,
-          variant: episodeAirTime <= now ? 'aired' as const : 'scheduled' as const
-        };
-
-        processedAnime.push({
-          id: `airing-${anime.id}-ep${episode.episodeNumber}`,
-          anime: {
-            id: anime.id,
-            slug: anime.slug,
-            titleEn: anime.titleEn,
-            titleJp: anime.titleJp,
-            description: anime.description,
-            tags: anime.tags || [],
-            episodeCount: anime.episodes?.length || null,
-            duration: anime.duration,
-            startDate: anime.startDate,
-            imageUrl: anime.imageUrl,
-            userAnime: anime.userAnime || null
-          },
-          status: null,
-          airingInfo: {
-            ...anime,
-            airTimeDisplay: airTimeInfo,
-            nextEpisodeDate: episodeAirTime,
-            nextEpisode: {
-              ...episode,
-              airDate: episodeAirTime
-            },
-            isInWatchlist: false
-          }
-        });
-      });
-    });
-
-    // Sort all entries by air date
-    return processedAnime
-            .sort((a, b) => a.airingInfo.nextEpisodeDate.getTime() - b.airingInfo.nextEpisodeDate.getTime());
-  }
-
-  function handleAddAnime(animeId: string) {
-    $upsertAnimeMutation.mutate({ input: { animeID: animeId, status: Status.Plantowatch } });
-  }
-
-  function navigateToShow(anime: { id?: string | null; slug?: string | null } | null | undefined) {
-    // Use proper navigation for View Transitions
-    goto(animeHref(anime));
-  }
-
-  function navigateToCalendar() {
-    // Use proper navigation for View Transitions
-    goto('/airing/calendar');
-  }
-
-  // Reactive data using TanStack Query stores — merge main query data with additional calendar data
-  $: sortedCurrentlyAiring = (() => {
-    const mainData = $currentlyAiringQuery.data;
-    if (!mainData && additionalAnimeData.length === 0) return [];
-
-    // Merge main query data with the wider-range calendar fetches, unioning the
-    // episode lists per anime. Skipping anime whose id was already present drops
-    // every episode outside the initial two-month window for a show that is also
-    // airing inside it — which is most of them, so the calendar went blank as
-    // soon as you paged past that window.
-    const byId = new Map<string, any>();
-
-    const mergeAnime = (anime: any) => {
-      if (!anime?.id) return;
-
-      const existing = byId.get(anime.id);
-      if (!existing) {
-        byId.set(anime.id, anime);
-        return;
-      }
-
-      const episodes = [...(existing.episodes || [])];
-      const seenEpisodes = new Set(episodes.map((e: any) => e?.episodeNumber));
-      (anime.episodes || []).forEach((episode: any) => {
-        if (!episode || seenEpisodes.has(episode.episodeNumber)) return;
-        seenEpisodes.add(episode.episodeNumber);
-        episodes.push(episode);
-      });
-
-      byId.set(anime.id, { ...existing, ...anime, episodes });
-    };
-
-    (mainData?.currentlyAiring || []).forEach(mergeAnime);
-    additionalAnimeData.forEach(mergeAnime);
-
-    return processCurrentlyAiring({ currentlyAiring: [...byId.values()] });
-  })();
-
-  // Debug logging for data fetching
-  $: {
-    console.log('Currently airing query status:', {
-      isLoading: $currentlyAiringQuery.isLoading,
-      isError: $currentlyAiringQuery.isError,
-      isSuccess: $currentlyAiringQuery.isSuccess,
-      error: $currentlyAiringQuery.error,
-      dataKeys: $currentlyAiringQuery.data ? Object.keys($currentlyAiringQuery.data) : null,
-      currentlyAiringCount: $currentlyAiringQuery.data?.currentlyAiring?.length || 0
-    });
-  }
-
-  // Set up anime notifications when currently airing data is available
-  $: if ($currentlyAiringQuery.isSuccess && $currentlyAiringQuery.data?.currentlyAiring) {
-    // Notifications are now managed globally by AnimeNotificationProvider
-    // Just trigger an update to refresh the data for the hero banner
-    setTimeout(() => {
-      animeNotificationService.triggerImmediateUpdate();
-    }, 50);
-  }
-
-  // Determine which anime to show in banner (first airing anime, no hover handling)
-  $: bannerAnime = sortedCurrentlyAiring[0]?.airingInfo;
-
-  // Categorize anime for different sections
-  $: categorizedAnime = (() => {
-    if (!sortedCurrentlyAiring.length) return {
-      airingToday: [],
-      airingThisWeek: [],
-      comingSoon: [],
-      recentlyAired: []
-    };
-
-    const now = new Date();
-    const categories = {
-      airingToday: [] as typeof sortedCurrentlyAiring,
-      airingThisWeek: [] as typeof sortedCurrentlyAiring,
-      comingSoon: [] as typeof sortedCurrentlyAiring,
-      recentlyAired: [] as typeof sortedCurrentlyAiring
-    };
-
-    sortedCurrentlyAiring.forEach(entry => {
-      const airTime = entry.airingInfo.nextEpisodeDate;
-      const diffMs = airTime.getTime() - now.getTime();
-      const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-      if (diffMs <= 0 && Math.abs(diffMs) <= (7 * 24 * 60 * 60 * 1000)) {
-        categories.recentlyAired.push(entry);
-      } else if (diffMs > 0 && diffMs <= (24 * 60 * 60 * 1000)) {
-        categories.airingToday.push(entry);
-      } else if (diffDays > 0 && diffDays <= 7) {
-        categories.airingThisWeek.push(entry);
-      } else {
-        categories.comingSoon.push(entry);
-      }
-    });
-
-    return categories;
-  })();
-
-  // Group by day of week for schedule view (matches HTML prototype)
-  const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  $: dayGroups = (() => {
-    if (!sortedCurrentlyAiring.length) return [];
-
-    const now = new Date();
-    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-    // Group ALL entries by their air date
-    const dateMap = new Map<string, typeof sortedCurrentlyAiring>();
-
-    sortedCurrentlyAiring.forEach(entry => {
-      const airTime = entry.airingInfo.nextEpisodeDate;
-      const airIso = `${airTime.getFullYear()}-${String(airTime.getMonth() + 1).padStart(2, '0')}-${String(airTime.getDate()).padStart(2, '0')}`;
-
-      if (!dateMap.has(airIso)) {
-        dateMap.set(airIso, []);
-      }
-      dateMap.get(airIso)!.push(entry);
-    });
-
-    // Sort dates and build groups
-    const sortedDates = [...dateMap.keys()].sort();
-
-    return sortedDates.map(iso => {
-      const d = new Date(iso + 'T12:00:00');
-      const dow = d.getDay();
-      const dateStr = format(d, 'MMM d');
-      const isToday = iso === todayIso;
-      const entries = dateMap.get(iso)!;
-
-      return {
-        id: iso,
-        dayName: DAY_NAMES[dow],
-        date: dateStr,
-        isToday,
-        entries
-      };
-    });
-  })();
-
-  // Schedule view: filter dayGroups to only show today onwards
-  $: allScheduleDayGroups = (() => {
-    const now = new Date();
-    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    return dayGroups.filter(g => g.id >= todayIso);
-  })();
-
-  // Show first 7 days by default, expand with "Load more"
-  let scheduleVisibleDays = 7;
-  $: scheduleDayGroups = allScheduleDayGroups.slice(0, scheduleVisibleDays);
-  $: hasMoreScheduleDays = allScheduleDayGroups.length > scheduleVisibleDays;
-  $: remainingScheduleDays = allScheduleDayGroups.length - scheduleVisibleDays;
-  function loadMoreSchedule() {
-    scheduleVisibleDays += 7;
-    // After Svelte renders the new day groups, re-apply the myListOnly filter
-    if (myListOnly) {
-      setTimeout(() => rebuildScheduleVisibility(), 0);
-    }
-  }
-
-  // Season display
-  $: currentSeasonLabel = getSeasonDisplayName(getCurrentSeason());
-
-  // View toggle: schedule vs calendar
-  let activeView: 'schedule' | 'calendar' = 'schedule';
-
-  function switchView(view: 'schedule' | 'calendar') {
-    activeView = view;
-    // Bypass Svelte reactivity — directly toggle DOM visibility
-    const scheduleEl = document.querySelector('[data-view="schedule"]') as HTMLElement;
-    const calendarEl = document.querySelector('[data-view="calendar"]') as HTMLElement;
-    const scheduleBtnEl = document.querySelector('[data-view-btn="schedule"]') as HTMLElement;
-    const calendarBtnEl = document.querySelector('[data-view-btn="calendar"]') as HTMLElement;
-    if (scheduleEl) scheduleEl.style.display = view === 'schedule' ? '' : 'none';
-    if (calendarEl) calendarEl.style.display = view === 'calendar' ? '' : 'none';
-    if (scheduleBtnEl) {
-      scheduleBtnEl.classList.toggle('active', view === 'schedule');
-      scheduleBtnEl.setAttribute('aria-selected', String(view === 'schedule'));
-    }
-    if (calendarBtnEl) {
-      calendarBtnEl.classList.toggle('active', view === 'calendar');
-      calendarBtnEl.setAttribute('aria-selected', String(view === 'calendar'));
-    }
-  }
-
-  // Timezone
-  const TIMEZONES = [
-    { value: 'local', label: Intl.DateTimeFormat().resolvedOptions().timeZone },
-    { value: 'JST', label: 'JST (UTC+9)' },
-    { value: 'EST', label: 'EST (UTC-5)' },
-    { value: 'GMT', label: 'GMT (UTC+0)' },
-    { value: 'PST', label: 'PST (UTC-8)' },
-    { value: 'CET', label: 'CET (UTC+1)' },
+  const VIEWS: TabItem[] = [
+    { value: 'schedule', label: 'Schedule' },
+    { value: 'calendar', label: 'Calendar' },
   ];
-  let selectedTimezone = 'local';
 
-  // My list only toggle
-  let myListOnly = false;
+  const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  function toggleMyListOnly() {
-    myListOnly = !myListOnly;
-    // Update DOM directly for ViewTransition reliability
-    const toggleEl = document.querySelector('[data-toggle="my-list"]');
-    if (toggleEl) {
-      if (myListOnly) {
-        toggleEl.classList.add('on');
-      } else {
-        toggleEl.classList.remove('on');
-      }
-    }
-    // Force re-render of schedule view by rebuilding day groups DOM
-    rebuildScheduleVisibility();
-  }
-
-  function rebuildScheduleVisibility() {
-    // Find all day groups and toggle visibility based on filtered entries
-    const dayGroupEls = document.querySelectorAll('[data-day-group]');
-    dayGroupEls.forEach(el => {
-      const dayId = el.getAttribute('data-day-group');
-      const group = dayGroups.find(g => g.id === dayId);
-      if (group) {
-        const filtered = myListOnly
-          ? group.entries.filter(e => e.airingInfo.userAnime != null)
-          : group.entries;
-        // Show/hide the group
-        (el as HTMLElement).style.display = filtered.length > 0 ? '' : 'none';
-        // Show/hide individual cards within the group
-        const cards = el.querySelectorAll('[data-anime-id]');
-        cards.forEach(card => {
-          const animeId = card.getAttribute('data-anime-id');
-          const entry = group.entries.find(e => e.airingInfo.id === animeId);
-          if (entry) {
-            const isInList = entry.airingInfo.userAnime != null;
-            (card as HTMLElement).style.display = (myListOnly && !isInList) ? 'none' : '';
-          }
-        });
-      }
-    });
-    // Handle empty state
-    const emptyState = document.querySelector('[data-empty-state="schedule"]');
-    if (emptyState) {
-      const hasVisibleGroups = Array.from(dayGroupEls).some(el => (el as HTMLElement).style.display !== 'none');
-      (emptyState as HTMLElement).style.display = (!hasVisibleGroups && myListOnly) ? '' : 'none';
-    }
-  }
-
-  // Calendar state
-  let calYear = new Date().getFullYear();
-  let calMonth = new Date().getMonth();
-  let selectedCalDate: string | null = null;
-
-  $: calMonthLabel = new Date(calYear, calMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-  function prevMonth() {
-    calMonth--;
-    if (calMonth < 0) { calMonth = 11; calYear--; }
-    selectedCalDate = null;
-    fetchMonthData(calYear, calMonth);
-  }
-  function nextMonth() {
-    calMonth++;
-    if (calMonth > 11) { calMonth = 0; calYear++; }
-    selectedCalDate = null;
-    fetchMonthData(calYear, calMonth);
-  }
-
-  // Build calendar grid
-  $: calendarDays = (() => {
-    const firstDay = new Date(calYear, calMonth, 1);
-    let startDow = firstDay.getDay();
-    startDow = (startDow + 6) % 7; // Monday = 0
-    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
-    const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
-    const today = new Date();
-    const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-    const days: { num: number; iso: string; otherMonth: boolean; isToday: boolean; showCount: number }[] = [];
-    for (let i = 0; i < totalCells; i++) {
-      let dayNum: number, iso: string, otherMonth = false;
-      if (i < startDow) {
-        dayNum = daysInPrevMonth - startDow + 1 + i;
-        const pm = calMonth === 0 ? 11 : calMonth - 1;
-        const py = calMonth === 0 ? calYear - 1 : calYear;
-        iso = `${py}-${String(pm + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-        otherMonth = true;
-      } else if (i >= startDow + daysInMonth) {
-        dayNum = i - startDow - daysInMonth + 1;
-        const nm = calMonth === 11 ? 0 : calMonth + 1;
-        const ny = calMonth === 11 ? calYear + 1 : calYear;
-        iso = `${ny}-${String(nm + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-        otherMonth = true;
-      } else {
-        dayNum = i - startDow + 1;
-        iso = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-      }
-      // Count shows airing on this day (filtered by myListOnly)
-      const showCount = sortedCurrentlyAiring.filter(entry => {
-        if (myListOnly && entry.airingInfo.userAnime == null) return false;
-        const airDate = entry.airingInfo.nextEpisodeDate;
-        const airIso = `${airDate.getFullYear()}-${String(airDate.getMonth() + 1).padStart(2, '0')}-${String(airDate.getDate()).padStart(2, '0')}`;
-        return airIso === iso;
-      }).length;
-      days.push({ num: dayNum, iso, otherMonth, isToday: iso === todayIso, showCount });
-    }
-    return days;
-  })();
-
-  // Get shows for selected calendar date (filtered by myListOnly)
-  $: selectedDayShows = selectedCalDate ? sortedCurrentlyAiring.filter(entry => {
-    if (myListOnly && entry.airingInfo.userAnime == null) return false;
-    const airDate = entry.airingInfo.nextEpisodeDate;
-    const airIso = `${airDate.getFullYear()}-${String(airDate.getMonth() + 1).padStart(2, '0')}-${String(airDate.getDate()).padStart(2, '0')}`;
-    return airIso === selectedCalDate;
-  }) : [];
-
-  $: selectedDayLabel = selectedCalDate
-    ? new Date(selectedCalDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-    : '--';
-
-  // Collapsible sections
-  let collapsedDays: Record<string, boolean> = {};
-  function toggleDay(dayId: string) {
-    collapsedDays = { ...collapsedDays, [dayId]: !collapsedDays[dayId] };
-  }
-
-  // Countdown text for each entry
-  function getCountdownText(entry: any): { text: string; status: 'aired' | 'airing-now' | 'upcoming' } {
-    const now = new Date();
-    const airTime = entry.airingInfo.nextEpisodeDate;
-    const diffMs = airTime.getTime() - now.getTime();
-
-    if (diffMs <= 0 && Math.abs(diffMs) <= 30 * 60 * 1000) {
-      return { text: 'LIVE', status: 'airing-now' };
-    }
-    if (diffMs <= 0) {
-      return { text: 'Aired', status: 'aired' };
-    }
-
-    const totalMin = Math.floor(diffMs / 60000);
-    const hours = Math.floor(totalMin / 60);
-    const mins = totalMin % 60;
-
-    if (hours < 24) {
-      return { text: `In ${hours}h ${String(mins).padStart(2, '0')}m`, status: 'upcoming' };
-    }
-
-    const days = Math.floor(hours / 24);
-    return { text: `In ${days}d ${hours % 24}h`, status: 'upcoming' };
-  }
+  /** The dot colours cycle so a busy day reads as more than one show at a glance. */
+  const DOT_TONES = ['accent', 'violet', 'green', 'amber'];
 </script>
 
+{#snippet viewIcon(item: TabItem)}
+  <span class="tab-svg" aria-hidden="true">
+    {#if item.value === 'schedule'}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    {:else}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    {/if}
+  </span>
+{/snippet}
+
 <div class="airing-page">
-  <!-- Page Header -->
   <div class="page-header">
     <div class="page-header-inner">
       <div class="page-header-left">
         <div class="page-header-eyebrow">
           <div class="live-dot"></div>
-          <span class="label">{currentSeasonLabel}</span>
+          <span class="label">{bloc.seasonLabel}</span>
         </div>
         <h1 class="page-title">Currently Airing</h1>
       </div>
 
       <div class="page-header-controls">
-        <div class="view-tabs" role="tablist">
-          <button class="view-tab active" data-view-btn="schedule" role="tab" aria-selected="true" on:click={() => switchView('schedule')}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Schedule
-          </button>
-          <button class="view-tab" data-view-btn="calendar" role="tab" aria-selected="false" on:click={() => switchView('calendar')}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Calendar
-          </button>
-        </div>
+        <Tabs
+          items={VIEWS}
+          value={bloc.view}
+          onChange={(value) => bloc.selectView(value)}
+          variant="segmented"
+          ariaLabel="Schedule or calendar"
+          itemContent={viewIcon}
+        />
 
-        <select class="tz-select" bind:value={selectedTimezone} aria-label="Timezone">
-          {#each TIMEZONES as tz}
+        <select
+          class="tz-select"
+          value={bloc.timezone}
+          onchange={(event) => bloc.selectTimezone(event.currentTarget.value)}
+          aria-label="Timezone"
+        >
+          {#each bloc.timezones as tz (tz.value)}
             <option value={tz.value}>{tz.label}</option>
           {/each}
         </select>
 
-        <button type="button" class="toggle-wrap" class:on={myListOnly} data-toggle="my-list" on:click={toggleMyListOnly} role="switch" aria-checked={myListOnly}>
+        <button
+          type="button"
+          class="toggle-wrap"
+          class:on={bloc.myListOnly}
+          onclick={() => bloc.toggleMyListOnly()}
+          role="switch"
+          aria-checked={bloc.myListOnly}
+        >
           <span class="toggle-switch"></span>
           My list only
         </button>
@@ -554,201 +93,262 @@
     </div>
   </div>
 
-  <!-- Schedule View -->
-  <div class="schedule-view" data-view="schedule">
-    {#if $currentlyAiringQuery.isLoading}
-      {#each Array(3) as _, i}
-        <div class="day-section">
-          <div class="day-section-header">
-            <span class="day-name skeleton-text" style="width: 120px;"></span>
-          </div>
-          <div class="day-cards">
-            {#each Array(4) as _}
-              <div class="show-card skeleton-show-card">
-                <div class="show-poster skeleton-poster-sm"></div>
-                <div class="show-info">
-                  <div class="skeleton-text" style="width: 80%;"></div>
-                  <div class="skeleton-text" style="width: 50%; margin-top: 6px;"></div>
-                  <div class="skeleton-text" style="width: 60%; margin-top: 8px;"></div>
+  {#if bloc.isError}
+    <!-- A failed fetch is not an empty schedule: something is airing, we just
+         could not ask. -->
+    <div class="airing-error">
+      <ErrorBanner
+        message="Couldn't load the airing schedule."
+        detail={bloc.errorDetail}
+        retrying={bloc.isRetrying}
+        onRetry={() => bloc.retry()}
+      />
+    </div>
+  {:else if bloc.view === 'schedule'}
+    <div class="schedule-view">
+      {#if bloc.isLoading}
+        {#each Array(3) as _, dayIndex (dayIndex)}
+          <div class="day-section">
+            <div class="day-section-header">
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div class="day-cards">
+              {#each Array(4) as _, cardIndex (cardIndex)}
+                <div class="show-card is-skeleton">
+                  <Skeleton className="w-[50px] h-[70px] shrink-0" />
+                  <div class="show-info">
+                    <Skeleton className="h-3.5 w-4/5" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-3 w-3/5" />
+                  </div>
                 </div>
+              {/each}
+            </div>
+          </div>
+        {/each}
+      {:else if bloc.isFilteredOut}
+        <EmptyState
+          heading="Nothing from your list"
+          message="No anime from your list are airing in this period."
+          action={{ label: 'Show all anime', onClick: () => bloc.showAllAnime(), variant: 'ghost' }}
+        />
+      {:else if bloc.scheduleDays.length === 0}
+        <EmptyState heading="Nothing scheduled" message="No upcoming airing anime found." />
+      {:else}
+        {#each bloc.scheduleDays as group (group.id)}
+          {@const collapsed = bloc.isCollapsed(group.id)}
+          <div class="day-section" class:collapsed data-day-group={group.id}>
+            <button
+              type="button"
+              class="day-section-header"
+              onclick={() => bloc.toggleDay(group.id)}
+              aria-expanded={!collapsed}
+            >
+              <span class="day-name">{group.dayName}</span>
+              <span class="day-date">{group.date}</span>
+              {#if group.isToday}
+                <span class="day-today-badge">
+                  <span class="live-dot" style="width:6px;height:6px;"></span>
+                  Today
+                </span>
+              {/if}
+              <span class="day-count">
+                {group.entries.length} show{group.entries.length === 1 ? '' : 's'}
+              </span>
+              <svg class="day-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+
+            {#if !collapsed}
+              <div class="day-cards">
+                {#each group.entries as entry (entry.id)}
+                  {@const countdown = bloc.countdownFor(entry)}
+                  {@const title = bloc.titleFor(entry)}
+                  <a
+                    href={bloc.hrefFor(entry)}
+                    class="show-card"
+                    data-anime-id={entry.airingInfo.id}
+                    onclick={(event) => {
+                      event.preventDefault();
+                      bloc.open(entry);
+                    }}
+                  >
+                    <div class="show-poster">
+                      <img
+                        src={bloc.imageFor(entry, 160)}
+                        alt={title}
+                        loading="lazy"
+                        onerror={(event) => {
+                          (event.currentTarget as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                    <div class="show-info">
+                      <div class="show-title">{title}</div>
+                      <div class="show-meta-row">
+                        <span class="show-ep">{bloc.episodeFor(entry)}</span>
+                        <span class="show-time">{bloc.timeFor(entry)}</span>
+                      </div>
+                      <span class="show-countdown {countdown.status}">
+                        {#if countdown.status === 'airing-now'}
+                          <span class="airing-now-dot"></span>
+                        {/if}
+                        {countdown.text}
+                      </span>
+                    </div>
+                    {#if !bloc.isOnList(entry)}
+                      <button
+                        type="button"
+                        class="show-add-btn"
+                        title="Add to list"
+                        aria-label="Add to list"
+                        onclick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          bloc.addToList(entry);
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </button>
+                    {/if}
+                  </a>
+                {/each}
               </div>
+            {/if}
+          </div>
+        {/each}
+
+        {#if bloc.hasMoreDays}
+          <button type="button" class="load-more-btn" onclick={() => bloc.showMoreDays()}>
+            Show next {bloc.nextDayBatch} day{bloc.nextDayBatch === 1 ? '' : 's'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        {/if}
+      {/if}
+    </div>
+  {:else}
+    <div class="calendar-view">
+      <div class="calendar-layout">
+        <div class="calendar-card" class:loading={bloc.calendarLoading}>
+          <div class="calendar-nav">
+            <button
+              type="button"
+              class="cal-nav-btn"
+              onclick={() => bloc.previousMonth()}
+              aria-label="Previous month"
+              disabled={bloc.calendarLoading}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <span class="calendar-month-label">
+              {bloc.monthLabel}
+              {#if bloc.calendarLoading}
+                <span class="cal-loading-dot"></span>
+              {/if}
+            </span>
+            <button
+              type="button"
+              class="cal-nav-btn"
+              onclick={() => bloc.nextMonth()}
+              aria-label="Next month"
+              disabled={bloc.calendarLoading}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+
+          <div class="calendar-weekdays">
+            {#each WEEKDAYS as weekday (weekday)}
+              <div class="cal-weekday">{weekday}</div>
             {/each}
           </div>
-        </div>
-      {/each}
-    {:else if scheduleDayGroups.length === 0}
-      <div class="empty-state">
-        <p>No upcoming airing anime found.</p>
-      </div>
-    {:else}
-      {#each scheduleDayGroups as group (group.id)}
-        <div class="day-section" data-day-group={group.id} class:collapsed={collapsedDays[group.id]}>
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div class="day-section-header" on:click={() => toggleDay(group.id)} role="button" tabindex="0">
-            <span class="day-name">{group.dayName}</span>
-            {#if group.date}
-              <span class="day-date">{group.date}</span>
+
+          <div class="calendar-days">
+            {#if bloc.isLoading}
+              <!-- Six weeks of empty squares: the grid keeps its full height, so
+                   the month does not jump when the data lands. -->
+              {#each Array(42) as _, cell (cell)}
+                <div class="cal-day is-skeleton">
+                  <Skeleton className="h-7 w-7 rounded-full" />
+                </div>
+              {/each}
+            {:else}
+              {#each bloc.calendarDays as day (day.iso)}
+                <button
+                  type="button"
+                  class="cal-day"
+                  class:other-month={day.otherMonth}
+                  class:today={day.isToday}
+                  class:selected={bloc.selectedDay === day.iso}
+                  onclick={() => bloc.selectDay(day.iso)}
+                  aria-pressed={bloc.selectedDay === day.iso}
+                >
+                  <div class="cal-day-num">{day.num}</div>
+                  {#if day.showCount > 0}
+                    <div class="cal-dots">
+                      {#each Array(Math.min(day.showCount, 5)) as _, dot (dot)}
+                        <div class="cal-dot cal-dot-{DOT_TONES[dot % DOT_TONES.length]}"></div>
+                      {/each}
+                    </div>
+                    <span class="cal-show-count">{day.showCount}</span>
+                  {/if}
+                </button>
+              {/each}
             {/if}
-            {#if group.isToday}
-              <span class="day-today-badge">
-                <span class="live-dot" style="width:6px;height:6px;"></span>
-                Today
-              </span>
-            {/if}
-            <span class="day-count" data-day-count>{group.entries.length} show{group.entries.length !== 1 ? 's' : ''}</span>
-            <svg class="day-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </div>
+        </div>
 
-          {#if !collapsedDays[group.id]}
-            <div class="day-cards">
-              {#each group.entries as entry (entry.id)}
-                {@const countdown = getCountdownText(entry)}
-                {@const airTime = entry.airingInfo.nextEpisodeDate}
-                {@const title = getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
-                {@const ep = entry.airingInfo.nextEpisode ? `Ep ${entry.airingInfo.nextEpisode.episodeNumber}` : ''}
-                {@const timeStr = format(airTime, 'HH:mm')}
-                {@const isInList = entry.airingInfo.userAnime != null}
-
-                <a href={animeHref(entry.airingInfo)} class="show-card" data-anime-id={entry.airingInfo.id} data-in-list={entry.airingInfo.userAnime != null ? 'true' : 'false'} on:click|preventDefault={() => navigateToShow(entry.airingInfo)}>
-                  <div class="show-poster">
+        <div class="cal-side-panel">
+          <div class="cal-panel-header">
+            <span class="cal-panel-label">Selected Day</span>
+            <span class="cal-panel-date">{bloc.selectedDayLabel}</span>
+          </div>
+          {#if !bloc.selectedDay}
+            <EmptyState size="compact" message="Select a day to see airing shows" />
+          {:else if bloc.selectedDayEntries.length === 0}
+            <EmptyState
+              size="compact"
+              message={bloc.emptyDayMessage}
+              action={bloc.myListOnly
+                ? { label: 'Show all anime', onClick: () => bloc.showAllAnime(), variant: 'ghost' }
+                : undefined}
+            />
+          {:else}
+            <div class="cal-panel-shows">
+              {#each bloc.selectedDayEntries as entry (entry.id)}
+                {@const title = bloc.titleFor(entry)}
+                <a
+                  href={bloc.hrefFor(entry)}
+                  class="cal-show-item"
+                  onclick={(event) => {
+                    event.preventDefault();
+                    bloc.open(entry);
+                  }}
+                >
+                  <div class="cal-show-poster">
                     <img
-                      src={resizeCdnUrl(getSafeImageUrl(GetImageFromAnime(entry.airingInfo)), 160)}
+                      src={bloc.imageFor(entry, 160)}
                       alt={title}
                       loading="lazy"
-                      on:error={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      onerror={(event) => {
+                        (event.currentTarget as HTMLImageElement).style.display = 'none';
+                      }}
                     />
                   </div>
-                  <div class="show-info">
-                    <div class="show-title">{title}</div>
-                    <div class="show-meta-row">
-                      <span class="show-ep">{ep}</span>
-                      <span class="show-time">{timeStr}</span>
+                  <div class="cal-show-info">
+                    <div class="cal-show-title">{title}</div>
+                    <div class="cal-show-meta">
+                      <span class="cal-ep">{bloc.episodeFor(entry)}</span>
+                      <span class="cal-time">{bloc.timeFor(entry)}</span>
                     </div>
-                    <span class="show-countdown {countdown.status}">
-                      {#if countdown.status === 'airing-now'}
-                        <span class="airing-now-dot"></span>
-                      {/if}
-                      {countdown.text}
-                    </span>
                   </div>
-                  {#if !isInList}
-                    <button class="show-add-btn" title="Add to list" aria-label="Add to list" on:click|preventDefault|stopPropagation={() => handleAddAnime(entry.airingInfo.id)}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    </button>
-                  {/if}
                 </a>
               {/each}
             </div>
           {/if}
         </div>
-      {/each}
-
-      <div class="empty-state" data-empty-state="schedule" style="display: none;">
-        <p>No anime from your list are airing in this period.</p>
-        <button class="empty-state-btn" on:click={() => { if (myListOnly) toggleMyListOnly(); }}>Show all anime</button>
-      </div>
-    {/if}
-
-    {#if hasMoreScheduleDays}
-      {@const nextBatch = Math.min(7, remainingScheduleDays)}
-      <button class="load-more-btn" on:click={loadMoreSchedule}>
-        Show next {nextBatch} day{nextBatch === 1 ? '' : 's'}
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-      </button>
-    {/if}
-  </div>
-
-  <!-- Calendar View -->
-  <div class="calendar-view" data-view="calendar" style="display: none;">
-    <div class="calendar-layout">
-      <div class="calendar-card" class:loading={calendarLoading}>
-        <div class="calendar-nav">
-          <button class="cal-nav-btn" on:click={prevMonth} aria-label="Previous month" disabled={calendarLoading}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-          <span class="calendar-month-label">
-            {calMonthLabel}
-            {#if calendarLoading}
-              <span class="cal-loading-dot"></span>
-            {/if}
-          </span>
-          <button class="cal-nav-btn" on:click={nextMonth} aria-label="Next month" disabled={calendarLoading}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </div>
-        <div class="calendar-weekdays">
-          <div class="cal-weekday">Mon</div>
-          <div class="cal-weekday">Tue</div>
-          <div class="cal-weekday">Wed</div>
-          <div class="cal-weekday">Thu</div>
-          <div class="cal-weekday">Fri</div>
-          <div class="cal-weekday">Sat</div>
-          <div class="cal-weekday">Sun</div>
-        </div>
-        <div class="calendar-days">
-          {#each calendarDays as day}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div
-              class="cal-day"
-              class:other-month={day.otherMonth}
-              class:today={day.isToday}
-              class:selected={selectedCalDate === day.iso}
-              on:click={() => selectedCalDate = day.iso}
-              role="button"
-              tabindex="0"
-            >
-              <div class="cal-day-num">{day.num}</div>
-              {#if day.showCount > 0}
-                <div class="cal-dots">
-                  {#each Array(Math.min(day.showCount, 5)) as _, i}
-                    <div class="cal-dot" class:cal-dot-accent={i % 4 === 0} class:cal-dot-violet={i % 4 === 1} class:cal-dot-green={i % 4 === 2} class:cal-dot-amber={i % 4 === 3}></div>
-                  {/each}
-                </div>
-                <span class="cal-show-count">{day.showCount}</span>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      </div>
-
-      <div class="cal-side-panel">
-        <div class="cal-panel-header">
-          <span class="cal-panel-label">Selected Day</span>
-          <span class="cal-panel-date">{selectedDayLabel}</span>
-        </div>
-        {#if !selectedCalDate}
-          <div class="cal-panel-empty">Select a day to see airing shows</div>
-        {:else if selectedDayShows.length === 0}
-          <div class="cal-panel-empty">{myListOnly ? 'No shows from your list airing this day' : 'No shows airing this day'}</div>
-        {:else}
-          <div class="cal-panel-shows">
-            {#each selectedDayShows as entry}
-              {@const title = getAnimeTitle(entry.airingInfo, $preferencesStore.titleLanguage)}
-              {@const ep = entry.airingInfo.nextEpisode ? `Ep ${entry.airingInfo.nextEpisode.episodeNumber}` : ''}
-              {@const timeStr = format(entry.airingInfo.nextEpisodeDate, 'HH:mm')}
-              <a href={animeHref(entry.airingInfo)} class="cal-show-item" on:click|preventDefault={() => navigateToShow(entry.airingInfo)}>
-                <div class="cal-show-poster">
-                  <img
-                    src={resizeCdnUrl(getSafeImageUrl(GetImageFromAnime(entry.airingInfo)), 160)}
-                    alt={title}
-                    loading="lazy"
-                    on:error={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                  />
-                </div>
-                <div class="cal-show-info">
-                  <div class="cal-show-title">{title}</div>
-                  <div class="cal-show-meta">
-                    <span class="cal-ep">{ep}</span>
-                    <span class="cal-time">{timeStr}</span>
-                  </div>
-                </div>
-              </a>
-            {/each}
-          </div>
-        {/if}
       </div>
     </div>
-  </div>
+  {/if}
 </div>
 
 <style>
@@ -817,35 +417,9 @@
     flex-wrap: wrap;
   }
 
-  /* ---- View Tabs ---- */
-  .view-tabs {
-    display: flex;
-    align-items: center;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
-    padding: 3px;
-    gap: 2px;
-  }
-  .view-tab {
-    height: 30px;
-    padding: 0 14px;
-    border-radius: calc(var(--weeb-radius) - 2px);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--weeb-fg-muted);
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .view-tab:hover { color: var(--weeb-fg-secondary); }
-  .view-tab.active { background: var(--weeb-accent); color: white; }
+  /* The view switch is Tabs in its segmented skin; only the inline icon needs
+     saying here. */
+  .tab-svg { display: inline-flex; }
 
   /* ---- Timezone Select ---- */
   .tz-select {
@@ -907,7 +481,8 @@
   .toggle-wrap.on .toggle-switch { background: var(--weeb-accent); border-color: var(--weeb-accent); }
   .toggle-wrap.on .toggle-switch::after { transform: translateX(16px); background: white; }
 
-  /* ---- Schedule View ---- */
+  /* ---- Views ---- */
+  .airing-error { padding: 32px 0; }
   .schedule-view { padding: 32px 0 64px; }
 
   /* ---- Day Section ---- */
@@ -918,13 +493,22 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    width: 100%;
     margin-bottom: 12px;
-    padding-bottom: 8px;
+    padding: 0 0 8px;
+    border: none;
     border-bottom: 1px solid var(--weeb-border);
+    background: none;
+    font-family: inherit;
+    text-align: left;
     cursor: pointer;
     user-select: none;
   }
   .day-section-header:hover .day-name { color: var(--weeb-accent-hover, var(--weeb-accent)); }
+  .day-section-header:focus-visible {
+    outline: 2px solid var(--weeb-accent);
+    outline-offset: 2px;
+  }
   .day-name {
     font-size: 16px;
     font-weight: 600;
@@ -978,6 +562,7 @@
   .day-cards::-webkit-scrollbar-thumb { background: var(--weeb-border); border-radius: 2px; }
 
   .show-card {
+    position: relative;
     flex-shrink: 0;
     width: 320px;
     display: flex;
@@ -1001,6 +586,11 @@
     border-color: oklch(34% 0.02 275);
     transform: translateY(-1px);
   }
+  /* A placeholder is not hoverable and should not pretend otherwise. */
+  .show-card.is-skeleton {
+    opacity: 0.6;
+    pointer-events: none;
+  }
 
   .show-poster {
     width: 50px;
@@ -1015,7 +605,6 @@
     height: 100%;
     object-fit: cover;
   }
-
   .show-info {
     flex: 1;
     min-width: 0;
@@ -1103,15 +692,13 @@
     cursor: pointer;
     padding: 0;
   }
-  .show-card:hover .show-add-btn { opacity: 1; }
+  .show-card:hover .show-add-btn,
+  .show-add-btn:focus-visible { opacity: 1; }
   .show-add-btn:hover {
     color: var(--weeb-accent-text);
     border-color: var(--weeb-accent);
     background: color-mix(in oklch, var(--weeb-accent) 10%, transparent);
   }
-
-  /* ---- Show card position for add btn ---- */
-  .show-card { position: relative; }
 
   /* ---- Load More Button ---- */
   .load-more-btn {
@@ -1229,15 +816,24 @@
   .cal-day {
     min-height: 80px;
     padding: 8px;
+    border: none;
     border-right: 1px solid var(--weeb-border);
     border-bottom: 1px solid var(--weeb-border);
+    background: none;
+    font-family: inherit;
+    text-align: left;
     cursor: pointer;
     transition: background 0.15s;
     position: relative;
   }
   .cal-day:nth-child(7n) { border-right: none; }
   .cal-day:hover { background: var(--weeb-surface-hover); }
+  .cal-day:focus-visible {
+    outline: 2px solid var(--weeb-accent);
+    outline-offset: -2px;
+  }
   .cal-day.other-month { opacity: 0.3; }
+  .cal-day.is-skeleton { pointer-events: none; }
   .cal-day.today .cal-day-num {
     background: var(--weeb-accent);
     color: white;
@@ -1321,12 +917,6 @@
     letter-spacing: -0.01em;
     color: var(--weeb-fg);
   }
-  .cal-panel-empty {
-    padding: 40px 20px;
-    text-align: center;
-    color: var(--weeb-fg-muted);
-    font-size: 14px;
-  }
   .cal-panel-shows { display: flex; flex-direction: column; }
   .cal-show-item {
     display: flex;
@@ -1370,50 +960,6 @@
     font-variant-numeric: tabular-nums;
     font-size: 11px;
     color: var(--weeb-fg-muted);
-  }
-
-  /* ---- Empty & Skeleton ---- */
-  .empty-state {
-    padding: 80px 20px;
-    text-align: center;
-    color: var(--weeb-fg-muted);
-    font-size: 15px;
-  }
-  .empty-state-btn {
-    margin-top: 12px;
-    background: none;
-    border: 1px solid var(--weeb-border);
-    color: var(--weeb-accent-text);
-    padding: 8px 20px;
-    border-radius: var(--weeb-radius, 8px);
-    cursor: pointer;
-    font-size: 13px;
-    transition: border-color 0.15s;
-  }
-  .empty-state-btn:hover {
-    border-color: var(--weeb-accent);
-  }
-  .skeleton-text {
-    height: 14px;
-    border-radius: 4px;
-    background: var(--weeb-surface);
-    animation: shimmer 1.5s infinite;
-    display: block;
-  }
-  .skeleton-show-card {
-    opacity: 0.6;
-  }
-  .skeleton-poster-sm {
-    width: 50px;
-    height: 70px;
-    border-radius: var(--weeb-radius);
-    background: var(--weeb-surface-hover);
-    animation: shimmer 1.5s infinite;
-    flex-shrink: 0;
-  }
-  @keyframes shimmer {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 0.8; }
   }
 
   /* ---- Responsive ---- */

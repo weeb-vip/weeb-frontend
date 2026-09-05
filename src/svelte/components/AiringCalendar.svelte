@@ -1,344 +1,156 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { createQuery } from '@tanstack/svelte-query';
-  import {
-    format,
-    startOfMonth,
-    endOfMonth,
-    startOfWeek,
-    endOfWeek,
-    eachDayOfInterval,
-    isSameDay,
-    addMonths,
-    subMonths,
-    addWeeks,
-    subWeeks,
-  } from 'date-fns';
-  import { fetchCurrentlyAiringWithDatesAndEpisodes } from '../../services/queries';
-  import { parseAirTime } from '../../services/airTimeUtils';
-  import { initializeQueryClient } from '../services/query-client';
+  import Tabs from './Tabs.svelte';
+  import Skeleton from './Skeleton.svelte';
+  import EmptyState from './EmptyState.svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
   import AnimeCalendarPopover from './AnimeCalendarPopover.svelte';
-  import Button from './Button.svelte';
+  import { AiringCalendarBloc } from './AiringCalendar.bloc.svelte';
+  import type { AiringShow } from './CurrentlyAiringPage.schedule';
+  import type { TabItem } from './Tabs.svelte';
 
-  type ViewMode = 'month' | 'week';
+  /**
+   * The airing schedule as a month or week grid.
+   *
+   * A view over the bloc: it owns the range, the query keyed to it and the
+   * per-day bucketing; this renders cells.
+   */
+  let {
+    ssrData = null,
+    ssrError = null,
+    bloc = new AiringCalendarBloc({ source: () => ({ ssrData, ssrError }) }),
+  }: {
+    ssrData?: { currentlyAiring?: AiringShow[] | null } | null;
+    ssrError?: string | null;
+    /** Kept for the loader's call site; the page reacts to it, nothing else does. */
+    isTokenExpired?: boolean;
+    bloc?: AiringCalendarBloc;
+  } = $props();
 
-  // SSR props
-  export let ssrData: any = null;
-  export let ssrError: string | null = null;
-  export let isTokenExpired: boolean = false;
+  $effect(() => bloc.init());
 
-  let currentDate = new Date();
-  let viewMode: ViewMode = 'month';
-  let mounted = false;
+  const MODES: TabItem[] = [
+    { value: 'month', label: 'Month' },
+    { value: 'week', label: 'Week' },
+  ];
 
-  // Initialize query client
-  const queryClient = initializeQueryClient();
+  const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Client-side query (will use SSR data as initial data for default month view)
-  let currentQuery: any;
+  const GRID =
+    'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-px bg-weeb-surface ' +
+    'border border-weeb-border rounded-lg overflow-hidden text-sm relative z-0 ' +
+    'transition-colors duration-300';
 
-  // Calculate date ranges
-  $: start = viewMode === 'month'
-    ? startOfMonth(currentDate)
-    : startOfWeek(currentDate, { weekStartsOn: 0 });
+  const CELL =
+    'bg-weeb-surface p-2 transition-colors duration-300 flex flex-col justify-start ' +
+    'border border-weeb-border';
 
-  $: end = viewMode === 'month'
-    ? endOfMonth(currentDate)
-    : endOfWeek(currentDate, { weekStartsOn: 0 });
-
-
-  $: days = eachDayOfInterval({ start, end });
-
-  // Check if current date range matches SSR data range (current month view)
-  $: isDefaultMonthView = viewMode === 'month' &&
-    startOfMonth(currentDate).getTime() === startOfMonth(new Date()).getTime() &&
-    ssrData;
-
-  // Create query for current date range (only on client)
-  $: if (mounted && start && end) {
-    const queryConfig = fetchCurrentlyAiringWithDatesAndEpisodes(start, null, 32, 300);
-    currentQuery = createQuery(
-      {
-        ...queryConfig,
-        // Use SSR data as initial data for default month view and prevent network request
-        ...(isDefaultMonthView && ssrData && {
-          initialData: ssrData,
-          staleTime: Infinity, // Prevent refetch for SSR data
-          refetchOnMount: false,
-          refetchOnWindowFocus: false,
-          refetchOnReconnect: false
-        })
-      },
-      queryClient
-    );
+  /**
+   * A placeholder month should look like a month that has shows in it, not like
+   * an empty one, or the grid visibly reflows when the data lands. The counts
+   * are a fixed pattern rather than nine hand-copied cells: same shape, one
+   * place to change it.
+   */
+  function placeholderRows(index: number): number {
+    return [1, 2, 3, 1, 4, 1, 1][index % 7];
   }
-
-  onMount(() => {
-    mounted = true;
-
-    // Handle SSR errors
-    if (ssrError) {
-      console.warn('SSR Calendar error:', ssrError);
-    }
-
-    if (isTokenExpired) {
-      console.warn('SSR Calendar: Token was expired during data fetch');
-    }
-
-    // Prefetch adjacent date ranges after initial load
-    setTimeout(() => {
-      if (!queryClient || !mounted) return;
-
-      const ranges = [
-        {
-          start: viewMode === 'month'
-            ? startOfMonth(subMonths(currentDate, 1))
-            : startOfWeek(subWeeks(currentDate, 1), { weekStartsOn: 0 }),
-          end: viewMode === 'month'
-            ? endOfMonth(subMonths(currentDate, 1))
-            : endOfWeek(subWeeks(currentDate, 1), { weekStartsOn: 0 }),
-        },
-        {
-          start: viewMode === 'month'
-            ? startOfMonth(addMonths(currentDate, 1))
-            : startOfWeek(addWeeks(currentDate, 1), { weekStartsOn: 0 }),
-          end: viewMode === 'month'
-            ? endOfMonth(addMonths(currentDate, 1))
-            : endOfWeek(addWeeks(currentDate, 1), { weekStartsOn: 0 }),
-        },
-      ];
-
-      for (const { start } of ranges) {
-        queryClient.prefetchQuery(fetchCurrentlyAiringWithDatesAndEpisodes(start, null, 32, 300));
-      }
-    }, 1000); // Delay prefetching to avoid interfering with initial load
-  });
-
-  // Process anime data by date
-  $: animeByDate = (() => {
-    const result: Record<string, any[]> = {};
-
-    if (!mounted || !currentQuery || !$currentQuery.data?.currentlyAiring) return result;
-
-    for (const anime of $currentQuery.data.currentlyAiring) {
-      // For calendar, we need to process all episodes to show by specific dates
-      if (anime.episodes && anime.episodes.length > 0) {
-        // Process all episodes
-        for (const episode of anime.episodes) {
-          const episodeAirTime = episode.airTime
-            ? new Date(episode.airTime)
-            : (episode.airDate ? new Date(episode.airDate) : null);
-
-          if (!episodeAirTime) continue;
-
-          const dateKey = format(episodeAirTime, "yyyy-MM-dd");
-          if (!result[dateKey]) result[dateKey] = [];
-
-          // Create entry with the episode's specific air time
-          const animeEntry = {
-            ...anime,
-            episodes: [episode], // Pass single episode as array for compatibility
-            episodeAirTime: episodeAirTime, // Use the episode's air time for sorting
-          };
-
-          result[dateKey].push(animeEntry);
-        }
-      } else if (anime.nextEpisode) {
-        // Fallback to nextEpisode if episodes array is empty
-        const episodeAirTime = anime.nextEpisode.airTime
-          ? new Date(anime.nextEpisode.airTime)
-          : (anime.nextEpisode.airDate ? new Date(anime.nextEpisode.airDate) : null);
-
-        if (!episodeAirTime) continue;
-
-        const dateKey = format(episodeAirTime, "yyyy-MM-dd");
-        if (!result[dateKey]) result[dateKey] = [];
-
-        // Create entry with the episode's specific air time
-        const animeEntry = {
-          ...anime,
-          episodes: [anime.nextEpisode], // Convert nextEpisode to episodes array for compatibility
-          episodeAirTime: episodeAirTime,
-        };
-
-        result[dateKey].push(animeEntry);
-      }
-    }
-
-    // Sort entries by episode air time within each day
-    Object.keys(result).forEach(dateKey => {
-      result[dateKey].sort((a, b) => {
-        const aTime = a.episodeAirTime;
-        const bTime = b.episodeAirTime;
-
-        if (aTime && bTime) {
-          return aTime.getTime() - bTime.getTime();
-        }
-
-        return 0;
-      });
-    });
-
-    return result;
-  })();
-
-  function isTodayVisible(day: Date): boolean {
-    return currentDate.getMonth() === new Date().getMonth() && isSameDay(day, new Date());
-  }
-
-  function goPrev() {
-    currentDate = viewMode === 'month' ? subMonths(currentDate, 1) : subWeeks(currentDate, 1);
-  }
-
-  function goNext() {
-    currentDate = viewMode === 'month' ? addMonths(currentDate, 1) : addWeeks(currentDate, 1);
-  }
-
-  function setViewModeMonth() {
-    viewMode = 'month';
-  }
-
-  function setViewModeWeek() {
-    viewMode = 'week';
-  }
-
 </script>
 
 <div class="max-w-screen-xl mx-auto relative py-8 px-0">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-    <div class="flex gap-2">
-      <Button
-        label="Month"
-        color={viewMode === 'month' ? 'blue' : 'transparent'}
-        status="idle"
-        onClick={setViewModeMonth}
-        className="px-3 py-1 rounded"
-      />
-
-      <Button
-        label="Week"
-        color={viewMode === 'week' ? 'blue' : 'transparent'}
-        status="idle"
-        onClick={setViewModeWeek}
-        className="px-3 py-1 rounded ml-2"
-      />
-    </div>
+    <Tabs
+      items={MODES}
+      value={bloc.viewMode}
+      onChange={(value) => bloc.selectViewMode(value)}
+      variant="segmented"
+      ariaLabel="Month or week"
+    />
 
     <div class="flex items-center gap-4">
-      <button on:click={goPrev} class="text-sm text-weeb-accent-text hover:underline transition-colors duration-300">
+      <button
+        type="button"
+        onclick={() => bloc.previous()}
+        class="text-sm text-weeb-accent-text hover:underline transition-colors duration-300"
+      >
         ← Previous
       </button>
-      <h1 class="text-xl font-bold text-weeb-fg">
-        {viewMode === 'month'
-          ? format(currentDate, "MMMM yyyy")
-          : `Week of ${format(start, "MMM d")}`}
-      </h1>
-      <button on:click={goNext} class="text-sm text-weeb-accent-text hover:underline transition-colors duration-300">
+      <h1 class="text-xl font-bold text-weeb-fg">{bloc.title}</h1>
+      <button
+        type="button"
+        onclick={() => bloc.next()}
+        class="text-sm text-weeb-accent-text hover:underline transition-colors duration-300"
+      >
         Next →
       </button>
     </div>
   </div>
 
-  {#if !mounted || !currentQuery || (currentQuery && $currentQuery.isLoading)}
-    <!-- Calendar Skeleton -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-px bg-weeb-surface border border-weeb-border rounded-lg overflow-hidden text-sm relative z-0 transition-colors duration-300">
-      <!-- Day headers skeleton for desktop only -->
-      {#each ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as day}
-        <div class="hidden lg:block bg-weeb-bg-elevated bg-weeb-surface-hover py-2 px-2 text-center font-medium text-weeb-fg-secondary border-b border-weeb-border transition-colors duration-300">
-          {day}
+  {#if bloc.isError}
+    <ErrorBanner
+      message="Couldn't load the airing calendar."
+      detail={bloc.errorDetail}
+      retrying={bloc.isRetrying}
+      onRetry={() => bloc.retry()}
+    />
+  {:else if bloc.isLoading}
+    <div class={GRID}>
+      {#each WEEKDAYS as weekday (weekday)}
+        <div
+          class="hidden lg:block bg-weeb-bg-elevated py-2 px-2 text-center font-medium text-weeb-fg-secondary border-b border-weeb-border transition-colors duration-300"
+        >
+          {weekday}
         </div>
       {/each}
 
-      <!-- Calendar days skeleton (show 35 cells for a typical month view) -->
-      {#each Array(35) as _, index}
-        <div class="bg-weeb-surface p-2 transition-colors duration-300 min-h-[140px] flex flex-col justify-start border border-weeb-border border-weeb-border">
+      {#each Array(bloc.skeletonCellCount) as _, index (index)}
+        <div class="{CELL} min-h-[140px]">
           <div class="text-xs font-semibold text-weeb-fg mb-1 flex items-center gap-1">
-            <span>{(index % 31) + 1}</span>
+            <Skeleton className="h-3 w-4" />
           </div>
-          <div class="flex flex-col gap-1 pr-1 overflow-y-auto scrollbar-thin scrollbar-thumb-weeb-border scrollbar-track-transparent">
-            <!-- Simulate varying number of anime entries with more realistic distribution -->
-            {#if index === 0 || index === 3 || index === 5 || index === 6}
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-12 mt-0.5"></div>
+          <div class="flex flex-col gap-1 pr-1">
+            {#each Array(placeholderRows(index)) as _, row (row)}
+              <div class="bg-weeb-surface px-2 py-1 rounded w-full flex flex-col gap-0.5">
+                <Skeleton className="h-[14px] w-full bg-weeb-surface-hover" />
+                <Skeleton className="h-[10px] w-12 bg-weeb-surface-hover" />
               </div>
-            {/if}
-            {#if index === 1 || index === 7 || index === 14}
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-14 mt-0.5"></div>
-              </div>
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-16 mt-0.5"></div>
-              </div>
-            {/if}
-            {#if index === 2 || index === 8 || index === 9 || index === 10 || index === 15}
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-12 mt-0.5"></div>
-              </div>
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-14 mt-0.5"></div>
-              </div>
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-10 mt-0.5"></div>
-              </div>
-            {/if}
-            {#if index === 4 || index === 11 || index === 18}
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-14 mt-0.5"></div>
-              </div>
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-12 mt-0.5"></div>
-              </div>
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-16 mt-0.5"></div>
-              </div>
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-14 mt-0.5"></div>
-              </div>
-            {/if}
-            {#if index === 12 || index === 19 || index === 20}
-              <div class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col animate-pulse">
-                <div class="h-[14px] bg-weeb-surface-hover rounded w-full"></div>
-                <div class="h-[10px] bg-weeb-surface-hover bg-weeb-surface-hover rounded w-12 mt-0.5"></div>
-              </div>
-            {/if}
+            {/each}
           </div>
         </div>
       {/each}
     </div>
+  {:else if bloc.isEmpty}
+    <EmptyState
+      variant="panel"
+      heading="Nothing airing"
+      message={bloc.isMonthView
+        ? 'No episodes are scheduled for this month.'
+        : 'No episodes are scheduled for this week.'}
+    />
   {:else}
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-px bg-weeb-surface border border-weeb-border rounded-lg overflow-hidden text-sm relative z-0 transition-colors duration-300">
-      <!-- Day headers for desktop only -->
-      {#each ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as day}
-        <div class="hidden lg:block bg-weeb-bg-elevated bg-weeb-surface-hover py-2 px-2 text-center font-medium text-weeb-fg-secondary border-b border-weeb-border transition-colors duration-300">
-          {day}
+    <div class={GRID}>
+      {#each WEEKDAYS as weekday (weekday)}
+        <div
+          class="hidden lg:block bg-weeb-bg-elevated py-2 px-2 text-center font-medium text-weeb-fg-secondary border-b border-weeb-border transition-colors duration-300"
+        >
+          {weekday}
         </div>
       {/each}
 
-      <!-- Calendar days -->
-      {#each days as day (format(day, 'yyyy-MM-dd'))}
-        {@const dateKey = format(day, 'yyyy-MM-dd')}
-        {@const entries = animeByDate[dateKey] || []}
-        {@const isToday = isTodayVisible(day)}
-
-        <div class="bg-weeb-surface p-2 transition-colors duration-300 {viewMode === 'month' ? 'min-h-[140px]' : ''} flex flex-col justify-start border border-weeb-border border-weeb-border {isToday ? 'bg-weeb-surface ring-2 ring-blue-400' : ''}">
+      {#each bloc.cells as cell (cell.iso)}
+        <div
+          class="{CELL} {bloc.isMonthView ? 'min-h-[140px]' : ''} {cell.isToday
+            ? 'ring-2 ring-weeb-accent'
+            : ''}"
+        >
           <div class="text-xs font-semibold text-weeb-fg mb-1 flex items-center gap-1">
-            <span>{format(day, 'd')}</span>
-            <span class="text-weeb-fg-muted text-xs block lg:hidden">
-              ({format(day, 'EEE')})
-            </span>
+            <span>{cell.dayNumber}</span>
+            <span class="text-weeb-fg-muted text-xs block lg:hidden">({cell.weekdayShort})</span>
           </div>
-          <div class="flex flex-col gap-1 pr-1 {viewMode === 'month' ? 'overflow-y-auto scrollbar-thin scrollbar-thumb-weeb-border scrollbar-track-transparent' : ''}">
-            {#each entries as anime, index (`${anime.id}-${index}`)}
+          <div
+            class="flex flex-col gap-1 pr-1 {bloc.isMonthView
+              ? 'overflow-y-auto scrollbar-thin scrollbar-thumb-weeb-border scrollbar-track-transparent'
+              : ''}"
+          >
+            {#each cell.entries as anime, index (`${anime.id}-${index}`)}
               <AnimeCalendarPopover {anime} />
             {/each}
           </div>

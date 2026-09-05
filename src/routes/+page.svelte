@@ -2,7 +2,7 @@
   import Seo from '$lib/Seo.svelte';
   import HomepageSSR from '../svelte/components/HomepageSSR.svelte';
 
-  export let data;
+  let { data } = $props();
 </script>
 
 <!-- No title, so Seo falls back to "WeebVIP - Track Your Anime Watchlist". This is the

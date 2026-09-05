@@ -4,12 +4,12 @@
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
   import SeasonPage from '../../../svelte/components/SeasonPage.svelte';
 
-  export let data;
+  let { data } = $props();
 
   const SITE_URL = 'https://weeb.vip';
 
-  $: canonical = `${SITE_URL}/season/${data.season}`;
-  $: schemas = [
+  const canonical = $derived(`${SITE_URL}/season/${data.season}`);
+  const schemas = $derived([
     itemListSchema(data.seasonalData?.animeBySeasons, {
       name: `${data.displayName} Anime`,
       url: canonical,
@@ -19,7 +19,7 @@
       { name: 'Home', url: `${SITE_URL}/` },
       { name: `${data.displayName} Anime`, url: canonical }
     ])
-  ];
+  ]);
 </script>
 
 <Seo

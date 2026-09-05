@@ -4,12 +4,12 @@
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
   import CurrentlyAiringPage from '../../svelte/components/CurrentlyAiringPage.svelte';
 
-  export let data;
+  let { data } = $props();
 
   const SITE_URL = 'https://weeb.vip';
 
   const canonical = `${SITE_URL}/airing`;
-  $: schemas = [
+  const schemas = $derived([
     itemListSchema(data.ssrData?.currentlyAiring, {
       name: 'Currently Airing Anime',
       url: canonical,
@@ -19,7 +19,7 @@
       { name: 'Home', url: `${SITE_URL}/` },
       { name: 'Currently Airing', url: canonical }
     ])
-  ];
+  ]);
 </script>
 
 <Seo

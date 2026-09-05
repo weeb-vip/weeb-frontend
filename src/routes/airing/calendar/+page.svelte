@@ -2,7 +2,7 @@
   import Seo from '$lib/Seo.svelte';
   import AiringCalendar from '../../../svelte/components/AiringCalendar.svelte';
 
-  export let data;
+  let { data } = $props();
 </script>
 
 <Seo
