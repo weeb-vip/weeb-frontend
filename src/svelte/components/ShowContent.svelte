@@ -15,7 +15,7 @@
   import { isFeatureEnabled } from '../../utils/analytics';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { fetchDetails } from '../../services/queries';
-  import { GetImageFromAnime, getYearUTC, formatDateUTC, animeHref, seasonLabel } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, formatDateUTC, animeHref, seasonLabel, seriesLinkFor } from '../../services/utils';
   import { getSafeImageUrl } from '../utils/image';
   import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import debug from '../../utils/debug';
@@ -31,6 +31,7 @@
   // "Season 2", or "Special" for TheTVDB's season 0.
   //
   $: seasonText = seasonLabel(anime?.seasonNumber);
+  $: seriesLink = seriesLinkFor(anime);
   export let animeId: string;
   export let ssrAnimeData: any = null;
   export let ssrCharactersData: any = null;
@@ -561,7 +562,11 @@
                    derivation refuses rather than guesses -- so an unknown
                    season renders as nothing at all, never as "Season ?". -->
               {#if seasonText}
-                <p class="hero-season">{seasonText}</p>
+                {#if seriesLink}
+                  <a class="hero-season hero-season-link" href={seriesLink}>{seasonText}</a>
+                {:else}
+                  <p class="hero-season">{seasonText}</p>
+                {/if}
               {/if}
             </div>
           </div>
@@ -1267,6 +1272,26 @@
     text-transform: uppercase;
     color: var(--weeb-accent-text);
     margin-top: 6px;
+  }
+
+  /* The season doubles as the way into the series page, so it has to read as a
+     control rather than as one more fact. It is already accent-coloured, which
+     is exactly why colour cannot be the signal -- a bare link would look
+     identical to the static label. A quiet underline does it, and firms up on
+     hover and keyboard focus.
+
+     inline-block so the hit area is the words rather than the width of the
+     column, and so the margin above still applies. */
+  .hero-season-link {
+    display: inline-block;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklch, var(--weeb-accent-text) 40%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  .hero-season-link:hover,
+  .hero-season-link:focus-visible {
+    text-decoration-color: currentColor;
   }
 
   .hero-title {

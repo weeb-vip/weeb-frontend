@@ -54,6 +54,38 @@ export function seriesHref(seriesId: string | null | undefined, slug?: string | 
 }
 
 /**
+ * The series page for an anime, or "" when it belongs to no series we know.
+ *
+ * Derives the readable half of the URL from the same-series list the show page
+ * already holds, so nothing extra is fetched. The anchor is the earliest TV
+ * entry -- whichever entry gives the series its name -- falling back to the
+ * earliest of anything for series that never had a TV run.
+ *
+ * One function rather than one per caller: the hero and the same-series
+ * heading both link here, and two copies of "which entry names this series"
+ * would eventually disagree and produce two URLs for one page.
+ */
+export function seriesLinkFor(anime: any): string {
+  if (!anime?.thetvdbid) return "";
+
+  const sameSeries = (anime.relatedAnime || [])
+    .filter((entry: any) => entry?.relation === "SAME_SERIES" && entry.anime)
+    .map((entry: any) => entry.anime);
+
+  const candidates = [...sameSeries, anime].sort((a, b) => {
+    if (!a.startDate && !b.startDate) return 0;
+    if (!a.startDate) return 1;
+    if (!b.startDate) return -1;
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+  });
+
+  const anchor =
+    candidates.find((e: any) => (e.type || "").toLowerCase() === "tv") || candidates[0];
+
+  return seriesHref(anime.thetvdbid, anchor?.slug);
+}
+
+/**
  * Which season of its series an anime is, as a reader-facing label.
  *
  * Null and 0 are different answers and must not collapse: null is "we do not

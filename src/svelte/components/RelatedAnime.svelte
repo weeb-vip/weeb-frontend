@@ -1,6 +1,6 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
-  import { getYearUTC, seasonLabel, seriesHref } from '../../services/utils';
+  import { getYearUTC, seasonLabel, seriesLinkFor } from '../../services/utils';
 
   /** RelatedAnime entries: { relation, anime }. */
   export let related: any[] = [];
@@ -65,23 +65,9 @@
     return `/anime/${entry.slug || entry.id}`;
   }
 
-  /**
-   * The series page, when this anime belongs to one.
-   *
-   * The readable half of the URL is borrowed from the earliest TV entry --
-   * whichever entry gives the series its name -- and the list here already
-   * holds it, so nothing extra is fetched. Only the id is parsed on the way
-   * back in, so a stale slug still resolves.
-   */
-  $: seriesLink = (() => {
-    if (!current?.thetvdbid) return '';
-    const sameSeries = groups.find((g) => g.kind === 'SAME_SERIES');
-    if (!sameSeries) return '';
-    const anchor =
-      sameSeries.items.find((e: any) => isMainEntry(e.type)) ?? sameSeries.items[0];
-
-    return seriesHref(current.thetvdbid, anchor?.slug);
-  })();
+  // Shared with the hero's season label, which links to the same page: two
+  // copies of "which entry names this series" would eventually disagree.
+  $: seriesLink = seriesLinkFor(current);
 
   /** TV is the through-line of a series; everything else hangs off it. */
   function isMainEntry(type: string | null | undefined): boolean {
