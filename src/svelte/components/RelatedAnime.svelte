@@ -2,10 +2,12 @@
   import SafeImage from './SafeImage.svelte';
   import { getYearUTC, seasonLabel, seriesLinkFor, collapseSeasonParts } from '../../services/utils';
 
-  /** RelatedAnime entries: { relation, anime }. */
-  export let related: any[] = [];
-  /** The anime being viewed, so it can be placed in its own timeline. */
-  export let current: any = null;
+  let {
+    /** RelatedAnime entries: { relation, anime }. */
+    related = [],
+    /** The anime being viewed, so it can be placed in its own timeline. */
+    current = null,
+  }: { related?: any[]; current?: any } = $props();
 
   /**
    * Heading per relation kind. Entries in the same series are not "related" to
@@ -25,7 +27,7 @@
   // closest relationship and the one most readers are looking for.
   const ORDER = ['SAME_SERIES'];
 
-  $: groups = (() => {
+  const groups = $derived.by(() => {
     const byKind = new Map<string, any[]>();
     for (const entry of related) {
       if (!entry?.anime) continue;
@@ -66,7 +68,7 @@
         return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
       })
     }));
-  })();
+  });
 
   function href(entry: any): string {
     return `/anime/${entry.slug || entry.id}`;
@@ -74,7 +76,7 @@
 
   // Shared with the hero's season label, which links to the same page: two
   // copies of "which entry names this series" would eventually disagree.
-  $: seriesLink = seriesLinkFor(current);
+  const seriesLink = $derived(seriesLinkFor(current));
 
   /** TV is the through-line of a series; everything else hangs off it. */
   function isMainEntry(type: string | null | undefined): boolean {
@@ -249,6 +251,7 @@
     line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     transition: color 0.15s;

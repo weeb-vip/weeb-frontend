@@ -800,7 +800,7 @@
               {watchedNumbers}
               canTrack={Boolean(anime.userAnime)}
               pending={$upsertAnime.isPending || $markEpisode.isPending}
-              on:watch={(e) => $markEpisode.mutate(e.detail)}
+              onWatch={(intent) => $markEpisode.mutate(intent)}
             />
           </section>
         {/if}
