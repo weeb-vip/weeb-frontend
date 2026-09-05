@@ -1,190 +1,38 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  // until hydration completes, a submit would be a native form POST
-  // that sveltekit rejects (no form actions) — keep the button inert
-  let hydrated = false;
-  onMount(() => { hydrated = true; });
-
-  import { goto } from '$app/navigation';
-  import type { LoginInput } from "../../gql/graphql";
-  import { isUnverifiedEmailError } from '../../utils/auth-errors';
-  import { useLogin, useRegister, useResendVerificationEmail } from '../services/queries';
-  import { loggedInStore, loginModalStore } from '../stores/auth';
+  import { onDestroy, onMount } from 'svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
   import FormInput from './FormInput.svelte';
+  import { LoginRegisterModalBloc } from './LoginRegisterModal.bloc.svelte';
+  import { VERIFY_BANNER } from './auth-shared';
 
-  export let closeFn: (() => void) | undefined = undefined;
+  /**
+   * The auth modal: the login form and the register form on one surface.
+   *
+   * A view over `LoginRegisterModalBloc`, which holds one `LoginBloc` and one
+   * `RegisterBloc` rather than a third copy of their rules -- being that third
+   * copy is how this file's register errors drifted away from the page's.
+   */
+  let {
+    closeFn,
+    bloc = new LoginRegisterModalBloc({ source: () => ({ closeFn }) })
+  }: {
+    /** Dismisses the modal. Supplied by whoever opened it. */
+    closeFn?: () => void;
+    bloc?: LoginRegisterModalBloc;
+  } = $props();
 
-  let registerState = false;
-  let isRegisterState = registerState;
-  let reason: string | null = null;
-  let formData = {
-    username: "",
-    password: "",
-    confirmPassword: "", // for registration validation
-  };
-  let errorMessage = "";
-  let validationErrors: Record<string, string> = {};
-  // login failed because the account exists but isn't verified — see Login.svelte
-  let needsVerification = false;
-  let resendState: 'idle' | 'sending' | 'sent' | 'failed' = 'idle';
-  // kept so the post-register redirect can carry the address
-  let submittedEmail = "";
+  // Until hydration completes a submit would be a native form POST that
+  // SvelteKit rejects (no form actions), so the button stays inert until here.
+  onMount(() => bloc.markHydrated());
+  onDestroy(() => bloc.dispose());
 
-  const loginMutation = useLogin();
-  const registerMutation = useRegister();
-  const resendMutation = useResendVerificationEmail();
-
-  // Subscribe to login modal state
-  onMount(() => {
-    const unsubscribe = loginModalStore.subscribe(state => {
-      registerState = state.register;
-      isRegisterState = state.register;
-      reason = state.reason ?? null;
-    });
-    return unsubscribe;
-  });
-
-  $: isLoading = $loginMutation.isPending || $registerMutation.isPending;
-
-  // Handle login state changes
-  $: if ($loginMutation.isSuccess && $loginMutation.data) {
-    loggedInStore.setLoggedIn({
-      id: $loginMutation.data.id
-    });
-    errorMessage = "";
-    needsVerification = false;
-
-    // Dispatch custom event to trigger data refresh
-    console.log('🎉 Login successful - dispatching loginSuccess event');
-    window.dispatchEvent(new CustomEvent('loginSuccess'));
-
-    if (closeFn) {
-      closeFn();
-    }
-  }
-
-  $: if ($loginMutation.isError) {
-    if (isUnverifiedEmailError($loginMutation.error)) {
-      needsVerification = true;
-      errorMessage = "";
-    } else {
-      needsVerification = false;
-      errorMessage = 'Unable to sign in. Please check your credentials and try again.';
-    }
-  }
-
-  // Registration leaves the modal for the dedicated "check your email" screen,
-  // so the modal path doesn't diverge from /auth/register.
-  $: if ($registerMutation.isSuccess) {
-    errorMessage = "";
-    const email = submittedEmail;
-    if (closeFn) {
-      closeFn();
-    }
-    goto(`/auth/check-email?email=${encodeURIComponent(email)}`);
-  }
-
-  $: if ($registerMutation.isError) {
-    errorMessage = 'Unable to create account. Please try again.';
-  }
-
-  $: if ($resendMutation.isSuccess) {
-    resendState = 'sent';
-  }
-
-  $: if ($resendMutation.isError) {
-    resendState = 'failed';
-  }
-
-  function handleResend() {
-    if (!formData.username.trim() || $resendMutation.isPending) return;
-    resendState = 'sending';
-    $resendMutation.mutate({ username: formData.username });
-  }
-
-  function validateForm() {
-    const errors: Record<string, string> = {};
-
-    if (!formData.username.trim()) {
-      errors.username = "Username is required";
-    } else if (formData.username.length < 3) {
-      errors.username = "Username must be at least 3 characters";
-    }
-
-    if (!formData.password) {
-      errors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
-    }
-
-    if (isRegisterState) {
-      if (!formData.confirmPassword) {
-        errors.confirmPassword = "Please confirm your password";
-      } else if (formData.password !== formData.confirmPassword) {
-        errors.confirmPassword = "Passwords do not match";
-      }
-    }
-
-    validationErrors = errors;
-    return Object.keys(errors).length === 0;
-  }
-
-  function handleChange(field: string, value: string) {
-    formData = { ...formData, [field]: value };
-
-    // Clear validation error when user starts typing
-    if (validationErrors[field]) {
-      validationErrors = { ...validationErrors, [field]: "" };
-    }
-    // Clear global messages
-    if (errorMessage) {
-      errorMessage = "";
-    }
-    // Editing the email invalidates the banner it was addressed to
-    if (needsVerification && field === 'username') {
-      needsVerification = false;
-      resendState = 'idle';
-    }
-  }
-
-  function handleSubmit(e: Event) {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    needsVerification = false;
-    resendState = 'idle';
-    submittedEmail = formData.username;
-
-    const data: LoginInput = { username: formData.username, password: formData.password };
-
-    if (!isRegisterState) {
-      $loginMutation.mutate(data);
-    } else {
-      $registerMutation.mutate(data);
-    }
-  }
-
-  function toggleMode() {
-    isRegisterState = !isRegisterState;
-    errorMessage = "";
-    needsVerification = false;
-    resendState = 'idle';
-    validationErrors = {};
-  }
-
-  function handleLinkClick(closeFn?: () => void) {
-    if (closeFn) {
-      closeFn();
-    }
+  function handleSubmit(event: Event) {
+    event.preventDefault();
+    void bloc.submit();
   }
 </script>
 
 <div class="weeb-auth-modal">
-
-  <!-- Header -->
   <div class="modal-header">
     <div class="logo-mark">
       <svg width="20" height="20" viewBox="0 0 22 22" fill="none" aria-hidden="true">
@@ -192,61 +40,53 @@
         <circle cx="11" cy="11" r="1.2" fill="white" opacity="0.7"/>
       </svg>
     </div>
-    <h2 class="modal-title">{reason ? (!isRegisterState ? 'Sign in to keep track' : 'Create your account') : (!isRegisterState ? 'Welcome back' : 'Create account')}</h2>
-    <!-- When the visitor was gated mid-action, say which action. The generic
-         subtitle only applies when they opened this deliberately. -->
-    <p class="modal-subtitle">{reason ?? (!isRegisterState ? 'Sign in to your account' : 'Start tracking your anime')}</p>
+    <h2 class="modal-title">{bloc.title}</h2>
+    <p class="modal-subtitle">{bloc.subtitle}</p>
   </div>
 
-  <!-- Alerts -->
-  {#if errorMessage}
-    <div class="alert alert-error">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-      <p>{errorMessage}</p>
-    </div>
-  {/if}
-  {#if needsVerification}
-    <div class="verify-banner" role="alert">
-      <div class="verify-head">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M3 7l9 6 9-6"/></svg>
-        Verify your email to continue
-      </div>
-      <!-- See Login.svelte: must not assert the account exists. -->
-      <p class="verify-body">
-        Accounts need a verified email before you can log in. Check
-        <b>{formData.username}</b> for the link we sent — it's often in spam.
-      </p>
-      {#if resendState === 'sent'}
-        <p class="verify-sent">Sent — check your inbox, and your spam folder.</p>
-      {:else if resendState === 'failed'}
-        <p class="verify-failed">We couldn't send that just now. Try again in a moment.</p>
-      {:else}
-        <button
-          type="button"
-          class="verify-action"
-          on:click={handleResend}
-          disabled={resendState === 'sending'}
-        >
-          {resendState === 'sending' ? 'Sending…' : 'Send a new link'}
-        </button>
-      {/if}
-    </div>
+  {#if bloc.errorMessage}
+    <ErrorBanner message={bloc.errorMessage} class="modal-alert" />
   {/if}
 
-  <!-- Form -->
-  <form on:submit={handleSubmit} class="auth-form">
+  <!-- Unverified account: amber, not red -- the credentials were correct,
+       there's just a step left. Same wording as the login page. -->
+  {#if bloc.needsVerification}
+    <ErrorBanner severity="warning" message={VERIFY_BANNER.title} class="modal-alert">
+      {#snippet children()}
+        <p class="verify-body">
+          Accounts need a verified email before you can log in. Check
+          <b>{bloc.verifyAddress}</b> for the link we sent — it's often in spam.
+        </p>
+        {#if bloc.resend.isSent}
+          <p class="verify-sent">{VERIFY_BANNER.sent}</p>
+        {:else if bloc.resend.isFailed}
+          <p class="verify-failed">{VERIFY_BANNER.failed}</p>
+        {:else}
+          <button
+            type="button"
+            class="verify-action"
+            onclick={() => void bloc.resendVerification()}
+            disabled={bloc.resend.isSending}
+          >
+            {bloc.resend.isSending ? VERIFY_BANNER.sending : VERIFY_BANNER.action}
+          </button>
+        {/if}
+      {/snippet}
+    </ErrorBanner>
+  {/if}
 
+  <form onsubmit={handleSubmit} class="auth-form" novalidate>
     <div class="form-group">
       <FormInput
         id="modal-username"
         name="username"
         type="text"
-        value={formData.username}
-        placeholder={!isRegisterState ? 'your_username' : 'you@example.com'}
-        label={!isRegisterState ? 'Username or email' : 'Email'}
-        error={validationErrors.username}
+        value={bloc.username}
+        placeholder={bloc.usernamePlaceholder}
+        label={bloc.usernameLabel}
+        error={bloc.validationErrors.username}
         required={true}
-        onInput={(e) => handleChange('username', e.value)}
+        onInput={(detail) => bloc.updateField('username', detail.value)}
       />
     </div>
 
@@ -255,69 +95,71 @@
         id="modal-password"
         name="password"
         type="password"
-        value={formData.password}
-        placeholder={!isRegisterState ? 'Enter your password' : 'At least 6 characters'}
+        value={bloc.password}
+        placeholder={bloc.passwordPlaceholder}
         label="Password"
-        error={validationErrors.password}
+        error={bloc.validationErrors.password}
         required={true}
         showPasswordToggle={true}
-        onInput={(e) => handleChange('password', e.value)}
+        onInput={(detail) => bloc.updateField('password', detail.value)}
       />
     </div>
 
-    {#if isRegisterState}
+    {#if bloc.isRegister}
       <div class="form-group">
         <FormInput
           id="modal-confirmPassword"
           name="confirmPassword"
           type="password"
-          value={formData.confirmPassword}
+          value={bloc.confirmPassword}
           placeholder="Re-enter your password"
           label="Confirm password"
-          error={validationErrors.confirmPassword}
+          error={bloc.validationErrors.confirmPassword}
           required={true}
           showPasswordToggle={true}
-          onInput={(e) => handleChange('confirmPassword', e.value)}
+          onInput={(detail) => bloc.updateField('confirmPassword', detail.value)}
         />
       </div>
-    {/if}
-
-    <!-- Login-only: remember me + forgot password -->
-    {#if !isRegisterState}
+    {:else}
       <div class="field-row">
         <label class="checkbox-wrap">
           <input type="checkbox" name="remember" />
           <span class="checkbox-label">Remember me</span>
         </label>
-        <a href="/auth/password-reset-request" on:click={() => handleLinkClick(closeFn)} class="link-accent">Forgot password?</a>
+        <a href="/auth/password-reset-request" onclick={() => bloc.close()} class="link-accent">
+          Forgot password?
+        </a>
       </div>
     {/if}
 
-    <!-- Submit -->
-    <button type="submit" class="btn-submit" class:loading={isLoading} disabled={isLoading || !hydrated}>
-      <span class="btn-label">{!isRegisterState ? 'Log in' : 'Create account'}</span>
-      {#if isLoading}
+    <button
+      type="submit"
+      class="btn-submit"
+      class:loading={bloc.isSubmitting}
+      disabled={!bloc.canSubmit}
+    >
+      <span class="btn-label">{bloc.submitLabel}</span>
+      {#if bloc.isSubmitting}
         <span class="spinner" aria-hidden="true"></span>
       {/if}
     </button>
-
   </form>
 
   <!-- No standing "resend verification" link: an unverified login now surfaces
        the banner above, which resends to the address already typed in.
        /auth/resend-verification stays reachable for anyone who needs it. -->
 
-  <!-- Divider -->
   <div class="divider">
     <div class="divider-line"></div>
     <span class="divider-text">or</span>
     <div class="divider-line"></div>
   </div>
 
-  <!-- Toggle mode -->
   <div class="mode-toggle">
-    {!isRegisterState ? "Don't have an account?" : "Already have an account?"}
-    <button type="button" on:click={toggleMode} class="link-accent">{!isRegisterState ? 'Sign up' : 'Log in'}</button>
+    {bloc.togglePrompt}
+    <button type="button" onclick={() => bloc.toggleMode()} class="link-accent">
+      {bloc.toggleLabel}
+    </button>
   </div>
 </div>
 
@@ -335,8 +177,8 @@
   :global(.weeb-auth-modal .logo-mark) {
     width: 40px;
     height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--weeb-accent), var(--weeb-violet, oklch(62% 0.14 300)));
+    border-radius: var(--weeb-radius-full, 9999px);
+    background: linear-gradient(135deg, var(--weeb-accent), var(--weeb-violet));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -354,53 +196,12 @@
     color: var(--weeb-fg-muted);
   }
 
-  /* Alerts */
-  :global(.weeb-auth-modal .alert) {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: var(--weeb-radius, 8px);
-    border: 1px solid;
-    font-size: 13px;
+  /* The banners keep the spacing the modal's own alerts had. */
+  :global(.weeb-auth-modal .modal-alert) {
     margin-bottom: 20px;
   }
-  :global(.weeb-auth-modal .alert svg) {
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-  :global(.weeb-auth-modal .alert p) {
-    margin: 0;
-    line-height: 1.4;
-  }
-  :global(.weeb-auth-modal .alert-error) {
-    color: var(--weeb-red);
-    background: oklch(20% 0.03 25 / 0.5);
-    border-color: oklch(60% 0.18 25 / 0.4);
-  }
-  /* Unverified-account banner — amber, not red: the credentials were correct,
-     there's just a step left. Mirrors Login.svelte. */
-  :global(.weeb-auth-modal .verify-banner) {
-    background: oklch(22% 0.04 85 / 0.45);
-    border: 1.5px solid var(--weeb-amber);
-    border-radius: var(--weeb-radius, 8px);
-    padding: 12px 14px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 11px;
-  }
-  :global(.weeb-auth-modal .verify-head) {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--weeb-amber);
-  }
-  :global(.weeb-auth-modal .verify-head svg) {
-    flex-shrink: 0;
-  }
+
+  /* Unverified-account banner body. Mirrors Login.svelte. */
   :global(.weeb-auth-modal .verify-body) {
     font-size: 13px;
     line-height: 1.5;
@@ -413,7 +214,7 @@
     word-break: break-all;
   }
   :global(.weeb-auth-modal .verify-action) {
-    align-self: flex-start;
+    margin-top: 10px;
     background: var(--weeb-amber);
     color: oklch(20% 0.04 85);
     font-size: 12.5px;
@@ -435,7 +236,7 @@
   :global(.weeb-auth-modal .verify-sent),
   :global(.weeb-auth-modal .verify-failed) {
     font-size: 12.5px;
-    margin: 0;
+    margin: 8px 0 0;
   }
   :global(.weeb-auth-modal .verify-sent) {
     color: var(--weeb-green);
@@ -493,7 +294,7 @@
     padding: 0;
   }
   :global(.weeb-auth-modal .link-accent:hover) {
-    color: var(--weeb-accent-hover, oklch(62% 0.16 280));
+    color: var(--weeb-accent-hover);
     text-decoration: underline;
   }
 
@@ -519,7 +320,7 @@
     overflow: hidden;
   }
   :global(.weeb-auth-modal .btn-submit:hover:not(:disabled)) {
-    background: var(--weeb-accent-hover, oklch(62% 0.16 280));
+    background: var(--weeb-accent-hover);
   }
   :global(.weeb-auth-modal .btn-submit:active:not(:disabled)) {
     transform: scale(0.99);
@@ -538,11 +339,14 @@
     height: 18px;
     border: 2px solid oklch(100% 0 0 / 0.3);
     border-top-color: white;
-    border-radius: 50%;
+    border-radius: var(--weeb-radius-full, 9999px);
     animation: weeb-auth-spin 0.7s linear infinite;
   }
   @keyframes -global-weeb-auth-spin {
     to { transform: rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.weeb-auth-modal .spinner) { animation-duration: 2s; }
   }
 
   /* Divider */

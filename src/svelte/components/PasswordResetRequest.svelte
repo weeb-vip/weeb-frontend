@@ -1,245 +1,239 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { faEnvelope, faUser, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-  import Fa from 'svelte-fa';
-
-  const iconEnvelope = faEnvelope;
-  const iconUser = faUser;
-  const iconArrowLeft = faArrowLeft;
+  import { faEnvelope, faUser } from '@fortawesome/free-solid-svg-icons';
+  import AuthCard from './AuthCard.svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
   import FormInput from './FormInput.svelte';
-  import Button from './Button.svelte';
-  import { initializeQueryClient } from '../services/query-client';
-  import type { RequestPasswordResetInput } from '../../gql/graphql';
-  import debug from '../../utils/debug';
+  import { PasswordResetRequestBloc } from './PasswordResetRequest.bloc.svelte';
 
-  let formData: RequestPasswordResetInput = { username: '', email: '' };
-  let errorMessage = '';
-  let submitted = false;
-  let blocked = false;
+  /**
+   * "I forgot my password".
+   *
+   * A view over `PasswordResetRequestBloc`. It used to hand-roll a Tailwind
+   * lookalike of the auth shell and boot its own TanStack client through a
+   * dynamic import before it could render anything; the request is one call
+   * with nothing observing it, so it goes direct and the form renders on the
+   * server like every other auth screen.
+   */
+  let { bloc = new PasswordResetRequestBloc() }: { bloc?: PasswordResetRequestBloc } = $props();
 
-  let QueryClientProvider: any = null;
-  let queryClient: any = null;
-  let isClient = false;
-  let usePasswordReset: any = null;
-  let passwordResetMutation: any = null;
+  const iconUser = faUser;
+  const iconEnvelope = faEnvelope;
 
-  onMount(async () => {
-    // Initialize TanStack Query
-    try {
-      const { QueryClientProvider: QCP } = await import('@tanstack/svelte-query');
-      const { usePasswordReset: uPR } = await import('../services/queries');
-
-      QueryClientProvider = QCP;
-      usePasswordReset = uPR;
-      queryClient = initializeQueryClient();
-      passwordResetMutation = usePasswordReset();
-      isClient = true;
-    } catch (error) {
-      console.warn('Failed to load TanStack Query:', error);
-      isClient = true;
-    }
-  });
-
-  function handleInputChange(detail: { value: string; originalEvent: Event }) {
-    const { value, originalEvent } = detail;
-    const target = originalEvent?.target as HTMLInputElement;
-
-    if (!target) return;
-
-    const name = target.name;
-
-    formData = {
-      ...formData,
-      [name]: value
-    };
-
-    // Clear error when user starts typing
-    if (errorMessage) {
-      errorMessage = '';
-    }
-  }
-
-  async function handleSubmit(event: Event) {
+  function handleSubmit(event: Event) {
     event.preventDefault();
-
-    if (blocked || submitted || !passwordResetMutation) return;
-
-    if (!formData.username.trim() || !formData.email.trim()) {
-      errorMessage = 'Please fill in all fields';
-      return;
-    }
-
-    errorMessage = '';
-    blocked = true;
-
-    try {
-      const result = await passwordResetMutation.mutateAsync({ input: formData });
-      if (result) {
-        debug.auth('Password reset request successful');
-        submitted = true;
-        blocked = true; // Keep blocked in success state
-      } else {
-        errorMessage = 'Failed to send password reset email. Please try again.';
-        blocked = false;
-      }
-    } catch (err: any) {
-      console.error('Password reset request failed:', err);
-      debug.error('Password reset request failed:', err);
-      errorMessage = err?.message || 'Failed to send password reset email. Please try again.';
-      blocked = false;
-    }
-  }
-
-  $: isLoading = passwordResetMutation ? passwordResetMutation.isPending : false;
-  $: disabled = blocked || submitted;
-
-  // Handle keyboard events to prevent submission while blocked
-  function handleKeyDown(event: KeyboardEvent) {
-    if (blocked && (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar')) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+    void bloc.submit();
   }
 </script>
 
-<svelte:document on:keydown={handleKeyDown} />
+<svelte:document onkeydown={(event) => bloc.handleKeyDown(event)} />
 
-{#if isClient}
-  {#if QueryClientProvider && queryClient}
-    <svelte:component this={QueryClientProvider} client={queryClient}>
-      <div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full space-y-8 relative">
-
-    {#if submitted}
-      <!-- Success state -->
-      <div class="text-center">
-        <div class="mx-auto h-12 w-12 bg-weeb-green/15 rounded-full flex items-center justify-center mb-4">
-          <Fa icon={iconEnvelope} class="text-weeb-green text-xl" />
-        </div>
-        <h2 class="text-3xl font-bold text-weeb-fg">Check your email</h2>
-        <p class="mt-4 text-weeb-fg-muted">
-          We've sent a password reset link to <strong>{formData.email}</strong>
-        </p>
-        <p class="mt-2 text-sm text-weeb-fg-muted">
-          Please check your email and follow the instructions to reset your password.
-        </p>
+{#if bloc.submitted}
+  <AuthCard title="Check your email">
+    {#snippet media()}
+      <div class="glyph good" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+          <path d="M3 7l9 6 9-6" />
+        </svg>
       </div>
-      <div class="mt-8">
-        <a
-          href="/"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-weeb-fg-muted hover:text-weeb-fg transition-colors"
-        >
-          <Fa icon={iconArrowLeft} class="mr-2" />
-          Back to Home
-        </a>
+    {/snippet}
+
+    {#snippet children()}
+      <p class="lede">
+        We've sent a password reset link to <b>{bloc.email}</b>
+      </p>
+      <p class="hint">
+        Please check your email and follow the instructions to reset your password.
+      </p>
+      <a class="btn-ghost" href="/">Back to home</a>
+    {/snippet}
+  </AuthCard>
+{:else}
+  <AuthCard
+    title="Reset your password"
+    subtitle="Enter your username and email address to receive a password reset link"
+  >
+    {#snippet media()}
+      <div class="glyph" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+          <path d="M3 7l9 6 9-6" />
+        </svg>
       </div>
+    {/snippet}
 
-    {:else}
-      <!-- Form state -->
-      <!-- Click/press guard overlay while blocked -->
-      {#if blocked}
-        <div class="absolute inset-0 z-10 bg-transparent" aria-hidden="true"></div>
-      {/if}
+    {#snippet children()}
+      <form class="pr-form" onsubmit={handleSubmit} aria-busy={bloc.isSubmitting} novalidate>
+        <!-- One fieldset rather than a per-control `disabled`: it also takes
+             the fields out of the tab order while the request is in flight,
+             which is how the old screen let a second Enter send a second email. -->
+        <fieldset disabled={bloc.isDisabled}>
+          <FormInput
+            id="username"
+            name="username"
+            type="text"
+            value={bloc.username}
+            onInput={(detail) => bloc.updateField('username', detail.value)}
+            placeholder="Username"
+            label="Username"
+            icon={iconUser}
+            required
+            disabled={bloc.isDisabled}
+          />
 
-      <div>
-        <div class="mx-auto h-12 w-12 bg-weeb-accent/15 rounded-full flex items-center justify-center">
-          <Fa icon={iconEnvelope} class="text-weeb-accent-text text-xl" />
-        </div>
-        <h2 class="mt-6 text-center text-3xl font-bold text-weeb-fg">Reset your password</h2>
-        <p class="mt-2 text-center text-sm text-weeb-fg-muted">
-          Enter your username and email address to receive a password reset link
-        </p>
-      </div>
+          <FormInput
+            id="email"
+            name="email"
+            type="email"
+            value={bloc.email}
+            onInput={(detail) => bloc.updateField('email', detail.value)}
+            placeholder="Email address"
+            label="Email address"
+            icon={iconEnvelope}
+            required
+            disabled={bloc.isDisabled}
+          />
 
-      <form
-        class="mt-8 space-y-6 relative"
-        on:submit={handleSubmit}
-        class:opacity-60={disabled}
-        class:pointer-events-none={disabled}
-        aria-busy={blocked}
-      >
-        <fieldset {disabled}>
-          <div class="space-y-4">
-            <FormInput
-              id="username"
-              name="username"
-              type="text"
-              value={formData.username}
-              onInput={handleInputChange}
-              placeholder="Username"
-              label="Username"
-              icon={iconUser}
-              required
-              disabled={disabled}
-            />
-
-            <FormInput
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onInput={handleInputChange}
-              placeholder="Email address"
-              label="Email address"
-              icon={iconEnvelope}
-              required
-              disabled={disabled}
-            />
-          </div>
-
-          {#if errorMessage}
-            <div class="bg-weeb-red/10 border border-weeb-red/30 rounded-md p-3 mt-4">
-              <p class="text-sm text-weeb-red">{errorMessage}</p>
-            </div>
+          {#if bloc.errorMessage}
+            <ErrorBanner message={bloc.errorMessage} />
           {/if}
 
-          <div class="mt-4">
-            <Button
-              color="blue"
-              label={blocked ? "Sending…" : "Send Reset Link"}
-              showLabel={true}
-              status={isLoading ? 'loading' : 'idle'}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md"
-              disabled={disabled}
-            />
-          </div>
-
-          <div class="text-center mt-2">
-            <a
-              href="/"
-              class="text-sm text-weeb-accent-text hover:text-weeb-accent-text transition-colors"
-            >
-              ← Back to Home
-            </a>
-          </div>
+          <button
+            type="submit"
+            class="btn-primary"
+            class:loading={bloc.isSubmitting}
+            disabled={bloc.isDisabled}
+          >
+            <span class="btn-label">{bloc.isSubmitting ? 'Sending…' : 'Send Reset Link'}</span>
+            {#if bloc.isSubmitting}
+              <span class="spinner" aria-hidden="true"></span>
+            {/if}
+          </button>
         </fieldset>
       </form>
-    {/if}
+    {/snippet}
 
-        </div>
-      </div>
-    </svelte:component>
-  {:else}
-    <!-- Fallback without QueryClient - show skeleton -->
-    <slot name="fallback">
-      <div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full space-y-8">
-          <div class="text-center">
-            <p class="text-weeb-fg-muted">Loading...</p>
-          </div>
-        </div>
-      </div>
-    </slot>
-  {/if}
-{:else}
-  <!-- SSR fallback - show skeleton -->
-  <slot name="fallback">
-    <div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div class="text-center">
-          <p class="text-weeb-fg-muted">Loading...</p>
-        </div>
-      </div>
-    </div>
-  </slot>
+    {#snippet footer()}
+      Remembered it? <a href="/auth/login">Sign in</a>
+    {/snippet}
+  </AuthCard>
 {/if}
+
+<style>
+  .glyph {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--weeb-radius-full);
+    background: color-mix(in oklch, var(--weeb-accent) 16%, transparent);
+    color: var(--weeb-accent-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .glyph.good {
+    background: color-mix(in oklch, var(--weeb-green) 15%, transparent);
+    color: var(--weeb-green);
+  }
+
+  .lede {
+    font-size: 14px;
+    color: var(--weeb-fg-secondary);
+    line-height: 1.5;
+    text-align: center;
+    margin: 0 0 8px;
+  }
+
+  .lede b {
+    color: var(--weeb-fg);
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  .hint {
+    font-size: 12.5px;
+    color: var(--weeb-fg-muted);
+    text-align: center;
+    line-height: 1.5;
+    margin: 0 0 20px;
+  }
+
+  .pr-form fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    border: none;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+  }
+
+  .pr-form fieldset:disabled {
+    opacity: 0.6;
+  }
+
+  .btn-primary {
+    width: 100%;
+    height: 46px;
+    margin-top: 4px;
+    background: var(--weeb-accent);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: none;
+    border-radius: var(--weeb-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary:hover:not(:disabled) { background: var(--weeb-accent-hover); }
+  .btn-primary:active:not(:disabled) { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary.loading .btn-label { opacity: 0; }
+
+  .btn-ghost {
+    width: 100%;
+    height: 42px;
+    background: var(--weeb-surface);
+    color: var(--weeb-fg-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .btn-ghost:hover {
+    background: var(--weeb-surface-hover);
+    color: var(--weeb-fg);
+  }
+
+  .spinner {
+    display: block;
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid oklch(100% 0 0 / 0.3);
+    border-top-color: white;
+    border-radius: var(--weeb-radius-full);
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 2s; }
+  }
+</style>

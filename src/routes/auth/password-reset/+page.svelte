@@ -1,196 +1,238 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
   import { goto } from '$app/navigation';
+  import AuthCard from '../../../svelte/components/AuthCard.svelte';
+  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
+  import type { ActionData, PageData } from './$types';
 
-  export let data;
-  export let form;
+  /**
+   * Setting a new password from a reset link.
+   *
+   * The only auth screen with no bloc: it is a progressively-enhanced form
+   * action, so the server owns the state and this renders `data`/`form`. It
+   * used to hand-roll a Tailwind lookalike of the auth shell in raw grays and
+   * blues -- it sits in the same `AuthCard` as the rest of them now.
+   */
+  let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  $: errorMessage = form?.errorMessage ?? data.errorMessage;
-  $: successMessage = form?.successMessage ?? '';
-  $: showForm = data.showForm && !successMessage;
+  const errorMessage = $derived(form?.errorMessage ?? data.errorMessage);
+  const successMessage = $derived(form?.successMessage ?? '');
+  const showForm = $derived(data.showForm && !successMessage);
 
-  $: if (successMessage) {
-    setTimeout(() => goto('/'), 3000);
-  }
+  // Long enough to read the confirmation, short enough not to be a dead end.
+  $effect(() => {
+    if (!successMessage) return;
+    const timer = setTimeout(() => goto('/'), 3000);
+    return () => clearTimeout(timer);
+  });
 </script>
 
 <Seo title="Reset Password" />
 
-<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    {#if !showForm && !successMessage}
-      <!-- Error state if no token -->
-      <div class="text-center">
-        <div class="mx-auto h-12 w-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mb-4">
-          <svg class="text-red-600 dark:text-red-400 text-xl w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-          </svg>
+{#if successMessage}
+  <AuthCard
+    title="Password reset complete"
+    subtitle="Your password has been reset. You can now log in with your new password."
+  >
+    {#snippet media()}
+      <div class="glyph good" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+    {/snippet}
+
+    {#snippet children()}
+      <p class="hint" aria-live="polite">Redirecting you to the home page…</p>
+      <a class="btn-primary" href="/auth/login">Log in now</a>
+    {/snippet}
+  </AuthCard>
+{:else if !showForm}
+  <AuthCard
+    title="Invalid reset link"
+    subtitle="This password reset link is invalid or has expired."
+  >
+    {#snippet media()}
+      <div class="glyph bad" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="10.5" width="16" height="10" rx="2" />
+          <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+        </svg>
+      </div>
+    {/snippet}
+
+    {#snippet children()}
+      <a class="btn-primary" href="/auth/password-reset-request">Request a new link</a>
+      <div class="secondary-actions">
+        <a class="btn-ghost" href="/">Back to home</a>
+      </div>
+    {/snippet}
+  </AuthCard>
+{:else}
+  <AuthCard title="Set new password" subtitle="Enter your new password below">
+    {#snippet media()}
+      <div class="glyph" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="10.5" width="16" height="10" rx="2" />
+          <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+        </svg>
+      </div>
+    {/snippet}
+
+    {#snippet children()}
+      <!-- No `use:enhance`: the action is the whole flow, and a plain POST
+           means a reset still works with JS off. -->
+      <form class="pr-form" method="POST">
+        <div class="field">
+          <label for="email">Email</label>
+          <!-- Shown, not editable: the token is bound to this address, so
+               changing it here could only produce a confusing failure. -->
+          <input id="email" name="email" type="text" value={data.email} disabled autocomplete="email" />
         </div>
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Invalid Reset Link
-        </h2>
-        <p class="mt-4 text-gray-600 dark:text-gray-400">
-          This password reset link is invalid or has expired.
-        </p>
-      </div>
 
-      <div class="mt-8 space-y-4">
-        <a
-          href="/auth/password-reset-request"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-        >
-          Request New Reset Link
-        </a>
-        <a
-          href="/"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-        >
-          ← Back to Home
-        </a>
-      </div>
-    {/if}
-
-    {#if successMessage}
-      <!-- Success state -->
-      <div class="text-center">
-        <div class="mx-auto h-12 w-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
-          <svg class="text-green-600 dark:text-green-400 text-xl w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-          </svg>
+        <div class="field">
+          <label for="newPassword">New password</label>
+          <input
+            id="newPassword"
+            name="newPassword"
+            type="password"
+            required
+            placeholder="At least 8 characters"
+            autocomplete="new-password"
+          />
         </div>
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Password Reset Complete
-        </h2>
-        <p class="mt-4 text-gray-600 dark:text-gray-400">
-          Your password has been successfully reset. You can now log in with your new password.
-        </p>
-        <p class="mt-2 text-sm text-gray-500 dark:text-gray-500">
-          Redirecting you to the home page...
-        </p>
-      </div>
-    {/if}
 
-    {#if showForm}
-      <!-- Main form -->
-      <div>
-        <div class="mx-auto h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-          <svg class="text-blue-600 dark:text-blue-400 text-xl w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <h2 class="mt-6 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Set new password
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-          Enter your new password below
-        </p>
-      </div>
-
-      <form class="mt-8 space-y-6" method="POST">
-        <div class="space-y-4">
-          <!-- Email field (disabled) -->
-          <div>
-            <label for="email" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-              Email
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
-              </div>
-              <input
-                id="email"
-                name="email"
-                type="text"
-                value={data.email}
-                disabled
-                class="w-full px-4 py-3 pl-10 pr-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 opacity-50 cursor-not-allowed border-gray-300 dark:border-gray-600"
-                autocomplete="email"
-              />
-            </div>
-          </div>
-
-          <!-- New Password field -->
-          <div>
-            <label for="newPassword" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-              New Password
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <input
-                id="newPassword"
-                name="newPassword"
-                type="password"
-                required
-                placeholder="New password (min. 8 characters)"
-                class="w-full px-4 py-3 pl-10 pr-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500"
-                autocomplete="new-password"
-              />
-            </div>
-          </div>
-
-          <!-- Confirm Password field -->
-          <div>
-            <label for="confirmPassword" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-              Confirm New Password
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                placeholder="Confirm new password"
-                class="w-full px-4 py-3 pl-10 pr-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500"
-                autocomplete="new-password"
-              />
-            </div>
-          </div>
+        <div class="field">
+          <label for="confirmPassword">Confirm new password</label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            required
+            placeholder="Re-enter your new password"
+            autocomplete="new-password"
+          />
         </div>
 
         {#if errorMessage}
-          <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
-            <p class="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
-          </div>
+          <ErrorBanner message={errorMessage} />
         {/if}
 
-        <div class="text-xs text-gray-500 dark:text-gray-400">
-          <p>Password requirements:</p>
-          <ul class="list-disc list-inside mt-1 space-y-1">
-            <li>At least 8 characters long</li>
-            <li>Both passwords must match</li>
-          </ul>
-        </div>
+        <p class="requirements">At least 8 characters, and both fields must match.</p>
 
-        <div>
-          <button
-            type="submit"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
-            Reset Password
-          </button>
-        </div>
-
-        <div class="text-center">
-          <a
-            href="/"
-            class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
-          >
-            ← Back to Home
-          </a>
-        </div>
+        <button type="submit" class="btn-primary">Reset password</button>
       </form>
-    {/if}
-  </div>
-</div>
+    {/snippet}
+
+    {#snippet footer()}
+      Remembered it? <a href="/auth/login">Sign in</a>
+    {/snippet}
+  </AuthCard>
+{/if}
+
+<style>
+  .glyph {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--weeb-radius-full);
+    background: color-mix(in oklch, var(--weeb-accent) 16%, transparent);
+    color: var(--weeb-accent-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .glyph.good {
+    background: color-mix(in oklch, var(--weeb-green) 15%, transparent);
+    color: var(--weeb-green);
+  }
+
+  .glyph.bad {
+    background: color-mix(in oklch, var(--weeb-red) 15%, transparent);
+    color: var(--weeb-red);
+  }
+
+  .pr-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .requirements {
+    font-size: 12px;
+    color: var(--weeb-fg-muted);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .hint {
+    font-size: 12.5px;
+    color: var(--weeb-fg-muted);
+    text-align: center;
+    line-height: 1.5;
+    margin: 0 0 16px;
+  }
+
+  .btn-primary {
+    width: 100%;
+    height: 46px;
+    background: var(--weeb-accent);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    letter-spacing: 0.01em;
+    border: none;
+    border-radius: var(--weeb-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .btn-primary:hover { background: var(--weeb-accent-hover); }
+  .btn-primary:active { transform: scale(0.99); }
+
+  .secondary-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .btn-ghost {
+    width: 100%;
+    height: 42px;
+    background: var(--weeb-surface);
+    color: var(--weeb-fg-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    border: 1px solid var(--weeb-border);
+    border-radius: var(--weeb-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .btn-ghost:hover {
+    background: var(--weeb-surface-hover);
+    color: var(--weeb-fg);
+  }
+</style>

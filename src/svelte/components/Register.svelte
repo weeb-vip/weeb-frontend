@@ -1,341 +1,117 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
-  // until hydration completes, a submit would be a native form POST
-  // that sveltekit rejects (no form actions) — keep the button inert
-  let hydrated = false;
-  onMount(() => { hydrated = true; });
-
+  import AuthCard from './AuthCard.svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
   import FormInput from './FormInput.svelte';
-  import type { RegisterInput } from '../../gql/graphql';
-  import debug from '../../utils/debug';
-  import { useRegister } from '../services/queries';
+  import { RegisterBloc } from './Register.bloc.svelte';
 
-  let formData: RegisterInput & { confirmPassword: string } = {
-    username: '',
-    password: '',
-    confirmPassword: ''
-  };
-  let errorMessage = '';
-  let validationErrors: Record<string, string> = {};
-  // the address submitted, kept so the redirect can carry it even though the
-  // form is cleared before navigation
-  let submittedEmail = '';
+  /**
+   * The sign-up page.
+   *
+   * A view over `RegisterBloc`: it owns the fields, the rules (shared with the
+   * modal's register mode) and where a new account goes next. The shell is
+   * `AuthCard`, the same one every auth screen sits in.
+   */
+  let { bloc = new RegisterBloc() }: { bloc?: RegisterBloc } = $props();
 
-  const registerMutation = useRegister();
-
-  // Registration succeeds into a dedicated screen rather than an inline alert
-  // under an emptied form — the verification step was too easy to miss there.
-  $: if ($registerMutation.isSuccess) {
-    debug.success('Registration successful!');
-    errorMessage = '';
-    const email = submittedEmail;
-    formData = { username: '', password: '', confirmPassword: '' };
-    goto(`/auth/check-email?email=${encodeURIComponent(email)}`);
-  }
-
-  $: if ($registerMutation.isError) {
-    debug.error('Registration failed', $registerMutation.error);
-    let errorMsg = 'Registration failed. Please try again.';
-
-    if ($registerMutation.error?.message?.includes('already exists') || $registerMutation.error?.message?.includes('exists')) {
-      errorMsg = 'An account with this email already exists. Please try logging in or use a different email.';
-    } else if ($registerMutation.error?.message?.includes('invalid email') || $registerMutation.error?.message?.includes('email')) {
-      errorMsg = 'Please enter a valid email address.';
-    } else if ($registerMutation.error?.message?.includes('password')) {
-      errorMsg = 'Password requirements not met. Please ensure it\'s at least 6 characters long.';
-    } else if ($registerMutation.error?.message?.includes('network') || $registerMutation.error?.message?.includes('fetch')) {
-      errorMsg = 'Network error. Please check your connection and try again.';
-    } else if ($registerMutation.error?.message) {
-      errorMsg = $registerMutation.error.message;
-    }
-
-    errorMessage = errorMsg;
-  }
-
-  function validateForm() {
-    const errors: Record<string, string> = {};
-
-    if (!formData.username.trim()) {
-      errors.username = 'Email is required';
-    } else if (formData.username.length < 3) {
-      errors.username = 'Email must be at least 3 characters';
-    }
-
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
-    }
-
-    if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-
-    validationErrors = errors;
-    return Object.keys(errors).length === 0;
-  }
-
-  function handleInputChange(detail: { value: string; originalEvent: Event }) {
-    const { value, originalEvent } = detail;
-    const target = originalEvent?.target as HTMLInputElement;
-
-    if (!target) return;
-
-    const name = target.name;
-
-    formData = {
-      ...formData,
-      [name]: value
-    };
-
-    // Clear validation error when user starts typing
-    if (validationErrors[name]) {
-      validationErrors = { ...validationErrors, [name]: '' };
-    }
-    // Clear messages
-    if (errorMessage) {
-      errorMessage = '';
-    }
-  }
+  // See Login: the submit stays inert until the form can be handled in JS.
+  onMount(() => bloc.markHydrated());
 
   function handleSubmit(event: Event) {
     event.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    errorMessage = '';
-    submittedEmail = formData.username;
-    const data: RegisterInput = { username: formData.username, password: formData.password };
-
-    // Use the reactive mutation pattern like the modal
-    $registerMutation.mutate(data);
+    void bloc.submit();
   }
-
-  $: isLoading = $registerMutation.isPending;
 </script>
 
-<!-- Animated background -->
-<div class="page-bg"></div>
-
-<main class="main">
-  <div class="auth-wrapper">
-
-    <!-- Logo block -->
-    <a href="/" class="logo-block" aria-label="weeb.vip - back to homepage">
-      <div class="logo-mark">
-        <svg width="24" height="24" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-          <path d="M4 5L8.5 16L11 10L13.5 16L18 5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="11" cy="11" r="1.2" fill="white" opacity="0.7"/>
-        </svg>
-      </div>
-      <span class="logo-wordmark">weeb.vip</span>
-    </a>
-
-    <!-- Card -->
-    <div class="card">
-      <div class="card-header">
-        <h1 class="card-title">Create account</h1>
-        <p class="card-subtitle">Join the community</p>
+<AuthCard title="Create account" subtitle="Join the community">
+  {#snippet children()}
+    <form class="register-form" onsubmit={handleSubmit} novalidate>
+      <div class="field">
+        <FormInput
+          id="username"
+          name="username"
+          type="email"
+          value={bloc.username}
+          onInput={(detail) => bloc.updateField('username', detail.value)}
+          placeholder="you@example.com"
+          label="Email"
+          error={bloc.validationErrors.username}
+          required
+        />
+        <!-- Sets the expectation before submitting, so the check-email screen
+             that follows is expected rather than a surprise. -->
+        {#if !bloc.validationErrors.username}
+          <p class="field-hint">We'll send a link here to confirm it's yours.</p>
+        {/if}
       </div>
 
-      <form on:submit={handleSubmit} novalidate>
+      <div class="field">
+        <FormInput
+          id="password"
+          name="password"
+          type="password"
+          value={bloc.password}
+          onInput={(detail) => bloc.updateField('password', detail.value)}
+          placeholder="At least 6 characters"
+          label="Password"
+          error={bloc.validationErrors.password}
+          required
+          showPasswordToggle={true}
+        />
 
-        <!-- Email -->
-        <div class="field">
-          <FormInput
-            id="username"
-            name="username"
-            type="email"
-            value={formData.username}
-            onInput={handleInputChange}
-            placeholder="you@example.com"
-            label="Email"
-            error={validationErrors.username}
-            required
-          />
-          {#if !validationErrors.username}
-            <p class="field-hint">We'll send a link here to confirm it's yours.</p>
-          {/if}
-        </div>
-
-        <!-- Password -->
-        <div class="field">
-          <FormInput
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onInput={handleInputChange}
-            placeholder="At least 6 characters"
-            label="Password"
-            error={validationErrors.password}
-            required
-            showPasswordToggle={true}
-          />
-
-          <!-- Password strength indicator -->
-          {#if formData.password.length > 0}
-            {@const strength = formData.password.length >= 12 && /[A-Z]/.test(formData.password) && /[0-9]/.test(formData.password) && /[^A-Za-z0-9]/.test(formData.password) ? 'strong' : formData.password.length >= 8 && /[A-Z]/.test(formData.password) ? 'medium' : formData.password.length >= 6 ? 'weak' : 'none'}
-            <div class="strength-wrap" data-level={strength} aria-live="polite">
-              <div class="strength-bars">
-                <div class="strength-bar"></div>
-                <div class="strength-bar"></div>
-                <div class="strength-bar"></div>
-                <div class="strength-bar"></div>
-              </div>
-              <span class="strength-label">
-                {#if strength === 'weak'}Weak{:else if strength === 'medium'}Medium{:else if strength === 'strong'}Strong{/if}
-              </span>
+        {#if bloc.showStrength}
+          <div class="strength-wrap" data-level={bloc.strength} aria-live="polite">
+            <div class="strength-bars">
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
             </div>
-          {/if}
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="field">
-          <FormInput
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            value={formData.confirmPassword}
-            onInput={handleInputChange}
-            placeholder="Re-enter your password"
-            label="Confirm password"
-            error={validationErrors.confirmPassword}
-            required
-            showPasswordToggle={true}
-          />
-        </div>
-
-        {#if errorMessage}
-          <div class="alert alert-error">
-            <p>{errorMessage}</p>
+            <span class="strength-label">{bloc.strengthLabel}</span>
           </div>
         {/if}
-
-        <!-- Submit -->
-        <button
-          type="submit"
-          class="btn-primary"
-          class:loading={isLoading}
-          disabled={isLoading || !hydrated}
-        >
-          <span class="btn-label">Create account</span>
-          {#if isLoading}
-            <span class="spinner" aria-hidden="true"></span>
-          {/if}
-        </button>
-
-      </form>
-
-      <!-- Card footer -->
-      <div class="card-footer">
-        Already have an account? <a href="/auth/login">Log in</a>
       </div>
-    </div>
 
-  </div>
-</main>
+      <div class="field">
+        <FormInput
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          value={bloc.confirmPassword}
+          onInput={(detail) => bloc.updateField('confirmPassword', detail.value)}
+          placeholder="Re-enter your password"
+          label="Confirm password"
+          error={bloc.validationErrors.confirmPassword}
+          required
+          showPasswordToggle={true}
+        />
+      </div>
+
+      {#if bloc.errorMessage}
+        <ErrorBanner message={bloc.errorMessage} />
+      {/if}
+
+      <button
+        type="submit"
+        class="btn-primary"
+        class:loading={bloc.isSubmitting}
+        disabled={!bloc.canSubmit}
+      >
+        <span class="btn-label">Create account</span>
+        {#if bloc.isSubmitting}
+          <span class="spinner" aria-hidden="true"></span>
+        {/if}
+      </button>
+    </form>
+  {/snippet}
+
+  {#snippet footer()}
+    Already have an account? <a href="/auth/login">Log in</a>
+  {/snippet}
+</AuthCard>
 
 <style>
-  /* --- Animated background --- */
-  .page-bg {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background: linear-gradient(135deg,
-      oklch(16% 0.025 280),
-      oklch(14% 0.015 270),
-      oklch(15% 0.02 295));
-    background-size: 400% 400%;
-    animation: bgShift 30s ease infinite;
-  }
-
-  @keyframes bgShift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-  }
-
-  /* --- Main layout --- */
-  .main {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 16px 40px;
-  }
-
-  .auth-wrapper {
-    width: 100%;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 32px;
-  }
-
-  /* --- Logo block --- */
-  .logo-block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .logo-mark {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--weeb-accent), var(--weeb-violet, oklch(62% 0.14 300)));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .logo-wordmark {
-    font-family: ui-monospace, 'JetBrains Mono', Menlo, monospace;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--weeb-fg);
-  }
-
-  /* --- Card --- */
-  .card {
-    width: 100%;
-    background: var(--weeb-bg-elevated);
-    border: 1px solid var(--weeb-border);
-    border-radius: 12px;
-    padding: 36px;
-    box-shadow: 0 4px 24px oklch(0% 0 0 / 0.3), 0 1px 3px oklch(0% 0 0 / 0.2);
-  }
-
-  .card-header {
-    margin-bottom: 28px;
-    text-align: center;
-  }
-
-  .card-title {
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--weeb-fg);
-    margin-bottom: 4px;
-  }
-
-  .card-subtitle {
-    font-size: 14px;
-    color: var(--weeb-fg-muted);
-  }
-
-  /* --- Form layout --- */
-  form {
+  .register-form {
     display: flex;
     flex-direction: column;
     gap: 18px;
@@ -345,6 +121,13 @@
     display: flex;
     flex-direction: column;
     gap: 0;
+  }
+
+  .field-hint {
+    font-size: 12px;
+    color: var(--weeb-fg-muted);
+    line-height: 1.45;
+    margin-top: 6px;
   }
 
   /* --- Password strength indicator --- */
@@ -364,62 +147,39 @@
     flex: 1;
     height: 4px;
     background: var(--weeb-border);
-    border-radius: 99px;
+    border-radius: var(--weeb-radius-full);
     transition: background 0.25s;
   }
 
   .strength-label {
     font-size: 11px;
     color: var(--weeb-fg-muted);
-    font-family: ui-monospace, 'JetBrains Mono', Menlo, monospace;
+    font-family: var(--weeb-font-mono);
     letter-spacing: 0.04em;
   }
 
-  /* Strength levels */
-  .strength-wrap[data-level="weak"] .strength-bar:nth-child(1) {
+  .strength-wrap[data-level='weak'] .strength-bar:nth-child(1) {
     background: var(--weeb-red);
   }
-  .strength-wrap[data-level="weak"] .strength-label {
+  .strength-wrap[data-level='weak'] .strength-label {
     color: var(--weeb-red);
   }
 
-  .strength-wrap[data-level="medium"] .strength-bar:nth-child(1),
-  .strength-wrap[data-level="medium"] .strength-bar:nth-child(2) {
-    background: var(--weeb-amber, oklch(72% 0.14 85));
+  .strength-wrap[data-level='medium'] .strength-bar:nth-child(1),
+  .strength-wrap[data-level='medium'] .strength-bar:nth-child(2) {
+    background: var(--weeb-amber);
   }
-  .strength-wrap[data-level="medium"] .strength-label {
-    color: var(--weeb-amber, oklch(72% 0.14 85));
+  .strength-wrap[data-level='medium'] .strength-label {
+    color: var(--weeb-amber);
   }
 
-  .strength-wrap[data-level="strong"] .strength-bar:nth-child(1),
-  .strength-wrap[data-level="strong"] .strength-bar:nth-child(2),
-  .strength-wrap[data-level="strong"] .strength-bar:nth-child(3) {
+  .strength-wrap[data-level='strong'] .strength-bar:nth-child(1),
+  .strength-wrap[data-level='strong'] .strength-bar:nth-child(2),
+  .strength-wrap[data-level='strong'] .strength-bar:nth-child(3) {
     background: var(--weeb-green);
   }
-  .strength-wrap[data-level="strong"] .strength-label {
+  .strength-wrap[data-level='strong'] .strength-label {
     color: var(--weeb-green);
-  }
-
-  /* --- Alert messages --- */
-  .alert {
-    font-size: 13px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid;
-  }
-
-  .alert-error {
-    color: var(--weeb-red);
-    background: oklch(20% 0.03 25 / 0.5);
-    border-color: var(--weeb-red, oklch(60% 0.18 25));
-  }
-
-  /* --- Field hint --- */
-  .field-hint {
-    font-size: 12px;
-    color: var(--weeb-fg-muted);
-    line-height: 1.45;
-    margin-top: 6px;
   }
 
   /* --- Submit button --- */
@@ -433,7 +193,7 @@
     font-weight: 600;
     letter-spacing: 0.01em;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--weeb-radius);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -444,22 +204,10 @@
     overflow: hidden;
   }
 
-  .btn-primary:hover:not(:disabled) {
-    background: var(--weeb-accent-hover);
-  }
-
-  .btn-primary:active:not(:disabled) {
-    transform: scale(0.99);
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .btn-primary.loading .btn-label {
-    opacity: 0;
-  }
+  .btn-primary:hover:not(:disabled) { background: var(--weeb-accent-hover); }
+  .btn-primary:active:not(:disabled) { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary.loading .btn-label { opacity: 0; }
 
   .spinner {
     display: block;
@@ -468,44 +216,12 @@
     height: 18px;
     border: 2px solid oklch(100% 0 0 / 0.3);
     border-top-color: white;
-    border-radius: 50%;
+    border-radius: var(--weeb-radius-full);
     animation: spin 0.7s linear infinite;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  /* --- Card footer --- */
-  .card-footer {
-    text-align: center;
-    font-size: 14px;
-    color: var(--weeb-fg-muted);
-    margin-top: 20px;
-  }
-
-  .card-footer a {
-    color: var(--weeb-accent-text);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.15s;
-  }
-
-  .card-footer a:hover {
-    color: var(--weeb-accent-hover);
-    text-decoration: underline;
-  }
-
-  /* --- Responsive --- */
-  @media (max-width: 480px) {
-    .main {
-      padding: 40px 16px 24px;
-    }
-    .card {
-      padding: 24px;
-    }
-    .card-title {
-      font-size: 20px;
-    }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 2s; }
   }
 </style>

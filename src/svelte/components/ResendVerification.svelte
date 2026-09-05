@@ -1,182 +1,149 @@
 <script lang="ts">
-  import { faUser, faArrowLeft, faEnvelope } from '@fortawesome/free-solid-svg-icons';
-  import Fa from 'svelte-fa';
+  import { onDestroy } from 'svelte';
+  import { faUser } from '@fortawesome/free-solid-svg-icons';
+  import AuthCard from './AuthCard.svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
+  import FormInput from './FormInput.svelte';
+  import { ResendVerificationBloc } from './ResendVerification.bloc.svelte';
+
+  /**
+   * The standalone "send me another verification link" page.
+   *
+   * A view over `ResendVerificationBloc`, which shares its send with the
+   * banners on the login form, the modal and the check-email screen.
+   */
+  let { bloc = new ResendVerificationBloc() }: { bloc?: ResendVerificationBloc } = $props();
 
   const iconUser = faUser;
-  const iconArrowLeft = faArrowLeft;
-  const iconEnvelope = faEnvelope;
-  import FormInput from './FormInput.svelte';
-  import Button from './Button.svelte';
-  import { useResendVerificationEmail } from '../services/queries';
-  import debug from '../../utils/debug';
 
-  let formData = {
-    username: ''
-  };
-  let errorMessage = '';
-  let successMessage = '';
-
-  const resendMutation = useResendVerificationEmail();
-
-  // Handle resend state changes
-  $: if ($resendMutation.isSuccess) {
-    debug.success('Verification email resent successfully');
-    successMessage = 'Verification email sent! Please check your inbox and spam folder.';
-    errorMessage = '';
-    formData = { username: '' };
-  }
-
-  $: if ($resendMutation.isError) {
-    debug.error('Failed to resend verification email', $resendMutation.error);
-    let errorMsg = 'Failed to send verification email. Please try again.';
-
-    if ($resendMutation.error?.message?.includes('User not found') || $resendMutation.error?.message?.includes('not found')) {
-      errorMsg = 'No account found with this email address. Please check and try again.';
-    } else if ($resendMutation.error?.message?.includes('already verified') || $resendMutation.error?.message?.includes('verified')) {
-      errorMsg = 'Your email is already verified. You can proceed to login.';
-    } else if ($resendMutation.error?.message?.includes('network') || $resendMutation.error?.message?.includes('fetch')) {
-      errorMsg = 'Network error. Please check your connection and try again.';
-    } else if ($resendMutation.error?.message) {
-      errorMsg = $resendMutation.error.message;
-    }
-
-    errorMessage = errorMsg;
-    successMessage = '';
-  }
-
-  function handleInputChange(detail: { value: string; originalEvent: Event }) {
-    const { value, originalEvent } = detail;
-    const target = originalEvent?.target as HTMLInputElement;
-
-    if (!target) return;
-
-    const name = target.name;
-    formData = {
-      ...formData,
-      [name]: value
-    };
-
-    // Clear messages when user starts typing
-    if (errorMessage) {
-      errorMessage = '';
-    }
-    if (successMessage) {
-      successMessage = '';
-    }
-  }
+  onDestroy(() => bloc.dispose());
 
   function handleSubmit(event: Event) {
     event.preventDefault();
-
-    if (!formData.username.trim()) {
-      errorMessage = 'Please enter your email address.';
-      return;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.username)) {
-      errorMessage = 'Please enter a valid email address.';
-      return;
-    }
-
-    errorMessage = '';
-    successMessage = '';
-    $resendMutation.mutate({ username: formData.username });
+    void bloc.submit();
   }
-
-  $: isLoading = $resendMutation.isPending;
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-weeb-bg-elevated py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <div>
-      <div class="flex justify-center">
-        <img
-          class="h-12 w-auto"
-          src="/assets/icons/logo6-rev-sm_sm.png"
-          alt="Weeb VIP"
-          on:error={(e) => {
-            (e.currentTarget as HTMLElement).style.display = 'none';
-          }}
-        />
-      </div>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-weeb-fg text-weeb-fg">
-        Resend Email Verification
-      </h2>
-      <p class="mt-2 text-center text-sm text-weeb-fg-muted">
-        Enter your email address to receive a new verification link
-      </p>
-    </div>
+<AuthCard>
+  {#snippet children()}
+    <!-- The heading lives in the body rather than in AuthCard's `title` so it
+         stays an <h2>: the e2e suite pins this page by that tag. -->
+    <header class="rv-header">
+      <h2 class="rv-title">Resend Email Verification</h2>
+      <p class="rv-subtitle">Enter your email address to receive a new verification link</p>
+    </header>
 
-    <form class="mt-8 space-y-6" on:submit={handleSubmit}>
-      <div class="space-y-4">
-        <FormInput
-          id="username"
-          name="username"
-          type="email"
-          value={formData.username}
-          onInput={handleInputChange}
-          placeholder="Email address"
-          label="Email address"
-          icon={iconUser}
-          required
-        />
-      </div>
+    <form class="rv-form" onsubmit={handleSubmit} novalidate>
+      <FormInput
+        id="username"
+        name="username"
+        type="email"
+        value={bloc.username}
+        onInput={(detail) => bloc.updateField('username', detail.value)}
+        placeholder="Email address"
+        label="Email address"
+        icon={iconUser}
+        required
+      />
 
-      {#if errorMessage}
-        <div class="bg-weeb-red/10 border border-weeb-red/30 rounded-md p-3">
-          <p class="text-sm text-weeb-red">{errorMessage}</p>
-        </div>
+      {#if bloc.errorMessage}
+        <ErrorBanner message={bloc.errorMessage} />
       {/if}
 
-      {#if successMessage}
-        <div class="bg-weeb-green/10 border border-weeb-green rounded-md p-3">
-          <div class="flex items-center">
-            <Fa icon={iconEnvelope} class="text-weeb-green mr-2" />
-            <p class="text-sm text-weeb-green">{successMessage}</p>
-          </div>
-        </div>
+      {#if bloc.successMessage}
+        <ErrorBanner severity="success" message={bloc.successMessage} />
       {/if}
 
-      <div>
-        <Button
-          color="blue"
-          label="Send Verification Email"
-          onClick={() => {}}
-          showLabel={true}
-          status={isLoading ? 'loading' : 'idle'}
-          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md"
-        />
-      </div>
-
-      <div class="text-center space-y-2">
-        <p class="text-sm text-weeb-fg-muted">
-          Already verified?{' '}
-          <a
-            href="/auth/login"
-            class="text-weeb-accent-text hover:text-weeb-accent-text transition-colors"
-          >
-            Sign in here
-          </a>
-        </p>
-        <p class="text-sm text-weeb-fg-muted">
-          Need help?{' '}
-          <a
-            href="/auth/password-reset-request"
-            class="text-weeb-accent-text hover:text-weeb-accent-text transition-colors"
-          >
-            Reset your password
-          </a>
-        </p>
-        <a
-          href="/"
-          class="text-sm text-weeb-fg-muted hover:text-weeb-fg transition-colors inline-flex items-center"
-        >
-          <Fa icon={iconArrowLeft} class="mr-2" />
-          Back to Home
-        </a>
-      </div>
+      <button
+        type="submit"
+        class="btn-primary"
+        class:loading={bloc.isSubmitting}
+        disabled={bloc.isSubmitting}
+      >
+        <span class="btn-label">Send Verification Email</span>
+        {#if bloc.isSubmitting}
+          <span class="spinner" aria-hidden="true"></span>
+        {/if}
+      </button>
     </form>
-  </div>
-</div>
+  {/snippet}
+
+  {#snippet footer()}
+    <p class="rv-link">Already verified? <a href="/auth/login">Sign in here</a></p>
+    <p class="rv-link">Need help? <a href="/auth/password-reset-request">Reset your password</a></p>
+  {/snippet}
+</AuthCard>
+
+<style>
+  .rv-header {
+    margin-bottom: 28px;
+    text-align: center;
+  }
+
+  .rv-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--weeb-fg);
+    margin: 0 0 4px;
+  }
+
+  .rv-subtitle {
+    font-size: 14px;
+    color: var(--weeb-fg-muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .rv-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .rv-link {
+    margin: 0 0 4px;
+  }
+
+  .btn-primary {
+    width: 100%;
+    height: 46px;
+    margin-top: 4px;
+    background: var(--weeb-accent);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: none;
+    border-radius: var(--weeb-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary:hover:not(:disabled) { background: var(--weeb-accent-hover); }
+  .btn-primary:active:not(:disabled) { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary.loading .btn-label { opacity: 0; }
+
+  .spinner {
+    display: block;
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid oklch(100% 0 0 / 0.3);
+    border-top-color: white;
+    border-radius: var(--weeb-radius-full);
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 2s; }
+  }
+</style>
