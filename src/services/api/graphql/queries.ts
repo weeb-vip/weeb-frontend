@@ -111,6 +111,7 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
                     type
                     startDate
                     animeStatus
+                    seasonNumber
                 }
             }
             duration
@@ -232,6 +233,7 @@ export const getAnimeDetailsBySlug = graphql(/* GraphQL */`
                     type
                     startDate
                     animeStatus
+                    seasonNumber
                 }
             }
             duration
@@ -596,6 +598,31 @@ export const mutateMarkChapterRead = graphql(/* GraphQL */`
 export const mutateUnmarkChapterRead = graphql(/* GraphQL */`
     mutation UnmarkChapterRead($input: MarkChapterInput!) {
         UnmarkChapterRead(input: $input)
+    }
+`)
+
+export const getAnimeBySeriesId = graphql(/* GraphQL */`
+    query getAnimeBySeriesId($id: String!) {
+        animeBySeriesId(id: $id) {
+            id
+            slug
+            titleEn
+            titleJp
+            imageUrl
+            type
+            startDate
+            endDate
+            episodeCount
+            animeStatus
+            seasonNumber
+            tags
+            description
+            rating
+            userAnime {
+                id
+                status
+            }
+        }
     }
 `)
 

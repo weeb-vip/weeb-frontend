@@ -1,6 +1,6 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
-  import { getYearUTC } from '../../services/utils';
+  import { getYearUTC, seasonLabel, seriesLinkFor, collapseSeasonParts } from '../../services/utils';
 
   /** RelatedAnime entries: { relation, anime }. */
   export let related: any[] = [];
@@ -42,6 +42,13 @@
       sameSeries.push({ ...current, isCurrent: true });
     }
 
+    // A season split across two cours is one season, so the timeline lists only
+    // the original of each. The anime being viewed is kept whatever it is: on
+    // the page for a Part 2, the reader still has to see where they are.
+    if (sameSeries) {
+      byKind.set('SAME_SERIES', collapseSeasonParts(sameSeries, current ? [current.id] : []));
+    }
+
     const kinds = [...byKind.keys()].sort((a, b) => {
       const ai = ORDER.indexOf(a), bi = ORDER.indexOf(b);
       return (ai === -1 ? ORDER.length : ai) - (bi === -1 ? ORDER.length : bi);
@@ -65,6 +72,10 @@
     return `/anime/${entry.slug || entry.id}`;
   }
 
+  // Shared with the hero's season label, which links to the same page: two
+  // copies of "which entry names this series" would eventually disagree.
+  $: seriesLink = seriesLinkFor(current);
+
   /** TV is the through-line of a series; everything else hangs off it. */
   function isMainEntry(type: string | null | undefined): boolean {
     return (type || '').toLowerCase() === 'tv';
@@ -74,9 +85,23 @@
 {#each groups as group (group.kind)}
   {#if group.items.length > 1 || group.kind !== 'SAME_SERIES'}
     <div class="rel-group">
-      <h3 class="rel-group-heading">{group.heading}</h3>
+      <div class="rel-group-head">
+        <h3 class="rel-group-heading">{group.heading}</h3>
+        <!-- Only beside the same-series list: it is the one group that is a
+             timeline of a single thing, and so the only one a series page
+             could show more of. -->
+        {#if group.kind === 'SAME_SERIES' && seriesLink}
+          <a class="rel-group-link" href={seriesLink}>View all seasons &rarr;</a>
+        {/if}
+      </div>
       <ul class="rel-list">
         {#each group.items as entry (entry.id)}
+          <!-- Not when it would repeat the type chip verbatim. A season-0 entry
+               already typed "Special" would otherwise read "Special Special";
+               "TV Special" differs from "Special" and keeps both, because there
+               the two words are saying different things. -->
+          {@const seasonText = seasonLabel(entry.seasonNumber)}
+          {@const season = seasonText.toLowerCase() === (entry.type || '').toLowerCase() ? '' : seasonText}
           <li class="rel-item" class:current={entry.isCurrent}>
             <svelte:element
               this={entry.isCurrent ? 'div' : 'a'}
@@ -98,6 +123,13 @@
                   {#if entry.type}
                     <span class="rel-type" class:main={isMainEntry(entry.type)}>{entry.type}</span>
                   {/if}
+                  <!-- Which run of the series this entry is. The reason the
+                       list is worth reading in order, so it earns the accent
+                       the type chip does not. Absent for most of the
+                       catalogue, and rendered as nothing when so. -->
+                  {#if season}
+                    <span class="rel-season">{season}</span>
+                  {/if}
                   {#if entry.isCurrent}
                     <span class="rel-here">You are here</span>
                   {/if}
@@ -114,6 +146,33 @@
 <style>
   .rel-group + .rel-group {
     margin-top: 20px;
+  }
+
+  .rel-group-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  /* The heading owns the spacing above the list; inside the head row it is one
+     of two baseline-aligned items, so its own margin would push the row apart. */
+  .rel-group-head .rel-group-heading {
+    margin-bottom: 0;
+  }
+
+  .rel-group-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--weeb-accent-text, var(--weeb-fg));
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .rel-group-link:hover,
+  .rel-group-link:focus-visible {
+    text-decoration: underline;
   }
 
   .rel-group-heading {
@@ -220,6 +279,17 @@
   .rel-type.main {
     background: color-mix(in oklch, var(--weeb-accent) 18%, transparent);
     color: var(--weeb-accent-text, var(--weeb-fg));
+  }
+
+  /* Accent text on no background, where the TV chip is accent text on a filled
+     one. Same colour ties it to the season line on the show page; the missing
+     fill keeps the two apart on a card that shows both. */
+  .rel-season {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--weeb-accent-text, var(--weeb-fg));
+    white-space: nowrap;
   }
 
   .rel-here {
