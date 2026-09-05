@@ -11,115 +11,49 @@
     Where it deliberately differs: a work has no schedule. The anime hero earns
     its second panel with a countdown, and there is nothing here that is
     time-sensitive, so the aside is gone and the panel stands alone.
+
+    A view over the bloc: what the page is made of — cover and banner
+    candidates, credits, stats, adaptations — is the bloc's call; this renders
+    it and owns the treatment.
   */
   import SafeImage from './SafeImage.svelte';
   import PosterGrid from './PosterGrid.svelte';
   import PosterCard from './PosterCard.svelte';
-  import { getSafeImageUrl } from '../utils/image';
+  import EmptyState from './EmptyState.svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
   import WorkStatusControl from './WorkStatusControl.svelte';
   import ChapterProgress from './ChapterProgress.svelte';
   import { GetImageFromAnime } from '../../services/utils';
-  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
-  import { readableWorkType } from '../../utils/workDisplay';
+  import { MangaContentBloc, type Work } from './MangaContent.bloc.svelte';
 
-  export let work: any = null;
-  export let ssrError: string | null = null;
-
-  const readableType = readableWorkType;
-
-  function yearOf(value: string | null | undefined): string | null {
-    if (!value) return null;
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : String(parsed.getUTCFullYear());
-  }
-
-  /** "1997 – 2008", "1997 – ongoing", or "1997". Runs to a year rather than a
-      date: a publication that spans a decade is not made clearer by its day. */
-  function published(from: string | null | undefined, to: string | null | undefined, status: string | null | undefined): string | null {
-    const start = yearOf(from);
-    if (!start) return null;
-    const end = yearOf(to);
-    if (end && end !== start) return `${start} – ${end}`;
-    if (end) return start;
-    // No end date and still running reads as ongoing; no end date on a finished
-    // work means we simply do not know, and inventing a dash implies we do.
-    return status && status.toLowerCase().includes('publish') ? `${start} – ongoing` : start;
-  }
-
-  /** Thousands separators on counts. The design system sets every number the
-      product is accountable for in mono; grouping is what makes six figures
-      scannable at that size. */
-  function grouped(value: number | null | undefined): string | null {
-    return value === null || value === undefined ? null : value.toLocaleString('en-US');
-  }
-
-  $: title = work?.titleEn || work?.titleJp || 'Untitled';
-  $: hasJapaneseTitle = work?.titleJp && work.titleJp !== work?.titleEn;
-  // The cover, from our CDN under /works/<id> — the same path anime posters
-  // take. imageUrl on the record is MyAnimeList's own host and is kept only as
-  // the last fallback, for a work whose cover image-sync has not fetched yet.
-  $: coverSources = work
-    ? [getSafeImageUrl(work.id, 'works'), work.imageUrl].filter(Boolean) as string[]
-    : [];
-  $: adaptations = work?.adaptations ?? [];
-
-  /*
-    The banner behind the hero.
-
-    A work's own art is a 2:3 cover, and a portrait doing a wide banner's job has
-    to be scaled past the frame and blurred to avoid hard edges -- which is a
-    fallback, not a design. An adaptation has real wide key art, synced from
-    TheTVDB under banners/<anime id>, so when one exists the page uses it and
-    shows artwork rather than a smear of colour.
-
-    The oldest adaptation, which is what the query returns first. A work with
-    several is being adapted repeatedly, and the first one is the one its
-    audience recognises.
-  */
-  $: bannerAnime = adaptations.length > 0 ? adaptations[0] : null;
-  $: heroSources = (bannerAnime
-    ? [getSafeImageUrl(bannerAnime.id, 'banners'), getSafeImageUrl(bannerAnime.id), ...coverSources]
-    : coverSources) as string[];
-
-  // Which source actually won decides the treatment, rather than which one was
-  // offered: a missing banner falls through to the poster and then the cover,
-  // and a portrait shown at banner treatment looks like a mistake.
-  let heroIsBanner = false;
-  function handleHeroChosen(detail: { src: string | null; reason: string }) {
-    heroIsBanner = typeof detail?.src === 'string' && detail.src.includes('/banners/');
-  }
-  $: authors = (work?.authors ?? []) as string[];
-  $: publishedRange = published(work?.publishedFrom, work?.publishedTo, work?.status);
-  // Volumes and chapters are facts about the work. Score and ranked are shown
-  // because the anime pages already show both and a reader arriving from one
-  // expects the same measure.
-  //
-  // Members and favourites are deliberately absent. They are MyAnimeList's
-  // community counts, and rendered here unlabelled they read as weeb.vip's own
-  // -- we have no such number. They are also the one thing this product says it
-  // does not do: the neighbouring sites compete on community, and this one does
-  // not follow them there.
-  $: facts = [
-    { label: 'Volumes', value: grouped(work?.volumes) },
-    { label: 'Chapters', value: grouped(work?.chapters) },
-    { label: 'Score', value: work?.score != null ? Number(work.score).toFixed(2) : null },
-    { label: 'Ranked', value: work?.ranking != null ? `#${grouped(work.ranking)}` : null }
-  ].filter((f) => f.value !== null && f.value !== undefined);
+  let {
+    work = null,
+    ssrError = null,
+    /**
+     * Defaults to a bloc reading this component's props, so the route call site
+     * is unchanged and the server frame already has its facts and credits.
+     */
+    bloc = new MangaContentBloc({ source: () => ({ work, ssrError }) }),
+  }: {
+    work?: Work | null;
+    ssrError?: string | null;
+    bloc?: MangaContentBloc;
+  } = $props();
 </script>
 
-{#if ssrError}
+{#if bloc.ssrError}
   <div class="state">
-    <h1 class="state-title">This page could not load</h1>
-    <p class="state-body">{ssrError}</p>
-    <a class="state-action" href="/">Back to home</a>
+    <ErrorBanner message="This page could not load" detail={bloc.ssrError}>
+      <a class="state-action" href="/">Back to home</a>
+    </ErrorBanner>
   </div>
-{:else if work}
+{:else if bloc.work}
   <article class="work">
-    <section class="hero" aria-label="{title} overview">
-      {#if heroSources.length > 0}
-        <div class="hero-bg" class:hero-bg--banner={heroIsBanner} aria-hidden="true">
+    <section class="hero" aria-label="{bloc.title} overview">
+      {#if bloc.heroSources.length > 0}
+        <div class="hero-bg" class:hero-bg--banner={bloc.heroIsBanner} aria-hidden="true">
           <SafeImage
-            sources={heroSources}
+            sources={bloc.heroSources}
             alt=""
             loading="eager"
             priority={true}
@@ -127,7 +61,7 @@
             perTryTimeoutMs={3000}
             className="hero-bg-img"
             style=""
-            onChosen={handleHeroChosen}
+            onChosen={(detail) => bloc.heroChosen(detail)}
           />
         </div>
       {/if}
@@ -139,7 +73,7 @@
           <div class="hero-identity">
             <div class="hero-cover">
               <SafeImage
-                sources={coverSources}
+                sources={bloc.coverSources}
                 alt=""
                 className="hero-cover-img"
                 fallbackSrc="/assets/not found.jpg"
@@ -147,9 +81,9 @@
               />
             </div>
             <div class="hero-identity-text">
-              <h1 class="hero-title">{title}</h1>
-              {#if hasJapaneseTitle}
-                <p class="hero-title-jp" lang="ja">{work.titleJp}</p>
+              <h1 class="hero-title">{bloc.title}</h1>
+              {#if bloc.japaneseTitle}
+                <p class="hero-title-jp" lang="ja">{bloc.japaneseTitle}</p>
               {/if}
             </div>
           </div>
@@ -159,47 +93,34 @@
                  an anime page. Until now a manga page was somewhere to read
                  about a work and nowhere to put it. -->
             <div class="hero-track">
-              <WorkStatusControl workId={work.id} userWork={work.userWork ?? null} />
-              {#if work.userWork}
+              <WorkStatusControl workId={bloc.work.id ?? ''} userWork={bloc.work.userWork ?? null} />
+              {#if bloc.work.userWork}
                 <ChapterProgress
-                  workId={work.id}
-                  totalChapters={work.chapters ?? null}
-                  userWork={work.userWork}
+                  workId={bloc.work.id ?? ''}
+                  totalChapters={bloc.work.chapters ?? null}
+                  userWork={bloc.work.userWork}
                 />
               {/if}
             </div>
 
             <p class="hero-meta">
-              {readableType(work.type)}
-              {#if publishedRange}<span class="dot" aria-hidden="true">·</span><span class="num">{publishedRange}</span>{/if}
-              {#if work.status}<span class="dot" aria-hidden="true">·</span>{work.status}{/if}
+              {#each bloc.metaLine as part, i (i)}
+                {#if i > 0}<span class="dot" aria-hidden="true">·</span>{/if}
+                <span class:num={part.mono}>{part.label}</span>
+              {/each}
             </p>
 
-            {#if authors.length > 0 || work.serialization || work.demographic}
+            {#if bloc.credits.length > 0}
               <!-- A definition list on a two-column grid, so the values line up
                    on one edge whatever the labels measure. "Author",
                    "Serialised in" and "Aimed at" are three different widths, and
                    inline labels left the values starting at three different
-                   places.
-
-                   Three plain nouns. "Ran in" and "Serialised in" both describe
-                   the relationship instead of naming the thing, and neither
-                   tells a reader that Afternoon is a magazine -- which is the
-                   only fact they were missing. A label that needs explaining is
-                   the wrong label. -->
+                   places. -->
               <dl class="hero-credits">
-                {#if authors.length > 0}
-                  <dt class="credit-label">{authors.length > 1 ? 'Authors' : 'Author'}</dt>
-                  <dd class="credit-value">{authors.join(', ')}</dd>
-                {/if}
-                {#if work.serialization}
-                  <dt class="credit-label">Magazine</dt>
-                  <dd class="credit-value">{work.serialization}</dd>
-                {/if}
-                {#if work.demographic}
-                  <dt class="credit-label">Audience</dt>
-                  <dd class="credit-value">{work.demographic}</dd>
-                {/if}
+                {#each bloc.credits as credit (credit.label)}
+                  <dt class="credit-label">{credit.label}</dt>
+                  <dd class="credit-value">{credit.value}</dd>
+                {/each}
               </dl>
             {/if}
           </div>
@@ -207,10 +128,10 @@
       </div>
     </section>
 
-    {#if facts.length > 0}
+    {#if bloc.facts.length > 0}
       <div class="facts">
         <dl class="facts-inner">
-          {#each facts as fact}
+          {#each bloc.facts as fact (fact.label)}
             <div class="fact">
               <dt class="fact-label">{fact.label}</dt>
               <dd class="fact-value">{fact.value}</dd>
@@ -221,28 +142,28 @@
     {/if}
 
     <div class="body">
-      {#if work.synopsis}
+      {#if bloc.synopsis}
         <section class="section" aria-labelledby="synopsis-heading">
           <h2 class="section-title" id="synopsis-heading">Synopsis</h2>
-          <p class="synopsis">{work.synopsis}</p>
+          <p class="synopsis">{bloc.synopsis}</p>
         </section>
       {/if}
 
       <section class="section" aria-labelledby="adaptations-heading">
         <h2 class="section-title" id="adaptations-heading">Anime adaptations</h2>
-        {#if adaptations.length > 0}
+        {#if bloc.adaptations.length > 0}
           <PosterGrid>
-            {#each adaptations as anime (anime.id)}
+            {#each bloc.adaptations as anime (anime.id)}
               <PosterCard
                 id={anime.id}
                 slug={anime.slug}
-                title={getAnimeTitle(anime, $preferencesStore.titleLanguage)}
+                title={bloc.adaptationTitle(anime)}
                 image={GetImageFromAnime(anime)}
                 score={anime.rating}
                 status={anime.animeStatus}
                 genres={anime.tags || []}
                 episodeCount={anime.episodeCount}
-                sub={yearOf(anime.startDate) || ''}
+                sub={bloc.adaptationSubtitle(anime)}
               />
             {/each}
           </PosterGrid>
@@ -251,9 +172,12 @@
                than there are anime made from one, so most works genuinely have
                no adaptation and the page should say so plainly rather than
                apologise or leave a hole where a grid was. -->
-          <p class="empty">
-            No anime has been made from this {readableType(work.type).toLowerCase()} — or none that we know of yet.
-          </p>
+          <EmptyState
+            variant="panel"
+            size="compact"
+            message={bloc.noAdaptationsMessage}
+            class="adaptations-empty"
+          />
         {/if}
       </section>
     </div>
@@ -509,7 +433,8 @@
 
   /* ---- body ---- */
   .body {
-    padding: var(--weeb-section-py, 40px) var(--weeb-section-px, 48px) calc(var(--weeb-section-py, 40px) * 2);
+    padding: var(--weeb-section-py, 40px) var(--weeb-section-px, 48px)
+      calc(var(--weeb-section-py, 40px) * 2);
     display: flex;
     flex-direction: column;
     gap: calc(var(--weeb-section-py, 40px));
@@ -528,16 +453,13 @@
     max-width: 70ch;
     white-space: pre-line;
   }
-  .empty {
-    margin: 0;
-    padding: 20px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--weeb-fg-secondary);
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius, 8px);
+  /* The shared EmptyState centres its copy across the full row; here it stands
+     in a text column, so it is pulled back to the measure of the synopsis
+     above it rather than floating in the middle of a wide page. */
+  .section :global(.adaptations-empty) {
     max-width: 70ch;
+    align-items: flex-start;
+    text-align: left;
   }
 
   /* ---- error state ---- */
@@ -552,19 +474,8 @@
     text-align: center;
     background: var(--weeb-bg);
   }
-  .state-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0;
-    color: var(--weeb-fg);
-  }
-  .state-body {
-    margin: 0;
-    font-size: 14px;
-    color: var(--weeb-fg-secondary);
-    max-width: 60ch;
-  }
   .state-action {
+    display: inline-block;
     margin-top: 8px;
     padding: 7px 18px;
     border-radius: var(--weeb-radius, 8px);
@@ -580,11 +491,19 @@
   }
 
   @media (max-width: 1024px) {
-    .hero-panel { max-width: none; }
+    .hero-panel {
+      max-width: none;
+    }
   }
   @media (max-width: 640px) {
-    .hero-cover { flex-basis: 92px; }
-    .hero-identity { gap: 14px; }
-    .facts-inner { gap: 8px 20px; }
+    .hero-cover {
+      flex-basis: 92px;
+    }
+    .hero-identity {
+      gap: 14px;
+    }
+    .facts-inner {
+      gap: 8px 20px;
+    }
   }
 </style>

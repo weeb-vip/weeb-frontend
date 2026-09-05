@@ -1,68 +1,30 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
-  import { getYearUTC } from '../../services/utils';
-
-  export let staff: any;
-  export let ssrError: string | null = null;
-
-  type FilterKey = 'all' | 'main' | 'supporting';
-
-  let filter: FilterKey = 'all';
-
-  $: name = `${staff?.givenName ?? ''} ${staff?.familyName ?? ''}`.trim();
-  $: roles = staff?.roles ?? [];
-
-  function isMain(role: string | null | undefined): boolean {
-    const r = (role || '').toLowerCase();
-    return r.includes('main') || r.includes('protagonist');
-  }
+  import EmptyState from './EmptyState.svelte';
+  import ErrorBanner from './ErrorBanner.svelte';
+  import Tabs from './Tabs.svelte';
+  import { VoiceActorPageBloc, type Staff } from './VoiceActorPage.bloc.svelte';
 
   /**
-   * Counted over roles, not anime. A voice actor can hold two credits in one
-   * title -- a lead and a one-scene bit part -- and collapsing those to "1
-   * anime" would understate the work. The anime count is reported separately.
-   */
-  $: mainCount = roles.filter((r: any) => isMain(r.character?.role)).length;
-  $: supportingCount = roles.length - mainCount;
-  $: animeCount = new Set(roles.filter((r: any) => r.anime).map((r: any) => r.anime.id)).size;
-
-  $: filterOptions = [
-    { key: 'all' as FilterKey, label: 'All', count: roles.length },
-    { key: 'main' as FilterKey, label: 'Main', count: mainCount },
-    { key: 'supporting' as FilterKey, label: 'Supporting', count: supportingCount }
-  ].filter((o) => o.count > 0);
-
-  // Already ordered newest-first by the API, so filtering preserves that and
-  // there is nothing to re-sort here.
-  $: filteredRoles = roles.filter((r: any) => {
-    if (filter === 'all') return true;
-    return filter === 'main' ? isMain(r.character?.role) : !isMain(r.character?.role);
-  });
-
-  /**
-   * Roles are revealed a page at a time rather than all at once.
+   * A voice actor's page: who they are, and everything they have voiced.
    *
-   * Every card loads a character portrait from the CDN, and a prolific voice
-   * actor has enough credits to put that well past the browser's six
-   * connections per host: rendering all 117 of Mary Elizabeth McGlynn's roles
-   * left 234 images still pending after eight seconds, because SafeImage
-   * preloads in JS and its per-attempt timeouts pile up behind the queue.
-   * A page of 24 keeps the first screen instant, and the rest arrive as they
-   * are scrolled to.
+   * A view over the bloc: the credits, the counts, the active filter and how
+   * much of the list is revealed are its calls; this renders them and owns the
+   * IntersectionObserver that asks for the next page.
    */
-  const PAGE_SIZE = 24;
-  let visibleCount = PAGE_SIZE;
-
-  // Reset on filter change, or switching to a filter would keep an expansion
-  // the reader never asked for on the new, shorter list.
-  $: if (filter) visibleCount = PAGE_SIZE;
-
-  $: visibleRoles = filteredRoles.slice(0, visibleCount);
-  $: remaining = filteredRoles.length - visibleRoles.length;
-
-  function showMore() {
-    visibleCount += PAGE_SIZE;
-  }
+  let {
+    staff = null,
+    ssrError = null,
+    /**
+     * Defaults to a bloc reading this component's props, so the route call site
+     * is unchanged and the server frame already has the first page of roles.
+     */
+    bloc = new VoiceActorPageBloc({ source: () => ({ staff, ssrError }) }),
+  }: {
+    staff?: Staff | null;
+    ssrError?: string | null;
+    bloc?: VoiceActorPageBloc;
+  } = $props();
 
   /**
    * Auto-advance when the sentinel scrolls into view. The button stays in the
@@ -73,73 +35,54 @@
     if (typeof IntersectionObserver === 'undefined') return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) showMore();
+        if (entries.some((entry) => entry.isIntersecting)) bloc.showMore();
       },
-      { rootMargin: '400px' }
+      { rootMargin: '400px' },
     );
     observer.observe(node);
     return { destroy: () => observer.disconnect() };
   }
-
-  /**
-   * The scraped profile fields are usually empty strings rather than nulls, so
-   * every one of these needs a truthiness check or the page renders a column of
-   * labels with nothing beside them.
-   */
-  $: details = [
-    { label: 'Language', value: staff?.language },
-    { label: 'Born', value: staff?.birthday },
-    { label: 'Birthplace', value: staff?.birthPlace },
-    { label: 'Blood type', value: staff?.bloodType },
-    { label: 'Hobbies', value: staff?.hobbies }
-  ].filter((d) => d.value);
-
-  function animeHref(anime: any): string {
-    // Falls back to the id for anime the slug backfill has not reached; the
-    // /anime route resolves both.
-    return `/anime/${anime.slug || anime.id}`;
-  }
 </script>
 
-{#if ssrError}
+{#if bloc.ssrError}
   <div class="va-error">
-    Could not load this voice actor right now. Please try again.
+    <ErrorBanner message="Could not load this voice actor right now. Please try again." />
   </div>
 {:else}
   <div class="va-root">
     <header class="va-header">
       <div class="va-portrait">
         <SafeImage
-          src={staff.id}
+          src={bloc.staff?.id ?? undefined}
           path="staff"
-          alt={name}
+          alt={bloc.name}
           className="va-portrait-img"
-          placeholderTitle={name}
+          placeholderTitle={bloc.name}
           priority={true}
         />
       </div>
 
       <div class="va-identity">
         <p class="va-eyebrow">Voice actor</p>
-        <h1 class="va-name">{name}</h1>
+        <h1 class="va-name">{bloc.name}</h1>
 
-        {#if roles.length > 0}
+        {#if bloc.roles.length > 0}
           <p class="va-stats">
-            <span class="va-stat-figure">{roles.length}</span>
-            {roles.length === 1 ? 'role' : 'roles'}
+            <span class="va-stat-figure">{bloc.roles.length}</span>
+            {bloc.roles.length === 1 ? 'role' : 'roles'}
             <span class="va-stat-sep">·</span>
-            <span class="va-stat-figure">{animeCount}</span>
-            {animeCount === 1 ? 'anime' : 'anime'}
-            {#if mainCount > 0}
+            <span class="va-stat-figure">{bloc.animeCount}</span>
+            anime
+            {#if bloc.mainCount > 0}
               <span class="va-stat-sep">·</span>
-              <span class="va-stat-figure">{mainCount}</span> main
+              <span class="va-stat-figure">{bloc.mainCount}</span> main
             {/if}
           </p>
         {/if}
 
-        {#if details.length > 0}
+        {#if bloc.details.length > 0}
           <dl class="va-details">
-            {#each details as detail}
+            {#each bloc.details as detail (detail.label)}
               <div class="va-detail">
                 <dt>{detail.label}</dt>
                 <dd>{detail.value}</dd>
@@ -148,8 +91,8 @@
           </dl>
         {/if}
 
-        {#if staff.summary}
-          <p class="va-summary">{staff.summary}</p>
+        {#if bloc.summary}
+          <p class="va-summary">{bloc.summary}</p>
         {/if}
       </div>
     </header>
@@ -157,25 +100,23 @@
     <section class="va-roles" aria-labelledby="roles-heading">
       <div class="va-roles-head">
         <h2 class="va-section-heading" id="roles-heading">Roles</h2>
-        {#if filterOptions.length > 1}
-          <div class="va-filters">
-            {#each filterOptions as option}
-              <button
-                class="va-filter-pill"
-                class:active={filter === option.key}
-                aria-pressed={filter === option.key}
-                on:click={() => (filter = option.key)}
-              >
-                {option.label}
-                <span class="va-filter-count">{option.count}</span>
-              </button>
-            {/each}
-          </div>
+        {#if bloc.showFilters}
+          <Tabs
+            variant="pill"
+            items={bloc.filterOptions}
+            value={bloc.filter}
+            onChange={(value) => bloc.selectFilter(value)}
+            ariaLabel="Filter roles"
+          />
         {/if}
       </div>
 
-      {#if visibleRoles.length === 0}
-        <p class="va-empty">No roles recorded for {name} yet.</p>
+      {#if bloc.visibleRoles.length === 0}
+        <EmptyState
+          size="compact"
+          message="No roles recorded for {bloc.name} yet."
+          class="va-empty"
+        />
       {:else}
         <ul class="va-role-grid">
           <!--
@@ -184,20 +125,20 @@
             and belongs in the list once per credit; keying on name would
             collapse three Motoko Kusanagi credits into one card.
           -->
-          {#each visibleRoles as entry (entry.character.id)}
+          {#each bloc.visibleRoles as entry (entry.character.id)}
             <li class="va-role-card">
               <div class="va-role-character">
                 <div class="va-char-portrait">
                   <SafeImage
-                    src={entry.character.id}
+                    src={entry.character.id ?? undefined}
                     path="characters"
-                    alt={entry.character.name}
+                    alt={entry.character.name ?? ''}
                     className="va-char-portrait-img"
                   />
                 </div>
                 <div class="va-char-text">
                   <p class="va-char-name">{entry.character.name}</p>
-                  <span class="va-char-role" class:main={isMain(entry.character.role)}>
+                  <span class="va-char-role" class:main={bloc.isMain(entry.character.role)}>
                     {entry.character.role}
                   </span>
                 </div>
@@ -207,11 +148,11 @@
                 <!-- No poster thumbnail here. It would double the page's image
                      count for a 30px crop that identifies nothing the title
                      does not; the title and year carry the anime. -->
-                <a class="va-role-anime" href={animeHref(entry.anime)}>
+                <a class="va-role-anime" href={bloc.hrefFor(entry.anime)}>
                   <span class="va-anime-title">
                     {entry.anime.titleEn || entry.anime.titleJp}
                   </span>
-                  <span class="va-anime-year">{getYearUTC(entry.anime.startDate)}</span>
+                  <span class="va-anime-year">{bloc.yearFor(entry.anime)}</span>
                 </a>
               {:else}
                 <!-- Characters are not cascade-deleted with their anime, so a
@@ -222,11 +163,11 @@
           {/each}
         </ul>
 
-        {#if remaining > 0}
+        {#if bloc.remaining > 0}
           <div class="va-more" use:autoLoad>
-            <button class="va-more-button" on:click={showMore}>
-              Show {Math.min(remaining, PAGE_SIZE)} more
-              <span class="va-more-count">{remaining} left</span>
+            <button class="va-more-button" onclick={() => bloc.showMore()}>
+              Show {bloc.nextRevealSize} more
+              <span class="va-more-count">{bloc.remaining} left</span>
             </button>
           </div>
         {/if}
@@ -247,8 +188,6 @@
   .va-error {
     width: 100%;
     padding: 48px var(--weeb-section-px, 48px);
-    color: var(--weeb-fg-secondary);
-    font-size: 15px;
   }
 
   /* ── Header ── */
@@ -371,44 +310,13 @@
     color: var(--weeb-fg);
   }
 
-  .va-filters {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .va-filter-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 6px 14px;
-    border-radius: var(--weeb-radius-full, 9999px);
-    border: 1px solid var(--weeb-border);
-    background: transparent;
-    color: var(--weeb-fg-secondary);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-  }
-  .va-filter-pill:hover {
-    border-color: var(--weeb-accent);
-    color: var(--weeb-fg);
-  }
-  .va-filter-pill.active {
-    background: var(--weeb-accent);
-    border-color: var(--weeb-accent);
-    color: var(--weeb-fg);
-  }
-  .va-filter-count {
-    font-size: 11px;
-    font-weight: 700;
-    opacity: 0.75;
-  }
-
-  .va-empty {
-    margin: 0;
-    font-size: 14px;
-    color: var(--weeb-fg-muted);
+  /* The shared EmptyState centres itself over the full row; this one sits
+     under a left-aligned heading, so it is pulled back into that column. */
+  .va-roles :global(.va-empty) {
+    padding-left: 0;
+    padding-right: 0;
+    align-items: flex-start;
+    text-align: left;
   }
 
   .va-role-grid {
@@ -469,6 +377,7 @@
        line would make the cards ragged. */
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

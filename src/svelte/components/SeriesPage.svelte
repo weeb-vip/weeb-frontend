@@ -2,159 +2,84 @@
   import PosterCard from './PosterCard.svelte';
   import PosterGrid from './PosterGrid.svelte';
   import KeyArtStage from './KeyArtStage.svelte';
-  import { GetImageFromAnime, getYearUTC, collapseSeasonParts } from '../../services/utils';
-  import { preferencesStore, getAnimeTitle } from '../stores/preferences';
-
-  /** Every anime sharing the series id, oldest first as the API returns them. */
-  export let entries: any[] = [];
-  export let seriesTitle: string = 'Series';
-  export let ssrError: string | null = null;
+  import ErrorBanner from './ErrorBanner.svelte';
+  import EmptyState from './EmptyState.svelte';
+  import { GetImageFromAnime } from '../../services/utils';
+  import { SeriesPageBloc, type SeriesEntry } from './SeriesPage.bloc.svelte';
 
   /**
-   * One group per season, then everything the derivation could not place.
+   * Every anime sharing a series id, laid out season by season.
    *
-   * Three buckets rather than one list, because they answer different
-   * questions. The numbered seasons are the show in order -- what someone
-   * arriving from "Season 4" came to see. Season 0 is TheTVDB's specials, which
-   * belong to the series but not to its run. And the unplaced entries are the
-   * honest remainder: most of the catalogue has no derived season, and a page
-   * that quietly dropped them would claim a series is smaller than it is.
+   * A view over the bloc: it decides the grouping, the summary line and which
+   * entry's key art stands for the series; this renders them.
    */
-  // A season split across two cours is one season, so only the original of
-  // each is listed. See collapseSeasonParts for why the rule is the TheTVDB
-  // season rather than the title.
-  $: shown = collapseSeasonParts(entries);
-
-  $: groups = (() => {
-    const numbered = new Map<number, any[]>();
-    const specials: any[] = [];
-    const unplaced: any[] = [];
-
-    for (const entry of shown) {
-      const season = entry?.seasonNumber;
-      if (season === null || season === undefined) {
-        unplaced.push(entry);
-      } else if (season === 0) {
-        specials.push(entry);
-      } else {
-        if (!numbered.has(season)) numbered.set(season, []);
-        numbered.get(season)!.push(entry);
-      }
-    }
-
-    const byDate = (a: any, b: any) => {
-      if (!a.startDate && !b.startDate) return 0;
-      if (!a.startDate) return 1;
-      if (!b.startDate) return -1;
-      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-    };
-
-    const out = [...numbered.keys()]
-      .sort((a, b) => a - b)
-      .map((season) => ({
-        key: `s${season}`,
-        heading: `Season ${season}`,
-        items: numbered.get(season)!.slice().sort(byDate)
-      }));
-
-    if (specials.length) {
-      out.push({ key: 'specials', heading: 'Specials', items: specials.slice().sort(byDate) });
-    }
-    if (unplaced.length) {
-      // Not "Unknown". The season is unknown; these entries are not, and most
-      // of them are films and shorts that never belonged to a numbered run.
-      out.push({ key: 'other', heading: 'Other entries', items: unplaced.slice().sort(byDate) });
-    }
-
-    return out;
-  })();
-
-  $: seasonCount = groups.filter((g) => g.key.startsWith('s')).length;
-
-  // Assembled here rather than from inline {#if} blocks in the markup, which
-  // swallowed the spaces around them and rendered "13 entriesacross 5 seasons".
-  $: summary = [
-    `${shown.length} ${shown.length === 1 ? 'entry' : 'entries'}`,
-    seasonCount > 0 ? `across ${seasonCount} ${seasonCount === 1 ? 'season' : 'seasons'}` : '',
-  ]
-    .filter(Boolean)
-    .join(' ') + (years ? ` \u00b7 ${years}` : '');
-
-  // The span the series covers, from the entries we can date. One year when
-  // everything landed in the same one, rather than "2016 – 2016".
-  $: years = (() => {
-    const all = shown
-      .map((e) => getYearUTC(e.startDate))
-      .filter((y) => y && y !== 'TBA')
-      .sort();
-    if (all.length === 0) return '';
-    return all[0] === all[all.length - 1] ? all[0] : `${all[0]} – ${all[all.length - 1]}`;
-  })();
-
-  /**
-   * The entry whose artwork stands for the series: its first season.
-   *
-   * The earliest TV entry, which is also the one that names the series -- the
-   * same anchor the URL and the page title use, so the banner cannot end up
-   * showing one thing while the heading says another. Falls back to the
-   * earliest of anything for series that never had a TV run.
-   */
-  $: anchor = (() => {
-    const byDate = [...shown].sort((a, b) => {
-      if (!a.startDate && !b.startDate) return 0;
-      if (!a.startDate) return 1;
-      if (!b.startDate) return -1;
-      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-    });
-
-    return byDate.find((e) => (e.type || '').toLowerCase() === 'tv') || byDate[0];
-  })();
-
-  function entrySub(entry: any): string {
-    const year = getYearUTC(entry.startDate);
-    const type = entry.type || '';
-    return [year, type].filter(Boolean).join(' · ');
-  }
+  let {
+    /** Every anime sharing the series id, oldest first as the API returns them. */
+    entries = [],
+    seriesTitle = 'Series',
+    ssrError = null,
+    /**
+     * Defaults to a bloc reading this component's props, so the call site is
+     * unchanged and the first (server) frame already has its groups.
+     */
+    bloc = new SeriesPageBloc({ source: () => ({ entries, seriesTitle, ssrError }) }),
+  }: {
+    entries?: SeriesEntry[];
+    seriesTitle?: string;
+    ssrError?: string | null;
+    bloc?: SeriesPageBloc;
+  } = $props();
 </script>
 
 <div class="series-page">
-  {#if ssrError}
-    <p class="series-error">{ssrError}</p>
+  {#if bloc.ssrError}
+    <div class="series-error">
+      <ErrorBanner message="Couldn’t load this series." detail={bloc.ssrError} />
+    </div>
   {:else}
     <!-- Half height, not the show page's full viewport. There the artwork is
          the subject; here the subject is the list, and a full-screen banner
          would push every season below the fold on the one page whose whole job
          is showing them together. -->
-    <KeyArtStage imageId={anchor?.id} minHeight="clamp(300px, 46svh, 520px)">
+    <KeyArtStage imageId={bloc.anchorImageId} minHeight="clamp(300px, 46svh, 520px)">
       <header class="page-header">
         <p class="page-eyebrow">Series</p>
-        <h1 class="page-title">{seriesTitle}</h1>
-        <p class="series-summary">{summary}</p>
+        <h1 class="page-title">{bloc.seriesTitle}</h1>
+        <p class="series-summary">{bloc.summary}</p>
       </header>
     </KeyArtStage>
 
     <div class="series-body">
-    {#each groups as group (group.key)}
-      <section class="series-group" aria-label={group.heading}>
-        <h2 class="series-group-heading">{group.heading}</h2>
-        <PosterGrid>
-          {#each group.items as entry (entry.id)}
-            <PosterCard
-              id={entry.id}
-              slug={entry.slug}
-              title={getAnimeTitle(entry, $preferencesStore.titleLanguage)}
-              image={GetImageFromAnime(entry)}
-              status={entry.animeStatus || null}
-              sub={entrySub(entry)}
-              genres={entry.tags || []}
-              description={entry.description || ''}
-              episodeCount={entry.episodeCount}
-              onList={entry.userAnime?.status || null}
-            />
-          {/each}
-        </PosterGrid>
-      </section>
-    {/each}
+      {#each bloc.groups as group (group.key)}
+        <section class="series-group" aria-label={group.heading}>
+          <h2 class="series-group-heading">{group.heading}</h2>
+          <PosterGrid>
+            {#each group.items as entry (entry.id)}
+              <PosterCard
+                id={entry.id ?? ''}
+                slug={entry.slug}
+                title={bloc.titleFor(entry)}
+                image={GetImageFromAnime(entry)}
+                status={entry.animeStatus || null}
+                sub={bloc.subtitleFor(entry)}
+                genres={entry.tags || []}
+                description={entry.description || ''}
+                episodeCount={entry.episodeCount}
+                onList={entry.userAnime?.status || null}
+              />
+            {/each}
+          </PosterGrid>
+        </section>
+      {:else}
+        <!-- A series id that resolves to nothing. Rare, but it is a real answer
+             rather than a failure, so it says so instead of leaving the page
+             blank under the banner. -->
+        <EmptyState
+          heading="Nothing in this series yet"
+          message="No entries have been linked to this series."
+          action={{ label: 'Browse anime', href: '/search', variant: 'ghost' }}
+        />
+      {/each}
     </div>
   {/if}
 </div>
@@ -212,7 +137,7 @@
   }
 
   .series-error {
-    color: var(--weeb-fg-muted);
+    padding: var(--weeb-section-py, 40px) var(--weeb-section-px, 48px);
   }
 
   @media (max-width: 768px) {

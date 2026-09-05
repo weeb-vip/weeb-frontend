@@ -5,21 +5,23 @@
   import WorksBrowsePage from '../../svelte/components/WorksBrowsePage.svelte';
   import { shelfLabel } from '../../services/api/graphql/works';
 
-  export let data;
+  let { data }: { data: any } = $props();
 
   const SITE_URL = 'https://weeb.vip';
   const canonical = `${SITE_URL}/light-novels`;
 
-  $: pageTitle = data.sort
-    ? `Light novels · ${shelfLabel(data.sort)}${data.page > 1 ? ` — page ${data.page}` : ''}`
-    : 'Light novels';
+  const pageTitle = $derived(
+    data.sort
+      ? `Light novels · ${shelfLabel(data.sort)}${data.page > 1 ? ` — page ${data.page}` : ''}`
+      : 'Light novels'
+  );
 
-  $: schemas = [
+  const schemas = $derived([
     breadcrumbSchema([
       { name: 'Home', url: `${SITE_URL}/` },
       { name: 'Light novels', url: canonical }
     ])
-  ];
+  ]);
 </script>
 
 <Seo
