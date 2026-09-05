@@ -111,6 +111,7 @@ export const getAnimeDetailsByID = graphql(/* GraphQL */`
                     type
                     startDate
                     animeStatus
+                    seasonNumber
                 }
             }
             duration
@@ -232,6 +233,7 @@ export const getAnimeDetailsBySlug = graphql(/* GraphQL */`
                     type
                     startDate
                     animeStatus
+                    seasonNumber
                 }
             }
             duration

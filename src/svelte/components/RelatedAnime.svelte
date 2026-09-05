@@ -1,6 +1,6 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
-  import { getYearUTC } from '../../services/utils';
+  import { getYearUTC, seasonLabel } from '../../services/utils';
 
   /** RelatedAnime entries: { relation, anime }. */
   export let related: any[] = [];
@@ -77,6 +77,12 @@
       <h3 class="rel-group-heading">{group.heading}</h3>
       <ul class="rel-list">
         {#each group.items as entry (entry.id)}
+          <!-- Not when it would repeat the type chip verbatim. A season-0 entry
+               already typed "Special" would otherwise read "Special Special";
+               "TV Special" differs from "Special" and keeps both, because there
+               the two words are saying different things. -->
+          {@const seasonText = seasonLabel(entry.seasonNumber)}
+          {@const season = seasonText.toLowerCase() === (entry.type || '').toLowerCase() ? '' : seasonText}
           <li class="rel-item" class:current={entry.isCurrent}>
             <svelte:element
               this={entry.isCurrent ? 'div' : 'a'}
@@ -97,6 +103,13 @@
                   <span class="rel-year">{getYearUTC(entry.startDate)}</span>
                   {#if entry.type}
                     <span class="rel-type" class:main={isMainEntry(entry.type)}>{entry.type}</span>
+                  {/if}
+                  <!-- Which run of the series this entry is. The reason the
+                       list is worth reading in order, so it earns the accent
+                       the type chip does not. Absent for most of the
+                       catalogue, and rendered as nothing when so. -->
+                  {#if season}
+                    <span class="rel-season">{season}</span>
                   {/if}
                   {#if entry.isCurrent}
                     <span class="rel-here">You are here</span>
@@ -220,6 +233,17 @@
   .rel-type.main {
     background: color-mix(in oklch, var(--weeb-accent) 18%, transparent);
     color: var(--weeb-accent-text, var(--weeb-fg));
+  }
+
+  /* Accent text on no background, where the TV chip is accent text on a filled
+     one. Same colour ties it to the season line on the show page; the missing
+     fill keeps the two apart on a card that shows both. */
+  .rel-season {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--weeb-accent-text, var(--weeb-fg));
+    white-space: nowrap;
   }
 
   .rel-here {
