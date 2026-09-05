@@ -601,6 +601,31 @@ export const mutateUnmarkChapterRead = graphql(/* GraphQL */`
     }
 `)
 
+export const getAnimeBySeriesId = graphql(/* GraphQL */`
+    query getAnimeBySeriesId($id: String!) {
+        animeBySeriesId(id: $id) {
+            id
+            slug
+            titleEn
+            titleJp
+            imageUrl
+            type
+            startDate
+            endDate
+            episodeCount
+            animeStatus
+            seasonNumber
+            tags
+            description
+            rating
+            userAnime {
+                id
+                status
+            }
+        }
+    }
+`)
+
 export const getAnimeNewsByID = graphql(/* GraphQL */`
     query getAnimeNewsByID($id: ID!) {
         anime(id: $id) {

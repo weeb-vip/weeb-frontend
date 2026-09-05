@@ -38,6 +38,22 @@ export function getYearUTC(dateStr: string | null | undefined): string {
 }
 
 /**
+ * The URL of a series page.
+ *
+ * The TheTVDB id is the key and the slug is decoration: only the leading digits
+ * are parsed, so the readable half can change -- or be missing entirely -- and
+ * the link still resolves. That is deliberate. A series has no name of its own
+ * in our data, so the slug is borrowed from whichever entry currently opens it,
+ * and borrowing something mutable to build a permanent URL is only safe if the
+ * URL does not depend on it.
+ */
+export function seriesHref(seriesId: string | null | undefined, slug?: string | null): string {
+  if (!seriesId) return "";
+
+  return slug ? `/series/${seriesId}-${slug}` : `/series/${seriesId}`;
+}
+
+/**
  * Which season of its series an anime is, as a reader-facing label.
  *
  * Null and 0 are different answers and must not collapse: null is "we do not

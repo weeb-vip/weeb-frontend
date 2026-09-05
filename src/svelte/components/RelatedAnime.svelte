@@ -1,6 +1,6 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
-  import { getYearUTC, seasonLabel } from '../../services/utils';
+  import { getYearUTC, seasonLabel, seriesHref } from '../../services/utils';
 
   /** RelatedAnime entries: { relation, anime }. */
   export let related: any[] = [];
@@ -65,6 +65,24 @@
     return `/anime/${entry.slug || entry.id}`;
   }
 
+  /**
+   * The series page, when this anime belongs to one.
+   *
+   * The readable half of the URL is borrowed from the earliest TV entry --
+   * whichever entry gives the series its name -- and the list here already
+   * holds it, so nothing extra is fetched. Only the id is parsed on the way
+   * back in, so a stale slug still resolves.
+   */
+  $: seriesLink = (() => {
+    if (!current?.thetvdbid) return '';
+    const sameSeries = groups.find((g) => g.kind === 'SAME_SERIES');
+    if (!sameSeries) return '';
+    const anchor =
+      sameSeries.items.find((e: any) => isMainEntry(e.type)) ?? sameSeries.items[0];
+
+    return seriesHref(current.thetvdbid, anchor?.slug);
+  })();
+
   /** TV is the through-line of a series; everything else hangs off it. */
   function isMainEntry(type: string | null | undefined): boolean {
     return (type || '').toLowerCase() === 'tv';
@@ -74,7 +92,15 @@
 {#each groups as group (group.kind)}
   {#if group.items.length > 1 || group.kind !== 'SAME_SERIES'}
     <div class="rel-group">
-      <h3 class="rel-group-heading">{group.heading}</h3>
+      <div class="rel-group-head">
+        <h3 class="rel-group-heading">{group.heading}</h3>
+        <!-- Only beside the same-series list: it is the one group that is a
+             timeline of a single thing, and so the only one a series page
+             could show more of. -->
+        {#if group.kind === 'SAME_SERIES' && seriesLink}
+          <a class="rel-group-link" href={seriesLink}>View all seasons &rarr;</a>
+        {/if}
+      </div>
       <ul class="rel-list">
         {#each group.items as entry (entry.id)}
           <!-- Not when it would repeat the type chip verbatim. A season-0 entry
@@ -127,6 +153,33 @@
 <style>
   .rel-group + .rel-group {
     margin-top: 20px;
+  }
+
+  .rel-group-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  /* The heading owns the spacing above the list; inside the head row it is one
+     of two baseline-aligned items, so its own margin would push the row apart. */
+  .rel-group-head .rel-group-heading {
+    margin-bottom: 0;
+  }
+
+  .rel-group-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--weeb-accent-text, var(--weeb-fg));
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .rel-group-link:hover,
+  .rel-group-link:focus-visible {
+    text-decoration: underline;
   }
 
   .rel-group-heading {
