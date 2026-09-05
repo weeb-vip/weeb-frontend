@@ -1,6 +1,7 @@
 <script lang="ts">
   import PosterCard from './PosterCard.svelte';
   import PosterGrid from './PosterGrid.svelte';
+  import KeyArtStage from './KeyArtStage.svelte';
   import { GetImageFromAnime, getYearUTC } from '../../services/utils';
   import { preferencesStore, getAnimeTitle } from '../stores/preferences';
 
@@ -85,6 +86,25 @@
     return all[0] === all[all.length - 1] ? all[0] : `${all[0]} – ${all[all.length - 1]}`;
   })();
 
+  /**
+   * The entry whose artwork stands for the series: its first season.
+   *
+   * The earliest TV entry, which is also the one that names the series -- the
+   * same anchor the URL and the page title use, so the banner cannot end up
+   * showing one thing while the heading says another. Falls back to the
+   * earliest of anything for series that never had a TV run.
+   */
+  $: anchor = (() => {
+    const byDate = [...entries].sort((a, b) => {
+      if (!a.startDate && !b.startDate) return 0;
+      if (!a.startDate) return 1;
+      if (!b.startDate) return -1;
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
+
+    return byDate.find((e) => (e.type || '').toLowerCase() === 'tv') || byDate[0];
+  })();
+
   function entrySub(entry: any): string {
     const year = getYearUTC(entry.startDate);
     const type = entry.type || '';
@@ -96,12 +116,19 @@
   {#if ssrError}
     <p class="series-error">{ssrError}</p>
   {:else}
-    <header class="page-header">
-      <p class="page-eyebrow">Series</p>
-      <h1 class="page-title">{seriesTitle}</h1>
-      <p class="series-summary">{summary}</p>
-    </header>
+    <!-- Half height, not the show page's full viewport. There the artwork is
+         the subject; here the subject is the list, and a full-screen banner
+         would push every season below the fold on the one page whose whole job
+         is showing them together. -->
+    <KeyArtStage imageId={anchor?.id} minHeight="clamp(300px, 46svh, 520px)">
+      <header class="page-header">
+        <p class="page-eyebrow">Series</p>
+        <h1 class="page-title">{seriesTitle}</h1>
+        <p class="series-summary">{summary}</p>
+      </header>
+    </KeyArtStage>
 
+    <div class="series-body">
     {#each groups as group (group.key)}
       <section class="series-group" aria-label={group.heading}>
         <h2 class="series-group-heading">{group.heading}</h2>
@@ -123,18 +150,21 @@
         </PosterGrid>
       </section>
     {/each}
+    </div>
   {/if}
 </div>
 
 <style>
-  .series-page {
-    padding: 48px var(--weeb-section-px, 48px) 64px;
+  .series-body {
+    padding: 32px var(--weeb-section-px, 48px) 64px;
     max-width: 1600px;
     margin: 0 auto;
   }
 
+  /* No bottom margin: the stage's own below-fold band is the gap. */
   .page-header {
-    margin-bottom: 32px;
+    max-width: 1600px;
+    margin: 0 auto;
   }
 
   .page-eyebrow {
@@ -181,8 +211,8 @@
   }
 
   @media (max-width: 768px) {
-    .series-page {
-      padding: 24px 16px 48px;
+    .series-body {
+      padding: 20px 16px 48px;
     }
 
     .page-title {
