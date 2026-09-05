@@ -17,7 +17,7 @@
     sections,
     active,
     onSelect,
-    top = 'var(--weeb-nav-height, 60px)',
+    top = 'var(--weeb-nav-height)',
     height = $bindable(0),
   }: {
     sections: SectionTab[];
@@ -57,7 +57,7 @@
 
   .tab-bar-inner {
     width: 100%;
-    padding: 0 var(--weeb-section-px, 48px);
+    padding: 0 var(--weeb-section-px);
     display: flex;
     align-items: center;
   }

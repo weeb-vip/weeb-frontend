@@ -2,6 +2,7 @@
   import Seo from '$lib/Seo.svelte';
   import { goto } from '$app/navigation';
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
+  import Button from '$lib/components/primitives/Button.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import type { ActionData, PageData } from './$types';
 
@@ -44,7 +45,7 @@
 
     {#snippet children()}
       <p class="hint" aria-live="polite">Redirecting you to the home page…</p>
-      <a class="btn-primary" href="/auth/login">Log in now</a>
+      <Button size="lg" fullWidth href="/auth/login">Log in now</Button>
     {/snippet}
   </AuthCard>
 {:else if !showForm}
@@ -62,9 +63,9 @@
     {/snippet}
 
     {#snippet children()}
-      <a class="btn-primary" href="/auth/password-reset-request">Request a new link</a>
+      <Button size="lg" fullWidth href="/auth/password-reset-request">Request a new link</Button>
       <div class="secondary-actions">
-        <a class="btn-ghost" href="/">Back to home</a>
+        <Button color="transparent" fullWidth href="/">Back to home</Button>
       </div>
     {/snippet}
   </AuthCard>
@@ -120,7 +121,7 @@
 
         <p class="requirements">At least 8 characters, and both fields must match.</p>
 
-        <button type="submit" class="btn-primary">Reset password</button>
+        <Button type="submit" size="lg" fullWidth>Reset password</Button>
       </form>
     {/snippet}
 
@@ -164,6 +165,43 @@
     gap: 6px;
   }
 
+  /* The only auth screen with plain `<input>`s: it is a no-JS form action, so it
+     cannot use FormInput (which owns the value in a rune and has no
+     `autocomplete` passthrough). AuthCard used to style these globally, which is
+     what silently beat FormInput's error state everywhere else -- so the styling
+     lives here, scoped to this form, where it can reach nothing else. */
+  .field label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--weeb-fg-secondary);
+    letter-spacing: 0.01em;
+  }
+
+  .field input {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--weeb-fg);
+    background: var(--weeb-surface);
+    border: 1.5px solid var(--weeb-border);
+    border-radius: var(--weeb-radius);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .field input::placeholder {
+    color: var(--weeb-fg-muted);
+  }
+
+  .field input:focus {
+    border-color: var(--weeb-accent);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--weeb-accent) 20%, transparent);
+  }
+
   .field input:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -184,55 +222,10 @@
     margin: 0 0 16px;
   }
 
-  .btn-primary {
-    width: 100%;
-    height: 46px;
-    background: var(--weeb-accent);
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: inherit;
-    letter-spacing: 0.01em;
-    border: none;
-    border-radius: var(--weeb-radius);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: background 0.15s, transform 0.1s;
-  }
-
-  .btn-primary:hover { background: var(--weeb-accent-hover); }
-  .btn-primary:active { transform: scale(0.99); }
-
   .secondary-actions {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-top: 10px;
-  }
-
-  .btn-ghost {
-    width: 100%;
-    height: 42px;
-    background: var(--weeb-surface);
-    color: var(--weeb-fg-secondary);
-    font-size: 14px;
-    font-weight: 500;
-    font-family: inherit;
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s;
-  }
-
-  .btn-ghost:hover {
-    background: var(--weeb-surface-hover);
-    color: var(--weeb-fg);
   }
 </style>

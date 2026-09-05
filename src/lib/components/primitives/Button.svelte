@@ -1,46 +1,104 @@
-<script lang="ts">
-  import Fa from 'svelte-fa';
-  import {
-    faSpinner,
-    faCheckCircle,
-    faExclamationCircle,
-  } from '@fortawesome/free-solid-svg-icons';
+<script lang="ts" module>
+  import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+  import type { Snippet } from 'svelte';
 
-  type ButtonStatus = 'idle' | 'loading' | 'success' | 'error';
+  export type ButtonStatus = 'idle' | 'loading' | 'success' | 'error';
+  export type ButtonColor = 'blue' | 'red' | 'transparent' | '';
+  /**
+   * `sm` is the old hand-rolled "compact" action (EmptyState's CTA, the sticky
+   * header's add button), `lg` the 46px full-width auth submit, `hero` the pair
+   * that sit on the banner panel, and `icon` the 32px round icon-only one.
+   */
+  export type ButtonSize = 'sm' | 'md' | 'lg' | 'hero' | 'icon';
 
-  let {
-    color = 'blue',
-    label = '',
-    icon = '',
-    onClick = () => {},
-    showLabel = true,
-    className = '',
-    status = 'idle',
-    onResetStatus,
-    disabled = false,
-  }: {
-    color?: 'blue' | 'red' | 'transparent' | '';
+  export interface ButtonProps {
+    color?: ButtonColor;
+    size?: ButtonSize;
+    /** Stretches to the container -- what every auth CTA and dialog action wants. */
+    fullWidth?: boolean;
+    /** Renders an `<a>` instead of a `<button>`, styled and focused identically. */
+    href?: string;
+    target?: string;
+    rel?: string;
+    /**
+     * Only meaningful without `href`. Defaults to `button`, so a Button inside a
+     * form is inert unless it asks to submit.
+     */
+    type?: 'button' | 'submit' | 'reset';
+    /** A FontAwesome icon rendered before the label. */
+    icon?: IconDefinition | null;
+    /** The label. Prefer this over `label`. */
+    children?: Snippet;
+    /**
+     * Legacy plain-string label, kept for the call sites that still pass one.
+     * `children` wins when both are given.
+     */
     label?: string;
-    /** Raw SVG markup rendered in place of the label. */
-    icon?: string;
-    onClick?: () => void;
+    /** Legacy companion to `label`. */
     showLabel?: boolean;
+    onClick?: () => void;
+    /** Layout only -- a class here must not restyle the variant. */
     className?: string;
     status?: ButtonStatus;
+    /** Sugar for `status="loading"`, which is all most call sites need. */
+    loading?: boolean;
     /** Called once the transient success/error state has been shown. */
     onResetStatus?: () => void;
     disabled?: boolean;
-  } = $props();
+    /** Required when the button has an icon and no visible label. */
+    ariaLabel?: string;
+  }
+</script>
+
+<script lang="ts">
+  import Fa from 'svelte-fa';
+  import { faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
+
+  /**
+   * The one action control.
+   *
+   * It renders a `<button>` or, with `href`, an `<a>` that looks and focuses the
+   * same, so a link CTA never has to be hand-rolled. The transient states
+   * (loading / success / error) overlay the label rather than replacing it:
+   * swapping the content collapsed the button mid-request (167px -> 49px), which
+   * every hand-rolled copy had already worked around by keeping its label at
+   * `opacity: 0` under the spinner. The copies were right.
+   *
+   * Presentational -- no bloc.
+   */
+  let {
+    color = 'blue',
+    size = 'md',
+    fullWidth = false,
+    href,
+    target,
+    rel,
+    type = 'button',
+    icon = null,
+    children,
+    label = '',
+    showLabel = true,
+    onClick = () => {},
+    className = '',
+    status = 'idle',
+    loading = false,
+    onResetStatus,
+    disabled = false,
+    ariaLabel,
+  }: ButtonProps = $props();
 
   // The caller's status shows immediately, including on the first paint; success
   // and error are transient, so after two seconds the button falls back to idle
   // on its own. `expired` is that local override and nothing else.
   let expired = $state(false);
-  const internalStatus = $derived<ButtonStatus>(expired ? 'idle' : status);
+  const requested = $derived<ButtonStatus>(loading ? 'loading' : status);
+  const phase = $derived<ButtonStatus>(expired ? 'idle' : requested);
+  const isLoading = $derived(phase === 'loading');
+  const isInert = $derived(isLoading || disabled);
 
   $effect(() => {
     expired = false;
-    if (status === 'idle') return;
+    if (requested === 'idle' || requested === 'loading') return;
 
     const timer = setTimeout(() => {
       expired = true;
@@ -49,40 +107,80 @@
     return () => clearTimeout(timer);
   });
 
-  const colorClasses = {
+  const colorClasses: Record<ButtonColor, string> = {
     blue: 'btn-accent',
     red: 'btn-danger',
     transparent: 'btn-ghost',
     '': '',
   };
 
-  function handleClick() {
-    if (internalStatus !== 'loading' && !disabled) {
-      onClick();
+  const classes = $derived(
+    ['btn', `btn--${size}`, colorClasses[color], fullWidth ? 'btn--full' : '', className]
+      .filter(Boolean)
+      .join(' ')
+  );
+
+  function handleClick(event: MouseEvent) {
+    if (isInert) {
+      event.preventDefault();
+      return;
     }
+    onClick();
   }
 </script>
 
-<button
-  onclick={handleClick}
-  disabled={internalStatus === 'loading' || disabled}
-  class="btn {colorClasses[color]} {className} {internalStatus === 'loading' ? 'cursor-not-allowed' : 'cursor-pointer'}"
->
-  {#if internalStatus === 'loading'}
-    <Fa icon={faSpinner} class="animate-spin" />
-  {:else if internalStatus === 'success'}
-    <Fa icon={faCheckCircle} class="text-green-500" />
-  {:else if internalStatus === 'error'}
-    <Fa icon={faExclamationCircle} class="text-red-500" />
-  {:else}
-    <!-- Idle state -->
+{#snippet inner()}
+  {#if phase !== 'idle'}
+    <span class="btn-state" aria-hidden="true">
+      {#if phase === 'loading'}
+        <span class="btn-spinner"></span>
+      {:else if phase === 'success'}
+        <Fa icon={faCheckCircle} />
+      {:else}
+        <Fa icon={faExclamationCircle} />
+      {/if}
+    </span>
+  {/if}
+
+  <!-- Kept in the flow, just invisible: the button must not resize mid-request,
+       and the accessible name has to survive the spinner. -->
+  <span class="btn-content" class:btn-content--under={phase !== 'idle'}>
     {#if icon}
-      {@html icon}
+      <Fa {icon} />
+    {/if}
+    {#if children}
+      {@render children()}
     {:else if showLabel && label}
       <span>{label}</span>
     {/if}
-  {/if}
-</button>
+  </span>
+{/snippet}
+
+{#if href}
+  <a
+    {href}
+    {target}
+    {rel}
+    class={classes}
+    aria-label={ariaLabel}
+    aria-disabled={isInert ? 'true' : undefined}
+    aria-busy={isLoading ? 'true' : undefined}
+    onclick={handleClick}
+  >
+    {@render inner()}
+  </a>
+{:else}
+  <button
+    {type}
+    onclick={handleClick}
+    disabled={isInert}
+    aria-label={ariaLabel}
+    aria-busy={isLoading ? 'true' : undefined}
+    class={classes}
+  >
+    {@render inner()}
+  </button>
+{/if}
 
 <style>
   .btn {
@@ -96,32 +194,72 @@
     font-size: 14px;
     font-weight: 600;
     font-family: inherit;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     white-space: nowrap;
     width: fit-content;
     position: relative;
     border: none;
     cursor: pointer;
   }
-  .btn:disabled {
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
     opacity: 0.5;
     cursor: not-allowed;
   }
+  /* A link cannot be `disabled`, so an inert one has to stop navigating too. */
+  a.btn[aria-disabled='true'] {
+    pointer-events: none;
+  }
+  .btn:active:not(:disabled):not([aria-disabled='true']) {
+    transform: scale(0.99);
+  }
+  .btn--full {
+    width: 100%;
+  }
+
+  /* --- Sizes --- */
+  .btn--sm {
+    min-height: 36px;
+    padding: 0 20px;
+    font-size: 13.6px;
+    gap: 6px;
+  }
+  .btn--lg {
+    min-height: 46px;
+    padding: 7px 20px;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+  }
+  .btn--hero {
+    padding: 10px 24px;
+  }
+  .btn--icon {
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
+    font-size: 12px;
+    border-radius: var(--weeb-radius-full);
+  }
+
+  /* --- Colours --- */
   .btn-accent {
     background: var(--weeb-accent);
     color: white;
   }
-  .btn-accent:hover:not(:disabled) {
+  .btn-accent:hover:not(:disabled):not([aria-disabled='true']) {
     background: var(--weeb-accent-hover);
   }
   .btn-danger {
     background: var(--weeb-red);
     color: white;
   }
-  .btn-danger:hover:not(:disabled) {
+  .btn-danger:hover:not(:disabled):not([aria-disabled='true']) {
     filter: brightness(1.1);
   }
   .btn-ghost {
@@ -129,8 +267,61 @@
     color: var(--weeb-fg-secondary);
     border: 1px solid var(--weeb-border);
   }
-  .btn-ghost:hover:not(:disabled) {
+  .btn-ghost:hover:not(:disabled):not([aria-disabled='true']) {
     color: var(--weeb-fg);
     background: var(--weeb-surface);
+  }
+  /* On the banner the ghost sits next to a filled accent CTA on artwork, so it
+     carries full-strength text on a surface rather than the secondary grey. */
+  .btn--hero.btn-ghost {
+    color: var(--weeb-fg);
+    background: var(--weeb-surface);
+  }
+  .btn--hero.btn-ghost:hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--weeb-surface-hover);
+  }
+
+  /* --- Transient states --- */
+  .btn-content {
+    display: inline-flex;
+    align-items: center;
+    gap: inherit;
+    transition: opacity 0.12s;
+  }
+  .btn-content--under {
+    opacity: 0;
+  }
+  .btn-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-spinner {
+    display: block;
+    width: 18px;
+    height: 18px;
+    /* currentColor, so one spinner serves the accent, danger and ghost variants
+       without any of them hardcoding a colour. */
+    border: 2px solid color-mix(in oklch, currentColor 30%, transparent);
+    border-top-color: currentColor;
+    border-radius: var(--weeb-radius-full);
+    animation: spin 0.7s linear infinite;
+  }
+  .btn--sm .btn-spinner,
+  .btn--icon .btn-spinner {
+    width: 14px;
+    height: 14px;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-spinner {
+      animation-duration: 2s;
+    }
   }
 </style>

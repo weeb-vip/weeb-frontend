@@ -202,20 +202,10 @@
         {/if}
 
         <div class="flex gap-4 pt-4">
-          <Button
-            color="blue"
-            label="Save Changes"
-            onClick={() => {}}
-            showLabel={true}
-            status={bloc.isSaving ? 'loading' : 'idle'}
-            className="flex-1"
-          />
-          <a
-            href="/profile"
-            class="px-4 py-2 border border-weeb-border rounded-md text-weeb-fg-secondary hover:bg-weeb-surface-hover transition-colors duration-200 inline-flex items-center justify-center"
-          >
-            Cancel
-          </a>
+          <!-- The submit is the form's own; it no longer relies on a button
+               with no type defaulting to one. -->
+          <Button type="submit" loading={bloc.isSaving} className="flex-1">Save Changes</Button>
+          <Button color="transparent" href="/profile">Cancel</Button>
         </div>
       </form>
     </div>

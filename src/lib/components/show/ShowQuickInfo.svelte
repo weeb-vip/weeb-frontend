@@ -1,5 +1,7 @@
 <script lang="ts">
   import AnimeActions from '$lib/components/tracking/AnimeActions.svelte';
+  import AiringIndicator from '$lib/components/primitives/AiringIndicator.svelte';
+  import Chip from '$lib/components/primitives/Chip.svelte';
 
   /**
    * The strip under the hero: the facts as chips on the left, the viewer's own
@@ -50,36 +52,33 @@
   <div class="quick-info__inner">
     <div class="quick-info__stats">
       {#if anime.ranking}
-        <span class="qi-chip qi-chip--accent">
-          <svg class="qi-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"
-            ><path d="M8 1l2.35 4.76 5.25.77-3.8 3.7.9 5.24L8 12.93l-4.7 2.54.9-5.24-3.8-3.7 5.25-.77z" /></svg
-          >
-          #{anime.ranking}
-        </span>
+        <Chip tone="accent" mono leading={rankIcon} label="#{anime.ranking}" />
       {/if}
-      <span class="qi-chip" class:qi-chip--green={airing}>
-        <span class="qi-dot" class:qi-dot--green={airing}></span>
-        {airingLabel}
-      </span>
+      <!-- Airing is green with the one pulse; anything else is a plain fact
+           with a muted dot. It used to be a green chip and an AMBER "NOW" chip
+           carrying a green dot, in a palette where amber already means
+           "upcoming". -->
+      {#if airing}
+        <AiringIndicator state="airing" presentation="chip" label={airingLabel} />
+      {:else}
+        <Chip dot label={airingLabel} />
+      {/if}
       {#if episodeCount > 0}
-        <span class="qi-chip">{episodeCount} ep</span>
+        <Chip mono label="{episodeCount} ep" />
       {/if}
       {#if anime.duration}
-        <span class="qi-chip">{anime.duration}</span>
+        <Chip label={anime.duration} />
       {/if}
       {#if studio}
-        <span class="qi-chip">{studio}</span>
+        <Chip label={studio} />
       {/if}
       {#if anime.rating}
-        <span class="qi-chip">{anime.rating}</span>
+        <Chip label={anime.rating} />
       {/if}
-      {#if nextChip}
-        <span class="qi-chip qi-chip--next">
-          {#if nextChip === 'NOW'}
-            <span class="qi-dot qi-dot--green qi-dot--pulse"></span>
-          {/if}
-          {nextChip}
-        </span>
+      {#if nextChip === 'NOW'}
+        <AiringIndicator state="airing" presentation="chip" label="NOW" mono />
+      {:else if nextChip}
+        <Chip tone="amber" mono label={nextChip} />
       {/if}
     </div>
 
@@ -120,10 +119,16 @@
   </div>
 </div>
 
+{#snippet rankIcon()}
+  <svg class="qi-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"
+    ><path d="M8 1l2.35 4.76 5.25.77-3.8 3.7.9 5.24L8 12.93l-4.7 2.54.9-5.24-3.8-3.7 5.25-.77z" /></svg
+  >
+{/snippet}
+
 <style>
   .quick-info {
     width: 100%;
-    padding: 0 var(--weeb-section-px, 48px);
+    padding: 0 var(--weeb-section-px);
     position: relative;
     z-index: 2;
     margin-top: -16px;
@@ -156,72 +161,12 @@
     display: none;
   }
 
-  .qi-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--weeb-fg-secondary);
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-full);
-    white-space: nowrap;
-    flex-shrink: 0;
-    line-height: 1;
-  }
-  .qi-chip--accent {
-    color: var(--weeb-accent-text);
-    border-color: color-mix(in oklch, var(--weeb-accent), transparent 70%);
-    background: color-mix(in oklch, var(--weeb-accent), transparent 90%);
-  }
-  .qi-chip--green {
-    color: var(--weeb-green);
-    border-color: color-mix(in oklch, var(--weeb-green), transparent 70%);
-  }
-  .qi-chip--next {
-    color: var(--weeb-amber);
-    border-color: color-mix(in oklch, var(--weeb-amber), transparent 70%);
-    background: color-mix(in oklch, var(--weeb-amber), transparent 90%);
-    font-family: var(--weeb-font-mono);
-    font-weight: 700;
-  }
-
+  /* The chips are `Chip`; the airing one is `AiringIndicator`. The only thing
+     left here is the icon this row hands one of them. */
   .qi-icon {
     width: 12px;
     height: 12px;
     flex-shrink: 0;
-  }
-
-  .qi-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--weeb-fg-muted);
-    flex-shrink: 0;
-  }
-  .qi-dot--green {
-    background: var(--weeb-green);
-  }
-  .qi-dot--pulse {
-    animation: dotPulse 1.5s ease-in-out infinite;
-  }
-  @keyframes dotPulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.3;
-    }
-  }
-  /* A pulsing dot is decoration, and for anyone who has asked for less motion
-     it is the only thing moving on a static page. */
-  @media (prefers-reduced-motion: reduce) {
-    .qi-dot--pulse {
-      animation: none;
-    }
   }
 
   .quick-info__tracking {

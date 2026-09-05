@@ -116,10 +116,15 @@ shape.
 
 ## Pills
 
-There is **one** pill. `Tabs`' `pill` variant (single-select), `FilterPills`
-(multi-select) and `GenrePills` (links to `/search`) all read these tokens, so
-they cannot drift apart again. Anything else pill-shaped — the news page's "Show
-all" reset, say — takes the same tokens rather than inventing a radius.
+There is **one** pill, and it is a component: `primitives/Chip.svelte`. It is
+the ONLY file that reads the `--weeb-pill-*` tokens. Anything pill-shaped —
+a genre link, a quick-info fact, a type badge, a news category, a voice-actor
+credit — composes `Chip` rather than re-declaring the shape off the same
+tokens, because five agreeing copies of a rule are still five copies.
+
+`Chip` renders as an `<a>` given an `href`, a `<button>` given an `onclick`,
+and a `<span>` otherwise, which is what lets the link row and the static badge
+be the same component.
 
 | Token | Value | Usage |
 |---|---|---|
@@ -171,7 +176,9 @@ transparent at `0` so an empty facet recedes.
 
 ### PosterCard
 
-Poster grid card with score badge and status indicator.
+Poster grid card. Composes `Score` (badge), and either `StatusMarker` (on the
+viewer's list) or `AiringIndicator` (where it is in its run) in the corner
+opposite — one at a time, never both.
 
 | Prop | Type | Description |
 |---|---|---|
@@ -183,37 +190,83 @@ Poster grid card with score badge and status indicator.
 | `sub` | string | Subtitle line |
 | `href` | string | Link target |
 
-### AiringStripCard
+### Chip
 
-Horizontal compact card for the airing strip carousel.
+**The** pill. Every small labelled thing is this component.
 
 | Prop | Type | Description |
 |---|---|---|
-| `id` | number/string | Anime ID |
-| `title` | string | Display title |
-| `image` | string | Poster image URL |
-| `episodeText` | string | e.g. "Ep 12" |
-| `timeText` | string | e.g. "2h ago" |
-| `isLive` | boolean | Currently airing indicator |
+| `label` | string | The text. `children` wins over it |
+| `href` | string | Renders an `<a>` |
+| `onclick` | `() => void` | Renders a `<button>`. Neither renders a `<span>` |
+| `tone` | `neutral \| accent \| green \| amber \| red` | Tints border, text and ground from one colour |
+| `color` | string | An explicit tint for an OPEN set the tones cannot name (news categories). A token reference, never a raw oklch |
+| `size` | `sm \| md` | 11px dense metadata, or 12px (the pill token) |
+| `touch` | boolean | The taller of the two heights |
+| `selected` | boolean | The accent wash |
+| `dot` | boolean | A leading dot in the chip's own colour |
+| `count` | number | The shared count badge. `0` renders, muted |
+| `mono` | boolean | Mono tabular numerals |
+| `leading` | Snippet | An icon before the label |
+
+### ChipRow
+
+A wrapping row of `Chip`s, at `--weeb-pill-row-gap`.
+
+| Prop | Type | Description |
+|---|---|---|
+| `items` | `{ label, href?, title? }[]` | |
+| `tone` / `size` / `touch` | | Applied to every chip |
+| `ariaLabel` | string | Names the row |
+
+The homepage's "Browse by Tag" row is this over `$lib/data/genres`. The genre
+taxonomy is data; a presentational primitive does not own it.
+
+### Score
+
+A rating. One star glyph, mono tabular numerals.
+
+| Prop | Type | Description |
+|---|---|---|
+| `value` | number/string/null | |
+| `variant` | `badge \| inline` | Over cover art on a scrim, or in a text row |
+| `placeholder` | string | `inline` only; a `badge` with no score does not render |
+
+### StatusMarker
+
+The corner ribbon saying a show is on the viewer's list. Wordless, colour-coded
+from `STATUS_COLORS`, with the glyph carrying the status. Sits in whatever
+positioned box the caller gives it.
+
+| Prop | Type | Description |
+|---|---|---|
+| `status` | string | A raw list status; anything unrecognised renders nothing |
+
+### AiringIndicator
+
+"On the air". **Green is airing, amber is upcoming**, and the pulse only ever
+runs on the green one.
+
+| Prop | Type | Description |
+|---|---|---|
+| `state` | `airing \| upcoming` | |
+| `presentation` | `dot \| chip` | The bare marker, or `Chip` with the dot inside |
+| `label` | string | Chip only |
+| `pulse` | boolean | Off where the motion would be noise; always off under `prefers-reduced-motion` |
 
 ### SectionHeader
 
-Section title with an optional "View all" link.
+Section title with an optional "View all" link. Three scales, one
+implementation — `ShowSection` and `RelatedAnime` used to write their own.
 
 | Prop | Type | Description |
 |---|---|---|
 | `title` | string | Section heading text |
-| `href` | string | Optional link URL |
-| `linkText` | string | Optional link label |
-
-### GenrePills
-
-Wrapping row of genre pills. The link-flavoured pill: each is an `<a>` to
-`/search?genre=`, not a toggle. Shape from the pill tokens, at the touch height.
-
-| Prop | Type | Description |
-|---|---|---|
-| `genres` | string[] | List of genre names |
+| `size` | `section \| sub \| eyebrow` | 20px shelf, 18px show-page section, 12px uppercase group label |
+| `as` | `h2 \| h3` | Heading level |
+| `rule` | boolean | The hairline from the words to the column edge |
+| `id` | string | For `aria-labelledby` |
+| `href` / `linkText` | string | Optional trailing link |
 
 ### FilterPills
 
@@ -263,20 +316,6 @@ Progressive image loader with placeholder and fallback support.
 | `alt` | string | Alt text |
 | `fallbackSrc` | string | Fallback image URL |
 | `className` | string | Additional CSS classes |
-
-### AnimeCard
-
-Detail card with full metadata display.
-
-| Prop | Type | Description |
-|---|---|---|
-| `id` | number/string | Anime ID |
-| `title` | string | Display title |
-| `image` | string | Poster image URL |
-| `description` | string | Synopsis text |
-| `episodes` | number | Episode count |
-| `year` | number | Release year |
-| `tags` | string[] | Genre/tag list |
 
 ### Footer
 

@@ -37,3 +37,15 @@ export const Avatar: Story = {
     className: 'w-12 h-12 rounded-full',
   },
 };
+
+/**
+ * A design-system radius rather than a Tailwind `rounded-*` class. Left off,
+ * the box keeps Tailwind's `rounded` so the callers that pass their own radius
+ * in `className` still win -- an inline radius would override those.
+ */
+export const TokenRadius: Story = {
+  args: {
+    className: 'w-48 h-24',
+    radius: 'lg',
+  },
+};

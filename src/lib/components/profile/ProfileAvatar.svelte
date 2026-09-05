@@ -122,10 +122,14 @@
         onerror={() => (imageError = true)}
       />
     {:else if size === 'xl'}
-      <span class="avatar-hero-initials">{initial}</span>
+      <span class="avatar-initials">{initial}</span>
     {:else}
-      <div class="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
-        {initial}
+      <!-- The same ground at every size. The small ones used to be a Tailwind
+           from-blue-500 to-purple-600, so the nav avatar stayed blue while the
+           hero one was the accent -- and a viewer on the green or rose accent
+           had a blue initial in the header of their own page. -->
+      <div class="avatar-fallback">
+        <span class="avatar-initials">{initial}</span>
       </div>
     {/if}
   </div>
@@ -140,20 +144,24 @@
 {/if}
 
 <style>
+  /* The ground the initials sit on, and what shows through while a picture
+     loads. One gradient, off the accent, shared by every size. */
+  .avatar-hero,
+  .avatar-fallback {
+    background: linear-gradient(
+      135deg,
+      var(--weeb-accent) 0%,
+      var(--weeb-accent-hover) 50%,
+      color-mix(in oklch, var(--weeb-accent-hover) 60%, var(--weeb-accent)) 100%
+    );
+  }
+
   /* The hero face. Sized by its wrapper, so the page owns the dimensions and
      their breakpoints. */
   .avatar-hero {
     border-radius: var(--weeb-radius-full);
     border: 4px solid var(--weeb-bg);
-    /* The gradient is the ground the initials sit on, and what shows through
-       while a picture loads. */
-    background: linear-gradient(
-      135deg,
-      var(--weeb-accent) 0%,
-      var(--weeb-violet, var(--weeb-accent-hover)) 50%,
-      color-mix(in oklch, var(--weeb-violet, var(--weeb-accent-hover)) 60%, var(--weeb-accent)) 100%
-    );
-    box-shadow: 0 8px 32px color-mix(in oklch, black 50%, transparent);
+    box-shadow: 0 8px 32px color-mix(in oklch, var(--weeb-bg) 50%, transparent);
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -161,11 +169,24 @@
     flex-shrink: 0;
   }
 
-  .avatar-hero-initials {
-    font-size: var(--hero-avatar-initials, 2.5rem);
+  .avatar-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--weeb-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Inherits the size class's own font-size at sm/md/lg; the hero sets its own
+     because its circle is sized by the page rather than by a class here. */
+  .avatar-initials {
     font-weight: 700;
     line-height: 1;
     color: #fff;
     letter-spacing: 0.02em;
+  }
+  .avatar-hero > .avatar-initials {
+    font-size: var(--hero-avatar-initials, 2.5rem);
   }
 </style>

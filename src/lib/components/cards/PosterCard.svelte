@@ -4,6 +4,10 @@
   import { getSafeImageUrl } from '$lib/utils/image';
   import { animeHref } from '$lib/services/utils';
   import { normalizeStatus } from '$lib/utils/status';
+  import AiringIndicator from '$lib/components/primitives/AiringIndicator.svelte';
+  import Chip from '$lib/components/primitives/Chip.svelte';
+  import Score from '$lib/components/primitives/Score.svelte';
+  import StatusMarker from '$lib/components/primitives/StatusMarker.svelte';
   import { realCardTracking, type CardTrackingPort } from './Card.bloc.svelte';
 
   /**
@@ -56,6 +60,15 @@
 
   const normalizedStatus = $derived(normalizeStatus(onList));
 
+  // Green is airing, amber is upcoming -- and nothing else is either. The card
+  // used to draw the two as its own pair of dots while AnimeCard drew "airing
+  // now" in amber, which is the colour this one uses for "not out yet".
+  const airingState = $derived.by<'airing' | 'upcoming' | null>(() => {
+    if (status === 'CURRENTLY_AIRING' || status === 'airing') return 'airing';
+    if (status === 'upcoming' || status === 'NOT_YET_RELEASED') return 'upcoming';
+    return null;
+  });
+
   // Prefer TheTVDB's 680x1000 series poster over the scraper's MyAnimeList
   // image, which MAL serves at 225px wide -- soft on any 2x display at card
   // size, and this component renders 54 times on the homepage alone. Falls back
@@ -83,51 +96,32 @@
       cdnWidth={360}
     />
     {#if score}
-      <span class="score-badge">{typeof score === 'number' ? score.toFixed(1) : score}</span>
+      <span class="score-mark"><Score value={score} variant="badge" /></span>
     {/if}
-    {#if !normalizedStatus}
-      {#if status === 'CURRENTLY_AIRING' || status === 'airing'}
-        <span class="status-dot airing"></span>
-      {:else if status === 'upcoming' || status === 'NOT_YET_RELEASED'}
-        <span class="status-dot upcoming"></span>
-      {/if}
-    {/if}
+    <!-- The corner opposite the score says one thing at a time: the viewer's
+         own list status if the show is on it, otherwise where it is in its run. -->
     {#if normalizedStatus}
-      <span class="on-list-tab" class:watching={normalizedStatus === 'WATCHING'} class:completed={normalizedStatus === 'COMPLETED'} class:plan={normalizedStatus === 'PLANTOWATCH'} class:dropped={normalizedStatus === 'DROPPED'} class:on-hold={normalizedStatus === 'ONHOLD'}>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          {#if normalizedStatus === 'WATCHING'}
-            <polygon points="5,3 19,12 5,21" />
-          {:else if normalizedStatus === 'COMPLETED'}
-            <polyline points="4,12 10,18 20,6" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
-          {:else if normalizedStatus === 'DROPPED'}
-            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-          {:else if normalizedStatus === 'ONHOLD'}
-            <rect x="5" y="4" width="4" height="16" rx="1" />
-            <rect x="15" y="4" width="4" height="16" rx="1" />
-          {:else}
-            <path d="M5 3h14a1 1 0 011 1v16.5a.5.5 0 01-.8.4L12 16l-6.2 4.9A.5.5 0 015 20.5V4a1 1 0 011-1z" />
-          {/if}
-        </svg>
-      </span>
+      <span class="list-mark"><StatusMarker status={normalizedStatus} /></span>
+    {:else if airingState}
+      <span class="airing-mark"><AiringIndicator state={airingState} /></span>
     {/if}
     <div class="hover-overlay" aria-hidden="true">
       <div class="hover-content">
         {#if description}
           <p class="hover-desc">{description.replace(/<[^>]*>/g, '').slice(0, 120)}{description.length > 120 ? '...' : ''}</p>
         {/if}
-        <div class="hover-meta">
-          {#if episodeCount}
+        <!-- No score here. It is already in the corner of this very poster:
+             the card used to draw the same number twice, once mono without a
+             star and once sans with one. -->
+        {#if episodeCount}
+          <div class="hover-meta">
             <span class="hover-meta-item">{episodeCount} episodes</span>
-          {/if}
-          {#if score}
-            <span class="hover-meta-item hover-score">&#9733; {typeof score === 'number' ? score.toFixed(1) : score}</span>
-          {/if}
-        </div>
+          </div>
+        {/if}
         {#if genres.length > 0}
           <div class="hover-genres">
             {#each genres.slice(0, 3) as genre}
-              <span class="hover-genre">{genre}</span>
+              <Chip label={genre} size="sm" />
             {/each}
           </div>
         {/if}
@@ -175,77 +169,38 @@
     height: 100%;
     object-fit: cover;
   }
-  /* Numeral step. A score is a measured value like the sub-line beneath it, and
-     rendering one in the sans and the other in mono broke the family. */
-  .score-badge {
-    font-family: var(--weeb-font-mono);
+  /* The card owns WHERE its corners are; Score, StatusMarker and
+     AiringIndicator own what is drawn in them. */
+  .score-mark {
     position: absolute;
     top: 8px;
     left: 8px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    background: var(--weeb-scrim);
-    backdrop-filter: blur(8px);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--weeb-amber);
-    font-variant-numeric: tabular-nums;
+    display: flex;
   }
-  .status-dot {
+  .airing-mark {
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    display: flex;
   }
-  .status-dot.airing {
-    background: var(--weeb-green);
-    box-shadow: 0 0 8px var(--weeb-green);
-  }
-  .status-dot.upcoming {
-    background: var(--weeb-amber);
-  }
-  .on-list-tab {
+  .list-mark {
     position: absolute;
     top: 0;
     right: 8px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    padding: 4px 0 8px;
-    background: var(--weeb-accent);
-    color: white;
-    font-size: 12px;
-    opacity: 0.9;
-    transition: opacity 0.2s;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
-  }
-  .on-list-tab.watching {
-    background: var(--weeb-green);
-  }
-  .on-list-tab.completed {
-    background: var(--weeb-accent);
-  }
-  .on-list-tab.plan {
-    background: var(--weeb-amber);
-  }
-  .on-list-tab.dropped {
-    background: var(--weeb-red);
-  }
-  .on-list-tab.on-hold {
-    background: var(--weeb-fg-muted);
   }
   .hover-overlay {
     position: absolute;
     inset: 0;
+    /* Off --weeb-scrim, which the score badge eight lines up already uses. The
+       four stops were raw oklch(0% 0 0 / a) -- the same colour, written out by
+       hand, which is exactly what the token exists to stop. */
     background: linear-gradient(
       to top,
-      oklch(0% 0 0 / 0.92) 0%,
-      oklch(0% 0 0 / 0.8) 40%,
-      oklch(0% 0 0 / 0.5) 70%,
-      oklch(0% 0 0 / 0.2) 100%
+      var(--weeb-scrim) 0%,
+      color-mix(in oklch, var(--weeb-scrim) 90%, transparent) 40%,
+      color-mix(in oklch, var(--weeb-scrim) 56%, transparent) 70%,
+      color-mix(in oklch, var(--weeb-scrim) 22%, transparent) 100%
     );
     backdrop-filter: blur(2px);
     display: flex;
@@ -286,24 +241,10 @@
   .hover-meta-item {
     white-space: nowrap;
   }
-  .hover-score {
-    color: var(--weeb-amber);
-    font-weight: 600;
-  }
   .hover-genres {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-  }
-  .hover-genre {
-    padding: 2px 7px;
-    border-radius: var(--weeb-radius-full);
-    background: var(--weeb-border);
-    border: 1px solid var(--weeb-border);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--weeb-fg);
-    white-space: nowrap;
   }
   .poster-title {
     margin-top: 8px;
@@ -340,15 +281,11 @@
     .poster-sub {
       font-size: 12px;
     }
-    .score-badge {
-      font-size: 12px;
-      padding: 1px 5px;
+    .score-mark {
       top: 5px;
       left: 5px;
     }
-    .status-dot {
-      width: 6px;
-      height: 6px;
+    .airing-mark {
       top: 5px;
       right: 5px;
     }

@@ -1,5 +1,7 @@
 <script lang="ts">
+  import Chip from '$lib/components/primitives/Chip.svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
+  import SectionHeader from '$lib/components/primitives/SectionHeader.svelte';
   import { getYearUTC, seasonLabel, seriesLinkFor, collapseSeasonParts } from '$lib/services/utils';
 
   let {
@@ -87,15 +89,17 @@
 {#each groups as group (group.kind)}
   {#if group.items.length > 1 || group.kind !== 'SAME_SERIES'}
     <div class="rel-group">
-      <div class="rel-group-head">
-        <h3 class="rel-group-heading">{group.heading}</h3>
-        <!-- Only beside the same-series list: it is the one group that is a
-             timeline of a single thing, and so the only one a series page
-             could show more of. -->
-        {#if group.kind === 'SAME_SERIES' && seriesLink}
-          <a class="rel-group-link" href={seriesLink}>View all seasons &rarr;</a>
-        {/if}
-      </div>
+      <!-- The eyebrow scale of the one section heading. The link beside it is
+           only on the same-series list: that is the one group that is a
+           timeline of a single thing, and so the only one a series page could
+           show more of. -->
+      <SectionHeader
+        title={group.heading}
+        as="h3"
+        size="eyebrow"
+        href={group.kind === 'SAME_SERIES' && seriesLink ? seriesLink : ''}
+        linkText="View all seasons &rarr;"
+      />
       <ul class="rel-list">
         {#each group.items as entry (entry.id)}
           <!-- Not when it would repeat the type chip verbatim. A season-0 entry
@@ -123,7 +127,7 @@
                 <span class="rel-meta">
                   <span class="rel-year">{getYearUTC(entry.startDate)}</span>
                   {#if entry.type}
-                    <span class="rel-type" class:main={isMainEntry(entry.type)}>{entry.type}</span>
+                    <Chip label={entry.type} size="sm" tone={isMainEntry(entry.type) ? 'accent' : 'neutral'} />
                   {/if}
                   <!-- Which run of the series this entry is. The reason the
                        list is worth reading in order, so it earns the accent
@@ -148,42 +152,6 @@
 <style>
   .rel-group + .rel-group {
     margin-top: 20px;
-  }
-
-  .rel-group-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
-
-  /* The heading owns the spacing above the list; inside the head row it is one
-     of two baseline-aligned items, so its own margin would push the row apart. */
-  .rel-group-head .rel-group-heading {
-    margin-bottom: 0;
-  }
-
-  .rel-group-link {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--weeb-accent-text, var(--weeb-fg));
-    white-space: nowrap;
-    text-decoration: none;
-  }
-  .rel-group-link:hover,
-  .rel-group-link:focus-visible {
-    text-decoration: underline;
-  }
-
-  .rel-group-heading {
-    margin: 0 0 10px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--weeb-fg-muted);
   }
 
   .rel-list {
@@ -212,7 +180,7 @@
     border-color: var(--weeb-accent);
   }
   a.rel-card:hover .rel-title {
-    color: var(--weeb-accent-text, var(--weeb-fg));
+    color: var(--weeb-accent-text);
   }
 
   /* The current entry is present for orientation, not navigation: it reads as
@@ -270,20 +238,6 @@
     color: var(--weeb-fg-muted);
   }
 
-  .rel-type {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 1px 6px;
-    border-radius: var(--weeb-radius-sm);
-    background: var(--weeb-bg-elevated);
-    color: var(--weeb-fg-muted);
-    white-space: nowrap;
-  }
-  .rel-type.main {
-    background: color-mix(in oklch, var(--weeb-accent) 18%, transparent);
-    color: var(--weeb-accent-text, var(--weeb-fg));
-  }
-
   /* Accent text on no background, where the TV chip is accent text on a filled
      one. Same colour ties it to the season line on the show page; the missing
      fill keeps the two apart on a card that shows both. */
@@ -291,14 +245,14 @@
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.04em;
-    color: var(--weeb-accent-text, var(--weeb-fg));
+    color: var(--weeb-accent-text);
     white-space: nowrap;
   }
 
   .rel-here {
     font-size: 10px;
     font-weight: 600;
-    color: var(--weeb-accent-text, var(--weeb-fg));
+    color: var(--weeb-accent-text);
   }
 
   @media (max-width: 640px) {

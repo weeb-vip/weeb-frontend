@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import SectionHeader from '$lib/components/primitives/SectionHeader.svelte';
 
   /**
    * One block of the show page: a rule-trailed heading and whatever sits under
@@ -23,29 +24,6 @@
 </script>
 
 <section class="content-section" {id} aria-labelledby="{id}-heading">
-  <h2 class="section-heading" id="{id}-heading">{heading}</h2>
+  <SectionHeader title={heading} id="{id}-heading" size="sub" rule />
   {@render children()}
 </section>
-
-<style>
-  .section-heading {
-    font-family: var(--weeb-font);
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    color: var(--weeb-fg);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  /* The rule runs from the end of the words to the edge of the column, so the
-     heading measures the section rather than floating above it. */
-  .section-heading::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--weeb-border);
-  }
-</style>

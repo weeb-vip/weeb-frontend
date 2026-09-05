@@ -14,6 +14,14 @@ const searchIcon = createRawSnippet(() => ({
     </svg>`,
 }));
 
+/** SeasonPage's failure glyph. A magnifier would claim the search came back empty. */
+const brokenCircle = createRawSnippet(() => ({
+  render: () => `
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>
+    </svg>`,
+}));
+
 const filteredCopy = createRawSnippet(() => ({
   render: () => `<span>No anime match the selected tags.</span>`,
 }));
@@ -97,11 +105,21 @@ export const WithBodySnippet: Story = {
   },
 };
 
-/** The failure variant of the same surface: SeasonPage renders this when the SSR fetch errored. */
+/**
+ * The failure variant of the same surface, as SeasonPage actually renders it
+ * when the SSR fetch errored.
+ *
+ * The story used to show a magnifying glass and no action -- which says "no
+ * results" about a request that failed, and leaves the reader with no way out.
+ * A failed fetch gets the broken-circle glyph and the retry the route has
+ * always passed: an EmptyState with no `action` is not a legitimate error state.
+ */
 export const ErrorShaped: Story = {
   args: {
-    icon: searchIcon,
+    icon: brokenCircle,
     heading: 'Something went wrong',
     message: 'We could not reach the season index. Try again in a moment.',
+    size: 'hero',
+    action: { label: 'Try again', variant: 'ghost', onClick: () => {} },
   },
 };

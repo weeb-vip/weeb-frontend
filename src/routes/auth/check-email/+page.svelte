@@ -3,6 +3,7 @@
   import QueryProvider from '$lib/components/shell/QueryProvider.svelte';
   import { onDestroy, onMount } from 'svelte';
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
+  import Button from '$lib/components/primitives/Button.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import { CheckEmailBloc } from './CheckEmail.bloc.svelte';
 
@@ -66,15 +67,15 @@
     {/if}
 
     {#if bloc.provider.url}
-      <a class="btn-primary" href={bloc.provider.url} target="_blank" rel="noopener noreferrer">
+      <Button size="lg" fullWidth href={bloc.provider.url} target="_blank" rel="noopener noreferrer">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="5" width="18" height="14" rx="2" />
           <path d="M3.5 7l8.5 5.5L20.5 7" />
         </svg>
         {bloc.provider.label}
-      </a>
+      </Button>
     {:else}
-      <a class="btn-primary" href="/auth/login">Go to log in</a>
+      <Button size="lg" fullWidth href="/auth/login">Go to log in</Button>
     {/if}
 
     <!-- 15 minutes is the token's actual lifetime (exp - iat on the
@@ -179,34 +180,6 @@
   /* The banners sit in the same rhythm as the step list they replace. */
   :global(.ce-alert) {
     margin-bottom: 20px;
-  }
-
-  /* --- Primary action --- */
-  .btn-primary {
-    width: 100%;
-    height: 46px;
-    background: var(--weeb-accent);
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    border: none;
-    border-radius: var(--weeb-radius);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    text-decoration: none;
-    transition: background 0.15s, transform 0.1s;
-  }
-
-  .btn-primary:hover {
-    background: var(--weeb-accent-hover);
-  }
-
-  .btn-primary:active {
-    transform: scale(0.99);
   }
 
   .hint {

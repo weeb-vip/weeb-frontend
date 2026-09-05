@@ -23,6 +23,7 @@
 
 <script lang="ts">
   import Fa from 'svelte-fa';
+  import Button from './Button.svelte';
 
   /**
    * The "there is nothing here" surface. One shape for all thirteen of them:
@@ -100,19 +101,19 @@
   {/if}
 
   {#if action}
-    {#if action.href}
-      <a class="es-action es-action--{action.variant ?? 'primary'}" href={action.href}>
-        {action.label}
-      </a>
-    {:else}
-      <button
-        type="button"
-        class="es-action es-action--{action.variant ?? 'primary'}"
-        onclick={action.onClick}
+    <!-- The action was a fourth hand-rolled copy of the primary button, down to
+         its own 36px height and focus ring. It is the shared one at `sm` now;
+         `href` is what made that possible for the link-flavoured call sites. -->
+    <div class="es-action">
+      <Button
+        size="sm"
+        color={action.variant === 'ghost' ? 'transparent' : 'blue'}
+        href={action.href}
+        onClick={action.onClick ?? (() => {})}
       >
         {action.label}
-      </button>
-    {/if}
+      </Button>
+    </div>
   {/if}
 </div>
 
@@ -189,37 +190,9 @@
     line-height: 1.5;
   }
 
+  /* Only the space above the action belongs here; the button is a Button. */
   .es-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    display: flex;
     margin-top: 20px;
-    height: 36px;
-    padding: 0 20px;
-    border-radius: var(--weeb-radius);
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
-  }
-  .es-action--primary {
-    background: var(--weeb-accent);
-    border: 1px solid transparent;
-    color: #fff;
-  }
-  .es-action--primary:hover { background: var(--weeb-accent-hover); }
-
-  .es-action--ghost {
-    background: none;
-    border: 1px solid var(--weeb-border);
-    color: var(--weeb-accent-text);
-  }
-  .es-action--ghost:hover { border-color: var(--weeb-accent); }
-
-  .es-action:focus-visible {
-    outline: 2px solid var(--weeb-accent);
-    outline-offset: 2px;
   }
 </style>

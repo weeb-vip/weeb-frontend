@@ -21,6 +21,7 @@ src/lib/stores/               store singletons
 src/lib/actions/              Svelte actions
 src/lib/composables/          shared rune helpers
 src/lib/utils/                framework-free helpers
+src/lib/data/                 static data the app renders (the genre taxonomy)
 src/lib/services/             the data layer (see below)
 src/lib/server/               server-only modules
 src/lib/client/               browser-only modules
@@ -194,6 +195,12 @@ Before writing markup, check whether a primitive already covers it. Reach for
 the existing shared components rather than re-rolling a surface, a pill, a
 skeleton, or a field. If you find yourself copying markup from another
 component, that is the signal to extract a primitive instead.
+
+Reusing the *tokens* is not the same as reusing the component. Four files each
+declaring the pill shape off `--weeb-pill-*` is still four copies of the pill;
+`Chip` is the pill, and it is the only file that reads those tokens. The same
+goes for `Score`, `StatusMarker` and `AiringIndicator`: a score, a list-status
+ribbon and an "on the air" mark are drawn in one place each.
 
 Never hardcode `oklch()` values — reference the `--weeb-*` tokens.
 

@@ -5,6 +5,7 @@
   import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
   import Pagination from '$lib/components/primitives/Pagination.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import Score from '$lib/components/primitives/Score.svelte';
   import Select from '$lib/components/primitives/Select.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
   import Tabs from '$lib/components/primitives/Tabs.svelte';
@@ -271,12 +272,7 @@
                 </span>
               {/if}
               {#if item.ratingNum}
-                <div class="list-score">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                  {item.ratingNum.toFixed(1)}
-                </div>
+                <Score value={item.ratingNum} />
               {/if}
             </div>
           </a>
@@ -345,12 +341,7 @@
                 </div>
                 <div class="list-badges">
                   {#if work.score}
-                    <div class="list-score">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                      {work.score.toFixed(1)}
-                    </div>
+                    <Score value={work.score} />
                   {/if}
                 </div>
               </a>
@@ -689,16 +680,6 @@
     color: var(--badge-color, var(--weeb-fg-secondary));
     border: 1px solid var(--badge-color, var(--weeb-border));
     background: color-mix(in oklch, var(--badge-color, var(--weeb-surface)) 8%, transparent);
-  }
-  .list-score {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-family: var(--weeb-font-mono);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--weeb-amber);
-    flex-shrink: 0;
   }
 
   /* Responsive */

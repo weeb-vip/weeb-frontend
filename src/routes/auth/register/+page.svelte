@@ -3,6 +3,7 @@
   import QueryProvider from '$lib/components/shell/QueryProvider.svelte';
   import { onMount } from 'svelte';
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
+  import Button from '$lib/components/primitives/Button.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import FormInput from '$lib/components/primitives/FormInput.svelte';
   import { RegisterBloc } from '$lib/components/auth/Register.bloc.svelte';
@@ -102,17 +103,11 @@
         <ErrorBanner message={bloc.errorMessage} />
       {/if}
 
-      <button
-        type="submit"
-        class="btn-primary"
-        class:loading={bloc.isSubmitting}
-        disabled={!bloc.canSubmit}
-      >
-        <span class="btn-label">Create account</span>
-        {#if bloc.isSubmitting}
-          <span class="spinner" aria-hidden="true"></span>
-        {/if}
-      </button>
+      <div class="submit-row">
+        <Button type="submit" size="lg" fullWidth loading={bloc.isSubmitting} disabled={!bloc.canSubmit}>
+          Create account
+        </Button>
+      </div>
     </form>
   {/snippet}
 
@@ -194,46 +189,9 @@
     color: var(--weeb-green);
   }
 
-  /* --- Submit button --- */
-  .btn-primary {
-    width: 100%;
-    height: 46px;
-    margin-top: 4px;
-    background: var(--weeb-accent);
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    border: none;
-    border-radius: var(--weeb-radius);
-    cursor: pointer;
+  /* The submit is a Button; only the gap above it belongs to this page. */
+  .submit-row {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: background 0.15s, transform 0.1s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-primary:hover:not(:disabled) { background: var(--weeb-accent-hover); }
-  .btn-primary:active:not(:disabled) { transform: scale(0.99); }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-primary.loading .btn-label { opacity: 0; }
-
-  .spinner {
-    display: block;
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    border: 2px solid oklch(100% 0 0 / 0.3);
-    border-top-color: white;
-    border-radius: var(--weeb-radius-full);
-    animation: spin 0.7s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) {
-    .spinner { animation-duration: 2s; }
+    margin-top: 4px;
   }
 </style>

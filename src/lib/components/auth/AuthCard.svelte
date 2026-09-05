@@ -200,38 +200,15 @@
     color: var(--weeb-accent-hover);
   }
 
-  /* Inputs rendered by FormInput (or a plain form) inside the card body. Every
-     auth screen repeated this block verbatim; it belongs to the shell, so a
-     field looks the same whichever screen it lands on. */
-  .card-body :global(input[type='text']),
-  .card-body :global(input[type='password']),
-  .card-body :global(input[type='email']) {
-    width: 100%;
-    height: 44px;
-    padding: 0 16px;
-    font-size: 15px;
-    color: var(--weeb-fg);
-    background: var(--weeb-surface);
-    border: 1.5px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-  .card-body :global(input::placeholder) {
-    color: var(--weeb-fg-muted);
-  }
-  .card-body :global(input:focus) {
-    border-color: var(--weeb-accent);
-    box-shadow: 0 0 0 3px color-mix(in oklch, var(--weeb-accent) 20%, transparent);
-  }
-  .card-body :global(label) {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--weeb-fg-secondary);
-    letter-spacing: 0.01em;
-  }
+  /* Deliberately no input or label styling here.
+     The card used to re-declare FormInput's field styling as
+     `.card-body :global(input[type='text'|'password'|'email'])`. That selector
+     is specificity (0,2,1); FormInput's own `:global(.weeb-form-input.has-error)`
+     is (0,2,0), so the shell silently won the cascade and the red error border
+     never rendered on any auth page -- the same field showed red inside the
+     login modal and neutral grey on /auth/login. Every field in here is a
+     FormInput now: the shell owns the card, FormInput owns the field. The one
+     screen with plain `<input>`s (the no-JS password-reset form) styles its own. */
 
   @media (max-width: 480px) {
     .auth-main { padding: 40px 12px 32px; }

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/components/primitives/Button.svelte';
+  import { faPlus } from '@fortawesome/free-solid-svg-icons';
+  import Button, { type ButtonColor, type ButtonSize } from '$lib/components/primitives/Button.svelte';
   import AnimeStatusDropdown from './AnimeStatusDropdown.svelte';
   import { AnimeActionsBloc } from './AnimeActions.bloc.svelte';
 
@@ -26,6 +27,14 @@
   });
   const bloc = $derived(injected ?? ownBloc);
 
+  // The four variants are four Button sizes -- nothing here needs a class to
+  // restyle the primitive.
+  const isIconOnly = $derived(variant === 'icon-only');
+  const buttonSize = $derived<ButtonSize>(
+    variant === 'icon-only' ? 'icon' : variant === 'compact' ? 'sm' : variant === 'hero' ? 'hero' : 'md'
+  );
+  const buttonColor = $derived<ButtonColor>(variant === 'hero' ? 'transparent' : 'blue');
+
   // Mutations are created after mount, as they were under onMount: they read
   // the query client off Svelte's context, which is not available to a bloc
   // constructed at module scope in a story.
@@ -41,43 +50,22 @@
     onDelete={(detail) => bloc.removeFromList(detail)}
   />
 {:else}
-  <!-- Show add button for anime not in list -->
-  {#if variant === 'icon-only'}
-    <Button
-      color="blue"
-      icon='<i class="fas fa-plus w-3 h-3" style="display: flex; align-items: center; justify-content: center; line-height: 1;"></i>'
-      showLabel={false}
-      status={bloc.buttonStatus}
-      onClick={() => bloc.addToList()}
-      className="w-8 h-8 rounded-full flex items-center justify-center p-0 {className}"
-    />
-  {:else if variant === 'hero'}
-    <Button
-      color="transparent"
-      label="Add to List"
-      showLabel={true}
-      status={bloc.buttonStatus}
-      onClick={() => bloc.addToList()}
-      className="px-4 py-2 text-base font-semibold text-white hover:bg-weeb-surface hover:text-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition {className}"
-    />
-  {:else if variant === 'compact'}
-    <Button
-      color="blue"
-      label="Add to list"
-      showLabel={showLabel}
-      status={bloc.buttonStatus}
-      className="w-fit px-2 py-1 text-xs {className}"
-      onClick={() => bloc.addToList()}
-    />
-  {:else}
-    <!-- Default button variant -->
-    <Button
-      color="blue"
-      label="Add to list"
-      showLabel={showLabel}
-      status={bloc.buttonStatus}
-      className={className}
-      onClick={() => bloc.addToList()}
-    />
-  {/if}
+  <!-- Show add button for anime not in list.
+       One Button: the variant picks a real size and colour rather than a stack
+       of utility classes. It used to reach through `className` to override the
+       variant's colour, its font size and -- worst -- the app's accent focus
+       ring, replacing it with a white one. -->
+  <Button
+    color={buttonColor}
+    size={buttonSize}
+    icon={isIconOnly ? faPlus : null}
+    ariaLabel={isIconOnly ? 'Add to list' : undefined}
+    status={bloc.buttonStatus}
+    onClick={() => bloc.addToList()}
+    className={className}
+  >
+    {#if !isIconOnly && showLabel}
+      {variant === 'hero' ? 'Add to List' : 'Add to list'}
+    {/if}
+  </Button>
 {/if}

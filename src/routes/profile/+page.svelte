@@ -36,10 +36,9 @@
   noIndex={true}
 />
 
-<!-- PosterCardSkeleton, matching the PosterCards that load in below.
-     AnimeCardSkeleton draws the other card -- a fixed 192x288 box with the
-     metadata column beside the art -- so in these grid cells the placeholder
-     was neither the cell's width nor the loaded card's shape. -->
+<!-- PosterCardSkeleton, matching the PosterCards that load in below: the
+     poster box, the title line and the sub-line land where the loaded card
+     puts them, and the cell width is the grid's. -->
 {#snippet shelfSkeleton(count: number)}
   <PosterGrid>
     {#each Array(count) as _}

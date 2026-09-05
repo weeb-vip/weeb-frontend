@@ -2,6 +2,7 @@
   import Seo from '$lib/Seo.svelte';
   import { faEnvelope, faUser } from '@fortawesome/free-solid-svg-icons';
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
+  import Button from '$lib/components/primitives/Button.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import FormInput from '$lib/components/primitives/FormInput.svelte';
   import { PasswordResetRequestBloc } from './PasswordResetRequest.bloc.svelte';
@@ -48,7 +49,7 @@
       <p class="hint">
         Please check your email and follow the instructions to reset your password.
       </p>
-      <a class="btn-ghost" href="/">Back to home</a>
+      <Button color="transparent" fullWidth href="/">Back to home</Button>
     {/snippet}
   </AuthCard>
 {:else}
@@ -101,17 +102,11 @@
             <ErrorBanner message={bloc.errorMessage} />
           {/if}
 
-          <button
-            type="submit"
-            class="btn-primary"
-            class:loading={bloc.isSubmitting}
-            disabled={bloc.isDisabled}
-          >
-            <span class="btn-label">{bloc.isSubmitting ? 'Sending…' : 'Send Reset Link'}</span>
-            {#if bloc.isSubmitting}
-              <span class="spinner" aria-hidden="true"></span>
-            {/if}
-          </button>
+          <div class="submit-row">
+            <Button type="submit" size="lg" fullWidth loading={bloc.isSubmitting} disabled={bloc.isDisabled}>
+              {bloc.isSubmitting ? 'Sending…' : 'Send Reset Link'}
+            </Button>
+          </div>
         </fieldset>
       </form>
     {/snippet}
@@ -175,68 +170,9 @@
     opacity: 0.6;
   }
 
-  .btn-primary {
-    width: 100%;
-    height: 46px;
+  /* Both actions are Buttons; only the gap above the submit belongs here. */
+  .submit-row {
+    display: flex;
     margin-top: 4px;
-    background: var(--weeb-accent);
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    border: none;
-    border-radius: var(--weeb-radius);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: background 0.15s, transform 0.1s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-primary:hover:not(:disabled) { background: var(--weeb-accent-hover); }
-  .btn-primary:active:not(:disabled) { transform: scale(0.99); }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-primary.loading .btn-label { opacity: 0; }
-
-  .btn-ghost {
-    width: 100%;
-    height: 42px;
-    background: var(--weeb-surface);
-    color: var(--weeb-fg-secondary);
-    font-size: 14px;
-    font-weight: 500;
-    font-family: inherit;
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s;
-  }
-
-  .btn-ghost:hover {
-    background: var(--weeb-surface-hover);
-    color: var(--weeb-fg);
-  }
-
-  .spinner {
-    display: block;
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    border: 2px solid oklch(100% 0 0 / 0.3);
-    border-top-color: white;
-    border-radius: var(--weeb-radius-full);
-    animation: spin 0.7s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) {
-    .spinner { animation-duration: 2s; }
   }
 </style>

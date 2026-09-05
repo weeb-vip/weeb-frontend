@@ -22,9 +22,9 @@
 
     <!-- Meta tags -->
     <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-      <div class="skeleton-line" style="width: 60px; height: 24px; border-radius: 4px;"></div>
-      <div class="skeleton-line" style="width: 80px; height: 24px; border-radius: 4px;"></div>
-      <div class="skeleton-line" style="width: 70px; height: 24px; border-radius: 4px;"></div>
+      <div class="skeleton-line" style="width: 60px; height: 24px; border-radius: var(--weeb-radius-sm);"></div>
+      <div class="skeleton-line" style="width: 80px; height: 24px; border-radius: var(--weeb-radius-sm);"></div>
+      <div class="skeleton-line" style="width: 70px; height: 24px; border-radius: var(--weeb-radius-sm);"></div>
     </div>
 
     <!-- Buttons -->
@@ -52,8 +52,14 @@
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(to top, var(--weeb-bg) 0%, oklch(14% 0.015 275 / 0.85) 40%, oklch(14% 0.015 275 / 0.55) 70%, oklch(14% 0.015 275 / 0.3) 100%),
-      linear-gradient(to right, oklch(14% 0.015 275 / 0.7) 0%, transparent 60%);
+      linear-gradient(
+        to top,
+        var(--weeb-bg) 0%,
+        color-mix(in oklch, var(--weeb-bg) 85%, transparent) 40%,
+        color-mix(in oklch, var(--weeb-bg) 55%, transparent) 70%,
+        color-mix(in oklch, var(--weeb-bg) 30%, transparent) 100%
+      ),
+      linear-gradient(to right, color-mix(in oklch, var(--weeb-bg) 70%, transparent) 0%, transparent 60%);
   }
   .hero-skeleton-content {
     position: relative;
@@ -70,7 +76,7 @@
     align-items: center;
     gap: 6px;
     padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: var(--weeb-radius-full);
     background: var(--weeb-surface-hover);
     margin-bottom: 16px;
     width: fit-content;
@@ -78,12 +84,12 @@
   .skeleton-dot {
     width: 6px;
     height: 6px;
-    border-radius: 50%;
+    border-radius: var(--weeb-radius-full);
     background: var(--weeb-surface-hover);
   }
   .skeleton-line {
     background: var(--weeb-surface-hover);
-    border-radius: 6px;
+    border-radius: var(--weeb-radius-sm);
     animation: shimmer 1.5s infinite;
   }
   @keyframes shimmer {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Chip from '$lib/components/primitives/Chip.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
 
   /**
@@ -192,10 +193,13 @@
 
           <div class="meta">
             {#if item.category}
-              <span class="badge" style="--cat: {colorFor(item.category)}">{item.category}</span>
+              <!-- The category set is open, so the colour is passed rather than
+                   named: Chip tints border, text and ground from whatever it is
+                   given. -->
+              <Chip label={item.category} size="sm" color={colorFor(item.category)} class="cat-chip" />
             {/if}
             {#if item.episodeNumber}
-              <span class="ep">Ep {item.episodeNumber}</span>
+              <Chip label="Ep {item.episodeNumber}" size="sm" mono />
             {/if}
             <!-- Language of the SOURCE article; our summary is always English. Tells a
                  reader the link is Japanese before they follow it. Guarded like
@@ -448,31 +452,12 @@
     margin-top: 6px;
   }
 
-  /* Pill, matching .hero-tag and .genre-pill — the site's pill radius is a
-     hardcoded 20px rather than a token, so this follows suit deliberately.
-     No colour dot here: the rail already carries one, and the site's pills
-     have no leading marker. */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 11px;
-    font-weight: 500;
-    padding: 3px 11px;
-    border-radius: 20px;
-    border: 1px solid color-mix(in oklch, var(--cat) 40%, var(--weeb-border));
-    color: var(--cat);
-    background: color-mix(in oklch, var(--cat) 12%, transparent);
+  /* Shape and tint come from Chip -- this used to hardcode `border-radius:
+     20px` with a comment explaining that the site's pill radius was a
+     hardcoded 20px, which had not been true since the tokens landed. No colour
+     dot: the rail beside the row already carries one. */
+  :global(.cat-chip) {
     text-transform: capitalize;
-    white-space: nowrap;
-  }
-
-  .ep {
-    font-family: var(--weeb-font-mono);
-    font-size: 10px;
-    color: var(--weeb-fg-secondary);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-sm);
-    padding: 1px 5px;
   }
 
   .source {

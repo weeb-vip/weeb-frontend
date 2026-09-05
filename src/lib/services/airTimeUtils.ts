@@ -293,7 +293,7 @@ export function findNextEpisode(
 }
 
 /**
- * Get air time display configuration for AnimeCard component
+ * Get air time display configuration for a card's air-time line
  */
 export function getAirTimeDisplay(airDate?: string | null, broadcast?: string | null, durationMinutes?: number | null, now?: Date | null): {
   show: boolean;

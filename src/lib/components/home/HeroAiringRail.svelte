@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AiringIndicator from '$lib/components/primitives/AiringIndicator.svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import { GetImageFromAnime, animeHref } from '$lib/services/utils';
   import {
@@ -126,7 +127,7 @@
             </span>
 
             <span class="rail-when" class:is-live={m.isLive}>
-              {#if m.isLive}<span class="rail-dot" aria-hidden="true"></span>{/if}
+              {#if m.isLive}<AiringIndicator state="airing" />{/if}
               {m.countdown}
             </span>
           </a>
@@ -141,11 +142,11 @@
     position: absolute;
     z-index: 4;
     border-radius: var(--weeb-radius-lg);
-    background: var(--weeb-panel-bg, var(--weeb-surface));
+    background: var(--weeb-panel-bg);
     backdrop-filter: var(--weeb-panel-blur);
     -webkit-backdrop-filter: var(--weeb-panel-blur);
     border: 1px solid var(--weeb-border);
-    box-shadow: var(--weeb-shadow-card, 0 12px 32px oklch(0% 0 0 / 0.4));
+    box-shadow: var(--weeb-shadow-card);
   }
 
   .rail-head {
@@ -272,27 +273,17 @@
     color: var(--weeb-fg);
     white-space: nowrap;
   }
+  /* Green, and the same green pulse as every other "on the air now" mark:
+     AiringIndicator owns the dot, the colour and the one pulse rule. */
   .rail-when.is-live { color: var(--weeb-green); }
-  .rail-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--weeb-green);
-    animation: railPulse 2s infinite;
-  }
-  @keyframes railPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
   @media (prefers-reduced-motion: reduce) {
-    .rail-dot { animation: none; }
     .rail-item { transition: none; }
   }
 
   /* ---- Desktop: vertical panel on the right of the banner ---- */
   @media (min-width: 1025px) {
     .rail {
-      right: var(--weeb-section-px, 48px);
+      right: var(--weeb-section-px);
       bottom: calc(48px + var(--hero-fade, 0px));
       width: 340px;
       padding: 14px;

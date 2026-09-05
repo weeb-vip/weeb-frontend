@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Chip from '$lib/components/primitives/Chip.svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import EmptyState from '$lib/components/primitives/EmptyState.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
@@ -122,12 +123,14 @@
           {#if isExpanded && entry.staff}
             <div class="char-va-list">
               {#each entry.staff as va, vaIdx}
-                <a class="va-chip" class:active={vaIdx === 0} href={`/people/${va.slug || va.id}`}>
+                <!-- The credited voice actor is the first one, so it is the
+                     one selected. Same pill as every other pill. -->
+                <Chip size="sm" href={`/people/${va.slug || va.id}`} selected={vaIdx === 0}>
                   <span class="va-name">{va.givenName} {va.familyName}</span>
                   {#if va.language}
                     <span class="va-lang">{va.language}</span>
                   {/if}
-                </a>
+                </Chip>
               {/each}
             </div>
           {/if}
@@ -221,14 +224,25 @@
     object-fit: cover;
     border-radius: var(--weeb-radius);
   }
-  .char-portrait-0 { background: linear-gradient(135deg, oklch(28% 0.06 280), oklch(18% 0.04 300)); }
-  .char-portrait-1 { background: linear-gradient(135deg, oklch(32% 0.08 260), oklch(20% 0.05 280)); }
-  .char-portrait-2 { background: linear-gradient(135deg, oklch(26% 0.07 290), oklch(16% 0.04 270)); }
-  .char-portrait-3 { background: linear-gradient(135deg, oklch(30% 0.09 270), oklch(18% 0.05 295)); }
-  .char-portrait-4 { background: linear-gradient(135deg, oklch(34% 0.10 275), oklch(22% 0.07 300)); }
-  .char-portrait-5 { background: linear-gradient(135deg, oklch(24% 0.06 285), oklch(14% 0.03 265)); }
-  .char-portrait-6 { background: linear-gradient(135deg, oklch(28% 0.08 300), oklch(18% 0.05 280)); }
-  .char-portrait-7 { background: linear-gradient(135deg, oklch(32% 0.07 265), oklch(20% 0.04 290)); }
+  /* Eight grounds behind a missing portrait, so a wall of them is not one flat
+     grey. They were eight hardcoded oklch() pairs; they are now one gradient
+     tinted by a per-index step off the accent, which is the same variation
+     without eight literals the palette does not know about. */
+  .char-portrait[class*='char-portrait-'] {
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--weeb-accent) var(--portrait-tint, 14%), var(--weeb-surface)),
+      var(--weeb-bg-elevated)
+    );
+  }
+  .char-portrait-0 { --portrait-tint: 10%; }
+  .char-portrait-1 { --portrait-tint: 22%; }
+  .char-portrait-2 { --portrait-tint: 6%; }
+  .char-portrait-3 { --portrait-tint: 18%; }
+  .char-portrait-4 { --portrait-tint: 28%; }
+  .char-portrait-5 { --portrait-tint: 4%; }
+  .char-portrait-6 { --portrait-tint: 24%; }
+  .char-portrait-7 { --portrait-tint: 14%; }
 
   .char-info {
     min-width: 0;
@@ -281,7 +295,7 @@
   }
   .char-va-link:hover,
   .char-va-link:focus-visible {
-    color: var(--weeb-accent-text, var(--weeb-fg));
+    color: var(--weeb-accent-text);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
@@ -309,38 +323,12 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    background: oklch(16% 0.012 275);
+    background: color-mix(in oklch, var(--weeb-bg) 60%, var(--weeb-surface));
   }
 
-  .va-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--weeb-border);
-    font-size: 11px;
-    transition: all 0.15s;
-  }
-  .va-chip.active {
-    border-color: var(--weeb-accent);
-    background: oklch(22% 0.03 280);
-  }
-  a.va-chip {
-    text-decoration: none;
-    cursor: pointer;
-  }
-  a.va-chip:hover,
-  a.va-chip:focus-visible {
-    border-color: var(--weeb-accent);
-    background: var(--weeb-surface-hover);
-  }
-  a.va-chip:hover .va-name,
-  a.va-chip:focus-visible .va-name {
-    color: var(--weeb-fg);
-  }
+  /* Shape, hover and selected state all come from Chip. What is left is the
+     two-part label inside it. */
   .va-name {
-    color: var(--weeb-fg-secondary);
     font-weight: 500;
   }
   .va-lang {

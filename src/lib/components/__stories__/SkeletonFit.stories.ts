@@ -4,10 +4,11 @@ import PosterGridFitDemo from './PosterGridFitDemo.svelte';
 /**
  * Does the placeholder actually stand in for the card that replaces it?
  *
- * ProfileMediaList's loading state rendered `AnimeCardSkeleton` into a
- * `PosterGrid` of `PosterCard`s, which is two different cards. These two
- * stories put loaded cards and placeholders in one grid so the difference is
- * something to look at rather than take on trust.
+ * The contrast story that used to sit beside this one drew `AnimeCardSkeleton`
+ * into the same grid to show what the wrong placeholder looked like. That
+ * component had no callers outside these stories and has been deleted, so the
+ * comparison went with it -- what is left is the check that still means
+ * something.
  */
 const meta = {
   title: 'Composites/Cards/SkeletonFit',
@@ -21,20 +22,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * `PosterCardSkeleton`, which is what the list renders now: the poster box, the
- * title line and the sub-line land where the loaded card puts them, and the
- * cell width is the grid's rather than the skeleton's.
- */
-export const PosterCardSkeletonFits: Story = {
-  args: { skeleton: 'poster' },
-};
-
-/**
- * `AnimeCardSkeleton`, which is what it rendered before: a fixed 192x288 box
- * with the metadata column beside the art. It neither fills the cell nor lines
- * up with anything that loads in.
- */
-export const AnimeCardSkeletonDoesNot: Story = {
-  args: { skeleton: 'anime' },
-};
+/** Loaded cards and placeholders in one grid, at the same cell width. */
+export const PosterCardSkeletonFits: Story = {};

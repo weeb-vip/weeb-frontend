@@ -7,7 +7,8 @@
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
   import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
   import SectionHeader from '$lib/components/primitives/SectionHeader.svelte';
-  import GenrePills from '$lib/components/primitives/GenrePills.svelte';
+  import ChipRow from '$lib/components/primitives/ChipRow.svelte';
+  import { BROWSE_GENRE_LINKS } from '$lib/data/genres';
   import Tabs from '$lib/components/primitives/Tabs.svelte';
   import { HomepageBloc, type HomeAnime, type PublishingWork } from './HomepageSSR.bloc.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -227,7 +228,10 @@
   <!-- Browse by Tag -->
   <section class="section">
     <SectionHeader title="Browse by Tag" />
-    <GenrePills />
+    <!-- The genre list is data (`$lib/data/genres`) and the row is Chips; it
+         used to be sixteen names hardcoded as a default prop inside the
+         presentational component that drew them. -->
+    <ChipRow items={BROWSE_GENRE_LINKS} touch ariaLabel="Browse by tag" />
   </section>
 </div>
 

@@ -90,7 +90,7 @@
     position: fixed;
     left: 0;
     right: 0;
-    top: var(--weeb-nav-height, 60px);
+    top: var(--weeb-nav-height);
     z-index: 90;
     transform: translateY(-100%);
     opacity: 0;
@@ -134,7 +134,7 @@
     position: relative;
     z-index: 1;
     width: 100%;
-    padding: 8px var(--weeb-section-px, 48px);
+    padding: 8px var(--weeb-section-px);
     display: flex;
     align-items: center;
     gap: 12px;

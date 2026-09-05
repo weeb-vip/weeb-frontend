@@ -5,7 +5,9 @@
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import Pagination from '$lib/components/primitives/Pagination.svelte';
   import PosterCard from '$lib/components/cards/PosterCard.svelte';
+  import Chip from '$lib/components/primitives/Chip.svelte';
   import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
+  import Score from '$lib/components/primitives/Score.svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import Skeleton from '$lib/components/primitives/Skeleton.svelte';
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
@@ -71,11 +73,9 @@
 <div class="pml">
   {#if bloc.isLoading}
     <!-- The same shape as the loaded list: a tab row, then a wall of cards.
-         PosterCardSkeleton, not AnimeCardSkeleton: what loads in behind it is
-         a PosterGrid of PosterCards, and AnimeCardSkeleton draws the other
-         card -- a fixed 192x288 box with a metadata column beside the art,
-         which in a fluid grid column neither filled the cell nor matched the
-         2:3 poster that replaced it. -->
+         PosterCardSkeleton is the right placeholder because what loads in
+         behind it is a PosterGrid of PosterCards: the poster box, the title
+         line and the sub-line land where the loaded card puts them. -->
     <div class="pml-tab-skeleton">
       {#each Array(5) as _}
         <Skeleton className="h-10 w-24" />
@@ -159,18 +159,14 @@
               <div class="row-title">{row.title}</div>
               <div class="row-sub">
                 {#if row.typeBadge}
-                  <span class="row-type-badge">{row.typeBadge}</span>
+                  <Chip label={row.typeBadge} size="sm" />
                 {/if}
                 <span style="color: {color}">{bloc.config.statusLabel(row.status)}</span>
               </div>
             </div>
 
-            <div class="row-score" class:no-score={row.score == null}>
-              {#if row.score != null}
-                <span class="star">&#9733;</span> {row.score.toFixed(1)}
-              {:else}
-                &mdash;
-              {/if}
+            <div class="row-score">
+              <Score value={row.score} variant="inline" />
             </div>
 
             <div class="row-progress">
@@ -233,7 +229,7 @@
 <style>
   .pml {
     width: 100%;
-    padding: 0 var(--weeb-section-px, 48px);
+    padding: 0 var(--weeb-section-px);
   }
 
   .pml-tab-skeleton {
@@ -293,7 +289,7 @@
   .row-poster {
     width: 36px;
     height: 52px;
-    border-radius: 4px;
+    border-radius: var(--weeb-radius-sm);
     overflow: hidden;
     flex-shrink: 0;
   }
@@ -305,7 +301,7 @@
     width: 100%;
     height: 100%;
     background: var(--weeb-surface-hover);
-    border-radius: 4px;
+    border-radius: var(--weeb-radius-sm);
   }
 
   .row-main { min-width: 0; }
@@ -327,46 +323,32 @@
     gap: 6px;
     min-width: 0;
   }
-  .row-type-badge {
-    font-size: 0.65rem;
-    font-weight: 600;
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: var(--weeb-surface-hover);
-    color: var(--weeb-fg-secondary);
-    white-space: nowrap;
-  }
-
+  /* The cell; `Score` draws what is in it. */
   .row-score {
-    font-family: var(--weeb-font-mono, monospace);
-    font-size: 0.85rem;
-    font-weight: 600;
     display: flex;
-    align-items: center;
-    gap: 3px;
     justify-content: center;
-    color: var(--weeb-fg);
   }
-  .row-score.no-score { color: var(--weeb-fg-muted); font-weight: 400; }
-  .star { color: var(--weeb-amber); font-size: 0.7rem; }
 
   .row-progress { min-width: 0; }
   .progress-text {
-    font-family: var(--weeb-font-mono, monospace);
+    font-family: var(--weeb-font-mono);
     font-size: 0.7rem;
     color: var(--weeb-fg-muted);
     margin-bottom: 3px;
     white-space: nowrap;
   }
+  /* One 3px bar. It had a twin in AiringStripCard at a different radius; that
+     card is gone, and 99px was --weeb-radius-full written by hand. A second
+     call site would earn a ProgressBar primitive -- one does not. */
   .progress-bar {
     height: 3px;
     background: var(--weeb-surface-hover);
-    border-radius: 99px;
+    border-radius: var(--weeb-radius-full);
     overflow: hidden;
   }
   .progress-fill {
     height: 100%;
-    border-radius: 99px;
+    border-radius: var(--weeb-radius-full);
     transition: width 0.3s ease;
   }
 

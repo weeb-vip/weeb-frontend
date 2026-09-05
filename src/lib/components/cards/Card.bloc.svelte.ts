@@ -5,7 +5,7 @@ import { analytics } from '$lib/utils/analytics';
 /**
  * The two singletons every anime card used to reach for -- the title-language
  * preference and the analytics ping -- behind one pair of ports, shared by
- * AnimeCard, PosterCard, AiringStripCard and HeroAiringRail.
+ * PosterCard, HeroAiringRail and the calendar popover's episode row.
  *
  * Why ports and not four blocs, or one bloc instantiated four times:
  *

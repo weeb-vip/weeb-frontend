@@ -118,12 +118,12 @@
   .hero-panel {
     flex: 0 1 auto;
     max-width: min(560px, calc(100vw - 460px));
-    background: var(--weeb-panel-bg, var(--weeb-surface));
+    background: var(--weeb-panel-bg);
     backdrop-filter: var(--weeb-panel-blur);
     -webkit-backdrop-filter: var(--weeb-panel-blur);
     border: 1px solid var(--weeb-border);
     border-radius: var(--weeb-radius-lg);
-    box-shadow: var(--weeb-shadow-card, 0 12px 32px oklch(0% 0 0 / 0.4));
+    box-shadow: var(--weeb-shadow-card);
     padding: 20px;
   }
 

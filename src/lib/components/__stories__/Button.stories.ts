@@ -1,5 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
+import { createRawSnippet } from 'svelte';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import Button from '$lib/components/primitives/Button.svelte';
+
+/** Stories are plain .ts, so a label snippet is built rather than slotted. */
+const text = (label: string) => createRawSnippet(() => ({ render: () => `<span>${label}</span>` }));
 
 const meta = {
   title: 'Primitives/Button',
@@ -9,6 +14,10 @@ const meta = {
     color: {
       control: 'select',
       options: ['blue', 'red', 'transparent', ''],
+    },
+    size: {
+      control: 'select',
+      options: ['sm', 'md', 'lg', 'hero', 'icon'],
     },
     status: {
       control: 'select',
@@ -24,10 +33,7 @@ type Story = StoryObj<typeof meta>;
 export const Accent: Story = {
   args: {
     color: 'blue',
-    label: 'Add to Watchlist',
-    showLabel: true,
-    status: 'idle',
-    disabled: false,
+    children: text('Add to Watchlist'),
   },
 };
 
@@ -35,10 +41,7 @@ export const Accent: Story = {
 export const Ghost: Story = {
   args: {
     color: 'transparent',
-    label: 'View Details',
-    showLabel: true,
-    status: 'idle',
-    disabled: false,
+    children: text('View Details'),
   },
 };
 
@@ -46,21 +49,29 @@ export const Ghost: Story = {
 export const Danger: Story = {
   args: {
     color: 'red',
-    label: 'Remove from List',
-    showLabel: true,
-    status: 'idle',
-    disabled: false,
+    children: text('Remove from List'),
   },
 };
 
-/** In flight: a spinner replaces the label and clicks are ignored. */
+/**
+ * In flight. The label stays exactly where it was, at `opacity: 0` under the
+ * spinner: replacing it used to collapse the button from 167px to 49px
+ * mid-request, and take its accessible name with it.
+ */
 export const Loading: Story = {
   args: {
     color: 'blue',
-    label: 'Saving...',
-    showLabel: true,
-    status: 'loading',
-    disabled: false,
+    loading: true,
+    children: text('Add to Watchlist'),
+  },
+};
+
+/** The transient confirmation, which falls back to idle on its own after 2s. */
+export const Success: Story = {
+  args: {
+    color: 'blue',
+    status: 'success',
+    children: text('Add to Watchlist'),
   },
 };
 
@@ -68,9 +79,54 @@ export const Loading: Story = {
 export const Disabled: Story = {
   args: {
     color: 'blue',
-    label: 'Not Available',
-    showLabel: true,
-    status: 'idle',
     disabled: true,
+    children: text('Not Available'),
+  },
+};
+
+/** A link CTA. Same paint, same focus ring, an `<a>` in the DOM. */
+export const Link: Story = {
+  args: {
+    color: 'blue',
+    href: '/auth/login',
+    children: text('Go to log in'),
+  },
+};
+
+/** `sm` is the compact action: EmptyState's CTA and the show page's sticky header. */
+export const Small: Story = {
+  args: {
+    color: 'blue',
+    size: 'sm',
+    children: text('Show all anime'),
+  },
+};
+
+/** `lg` + `fullWidth` is the auth submit every auth screen used to hand-roll. */
+export const LargeFullWidth: Story = {
+  args: {
+    color: 'blue',
+    size: 'lg',
+    fullWidth: true,
+    children: text('Create account'),
+  },
+};
+
+/** `hero` is the pair on the home banner panel: the accent CTA and its ghost sibling. */
+export const Hero: Story = {
+  args: {
+    color: 'blue',
+    size: 'hero',
+    children: text('View Details'),
+  },
+};
+
+/** `icon` is the 32px round add button. It needs an `ariaLabel` -- there is no text to read. */
+export const IconOnly: Story = {
+  args: {
+    color: 'blue',
+    size: 'icon',
+    icon: faPlus,
+    ariaLabel: 'Add to list',
   },
 };

@@ -1,5 +1,6 @@
 <script lang="ts">
   import AnimeActions from '$lib/components/tracking/AnimeActions.svelte';
+  import Button from '$lib/components/primitives/Button.svelte';
   import SafeImage from '$lib/components/primitives/SafeImage.svelte';
   import StreamingPlatforms from '$lib/components/show/StreamingPlatforms.svelte';
   import { animeHref } from '$lib/services/utils';
@@ -123,7 +124,7 @@
     </div>
 
     <div class="hero-actions">
-      <a href={animeHref(bloc.anime)} class="btn-primary">View Details</a>
+      <Button size="hero" href={animeHref(bloc.anime)}>View Details</Button>
       <AnimeActions
         anime={bloc.anime}
         variant="hero"
@@ -379,22 +380,6 @@
     gap: 10px;
     margin-top: 20px;
     align-items: center;
-  }
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 10px 24px;
-    border-radius: var(--weeb-radius);
-    font-size: 14px;
-    font-weight: 600;
-    background: var(--weeb-accent);
-    color: white;
-    text-decoration: none;
-    transition: background 0.15s;
-  }
-  .btn-primary:hover {
-    background: var(--weeb-accent-hover);
   }
   @media (min-width: 1025px) {
     .hero-desc { display: -webkit-box; }

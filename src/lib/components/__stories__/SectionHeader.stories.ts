@@ -27,3 +27,30 @@ export const WithoutLink: Story = {
     linkText: '',
   },
 };
+
+/**
+ * The `sub` scale with its rule: the show page's section headings, which used
+ * to be a second implementation inside `ShowSection`. The hairline runs from
+ * the words to the edge of the column, so the heading measures the section.
+ */
+export const SubWithRule: Story = {
+  args: {
+    title: 'Characters & Staff',
+    size: 'sub',
+    rule: true,
+  },
+};
+
+/**
+ * The `eyebrow` scale: the label over a group inside a section, which used to
+ * be a third implementation inside `RelatedAnime`.
+ */
+export const Eyebrow: Story = {
+  args: {
+    title: 'Same series',
+    size: 'eyebrow',
+    as: 'h3',
+    href: '/series/12345',
+    linkText: 'View all seasons →',
+  },
+};

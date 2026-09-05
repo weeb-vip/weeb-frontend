@@ -3,6 +3,7 @@
   import QueryProvider from '$lib/components/shell/QueryProvider.svelte';
   import { onDestroy, onMount } from 'svelte';
   import AuthCard from '$lib/components/auth/AuthCard.svelte';
+  import Button from '$lib/components/primitives/Button.svelte';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
   import { EmailVerificationBloc } from './EmailVerification.bloc.svelte';
   import { VERIFY_BANNER } from '$lib/components/auth/auth-shared';
@@ -57,7 +58,7 @@
 
   {#snippet children()}
     {#if bloc.status === 'success'}
-      <a class="btn-primary" href={bloc.loginHref}>Log in and start tracking</a>
+      <Button size="lg" fullWidth href={bloc.loginHref}>Log in and start tracking</Button>
       <p class="hint" aria-live="polite">Taking you to log in in {bloc.redirectIn}…</p>
     {/if}
 
@@ -72,32 +73,34 @@
         {#if bloc.resend.isFailed}
           <ErrorBanner message={VERIFY_BANNER.failed} class="ev-alert" />
         {/if}
-        <button
-          type="button"
-          class="btn-primary"
-          onclick={() => void bloc.resendLink()}
-          disabled={bloc.resend.isSending}
+        <Button
+          size="lg"
+          fullWidth
+          loading={bloc.resend.isSending}
+          onClick={() => void bloc.resendLink()}
         >
-          {bloc.resend.isSending ? VERIFY_BANNER.sending : VERIFY_BANNER.action}
-        </button>
+          <!-- The label stays put under the spinner, so it is also still the
+               button's accessible name while the resend is in flight. -->
+          {VERIFY_BANNER.action}
+        </Button>
       {/if}
 
       <p class="hint">Your account and password are unchanged.</p>
 
       <div class="secondary-actions">
         {#if bloc.token}
-          <button type="button" class="btn-ghost" onclick={() => bloc.retry()}>
+          <Button color="transparent" fullWidth onClick={() => bloc.retry()}>
             Try this link again
-          </button>
+          </Button>
         {/if}
-        <a class="btn-ghost" href="/auth/login">Back to log in</a>
+        <Button color="transparent" fullWidth href="/auth/login">Back to log in</Button>
       </div>
     {/if}
 
     {#if bloc.status === 'incomplete'}
       <div class="secondary-actions">
-        <a class="btn-ghost" href="/auth/resend-verification">Send me a new link</a>
-        <a class="btn-ghost" href="/auth/login">Back to log in</a>
+        <Button color="transparent" fullWidth href="/auth/resend-verification">Send me a new link</Button>
+        <Button color="transparent" fullWidth href="/auth/login">Back to log in</Button>
       </div>
     {/if}
   {/snippet}
@@ -139,59 +142,13 @@
     margin-bottom: 14px;
   }
 
-  /* --- Buttons --- */
-  .btn-primary {
-    width: 100%;
-    height: 46px;
-    background: var(--weeb-accent);
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: inherit;
-    letter-spacing: 0.01em;
-    border: none;
-    border-radius: var(--weeb-radius);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    text-decoration: none;
-    transition: background 0.15s, transform 0.1s;
-  }
-
-  .btn-primary:hover:not(:disabled) { background: var(--weeb-accent-hover); }
-  .btn-primary:active:not(:disabled) { transform: scale(0.99); }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
+  /* Every action on this screen is a Button; the stack around them is all that
+     is left here. */
   .secondary-actions {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-top: 14px;
-  }
-
-  .btn-ghost {
-    width: 100%;
-    height: 42px;
-    background: var(--weeb-surface);
-    color: var(--weeb-fg-secondary);
-    font-size: 14px;
-    font-weight: 500;
-    font-family: inherit;
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s;
-  }
-
-  .btn-ghost:hover {
-    background: var(--weeb-surface-hover);
-    color: var(--weeb-fg);
   }
 
   .hint {

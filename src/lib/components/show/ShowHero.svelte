@@ -73,7 +73,7 @@
     display: flex;
     align-items: flex-end;
     overflow: hidden;
-    margin-top: calc(-1 * var(--weeb-nav-height, 60px));
+    margin-top: calc(-1 * var(--weeb-nav-height));
     background: var(--weeb-bg-elevated);
   }
 
