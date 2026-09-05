@@ -21,13 +21,15 @@
   import ScrollingText from './ScrollingText.svelte';
   import ScrollingTags from './ScrollingTags.svelte';
   import { STATUS_LABELS } from '../utils/status';
-  import { analytics } from '../../utils/analytics';
   import { animeHref } from '../../services/utils';
+  import { realCardTracking, type CardTrackingPort } from './Card.bloc.svelte';
 
   /**
-   * Presentational -- no bloc. Everything it draws arrives as a prop; the one
-   * side effect is the analytics ping on the title link, which is a report of
-   * what the reader just did rather than state this component owns.
+   * Presentational -- no bloc. Everything it draws arrives as a prop, its title
+   * included: whoever owns the title-language preference resolves it (see
+   * Card.bloc). The one side effect is the analytics ping on the title link --
+   * a report of what the reader just did rather than state this component owns
+   * -- and that arrives as the same module's shared port.
    */
   let {
     style = 'default',
@@ -52,6 +54,7 @@
     tags = [],
     /** Controls rendered under the metadata on the `detail` and `episode` styles. */
     options,
+    track = realCardTracking,
   }: {
     style?: AnimeCardStyle;
     forceListLayout?: boolean;
@@ -70,6 +73,7 @@
     episodeNumber?: string;
     tags?: string[];
     options?: Snippet;
+    track?: CardTrackingPort;
   } = $props();
 
   const statusLabels = STATUS_LABELS;
@@ -143,7 +147,7 @@
   {/if}
 
   <a href={animeHref({ id, slug })}
-     onclick={() => analytics.animeViewed(id || '', title)}
+     onclick={() => track(id || '', title)}
      class="flex flex-col {cardStyles[style]} overflow-hidden transition-colors duration-300 {forceListLayout ? 'rounded-l-md h-full flex-shrink-0 flex-grow-0 w-32' : 'flex-shrink sm:flex-shrink md:flex-shrink-0 rounded-l-md lg:rounded-bl-none lg:rounded-t-md'}" style="background: var(--weeb-surface);">
     <SafeImage
             src={image}
@@ -155,7 +159,7 @@
 
   {#if style === 'detail'}
     <div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group">
-      <a href={animeHref({ id, slug })} onclick={() => analytics.animeViewed(id || '', title)} class="flex overflow-hidden flex-col w-full flex-grow">
+      <a href={animeHref({ id, slug })} onclick={() => track(id || '', title)} class="flex overflow-hidden flex-col w-full flex-grow">
         <ScrollingText
                 text={title}
                 className="text-md font-bold text-weeb-fg"
@@ -195,7 +199,7 @@
 
   {#if style === 'episode'}
     <div class="flex flex-col flex-grow min-w-0 px-4 py-2 h-full relative w-full group">
-      <a href={animeHref({ id, slug })} onclick={() => analytics.animeViewed(id || '', title)} class="flex flex-col overflow-hidden w-full flex-grow">
+      <a href={animeHref({ id, slug })} onclick={() => track(id || '', title)} class="flex flex-col overflow-hidden w-full flex-grow">
         <ScrollingText
                 text={title}
                 className="text-md font-bold text-weeb-fg"

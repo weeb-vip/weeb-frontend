@@ -2,7 +2,7 @@
   import PosterCard from './PosterCard.svelte';
   import PosterGrid from './PosterGrid.svelte';
   import EmptyState from './EmptyState.svelte';
-  import ProfileHeroAvatar from './ProfileHeroAvatar.svelte';
+  import ProfileAvatar from './ProfileAvatar.svelte';
   import { PublicUserPageBloc, type PublicUserCard } from './PublicUserPage.bloc.svelte';
 
   /**
@@ -46,7 +46,9 @@
 
     <div class="hero-body">
       <div class="hero-avatar-wrap">
-        <ProfileHeroAvatar
+        <ProfileAvatar
+          size="xl"
+          linkToProfile={false}
           src={bloc.avatarUrl}
           alt={bloc.displayName}
           initials={bloc.initials}

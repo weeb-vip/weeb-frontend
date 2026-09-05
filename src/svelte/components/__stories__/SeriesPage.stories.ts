@@ -45,7 +45,7 @@ function bloc(entries: SeriesEntry[], ssrError: string | null = null, seriesTitl
 }
 
 const meta = {
-  title: 'Browse/SeriesPage',
+  title: 'Pages/SeriesPage',
   component: SeriesPage,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

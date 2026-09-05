@@ -4,7 +4,7 @@ import FormInput from '../FormInput.svelte';
 import StoryContainer from './StoryContainer.svelte';
 
 const meta = {
-  title: 'Design System/FormInput',
+  title: 'Primitives/FormInput',
   component: FormInput,
   tags: ['autodocs'],
   parameters: {

@@ -44,7 +44,7 @@ const successGlyph = createRawSnippet(() => ({
 }));
 
 const meta = {
-  title: 'Design System/AuthCard',
+  title: 'Composites/Auth/AuthCard',
   component: AuthCard,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

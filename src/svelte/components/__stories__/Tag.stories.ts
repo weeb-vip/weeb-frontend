@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import Tag from '../Tag.svelte';
 
 const meta = {
-  title: 'Design System/Tag',
+  title: 'Primitives/Tag',
   component: Tag,
   tags: ['autodocs'],
   parameters: {

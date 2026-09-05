@@ -1,11 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import PosterCard from '../PosterCard.svelte';
+import { noCardTracking } from '../Card.bloc.svelte';
 import StoryContainer from './StoryContainer.svelte';
 
 const meta = {
-  title: 'Design System/PosterCard',
+  title: 'Composites/Cards/PosterCard',
   component: PosterCard,
   tags: ['autodocs'],
+  args: {
+    track: noCardTracking,
+  },
   parameters: {
     layout: 'centered',
   },

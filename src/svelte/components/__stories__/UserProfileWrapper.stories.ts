@@ -44,7 +44,7 @@ const user: ProfileUser = {
 };
 
 const meta = {
-  title: 'Design System/UserProfileWrapper',
+  title: 'Composites/Profile/UserProfileWrapper',
   component: UserProfileWrapper,
   tags: ['autodocs'],
 } satisfies Meta<typeof UserProfileWrapper>;

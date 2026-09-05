@@ -3,7 +3,7 @@ import ShowQuickInfo from '../ShowQuickInfo.svelte';
 import { FULL_ANIME, MINIMAL_ANIME, TRACKED_ANIME, UNAIRED_ANIME } from './show-fixtures';
 
 const meta = {
-  title: 'Show/ShowQuickInfo',
+  title: 'Composites/Show/ShowQuickInfo',
   component: ShowQuickInfo,
   tags: ['autodocs'],
 } satisfies Meta<typeof ShowQuickInfo>;

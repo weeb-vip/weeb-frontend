@@ -24,7 +24,7 @@ function stubPreferences(titleLanguage: TitleLanguage): PreferencesPort {
 }
 
 const meta = {
-  title: 'Design System/TitleLanguageToggle',
+  title: 'Composites/App Shell/TitleLanguageToggle',
   component: TitleLanguageToggle,
   tags: ['autodocs'],
 } satisfies Meta<typeof TitleLanguageToggle>;

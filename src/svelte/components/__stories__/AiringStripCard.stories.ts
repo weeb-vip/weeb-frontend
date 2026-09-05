@@ -1,10 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import AiringStripCard from '../AiringStripCard.svelte';
+import { noCardTracking } from '../Card.bloc.svelte';
 
 const meta = {
-  title: 'Design System/AiringStripCard',
+  title: 'Composites/Cards/AiringStripCard',
   component: AiringStripCard,
   tags: ['autodocs'],
+  args: {
+    track: noCardTracking,
+  },
   argTypes: {
     isLive: { control: 'boolean' },
   },

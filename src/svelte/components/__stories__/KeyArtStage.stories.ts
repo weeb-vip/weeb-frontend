@@ -16,7 +16,7 @@ const stageContent = createRawSnippet(() => ({
 }));
 
 const meta = {
-  title: 'Show/KeyArtStage',
+  title: 'Composites/Show/KeyArtStage',
   component: KeyArtStage,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

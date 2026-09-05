@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import HeroBannerSkeleton from '../HeroBannerSkeleton.svelte';
 
 const meta = {
-  title: 'Design System/HeroBannerSkeleton',
+  title: 'Composites/Home/HeroBannerSkeleton',
   component: HeroBannerSkeleton,
   tags: ['autodocs'],
   parameters: {

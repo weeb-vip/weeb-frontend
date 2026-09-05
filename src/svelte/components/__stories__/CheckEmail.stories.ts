@@ -8,7 +8,7 @@ function checkEmailBloc(query: string, resend: ResendStoryState = 'idle') {
 }
 
 const meta = {
-  title: 'Design System/CheckEmail',
+  title: 'Composites/Auth/CheckEmail',
   component: CheckEmail,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

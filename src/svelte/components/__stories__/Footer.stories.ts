@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import Footer from '../Footer.svelte';
 
 const meta = {
-  title: 'Design System/Footer',
+  title: 'Composites/App Shell/Footer',
   component: Footer,
   tags: ['autodocs'],
   parameters: {

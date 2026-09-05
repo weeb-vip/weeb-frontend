@@ -62,7 +62,7 @@ const ITEMS = [
 ];
 
 const meta = {
-  title: 'Show/AnimeNews',
+  title: 'Composites/Show/AnimeNews',
   component: AnimeNews,
   tags: ['autodocs'],
 } satisfies Meta<typeof AnimeNews>;

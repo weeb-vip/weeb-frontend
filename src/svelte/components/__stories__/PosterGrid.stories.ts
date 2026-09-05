@@ -13,7 +13,7 @@ type PosterGridArgs = {
 };
 
 const meta = {
-  title: 'Design System/PosterGrid',
+  title: 'Primitives/PosterGrid',
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',

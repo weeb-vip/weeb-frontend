@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import AutocompleteItem from '../AutocompleteItem.svelte';
 
 const meta = {
-  title: 'Design System/AutocompleteItem',
+  title: 'Composites/App Shell/AutocompleteItem',
   component: AutocompleteItem,
   tags: ['autodocs'],
 } satisfies Meta<typeof AutocompleteItem>;

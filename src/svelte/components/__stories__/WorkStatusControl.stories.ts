@@ -33,7 +33,7 @@ function bloc(userWork: UserWorkSnapshot | null, tracking = acceptingTracking) {
 }
 
 const meta = {
-  title: 'Show/WorkStatusControl',
+  title: 'Composites/Tracking/WorkStatusControl',
   component: WorkStatusControl,
   tags: ['autodocs'],
 } satisfies Meta<typeof WorkStatusControl>;

@@ -19,7 +19,7 @@ const filteredCopy = createRawSnippet(() => ({
 }));
 
 const meta = {
-  title: 'Design System/EmptyState',
+  title: 'Primitives/EmptyState',
   component: EmptyState,
   tags: ['autodocs'],
 } satisfies Meta<typeof EmptyState>;

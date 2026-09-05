@@ -4,7 +4,7 @@ import Pagination from '../Pagination.svelte';
 const PAGE_SIZE_OPTIONS = [12, 24, 48, 96];
 
 const meta = {
-  title: 'Design System/Pagination',
+  title: 'Primitives/Pagination',
   component: Pagination,
   tags: ['autodocs'],
 } satisfies Meta<typeof Pagination>;

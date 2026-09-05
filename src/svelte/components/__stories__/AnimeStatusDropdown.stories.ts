@@ -33,7 +33,7 @@ function bloc(
 }
 
 const meta = {
-  title: 'Design System/AnimeStatusDropdown',
+  title: 'Composites/Tracking/AnimeStatusDropdown',
   component: AnimeStatusDropdown,
   tags: ['autodocs'],
   parameters: { layout: 'centered' },

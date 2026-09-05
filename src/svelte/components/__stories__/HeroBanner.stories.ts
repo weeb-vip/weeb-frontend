@@ -71,7 +71,7 @@ function bloc(options: {
 }
 
 const meta = {
-  title: 'Design System/HeroBanner',
+  title: 'Composites/Home/HeroBanner',
   component: HeroBanner,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

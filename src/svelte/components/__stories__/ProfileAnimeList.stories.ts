@@ -33,7 +33,7 @@ function bloc(result: StubResult, total = ANIME_ENTRIES.length, url: MediaListUr
 }
 
 const meta = {
-  title: 'Profile/ProfileAnimeList',
+  title: 'Composites/Profile/ProfileAnimeList',
   component: ProfileAnimeList,
   tags: ['autodocs'],
 } satisfies Meta<typeof ProfileAnimeList>;

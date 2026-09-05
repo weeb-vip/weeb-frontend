@@ -26,7 +26,7 @@ function bloc(
 }
 
 const meta = {
-  title: 'Show/ChapterProgress',
+  title: 'Composites/Tracking/ChapterProgress',
   component: ChapterProgress,
   tags: ['autodocs'],
 } satisfies Meta<typeof ChapterProgress>;

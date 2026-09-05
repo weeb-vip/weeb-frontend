@@ -41,7 +41,7 @@ function loginBloc(options: {
 }
 
 const meta = {
-  title: 'Design System/Login',
+  title: 'Composites/Auth/Login',
   component: Login,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

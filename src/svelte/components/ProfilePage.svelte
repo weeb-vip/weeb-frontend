@@ -2,10 +2,10 @@
   import PosterCard from './PosterCard.svelte';
   import PosterGrid from './PosterGrid.svelte';
   import ProfileImageUpload from './ProfileImageUpload.svelte';
-  import ProfileHeroAvatar from './ProfileHeroAvatar.svelte';
+  import ProfileAvatar from './ProfileAvatar.svelte';
   import EmptyState from './EmptyState.svelte';
   import Skeleton from './Skeleton.svelte';
-  import AnimeCardSkeleton from './AnimeCardSkeleton.svelte';
+  import PosterCardSkeleton from './PosterCardSkeleton.svelte';
   import { ProfilePageBloc, type ProfileShelfCard } from './ProfilePage.bloc.svelte';
 
   /**
@@ -29,10 +29,14 @@
   });
 </script>
 
+<!-- PosterCardSkeleton, matching the PosterCards that load in below.
+     AnimeCardSkeleton draws the other card -- a fixed 192x288 box with the
+     metadata column beside the art -- so in these grid cells the placeholder
+     was neither the cell's width nor the loaded card's shape. -->
 {#snippet shelfSkeleton(count: number)}
   <PosterGrid>
     {#each Array(count) as _}
-      <AnimeCardSkeleton />
+      <PosterCardSkeleton />
     {/each}
   </PosterGrid>
 {/snippet}
@@ -81,7 +85,9 @@
       </div>
     {:else if bloc.user}
       <div class="profile-avatar-wrap">
-        <ProfileHeroAvatar
+        <ProfileAvatar
+          size="xl"
+          linkToProfile={false}
           src={bloc.avatarUrl}
           alt={bloc.username}
           initials={bloc.username.charAt(0).toUpperCase()}

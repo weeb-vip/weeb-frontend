@@ -30,7 +30,7 @@ function bloc(result: StubResult, total = WORK_ENTRIES.length, url: MediaListUrl
 }
 
 const meta = {
-  title: 'Profile/ProfileWorkList',
+  title: 'Composites/Profile/ProfileWorkList',
   component: ProfileWorkList,
   tags: ['autodocs'],
 } satisfies Meta<typeof ProfileWorkList>;

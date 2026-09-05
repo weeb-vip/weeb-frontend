@@ -3,7 +3,7 @@ import ShowHero from '../ShowHero.svelte';
 import { FULL_ANIME, MINIMAL_ANIME, TRACKED_ANIME, UNAIRED_ANIME } from './show-fixtures';
 
 const meta = {
-  title: 'Show/ShowHero',
+  title: 'Composites/Show/ShowHero',
   component: ShowHero,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

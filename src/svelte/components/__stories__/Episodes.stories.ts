@@ -48,7 +48,7 @@ function bloc(overrides: SourceOverrides = {}) {
 }
 
 const meta = {
-  title: 'Show/Episodes',
+  title: 'Composites/Show/Episodes',
   component: Episodes,
   tags: ['autodocs'],
 } satisfies Meta<typeof Episodes>;

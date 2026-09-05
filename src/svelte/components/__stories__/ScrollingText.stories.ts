@@ -3,7 +3,7 @@ import ScrollingText from '../ScrollingText.svelte';
 import StoryContainer from './StoryContainer.svelte';
 
 const meta = {
-  title: 'Design System/ScrollingText',
+  title: 'Primitives/ScrollingText',
   component: ScrollingText,
   tags: ['autodocs'],
   parameters: {

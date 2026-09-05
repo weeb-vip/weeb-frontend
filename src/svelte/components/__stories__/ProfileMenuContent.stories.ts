@@ -40,7 +40,7 @@ const user = {
 };
 
 const meta = {
-  title: 'Design System/ProfileMenuContent',
+  title: 'Composites/Profile/ProfileMenuContent',
   component: ProfileMenuContent,
   tags: ['autodocs'],
 } satisfies Meta<typeof ProfileMenuContent>;

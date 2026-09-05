@@ -59,7 +59,7 @@ function bloc(result: 'ok' | 'empty' | 'never' | 'fail') {
 }
 
 const meta = {
-  title: 'Show/CharactersWithStaff',
+  title: 'Composites/Show/CharactersWithStaff',
   component: CharactersWithStaff,
   tags: ['autodocs'],
 } satisfies Meta<typeof CharactersWithStaff>;

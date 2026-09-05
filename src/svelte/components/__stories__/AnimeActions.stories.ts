@@ -59,7 +59,7 @@ function bloc(options: {
 }
 
 const meta = {
-  title: 'Design System/AnimeActions',
+  title: 'Composites/Tracking/AnimeActions',
   component: AnimeActions,
   tags: ['autodocs'],
   parameters: { layout: 'centered' },

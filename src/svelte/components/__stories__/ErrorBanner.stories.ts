@@ -8,7 +8,7 @@ const resendLink = createRawSnippet(() => ({
 }));
 
 const meta = {
-  title: 'Design System/ErrorBanner',
+  title: 'Primitives/ErrorBanner',
   component: ErrorBanner,
   tags: ['autodocs'],
 } satisfies Meta<typeof ErrorBanner>;

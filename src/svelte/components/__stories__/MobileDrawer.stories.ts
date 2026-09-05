@@ -52,7 +52,7 @@ const user: ProfileUser = {
 };
 
 const meta = {
-  title: 'Design System/MobileDrawer',
+  title: 'Composites/App Shell/MobileDrawer',
   component: MobileDrawer,
   tags: ['autodocs'],
   parameters: {

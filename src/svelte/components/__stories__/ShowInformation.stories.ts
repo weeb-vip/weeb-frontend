@@ -3,7 +3,7 @@ import ShowInformation from '../ShowInformation.svelte';
 import { FULL_ANIME, MINIMAL_ANIME, UNAIRED_ANIME } from './show-fixtures';
 
 const meta = {
-  title: 'Show/ShowInformation',
+  title: 'Composites/Show/ShowInformation',
   component: ShowInformation,
   tags: ['autodocs'],
 } satisfies Meta<typeof ShowInformation>;

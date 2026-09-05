@@ -20,7 +20,7 @@ const PLATFORMS = [
 ];
 
 const meta = {
-  title: 'Show/StreamingPlatforms',
+  title: 'Composites/Show/StreamingPlatforms',
   component: StreamingPlatforms,
   tags: ['autodocs'],
 } satisfies Meta<typeof StreamingPlatforms>;

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import ShowContentSkeleton from '../ShowContentSkeleton.svelte';
 
 const meta = {
-  title: 'Design System/ShowContentSkeleton',
+  title: 'Composites/Show/ShowContentSkeleton',
   component: ShowContentSkeleton,
   tags: ['autodocs'],
   parameters: {

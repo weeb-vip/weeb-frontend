@@ -3,7 +3,7 @@ import ShowSectionNav from '../ShowSectionNav.svelte';
 import { sectionTabs } from '../ShowContent.rules';
 
 const meta = {
-  title: 'Show/ShowSectionNav',
+  title: 'Composites/Show/ShowSectionNav',
   component: ShowSectionNav,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

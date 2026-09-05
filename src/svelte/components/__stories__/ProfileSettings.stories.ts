@@ -51,7 +51,7 @@ function bloc(shape: Shape) {
 }
 
 const meta = {
-  title: 'Profile/ProfileSettings',
+  title: 'Composites/Profile/ProfileSettings',
   component: ProfileSettings,
   tags: ['autodocs'],
 } satisfies Meta<typeof ProfileSettings>;

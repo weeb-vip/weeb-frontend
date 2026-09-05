@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import HeroAiringRail from '../HeroAiringRail.svelte';
+import { englishTitles, noCardTracking } from '../Card.bloc.svelte';
 import StoryContainer from './StoryContainer.svelte';
 
 /**
@@ -22,9 +23,17 @@ function entry(
 }
 
 const meta = {
-  title: 'Design System/HeroAiringRail',
+  title: 'Composites/Home/HeroAiringRail',
   component: HeroAiringRail,
   tags: ['autodocs'],
+  // The rail is the one card that resolves its own titles, so it takes both of
+  // Card.bloc's ports. Fixed here rather than read off the preferences store:
+  // the fixtures below only carry `titleEn`, and a story should not depend on
+  // whatever language the last person to open the app left the toggle on.
+  args: {
+    titleLanguage: englishTitles,
+    track: noCardTracking,
+  },
   decorators: [
     () => ({
       Component: StoryContainer,

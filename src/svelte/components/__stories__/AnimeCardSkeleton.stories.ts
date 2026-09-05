@@ -3,7 +3,7 @@ import AnimeCardSkeleton from '../AnimeCardSkeleton.svelte';
 import StoryContainer from './StoryContainer.svelte';
 
 const meta = {
-  title: 'Design System/AnimeCardSkeleton',
+  title: 'Composites/Cards/AnimeCardSkeleton',
   component: AnimeCardSkeleton,
   tags: ['autodocs'],
   parameters: {

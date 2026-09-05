@@ -3,7 +3,7 @@ import ShowIdentityPanel from '../ShowIdentityPanel.svelte';
 import { FULL_ANIME, MINIMAL_ANIME, TRACKED_ANIME, UNAIRED_ANIME } from './show-fixtures';
 
 const meta = {
-  title: 'Show/ShowIdentityPanel',
+  title: 'Composites/Show/ShowIdentityPanel',
   component: ShowIdentityPanel,
   tags: ['autodocs'],
 } satisfies Meta<typeof ShowIdentityPanel>;

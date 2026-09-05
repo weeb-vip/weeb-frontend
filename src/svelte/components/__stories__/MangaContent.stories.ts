@@ -57,7 +57,7 @@ function bloc(work: Work | null, ssrError: string | null = null) {
 }
 
 const meta = {
-  title: 'Browse/MangaContent',
+  title: 'Pages/MangaContent',
   component: MangaContent,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

@@ -4,8 +4,18 @@ import Header from '../../../lib/Header.svelte';
 import { HeaderBloc, type FramePort } from '../../../lib/Header.bloc.svelte';
 
 /**
- * No real frames: the easing loop would keep scheduling work behind the docs
- * page. Every story renders one settled value instead.
+ * Header takes a bloc; its four chrome children do not, and between them they
+ * run a GraphQL user query, fetch /config.json and stand up an Algolia client.
+ * Header itself is out of scope for this story to change, so the substitution
+ * happens one level down: `.storybook/main.ts` resolves AuthInitializer,
+ * LoginModalHandler, UserProfileHandler and AutocompleteAdvanced to the offline
+ * stand-ins in `./offline/` **only for imports made by Header.svelte** -- every
+ * other consumer, including AutocompleteAdvanced's own story, gets the real
+ * module. Two of those stand-ins render the real component behind them with
+ * stub ports, so the bar on screen here is the bar the app draws.
+ *
+ * No real frames either: the easing loop would keep scheduling work behind the
+ * docs page. Every story renders one settled value instead.
  */
 const noFrames: FramePort = { request: () => 0, cancel: () => {} };
 
@@ -24,7 +34,7 @@ function stubBloc(options: { overlay?: boolean; pathname?: string; scrolledTo?: 
 }
 
 const meta = {
-  title: 'Design System/Header',
+  title: 'Composites/App Shell/Header',
   component: Header,
   tags: ['autodocs'],
   parameters: {

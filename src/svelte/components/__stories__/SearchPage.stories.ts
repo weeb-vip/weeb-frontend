@@ -141,7 +141,7 @@ function bloc(
 }
 
 const meta = {
-  title: 'Browse/SearchPage',
+  title: 'Pages/SearchPage',
   component: SearchPage,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

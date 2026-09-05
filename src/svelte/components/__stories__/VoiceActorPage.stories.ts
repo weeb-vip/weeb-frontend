@@ -53,7 +53,7 @@ function bloc(staff: Staff | null, ssrError: string | null = null, pageSize = 24
 }
 
 const meta = {
-  title: 'Browse/VoiceActorPage',
+  title: 'Pages/VoiceActorPage',
   component: VoiceActorPage,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

@@ -38,7 +38,7 @@ const SAME_SERIES = [
 ];
 
 const meta = {
-  title: 'Show/RelatedAnime',
+  title: 'Composites/Show/RelatedAnime',
   component: RelatedAnime,
   tags: ['autodocs'],
 } satisfies Meta<typeof RelatedAnime>;

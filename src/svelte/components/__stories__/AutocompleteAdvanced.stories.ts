@@ -68,7 +68,7 @@ function openBloc(state: Partial<SearchState>) {
 }
 
 const meta = {
-  title: 'Design System/AutocompleteAdvanced',
+  title: 'Composites/App Shell/AutocompleteAdvanced',
   component: AutocompleteAdvanced,
   tags: ['autodocs'],
 } satisfies Meta<typeof AutocompleteAdvanced>;

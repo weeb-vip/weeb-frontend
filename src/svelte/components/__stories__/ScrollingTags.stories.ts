@@ -3,7 +3,7 @@ import ScrollingTags from '../ScrollingTags.svelte';
 import StoryContainer from './StoryContainer.svelte';
 
 const meta = {
-  title: 'Design System/ScrollingTags',
+  title: 'Primitives/ScrollingTags',
   component: ScrollingTags,
   tags: ['autodocs'],
   parameters: {

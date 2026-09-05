@@ -47,7 +47,7 @@ function workBloc(result: StubResult = 'ok') {
 }
 
 const meta = {
-  title: 'Profile/ProfileList',
+  title: 'Pages/ProfileList',
   component: ProfileList,
   tags: ['autodocs'],
 } satisfies Meta<typeof ProfileList>;

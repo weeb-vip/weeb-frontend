@@ -55,7 +55,7 @@ function modalBloc(options: {
 }
 
 const meta = {
-  title: 'Design System/LoginRegisterModal',
+  title: 'Composites/Auth/LoginRegisterModal',
   component: LoginRegisterModal,
   tags: ['autodocs'],
   parameters: { layout: 'centered' }

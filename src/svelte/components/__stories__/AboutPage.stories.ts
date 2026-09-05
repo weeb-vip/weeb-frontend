@@ -7,7 +7,7 @@ import AboutPage from '../AboutPage.svelte';
  * whose long-form typography and section rhythm are checked by reading it.
  */
 const meta = {
-  title: 'Browse/AboutPage',
+  title: 'Pages/AboutPage',
   component: AboutPage,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

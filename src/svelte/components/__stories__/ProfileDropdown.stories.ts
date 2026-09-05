@@ -12,7 +12,7 @@ const user = {
 };
 
 const meta = {
-  title: 'Design System/ProfileDropdown',
+  title: 'Composites/Profile/ProfileDropdown',
   component: ProfileDropdown,
   tags: ['autodocs'],
 } satisfies Meta<typeof ProfileDropdown>;

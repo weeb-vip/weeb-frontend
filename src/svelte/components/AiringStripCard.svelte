@@ -1,12 +1,16 @@
 <script lang="ts">
   import SafeImage from './SafeImage.svelte';
-  import { analytics } from '../../utils/analytics';
   import { animeHref } from '../../services/utils';
+  import { realCardTracking, type CardTrackingPort } from './Card.bloc.svelte';
 
   /**
    * Presentational -- no bloc. It used to forward bare `on:mouseenter` /
    * `on:mouseleave` to its parent; runes components cannot forward DOM
    * directives, so the two are callback props now.
+   *
+   * Its title arrives resolved: whoever owns the title-language preference
+   * picks the string (see Card.bloc). The analytics ping is the one singleton
+   * left, and it comes in as that module's shared port.
    */
   let {
     id,
@@ -24,6 +28,7 @@
     /** Pointer entered the card -- the airing strip uses this to preview a show. */
     onMouseEnter,
     onMouseLeave,
+    track = realCardTracking,
   }: {
     id: string;
     slug?: string | null | undefined;
@@ -37,6 +42,7 @@
     totalEpisodes?: number;
     onMouseEnter?: (event: MouseEvent) => void;
     onMouseLeave?: (event: MouseEvent) => void;
+    track?: CardTrackingPort;
   } = $props();
 
   const progress = $derived(
@@ -48,7 +54,7 @@
 <a
   class="airing-card"
   href={animeHref({ id, slug })}
-  onclick={() => analytics.animeViewed(id, title)}
+  onclick={() => track(id, title)}
   onmouseenter={onMouseEnter}
   onmouseleave={onMouseLeave}
 >

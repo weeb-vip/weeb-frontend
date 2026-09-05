@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import ShowSchedulePanel from '../ShowSchedulePanel.svelte';
 
 const meta = {
-  title: 'Show/ShowSchedulePanel',
+  title: 'Composites/Show/ShowSchedulePanel',
   component: ShowSchedulePanel,
   tags: ['autodocs'],
 } satisfies Meta<typeof ShowSchedulePanel>;

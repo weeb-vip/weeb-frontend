@@ -5,7 +5,7 @@ import { createRawSnippet } from 'svelte';
 import { FULL_ANIME } from './show-fixtures';
 
 const meta = {
-  title: 'Show/ShowSection',
+  title: 'Composites/Show/ShowSection',
   component: ShowSection,
   tags: ['autodocs'],
 } satisfies Meta<typeof ShowSection>;

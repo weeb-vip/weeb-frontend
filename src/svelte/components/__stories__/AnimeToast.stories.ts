@@ -45,7 +45,7 @@ function bloc(
 }
 
 const meta = {
-  title: 'Design System/AnimeToast',
+  title: 'Composites/Tracking/AnimeToast',
   component: AnimeToast,
   tags: ['autodocs'],
   decorators: [

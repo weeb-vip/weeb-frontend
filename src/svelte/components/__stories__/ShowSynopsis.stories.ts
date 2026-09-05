@@ -3,7 +3,7 @@ import ShowSynopsis from '../ShowSynopsis.svelte';
 import { FULL_ANIME } from './show-fixtures';
 
 const meta = {
-  title: 'Show/ShowSynopsis',
+  title: 'Composites/Show/ShowSynopsis',
   component: ShowSynopsis,
   tags: ['autodocs'],
 } satisfies Meta<typeof ShowSynopsis>;

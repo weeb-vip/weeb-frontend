@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import GenrePills from '../GenrePills.svelte';
 
 const meta = {
-  title: 'Design System/GenrePills',
+  title: 'Primitives/GenrePills',
   component: GenrePills,
   tags: ['autodocs'],
 } satisfies Meta<typeof GenrePills>;

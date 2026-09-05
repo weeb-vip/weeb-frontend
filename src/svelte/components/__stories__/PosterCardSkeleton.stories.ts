@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import PosterCardSkeleton from '../PosterCardSkeleton.svelte';
 
 const meta = {
-  title: 'Primitives/PosterCardSkeleton',
+  title: 'Composites/Cards/PosterCardSkeleton',
   component: PosterCardSkeleton,
   tags: ['autodocs'],
 } satisfies Meta<typeof PosterCardSkeleton>;

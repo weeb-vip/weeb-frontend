@@ -17,7 +17,7 @@ function resendBloc(options: { send?: ResendVerificationPort; typed?: string; su
 }
 
 const meta = {
-  title: 'Design System/ResendVerification',
+  title: 'Composites/Auth/ResendVerification',
   component: ResendVerification,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

@@ -31,7 +31,7 @@ const svgItem = createRawSnippet((item: () => TabItem) => ({
 }));
 
 const meta = {
-  title: 'Design System/Tabs',
+  title: 'Primitives/Tabs',
   component: Tabs,
   tags: ['autodocs'],
 } satisfies Meta<typeof Tabs>;

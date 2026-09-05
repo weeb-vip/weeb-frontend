@@ -51,7 +51,7 @@ function withPicture(instance: ProfileImageUploadBloc, width: number, height: nu
 }
 
 const meta = {
-  title: 'Design System/ProfileImageUpload',
+  title: 'Composites/Profile/ProfileImageUpload',
   component: ProfileImageUpload,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

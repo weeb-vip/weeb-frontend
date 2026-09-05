@@ -23,7 +23,7 @@ const dialogBody = createRawSnippet(() => ({
 }));
 
 const meta = {
-  title: 'Design System/Modal',
+  title: 'Primitives/Modal',
   component: Modal,
   tags: ['autodocs'],
   parameters: {

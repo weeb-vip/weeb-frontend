@@ -32,7 +32,7 @@ function bloc(user: any, lists: any) {
 }
 
 const meta = {
-  title: 'Profile/PublicUserPage',
+  title: 'Pages/PublicUserPage',
   component: PublicUserPage,
   parameters: { layout: 'fullscreen' },
   tags: ['autodocs'],

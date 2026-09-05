@@ -59,7 +59,7 @@ function bloc(
 }
 
 const meta = {
-  title: 'Show/ShowContent',
+  title: 'Pages/ShowContent',
   component: ShowContent,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

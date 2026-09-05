@@ -1,11 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import AnimeCard from '../AnimeCard.svelte';
+import { noCardTracking } from '../Card.bloc.svelte';
 import StoryContainer from './StoryContainer.svelte';
 
 const meta = {
-  title: 'Design System/AnimeCard',
+  title: 'Composites/Cards/AnimeCard',
   component: AnimeCard,
   tags: ['autodocs'],
+  // The analytics ping, off. Every card takes it as Card.bloc's shared port
+  // precisely so a story does not report a page view for a click on a canvas.
+  args: {
+    track: noCardTracking,
+  },
   parameters: {
     layout: 'centered',
   },

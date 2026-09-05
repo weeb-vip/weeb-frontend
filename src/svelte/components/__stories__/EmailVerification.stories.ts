@@ -18,7 +18,7 @@ function verificationBloc(query: string, verify: VerifyEmailPort, resend: Resend
 }
 
 const meta = {
-  title: 'Design System/EmailVerification',
+  title: 'Composites/Auth/EmailVerification',
   component: EmailVerification,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

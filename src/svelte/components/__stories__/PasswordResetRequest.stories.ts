@@ -19,7 +19,7 @@ function resetBloc(options: { request?: PasswordResetRequestPort; fill?: boolean
 }
 
 const meta = {
-  title: 'Design System/PasswordResetRequest',
+  title: 'Composites/Auth/PasswordResetRequest',
   component: PasswordResetRequest,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }

@@ -8,7 +8,7 @@
   import PosterGrid from './PosterGrid.svelte';
   import SafeImage from './SafeImage.svelte';
   import Skeleton from './Skeleton.svelte';
-  import AnimeCardSkeleton from './AnimeCardSkeleton.svelte';
+  import PosterCardSkeleton from './PosterCardSkeleton.svelte';
   import Tabs, { type TabItem } from './Tabs.svelte';
   import type { MediaListBloc, MediaListRow } from './MediaList.bloc.svelte';
 
@@ -70,7 +70,12 @@
 
 <div class="pml">
   {#if bloc.isLoading}
-    <!-- The same shape as the loaded list: a tab row, then a wall of cards. -->
+    <!-- The same shape as the loaded list: a tab row, then a wall of cards.
+         PosterCardSkeleton, not AnimeCardSkeleton: what loads in behind it is
+         a PosterGrid of PosterCards, and AnimeCardSkeleton draws the other
+         card -- a fixed 192x288 box with a metadata column beside the art,
+         which in a fluid grid column neither filled the cell nor matched the
+         2:3 poster that replaced it. -->
     <div class="pml-tab-skeleton">
       {#each Array(5) as _}
         <Skeleton className="h-10 w-24" />
@@ -78,7 +83,7 @@
     </div>
     <PosterGrid class="pml-grid">
       {#each Array(8) as _}
-        <AnimeCardSkeleton />
+        <PosterCardSkeleton />
       {/each}
     </PosterGrid>
   {:else}

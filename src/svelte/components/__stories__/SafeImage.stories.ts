@@ -17,7 +17,7 @@ const FALLBACK =
 const BROKEN = 'data:image/png;base64,QUJD';
 
 const meta = {
-  title: 'Design System/SafeImage',
+  title: 'Primitives/SafeImage',
   component: SafeImage,
   tags: ['autodocs'],
   parameters: {

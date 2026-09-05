@@ -94,7 +94,7 @@ const base = {
 };
 
 const meta = {
-  title: 'Browse/WorksBrowsePage',
+  title: 'Pages/WorksBrowsePage',
   component: WorksBrowsePage,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

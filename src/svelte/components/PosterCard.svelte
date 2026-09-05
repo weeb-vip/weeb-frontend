@@ -2,13 +2,16 @@
   import type { Snippet } from 'svelte';
   import SafeImage from './SafeImage.svelte';
   import { getSafeImageUrl } from '../utils/image';
-  import { analytics } from '../../utils/analytics';
   import { animeHref } from '../../services/utils';
   import { normalizeStatus } from '../utils/status';
+  import { realCardTracking, type CardTrackingPort } from './Card.bloc.svelte';
 
   /**
    * Presentational -- no bloc. The homepage renders 54 of these; anything that
-   * fetched or held state here would do so 54 times over.
+   * fetched or held state here would do so 54 times over -- which is also why
+   * the analytics ping arrives as Card.bloc's shared port rather than as a
+   * per-card bloc, and why the title arrives already resolved from whoever
+   * owns the title-language preference.
    */
   let {
     id,
@@ -31,6 +34,7 @@
     onList = null,
     /** Anything a call site wants under the sub-line -- a progress bar, a control. */
     children,
+    track = realCardTracking,
   }: {
     id: string;
     slug?: string | null | undefined;
@@ -47,6 +51,7 @@
     /** The viewer's own list status, if the show is on it. */
     onList?: string | null;
     children?: Snippet;
+    track?: CardTrackingPort;
   } = $props();
 
   const normalizedStatus = $derived(normalizeStatus(onList));
@@ -66,7 +71,7 @@
 <a
   class="poster-card"
   href={href || animeHref({ id, slug })}
-  onclick={() => analytics.animeViewed(id, title)}
+  onclick={() => track(id, title)}
 >
   <div class="poster">
     <SafeImage

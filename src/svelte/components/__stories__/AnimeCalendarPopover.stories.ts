@@ -47,7 +47,7 @@ function opened(instance: AnimeCalendarPopoverBloc) {
 }
 
 const meta = {
-  title: 'Design System/AnimeCalendarPopover',
+  title: 'Composites/Tracking/AnimeCalendarPopover',
   component: AnimeCalendarPopover,
   tags: ['autodocs'],
   decorators: [

@@ -57,7 +57,7 @@ function mangaBloc(result: StubResult, total = WORK_ENTRIES.length) {
 }
 
 const meta = {
-  title: 'Profile/ProfileMediaList',
+  title: 'Composites/Profile/ProfileMediaList',
   component: ProfileMediaList,
   tags: ['autodocs'],
 } satisfies Meta<typeof ProfileMediaList>;

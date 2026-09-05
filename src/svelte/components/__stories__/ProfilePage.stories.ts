@@ -78,7 +78,7 @@ function bloc(shape: Shape) {
 }
 
 const meta = {
-  title: 'Profile/ProfilePage',
+  title: 'Pages/ProfilePage',
   component: ProfilePage,
   parameters: { layout: 'fullscreen' },
   tags: ['autodocs'],

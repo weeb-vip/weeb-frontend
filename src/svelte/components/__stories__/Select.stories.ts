@@ -9,7 +9,7 @@ const STATUSES = [
 ];
 
 const meta = {
-  title: 'Design System/Select',
+  title: 'Primitives/Select',
   component: Select,
   tags: ['autodocs'],
   parameters: {

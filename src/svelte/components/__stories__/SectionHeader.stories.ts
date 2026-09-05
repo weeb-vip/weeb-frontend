@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import SectionHeader from '../SectionHeader.svelte';
 
 const meta = {
-  title: 'Design System/SectionHeader',
+  title: 'Primitives/SectionHeader',
   component: SectionHeader,
   tags: ['autodocs'],
 } satisfies Meta<typeof SectionHeader>;

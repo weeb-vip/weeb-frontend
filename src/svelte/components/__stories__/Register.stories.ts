@@ -29,7 +29,7 @@ function registerBloc(options: {
 }
 
 const meta = {
-  title: 'Design System/Register',
+  title: 'Composites/Auth/Register',
   component: Register,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' }
