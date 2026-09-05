@@ -1,19 +1,18 @@
 <script lang="ts">
-  import { preferencesStore, type TitleLanguage } from '../stores/preferences';
+  import { TitleLanguageToggleBloc } from './TitleLanguageToggle.bloc.svelte';
 
-  // Subscribe to preferences store
-  $: preferences = $preferencesStore;
-
-  function handleToggle() {
-    preferencesStore.toggleTitleLanguage();
-  }
+  /**
+   * Defaults to a bloc bound to the real preferences store, so call sites stay
+   * `<TitleLanguageToggle />`. Stories and tests inject their own.
+   */
+  let { bloc = new TitleLanguageToggleBloc() }: { bloc?: TitleLanguageToggleBloc } = $props();
 </script>
 
 <button
-  on:click={handleToggle}
+  onclick={() => bloc.toggle()}
   class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-weeb-fg-secondary hover:text-weeb-fg hover:bg-weeb-surface-hover rounded-lg transition-colors duration-200"
-  title={preferences.titleLanguage === 'english' ? 'Show titles in Japanese' : 'Show titles in English'}
-  aria-label={preferences.titleLanguage === 'english' ? 'Show titles in Japanese' : 'Show titles in English'}
+  title={bloc.actionLabel}
+  aria-label={bloc.actionLabel}
 >
   <!-- Language Icon -->
   <svg
@@ -34,7 +33,5 @@
   </svg>
 
   <!-- Language Text -->
-  <span class="hidden sm:inline">
-    {preferences.titleLanguage === 'english' ? 'EN' : 'JP'}
-  </span>
+  <span class="hidden sm:inline">{bloc.shortLabel}</span>
 </button>
