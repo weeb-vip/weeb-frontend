@@ -163,20 +163,27 @@
     }
   }
 
-  // Animate results in when the panel opens — deliberately NOT on every
-  // keystroke. Each run restarts the items from opacity 0, so re-running it per
-  // input made already-rendered results blink out and fade back in on every
-  // character, which is what made the search feel slow. Refining a query now
-  // swaps the contents in place.
-  let resultsPanelWasOpen = false;
+  // Animate results in once per opening of the panel — deliberately NOT on
+  // every keystroke. Each run restarts the items from opacity 0, so re-running
+  // it per input made already-rendered results blink out and fade back in on
+  // every character, which is what made the search feel slow.
+  //
+  // The latch keys on the panel being open, NOT on results being present:
+  // refining a query empties the rows for a frame while the next response is in
+  // flight, and latching on `hasResults` read that blank frame as a fresh open
+  // and replayed the fade. Refining now swaps the contents in place.
+  let animatedForThisOpen = false;
   $effect(() => {
-    const panelShowing = bloc.isPanelOpen && bloc.hasResults;
+    if (!bloc.isPanelOpen) {
+      animatedForThisOpen = false;
+      return;
+    }
 
-    if (panelShowing && !resultsPanelWasOpen) {
+    if (bloc.hasResults && !animatedForThisOpen) {
+      animatedForThisOpen = true;
       // Let Svelte flush the items into the panel before measuring them.
       setTimeout(animateResultsIn, 0);
     }
-    resultsPanelWasOpen = panelShowing;
   });
 
   // Svelte action for mobile backdrop animation

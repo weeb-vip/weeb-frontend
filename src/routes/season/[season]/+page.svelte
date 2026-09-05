@@ -3,12 +3,12 @@
   import StructuredData from '$lib/StructuredData.svelte';
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
   import { fly } from 'svelte/transition';
-  import PosterCard from '../../../svelte/components/PosterCard.svelte';
-  import PosterGrid from '../../../svelte/components/PosterGrid.svelte';
-  import PosterCardSkeleton from '../../../svelte/components/PosterCardSkeleton.svelte';
-  import EmptyState from '../../../svelte/components/EmptyState.svelte';
-  import SafeImage from '../../../svelte/components/SafeImage.svelte';
-  import { SeasonPageBloc, type SeasonalAnime } from '../../../svelte/components/SeasonPage.bloc.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard.svelte';
+  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
+  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
+  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
+  import { SeasonPageBloc, type SeasonalAnime } from '$lib/components/pages/SeasonPage.bloc.svelte';
 
   /**
    * Everything that aired in one season, with a tag filter over it.
@@ -99,14 +99,20 @@
   </header>
 
   <div class="season-selector">
-    <div class="season-tabs" role="tablist">
+    <!--
+      Not a tablist. These navigate to /season/<key>; they reveal no panel, so
+      tab/tablist semantics would misdescribe them -- and `role="tab"` also
+      overrides the implicit button role, which is what an assistive tech (and
+      season.spec.ts) looks for. Plain buttons, with aria-current marking the
+      season being shown.
+    -->
+    <div class="season-tabs">
       {#each bloc.seasonTabs as tab (tab.season)}
         <button
           type="button"
           class="season-tab"
           class:active={tab.active}
-          role="tab"
-          aria-selected={tab.active}
+          aria-current={tab.active ? 'page' : undefined}
           onclick={() => bloc.goToSeason(tab.key)}
         >
           <span class="season-tab-icon" aria-hidden="true">{tab.icon}</span>
