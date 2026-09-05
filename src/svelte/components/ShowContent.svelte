@@ -15,7 +15,7 @@
   import { isFeatureEnabled } from '../../utils/analytics';
   import StreamingPlatforms from './StreamingPlatforms.svelte';
   import { fetchDetails } from '../../services/queries';
-  import { GetImageFromAnime, getYearUTC, formatDateUTC, animeHref } from '../../services/utils';
+  import { GetImageFromAnime, getYearUTC, formatDateUTC, animeHref, seasonLabel } from '../../services/utils';
   import { getSafeImageUrl } from '../utils/image';
   import { findNextEpisode, getCurrentTime, getAirTimeDisplay, parseDurationToMinutes, parseAirTime, getAirDateTime } from '../../services/airTimeUtils';
   import debug from '../../utils/debug';
@@ -30,16 +30,7 @@
 
   // "Season 2", or "Special" for TheTVDB's season 0.
   //
-  // Null and 0 are different answers and must not collapse: null is "we do not
-  // know", which shows nothing, while 0 is the specials season and shows as
-  // "Special". A truthiness check would render neither, which is why this
-  // tests for null explicitly.
-  $: seasonLabel = (() => {
-    const n = anime?.seasonNumber;
-    if (n === null || n === undefined) return '';
-
-    return n === 0 ? 'Special' : `Season ${n}`;
-  })();
+  $: seasonText = seasonLabel(anime?.seasonNumber);
   export let animeId: string;
   export let ssrAnimeData: any = null;
   export let ssrCharactersData: any = null;
@@ -569,8 +560,8 @@
                    the air dates TheTVDB and MyAnimeList agree on, and that
                    derivation refuses rather than guesses -- so an unknown
                    season renders as nothing at all, never as "Season ?". -->
-              {#if seasonLabel}
-                <p class="hero-season">{seasonLabel}</p>
+              {#if seasonText}
+                <p class="hero-season">{seasonText}</p>
               {/if}
             </div>
           </div>

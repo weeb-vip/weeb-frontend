@@ -38,6 +38,24 @@ export function getYearUTC(dateStr: string | null | undefined): string {
 }
 
 /**
+ * Which season of its series an anime is, as a reader-facing label.
+ *
+ * Null and 0 are different answers and must not collapse: null is "we do not
+ * know" and shows nothing, while 0 is TheTVDB's specials season. A truthiness
+ * check would render neither, which is why this tests for null explicitly.
+ *
+ * Season 0 is not redundant with an anime's type, which was the tempting
+ * assumption: of the 1,151 anime we hold in season 0, 583 are typed OVA, Movie,
+ * ONA, TV, Music or PV rather than as a special. Hiding it would lose real
+ * information on more than half of them.
+ */
+export function seasonLabel(season: number | null | undefined): string {
+  if (season === null || season === undefined) return "";
+
+  return season === 0 ? "Special" : `Season ${season}`;
+}
+
+/**
  * Format a date string to "dd MMM yyyy" using UTC to avoid timezone issues.
  */
 export function formatDateUTC(dateStr: string | null | undefined, fallback: string = "Unknown"): string {
