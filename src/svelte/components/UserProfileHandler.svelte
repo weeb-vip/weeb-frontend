@@ -1,52 +1,26 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { initializeQueryClient } from '../services/query-client';
   import ConfigProvider from './ConfigProvider.svelte';
+  import QueryProvider from './QueryProvider.svelte';
   import UserProfileWrapper from './UserProfileWrapper.svelte';
 
-  export let isMobile: boolean = false;
-  export let onProfileClick: (() => void) | null = null;
-
-  let QueryClientProvider: any = null;
-  let queryClient: any = null;
-  let isClient = false;
-
-  onMount(async () => {
-    // Initialize TanStack Query
-    try {
-      const { QueryClientProvider: QCP } = await import('@tanstack/svelte-query');
-      QueryClientProvider = QCP;
-      queryClient = initializeQueryClient();
-      isClient = true;
-    } catch (error) {
-      console.warn('Failed to load TanStack Query:', error);
-      isClient = true;
-    }
-  });
+  /**
+   * The header's account slot: config context, a query client, and the wrapper
+   * that decides which of the four signed-in/out states to render. The
+   * skeleton this used to show while a dynamic import resolved is gone --
+   * `UserProfileWrapper` already renders exactly that skeleton for its own
+   * `loading` status, so the copy here only ever duplicated it.
+   */
+  let {
+    isMobile = false,
+    onProfileClick = null,
+  }: {
+    isMobile?: boolean;
+    onProfileClick?: (() => void) | null;
+  } = $props();
 </script>
 
 <ConfigProvider>
-  {#if isClient}
-    {#if QueryClientProvider && queryClient}
-      <svelte:component this={QueryClientProvider} client={queryClient}>
-        <UserProfileWrapper {isMobile} {onProfileClick} />
-      </svelte:component>
-    {:else}
-      <!-- Fallback loading state -->
-      <div class="flex items-center space-x-2">
-        <div class="w-10 h-10 bg-weeb-surface rounded-full animate-pulse"></div>
-        {#if !isMobile}
-          <div class="w-16 h-4 bg-weeb-surface rounded animate-pulse"></div>
-        {/if}
-      </div>
-    {/if}
-  {:else}
-    <!-- Show fallback while client is initializing -->
-    <div class="flex items-center space-x-2">
-      <div class="w-10 h-10 bg-weeb-surface rounded-full animate-pulse"></div>
-      {#if !isMobile}
-        <div class="w-16 h-4 bg-weeb-surface rounded animate-pulse"></div>
-      {/if}
-    </div>
-  {/if}
+  <QueryProvider>
+    <UserProfileWrapper {isMobile} {onProfileClick} />
+  </QueryProvider>
 </ConfigProvider>

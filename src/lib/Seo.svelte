@@ -1,25 +1,32 @@
 <script lang="ts">
   import { page } from '$app/stores';
 
-  export let title: string | undefined = undefined;
-  export let description: string | undefined = undefined;
-  export let image: string | undefined = undefined;
-  export let noIndex: boolean = false;
+  let {
+    title = undefined,
+    description = undefined,
+    image = undefined,
+    noIndex = false,
+  }: {
+    title?: string;
+    description?: string;
+    image?: string;
+    noIndex?: boolean;
+  } = $props();
 
   const defaultTitle = 'WeebVIP - Track Your Anime Watchlist';
   const defaultDescription = 'Discover, track, and manage your anime watchlist with WeebVIP. Get notifications for new episodes, explore seasonal anime, and connect with other anime fans.';
   const defaultImage = '/assets/og-image.jpg';
   const siteUrl = 'https://weeb.vip';
 
-  $: pageTitle = title ? `${title} | WeebVIP` : defaultTitle;
-  $: pageDescription = description || defaultDescription;
+  const pageTitle = $derived(title ? `${title} | WeebVIP` : defaultTitle);
+  const pageDescription = $derived(description || defaultDescription);
   // Resolved against the host that actually served this page, not the canonical site.
   // og:image has to be fetchable: on staging, resolving against siteUrl pointed the tag
   // at https://weeb.vip/og/<id>, which is a different deployment and 404s there.
-  $: pageImage = new URL(image || defaultImage, $page.url.origin).toString();
+  const pageImage = $derived(new URL(image || defaultImage, $page.url.origin).toString());
   // canonical, og:url and twitter:url deliberately stay on the canonical host. Staging
   // self-canonicalising would make it an indexable duplicate of production.
-  $: canonicalUrl = new URL($page.url.pathname, siteUrl).toString();
+  const canonicalUrl = $derived(new URL($page.url.pathname, siteUrl).toString());
 </script>
 
 <svelte:head>

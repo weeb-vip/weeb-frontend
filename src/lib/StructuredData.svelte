@@ -1,10 +1,12 @@
 <script lang="ts">
   import { serializeJsonLd } from './structured-data';
 
-  /** One schema object, or several to emit as separate blocks. Nulls are skipped. */
-  export let schemas: (Record<string, unknown> | null)[] = [];
+  let {
+    /** One schema object, or several to emit as separate blocks. Nulls are skipped. */
+    schemas = [],
+  }: { schemas?: (Record<string, unknown> | null)[] } = $props();
 
-  $: present = schemas.filter((s): s is Record<string, unknown> => Boolean(s));
+  const present = $derived(schemas.filter((s): s is Record<string, unknown> => Boolean(s)));
 </script>
 
 <svelte:head>
