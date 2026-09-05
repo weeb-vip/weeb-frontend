@@ -4,12 +4,12 @@
   import { beforeNavigate, afterNavigate } from '$app/navigation';
   import { page } from '$app/stores';
   import { QueryClientProvider } from '@tanstack/svelte-query';
-  import { getQueryClient, createQueryClient } from '../svelte/services/query-client';
-  import Header from '$lib/Header.svelte';
-  import Footer from '../svelte/components/Footer.svelte';
-  import GlobalToaster from '../svelte/components/GlobalToaster.svelte';
-  import AnimeNotificationProvider from '../svelte/components/AnimeNotificationProvider.svelte';
-  import MobileDrawer from '../svelte/components/MobileDrawer.svelte';
+  import { getQueryClient, createQueryClient } from '$lib/services/query-client';
+  import Header from '$lib/components/shell/Header.svelte';
+  import Footer from '$lib/components/shell/Footer.svelte';
+  import GlobalToaster from '$lib/components/shell/GlobalToaster.svelte';
+  import AnimeNotificationProvider from '$lib/components/shell/AnimeNotificationProvider.svelte';
+  import MobileDrawer from '$lib/components/shell/MobileDrawer.svelte';
   import {
     initGlobalErrorHandlers,
     initPostHogWhenConfigured,
@@ -17,7 +17,7 @@
     hideNavigationFeedback
   } from '$lib/client/global-ui';
   import { initTelemetryWhenConfigured } from '$lib/client/telemetry';
-  import { configStore } from '../svelte/stores/config';
+  import { configStore } from '$lib/stores/config';
   import '../scss/base.scss';
   import '../styles/design-tokens.css';
 

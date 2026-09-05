@@ -1,10 +1,10 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import ProfileAnimeList from '../../../svelte/components/ProfileAnimeList.svelte';
-  import ProfileWorkList from '../../../svelte/components/ProfileWorkList.svelte';
-  import Tabs from '../../../svelte/components/Tabs.svelte';
-  import { ProfileListBloc } from '../../../svelte/components/ProfileList.bloc.svelte';
-  import type { MediaListBloc } from '../../../svelte/components/MediaList.bloc.svelte';
+  import ProfileAnimeList from '$lib/components/profile/ProfileAnimeList.svelte';
+  import ProfileWorkList from '$lib/components/profile/ProfileWorkList.svelte';
+  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import { ProfileListBloc } from '$lib/components/pages/ProfileList.bloc.svelte';
+  import type { MediaListBloc } from '$lib/components/profile/MediaList.bloc.svelte';
 
   /*
     One page, two media. The Anime | Manga switch sits above the status tabs and

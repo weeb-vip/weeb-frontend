@@ -1,13 +1,13 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import PosterCard from '../../svelte/components/PosterCard.svelte';
-  import PosterGrid from '../../svelte/components/PosterGrid.svelte';
-  import ProfileImageUpload from '../../svelte/components/ProfileImageUpload.svelte';
-  import ProfileAvatar from '../../svelte/components/ProfileAvatar.svelte';
-  import EmptyState from '../../svelte/components/EmptyState.svelte';
-  import Skeleton from '../../svelte/components/Skeleton.svelte';
-  import PosterCardSkeleton from '../../svelte/components/PosterCardSkeleton.svelte';
-  import { ProfilePageBloc, type ProfileShelfCard } from '../../svelte/components/ProfilePage.bloc.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard.svelte';
+  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
+  import ProfileImageUpload from '$lib/components/profile/ProfileImageUpload.svelte';
+  import ProfileAvatar from '$lib/components/profile/ProfileAvatar.svelte';
+  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
+  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
+  import { ProfilePageBloc, type ProfileShelfCard } from '$lib/components/pages/ProfilePage.bloc.svelte';
 
   /**
    * The dashboard at /profile: who you are, what your library adds up to, and

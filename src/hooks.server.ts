@@ -1,7 +1,7 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { getConfig } from './config/build-time-loader';
-import { AuthStorage } from './utils/auth-storage';
-import { refreshTokenSSR, isTokenExpired } from './utils/ssr-token-refresh';
+import { AuthStorage } from '$lib/utils/auth-storage';
+import { refreshTokenSSR, isTokenExpired } from '$lib/utils/ssr-token-refresh';
 import { clearAuthCookies } from '$lib/server/auth-cookies';
 
 // Config cache for performance

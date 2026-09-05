@@ -1,0 +1,76 @@
+import type { Meta, StoryObj } from '@storybook/svelte';
+import Button from '$lib/components/primitives/Button.svelte';
+
+const meta = {
+  title: 'Primitives/Button',
+  component: Button,
+  tags: ['autodocs'],
+  argTypes: {
+    color: {
+      control: 'select',
+      options: ['blue', 'red', 'transparent', ''],
+    },
+    status: {
+      control: 'select',
+      options: ['idle', 'loading', 'success', 'error'],
+    },
+  },
+} satisfies Meta<typeof Button>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+/** The primary action. */
+export const Accent: Story = {
+  args: {
+    color: 'blue',
+    label: 'Add to Watchlist',
+    showLabel: true,
+    status: 'idle',
+    disabled: false,
+  },
+};
+
+/** The quiet, bordered variant for secondary actions. */
+export const Ghost: Story = {
+  args: {
+    color: 'transparent',
+    label: 'View Details',
+    showLabel: true,
+    status: 'idle',
+    disabled: false,
+  },
+};
+
+/** Destructive actions, e.g. removing an entry from a list. */
+export const Danger: Story = {
+  args: {
+    color: 'red',
+    label: 'Remove from List',
+    showLabel: true,
+    status: 'idle',
+    disabled: false,
+  },
+};
+
+/** In flight: a spinner replaces the label and clicks are ignored. */
+export const Loading: Story = {
+  args: {
+    color: 'blue',
+    label: 'Saving...',
+    showLabel: true,
+    status: 'loading',
+    disabled: false,
+  },
+};
+
+/** Unavailable: dimmed, and `onClick` never fires. */
+export const Disabled: Story = {
+  args: {
+    color: 'blue',
+    label: 'Not Available',
+    showLabel: true,
+    status: 'idle',
+    disabled: true,
+  },
+};

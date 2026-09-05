@@ -19,15 +19,15 @@
     candidates, credits, stats, adaptations — is the bloc's call; this renders
     it and owns the treatment.
   */
-  import SafeImage from '../../../svelte/components/SafeImage.svelte';
-  import PosterGrid from '../../../svelte/components/PosterGrid.svelte';
-  import PosterCard from '../../../svelte/components/PosterCard.svelte';
-  import EmptyState from '../../../svelte/components/EmptyState.svelte';
-  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
-  import WorkStatusControl from '../../../svelte/components/WorkStatusControl.svelte';
-  import ChapterProgress from '../../../svelte/components/ChapterProgress.svelte';
-  import { GetImageFromAnime } from '../../../services/utils';
-  import { MangaContentBloc, type Work } from '../../../svelte/components/MangaContent.bloc.svelte';
+  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
+  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard.svelte';
+  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import WorkStatusControl from '$lib/components/tracking/WorkStatusControl.svelte';
+  import ChapterProgress from '$lib/components/tracking/ChapterProgress.svelte';
+  import { GetImageFromAnime } from '$lib/services/utils';
+  import { MangaContentBloc, type Work } from '$lib/components/pages/MangaContent.bloc.svelte';
 
   let {
     data,

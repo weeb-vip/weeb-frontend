@@ -8,6 +8,11 @@ const config = {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  // SvelteKit resolves $lib at build time; jest has to be told separately, and
+  // cross-group imports inside src/lib go through the alias.
+  moduleNameMapper: {
+    '^\\$lib/(.*)$': '<rootDir>/src/lib/$1',
+  },
   // Exclude e2e tests from Jest runs
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',

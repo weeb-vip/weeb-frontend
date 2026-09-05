@@ -1,11 +1,11 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import QueryProvider from '../../../svelte/components/QueryProvider.svelte';
+  import QueryProvider from '$lib/components/shell/QueryProvider.svelte';
   import { onMount } from 'svelte';
-  import AuthCard from '../../../svelte/components/AuthCard.svelte';
-  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
-  import FormInput from '../../../svelte/components/FormInput.svelte';
-  import { RegisterBloc } from '../../../svelte/components/Register.bloc.svelte';
+  import AuthCard from '$lib/components/auth/AuthCard.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import FormInput from '$lib/components/primitives/FormInput.svelte';
+  import { RegisterBloc } from '$lib/components/pages/Register.bloc.svelte';
 
   /**
    * The sign-up page.

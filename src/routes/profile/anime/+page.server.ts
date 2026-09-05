@@ -5,7 +5,7 @@ import {
   queryUserWorks,
   queryUserAnimeStatusCounts,
   queryUserWorkStatusCounts
-} from '../../../services/api/graphql/queries';
+} from '$lib/services/api/graphql/queries';
 import { Status, WorkStatus } from '../../../gql/graphql';
 
 // The list page renders whatever medium, status and page the URL names, so the

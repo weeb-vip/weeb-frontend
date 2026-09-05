@@ -3,9 +3,9 @@
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
   import { untrack } from 'svelte';
-  import SafeImage from '../../../../svelte/components/SafeImage.svelte';
-  import AnimeNews from '../../../../svelte/components/AnimeNews.svelte';
-  import { AnimeNewsPageBloc, type AnimeNewsPageData } from '../../../../svelte/components/AnimeNewsPage.bloc.svelte';
+  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
+  import AnimeNews from '$lib/components/show/AnimeNews.svelte';
+  import { AnimeNewsPageBloc, type AnimeNewsPageData } from '$lib/components/pages/AnimeNewsPage.bloc.svelte';
 
   /**
    * Every news story for one anime, filtered by category and paged, both of

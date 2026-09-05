@@ -1,17 +1,17 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
   import { onMount } from 'svelte';
-  import PosterCard from '../../svelte/components/PosterCard.svelte';
-  import PosterGrid from '../../svelte/components/PosterGrid.svelte';
-  import Pagination from '../../svelte/components/Pagination.svelte';
-  import EmptyState from '../../svelte/components/EmptyState.svelte';
-  import Select from '../../svelte/components/Select.svelte';
-  import Skeleton from '../../svelte/components/Skeleton.svelte';
-  import Tabs from '../../svelte/components/Tabs.svelte';
-  import SafeImage from '../../svelte/components/SafeImage.svelte';
-  import { GetImageFromAnime } from '../../services/utils';
-  import { getStatusColor, getStatusLabel } from '../../svelte/utils/status';
-  import { SearchPageBloc } from '../../svelte/components/SearchPage.bloc.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard.svelte';
+  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
+  import Pagination from '$lib/components/primitives/Pagination.svelte';
+  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import Select from '$lib/components/primitives/Select.svelte';
+  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
+  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
+  import { GetImageFromAnime } from '$lib/services/utils';
+  import { getStatusColor, getStatusLabel } from '$lib/utils/status';
+  import { SearchPageBloc } from '$lib/components/pages/SearchPage.bloc.svelte';
 
   /**
    * /search — the browse-and-search page.

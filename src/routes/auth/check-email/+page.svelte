@@ -1,10 +1,10 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import QueryProvider from '../../../svelte/components/QueryProvider.svelte';
+  import QueryProvider from '$lib/components/shell/QueryProvider.svelte';
   import { onDestroy, onMount } from 'svelte';
-  import AuthCard from '../../../svelte/components/AuthCard.svelte';
-  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
-  import { CheckEmailBloc } from '../../../svelte/components/CheckEmail.bloc.svelte';
+  import AuthCard from '$lib/components/auth/AuthCard.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import { CheckEmailBloc } from '$lib/components/pages/CheckEmail.bloc.svelte';
 
   /**
    * The screen straight after registering: what to do next, and how to get

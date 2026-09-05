@@ -2,13 +2,13 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
-  import Tabs from '../../svelte/components/Tabs.svelte';
-  import EmptyState from '../../svelte/components/EmptyState.svelte';
-  import ErrorBanner from '../../svelte/components/ErrorBanner.svelte';
-  import Skeleton from '../../svelte/components/Skeleton.svelte';
-  import { CurrentlyAiringPageBloc } from '../../svelte/components/CurrentlyAiringPage.bloc.svelte';
-  import type { AiringShow } from '../../svelte/components/CurrentlyAiringPage.schedule';
-  import type { TabItem } from '../../svelte/components/Tabs.svelte';
+  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
+  import { CurrentlyAiringPageBloc } from '$lib/components/pages/CurrentlyAiringPage.bloc.svelte';
+  import type { AiringShow } from '$lib/components/pages/CurrentlyAiringPage.schedule';
+  import type { TabItem } from '$lib/components/primitives/Tabs.svelte';
 
   /**
    * What is airing, as a forward-looking schedule or as a month calendar.

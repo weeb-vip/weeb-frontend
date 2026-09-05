@@ -3,24 +3,24 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { animeSchema, breadcrumbSchema } from '$lib/structured-data';
-  import QueryProvider from '../../../svelte/components/QueryProvider.svelte';
+  import QueryProvider from '$lib/components/shell/QueryProvider.svelte';
   import { untrack } from 'svelte';
   import { format } from 'date-fns';
-  import AnimeNews from '../../../svelte/components/AnimeNews.svelte';
-  import CharactersWithStaff from '../../../svelte/components/CharactersWithStaff.svelte';
-  import Episodes from '../../../svelte/components/Episodes.svelte';
-  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
-  import RelatedAnime from '../../../svelte/components/RelatedAnime.svelte';
-  import ShowContentSkeleton from '../../../svelte/components/ShowContentSkeleton.svelte';
-  import ShowHero from '../../../svelte/components/ShowHero.svelte';
-  import ShowInformation from '../../../svelte/components/ShowInformation.svelte';
-  import ShowQuickInfo from '../../../svelte/components/ShowQuickInfo.svelte';
-  import ShowSchedulePanel from '../../../svelte/components/ShowSchedulePanel.svelte';
-  import ShowSection from '../../../svelte/components/ShowSection.svelte';
-  import ShowSectionNav from '../../../svelte/components/ShowSectionNav.svelte';
-  import ShowStickyHeader from '../../../svelte/components/ShowStickyHeader.svelte';
-  import ShowSynopsis from '../../../svelte/components/ShowSynopsis.svelte';
-  import { ShowContentBloc, NEWS_LIMIT } from '../../../svelte/components/ShowContent.bloc.svelte';
+  import AnimeNews from '$lib/components/show/AnimeNews.svelte';
+  import CharactersWithStaff from '$lib/components/show/CharactersWithStaff.svelte';
+  import Episodes from '$lib/components/show/Episodes.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import RelatedAnime from '$lib/components/show/RelatedAnime.svelte';
+  import ShowContentSkeleton from '$lib/components/show/ShowContentSkeleton.svelte';
+  import ShowHero from '$lib/components/show/ShowHero.svelte';
+  import ShowInformation from '$lib/components/show/ShowInformation.svelte';
+  import ShowQuickInfo from '$lib/components/show/ShowQuickInfo.svelte';
+  import ShowSchedulePanel from '$lib/components/show/ShowSchedulePanel.svelte';
+  import ShowSection from '$lib/components/show/ShowSection.svelte';
+  import ShowSectionNav from '$lib/components/show/ShowSectionNav.svelte';
+  import ShowStickyHeader from '$lib/components/show/ShowStickyHeader.svelte';
+  import ShowSynopsis from '$lib/components/show/ShowSynopsis.svelte';
+  import { ShowContentBloc, NEWS_LIMIT } from '$lib/components/pages/ShowContent.bloc.svelte';
 
   /**
    * The anime detail page.

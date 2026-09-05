@@ -1,14 +1,14 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import HeroBanner from '../svelte/components/HeroBanner.svelte';
-  import HeroBannerSkeleton from '../svelte/components/HeroBannerSkeleton.svelte';
-  import HeroAiringRail from '../svelte/components/HeroAiringRail.svelte';
-  import PosterCard from '../svelte/components/PosterCard.svelte';
-  import PosterCardSkeleton from '../svelte/components/PosterCardSkeleton.svelte';
-  import PosterGrid from '../svelte/components/PosterGrid.svelte';
-  import SectionHeader from '../svelte/components/SectionHeader.svelte';
-  import GenrePills from '../svelte/components/GenrePills.svelte';
-  import { HomepageBloc, type HomeAnime, type PublishingWork } from '../svelte/components/HomepageSSR.bloc.svelte';
+  import HeroBanner from '$lib/components/home/HeroBanner.svelte';
+  import HeroBannerSkeleton from '$lib/components/home/HeroBannerSkeleton.svelte';
+  import HeroAiringRail from '$lib/components/home/HeroAiringRail.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard.svelte';
+  import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton.svelte';
+  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
+  import SectionHeader from '$lib/components/primitives/SectionHeader.svelte';
+  import GenrePills from '$lib/components/primitives/GenrePills.svelte';
+  import { HomepageBloc, type HomeAnime, type PublishingWork } from '$lib/components/pages/HomepageSSR.bloc.svelte';
   import '@fortawesome/fontawesome-free/css/all.min.css';
 
   /**

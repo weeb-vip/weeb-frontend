@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { makeSSRFetcher, loggedOutAuth, publicAuth, cookieHeaderFrom } from '$lib/server/ssr-graphql';
-import { getCurrentlyAiringWithDatesAndEpisodes } from '../../services/api/graphql/queries';
+import { getCurrentlyAiringWithDatesAndEpisodes } from '$lib/services/api/graphql/queries';
 
 export const load: PageServerLoad = async ({ locals, cookies }) => {
   const { auth, config } = locals;

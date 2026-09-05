@@ -1,10 +1,10 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import PosterCard from '../../../svelte/components/PosterCard.svelte';
-  import PosterGrid from '../../../svelte/components/PosterGrid.svelte';
-  import EmptyState from '../../../svelte/components/EmptyState.svelte';
-  import ProfileAvatar from '../../../svelte/components/ProfileAvatar.svelte';
-  import { PublicUserPageBloc, type PublicUserCard } from '../../../svelte/components/PublicUserPage.bloc.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard.svelte';
+  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
+  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import ProfileAvatar from '$lib/components/profile/ProfileAvatar.svelte';
+  import { PublicUserPageBloc, type PublicUserCard } from '$lib/components/pages/PublicUserPage.bloc.svelte';
 
   /**
    * Someone else's profile.

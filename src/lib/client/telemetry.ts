@@ -10,7 +10,7 @@
 // the critical path of first paint.
 
 import type { IConfig } from '../../config/interfaces';
-import debug from '../../utils/debug';
+import debug from '$lib/utils/debug';
 
 let started = false;
 

@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { loadWorksBrowse } from '$lib/server/works-browse';
-import { NOVEL_TYPES } from '../../services/api/graphql/works';
+import { NOVEL_TYPES } from '$lib/services/api/graphql/works';
 
 /**
  * /manga -- the comics shelf.

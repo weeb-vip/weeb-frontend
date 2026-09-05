@@ -2,11 +2,11 @@
   import Seo from '$lib/Seo.svelte';
   import { faUser, faEnvelope, faGlobe, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
   import Fa from 'svelte-fa';
-  import Button from '../../../svelte/components/Button.svelte';
-  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
-  import FormInput from '../../../svelte/components/FormInput.svelte';
-  import Skeleton from '../../../svelte/components/Skeleton.svelte';
-  import { ProfileSettingsBloc, type ProfileFormField } from '../../../svelte/components/ProfileSettings.bloc.svelte';
+  import Button from '$lib/components/primitives/Button.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import FormInput from '$lib/components/primitives/FormInput.svelte';
+  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
+  import { ProfileSettingsBloc, type ProfileFormField } from '$lib/components/profile/ProfileSettings.bloc.svelte';
 
   /**
    * The settings form.

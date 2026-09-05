@@ -4,7 +4,7 @@ import type { PluginOption } from "vite";
 
 /**
  * Header's four chrome children, and the offline stand-ins Storybook renders
- * instead. See src/svelte/components/__stories__/offline/README.md for why the
+ * instead. See src/lib/components/__stories__/offline/README.md for why the
  * substitution happens here rather than in the story.
  *
  * Keyed by file name; the swap only applies to imports made *by Header.svelte*,
@@ -22,7 +22,7 @@ const OFFLINE_HEADER_CHROME = [
 // `yarn build-storybook`), so cwd is the repo root.
 const STUB_DIR = path.resolve(
   process.cwd(),
-  "src/svelte/components/__stories__/offline",
+  "src/lib/components/__stories__/offline",
 );
 
 function offlineHeaderChrome(): PluginOption {
@@ -31,7 +31,7 @@ function offlineHeaderChrome(): PluginOption {
     // Ahead of vite-plugin-svelte, or the real file is resolved first.
     enforce: "pre",
     resolveId(source: string, importer?: string) {
-      if (!importer || !importer.endsWith(path.join("src", "lib", "Header.svelte"))) {
+      if (!importer || !importer.endsWith(path.join("src", "lib", "components", "shell", "Header.svelte"))) {
         return null;
       }
 

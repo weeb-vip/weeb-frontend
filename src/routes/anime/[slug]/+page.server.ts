@@ -6,7 +6,7 @@ import {
   getAnimeDetailsByID,
   getAnimeDetailsBySlug,
   queryCharactersAndStaffByAnimeID
-} from '../../../services/api/graphql/queries';
+} from '$lib/services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
 import { metaDescription } from '$lib/meta';
 

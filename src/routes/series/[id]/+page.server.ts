@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getAnimeBySeriesId } from '../../../services/api/graphql/queries';
+import { getAnimeBySeriesId } from '$lib/services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
 
 /**

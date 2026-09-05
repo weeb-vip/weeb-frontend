@@ -2,13 +2,13 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
-  import PosterCard from '../../../svelte/components/PosterCard.svelte';
-  import PosterGrid from '../../../svelte/components/PosterGrid.svelte';
-  import KeyArtStage from '../../../svelte/components/KeyArtStage.svelte';
-  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
-  import EmptyState from '../../../svelte/components/EmptyState.svelte';
-  import { GetImageFromAnime, seriesHref } from '../../../services/utils';
-  import { SeriesPageBloc, type SeriesEntry } from '../../../svelte/components/SeriesPage.bloc.svelte';
+  import PosterCard from '$lib/components/cards/PosterCard.svelte';
+  import PosterGrid from '$lib/components/primitives/PosterGrid.svelte';
+  import KeyArtStage from '$lib/components/show/KeyArtStage.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import { GetImageFromAnime, seriesHref } from '$lib/services/utils';
+  import { SeriesPageBloc, type SeriesEntry } from '$lib/components/pages/SeriesPage.bloc.svelte';
 
   /**
    * Every anime sharing a series id, laid out season by season.

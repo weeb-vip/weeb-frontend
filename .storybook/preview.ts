@@ -1,7 +1,7 @@
 import type { Preview } from "storybook";
 import '../src/styles/design-tokens.css';
 import '../src/scss/base.scss';
-import { configStore } from '../src/svelte/stores/config';
+import { configStore } from '../src/lib/stores/config';
 import type { IConfig } from '../src/config/interfaces';
 
 /**

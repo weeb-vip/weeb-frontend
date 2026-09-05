@@ -1,4 +1,4 @@
-import { swipeNavigation } from '../utils/swipe-navigation';
+import { swipeNavigation } from '$lib/utils/swipe-navigation';
 
 // Initialize swipe navigation handler immediately
 swipeNavigation;

@@ -2,11 +2,11 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
-  import SafeImage from '../../../svelte/components/SafeImage.svelte';
-  import EmptyState from '../../../svelte/components/EmptyState.svelte';
-  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
-  import Tabs from '../../../svelte/components/Tabs.svelte';
-  import { VoiceActorPageBloc, type Staff } from '../../../svelte/components/VoiceActorPage.bloc.svelte';
+  import SafeImage from '$lib/components/primitives/SafeImage.svelte';
+  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import { VoiceActorPageBloc, type Staff } from '$lib/components/pages/VoiceActorPage.bloc.svelte';
 
   /**
    * A voice actor's page: who they are, and everything they have voiced.

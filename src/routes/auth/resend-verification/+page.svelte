@@ -1,12 +1,12 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import QueryProvider from '../../../svelte/components/QueryProvider.svelte';
+  import QueryProvider from '$lib/components/shell/QueryProvider.svelte';
   import { onDestroy } from 'svelte';
   import { faUser } from '@fortawesome/free-solid-svg-icons';
-  import AuthCard from '../../../svelte/components/AuthCard.svelte';
-  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
-  import FormInput from '../../../svelte/components/FormInput.svelte';
-  import { ResendVerificationBloc } from '../../../svelte/components/ResendVerification.bloc.svelte';
+  import AuthCard from '$lib/components/auth/AuthCard.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import FormInput from '$lib/components/primitives/FormInput.svelte';
+  import { ResendVerificationBloc } from '$lib/components/pages/ResendVerification.bloc.svelte';
 
   /**
    * The standalone "send me another verification link" page.

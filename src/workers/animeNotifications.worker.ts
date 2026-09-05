@@ -14,7 +14,7 @@ import {
   hasAlreadyAired,
   calculateCountdown,
   type NextEpisodeResult,
-} from '../services/airTimeUtils';
+} from '$lib/services/airTimeUtils';
 
 /**
  * Get next episode data directly from anime object (using new nextEpisode structure)

@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { loadWorksBrowse } from '$lib/server/works-browse';
-import { NOVEL_TYPES } from '../../services/api/graphql/works';
+import { NOVEL_TYPES } from '$lib/services/api/graphql/works';
 
 /**
  * /light-novels -- the prose shelf: light novels, novels and web novels.

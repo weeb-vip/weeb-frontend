@@ -1,13 +1,13 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
-  import Tabs from '../../../svelte/components/Tabs.svelte';
-  import Skeleton from '../../../svelte/components/Skeleton.svelte';
-  import EmptyState from '../../../svelte/components/EmptyState.svelte';
-  import ErrorBanner from '../../../svelte/components/ErrorBanner.svelte';
-  import AnimeCalendarPopover from '../../../svelte/components/AnimeCalendarPopover.svelte';
-  import { AiringCalendarBloc } from '../../../svelte/components/AiringCalendar.bloc.svelte';
-  import type { AiringShow } from '../../../svelte/components/CurrentlyAiringPage.schedule';
-  import type { TabItem } from '../../../svelte/components/Tabs.svelte';
+  import Tabs from '$lib/components/primitives/Tabs.svelte';
+  import Skeleton from '$lib/components/primitives/Skeleton.svelte';
+  import EmptyState from '$lib/components/primitives/EmptyState.svelte';
+  import ErrorBanner from '$lib/components/primitives/ErrorBanner.svelte';
+  import AnimeCalendarPopover from '$lib/components/tracking/AnimeCalendarPopover.svelte';
+  import { AiringCalendarBloc } from '$lib/components/pages/AiringCalendar.bloc.svelte';
+  import type { AiringShow } from '$lib/components/pages/CurrentlyAiringPage.schedule';
+  import type { TabItem } from '$lib/components/primitives/Tabs.svelte';
 
   /**
    * The airing schedule as a month or week grid.

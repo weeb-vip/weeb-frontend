@@ -7,7 +7,7 @@ import {
   queryPublicUserWorks,
   queryPublicUserAnimeStatusCounts,
   queryPublicUserWorkStatusCounts
-} from '../../../services/api/graphql/queries';
+} from '$lib/services/api/graphql/queries';
 import { Status, WorkStatus } from '../../../gql/graphql';
 
 // The public page for any user, at /u/<username>. The header is always public;
