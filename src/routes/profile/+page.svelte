@@ -2,7 +2,7 @@
   import Seo from '$lib/Seo.svelte';
   import ProfilePage from '../../svelte/components/ProfilePage.svelte';
 
-  export let data;
+  let { data }: { data: any } = $props();
 </script>
 
 <Seo
