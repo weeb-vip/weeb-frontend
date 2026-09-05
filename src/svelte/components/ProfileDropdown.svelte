@@ -1,45 +1,36 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import ProfileAvatar from './ProfileAvatar.svelte';
   import ProfileMenuContent from './ProfileMenuContent.svelte';
+  import { ProfileDropdownBloc } from './ProfileDropdown.bloc.svelte';
+  import { clickOutside } from '../actions/clickOutside';
 
-  export let user: {
-    id: string;
-    username: string;
-    firstname: string;
-    lastname: string;
-    email?: string | null;
-    profileImageUrl?: string | null;
-  };
-
-  let isOpen = false;
-  let dropdownRef: HTMLDivElement;
-
-  onMount(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef && !dropdownRef.contains(event.target as Node)) {
-        isOpen = false;
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  });
-
-  function toggleDropdown() {
-    isOpen = !isOpen;
-  }
-
-  function closeDropdown() {
-    isOpen = false;
-  }
+  let {
+    user,
+    bloc = new ProfileDropdownBloc()
+  }: {
+    user: {
+      id: string;
+      username: string;
+      firstname: string;
+      lastname: string;
+      email?: string | null;
+      profileImageUrl?: string | null;
+    };
+    bloc?: ProfileDropdownBloc;
+  } = $props();
 </script>
 
-<div class="relative" bind:this={dropdownRef}>
+<!-- Was an onMount that added a document mousedown listener and compared
+     contains() by hand. `clickOutside` is that listener, attached only while
+     the menu is open and always removed on destroy. -->
+<div
+  class="relative"
+  use:clickOutside={{ handler: () => bloc.close(), enabled: bloc.isOpen, event: 'mousedown' }}
+>
   <button
-    on:click={toggleDropdown}
+    onclick={() => bloc.toggle()}
     class="flex items-center space-x-2 p-1 rounded-full hover:bg-weeb-surface hover:bg-weeb-surface transition-colors duration-200"
-    aria-expanded={isOpen}
+    aria-expanded={bloc.isOpen}
     aria-haspopup="true"
   >
     <ProfileAvatar
@@ -50,9 +41,9 @@
     />
   </button>
 
-  {#if isOpen}
+  {#if bloc.isOpen}
     <div class="absolute right-0 mt-2 w-72 bg-weeb-surface rounded-lg shadow-lg border border-weeb-border py-2 z-50">
-      <ProfileMenuContent {user} isMobile={false} onClose={closeDropdown} />
+      <ProfileMenuContent {user} isMobile={false} onClose={() => bloc.close()} />
     </div>
   {/if}
 </div>

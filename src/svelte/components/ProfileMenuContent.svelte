@@ -1,61 +1,52 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { loggedInStore } from '../stores/auth';
-  import { AuthStorage } from '../../utils/auth-storage';
+  import { untrack } from 'svelte';
   import ProfileAvatar from './ProfileAvatar.svelte';
-  import { logout } from '../../services/queries';
+  import { ProfileMenuContentBloc } from './ProfileMenuContent.bloc.svelte';
 
-  export let user: {
-    id: string;
-    username: string;
-    firstname: string;
-    lastname: string;
-    email?: string | null;
-    profileImageUrl?: string | null;
-  };
+  let {
+    user,
+    isMobile = false,
+    onClose = null,
+    bloc: injected = undefined
+  }: {
+    user: {
+      id: string;
+      username: string;
+      firstname: string;
+      lastname: string;
+      email?: string | null;
+      profileImageUrl?: string | null;
+    };
+    isMobile?: boolean;
+    /** The surface that hosts this menu, closing itself. */
+    onClose?: (() => void) | null;
+    bloc?: ProfileMenuContentBloc;
+  } = $props();
 
-  export let isMobile: boolean = false;
-  export let onClose: (() => void) | null = null;
+  // Read at init rather than as a reactive default: the real bloc reaches the
+  // auth store and the logout mutation, and neither wants re-creating on a
+  // prop change.
+  const bloc = untrack(() => injected) ?? new ProfileMenuContentBloc();
 
   // Different styling based on context
-  $: userSectionClass = isMobile
+  const userSectionClass = $derived(isMobile
     ? "flex items-center px-4 py-4 space-x-3 hover:bg-weeb-surface-hover/50 transition-colors duration-300"
-    : "px-4 py-3 border-b border-weeb-border";
+    : "px-4 py-3 border-b border-weeb-border");
 
-  $: menuItemClass = isMobile
+  const menuItemClass = $derived(isMobile
     ? "flex items-center px-4 py-3 hover:bg-weeb-surface-hover/50 transition-colors duration-300"
-    : "flex items-center px-4 py-2 text-sm text-weeb-fg-secondary hover:bg-weeb-surface-hover transition-colors";
+    : "flex items-center px-4 py-2 text-sm text-weeb-fg-secondary hover:bg-weeb-surface-hover transition-colors");
 
-  $: logoutButtonClass = isMobile
+  const logoutButtonClass = $derived(isMobile
     ? "w-full text-left px-4 py-3 text-sm text-weeb-red hover:bg-weeb-surface-hover/50 transition-colors duration-300"
-    : "flex items-center w-full px-4 py-2 text-sm text-weeb-red hover:bg-weeb-surface-hover transition-colors";
+    : "flex items-center w-full px-4 py-2 text-sm text-weeb-red hover:bg-weeb-surface-hover transition-colors");
 
-  async function handleLogout() {
-    try {
-      // Call GraphQL logout mutation first
-      const logoutQuery = logout();
-      await logoutQuery.mutationFn();
-      console.log("🚪 GraphQL logout successful");
-
-      // Also call local API endpoint to ensure all cookies are cleared
-      await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include' // Send cookies to server
-      });
-      console.log("🚪 Server logout successful - cookies cleared");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-
-    // Update client state
-    AuthStorage.logout();
-    loggedInStore.logout();
-    if (onClose) onClose();
-    goto("/");
+  function handleLogout() {
+    bloc.signOut(() => onClose?.());
   }
 
   function handleLinkClick() {
-    if (onClose) onClose();
+    onClose?.();
   }
 </script>
 
@@ -63,7 +54,7 @@
 {#if isMobile}
   <a
     href="/profile"
-    on:click={handleLinkClick}
+    onclick={handleLinkClick}
     class={userSectionClass}
   >
     <ProfileAvatar
@@ -107,7 +98,7 @@
 <div class={isMobile ? "border-t border-weeb-border transition-colors duration-300" : "py-1"}>
   <a
     href="/profile"
-    on:click={handleLinkClick}
+    onclick={handleLinkClick}
     class={menuItemClass}
   >
     {#if isMobile}
@@ -122,7 +113,7 @@
 
   <a
     href="/profile/anime"
-    on:click={handleLinkClick}
+    onclick={handleLinkClick}
     class={menuItemClass}
   >
     {#if isMobile}
@@ -139,7 +130,7 @@
 
   <a
     href="/settings"
-    on:click={handleLinkClick}
+    onclick={handleLinkClick}
     class={menuItemClass}
   >
     {#if isMobile}
@@ -157,14 +148,15 @@
 <!-- Logout Section -->
 <div class={isMobile ? "border-t border-weeb-border transition-colors duration-300" : "border-t border-weeb-border py-1"}>
   <button
-    on:click={handleLogout}
+    onclick={handleLogout}
     class={logoutButtonClass}
+    disabled={bloc.isSigningOut}
   >
     {#if !isMobile}
       <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
       </svg>
     {/if}
-    Sign Out
+    {bloc.isSigningOut ? 'Signing out…' : 'Sign Out'}
   </button>
 </div>

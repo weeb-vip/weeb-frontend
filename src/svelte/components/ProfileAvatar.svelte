@@ -2,13 +2,25 @@
   import { getContext } from 'svelte';
   import { configStore } from '../stores/config';
 
-  export let username: string = '';
-  export let profileImageUrl: string | null = null;
-  export let size: 'sm' | 'md' | 'lg' = 'md';
-  export let linkToProfile: boolean = true;
-  export let className: string = '';
+  /**
+   * Presentational -- no bloc. It takes a username and an image name and draws
+   * a circle; the CDN base it needs is read once at init rather than owned.
+   */
+  let {
+    username = '',
+    profileImageUrl = null,
+    size = 'md',
+    linkToProfile = true,
+    className = ''
+  }: {
+    username?: string;
+    profileImageUrl?: string | null;
+    size?: 'sm' | 'md' | 'lg';
+    linkToProfile?: boolean;
+    className?: string;
+  } = $props();
 
-  let imageError = false;
+  let imageError = $state(false);
 
   // Context first, then the store ConfigProvider itself reads from.
   //
@@ -22,18 +34,15 @@
     undefined;
   const cdnUserUrl: string = config?.cdn_user_url || 'https://cdn.weeb.vip/users';
 
-  function getInitial(): string {
-    if (!username) return '?';
-    return username.charAt(0).toUpperCase();
-  }
-
   const sizeClasses = {
     sm: 'w-8 h-8 text-sm',
     md: 'w-10 h-10 text-base',
     lg: 'w-16 h-16 text-xl'
   };
 
-  function getImageUrl(): string | undefined {
+  const initial = $derived(username ? username.charAt(0).toUpperCase() : '?');
+
+  const imageUrl = $derived.by(() => {
     if (!profileImageUrl) return undefined;
     const suffix = size === 'lg' ? '_64' : '_32';
     // Insert suffix before file extension
@@ -43,45 +52,36 @@
     const nameWithoutExt = profileImageUrl.substring(0, lastDotIndex);
     const extension = profileImageUrl.substring(lastDotIndex);
     return `${cdnUserUrl}/${nameWithoutExt}${suffix}${extension}`;
-  }
+  });
 
-  function handleImageError() {
-    imageError = true;
-  }
-
-  $: avatarClasses = `${sizeClasses[size]} rounded-full flex items-center justify-center font-semibold cursor-pointer transition-all duration-300 hover:ring-2 hover:ring-weeb-accent hover:ring-offset-2 ${className}`;
+  const avatarClasses = $derived(
+    `${sizeClasses[size]} rounded-full flex items-center justify-center font-semibold cursor-pointer transition-all duration-300 hover:ring-2 hover:ring-weeb-accent hover:ring-offset-2 ${className}`
+  );
 </script>
 
-{#if linkToProfile}
-  <a href="/profile" class="block">
-    <div class={avatarClasses}>
-      {#if profileImageUrl && !imageError}
-        <img
-          src={getImageUrl()}
-          alt={username}
-          class="w-full h-full rounded-full object-cover"
-          on:error={handleImageError}
-        />
-      {:else}
-        <div class="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
-          {getInitial()}
-        </div>
-      {/if}
-    </div>
-  </a>
-{:else}
+<!-- One copy of the circle, rendered either inside the profile link or bare.
+     The two branches had drifted into duplicated markup for the same face. -->
+{#snippet face()}
   <div class={avatarClasses}>
     {#if profileImageUrl && !imageError}
       <img
-        src={getImageUrl()}
+        src={imageUrl}
         alt={username}
         class="w-full h-full rounded-full object-cover"
-        on:error={handleImageError}
+        onerror={() => (imageError = true)}
       />
     {:else}
       <div class="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
-        {getInitial()}
+        {initial}
       </div>
     {/if}
   </div>
+{/snippet}
+
+{#if linkToProfile}
+  <a href="/profile" class="block">
+    {@render face()}
+  </a>
+{:else}
+  {@render face()}
 {/if}
