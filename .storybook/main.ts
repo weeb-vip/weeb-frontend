@@ -43,8 +43,26 @@ function offlineHeaderChrome(): PluginOption {
   };
 }
 
-const config: StorybookConfig = {
+/**
+ * `$app/state` is mocked by a `.svelte.js` module, so it contains runes.
+ * esbuild's dep optimizer has no svelte loader, so prebundling flattens it to
+ * plain JS and the runes are never compiled -- `vite dev` then throws
+ * rune_outside_svelte the moment any story renders. `build-storybook` does not
+ * prebundle, which is why this only ever broke the dev server.
+ *
+ * Same class of problem as the optimizeDeps.exclude list in vite.config.ts.
+ */
+const STATE_MOCK = "@storybook/sveltekit/internal/mocks/app/state.svelte.js";
+
+const config: StorybookConfig & { optimizeViteDeps?: (deps: string[]) => string[] } = {
   stories: ["../src/**/*.stories.@(js|jsx|mjs|ts|tsx|svelte)"],
+
+  /**
+   * The framework preset puts STATE_MOCK in optimizeDeps.include, and that is
+   * applied AFTER viteFinal -- so excluding it there alone is overwritten.
+   * main.ts is itself a preset and runs last, so drop it here at the source.
+   */
+  optimizeViteDeps: (deps: string[]) => deps.filter((dep) => dep !== STATE_MOCK),
   // No a11y addon: @storybook/addon-a11y (and axe-core) are not in
   // node_modules, and adding them needs a registry install this environment
   // cannot do. Worth adding the moment there is network for it -- every story
@@ -66,6 +84,12 @@ const config: StorybookConfig = {
     };
 
     config.plugins = [offlineHeaderChrome(), ...(config.plugins ?? [])];
+
+    config.optimizeDeps = {
+      ...config.optimizeDeps,
+      exclude: [...(config.optimizeDeps?.exclude ?? []), STATE_MOCK],
+      include: (config.optimizeDeps?.include ?? []).filter((dep) => dep !== STATE_MOCK),
+    };
 
     return config;
   },

@@ -26,7 +26,8 @@
     "deploy:cf": "node scripts/deploy-cloudflare.js",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
-    "check:gate": "node scripts/svelte-check-gate.mjs"
+    "check:gate": "node scripts/svelte-check-gate.mjs",
+    "storybook:smoke": "node scripts/smoke-stories.mjs"
   },
   "repository": {
     "type": "git",

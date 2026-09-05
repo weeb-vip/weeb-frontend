@@ -59,20 +59,20 @@ export const RELATED = [
   },
 ];
 
+/**
+ * Shape matters here: the API returns CharacterWithStaff, so each row nests the
+ * character under `character` rather than spreading its fields at the top. A
+ * flat row reads back as `entry.character === undefined` and takes the cast
+ * sort down with it.
+ */
 export const CHARACTERS = {
   charactersAndStaffByAnimeId: [
     {
-      id: 'c1',
-      name: 'Frieren',
-      role: 'Main',
-      image: null,
+      character: { id: 'c1', animeId: 'a1', name: 'Frieren', role: 'Main', image: null },
       staff: [{ id: 's1', givenName: 'Atsumi', familyName: 'Tanezaki', language: 'Japanese', image: null }],
     },
     {
-      id: 'c2',
-      name: 'Fern',
-      role: 'Main',
-      image: null,
+      character: { id: 'c2', animeId: 'a1', name: 'Fern', role: 'Main', image: null },
       staff: [{ id: 's2', givenName: 'Kana', familyName: 'Ichinose', language: 'Japanese', image: null }],
     },
   ],
