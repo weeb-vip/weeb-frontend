@@ -85,6 +85,16 @@
     stage = true,
     /** Names the stage as a region, when it is one. */
     ariaLabel = undefined,
+    /**
+     * A caller's own class on the stage root.
+     *
+     * Not decoration: the homepage hero used to BE the root element and carried
+     * `.hero`, which tests/e2e/notifications-store.spec.ts selects on. Moving
+     * the backdrop into this component took that element away with it. A class
+     * passthrough restores the hook without wrapping the stage in a second
+     * div, which would have to re-declare the stage's own geometry.
+     */
+    class: className = '',
     /** Fires once SafeImage has settled on a candidate -- failures included. */
     onChosen = undefined,
     /** What sits on the stage. Slotted content from a call site arrives here. */
@@ -105,6 +115,7 @@
     clip?: boolean;
     stage?: boolean;
     ariaLabel?: string;
+    class?: string;
     onChosen?: (detail: ChosenDetail) => void;
     children?: Snippet;
   } = $props();
@@ -128,7 +139,7 @@
 </script>
 
 <section
-  class="key-art"
+  class="key-art {className}"
   class:key-art--under-nav={underNav}
   class:key-art--clip={clip}
   aria-label={ariaLabel}

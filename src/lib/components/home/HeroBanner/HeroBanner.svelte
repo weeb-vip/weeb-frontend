@@ -46,6 +46,7 @@
      same value -- hence `fade` as that variable, and `underNav={false}`. No
      clipping: at narrow widths the panel's shadow spills past the stage edge. -->
 <KeyArtStage
+  class="hero"
   sources={bloc.imageSources}
   cdnWidth={bloc.heroCdnWidth}
   loaded={bloc.bgLoaded}
