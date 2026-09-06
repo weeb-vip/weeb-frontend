@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, within } from '@testing-library/svelte';
+import StreamingPlatforms from './StreamingPlatforms.svelte';
 import { STREAMING_FLAG, StreamingPlatformsBloc } from './StreamingPlatforms.bloc.svelte';
 
 /** A flag port that only answers true after N asks, like PostHog loading late. */
@@ -126,5 +128,105 @@ describe('StreamingPlatformsBloc', () => {
     it('gives a bare host a scheme, or it would resolve as a relative path', () => {
       expect(bloc().hrefFor('www.netflix.com/title/1')).toBe('https://www.netflix.com/title/1');
     });
+  });
+});
+
+/**
+ * The view over that bloc. Added alongside the bloc suite above rather than in
+ * a file of its own, per the one-test-file-per-component convention: what the
+ * gate answers is the bloc's, and what is drawn once it answers is here.
+ *
+ * The bloc is injected, so nothing reaches PostHog.
+ */
+describe('StreamingPlatforms (view)', () => {
+  const openBloc = () => new StreamingPlatformsBloc({ flags: { isEnabled: () => true } });
+  const closedBloc = () => new StreamingPlatformsBloc({ flags: { isEnabled: () => false } });
+
+  const platforms = [
+    { platform: 'crunchyroll', name: 'Crunchyroll', url: 'https://www.crunchyroll.com/x' },
+    { platform: 'netflix', url: 'www.netflix.com/title/1' }
+  ];
+
+  it('draws one named link per platform, each leaving the site safely', () => {
+    render(StreamingPlatforms, { props: { platforms, bloc: openBloc() } });
+
+    const crunchyroll = screen.getByRole('link', { name: 'Watch on Crunchyroll' });
+    expect(crunchyroll).toHaveAttribute('href', 'https://www.crunchyroll.com/x');
+    expect(crunchyroll).toHaveAttribute('target', '_blank');
+    expect(crunchyroll).toHaveAttribute('rel', 'noopener noreferrer');
+
+    // A bare host is given a scheme, or it would resolve as a relative path.
+    expect(screen.getByRole('link', { name: 'Watch on netflix' })).toHaveAttribute(
+      'href',
+      'https://www.netflix.com/title/1'
+    );
+  });
+
+  it('falls back to the platform key when the row carries no display name', () => {
+    render(StreamingPlatforms, { props: { platforms, bloc: openBloc() } });
+
+    expect(screen.getByRole('link', { name: 'Watch on netflix' })).toBeInTheDocument();
+  });
+
+  it('labels the row "Watch on" and serves bundled logos, not hotlinked ones', () => {
+    const { container } = render(StreamingPlatforms, { props: { platforms, bloc: openBloc() } });
+
+    expect(screen.getByText('Watch on')).toBeInTheDocument();
+    // The marks are decorative -- the link is already named -- and they are
+    // served from /assets/streams because several hosts 403 hotlinked assets.
+    const icons = [...container.querySelectorAll('img')];
+    expect(icons.map((img) => img.getAttribute('src'))).toEqual([
+      '/assets/streams/crunchyroll.svg',
+      '/assets/streams/netflix.svg'
+    ]);
+    for (const icon of icons) expect(icon).toHaveAttribute('alt', '');
+  });
+
+  it.each([
+    ['the flag is off', { platforms, bloc: 'closed' }],
+    ['the show has no listings', { platforms: [], bloc: 'open' }],
+    ['the API sent no listings field', { platforms: undefined, bloc: 'open' }],
+    ['the API sent null', { platforms: null, bloc: 'open' }]
+  ])('renders nothing at all when %s', (_label, { platforms: rows, bloc }) => {
+    const { container } = render(StreamingPlatforms, {
+      props: { platforms: rows, bloc: bloc === 'open' ? openBloc() : closedBloc() }
+    });
+
+    expect(container.querySelector('.streaming-platforms')).toBeNull();
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('centres the row on mobile only where the call site asks for it', () => {
+    // The class is the contract; whether it actually centres is a media query
+    // jsdom never evaluates.
+    const { container } = render(StreamingPlatforms, {
+      props: { platforms, centerOnMobile: true, bloc: openBloc() }
+    });
+
+    expect(container.querySelector('.platforms-list')).toHaveClass('center-mobile');
+  });
+
+  it('leaves the row left-aligned by default', () => {
+    const { container } = render(StreamingPlatforms, {
+      props: { platforms, bloc: openBloc() }
+    });
+
+    expect(container.querySelector('.platforms-list')).not.toHaveClass('center-mobile');
+  });
+
+  it('draws every listing a heavily-syndicated show carries', () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      platform: `service-${i}`,
+      url: `https://service-${i}.example/x`
+    }));
+    const { container } = render(StreamingPlatforms, { props: { platforms: many, bloc: openBloc() } });
+
+    const list = container.querySelector('.platforms-list') as HTMLElement;
+    expect(within(list).getAllByRole('link')).toHaveLength(12);
+    // An unrecognised service gets the generic mark rather than a broken image.
+    expect(within(list).getAllByRole('link')[0].querySelector('img')).toHaveAttribute(
+      'src',
+      '/assets/streams/generic.svg'
+    );
   });
 });

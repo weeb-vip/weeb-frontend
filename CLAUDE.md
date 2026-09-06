@@ -36,9 +36,18 @@ imported into a test directly. Under the previous runner (ts-jest,
   with `globals: false`).
 - Component tests use `@testing-library/svelte` and query by accessible role.
   `src/lib/components/primitives/Button/Button.test.ts` is the reference.
-- Coverage is `@vitest/coverage-v8` (`yarn test:coverage`). The threshold block
-  is commented out; the target is 80% and it gets enabled once the component
-  suites are written.
+- **Unit tests cover components; pages are covered by e2e.** A component is a
+  unit with props in and DOM out; a `+page.svelte` is a composition plus a
+  loader, and what matters about it is asserted by `tests/e2e` in a real
+  browser. Do not write jsdom page tests to move a coverage number.
+- Coverage is `@vitest/coverage-v8` (`yarn test:coverage`), and it enforces a
+  threshold scoped to **`src/lib/components/**` at 80% statements** (branches
+  70 / functions 75 / lines 80 -- those run structurally lower in a Svelte
+  view). `src/routes/**` is unthresholded on purpose. Story support and test
+  helpers (`__stories__/`, `*.stories.*`, `__tests__/`, `__fixtures__/`) are
+  excluded from the denominator: none of it ships. The 80% is the standard the
+  suites are written to -- a failing gate means another component suite, not a
+  lower number in the config.
 - `resolve.conditions` is set to `['browser']` only when `VITEST` is set --
   without it components would render through svelte's server export instead of
   mounting into jsdom.

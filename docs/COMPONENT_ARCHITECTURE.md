@@ -355,9 +355,33 @@ The environment is `jsdom`. A file that needs the SSR path -- code branching on
 `typeof window === 'undefined'` -- opts out with a `@vitest-environment node`
 docblock; `actions/__tests__/anchoredPosition.test.ts` is the example.
 
-Coverage is `@vitest/coverage-v8` over `src/` (`yarn test:coverage`). The
-threshold block in `vite.config.ts` is commented out and the target is 80%; it
-gets turned on once the component suites exist.
+### What unit tests are for, and what they are not for
+
+**Unit tests cover components; e2e covers pages.** `src/lib/components/**` is
+what a unit test is for -- a component is a unit with props in and DOM out, and
+mounting one in jsdom says something true about it. A `+page.svelte` is a
+composition of those components plus a loader, and what is worth asserting
+about it -- that the route resolves, the data arrives, the flow completes -- is
+exactly what `tests/e2e` already drives in a real browser. Mounting a page in
+jsdom to reach a number would duplicate that with a weaker instrument.
+
+So the coverage gate is scoped rather than global.
+
+Coverage is `@vitest/coverage-v8` (`yarn test:coverage`). Story support and
+test helpers are excluded from the denominator -- `**/__stories__/**`,
+`**/*.stories.*`, `**/__tests__/**`, `**/__fixtures__/**` -- because none of it
+ships; leaving it in was quietly costing several points of a number that is
+supposed to describe the app.
+
+`vite.config.ts` thresholds **`src/lib/components/**` at 80% statements** (with
+branches 70 / functions 75 / lines 80: in a Svelte view every `{#if}`, `??` and
+event handler is a branch or a function of its own, so those sit structurally
+below statements for the same amount of behaviour exercised). `src/routes/**`
+is deliberately unthresholded -- see above.
+
+The 80% is the standard the suites are being written to, not a description of
+where they are. When `yarn test:coverage` fails on it, the answer is another
+component suite, never a lower number in the config.
 
 ## Gates
 
