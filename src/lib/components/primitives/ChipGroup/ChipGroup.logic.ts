@@ -66,12 +66,22 @@ export interface ChipGroupMore {
 export type ChipGroupSelect = 'single' | 'multi' | 'none';
 
 /**
- * The skin. `pill` is `Chip` exactly as `Chip` draws it; `segmented` the
- * boxed switches (medium toggle, schedule/calendar, grid/list, the season and
- * year strips); `underline` the profile status tabs and the show section nav.
+ * The skin. `pill` is `Chip` exactly as `Chip` draws it -- every row that picks
+ * one of N or several of N, from the mode switches through the season strips to
+ * the genre facets; `underline` the profile status tabs and the show section
+ * nav, where the row is a bar across the top of the thing it filters.
  * Same items, same ARIA, same behaviour underneath -- only the skin differs.
+ *
+ * There used to be a third, `segmented`: a grey container around the row, a
+ * solid accent fill on the selected chip, an 8px radius. It did the same job as
+ * `pill` in a second visual language, and pill's is the one that survives.
+ * Two reasons. A multi-select row has several chips on at once, and a solid
+ * fill there is a run of loud blocks, where one tinted chip among outlines
+ * reads cleanly at any count -- so only pill could serve both selection modes.
+ * And the container only ever held together while the items did not wrap, which
+ * is why the 16-genre row on /search could never use it.
  */
-export type ChipGroupVariant = 'pill' | 'segmented' | 'underline';
+export type ChipGroupVariant = 'pill' | 'underline';
 
 /**
  * `tabs` when the chips swap panels of content: role=tablist, arrow keys, one

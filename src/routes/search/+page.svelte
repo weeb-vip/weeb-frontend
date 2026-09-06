@@ -165,9 +165,9 @@
     <div class="results-header">
       <p class="results-count">{bloc.resultsSummary}</p>
       <ChipGroup
-        variant="segmented"
         mode="toggle"
         iconOnly
+        nowrap
         items={VIEW_MODES}
         value={bloc.viewMode}
         onSelect={(mode) => bloc.setViewMode(mode)}

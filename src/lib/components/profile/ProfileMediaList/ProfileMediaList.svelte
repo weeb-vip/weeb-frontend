@@ -105,9 +105,9 @@
         ]}
         value={bloc.view}
         onSelect={(value) => bloc.setView(value === 'list' ? 'list' : 'grid')}
-        variant="segmented"
         mode="toggle"
         iconOnly
+        nowrap
         ariaLabel="Grid or list"
         itemContent={viewIcon}
       />

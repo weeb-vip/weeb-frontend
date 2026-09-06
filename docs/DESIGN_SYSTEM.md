@@ -313,11 +313,27 @@ replaced `Tabs` (single-select, three skins), `FilterPills` (multi-select) and
 tokens `Chip` already owns. The item is always a `Chip`, so the `pill` variant
 adds no shape at all — only the row gap.
 
+Two skins, and the split is by what the row *is*, not by how many answers it
+takes. `pill` is every row that picks: the genre facets, the news categories,
+the mode switches, the season and year strips. `underline` is the tab bar
+across the top of the thing it filters.
+
+There was a third, `segmented` — a grey container round the row, a solid accent
+fill on the selected chip, an 8px radius — doing single-select in a second
+visual language. It merged into `pill`, and pill's treatment is the one that
+survived for two reasons. A multi-select row has several chips on at once, and
+a solid fill there is a run of loud blocks, where one tinted chip among
+outlines reads the same at one selection or six; only pill could serve both
+selection modes. And the container only ever held together while the items did
+not wrap, which is why /search's 16-genre row could never be given one. The
+cost is that a two-option switch (Grid | List) is two separate chips rather
+than one joined control — accepted, because one language beats a joined look.
+
 | Prop | Type | Description |
 |---|---|---|
 | `items` | `ChipGroupItem[]` | `{ value?, label, count?, icon?, title?, disabled?, accent?, href? }`. `value` defaults to `label` |
 | `select` | `single \| multi \| none` | One at a time, any number, or a row that selects nothing (links) |
-| `variant` | `pill \| segmented \| underline` | `Chip` as drawn; the boxed switches; the underlined tabs |
+| `variant` | `pill \| underline` | `Chip` as drawn — every row that picks; or the underlined tab bar |
 | `value` | string | `single`: the selected item's `value` |
 | `isSelected` | `(value) => boolean` | `multi`: whether a chip is on. A predicate, so a `Set` caller needs no accessor |
 | `onSelect` | `(value) => void` | A chip was activated |
@@ -326,6 +342,7 @@ adds no shape at all — only the row gap.
 | `size` | `sm \| md \| touch` | 11px dense, 12px default, or the 44px target |
 | `tone` | `ChipTone` | Applied to every chip, for a row that states rather than selects |
 | `iconOnly` | boolean | Hides labels. Each item then needs a `title` |
+| `nowrap` | boolean | Keeps the row on one line and scrolls it sideways instead of wrapping. For a strip that is the page's spine — the season and year strips |
 | `clear` | `{ label?, onClear }` | The leading Clear chip. Pass it only while something is on |
 | `more` | `{ hiddenCount, expanded, onToggle, collapseLabel? }` | The "+N more" chip. No `collapseLabel` makes the reveal one-way |
 | `ariaLabel` | string | Names the row |

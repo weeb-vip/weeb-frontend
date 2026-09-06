@@ -44,24 +44,33 @@ const someSelected =
   (value: string) =>
     wanted.includes(value);
 
-/** The pages use inline SVGs rather than FontAwesome; `itemContent` is how they keep them. */
+/**
+ * The pages use inline SVGs rather than FontAwesome; `itemContent` is how they
+ * keep them. It replaces the LEADING content only -- the label still comes from
+ * the item, which is why this snippet draws the glyph and nothing else, exactly
+ * as CurrentlyAiringPage's own does.
+ */
 const svgItem = createRawSnippet((item: () => ChipGroupItem) => ({
   render: () =>
     item().value === 'schedule'
-      ? `<span style="display:inline-flex;align-items:center;gap:6px;">
+      ? `<span style="display:inline-flex;">
            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
-           Schedule
          </span>`
-      : `<span style="display:inline-flex;align-items:center;gap:6px;">
+      : `<span style="display:inline-flex;">
            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-           Calendar
          </span>`,
 }));
 
 /**
  * THE row of chips: `Tabs`, `FilterPills` and `ChipRow` are all this one
- * component now, in three skins and three selection modes. The item is always
+ * component now, in two skins and three selection modes. The item is always
  * `Chip`, so the pill shape is declared exactly once in the app.
+ *
+ * `pill` is every row that picks -- one of N or several of N. `underline` is
+ * the bar across the top of the thing it filters. A third skin, `segmented`,
+ * drew the same single-select job as `pill` inside a grey container with a
+ * solid fill; it retired into `pill`, whose tinted-among-outlines selection is
+ * the one that survives a multi-select row and a row that wraps.
  */
 const meta = {
   title: 'Primitives/ChipGroup',
@@ -101,49 +110,13 @@ export const SingleUnderlineOverflowing: Story = {
   },
 };
 
-/** ProfileList's anime/manga switch: a compact segmented control with the active side filled. */
-export const SingleSegmented: Story = {
-  args: {
-    items: [
-      { value: 'anime', label: 'Anime' },
-      { value: 'manga', label: 'Manga' },
-    ],
-    value: 'anime',
-    onSelect: () => {},
-    variant: 'segmented',
-    ariaLabel: 'Anime or manga',
-  },
-};
-
-/** CurrentlyAiringPage's schedule/calendar switch, keeping its own inline SVGs via `itemContent`. */
-export const SingleSegmentedWithCustomContent: Story = {
-  args: {
-    items: [
-      { value: 'schedule', label: 'Schedule' },
-      { value: 'calendar', label: 'Calendar', icon: faCalendarDays },
-    ],
-    value: 'schedule',
-    onSelect: () => {},
-    variant: 'segmented',
-    ariaLabel: 'View mode',
-    itemContent: svgItem,
-  },
-};
-
-/** Grid/list mode: `toggle` mode, so these are pressed buttons rather than tabs, each named by its title. */
-export const SingleIconOnlyToggle: Story = {
-  args: {
-    items: VIEW_TABS,
-    value: 'grid',
-    onSelect: () => {},
-    variant: 'segmented',
-    mode: 'toggle',
-    iconOnly: true,
-    ariaLabel: 'View mode',
-  },
-};
-
-/** CharactersWithStaff's filter row: pills that wrap over as many lines as they need. */
+/**
+ * CharactersWithStaff's filter row: pills that wrap over as many lines as they
+ * need. The one treatment for picking out of a row, whatever the row is for --
+ * ProfileList's two-way Anime/Manga switch was drawn in a second language
+ * (grey container, solid fill) until it turned out to be this story with two
+ * items in it.
+ */
 export const SinglePill: Story = {
   args: {
     items: [
@@ -160,14 +133,44 @@ export const SinglePill: Story = {
   },
 };
 
+/** CurrentlyAiringPage's schedule/calendar switch, keeping its own inline SVGs via `itemContent`. */
+export const SinglePillWithCustomContent: Story = {
+  args: {
+    items: [
+      { value: 'schedule', label: 'Schedule' },
+      { value: 'calendar', label: 'Calendar', icon: faCalendarDays },
+    ],
+    value: 'schedule',
+    onSelect: () => {},
+    nowrap: true,
+    ariaLabel: 'View mode',
+    itemContent: svgItem,
+  },
+};
+
+/** Grid/list mode: `toggle` mode, so these are pressed buttons rather than tabs, each named by its title. */
+export const SingleIconOnlyToggle: Story = {
+  args: {
+    items: VIEW_TABS,
+    value: 'grid',
+    onSelect: () => {},
+    mode: 'toggle',
+    iconOnly: true,
+    nowrap: true,
+    ariaLabel: 'View mode',
+  },
+};
+
 /**
  * The season strips on / and /season. `toggle` mode leaves plain buttons -- no
  * `role="tab"` overriding the implicit button role -- `activeMarker="current"`
  * marks the season being shown with aria-current="page" because these NAVIGATE
  * rather than reveal a panel, and `size="touch"` is the 44px target the homepage
- * copy of this strip used to carry alone.
+ * copy of this strip used to carry alone. `nowrap` keeps the four seasons on one
+ * line on a phone -- the grey container this strip used to sit in did that by
+ * construction, and it is the one thing worth keeping of it.
  */
-export const SingleSegmentedNavigationTouch: Story = {
+export const SinglePillNavigationTouch: Story = {
   args: {
     items: [
       { value: 'WINTER_2026', label: 'Winter' },
@@ -177,10 +180,10 @@ export const SingleSegmentedNavigationTouch: Story = {
     ],
     value: 'SPRING_2026',
     onSelect: () => {},
-    variant: 'segmented',
     mode: 'toggle',
     activeMarker: 'current',
     size: 'touch',
+    nowrap: true,
     ariaLabel: 'Season',
   },
 };
@@ -217,7 +220,6 @@ export const SingleWithDisabledItem: Story = {
     ],
     value: 'anime',
     onSelect: () => {},
-    variant: 'segmented',
     ariaLabel: 'Medium',
   },
 };

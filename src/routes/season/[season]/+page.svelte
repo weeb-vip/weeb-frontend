@@ -131,10 +131,10 @@
         items={seasonItems}
         value={activeSeasonKey}
         onSelect={(key) => bloc.goToSeason(key)}
-        variant="segmented"
         mode="toggle"
         activeMarker="current"
         size="touch"
+        nowrap
         ariaLabel="Season"
         itemContent={seasonIcon}
       />
@@ -150,17 +150,17 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
 
-      <!-- Same strip, same primitive: this was a third copy of the segmented
+      <!-- Same strip, same primitive: this was a third hand-rolled copy of the
            look. Mono digits are the one thing it keeps of its own. -->
       <div class="year-selector">
         <ChipGroup
           items={yearItems}
           value={activeYearKey}
           onSelect={(key) => bloc.goToSeason(key)}
-          variant="segmented"
           mode="toggle"
           activeMarker="current"
           size="touch"
+          nowrap
           ariaLabel="Year"
         />
       </div>
@@ -387,7 +387,7 @@
 
   /* Years read as data, so they keep the mono face the rest of this page's
      figures use. Everything else about the strip is the primitive's. */
-  .year-selector :global(.chipgroup--segmented .chip.cg-item) {
+  .year-selector :global(.chipgroup .chip.cg-item) {
     font-family: var(--weeb-font-mono);
     font-weight: 600;
   }
@@ -620,12 +620,11 @@
   }
 
   @media (max-width: 480px) {
-    /* The segmented boxes do not wrap; they scroll. */
+    /* Both strips are `nowrap`, so they scroll inside themselves; these only
+       stop the placeholders from stretching the row wider than the phone. */
     .season-tabs,
     .year-selector {
       max-width: 100%;
-      overflow-x: auto;
-      scrollbar-width: none;
     }
   }
 </style>

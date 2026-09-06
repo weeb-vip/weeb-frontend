@@ -148,7 +148,7 @@ describe('the visible range', () => {
   });
 
   it('treats anything that is not "week" as the month view', () => {
-    // The value comes off a segmented control; an unrecognised one must not
+    // The value comes off a two-chip mode switch; an unrecognised one must not
     // leave the page rendering neither range.
     const bloc = loaded([]);
     bloc.selectViewMode('week');

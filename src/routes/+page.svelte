@@ -134,12 +134,13 @@
         href="/season/{bloc.selectedSeason}"
         linkText="Full season →"
       />
-      <!-- The same segmented strip as /season's, now off the same primitive.
-           The two had drifted into different padding, type size, weight, radius
-           and hover colour while doing one job; the only value worth keeping was
-           this one's 44px touch target, which `size="touch"` now carries for
-           both. This strip swaps the shelf in place rather than navigating, so
-           it stays on aria-pressed. -->
+      <!-- The same strip as /season's, off the same primitive. The two had
+           drifted into different padding, type size, weight, radius and hover
+           colour while doing one job; the only value worth keeping was this
+           one's 44px touch target, which `size="touch"` now carries for both.
+           This strip swaps the shelf in place rather than navigating, so it
+           stays on aria-pressed. `nowrap` keeps the four seasons on one line on
+           a phone, which the old grey container used to do by construction. -->
       <div class="season-tabs">
         <ChipGroup
           items={bloc.seasonOptions.map((season) => ({
@@ -148,9 +149,9 @@
           }))}
           value={bloc.selectedSeason}
           onSelect={(season) => bloc.selectSeason(season)}
-          variant="segmented"
           mode="toggle"
           size="touch"
+          nowrap
           ariaLabel="Season"
         />
       </div>
@@ -289,9 +290,11 @@
   .section-header-with-tabs :global(.section-header) {
     margin-bottom: 0;
   }
-  /* The strip itself is Primitives/ChipGroup; this only places it. */
+  /* The strip itself is Primitives/ChipGroup, which owns its own one-line
+     scroll via `nowrap`; this only places it and stops it stretching the row. */
   .season-tabs {
     display: flex;
+    min-width: 0;
   }
 
   /* --- RESPONSIVE --- */
@@ -299,12 +302,10 @@
     .section {
       padding: var(--weeb-section-py, 32px) var(--weeb-section-px, 24px);
     }
-    /* The segmented box does not wrap, so on a narrow screen it scrolls -- the
-       same thing /season's copy of this strip does. */
+    /* The strip does not wrap, so on a narrow screen it scrolls -- the same
+       thing /season's copy of this strip does. */
     .season-tabs {
       max-width: 100%;
-      overflow-x: auto;
-      scrollbar-width: none;
     }
   }
   @media (max-width: 400px) {

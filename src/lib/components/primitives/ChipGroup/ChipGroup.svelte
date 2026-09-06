@@ -29,7 +29,7 @@
 
   /**
    * THE row of chips. One component for every selectable or linked strip in the
-   * app, in all three skins.
+   * app, in both skins.
    *
    * It exists because the row had been written three times over -- `Tabs`
    * (single-select, three variants), `FilterPills` (multi-select, counts, clear
@@ -40,8 +40,18 @@
    * counts and selected states before any of them existed.
    *
    * So the item here is always `Chip`. The `pill` variant adds no shape at all
-   * -- it is `Chip`, wrapped in a row gap. `segmented` and `underline` are not
-   * pills, so those two skins are the only CSS in this file that touches a chip.
+   * -- it is `Chip`, wrapped in a row gap -- and it is the ONE treatment for
+   * picking out of a row, whether the row takes one answer or several.
+   * `underline` is not a pill, so that skin is the only CSS in this file that
+   * touches a chip.
+   *
+   * `segmented` -- a grey container round the row, a solid accent fill on the
+   * selected chip -- was a second language for pill's job and has retired into
+   * it. A multi-select row is several chips on at once, and a solid fill there
+   * is a run of loud purple blocks; one tinted chip among outlines reads the
+   * same at one selection or six. The container, meanwhile, only held together
+   * while the items did not wrap, which is why /search's 16-genre row could
+   * never be given one.
    *
    * Presentational -- no bloc. What is selected is the caller's state.
    */
@@ -57,6 +67,7 @@
     size = 'md',
     tone = 'neutral',
     iconOnly = false,
+    nowrap = false,
     clear = undefined,
     more = undefined,
     ariaLabel = undefined,
@@ -85,6 +96,13 @@
     tone?: ChipTone;
     /** Hides labels, leaving the icon. Each item then needs a `title`. */
     iconOnly?: boolean;
+    /**
+     * Keeps the row on one line and scrolls it sideways instead of wrapping.
+     * For a strip that IS the page's spine -- the season and year strips -- where
+     * three wrapped lines of choices push the content itself off a phone screen.
+     * The row scrolls inside itself, so the page never scrolls sideways.
+     */
+    nowrap?: boolean;
     clear?: ChipGroupClear;
     more?: ChipGroupMore;
     /** Names the row for a screen reader, e.g. "Filter by genre". */
@@ -149,7 +167,9 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
   bind:this={root}
-  class="chipgroup chipgroup--{variant} {isTouch ? 'chipgroup--touch' : ''} {className}"
+  class="chipgroup chipgroup--{variant} {isTouch ? 'chipgroup--touch' : ''} {nowrap
+    ? 'chipgroup--nowrap'
+    : ''} {className}"
   role={containerRole}
   aria-label={ariaLabel}
   onkeydown={select === 'single' ? handleKeydown : undefined}
@@ -227,7 +247,7 @@
     display: inline-flex;
   }
 
-  /* ── pill ──────────────────────────────────────────────────
+  /* ── pill ── every row that picks: one of N, several of N, or none ──
      Deliberately empty of pill CSS. The shape, the ground, the hover, the
      selected wash, the dot and the count badge are all `Chip`; this variant
      owns the row gap and nothing else. */
@@ -235,6 +255,33 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--weeb-pill-row-gap);
+  }
+
+  /* An icon-only chip has no label to stretch it into a lozenge, so it is a
+     circle rather than a wide oval: square, at whatever height its size gives
+     it. The retired `segmented` skin squared these off at a fixed 34px; the
+     ratio does the same job without pinning a second height into the app. */
+  .chipgroup--pill :global(.chip.cg-item.cg-icon-only) {
+    aspect-ratio: 1;
+    padding: 0;
+  }
+
+  /* One line, scrolled, for the strips that are a page's spine. Declared here
+     rather than three times over in the pages that need it -- and the row
+     scrolls inside its own box, so documentElement never widens. */
+  .chipgroup--nowrap {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    min-width: 0;
+  }
+  .chipgroup--nowrap::-webkit-scrollbar {
+    display: none;
+  }
+  /* The ring is drawn inside, so the scroll box does not clip it. */
+  .chipgroup--nowrap :global(.chip.cg-item:focus-visible) {
+    outline-offset: -2px;
   }
 
   /* ── underline ── the profile status tabs, the show section nav ──
@@ -278,53 +325,9 @@
     border-bottom-color: var(--weeb-accent);
   }
 
-  /* ── segmented ── the boxed mode switches and the season / year strips ──
-     The box is the container; the chips inside it lose their own border and
-     ground and take a solid fill when active. */
-  .chipgroup--segmented {
-    display: inline-flex;
-    gap: 2px;
-    padding: 3px;
-    background: var(--weeb-surface);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius);
-    flex-shrink: 0;
-  }
-  .chipgroup--segmented :global(.chip.cg-item--segmented) {
-    min-height: 0;
-    height: 30px;
-    gap: 6px;
-    padding: 0 var(--weeb-pill-padding-x);
-    border: none;
-    border-radius: calc(var(--weeb-radius) - 2px);
-    background: none;
-    color: var(--weeb-fg-muted);
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.5;
-  }
-  /* `height` beats `min-height`, so the touch size has to set it. */
-  .chipgroup--segmented.chipgroup--touch :global(.chip.cg-item--segmented) {
-    height: var(--weeb-pill-min-height-touch);
-  }
-  .chipgroup--segmented :global(.chip.cg-item--segmented.cg-icon-only) {
-    width: 34px;
-    padding: 0;
-  }
-  .chipgroup--segmented :global(button.chip.cg-item--segmented:hover:not(.selected):not(:disabled)) {
-    color: var(--weeb-fg);
-    background: var(--weeb-surface-hover);
-  }
-  .chipgroup--segmented :global(.chip.cg-item--segmented.selected),
-  .chipgroup--segmented :global(button.chip.cg-item--segmented.selected:hover) {
-    background: var(--weeb-accent);
-    color: #fff;
-  }
-
-  /* Both boxed skins draw the focus ring inside, so it is not clipped by the
-     box or the row's own overflow. */
-  .chipgroup--underline :global(.chip.cg-item--underline:focus-visible),
-  .chipgroup--segmented :global(.chip.cg-item--segmented:focus-visible) {
+  /* The underline row scrolls, so it draws its focus ring inside rather than
+     letting the overflow box clip it. */
+  .chipgroup--underline :global(.chip.cg-item--underline:focus-visible) {
     outline-offset: -2px;
   }
 

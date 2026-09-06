@@ -11,8 +11,8 @@ import type { ChipGroupItem } from './ChipGroup.logic';
  * everything that looks for one -- which is exactly how `season.spec.ts` broke.
  *
  * Everything below is asserted through roles and accessible names. jsdom
- * applies no CSS, so the skins (`pill` / `segmented` / `underline`) are only
- * checked as the class the browser would key on, never as an appearance.
+ * applies no CSS, so the skins (`pill` / `underline`) are only checked as the
+ * class the browser would key on, never as an appearance.
  */
 
 const items: ChipGroupItem[] = [
@@ -389,6 +389,45 @@ describe('ChipGroup', () => {
 
       expect(container.querySelector('.chipgroup')).toHaveClass('chipgroup--underline');
       expect(screen.getByRole('tab', { name: 'Winter' })).toHaveClass('cg-item--underline');
+    });
+
+    /**
+     * REGRESSION. `segmented` -- a grey container, a solid-filled active chip --
+     * was a second visual language for the job `pill` already did, and merged
+     * into it. Every row that picks is a pill now, and a row that names no
+     * variant gets one, so a mode switch cannot quietly grow a container again.
+     */
+    it('defaults to pill, the one treatment for a row that picks', () => {
+      const { container } = render(ChipGroup, {
+        props: { items, select: 'single', mode: 'toggle', ariaLabel: 'Season' }
+      });
+
+      const row = container.querySelector('.chipgroup');
+      expect(row).toHaveClass('chipgroup--pill');
+      expect(row?.className).not.toMatch(/segmented/);
+      expect(screen.getByRole('button', { name: 'Winter' })).toHaveClass('cg-item--pill');
+    });
+
+    /**
+     * The one thing the retired container did by construction: hold the strip
+     * on a single line. Five statuses or twelve years wrapped onto three lines
+     * push a phone's content off the first screen, so the row scrolls inside
+     * itself instead -- which leaves documentElement's own width alone.
+     */
+    it('nowrap marks the row the one-line scroll keys on', () => {
+      const { container } = render(ChipGroup, {
+        props: { items, select: 'single', mode: 'toggle', nowrap: true, ariaLabel: 'Season' }
+      });
+
+      expect(container.querySelector('.chipgroup')).toHaveClass('chipgroup--nowrap');
+    });
+
+    it('leaves the row free to wrap by default', () => {
+      const { container } = render(ChipGroup, {
+        props: { items, select: 'multi', ariaLabel: 'Genres' }
+      });
+
+      expect(container.querySelector('.chipgroup')).not.toHaveClass('chipgroup--nowrap');
     });
 
     it('touch is a height, not a type scale -- the chips stay at the default size', () => {

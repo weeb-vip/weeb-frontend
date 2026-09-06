@@ -70,7 +70,7 @@
       items={MODES}
       value={bloc.viewMode}
       onSelect={(value) => bloc.selectViewMode(value)}
-      variant="segmented"
+      nowrap
       ariaLabel="Month or week"
     />
 

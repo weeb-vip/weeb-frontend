@@ -88,7 +88,7 @@
           items={VIEWS}
           value={bloc.view}
           onSelect={(value) => bloc.selectView(value)}
-          variant="segmented"
+          nowrap
           ariaLabel="Schedule or calendar"
           itemContent={viewIcon}
         />
@@ -442,8 +442,8 @@
     flex-wrap: wrap;
   }
 
-  /* The view switch is ChipGroup in its segmented skin; only the inline icon needs
-     saying here. */
+  /* The view switch is ChipGroup's pill row; only the inline icon needs saying
+     here. */
   .tab-svg { display: inline-flex; }
 
   /* ---- Timezone Select ---- */

@@ -45,7 +45,7 @@
       items={bloc.tabs}
       value={bloc.medium}
       onSelect={(value) => bloc.select(value)}
-      variant="segmented"
+      nowrap
       ariaLabel="Anime or manga"
     />
   </div>
