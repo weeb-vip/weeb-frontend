@@ -5,13 +5,15 @@ import ShowHero from './ShowHero.svelte';
 import { stubNeverLoadingImages } from '$lib/components/__tests__/jsdom-gaps';
 
 /**
- * The show page's key-art stage: full-bleed artwork, scrims, the identity panel
- * on panel glass, and the schedule panel slotted beside it.
+ * The show page's hero: the identity panel on panel glass and the schedule
+ * panel beside it, standing on the key-art stage.
  *
- * ShowHero itself is a shell -- the panel's own contents are
- * `ShowIdentityPanel`'s and are covered there. What is asserted here is the
- * shell: the landmark, that the aside is optional, that the artwork layer is
- * absent rather than empty when there is none, and the load-fade wiring.
+ * ShowHero is a shell twice over -- the panel's contents are
+ * `ShowIdentityPanel`'s, and the backdrop is `KeyArtStage`; both are covered
+ * where they live. What is asserted here is this file's own job: the landmark,
+ * that the aside is optional, and that the artwork props (the candidates, the
+ * `loaded` gate, the `chosen` callback) reach the stage -- the page drives that
+ * fade, and losing the wiring is how a loaded banner sits at opacity 0 forever.
  */
 
 let restoreImages: () => void;
@@ -81,7 +83,7 @@ describe('ShowHero', () => {
 
       // Absent rather than an empty box: an empty SafeImage would draw its own
       // placeholder across the whole stage.
-      expect(container.querySelector('.hero-banner__bg')).toBeNull();
+      expect(container.querySelector('.key-art__bg')).toBeNull();
     });
 
     it('draws the layer, held at opacity 0, until something has painted', () => {
@@ -92,7 +94,7 @@ describe('ShowHero', () => {
       // The inline opacity is the contract: the fade is driven by the page's
       // `loaded` flag, and CSS transitions it. Whether it *looks* faded needs
       // a browser.
-      expect(container.querySelector('.hero-banner__bg')).toHaveAttribute(
+      expect(container.querySelector('.key-art__bg')).toHaveAttribute(
         'style',
         'opacity: 0;'
       );
@@ -103,7 +105,7 @@ describe('ShowHero', () => {
         props: { ...base, imageSources: ['/banners/a1'], loaded: true }
       });
 
-      expect(container.querySelector('.hero-banner__bg')).toHaveAttribute('style', 'opacity: 1;');
+      expect(container.querySelector('.key-art__bg')).toHaveAttribute('style', 'opacity: 1;');
     });
 
     it('tells the page a candidate has been settled on, so the fade can start', async () => {
@@ -133,8 +135,8 @@ describe('ShowHero', () => {
       // Pure gradient overlays. jsdom applies no CSS, so the only honest check
       // is that they exist and carry nothing; "does the nav stay legible over
       // the art" is a visual-diff question.
-      expect(container.querySelector('.hero-scrim-top')?.textContent).toBe('');
-      expect(container.querySelector('.hero-scrim-bottom')?.textContent).toBe('');
+      expect(container.querySelector('.key-art__scrim-top')?.textContent).toBe('');
+      expect(container.querySelector('.key-art__scrim-bottom')?.textContent).toBe('');
     });
   });
 });

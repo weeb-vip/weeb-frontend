@@ -212,6 +212,23 @@
   background: var(--weeb-bg-elevated);
 }
 
+/* ── The panel over key art ──
+   The elevated panel a hero stands on its artwork: the tinted panel ground,
+   the blur that makes busy art read as texture, a hairline border, the large
+   radius and the card shadow. The homepage banner and the show page's identity
+   panel are the same object and each used to declare all five itself -- one of
+   them through `var(--weeb-panel-bg, var(--weeb-surface))`, a fallback that had
+   not been reachable since the token was added. Layout is not here: where a
+   panel sits, how wide it may grow and what it pads by are its own. */
+.weeb-panel {
+  background: var(--weeb-panel-bg);
+  backdrop-filter: var(--weeb-panel-blur);
+  -webkit-backdrop-filter: var(--weeb-panel-blur);
+  border: 1px solid var(--weeb-border);
+  border-radius: var(--weeb-radius-lg);
+  box-shadow: var(--weeb-shadow-card);
+}
+
 /* ── The dialog backdrop ──
    Modal and MobileDrawer are two presentations over one dialog; this is the
    half of it that is CSS. The z-index is not here: each surface takes its own

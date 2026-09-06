@@ -1,13 +1,15 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import SafeImage from '$lib/components/primitives/SafeImage';
+  import KeyArtStage from '$lib/components/show/KeyArtStage';
   import ShowIdentityPanel from '$lib/components/show/ShowIdentityPanel';
 
   /**
-   * The key-art stage: full-bleed artwork, a scrim only under the nav, a fade
-   * band below the fold, and the identity panel on panel glass. Same stage as
-   * the homepage banner -- the artwork is the ground, and legibility comes from
-   * the scrim and the panels rather than from hiding the image.
+   * The show page's hero: the identity panel on panel glass, with the schedule
+   * panel beside it, standing on the key-art stage.
+   *
+   * The stage itself -- full-bleed artwork, the scrim under the nav, the fade
+   * band below the fold, the load fade -- is `KeyArtStage`, which the homepage
+   * banner and the series page also stand on. This file is what is above it.
    *
    * Presentational -- no bloc. The candidate list and "has it painted yet" are
    * the page's, because the sticky header uses the same first candidate.
@@ -38,96 +40,28 @@
   } = $props();
 </script>
 
-<section class="hero-banner" aria-label="Anime overview">
-  {#if imageSources.length > 0}
-    <div class="hero-banner__bg" style="opacity: {loaded ? 1 : 0};">
-      <SafeImage
-        sources={imageSources}
-        alt=""
-        loading="eager"
-        priority={true}
-        fallbackSrc="/assets/not found.jpg"
-        perTryTimeoutMs={3000}
-        className="hero-banner__bg-img"
-        onChosen={onArtChosen}
-      />
-    </div>
-  {/if}
-
-  <div class="hero-scrim-top"></div>
-  <div class="hero-scrim-bottom"></div>
-
+<KeyArtStage
+  ariaLabel="Anime overview"
+  sources={imageSources}
+  {loaded}
+  fade="100px"
+  fadeMobile="70px"
+  scrimTopMobile="120px"
+  textScrim={false}
+  stage={false}
+  onChosen={onArtChosen}
+>
   <div class="hero-stage">
     <ShowIdentityPanel {anime} {title} {seasonText} {seriesLink} {studio} />
     {#if aside}{@render aside()}{/if}
   </div>
-</section>
+</KeyArtStage>
 
 <style>
-  .hero-banner {
-    /* Extra banner below the fold carrying the dissolve into the page ground,
-       so the artwork does not end on a hard cut. Nothing of it shows at rest. */
-    --hero-fade: 100px;
-    position: relative;
-    min-height: calc(100svh + var(--hero-fade));
-    display: flex;
-    align-items: flex-end;
-    overflow: hidden;
-    margin-top: calc(-1 * var(--weeb-nav-height));
-    background: var(--weeb-bg-elevated);
-  }
-
-  .hero-banner__bg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    transition: opacity 0.3s ease;
-  }
-  /* :global because SafeImage renders the img itself. No mask: the old layout
-     treated key art as faint texture behind a solid page and capped it at 35%
-     opacity; here the artwork IS the banner. */
-  :global(.hero-banner__bg-img) {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .hero-scrim-top {
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 180px;
-    z-index: 2;
-    background: linear-gradient(
-      to bottom,
-      color-mix(in oklch, var(--weeb-bg) 88%, transparent) 0%,
-      color-mix(in oklch, var(--weeb-bg) 50%, transparent) 40%,
-      transparent 100%
-    );
-  }
-
-  /* Sized to the below-fold band exactly, and eased on a smoothstep ramp: a
-     linear two-stop gradient begins fading at constant slope and the eye reads
-     that onset as a horizontal seam. */
-  .hero-scrim-bottom {
-    position: absolute;
-    inset: auto 0 0 0;
-    height: var(--hero-fade);
-    z-index: 2;
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      color-mix(in oklch, var(--weeb-bg) 6%, transparent) 15%,
-      color-mix(in oklch, var(--weeb-bg) 22%, transparent) 30%,
-      color-mix(in oklch, var(--weeb-bg) 43%, transparent) 45%,
-      color-mix(in oklch, var(--weeb-bg) 65%, transparent) 60%,
-      color-mix(in oklch, var(--weeb-bg) 84%, transparent) 75%,
-      color-mix(in oklch, var(--weeb-bg) 97%, transparent) 90%,
-      var(--weeb-bg) 100%
-    );
-  }
-
+  /* Its own stage rather than the one KeyArtStage offers: two panels side by
+     side that stack below 1024px, which is this page's layout and not the
+     backdrop's. `--art-fade` is the stage's resolved below-fold band -- what is
+     bottom-anchored here offsets by it, or the dissolve eats into the panels. */
   .hero-stage {
     position: relative;
     z-index: 3;
@@ -136,7 +70,7 @@
     align-items: flex-end;
     justify-content: space-between;
     gap: 32px;
-    padding: 0 32px calc(32px + var(--hero-fade)) 32px;
+    padding: 0 32px calc(32px + var(--art-fade)) 32px;
   }
 
   @media (max-width: 1024px) {
@@ -144,16 +78,7 @@
       flex-direction: column;
       align-items: stretch;
       gap: 8px;
-      padding: 0 12px calc(16px + var(--hero-fade)) 12px;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .hero-banner {
-      --hero-fade: 70px;
-    }
-    .hero-scrim-top {
-      height: 120px;
+      padding: 0 12px calc(16px + var(--art-fade)) 12px;
     }
   }
 </style>

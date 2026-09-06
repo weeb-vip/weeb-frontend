@@ -244,6 +244,39 @@ use it; they used to spell the same two values out separately.
 
 ---
 
+## The panel over key art
+
+One recipe, one class: `.weeb-panel` in `design-tokens.css`.
+
+```css
+background: var(--weeb-panel-bg);
+backdrop-filter: var(--weeb-panel-blur);
+border: 1px solid var(--weeb-border);
+border-radius: var(--weeb-radius-lg);
+box-shadow: var(--weeb-shadow-card);
+```
+
+The elevated panel a hero stands on its artwork. `HeroBanner`'s content panel
+and `ShowIdentityPanel` are the same object -- the homepage leads with a badge
+and a countdown, the show page with a poster and the Japanese title, but the
+surface under both is this. Each used to declare all five values itself, one of
+them through a `var(--weeb-panel-bg, var(--weeb-surface))` fallback that had not
+been reachable since the token existed.
+
+Not in the recipe: where a panel sits, how wide it may grow, what it pads by.
+Those are the panel's own, and the two differ on all three.
+
+The **backdrop** under them is a component rather than a class, because it is
+four elements and a load fade, not a ruleset: `KeyArtStage`. Artwork as the
+ground, a scrim under the nav, an optional scrim over the lower half for type
+sitting straight on the picture, and a smoothstep fade band below the fold. The
+homepage banner, the show hero and the series page all stand on it; what they
+vary -- the fade band, the crop, the load fade, whether the page or the stage
+pulls up under the nav -- are props. Children can read `--art-fade`, the
+resolved height of the below-fold band; anything bottom-anchored offsets by it.
+
+---
+
 ## The form field
 
 44px tall, `--weeb-radius`, 15px text, a 1.5px border. The recipe is
@@ -504,7 +537,7 @@ For new components, prefer scoped `<style>` blocks using `var(--weeb-*)` directl
    Status tints come from the `-tint` / `-edge` / `-ring` tokens, not from a
    fresh `color-mix` and never from a literal `oklch()`.
 7. **Take the layer token, not a number** — `--weeb-z-*` is the whole scale.
-8. **Compose the recipe, not the tokens** — `.weeb-floating`,
+8. **Compose the recipe, not the tokens** — `.weeb-floating`, `.weeb-panel`,
    `.weeb-overlay-backdrop` and `.weeb-form-*` exist so a surface is drawn once.
    Reusing the tokens is not the same as reusing the rule.
 9. **Focus is visible everywhere.** `base.scss` sets a 2px accent ring as the

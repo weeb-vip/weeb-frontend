@@ -103,8 +103,7 @@ describe('KeyArtStage', () => {
       // The inline `min-height` IS the contract -- it is the one thing the
       // prop controls, and the fade band has to be added to whatever the
       // caller asked for or the dissolve eats into the content.
-      expect(container.querySelector('.key-art')).toHaveAttribute(
-        'style',
+      expect(container.querySelector('.key-art')?.getAttribute('style')).toContain(
         'min-height: calc(100svh + var(--art-fade));'
       );
     });
@@ -114,10 +113,124 @@ describe('KeyArtStage', () => {
         props: { imageId: 'abc123', minHeight: '420px' }
       });
 
-      expect(container.querySelector('.key-art')).toHaveAttribute(
-        'style',
+      expect(container.querySelector('.key-art')?.getAttribute('style')).toContain(
         'min-height: calc(420px + var(--art-fade));'
       );
+    });
+  });
+
+  /**
+   * The three call sites differ on the band below the fold, the crop, the load
+   * fade and whether the page or the stage pulls up under the nav. Each of
+   * those is a custom property or a class on the section -- inline, because a
+   * media query cannot override an inline custom property, so the breakpoint
+   * picks between the two names rather than restating the value.
+   */
+  describe('what a call site can vary', () => {
+    const styleOf = (container: HTMLElement) =>
+      container.querySelector('.key-art')?.getAttribute('style') ?? '';
+
+    it('carries the fade band, its mobile value, the crop and the fade duration', () => {
+      const { container } = render(KeyArtStage, {
+        props: {
+          imageId: 'abc123',
+          fade: '100px',
+          fadeMobile: '70px',
+          scrimTopMobile: '120px',
+          focus: 'center 20%',
+          fadeMs: 500
+        }
+      });
+
+      const style = styleOf(container);
+      expect(style).toContain('--key-art-fade: 100px;');
+      expect(style).toContain('--key-art-fade-sm: 70px;');
+      expect(style).toContain('--key-art-scrim-top-sm: 120px;');
+      expect(style).toContain('--key-art-focus: center 20%;');
+      expect(style).toContain('--key-art-fade-ms: 500ms;');
+    });
+
+    it('falls back to the one fade band when the caller names no mobile value', () => {
+      const { container } = render(KeyArtStage, {
+        props: { imageId: 'abc123', fade: 'var(--hero-fade, 0px)' }
+      });
+
+      // The homepage passes the variable its own wrapper owns, and that wrapper
+      // is where the breakpoint lives -- so both names resolve to it.
+      expect(styleOf(container)).toContain(
+        '--key-art-fade: var(--hero-fade, 0px); --key-art-fade-sm: var(--hero-fade, 0px);'
+      );
+    });
+
+    it('takes the candidate list from the caller when it picks its own', () => {
+      const { container } = render(KeyArtStage, {
+        // The homepage reorders these on a phone, so the stage cannot derive them.
+        props: { imageId: 'abc123', sources: ['/posters/abc123'] }
+      });
+
+      expect(container.querySelector('.key-art__bg')).toBeInTheDocument();
+    });
+
+    it('holds the artwork at opacity 0 until the caller says something painted', () => {
+      const { container } = render(KeyArtStage, {
+        props: { imageId: 'abc123', loaded: false }
+      });
+
+      expect(container.querySelector('.key-art__bg')).toHaveAttribute('style', 'opacity: 0;');
+    });
+
+    it('leaves the artwork visible for a caller that wants no gate', () => {
+      // The default. SafeImage does not dispatch `chosen` on every path, so a
+      // page that cannot guarantee the event must not gate on it.
+      const { container } = render(KeyArtStage, { props: { imageId: 'abc123' } });
+
+      expect(container.querySelector('.key-art__bg')).toHaveAttribute('style', 'opacity: 1;');
+    });
+
+    it('drops the text scrim for a stage whose type sits on panel glass', () => {
+      const { container } = render(KeyArtStage, {
+        props: { imageId: 'abc123', textScrim: false }
+      });
+
+      expect(container.querySelector('.key-art__scrim-text')).toBeNull();
+      // The nav scrim is not optional: a transparent bar over unknown artwork.
+      expect(container.querySelector('.key-art__scrim-top')).toBeInTheDocument();
+    });
+
+    it('hands the children the bare stage when the caller lays itself out', () => {
+      const { container } = render(KeyArtStage, {
+        props: { imageId: 'abc123', stage: false, children: stageContent('Bebop') }
+      });
+
+      expect(container.querySelector('.key-art__stage')).toBeNull();
+      expect(screen.getByRole('heading', { name: 'Bebop' })).toBeInTheDocument();
+    });
+
+    it('lets the page own the bleed and the clipping', () => {
+      const { container } = render(KeyArtStage, {
+        props: { imageId: 'abc123', underNav: false, clip: false }
+      });
+
+      const section = container.querySelector('.key-art');
+      expect(section).not.toHaveClass('key-art--under-nav');
+      expect(section).not.toHaveClass('key-art--clip');
+    });
+
+    it('pulls up under the nav and clips by default', () => {
+      const { container } = render(KeyArtStage, { props: { imageId: 'abc123' } });
+
+      const section = container.querySelector('.key-art');
+      expect(section).toHaveClass('key-art--under-nav');
+      expect(section).toHaveClass('key-art--clip');
+    });
+
+    it('is a named region only when the caller names it', () => {
+      const { container } = render(KeyArtStage, {
+        props: { imageId: 'abc123', ariaLabel: 'Anime overview' }
+      });
+      expect(screen.getByRole('region', { name: 'Anime overview' })).toBeInTheDocument();
+
+      expect(container.querySelector('.key-art')).toHaveAttribute('aria-label', 'Anime overview');
     });
   });
 });

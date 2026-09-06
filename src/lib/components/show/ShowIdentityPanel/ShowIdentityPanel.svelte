@@ -34,7 +34,7 @@
   } = $props();
 </script>
 
-<div class="hero-panel">
+<div class="hero-panel weeb-panel">
   <!-- The poster, which the page did not show anywhere. The artwork behind the
        hero is the wide banner; the 2:3 cover was only ever visible in the sticky
        header once you scrolled. It sits beside the identity text rather than
@@ -115,15 +115,12 @@
 </div>
 
 <style>
+  /* Ground, blur, border, radius and shadow are `.weeb-panel` -- the same
+     elevated panel the homepage banner stands on its artwork, drawn once in
+     design-tokens.css. What is left here is how much room this one may take. */
   .hero-panel {
     flex: 0 1 auto;
     max-width: min(560px, calc(100vw - 460px));
-    background: var(--weeb-panel-bg);
-    backdrop-filter: var(--weeb-panel-blur);
-    -webkit-backdrop-filter: var(--weeb-panel-blur);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg);
-    box-shadow: var(--weeb-shadow-card);
     padding: 20px;
   }
 

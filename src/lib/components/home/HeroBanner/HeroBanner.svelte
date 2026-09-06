@@ -1,7 +1,7 @@
 <script lang="ts">
   import AnimeActions from '$lib/components/tracking/AnimeActions';
   import Button from '$lib/components/primitives/Button';
-  import SafeImage from '$lib/components/primitives/SafeImage';
+  import KeyArtStage from '$lib/components/show/KeyArtStage';
   import StreamingPlatforms from '$lib/components/show/StreamingPlatforms';
   import { animeHref } from '$lib/services/utils';
   import type { EpisodeTiming } from '$lib/services/airTimeUtils';
@@ -36,30 +36,31 @@
   $effect(() => bloc.init());
 </script>
 
-<div class="hero">
-  {#if bloc.imageSources.length > 0}
-    <div class="hero-bg-image" style="opacity: {bloc.bgLoaded ? 1 : 0};">
-      <SafeImage
-        sources={bloc.imageSources}
-        alt=""
-        loading="eager"
-        priority={true}
-        fallbackSrc="/assets/not found.jpg"
-        perTryTimeoutMs={3000}
-        className="hero-bg-cover"
-        cdnWidth={bloc.heroCdnWidth}
-        onChosen={() => bloc.imageChosen()}
-      />
-    </div>
-  {/if}
+<!-- The backdrop is KeyArtStage, the same one the show and series pages stand
+     on. What this hero owns is what sits on it, below.
 
-  <!-- Only the nav band keeps a scrim; it is what makes a transparent bar safe
-       over key art of unknown colour. Everything below sits in a container. -->
-  <div class="hero-scrim-top"></div>
-  <div class="hero-scrim-bottom"></div>
-
+     Only the nav band keeps a scrim (`textScrim={false}`); it is what makes a
+     transparent bar safe over key art of unknown colour. Everything below sits
+     in a container. The page's `.hero-wrapper` owns the fade band and the pull
+     up under the nav, because the skeleton and the airing rail offset by the
+     same value -- hence `fade` as that variable, and `underNav={false}`. No
+     clipping: at narrow widths the panel's shadow spills past the stage edge. -->
+<KeyArtStage
+  sources={bloc.imageSources}
+  cdnWidth={bloc.heroCdnWidth}
+  loaded={bloc.bgLoaded}
+  fadeMs={500}
+  fade="var(--hero-fade, 0px)"
+  scrimTopMobile="120px"
+  focus="center 20%"
+  textScrim={false}
+  underNav={false}
+  clip={false}
+  stage={false}
+  onChosen={() => bloc.imageChosen()}
+>
   <!-- Content -->
-  <div class="hero-content">
+  <div class="hero-content weeb-panel">
     {#if bloc.hasSchedule && bloc.liveNow}
       <div class="hero-badge hero-badge--progress" style="--progress-factor: {bloc.progress !== undefined ? bloc.progress : 0};">
         <span class="badge-track"></span>
@@ -139,83 +140,18 @@
       <p class="hero-value">Free account &mdash; track every episode and get notified the moment one airs.</p>
     {/if}
   </div>
-
-</div>
+</KeyArtStage>
 
 <style>
-  .hero {
-    position: relative;
-    min-height: calc(100svh + var(--hero-fade, 0px));
-    display: flex;
-    align-items: flex-end;
-    background: var(--weeb-bg-elevated);
-  }
-  /* Sits behind the transparent nav. Short, and gone well before the artwork's
-     focal band. */
-  .hero-scrim-top {
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 180px;
-    z-index: 2;
-    background: linear-gradient(
-      to bottom,
-      color-mix(in oklch, var(--weeb-bg) 88%, transparent) 0%,
-      color-mix(in oklch, var(--weeb-bg) 50%, transparent) 40%,
-      transparent 100%
-    );
-  }
-  .hero-bg-image {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    overflow: hidden;
-    transition: opacity 500ms;
-  }
-  .hero-bg-image :global(.hero-bg-cover),
-  .hero-bg-image :global(.hero-bg-cover img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 20%;
-    display: block;
-  }
-  /* Starts fully transparent above the fold, so none of it shows at rest; the
-     artwork dissolves into the page ground only as it scrolls past. */
-  .hero-scrim-bottom {
-    position: absolute;
-    inset: auto 0 0 0;
-    /* Exactly the below-fold band: its top edge sits on the fold, where the
-       gradient is still fully transparent, so nothing of it is visible at rest. */
-    height: var(--hero-fade, 0px);
-    z-index: 2;
-    /* Smoothstep, not a linear ramp. A two-stop gradient begins fading at a
-       constant slope the instant it starts, and the eye reads that abrupt onset
-       as a horizontal seam (Mach band). These stops approximate t^2(3-2t), so the
-       fade starts at almost zero slope and there is no line where it begins. */
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      color-mix(in oklch, var(--weeb-bg) 6%, transparent) 15%,
-      color-mix(in oklch, var(--weeb-bg) 22%, transparent) 30%,
-      color-mix(in oklch, var(--weeb-bg) 43%, transparent) 45%,
-      color-mix(in oklch, var(--weeb-bg) 65%, transparent) 60%,
-      color-mix(in oklch, var(--weeb-bg) 84%, transparent) 75%,
-      color-mix(in oklch, var(--weeb-bg) 97%, transparent) 90%,
-      var(--weeb-bg) 100%
-    );
-  }
-
+  /* Ground, blur, border, radius and shadow are `.weeb-panel` -- the same
+     elevated panel the show page's identity panel is, drawn once in
+     design-tokens.css. What is left here is where this one sits and how much
+     room it takes. */
   .hero-content {
     position: relative;
     z-index: 3;
     margin: 0 0 calc(32px + var(--hero-fade, 0px)) 32px;
     padding: 20px;
-    background: var(--weeb-panel-bg, var(--weeb-surface));
-    backdrop-filter: var(--weeb-panel-blur);
-    -webkit-backdrop-filter: var(--weeb-panel-blur);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg);
-    box-shadow: var(--weeb-shadow-card, 0 12px 32px oklch(0% 0 0 / 0.4));
   }
   .hero-badge {
     position: relative;
@@ -280,7 +216,7 @@
     font-size: 12px;
     letter-spacing: 0.02em;
   }
-  .hero h2 {
+  .hero-content h2 {
     font-weight: 800;
     letter-spacing: -0.02em;
     /* 1.1 per the Display spec; at 44px the extra 0.05 cost a visible band of
@@ -292,13 +228,13 @@
        collapsing to a single orphaned word. */
     text-wrap: balance;
   }
-  .hero h2.t-short { font-size: clamp(28px, 4vw, 44px); }
-  .hero h2.t-mid   { font-size: clamp(26px, 3.2vw, 36px); }
-  .hero h2.t-long  { font-size: clamp(24px, 2.6vw, 30px); }
+  .hero-content h2.t-short { font-size: clamp(28px, 4vw, 44px); }
+  .hero-content h2.t-mid   { font-size: clamp(26px, 3.2vw, 36px); }
+  .hero-content h2.t-long  { font-size: clamp(24px, 2.6vw, 30px); }
 
   /* A long title has already spent the panel's vertical budget; the synopsis
      gives a line back so the panel does not grow twice over. */
-  .hero h2.t-long ~ .hero-desc {
+  .hero-content h2.t-long ~ .hero-desc {
     -webkit-line-clamp: 2;
     line-clamp: 2;
   }
@@ -402,8 +338,8 @@
   @media (max-width: 768px) {
     /* Streaming platforms are still on the show page; here the room goes to the
        schedule, which is what the visitor came for. */
+    /* The shorter nav scrim at this width is the stage's `scrimTopMobile`. */
     .hero-platforms { display: none; }
-    .hero-scrim-top { height: 120px; }
   }
 
   @media (max-width: 480px) {
