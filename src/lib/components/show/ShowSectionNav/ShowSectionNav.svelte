@@ -8,8 +8,10 @@
    * `mode="toggle"` rather than `tabs`: these buttons scroll the page, they do
    * not swap panels, so a `tablist` would promise a keyboard user panels that
    * do not exist -- and it would change the buttons' role, which the news e2e
-   * spec addresses by role. `underline` keeps the look the hand-rolled strip
-   * had, minus the 400 characters of inline style each button carried.
+   * spec addresses by role. The chips are `ChipGroup`'s pills, the one row
+   * treatment the app has left; the bar keeps only the two things that are its
+   * own, a nowrap strip that scrolls rather than wrapping under the sticky
+   * header, and the padding that sets its height.
    *
    * Presentational -- no bloc. Which section is active is the page's state.
    */
@@ -40,7 +42,7 @@
   bind:clientHeight={height}
 >
   <div class="tab-bar-inner">
-    <ChipGroup {items} value={active} onSelect={onSelect} variant="underline" mode="toggle" />
+    <ChipGroup {items} value={active} onSelect={onSelect} mode="toggle" />
   </div>
 </nav>
 
@@ -57,36 +59,28 @@
 
   .tab-bar-inner {
     width: 100%;
-    padding: 0 var(--weeb-section-px);
+    /* The pills bring their own 32px, so this padding IS the rest of the bar's
+       height -- 44px in total, within a pixel or two of the height the
+       underlined strip had. The page measures this bar to offset the sticky
+       stack, so its height is not a free parameter. */
+    padding: 6px var(--weeb-section-px);
     display: flex;
     align-items: center;
   }
 
-  /* The tabs are nowrap and there can be four of them with count badges, which
-     is wider than a small phone. Scroll them inside the bar rather than letting
-     them widen the document -- an overflowing tab bar scrolls the whole page
-     sideways. */
-  .tab-bar-inner :global(.chipgroup--underline) {
+  /* There can be four pills with count badges, which is wider than a small
+     phone. Scroll them inside the bar rather than letting them wrap it onto a
+     second line -- this bar is sticky, and a bar that changes height under the
+     header shoves the page around. `nowrap` is the one thing this row does not
+     take from the pill skin. */
+  .tab-bar-inner :global(.chipgroup--pill) {
     min-width: 0;
+    flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    /* The strip draws the bar's rule; a second one inside it doubles up. */
-    border-bottom: none;
   }
-  .tab-bar-inner :global(.chipgroup--underline)::-webkit-scrollbar {
+  .tab-bar-inner :global(.chipgroup--pill)::-webkit-scrollbar {
     display: none;
-  }
-  /* Carried past ChipGroup's own underline skin, which is one class heavier
-     than a bare `:global(.cg-item)` would be. */
-  .tab-bar-inner :global(.chipgroup--underline .chip.cg-item) {
-    flex: none;
-    padding: 10px 20px;
-    font-size: 13px;
-    border-bottom: 2px solid transparent;
-  }
-  .tab-bar-inner :global(.chipgroup--underline .chip.cg-item.selected) {
-    color: var(--weeb-fg);
-    border-bottom-color: var(--weeb-accent);
   }
 </style>

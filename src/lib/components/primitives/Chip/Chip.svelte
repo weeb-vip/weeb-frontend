@@ -50,8 +50,13 @@
     tintAtRest = true,
     /**
      * Transparent ground rather than the surface, with the hover tinted from
-     * the chip's own colour instead of lifting to `--weeb-surface-hover`. What
-     * a row of chips you can switch on and off sits on: nothing until it is on.
+     * the chip's own colour instead of lifting to `--weeb-surface-hover`.
+     *
+     * What every chip in a `ChipGroup` row sits on -- selectable or not --
+     * so the only fill in a row is the one that is on. A standalone chip that
+     * STATES something (a quick-info fact, a type badge, a genre over cover
+     * art) keeps the surface: it is not in a row of alternatives, and on the
+     * art it needs a ground to be legible at all.
      */
     ghost = false,
     /** A leading dot in the chip's own colour. */

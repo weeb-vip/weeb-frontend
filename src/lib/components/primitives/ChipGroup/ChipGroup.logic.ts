@@ -66,12 +66,23 @@ export interface ChipGroupMore {
 export type ChipGroupSelect = 'single' | 'multi' | 'none';
 
 /**
- * The skin. `pill` is `Chip` exactly as `Chip` draws it; `segmented` the
- * boxed switches (medium toggle, schedule/calendar, grid/list, the season and
- * year strips); `underline` the profile status tabs and the show section nav.
+ * The skin, and there are two of them.
+ *
+ * `pill` is `Chip` exactly as `Chip` draws it: every free-flowing row, on one
+ * ground. Single-select filters, multi-select facets, links and static labels
+ * alike sit transparent inside an outline until they are selected, and then
+ * take the accent wash. `segmented` is the joined control that switches a view
+ * or a mode -- Anime|Manga, grid|list, the season and year strips: one box,
+ * the active side filled solid.
+ *
+ * There was a third, `underline` -- flat text with a rule under the active one
+ * -- for the profile status tabs and the show section nav. Three treatments
+ * doing the one job (this is a row of choices; this one is on) is two too many,
+ * so those rows are pills now.
+ *
  * Same items, same ARIA, same behaviour underneath -- only the skin differs.
  */
-export type ChipGroupVariant = 'pill' | 'segmented' | 'underline';
+export type ChipGroupVariant = 'pill' | 'segmented';
 
 /**
  * `tabs` when the chips swap panels of content: role=tablist, arrow keys, one

@@ -78,7 +78,7 @@
          line and the sub-line land where the loaded card puts them. -->
     <div class="pml-tab-skeleton">
       {#each Array(5) as _}
-        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-8 w-24" radius="full" />
       {/each}
     </div>
     <PosterGrid class="pml-grid">
@@ -89,11 +89,12 @@
   {:else}
     <div class="pml-controls">
       <div class="pml-tabs" bind:this={tabsEl}>
+        <!-- Pills, like every other row of choices in the app: the status tabs
+             were the last of the underlined ones. -->
         <ChipGroup
           items={bloc.tabs}
           value={bloc.status}
           onSelect={(value) => bloc.selectStatus(value)}
-          variant="underline"
           ariaLabel={bloc.config.tabsLabel}
         />
       </div>
@@ -232,11 +233,11 @@
     padding: 0 var(--weeb-section-px);
   }
 
+  /* The shape the tabs land in: a row of pills, so pill-height blocks at the
+     pill row gap, and no rule under them any more. */
   .pml-tab-skeleton {
     display: flex;
-    gap: 8px;
-    border-bottom: 1px solid var(--weeb-border);
-    padding-bottom: 4px;
+    gap: var(--weeb-pill-row-gap);
     overflow: hidden;
   }
 
@@ -252,6 +253,19 @@
   .pml-tabs {
     flex: 1;
     min-width: 0;
+  }
+  /* Five statuses with counts are wider than a phone. Scroll them, as the
+     underlined strip did, rather than wrapping: three lines of tabs above the
+     grid pushes the shelf itself off the first screen. Nothing to scroll on a
+     desktop, where the row fits. */
+  .pml-tabs :global(.chipgroup--pill) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .pml-tabs :global(.chipgroup--pill)::-webkit-scrollbar {
+    display: none;
   }
 
   /* ── LIST VIEW ──────────────────────────────────────── */

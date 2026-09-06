@@ -60,8 +60,12 @@ const svgItem = createRawSnippet((item: () => ChipGroupItem) => ({
 
 /**
  * THE row of chips: `Tabs`, `FilterPills` and `ChipRow` are all this one
- * component now, in three skins and three selection modes. The item is always
+ * component now, in two skins and three selection modes. The item is always
  * `Chip`, so the pill shape is declared exactly once in the app.
+ *
+ * `pill` is every free-flowing row -- filters, facets, links, static labels --
+ * on one ground: transparent inside an outline, tinted with an accent outline
+ * once selected. `segmented` is the joined switch for a view or a mode.
  */
 const meta = {
   title: 'Primitives/ChipGroup',
@@ -74,19 +78,23 @@ type Story = StoryObj<typeof meta>;
 
 /* ── select: single ───────────────────────────────────────── */
 
-/** The profile status tabs: underline skin, count badges, and a muted zero on the empty statuses. */
-export const SingleUnderline: Story = {
+/**
+ * The profile status tabs: pills with count badges, one on, and a muted zero on
+ * the empty statuses. This row was the `underline` skin until the app settled on
+ * two treatments; the selected wash says what the rule under a tab used to.
+ */
+export const SinglePillWithCounts: Story = {
   args: {
     items: STATUS_TABS,
     value: 'watching',
     onSelect: () => {},
-    variant: 'underline',
+    variant: 'pill',
     ariaLabel: 'Filter by status',
   },
 };
 
-/** More tabs than fit: the strip scrolls sideways rather than wrapping or squashing. */
-export const SingleUnderlineOverflowing: Story = {
+/** More tabs than fit on a line: a pill row wraps rather than squashing or clipping. */
+export const SinglePillOverflowing: Story = {
   args: {
     items: [
       ...STATUS_TABS,
@@ -96,7 +104,7 @@ export const SingleUnderlineOverflowing: Story = {
     ],
     value: 'completed',
     onSelect: () => {},
-    variant: 'underline',
+    variant: 'pill',
     ariaLabel: 'Filter by status',
   },
 };
@@ -321,7 +329,11 @@ export const MultiOverflowing: Story = {
 
 /* ── select: none ─────────────────────────────────────────── */
 
-/** The homepage's "Browse by Tag" row: links, at the touch height, selecting nothing. */
+/**
+ * The homepage's "Browse by Tag" row: links, at the touch height, selecting
+ * nothing -- and on the same transparent ground as any other pill row, since a
+ * link into the catalogue is not a different kind of thing from a filter.
+ */
 export const NoneGenreLinks: Story = {
   args: {
     select: 'none',
@@ -331,7 +343,7 @@ export const NoneGenreLinks: Story = {
   },
 };
 
-/** Static labels -- no href and no selection, so each chip is a span. */
+/** Static labels -- no href and no selection, so each chip is a span. Same ground again. */
 export const NoneStaticLabels: Story = {
   args: {
     select: 'none',
