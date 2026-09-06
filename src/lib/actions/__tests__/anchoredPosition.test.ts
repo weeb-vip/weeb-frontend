@@ -7,6 +7,7 @@
  */
 import { describe, test, expect } from 'vitest';
 import {
+  anchoredPosition,
   computeAnchoredPosition,
   anchoredPositionStyle,
   type AnchorRect,
@@ -200,5 +201,14 @@ describe('anchoredPositionStyle', () => {
     expect(anchoredPositionStyle(pos)).toBe(
       'position: fixed; top: 138px; left: 100px; min-width: 120px;'
     );
+  });
+});
+
+describe('anchoredPosition action — no window', () => {
+  test('returns an inert action instead of measuring anything', () => {
+    // Actions never run during SSR, but the module is imported there, so the
+    // guard has to hold even if one is called: no listeners, no node writes.
+    const action = anchoredPosition({} as unknown as HTMLElement, { anchor: null });
+    expect(action).toEqual({});
   });
 });

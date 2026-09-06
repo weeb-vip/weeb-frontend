@@ -1,5 +1,12 @@
+/**
+ * @vitest-environment node
+ *
+ * The rule, with no DOM at all — which is what the fake elements below already
+ * assumed, and what lets the last case here assert the action's SSR guard. The
+ * action's DOM half lives in `clickOutside.action.test.ts`, under jsdom.
+ */
 import { describe, it, test, expect } from 'vitest';
-import { isOutside, type MaybeElement } from '$lib/actions/clickOutside';
+import { clickOutside, isOutside, type MaybeElement } from '$lib/actions/clickOutside';
 
 /**
  * A stand-in for an element tree. `testEnvironment` is node, so there is no
@@ -71,5 +78,12 @@ describe('isOutside', () => {
   test('a non-Node target (a window-level event) counts as outside', () => {
     expect(isOutside(null, menu)).toBe(true);
     expect(isOutside({ notANode: true }, menu)).toBe(true);
+  });
+});
+
+describe('clickOutside action — no document', () => {
+  test('returns an inert action rather than reaching for document', () => {
+    const action = clickOutside({} as unknown as HTMLElement, { handler: () => {} });
+    expect(action).toEqual({});
   });
 });
