@@ -72,3 +72,75 @@ export function stubNeverLoadingImages(): () => void {
     globalThis.Image = original;
   };
 }
+
+/**
+ * The Web Animations API. jsdom implements none of it -- `Element.animate` is
+ * simply absent -- and Svelte 5 compiles every `transition:` directive down to
+ * `element.animate(keyframes, ...)`. So a component with a transition mounts
+ * fine and then throws `element.animate is not a function` the moment it plays
+ * one, which for an outro is the moment the element would be removed:
+ * `MobileDrawer` could be opened here but never closed.
+ *
+ * The stand-in finishes immediately. Svelte drives its outro off `onfinish`, so
+ * finishing at once is what lets the element actually leave the DOM and a test
+ * assert that the drawer is gone. It says nothing about the animation: the
+ * 280ms slide, the easing and the fade are browser facts, and whether they look
+ * right belongs to the visual layer.
+ */
+export function stubWebAnimations(): () => void {
+  const target = Element.prototype as unknown as Record<string, unknown>;
+  const had = Object.prototype.hasOwnProperty.call(target, 'animate');
+  const original = target.animate;
+
+  class ImmediateAnimation {
+    onfinish: (() => void) | null = null;
+    effect: unknown = null;
+    currentTime = 0;
+    playState = 'finished';
+    #cancelled = false;
+
+    constructor() {
+      // The caller assigns `onfinish` on the line after `animate()` returns, so
+      // the callback has to be handed back no sooner than a microtask later.
+      queueMicrotask(() => {
+        if (!this.#cancelled) this.onfinish?.();
+      });
+    }
+
+    cancel(): void {
+      this.#cancelled = true;
+    }
+  }
+
+  target.animate = function animate() {
+    return new ImmediateAnimation();
+  };
+
+  return () => {
+    if (had) target.animate = original;
+    else delete target.animate;
+  };
+}
+
+/**
+ * `Element.scrollIntoView`, which jsdom does not implement at all -- there is
+ * nothing to scroll, since it performs no layout. `AutocompleteAdvanced` keeps
+ * the highlighted option in view by calling it on every arrow key, so without
+ * this the second press of ArrowDown throws inside an `$effect`.
+ *
+ * A no-op is the honest stand-in: whether the highlighted row is actually
+ * brought on screen is a scrolling fact that only a browser can show, and it
+ * belongs to the e2e layer.
+ */
+export function stubScrollIntoView(): () => void {
+  const target = Element.prototype as unknown as Record<string, unknown>;
+  const had = Object.prototype.hasOwnProperty.call(target, 'scrollIntoView');
+  const original = target.scrollIntoView;
+
+  target.scrollIntoView = function scrollIntoView() {};
+
+  return () => {
+    if (had) target.scrollIntoView = original;
+    else delete target.scrollIntoView;
+  };
+}

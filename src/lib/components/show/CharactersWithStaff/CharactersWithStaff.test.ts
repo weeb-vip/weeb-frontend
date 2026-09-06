@@ -1,6 +1,10 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor, within } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { QueryClient } from '@tanstack/svelte-query';
 import { reactiveScope } from '../../__tests__/reactive-scope.svelte';
+import { stubNeverLoadingImages } from '../../__tests__/jsdom-gaps';
+import CharactersWithStaff from './CharactersWithStaff.svelte';
 import {
   CHARACTER_FILTERS,
   CharactersWithStaffBloc,
@@ -261,6 +265,314 @@ describe('CharactersWithStaffBloc', () => {
 
       expect(bloc.isLeadRole(character('Adam', 'Main'))).toBe(true);
       expect(bloc.isLeadRole(character('Zoe', 'Supporting'))).toBe(false);
+    });
+  });
+});
+
+/**
+ * The cast grid.
+ *
+ * Ordering, filtering and which cards are expandable are the bloc's and are
+ * asserted above; this half is what a reader sees -- the four states, the cards
+ * themselves, the filter strip, and the one control on a card with more than one
+ * voice actor.
+ *
+ * The bloc is the real one, constructed with a fake `characters` port, and it is
+ * the component's render that subscribes to its query store: `fromStore` checks
+ * for a tracking context at READ time, and a mounted view reading `bloc.isLoading`
+ * in its template is exactly that subscriber. So no `reactiveScope` here -- the
+ * render is the scope, and the query genuinely moves from pending to settled
+ * under `findBy*`/`waitFor` below.
+ *
+ * jsdom caveats: portraits go through `SafeImage`, whose `new Image()` probe
+ * never settles here, so every card is asserted in its no-artwork state
+ * (`stubNeverLoadingImages`); and no stylesheet is loaded, so the lead-role
+ * accent and the chevron's rotation are only assertable as the classes the
+ * stylesheet keys on.
+ */
+describe('CharactersWithStaff', () => {
+  let restoreImages: () => void;
+  beforeEach(() => {
+    restoreImages = stubNeverLoadingImages();
+  });
+  afterEach(() => restoreImages());
+
+  const NEVER = () => new Promise<CharacterEntry[]>(() => {});
+
+  /** Mounts the grid over a bloc whose cast is already in hand (the SSR path). */
+  function renderCast(cast: CharacterEntry[] | null = CAST) {
+    const bloc = makeBloc({}, cast);
+    return { ...render(CharactersWithStaff, { props: { animeId: 'a1', bloc } }), bloc };
+  }
+
+  /** Mounts the grid over a bloc that has to fetch. */
+  function renderFetching(queryFn: () => Promise<CharacterEntry[]>) {
+    const bloc = makeBloc({ characters: () => ({ queryKey: ['cast', 'a1'], queryFn }) }, null);
+    return { ...render(CharactersWithStaff, { props: { animeId: 'a1', bloc } }), bloc };
+  }
+
+  const card = (name: string) =>
+    screen.getByText(name).closest('.char-card') as HTMLElement;
+
+  describe('while the cast is loading', () => {
+    it('shows a spinner rather than an empty grid or a "no cast" claim', () => {
+      const { container } = renderFetching(NEVER);
+
+      expect(container.querySelector('.chars-spinner')).toBeInTheDocument();
+      expect(screen.queryByText('No character data available.')).not.toBeInTheDocument();
+      expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the cast is here', () => {
+    it('draws a card per character, ordered by importance then name', () => {
+      const { container } = renderCast();
+
+      const drawn = Array.from(container.querySelectorAll('.char-name')).map(
+        (node) => node.textContent
+      );
+      expect(drawn).toEqual(['Adam', 'Nia', 'Zoe', 'Bob']);
+    });
+
+    it('names the character, their role and the voice actor behind them', () => {
+      renderCast();
+
+      const adam = card('Adam');
+      expect(within(adam).getByText('Main')).toBeInTheDocument();
+      expect(within(adam).getByText(/VA0 Adam/)).toBeInTheDocument();
+    });
+
+    it('marks a lead role so it reads differently from the rest of the cast', () => {
+      renderCast();
+
+      expect(card('Adam').querySelector('.char-role')).toHaveClass('main');
+      expect(card('Zoe').querySelector('.char-role')).not.toHaveClass('main');
+    });
+
+    it('says "Character" rather than nothing for an entry with no role', () => {
+      renderCast([{ character: { id: 'x', name: 'Nameless', role: null }, staff: [] }]);
+
+      expect(card('Nameless').querySelector('.char-role')).toHaveTextContent('Character');
+    });
+
+    it('says "Unknown" rather than an empty card for a character with no name', () => {
+      const { container } = renderCast([{ character: { id: 'x', name: null }, staff: [] }]);
+
+      expect(container.querySelector('.char-name')).toHaveTextContent('Unknown');
+    });
+
+    /**
+     * A card with one voice actor is not expandable, so the name is free to be a
+     * link. On a card that IS expandable the card is itself a `<button>`, and an
+     * `<a>` inside a button is invalid and unreachable by keyboard -- so those
+     * link from the expanded list instead.
+     */
+    it('links the sole voice actor’s name straight to their page', () => {
+      renderCast();
+
+      const link = within(card('Adam')).getByRole('link', { name: /VA0 Adam/ });
+      expect(link).toHaveAttribute('href', '/people/Adam-0');
+    });
+
+    it('does not nest a link inside the expandable card', () => {
+      renderCast([character('Nia', 'Main', 3)]);
+
+      const nia = card('Nia');
+      expect(nia.querySelector('button a')).not.toBeInTheDocument();
+      expect(within(nia).queryByRole('link')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when there is no cast at all', () => {
+    it('says so once, and offers no filter strip to narrow nothing with', () => {
+      renderCast([]);
+
+      expect(screen.getByText('No character data available.')).toBeInTheDocument();
+      expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the fetch fails', () => {
+    /** A failed fetch is not an empty cast: the show may well have one. */
+    it('says what happened and names the cause, instead of claiming there is no cast', async () => {
+      renderFetching(async () => Promise.reject(new Error('upstream 500')));
+
+      expect(await screen.findByText("Couldn't load the cast.")).toBeInTheDocument();
+      expect(screen.getByText('upstream 500')).toBeInTheDocument();
+      expect(screen.queryByText('No character data available.')).not.toBeInTheDocument();
+    });
+
+    it('offers a retry that fetches the cast again', async () => {
+      const queryFn = vi.fn(async () => Promise.reject(new Error('upstream 500')));
+      renderFetching(queryFn);
+      await screen.findByText("Couldn't load the cast.");
+      expect(queryFn).toHaveBeenCalledTimes(1);
+
+      await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+      await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(2));
+    });
+  });
+
+  describe('the filter strip', () => {
+    it('offers every bucket, opening on "All"', () => {
+      renderCast();
+
+      const strip = screen.getByRole('tablist', { name: 'Filter characters by role' });
+      expect(within(strip).getAllByRole('tab').map((tab) => tab.textContent?.trim())).toEqual([
+        'All',
+        'Main',
+        'Supporting',
+        'Minor'
+      ]);
+      expect(screen.getByRole('tab', { name: 'All' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('narrows the grid to the chosen bucket', async () => {
+      const { container } = renderCast();
+
+      await userEvent.click(screen.getByRole('tab', { name: 'Main' }));
+
+      await waitFor(() => {
+        expect(
+          Array.from(container.querySelectorAll('.char-name')).map((node) => node.textContent)
+        ).toEqual(['Adam', 'Nia']);
+      });
+      expect(screen.getByRole('tab', { name: 'Main' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('puts everything back when "All" is chosen again', async () => {
+      const { container } = renderCast();
+      await userEvent.click(screen.getByRole('tab', { name: 'Minor' }));
+      await waitFor(() => expect(container.querySelectorAll('.char-name')).toHaveLength(1));
+
+      await userEvent.click(screen.getByRole('tab', { name: 'All' }));
+
+      await waitFor(() => expect(container.querySelectorAll('.char-name')).toHaveLength(4));
+    });
+
+    it('says the filter is empty -- not that the show has no cast -- and offers the way back', async () => {
+      const { container } = renderCast([character('Zoe', 'Supporting')]);
+
+      await userEvent.click(screen.getByRole('tab', { name: 'Main' }));
+
+      expect(await screen.findByText('No characters found for this filter.')).toBeInTheDocument();
+      // The strip stays: this is a narrowing, not an absence.
+      expect(screen.getByRole('tablist')).toBeInTheDocument();
+      expect(container.querySelectorAll('.char-name')).toHaveLength(0);
+    });
+
+    it('undoes the filter from the empty state’s own control', async () => {
+      const { container } = renderCast([character('Zoe', 'Supporting')]);
+      await userEvent.click(screen.getByRole('tab', { name: 'Main' }));
+      await screen.findByText('No characters found for this filter.');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show all' }));
+
+      await waitFor(() => expect(container.querySelectorAll('.char-name')).toHaveLength(1));
+      expect(screen.getByRole('tab', { name: 'All' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    /**
+     * KNOWN A11Y FINDING, asserted as-is rather than fixed.
+     *
+     * `ChipGroup` defaults to `mode="tabs"`, so this strip renders a real
+     * `role="tablist"` of `role="tab"`s -- but there is no `role="tabpanel"`
+     * anywhere in the codebase, and none here: the grid below is a plain `div`
+     * with no `id`, so the tabs have nothing to point `aria-controls` at and no
+     * panel announces itself when the selection changes. A screen reader is told
+     * it moved to a tab and then told nothing about what appeared.
+     *
+     * The strip does not reveal panels -- it filters one list in place -- so the
+     * correct shape is almost certainly `mode="toggle"` with `aria-pressed`, the
+     * same call `ChipGroup.test.ts` documents for the season strips. That is a
+     * change to application source and is out of scope here; the test below pins
+     * what ships today, and the skipped one states what it should be.
+     */
+    it('renders a tablist whose tabs control no panel -- today’s shape', () => {
+      renderCast();
+
+      expect(screen.getByRole('tablist')).toBeInTheDocument();
+      expect(screen.queryAllByRole('tabpanel')).toHaveLength(0);
+      for (const tab of screen.getAllByRole('tab')) {
+        expect(tab).not.toHaveAttribute('aria-controls');
+      }
+    });
+
+    it.skip('should either own a tabpanel or not claim to be tabs at all', () => {
+      // Either of these is correct; neither holds today. Un-skip whichever the
+      // fix takes.
+      renderCast();
+
+      const grid = screen.getByRole('tabpanel');
+      expect(screen.getByRole('tab', { name: 'All' })).toHaveAttribute(
+        'aria-controls',
+        grid.id
+      );
+    });
+  });
+
+  describe('a character with more than one voice actor', () => {
+    const MANY = [character('Nia', 'Main', 3)];
+
+    it('is a real button that says how many more there are', () => {
+      renderCast(MANY);
+
+      const button = within(card('Nia')).getByRole('button');
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      expect(button).toHaveTextContent('+2 more VAs');
+    });
+
+    it('counts a single extra in the singular', () => {
+      renderCast([character('Nia', 'Main', 2)]);
+
+      expect(within(card('Nia')).getByRole('button')).toHaveTextContent('+1 more VA');
+    });
+
+    it('lists every voice actor, each linked, when opened', async () => {
+      renderCast(MANY);
+
+      await userEvent.click(within(card('Nia')).getByRole('button'));
+
+      const nia = card('Nia');
+      await waitFor(() => expect(nia.querySelector('.char-va-list')).toBeInTheDocument());
+      const links = within(nia).getAllByRole('link');
+      expect(links.map((link) => link.getAttribute('href'))).toEqual([
+        '/people/Nia-0',
+        '/people/Nia-1',
+        '/people/Nia-2'
+      ]);
+    });
+
+    it('says it is open, and closes again on a second press', async () => {
+      renderCast(MANY);
+      const button = within(card('Nia')).getByRole('button');
+
+      await userEvent.click(button);
+      await waitFor(() => expect(button).toHaveAttribute('aria-expanded', 'true'));
+      expect(card('Nia')).toHaveClass('expanded');
+
+      await userEvent.click(button);
+      await waitFor(() => expect(button).toHaveAttribute('aria-expanded', 'false'));
+      expect(card('Nia').querySelector('.char-va-list')).not.toBeInTheDocument();
+    });
+
+    it('opens only the card that was pressed', async () => {
+      renderCast([character('Nia', 'Main', 2), character('Adam', 'Main', 2)]);
+
+      await userEvent.click(within(card('Nia')).getByRole('button'));
+
+      await waitFor(() => expect(card('Nia').querySelector('.char-va-list')).toBeInTheDocument());
+      expect(card('Adam').querySelector('.char-va-list')).not.toBeInTheDocument();
+    });
+
+    it('gives a card with one voice actor nothing to press', () => {
+      renderCast([character('Solo', 'Main', 1)]);
+
+      const solo = card('Solo');
+      expect(within(solo).queryByRole('button')).not.toBeInTheDocument();
+      expect(solo.querySelector('.char-card-main')?.tagName).toBe('DIV');
+      expect(solo.querySelector('.char-va-more')).not.toBeInTheDocument();
     });
   });
 });

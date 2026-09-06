@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { readable, writable } from 'svelte/store';
+import LoginRegisterModal from './LoginRegisterModal.svelte';
 import { LoginBloc } from '../Login.bloc.svelte';
 import { RegisterBloc } from '../Register.bloc.svelte';
 import { ResendBloc } from '../auth-resend.svelte';
@@ -340,6 +343,428 @@ describe('LoginRegisterModalBloc', () => {
       });
 
       expect(() => bloc.dispose()).not.toThrow();
+    });
+  });
+});
+
+/**
+ * The modal's markup.
+ *
+ * Which mode is showing, what each mode's copy is, and what a submit does are
+ * the bloc's and are asserted above. What is asserted here is the surface: that
+ * both modes render the fields they claim to, that switching modes carries the
+ * credentials across the DOM rather than only across the bloc, that a field
+ * error lands on its own field, and that the banners and the submit's busy
+ * state actually appear.
+ *
+ * It is deliberately tested standalone. This component is content only -- the
+ * dialog, the portal, the focus trap and Escape all belong to `Modal`, which
+ * wraps it at the call site and has its own suite. Rendering the pair here would
+ * only re-assert `Modal.test.ts`.
+ *
+ * jsdom caveat: no stylesheet is loaded, so the submit's `loading` state and the
+ * amber-vs-red distinction between the two banners are assertable only as the
+ * class and the ARIA role each carries, never as an appearance.
+ */
+describe('LoginRegisterModal', () => {
+  const NEVER = () => new Promise<never>(() => {});
+
+  function setup(
+    options: {
+      register?: boolean;
+      reason?: string | null;
+      login?: (input: { username: string; password: string }) => Promise<{ id: string }>;
+      registerFn?: (input: { username: string; password: string }) => Promise<{ id: string }>;
+      resend?: (username: string) => Promise<unknown>;
+      closeFn?: () => void;
+    } = {}
+  ) {
+    const closeFn = options.closeFn ?? vi.fn();
+    const navigate = vi.fn();
+    const announce = vi.fn();
+    const setLoggedIn = vi.fn();
+    const send = vi.fn(options.resend ?? (async () => undefined));
+    const bloc = new LoginRegisterModalBloc({
+      source: () => ({ closeFn }),
+      modal: readable({ register: options.register ?? false, reason: options.reason ?? null }),
+      login: new LoginBloc({
+        route: readable(new URLSearchParams()),
+        login: vi.fn(options.login ?? (async () => ({ id: 'u1' }))),
+        navigate,
+        resend: new ResendBloc({ send }),
+        onAuthenticated: (result) => {
+          setLoggedIn(result);
+          announce();
+          bloc.close();
+        }
+      }),
+      register: new RegisterBloc({
+        register: vi.fn(options.registerFn ?? (async () => ({ id: 'u1' }))),
+        navigate,
+        usernameLabel: 'Username',
+        onRegistered: (email) => {
+          bloc.close();
+          return navigate(`/auth/check-email?email=${encodeURIComponent(email)}`);
+        }
+      }),
+      session: { setLoggedIn },
+      announce,
+      navigate
+    });
+
+    const result = render(LoginRegisterModal, { props: { bloc } });
+    return { ...result, bloc, closeFn, navigate, announce, setLoggedIn, send };
+  }
+
+  const submit = (name: string) => screen.getByRole('button', { name });
+
+  describe('signing in', () => {
+    it('opens on the login form: two fields, the remember box and the reset link', () => {
+      setup();
+
+      expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
+      expect(screen.getByText('Sign in to your account')).toBeInTheDocument();
+      expect(screen.getByLabelText('Username or email')).toBeInTheDocument();
+      expect(screen.getByLabelText('Password')).toBeInTheDocument();
+      expect(screen.getByLabelText('Remember me')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Forgot password?' })).toHaveAttribute(
+        'href',
+        '/auth/password-reset-request'
+      );
+      expect(submit('Log in')).toHaveAttribute('type', 'submit');
+    });
+
+    it('has no confirm-password field -- that belongs to registering', () => {
+      setup();
+
+      expect(screen.queryByLabelText('Confirm password')).not.toBeInTheDocument();
+    });
+
+    it('offers the way over to registering', () => {
+      setup();
+
+      expect(screen.getByText("Don't have an account?")).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Sign up' })).toBeInTheDocument();
+    });
+
+    it('signs in with what was typed, and closes over whatever the visitor was doing', async () => {
+      const login = vi.fn(async () => ({ id: 'u1' }));
+      const { closeFn, announce, setLoggedIn } = setup({ login });
+
+      await userEvent.type(screen.getByLabelText('Username or email'), 'ada');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+      await userEvent.click(submit('Log in'));
+
+      await waitFor(() =>
+        expect(login).toHaveBeenCalledWith({ username: 'ada', password: 'hunter22' })
+      );
+      expect(setLoggedIn).toHaveBeenCalledWith({ id: 'u1' });
+      expect(announce).toHaveBeenCalled();
+      expect(closeFn).toHaveBeenCalled();
+    });
+  });
+
+  describe('registering', () => {
+    it('opens on the register form when the modal was opened for it', () => {
+      setup({ register: true });
+
+      expect(screen.getByRole('heading', { name: 'Create account' })).toBeInTheDocument();
+      expect(screen.getByText('Start tracking your anime')).toBeInTheDocument();
+      // The modal asks for an "Email" here and "Username or email" on the login
+      // side; the *validation* copy says "Username", which is the register
+      // bloc's own label. Both are asserted, because they differ on purpose.
+      expect(screen.getByLabelText('Email')).toBeInTheDocument();
+      expect(screen.getByLabelText('Confirm password')).toBeInTheDocument();
+      expect(submit('Create account')).toBeInTheDocument();
+    });
+
+    it('drops the remember box and the reset link, which mean nothing here', () => {
+      setup({ register: true });
+
+      expect(screen.queryByLabelText('Remember me')).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Forgot password?' })).not.toBeInTheDocument();
+    });
+
+    it('leaves the modal for the check-email screen on success', async () => {
+      const { closeFn, navigate } = setup({ register: true });
+
+      await userEvent.type(screen.getByLabelText('Email'), 'ada@example.com');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+      await userEvent.type(screen.getByLabelText('Confirm password'), 'hunter22');
+      await userEvent.click(submit('Create account'));
+
+      await waitFor(() =>
+        expect(navigate).toHaveBeenCalledWith('/auth/check-email?email=ada%40example.com')
+      );
+      expect(closeFn).toHaveBeenCalled();
+    });
+  });
+
+  describe('the gated-action opening', () => {
+    it('says which action was gated instead of the generic subtitle', () => {
+      setup({ reason: 'Sign in to add this to your list' });
+
+      expect(screen.getByRole('heading', { name: 'Sign in to keep track' })).toBeInTheDocument();
+      expect(screen.getByText('Sign in to add this to your list')).toBeInTheDocument();
+      expect(screen.queryByText('Sign in to your account')).not.toBeInTheDocument();
+    });
+  });
+
+  /**
+   * REGRESSION. Retyping an address you just typed because you picked the wrong
+   * form is the reason people abandon this modal, so the toggle carries the
+   * credentials over. Asserted through the rendered inputs, not the bloc: the
+   * fields are re-created by the `{#if}`, so a bloc that carries the values and
+   * a view that does not re-read them would still be broken.
+   */
+  describe('switching between the two', () => {
+    it('carries what was typed from login over to register', async () => {
+      setup();
+      await userEvent.type(screen.getByLabelText('Username or email'), 'ada@example.com');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sign up' }));
+
+      const username = (await screen.findByLabelText('Email')) as HTMLInputElement;
+      expect(username.value).toBe('ada@example.com');
+      expect((screen.getByLabelText('Password') as HTMLInputElement).value).toBe('hunter22');
+      // The second field is new, and empty: it was never typed.
+      expect((screen.getByLabelText('Confirm password') as HTMLInputElement).value).toBe('');
+    });
+
+    it('carries them back again', async () => {
+      setup({ register: true });
+      await userEvent.type(screen.getByLabelText('Email'), 'ada@example.com');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
+
+      const username = (await screen.findByLabelText('Username or email')) as HTMLInputElement;
+      expect(username.value).toBe('ada@example.com');
+      expect((screen.getByLabelText('Password') as HTMLInputElement).value).toBe('hunter22');
+    });
+
+    it('swaps the whole surface, not just the button', async () => {
+      setup();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sign up' }));
+
+      expect(await screen.findByRole('heading', { name: 'Create account' })).toBeInTheDocument();
+      expect(screen.getByText('Already have an account?')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Remember me')).not.toBeInTheDocument();
+    });
+
+    it('clears a failure that described the form you just left', async () => {
+      setup({ login: async () => Promise.reject(new Error('nope')) });
+      await userEvent.type(screen.getByLabelText('Username or email'), 'ada');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+      await userEvent.click(submit('Log in'));
+      await screen.findByRole('alert');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sign up' }));
+
+      await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+    });
+  });
+
+  describe('validation', () => {
+    it('puts each complaint on its own field rather than in one banner', async () => {
+      setup();
+
+      await userEvent.click(submit('Log in'));
+
+      expect(await screen.findByText('Username or email is required')).toBeInTheDocument();
+      expect(screen.getByText('Password is required')).toBeInTheDocument();
+      // A field error is not a failure banner.
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('points the field at its own message for a screen reader', async () => {
+      setup();
+
+      await userEvent.click(submit('Log in'));
+
+      const field = await screen.findByLabelText('Username or email');
+      const described = field.getAttribute('aria-describedby');
+      expect(described).toBe('modal-username-error');
+      expect(document.getElementById(described!)).toHaveTextContent(
+        'Username or email is required'
+      );
+    });
+
+    it('names the register form’s own first field in its message', async () => {
+      setup({ register: true });
+
+      await userEvent.click(submit('Create account'));
+
+      expect(await screen.findByText('Username is required')).toBeInTheDocument();
+      expect(screen.getByText('Please confirm your password')).toBeInTheDocument();
+    });
+
+    it('catches a mismatched confirmation', async () => {
+      setup({ register: true });
+
+      await userEvent.type(screen.getByLabelText('Email'), 'ada@example.com');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+      await userEvent.type(screen.getByLabelText('Confirm password'), 'hunter23');
+      await userEvent.click(submit('Create account'));
+
+      expect(await screen.findByText('Passwords do not match')).toBeInTheDocument();
+    });
+
+    it('clears a field’s complaint as soon as it is corrected', async () => {
+      setup();
+      await userEvent.click(submit('Log in'));
+      await screen.findByText('Username or email is required');
+
+      await userEvent.type(screen.getByLabelText('Username or email'), 'a');
+
+      await waitFor(() =>
+        expect(screen.queryByText('Username or email is required')).not.toBeInTheDocument()
+      );
+    });
+
+    it('never reaches the server for a form it already knows is wrong', async () => {
+      const login = vi.fn(async () => ({ id: 'u1' }));
+      setup({ login });
+
+      await userEvent.click(submit('Log in'));
+      await screen.findByText('Password is required');
+
+      expect(login).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('the failure banner', () => {
+    it('says the sign-in failed, as an assertive alert', async () => {
+      setup({ login: async () => Promise.reject(new Error('nope')) });
+
+      await userEvent.type(screen.getByLabelText('Username or email'), 'ada');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+      await userEvent.click(submit('Log in'));
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(
+        'Unable to sign in. Please check your credentials and try again.'
+      );
+    });
+
+    it('names the cause of a failed registration rather than saying "try again"', async () => {
+      setup({
+        register: true,
+        registerFn: async () => Promise.reject(new Error('user already exists'))
+      });
+
+      await userEvent.type(screen.getByLabelText('Email'), 'ada@example.com');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+      await userEvent.type(screen.getByLabelText('Confirm password'), 'hunter22');
+      await userEvent.click(submit('Create account'));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'An account with this email already exists.'
+      );
+    });
+  });
+
+  /**
+   * An unverified account is not a failed sign-in: the credentials were right,
+   * there is a step left. So it is a `warning` banner, which `ErrorBanner`
+   * renders as `role="alert"` too but on the amber recipe -- and it carries the
+   * resend action, addressed to the address already typed.
+   */
+  describe('the unverified-account banner', () => {
+    const unverified = () =>
+      Promise.reject(Object.assign(new Error('INACTIVE_CREDENTIALS'), {}));
+
+    async function signInUnverified(over: Parameters<typeof setup>[0] = {}) {
+      const harness = setup({ login: () => unverified() as Promise<{ id: string }>, ...over });
+      await userEvent.type(screen.getByLabelText('Username or email'), 'ada@example.com');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+      await userEvent.click(submit('Log in'));
+      await screen.findByText('Verify your email to continue');
+      return harness;
+    }
+
+    it('replaces the generic failure with the verification step, naming the address', async () => {
+      await signInUnverified();
+
+      expect(screen.getByText('ada@example.com')).toBeInTheDocument();
+      expect(
+        screen.queryByText('Unable to sign in. Please check your credentials and try again.')
+      ).not.toBeInTheDocument();
+    });
+
+    it('resends to that address without leaving the form', async () => {
+      const { send } = await signInUnverified();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Send a new link' }));
+
+      await waitFor(() => expect(send).toHaveBeenCalledWith('ada@example.com'));
+      expect(await screen.findByText(/check your inbox/)).toBeInTheDocument();
+    });
+
+    it('says so, rather than staying silent, when the resend itself fails', async () => {
+      await signInUnverified({ resend: async () => Promise.reject(new Error('smtp down')) });
+
+      await userEvent.click(screen.getByRole('button', { name: 'Send a new link' }));
+
+      expect(await screen.findByText(/couldn't send that just now/i)).toBeInTheDocument();
+    });
+
+    /** Editing the address invalidates the banner it was addressed to. */
+    it('drops the banner once the address is edited', async () => {
+      await signInUnverified();
+
+      await userEvent.type(screen.getByLabelText('Username or email'), 'x');
+
+      await waitFor(() =>
+        expect(screen.queryByText('Verify your email to continue')).not.toBeInTheDocument()
+      );
+    });
+  });
+
+  describe('while the form is in flight', () => {
+    it('holds the submit shut and marks it busy', async () => {
+      setup({ login: NEVER as () => Promise<{ id: string }> });
+
+      await userEvent.type(screen.getByLabelText('Username or email'), 'ada');
+      await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+      await userEvent.click(submit('Log in'));
+
+      await waitFor(() => expect(submit('Log in')).toBeDisabled());
+      expect(submit('Log in')).toHaveClass('loading');
+      // The spinner is decoration beside the label, not a replacement for it.
+      expect(submit('Log in')).toHaveTextContent('Log in');
+      expect(submit('Log in').querySelector('.spinner')).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it('is not busy before anything has been submitted', () => {
+      setup();
+
+      expect(submit('Log in')).toBeEnabled();
+      expect(submit('Log in')).not.toHaveClass('loading');
+    });
+  });
+
+  describe('dismissal', () => {
+    /**
+     * The modal has no close button of its own -- that is `Modal`'s. The one
+     * dismissal this surface owns is the reset link, which navigates to a page
+     * and so must take the modal down with it.
+     */
+    it('closes itself when the visitor leaves for the password reset page', async () => {
+      const { closeFn } = setup();
+
+      await userEvent.click(screen.getByRole('link', { name: 'Forgot password?' }));
+
+      expect(closeFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('draws no dialog chrome of its own', () => {
+      setup();
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Close modal' })).not.toBeInTheDocument();
     });
   });
 });
