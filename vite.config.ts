@@ -74,7 +74,11 @@ export default defineConfig({
     restoreMocks: false,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html', 'lcov'],
+      // text for the terminal, html to browse locally, lcov for external tools.
+      // json-summary and json are what the CI reporter reads: the summary gives
+      // it the totals table, the full json lets it name which files a pull
+      // request actually changed the coverage of.
+      reporter: ['text', 'html', 'lcov', 'json-summary', 'json'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,js,svelte}'],
       // What is measured is what ships. Everything below exists only to

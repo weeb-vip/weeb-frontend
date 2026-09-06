@@ -10,6 +10,12 @@ on:
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
+    # The coverage reporter writes a comment on the pull request. A reusable
+    # workflow does not inherit the caller's permissions, so this has to be
+    # granted here or the comment step fails with 403.
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
@@ -39,9 +45,31 @@ jobs:
 
       - name: Unit Tests 🚨
         # test:coverage, not test: it runs the same suite and additionally
-        # writes coverage/, which the next step uploads.
+        # writes coverage/, which the steps below report on and upload.
+        #
+        # This step is what ENFORCES coverage: the thresholds in vite.config.ts
+        # (80% statements on src/lib/components/**) fail the run on their own.
+        # The report below is visibility, not the gate.
         run: bun run test:coverage
-        
+
+      - name: Coverage report
+        # Renders the totals into the job summary and, on a pull request,
+        # posts one comment that it updates in place on later pushes rather
+        # than adding a new one each time.
+        #
+        # `if: always()` so a failing threshold still reports the number --
+        # a coverage gate that goes red without saying what the figure was
+        # makes you download an artifact to find out.
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          json-summary-path: ./coverage/coverage-summary.json
+          json-final-path: ./coverage/coverage-final.json
+          # Mirrors the gate in vite.config.ts. Stated again because the action
+          # cannot read vitest's config; if the threshold there moves, move it
+          # here too or the comment will disagree with the build.
+          file-coverage-mode: changes
+
       - name: Upload coverage reports
         if: always()
         uses: actions/upload-artifact@v4
