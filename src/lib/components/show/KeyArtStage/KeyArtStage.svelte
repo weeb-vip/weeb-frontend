@@ -150,11 +150,11 @@
     </div>
   {/if}
 
-  <div class="key-art__scrim-top"></div>
+  <div class="key-art__scrim-top weeb-scrim-nav"></div>
   {#if textScrim}
     <div class="key-art__scrim-text"></div>
   {/if}
-  <div class="key-art__scrim-bottom"></div>
+  <div class="key-art__scrim-bottom weeb-scrim-fade"></div>
 
   {#if stage}
     <div class="key-art__stage">
@@ -205,38 +205,18 @@
     display: block;
   }
 
+  /* Position and gradient are `.weeb-scrim-nav`; the height is this stage's,
+     because it steps down on a phone where there is less room to spend. */
   .key-art__scrim-top {
-    position: absolute;
-    inset: 0 0 auto 0;
     height: var(--scrim-top);
     z-index: 2;
-    background: linear-gradient(
-      to bottom,
-      color-mix(in oklch, var(--weeb-bg) 88%, transparent) 0%,
-      color-mix(in oklch, var(--weeb-bg) 50%, transparent) 40%,
-      transparent 100%
-    );
   }
 
-  /* Sized to the below-fold band exactly, and eased on a smoothstep ramp: a
-     linear two-stop gradient begins fading at a constant slope and the eye
-     reads that onset as a horizontal seam. */
+  /* Position and the smoothstep ramp are `.weeb-scrim-fade`; the height is the
+     below-fold band, which the page owns and its children offset by. */
   .key-art__scrim-bottom {
-    position: absolute;
-    inset: auto 0 0 0;
     height: var(--art-fade);
     z-index: 2;
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      color-mix(in oklch, var(--weeb-bg) 6%, transparent) 15%,
-      color-mix(in oklch, var(--weeb-bg) 22%, transparent) 30%,
-      color-mix(in oklch, var(--weeb-bg) 43%, transparent) 45%,
-      color-mix(in oklch, var(--weeb-bg) 65%, transparent) 60%,
-      color-mix(in oklch, var(--weeb-bg) 84%, transparent) 75%,
-      color-mix(in oklch, var(--weeb-bg) 97%, transparent) 90%,
-      var(--weeb-bg) 100%
-    );
   }
 
   /* For a stage whose heading sits straight on the artwork, and key art is

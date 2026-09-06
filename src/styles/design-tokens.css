@@ -229,6 +229,50 @@
   box-shadow: var(--weeb-shadow-card);
 }
 
+/* ── The key-art scrims ──
+   The two gradients that make a photograph safe to build a page on. `.weeb-panel`
+   is the surface that stands on key art; these are what the key art is dimmed by
+   underneath it.
+
+   `KeyArtStage` draws both for the three pages that stand on it, but the stage is
+   a component -- artwork, scrims and a load fade -- and a caller that owns its own
+   background layer cannot take the whole thing to get the two gradients. The manga
+   hero is exactly that caller: its backdrop is an adaptation's key art shown
+   straight, or the work's cover smeared behind a blur when there is no banner, and
+   no prop on the stage expresses that. So the gradients are a ruleset here and the
+   stage composes them, the same trade `.weeb-panel` made.
+
+   Not in the recipe: height and layer. The fade band is a page-level number that
+   everything bottom-anchored on the artwork offsets by, so the page owns it. */
+.weeb-scrim-nav {
+  position: absolute;
+  inset: 0 0 auto 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--weeb-bg) 88%, transparent) 0%,
+    color-mix(in oklch, var(--weeb-bg) 50%, transparent) 40%,
+    transparent 100%
+  );
+}
+
+/* Eased on a smoothstep ramp: a linear two-stop gradient begins fading at a
+   constant slope and the eye reads that onset as a horizontal seam. */
+.weeb-scrim-fade {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in oklch, var(--weeb-bg) 6%, transparent) 15%,
+    color-mix(in oklch, var(--weeb-bg) 22%, transparent) 30%,
+    color-mix(in oklch, var(--weeb-bg) 43%, transparent) 45%,
+    color-mix(in oklch, var(--weeb-bg) 65%, transparent) 60%,
+    color-mix(in oklch, var(--weeb-bg) 84%, transparent) 75%,
+    color-mix(in oklch, var(--weeb-bg) 97%, transparent) 90%,
+    var(--weeb-bg) 100%
+  );
+}
+
 /* ── The dialog backdrop ──
    Modal and MobileDrawer are two presentations over one dialog; this is the
    half of it that is CSS. The z-index is not here: each surface takes its own

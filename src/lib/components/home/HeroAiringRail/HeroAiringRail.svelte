@@ -44,7 +44,7 @@
   <!-- Frosted glass, not a solid panel: DESIGN.md's saturate() boost carries the
        key art's colour through, so the rail belongs to whatever banner is behind
        it instead of punching a grey hole in it. -->
-  <aside class="rail" aria-label="Airing next">
+  <aside class="rail weeb-panel" aria-label="Airing next">
     <div class="rail-head">
       <h2 class="rail-title">Airing Next</h2>
       <a class="rail-all" href="/airing">Full schedule &rarr;</a>
@@ -95,15 +95,14 @@
 {/if}
 
 <style>
+  /* Ground, blur, border, radius and shadow are `.weeb-panel` -- the rail is
+     the same surface as the banner panel it sits beside, over the same key art.
+     Where it sits, how big it is and what it pads by are the two breakpoints'
+     business below, because the rail is a side panel on a desktop and a tray
+     across the foot of the banner on a phone. */
   .rail {
     position: absolute;
     z-index: 4;
-    border-radius: var(--weeb-radius-lg);
-    background: var(--weeb-panel-bg);
-    backdrop-filter: var(--weeb-panel-blur);
-    -webkit-backdrop-filter: var(--weeb-panel-blur);
-    border: 1px solid var(--weeb-border);
-    box-shadow: var(--weeb-shadow-card);
   }
 
   .rail-head {

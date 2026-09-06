@@ -45,7 +45,7 @@
   let triggerEl = $state<HTMLButtonElement | null>(null);
 </script>
 
-<aside class="hero-aside" aria-label="Broadcast schedule">
+<aside class="hero-aside weeb-panel" aria-label="Broadcast schedule">
   <div class="hero-next">
     <span class="hero-next-label">{label}</span>
     {#if countdown}
@@ -96,15 +96,12 @@
 {/if}
 
 <style>
+  /* Ground, blur, border, radius and shadow are `.weeb-panel` -- this is the
+     identity panel's twin, standing on the same key art beside it. Only how it
+     sits in the hero row, how wide it is and what it pads by are its own. */
   .hero-aside {
     flex: 0 0 auto;
     width: 320px;
-    background: var(--weeb-panel-bg);
-    backdrop-filter: var(--weeb-panel-blur);
-    -webkit-backdrop-filter: var(--weeb-panel-blur);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg);
-    box-shadow: var(--weeb-shadow-card);
     padding: 20px;
   }
 

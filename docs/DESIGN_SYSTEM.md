@@ -256,24 +256,57 @@ border-radius: var(--weeb-radius-lg);
 box-shadow: var(--weeb-shadow-card);
 ```
 
-The elevated panel a hero stands on its artwork. `HeroBanner`'s content panel
-and `ShowIdentityPanel` are the same object -- the homepage leads with a badge
-and a countdown, the show page with a poster and the Japanese title, but the
-surface under both is this. Each used to declare all five values itself, one of
-them through a `var(--weeb-panel-bg, var(--weeb-surface))` fallback that had not
-been reachable since the token existed.
+The elevated panel a hero stands on its artwork. Six surfaces are this one
+object, and every one of them used to declare all five values itself:
+
+| Adopter | What is its own |
+|---|---|
+| `HeroBanner` content panel | placement, max-width, responsive padding |
+| `ShowIdentityPanel` | max-width, responsive padding |
+| `ShowSchedulePanel` (`.hero-aside`) | `flex`, 320px, padding |
+| `HeroAiringRail` (`.rail`) | `position`, `z-index`, and per-breakpoint inset, width and padding |
+| `ShowContentSkeleton` (`.skeleton-panel`) | max-width, padding |
+| the manga hero panel | max-width, padding |
 
 Not in the recipe: where a panel sits, how wide it may grow, what it pads by.
-Those are the panel's own, and the two differ on all three.
+Those are the panel's own, and no two of the six agree on all three.
 
-The **backdrop** under them is a component rather than a class, because it is
+Two things the sweep turned up rather than fixed by hand. `HeroBanner` reached
+the ground through a `var(--weeb-panel-bg, var(--weeb-surface))` fallback that
+had not been reachable since the token existed. The manga hero panel declared
+four of the five and omitted the border, so the one panel that is plainly the
+same object as the other five had no hairline; composing the recipe gives it
+one, which is the only intended paint change in the sweep.
+
+### The scrims under it
+
+The two gradients that make a photograph safe to build a page on are also one
+recipe: `.weeb-scrim-nav` (the band under the transparent nav) and
+`.weeb-scrim-fade` (the smoothstep band that dissolves the artwork into the page
+ground below the fold). Height and `z-index` stay with the caller -- the fade
+band is a page-level number that everything bottom-anchored on the artwork
+offsets by.
+
+The **backdrop** as a whole is a component rather than a class, because it is
 four elements and a load fade, not a ruleset: `KeyArtStage`. Artwork as the
-ground, a scrim under the nav, an optional scrim over the lower half for type
-sitting straight on the picture, and a smoothstep fade band below the fold. The
-homepage banner, the show hero and the series page all stand on it; what they
-vary -- the fade band, the crop, the load fade, whether the page or the stage
-pulls up under the nav -- are props. Children can read `--art-fade`, the
-resolved height of the below-fold band; anything bottom-anchored offsets by it.
+ground, the two scrims, an optional third over the lower half for type sitting
+straight on the picture, and the fade band. The homepage banner, the show hero
+and the series page all stand on it; what they vary -- the fade band, the crop,
+the load fade, whether the page or the stage pulls up under the nav -- are
+props. Children can read `--art-fade`, the resolved height of the below-fold
+band; anything bottom-anchored offsets by it.
+
+The stage owns its background image, so a page whose backdrop it cannot express
+takes the two scrim classes instead of the component. The **manga hero** is that
+page: its backdrop is an adaptation's key art shown straight, or the work's cover
+smeared behind a blur when there is no banner.
+
+`ShowContentSkeleton` takes neither. Its fade is a plain two-stop ramp and it has
+no nav scrim at all, so adopting either would repaint a loading state whose whole
+job is to reserve the real page's space without moving when it arrives; the stage
+would move the box as well (24px foot padding against its 32px, a 768px side-
+padding step against its 1024px). It shares the panel glass, which is identical,
+and nothing else.
 
 ---
 

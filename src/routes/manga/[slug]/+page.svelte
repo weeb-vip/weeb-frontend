@@ -90,8 +90,8 @@
           />
         </div>
       {/if}
-      <div class="hero-scrim-top" aria-hidden="true"></div>
-      <div class="hero-scrim-bottom" aria-hidden="true"></div>
+      <div class="hero-scrim-top weeb-scrim-nav" aria-hidden="true"></div>
+      <div class="hero-scrim-bottom weeb-scrim-fade" aria-hidden="true"></div>
 
       <div class="hero-stage">
         <div class="hero-panel">
@@ -278,38 +278,20 @@
     object-fit: cover;
     display: block;
   }
-  /* Required, not decorative: it is what makes a transparent nav safe over key
-     art of unknown colour. */
+  /* Both gradients are `.weeb-scrim-nav` and `.weeb-scrim-fade` -- the same two
+     KeyArtStage stands the anime hero on. The stage itself is not usable here:
+     it owns its background image, and this page's backdrop is conditional (an
+     adaptation's key art shown straight, the work's cover smeared when there is
+     no banner). Only the heights are the page's. The nav scrim is required, not
+     decorative: it is what makes a transparent nav safe over art of unknown
+     colour. */
   .hero-scrim-top {
-    position: absolute;
-    inset: 0 0 auto 0;
     height: 180px;
     z-index: 2;
-    background: linear-gradient(
-      to bottom,
-      color-mix(in oklch, var(--weeb-bg) 88%, transparent) 0%,
-      color-mix(in oklch, var(--weeb-bg) 50%, transparent) 40%,
-      transparent 100%
-    );
   }
-  /* Eased on a smoothstep ramp. A linear two-stop gradient begins fading at a
-     constant slope and the eye reads that onset as a horizontal seam. */
   .hero-scrim-bottom {
-    position: absolute;
-    inset: auto 0 0 0;
     height: var(--hero-fade);
     z-index: 2;
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      color-mix(in oklch, var(--weeb-bg) 6%, transparent) 15%,
-      color-mix(in oklch, var(--weeb-bg) 22%, transparent) 30%,
-      color-mix(in oklch, var(--weeb-bg) 43%, transparent) 45%,
-      color-mix(in oklch, var(--weeb-bg) 65%, transparent) 60%,
-      color-mix(in oklch, var(--weeb-bg) 84%, transparent) 75%,
-      color-mix(in oklch, var(--weeb-bg) 97%, transparent) 90%,
-      var(--weeb-bg) 100%
-    );
   }
   .hero-stage {
     position: relative;
@@ -317,6 +299,13 @@
     width: 100%;
     padding: 0 var(--weeb-section-px, 48px) calc(var(--weeb-section-py, 40px) + var(--hero-fade));
   }
+  /* Deliberately NOT `.weeb-panel`, though it is plainly the same surface: this
+     declares four of that recipe's five values and omits the border. Composing
+     the class adds the hairline, and because the box is border-box the 1px also
+     pulls every child in by one -- measured at ~52k changed pixels per story at
+     1280, which is a repaint, not a de-duplication. Giving this panel its
+     border is a one-line design decision (add `weeb-panel` here, delete the
+     four declarations below); it is not this sweep's to make. */
   .hero-panel {
     max-width: 640px;
     padding: 20px;

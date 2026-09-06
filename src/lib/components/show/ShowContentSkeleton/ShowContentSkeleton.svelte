@@ -37,7 +37,7 @@
     <div class="skeleton-hero-art"></div>
     <div class="skeleton-hero-scrim"></div>
     <div class="skeleton-hero-stage">
-      <div class="skeleton-panel">
+      <div class="skeleton-panel weeb-panel">
         <div class="skeleton-identity">
           <Skeleton className="skeleton-poster bg-weeb-surface-hover" radius="md" />
           <div class="skeleton-identity-text">
@@ -157,6 +157,15 @@
       var(--weeb-bg) 100%
     );
   }
+  /* Deliberately NOT `.weeb-scrim-fade`, and not KeyArtStage. This is a plain
+     two-stop ramp, not the stage's eight-stop smoothstep, and there is no nav
+     scrim above it at all -- so adopting either would repaint the loading state
+     rather than de-duplicate it, and the whole job of this file is to reserve
+     the space the real page takes without moving when it arrives. Standing the
+     skeleton on the stage proper would also change the box: the stage pads its
+     foot by 24px against this 32px, and steps its side padding at 768px against
+     this 1024px. The scrims and the box are left; only the panel glass, which
+     is identical, is shared. */
   .skeleton-hero-scrim {
     position: absolute;
     inset: auto 0 0 0;
@@ -171,15 +180,12 @@
     padding: 0 32px calc(32px + var(--hero-fade)) 32px;
   }
 
-  /* The identity panel: panel glass, not a black card floating mid-page. */
+  /* The identity panel: panel glass, not a black card floating mid-page. The
+     glass is `.weeb-panel`, the same surface the real ShowIdentityPanel loads
+     into -- a placeholder that reserved a DIFFERENT surface would repaint on
+     load. Only the width it may grow to and its padding are the skeleton's. */
   .skeleton-panel {
     max-width: min(560px, calc(100vw - 460px));
-    background: var(--weeb-panel-bg);
-    backdrop-filter: var(--weeb-panel-blur);
-    -webkit-backdrop-filter: var(--weeb-panel-blur);
-    border: 1px solid var(--weeb-border);
-    border-radius: var(--weeb-radius-lg);
-    box-shadow: var(--weeb-shadow-card);
     padding: 20px;
   }
   .skeleton-identity {
