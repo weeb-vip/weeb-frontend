@@ -1,9 +1,10 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 // Mock console methods
 const consoleSpy = {
-  log: jest.fn(),
-  warn: jest.fn(),
+  log: vi.fn(),
+  warn: vi.fn(),
 };
 
 // Create a proper mock for console
@@ -13,8 +14,8 @@ Object.defineProperty(global, 'console', {
 });
 
 // Mock the global self object for worker environment
-const mockPostMessage = jest.fn();
-const mockAddEventListener = jest.fn();
+const mockPostMessage = vi.fn();
+const mockAddEventListener = vi.fn();
 
 const mockSelf = {
   postMessage: mockPostMessage,
@@ -28,11 +29,11 @@ Object.defineProperty(global, 'self', {
 });
 
 // Mock Date.now for consistent testing
-const mockDateNow = jest.spyOn(Date, 'now');
+const mockDateNow = vi.spyOn(Date, 'now');
 
 describe('animeNotifications worker', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockSelf.devTimeOffset = 0;
     // Set a default mock time
     mockDateNow.mockReturnValue(new Date('2024-01-15T16:00:00Z').getTime());
@@ -267,7 +268,7 @@ describe('animeNotifications worker', () => {
     describe('Multiple anime airing simultaneously', () => {
       // Simulate the worker's update logic that sends messages for multiple anime
       function simulateMultipleAnimeUpdates() {
-        const mockPostMessage = mockSelf.postMessage as jest.Mock;
+        const mockPostMessage = mockSelf.postMessage as Mock;
         mockPostMessage.mockClear();
 
         // Simulate two anime airing at the same time
@@ -402,7 +403,7 @@ describe('animeNotifications worker', () => {
       });
 
       it('should handle two anime airing at exactly the same time', () => {
-        const mockPostMessage = mockSelf.postMessage as jest.Mock;
+        const mockPostMessage = mockSelf.postMessage as Mock;
         mockPostMessage.mockClear();
 
         // Two anime airing at exactly the same time

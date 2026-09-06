@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getAnimeSlugByID } from '../../../../services/api/graphql/queries';
+import { getAnimeSlugByID } from '$lib/services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
 
 /** Legacy URL. See ../+page.server.ts for why this is a permanent redirect. */

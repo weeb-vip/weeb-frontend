@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { makeSSRFetcher, loggedOutAuth, publicAuth, cookieHeaderFrom } from '$lib/server/ssr-graphql';
-import { getSeasonalAnime } from '../../../services/api/graphql/queries';
+import { getSeasonalAnime } from '$lib/services/api/graphql/queries';
 
 function getCurrentSeason(): string {
   const now = new Date();

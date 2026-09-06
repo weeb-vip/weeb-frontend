@@ -25,7 +25,9 @@ Algolia credentials to do anything useful.
 
 ```sh
 yarn check          # svelte-check against tsconfig.json
-yarn test           # unit tests (Jest)
+yarn test           # unit + component tests (Vitest)
+yarn test:watch     # the same, in watch mode
+yarn test:coverage  # with a v8 coverage report in coverage/
 yarn test:e2e       # end-to-end (Playwright)
 yarn storybook      # component explorer on :6006
 ```

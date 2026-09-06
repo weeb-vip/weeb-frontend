@@ -7,7 +7,7 @@ import {
   queryUserWorkStatusCounts,
   queryUserWorks,
   getCurrentlyAiringWithDatesAndEpisodes
-} from '../../services/api/graphql/queries';
+} from '$lib/services/api/graphql/queries';
 import { Status, WorkStatus } from '../../gql/graphql';
 
 /** Mirrors the window ProfilePage asks for, so the client reuses this rather

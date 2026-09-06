@@ -1,0 +1,173 @@
+// Config loader that ensures config is loaded before anything else
+import type { IConfig } from '../../config/interfaces';
+import { configStore } from '$lib/stores/config';
+
+let configPromise: Promise<IConfig> | null = null;
+let configData: IConfig | null = null;
+
+// Initialize config asynchronously for SSR (Cloudflare Workers compatible)
+async function initializeConfigSSR(): Promise<IConfig> {
+  const isDev = import.meta.env.DEV;
+  if (isDev) {
+    console.log('[SSR] 🔧 Environment variables:', {
+      NODE_ENV: process.env.NODE_ENV,
+      APP_CONFIG: process.env.APP_CONFIG,
+      VITE_NODE_ENV: process.env.VITE_NODE_ENV,
+    });
+  }
+
+  if (configData) {
+    if (isDev) {
+      console.log('[SSR] 🔧 Using cached config:', configData);
+    }
+    return configData;
+  }
+
+  if (typeof window !== 'undefined') {
+    throw new Error('SSR config initialization called in browser context');
+  }
+
+  try {
+    // In Cloudflare Workers, we need to fetch the config like a client
+    // since we don't have filesystem access
+    let response;
+    let configUrl;
+
+    try {
+      // In SSR context, we need absolute URLs since relative URLs don't work
+      const isDev = import.meta.env.DEV;
+      if (isDev) {
+        configUrl = 'http://localhost:4322/config.json';
+      } else {
+        // In production/container, construct URL to self-serve the config
+        const port = process.env.PORT || '3000';
+        configUrl = `http://localhost:${port}/config.json`;
+      }
+      if (isDev) {
+        console.log('[SSR] 🔧 Fetching config from:', configUrl);
+      }
+      response = await fetch(configUrl);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (fetchError) {
+      if (isDev) {
+        console.log('[SSR] 🔧 First fetch failed:', fetchError);
+      }
+      // If that fails, try the absolute URL as fallback
+      const baseUrl = globalThis.location?.origin || 'https://weeb-production.pages.dev';
+      configUrl = `${baseUrl}/config.json`;
+      if (isDev) {
+        console.log('[SSR] 🔧 Fallback fetching config from:', configUrl);
+      }
+      response = await fetch(configUrl);
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch config: ${response.status}`);
+    }
+
+    const loadedConfig: IConfig = await response.json();
+    configData = loadedConfig;
+    if (isDev) {
+      console.log('[SSR] 🔧 Config loaded:', loadedConfig);
+    }
+
+    // Set on globalThis for compatibility
+    // @ts-ignore
+    globalThis.config = loadedConfig;
+
+    if (isDev) {
+      console.log('[SSR] Config loaded successfully');
+    }
+    return loadedConfig;
+  } catch (error) {
+    console.error('[SSR] Failed to load config:', error);
+    throw error;
+  }
+}
+
+// Initialize config asynchronously for client
+async function initializeConfigClient(): Promise<IConfig> {
+  if (configData) {
+    return configData;
+  }
+
+  // Prefer the config the root layout already hydrated from build-time data,
+  // avoiding a redundant /config.json round-trip. Falls through to fetch only
+  // if nothing populated the store yet.
+  const hydrated = configStore.get();
+  if (hydrated) {
+    configData = hydrated;
+    // @ts-ignore — legacy globals some code still reads
+    window.global = window.global || {};
+    // @ts-ignore
+    window.global.config = hydrated;
+    // @ts-ignore
+    window.config = hydrated;
+    return hydrated;
+  }
+
+  if (!configPromise) {
+    configPromise = fetch('/config.json')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch config: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((config: IConfig) => {
+        configData = config;
+
+        // Set on window.global for compatibility
+        // @ts-ignore
+        window.global = window.global || {};
+        // @ts-ignore
+        window.global.config = config;
+
+        // Also set directly on window for easier access
+        // @ts-ignore
+        window.config = config;
+
+        const isDev = import.meta.env.DEV;
+        if (isDev) {
+          console.log('[Client] Config loaded successfully');
+        }
+        return config;
+      });
+  }
+
+  return configPromise;
+}
+
+// Main initialization function
+export async function ensureConfigLoaded(): Promise<IConfig> {
+  if (configData) {
+    return configData;
+  }
+
+  if (typeof window === 'undefined') {
+    // SSR context - load asynchronously (ESM compatible)
+    return await initializeConfigSSR();
+  } else {
+    // Client context - load asynchronously
+    return await initializeConfigClient();
+  }
+}
+
+// Get config synchronously - throws if not loaded
+export function getConfigSync(): IConfig {
+  if (!configData) {
+    throw new Error('Config not loaded. Call ensureConfigLoaded() first.');
+  }
+  return configData;
+}
+
+// Check if config is loaded
+export function isConfigLoaded(): boolean {
+  return configData !== null;
+}
+
+// Note: Removed global scope config loading for Cloudflare Pages compatibility
+// Config will be loaded on first request instead

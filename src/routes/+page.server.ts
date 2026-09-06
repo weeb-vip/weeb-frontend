@@ -5,7 +5,7 @@ import {
   getCurrentlyAiringWithDates,
   getSeasonalAnime,
   getCurrentlyPublishingWorks
-} from '../services/api/graphql/queries';
+} from '$lib/services/api/graphql/queries';
 
 export const load: PageServerLoad = async ({ locals, cookies }) => {
   const { auth, config } = locals;

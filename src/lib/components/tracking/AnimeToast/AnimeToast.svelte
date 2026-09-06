@@ -1,0 +1,264 @@
+<script lang="ts">
+  import {
+    AnimeToastBloc,
+    type AnimeToastStatus,
+    type ToastAnime,
+    type ToastEpisode
+  } from './AnimeToast.bloc.svelte';
+
+  let {
+    anime,
+    episode,
+    status,
+    timeInfo = '',
+    bloc: injected
+  }: {
+    anime: ToastAnime;
+    episode: ToastEpisode;
+    status: AnimeToastStatus;
+    /** The line under the episode -- "Airs in 20m", "Aired 2h ago". */
+    timeInfo?: string;
+    bloc?: AnimeToastBloc;
+  } = $props();
+
+  const ownBloc = new AnimeToastBloc({
+    get anime() {
+      return anime;
+    },
+    get episode() {
+      return episode;
+    },
+    get status() {
+      return status;
+    }
+  });
+  const bloc = $derived(injected ?? ownBloc);
+
+  $effect(() => bloc.watchViewport());
+</script>
+
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  class="anime-toast-content"
+  class:clickable={!bloc.isCompact}
+  onclick={() => bloc.activateCard()}
+>
+  <!-- Anime Image -->
+  <div class="toast-poster">
+    {#if bloc.imageUrl}
+      <img
+        src={bloc.imageUrl}
+        alt={bloc.title}
+        class="toast-poster-img"
+        loading="lazy"
+      />
+    {:else}
+      <div class="toast-poster-placeholder">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Content -->
+  <div class="toast-body">
+    <div class="toast-title">{bloc.title}</div>
+    <div class="toast-episode">
+      <span class="toast-ep-num">Episode {bloc.episodeNumber}</span>
+      {#if bloc.episodeTitle}
+        <span class="toast-dot">·</span>
+        <span class="toast-ep-title">{bloc.episodeTitle}</span>
+      {/if}
+    </div>
+    {#if timeInfo}
+      <div class="toast-status toast-status-{bloc.status}">
+        <svg class="toast-status-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          {#if bloc.status === 'finished'}
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
+          {:else if bloc.status === 'airing'}
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          {:else if bloc.status === 'warning'}
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          {:else}
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          {/if}
+        </svg>
+        {timeInfo}
+      </div>
+    {/if}
+  </div>
+
+  <!-- Status indicator -->
+  {#if bloc.isCompact}
+    <button
+      onclick={(event) => bloc.activateButton(event)}
+      class="toast-action"
+      type="button"
+      title={bloc.goToShowLabel}
+      aria-label={bloc.goToShowLabel}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </button>
+  {:else}
+    <div class="toast-indicator toast-indicator-{bloc.status}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        {#if bloc.status === 'finished'}
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
+        {:else if bloc.status === 'airing'}
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        {:else if bloc.status === 'warning'}
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        {:else}
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        {/if}
+      </svg>
+    </div>
+  {/if}
+</div>
+
+<style>
+  .anime-toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 2px;
+  }
+  .clickable {
+    cursor: pointer;
+  }
+
+  /* Poster thumbnail */
+  .toast-poster {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .toast-poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .toast-poster-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--weeb-surface-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--weeb-fg-muted);
+  }
+
+  /* Body */
+  .toast-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .toast-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--weeb-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+  .toast-episode {
+    font-size: 12px;
+    color: var(--weeb-fg-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    margin-top: 1px;
+  }
+  .toast-ep-num {
+    font-weight: 500;
+  }
+  .toast-dot {
+    margin: 0 4px;
+    opacity: 0.5;
+  }
+  .toast-ep-title {
+    opacity: 0.8;
+  }
+
+  /* Status line */
+  .toast-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 3px;
+    line-height: 1;
+  }
+  .toast-status-icon {
+    flex-shrink: 0;
+  }
+  .toast-status-airing-soon { color: var(--weeb-accent-text); }
+  .toast-status-airing { color: var(--weeb-green); }
+  .toast-status-finished { color: var(--weeb-violet); }
+  .toast-status-warning { color: var(--weeb-amber); }
+
+  /* Status indicator circle (desktop) */
+  .toast-indicator {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--weeb-border);
+  }
+  /* The shared severity recipe: the status hue at 12% for the ground and 45%
+     for the ring, exactly as ErrorBanner and GlobalToaster express it. These
+     four used to be hardcoded oklch() -- 62% 0.17 145 green against a
+     --weeb-green of 65% 0.15 155, and 75% 0.15 80 amber against a --weeb-amber
+     of 72% 0.14 85 -- at their own 0.1/0.3 alpha stops. Two severity palettes,
+     both inside the same toast stack. */
+  .toast-indicator-airing-soon {
+    color: var(--weeb-accent-text);
+    background: var(--weeb-accent-tint);
+    border-color: var(--weeb-accent-edge);
+  }
+  .toast-indicator-airing {
+    color: var(--weeb-green);
+    background: var(--weeb-green-tint);
+    border-color: var(--weeb-green-edge);
+  }
+  /* `--weeb-violet` is an alias of the accent now, so "finished" takes the
+     accent tint: one colour, rather than a near-miss of it. */
+  .toast-indicator-finished {
+    color: var(--weeb-violet);
+    background: var(--weeb-accent-tint);
+    border-color: var(--weeb-accent-edge);
+  }
+  .toast-indicator-warning {
+    color: var(--weeb-amber);
+    background: var(--weeb-amber-tint);
+    border-color: var(--weeb-amber-edge);
+  }
+
+  /* Mobile action button */
+  .toast-action {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--weeb-accent);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .toast-action:hover {
+    transform: scale(1.08);
+  }
+</style>

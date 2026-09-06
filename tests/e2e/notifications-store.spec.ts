@@ -18,7 +18,7 @@ test.describe('Anime notification store consumers', () => {
     await waitForHomepage(page);
     await expect(page.locator('.hero').first()).toBeVisible({ timeout: 15000 });
 
-    // The airing page renders CurrentlyAiringCard, another store consumer.
+    // The airing page is another store consumer.
     await page.goto('/airing', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await expect(page.locator('main')).toBeVisible({ timeout: 15000 });
 

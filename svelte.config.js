@@ -21,10 +21,6 @@ const config = {
     files: {
       assets: 'public'
     },
-    alias: {
-      $components: 'src/svelte/components',
-      $stores: 'src/svelte/stores'
-    },
     // Namespaces every cache key, so a deploy cannot serve HTML rendered by the
     // previous build — it references /_app/immutable chunks the new image does
     // not contain. The default is a build timestamp, which is correct but

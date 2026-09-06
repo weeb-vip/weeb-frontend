@@ -114,6 +114,75 @@ test.describe('anime news', () => {
     expect(await rows.count()).toBeGreaterThan(0);
   });
 
+  /*
+    The News chip in the section nav is a scroll-to control, not a route and not
+    a tab: the show page is one document, and there is no panel for a tab to
+    control. It has to take the reader to the section it names.
+  */
+  test('the News chip in the section nav moves you to the News section', async ({ page }) => {
+    await page.goto(ANIME_PATH);
+    await waitForShowPage(page);
+
+    const nav = page.getByRole('navigation', { name: 'Section navigation' });
+    await expect(nav).toBeVisible({ timeout: 20000 });
+
+    const newsChip = nav.getByRole('button', { name: /^News/ });
+    await expect(newsChip).toBeVisible();
+    // The count travels with the label, so the chip is worth clicking or not
+    // before you click it.
+    expect((await newsChip.innerText()).trim()).toMatch(/\d/);
+
+    // Buttons in a nav, not tabs in a tablist. Scoped to the nav on purpose:
+    // the Characters & Staff role filter on this same page IS still a tablist of
+    // tabs, so widening this would turn a guard on the section nav into a
+    // failing assertion about a different component.
+    await expect(nav).not.toHaveAttribute('role', 'tablist');
+    await expect(nav.locator('[role="tab"]')).toHaveCount(0);
+
+    const heading = page.getByRole('heading', { name: /^News$/ });
+    // The id in ANIME_PATH resolves to the slug, so the route to compare against
+    // is wherever that landed.
+    const route = new URL(page.url()).pathname;
+    await newsChip.click();
+
+    // It is a jump within the page: the section comes into view and the hash
+    // names it, but the route does not change.
+    await expect(heading).toBeInViewport({ timeout: 15000 });
+    await expect.poll(() => new URL(page.url()).hash, { timeout: 10000 }).toBe('#show-section-news');
+    expect(new URL(page.url()).pathname).toBe(route);
+  });
+
+  /*
+    KNOWN BUG -- marked `fail` so the suite stays honest about it rather than
+    quietly not covering it. Delete the `test.fail()` line when it is fixed; the
+    test will then start failing for being unexpectedly green, which is the
+    reminder.
+
+    The section nav's whole job is to say which part of a very long page you are
+    in. Clicking News scrolls there and sets the hash (the test above proves
+    it), but the marker never leaves Synopsis -- not on the click, and not from
+    the scroll-spy afterwards either. So the bar shows the reader as being in a
+    section they have scrolled well past.
+  */
+  test('the section nav marks the section you jumped to', async ({ page }) => {
+    test.fail();
+
+    await page.goto(ANIME_PATH);
+    await waitForShowPage(page);
+
+    const nav = page.getByRole('navigation', { name: 'Section navigation' });
+    const newsChip = nav.getByRole('button', { name: /^News/ });
+    await expect(newsChip).toBeVisible({ timeout: 20000 });
+
+    await newsChip.click();
+    await expect(page.getByRole('heading', { name: /^News$/ })).toBeInViewport({ timeout: 15000 });
+
+    // Short timeout on purpose: the marker does not move at all, so a long one
+    // only makes every run of the suite wait for a result already known.
+    await expect(newsChip).toHaveAttribute('aria-pressed', 'true', { timeout: 4000 });
+    await expect(nav.locator('[aria-pressed="true"]')).toHaveCount(1);
+  });
+
   test('the section caps at five items and links to the full list', async ({ page }) => {
     await page.goto(ANIME_PATH);
     await waitForShowPage(page);

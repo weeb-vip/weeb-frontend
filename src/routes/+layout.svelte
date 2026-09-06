@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack, type Snippet } from 'svelte';
   import { browser } from '$app/environment';
   import { beforeNavigate, afterNavigate } from '$app/navigation';
   import { page } from '$app/stores';
   import { QueryClientProvider } from '@tanstack/svelte-query';
-  import { getQueryClient, createQueryClient } from '../svelte/services/query-client';
-  import Header from '$lib/Header.svelte';
-  import Footer from '../svelte/components/Footer.svelte';
-  import GlobalToaster from '../svelte/components/GlobalToaster.svelte';
-  import AnimeNotificationProvider from '../svelte/components/AnimeNotificationProvider.svelte';
-  import MobileDrawer from '../svelte/components/MobileDrawer.svelte';
+  import { getQueryClient, createQueryClient } from '$lib/services/query-client';
+  import Header from '$lib/components/shell/Header';
+  import Footer from '$lib/components/shell/Footer';
+  import GlobalToaster from '$lib/components/shell/GlobalToaster';
+  import AnimeNotificationProvider from '$lib/components/shell/AnimeNotificationProvider';
+  import MobileDrawer from '$lib/components/shell/MobileDrawer';
   import {
     initGlobalErrorHandlers,
     initPostHogWhenConfigured,
@@ -17,17 +17,18 @@
     hideNavigationFeedback
   } from '$lib/client/global-ui';
   import { initTelemetryWhenConfigured } from '$lib/client/telemetry';
-  import { configStore } from '../svelte/stores/config';
+  import { configStore } from '$lib/stores/config';
   import '../scss/base.scss';
   import '../styles/design-tokens.css';
 
-  export let data;
+  let { data, children }: { data: any; children?: Snippet } = $props();
 
   // Config is loaded once (build-time import → locals → layout data). Seed the
   // client store from it so nothing needs to re-fetch /config.json. Runs during
   // both SSR and client hydration; the store is shared but config isn't
-  // per-user, so that's safe.
-  configStore.hydrate(data.config);
+  // per-user, so that's safe. Read untracked: hydrate() is first-value-wins, so
+  // only the initial value can ever matter.
+  configStore.hydrate(untrack(() => data.config));
 
   // One QueryClient for the whole app via context. In the browser this is
   // the shared singleton; during SSR each layout render gets a fresh
@@ -65,7 +66,7 @@
      tabindex="-1" so the skip link can actually move focus here; without it the
      browser jumps the viewport but leaves focus back in the header. -->
 <main id="main-content" tabindex="-1" class="w-full bg-weeb-bg text-weeb-fg min-h-screen">
-  <slot />
+  {@render children?.()}
 </main>
 
 <Footer />

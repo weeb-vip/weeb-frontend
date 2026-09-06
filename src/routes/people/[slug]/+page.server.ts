@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { queryStaffByID, queryStaffBySlug } from '../../../services/api/graphql/queries';
+import { queryStaffByID, queryStaffBySlug } from '$lib/services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
 
 /** A v4 UUID, i.e. this route was reached with an id rather than a slug. */

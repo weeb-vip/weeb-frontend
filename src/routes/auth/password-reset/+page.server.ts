@@ -1,5 +1,5 @@
 import type { Actions, PageServerLoad } from './$types';
-import { resetPassword } from '../../../services/queries';
+import { resetPassword } from '$lib/services/query-options';
 
 export const load: PageServerLoad = async ({ url }) => {
   const token = url.searchParams.get('token');

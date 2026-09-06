@@ -2,26 +2,28 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
-  import WorksBrowsePage from '../../svelte/components/WorksBrowsePage.svelte';
-  import { shelfLabel } from '../../services/api/graphql/works';
+  import WorksBrowse from '../works/WorksBrowse.svelte';
+  import { shelfLabel } from '$lib/services/api/graphql/works';
 
-  export let data;
+  let { data }: { data: any } = $props();
 
   const SITE_URL = 'https://weeb.vip';
   const canonical = `${SITE_URL}/manga`;
 
   // The shelf a reader opened, and how deep, both belong in the tab title --
   // it is what tells two open tabs of this page apart.
-  $: pageTitle = data.sort
-    ? `Manga · ${shelfLabel(data.sort)}${data.page > 1 ? ` — page ${data.page}` : ''}`
-    : 'Manga';
+  const pageTitle = $derived(
+    data.sort
+      ? `Manga · ${shelfLabel(data.sort)}${data.page > 1 ? ` — page ${data.page}` : ''}`
+      : 'Manga'
+  );
 
-  $: schemas = [
+  const schemas = $derived([
     breadcrumbSchema([
       { name: 'Home', url: `${SITE_URL}/` },
       { name: 'Manga', url: canonical }
     ])
-  ];
+  ]);
 </script>
 
 <Seo
@@ -31,7 +33,7 @@
 
 <StructuredData {schemas} />
 
-<WorksBrowsePage
+<WorksBrowse
   heading="Manga"
   blurb="Manga, manhwa, manhua and one-shots — everything anime gets adapted from."
   basePath="/manga"

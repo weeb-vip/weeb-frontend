@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { metaDescription } from './meta';
 
 // The real synopsis that exposed every one of these problems in production.
