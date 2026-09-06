@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { resolveOgImage, _clearOgImageCache } from './og-image';
 
 const CDN = 'https://cdn.weeb.vip/weeb';
@@ -7,7 +8,7 @@ const ID = 'f3450266-1eaf-4d9e-8d31-8724a113c8bf';
 /** A fetch that 206s for the listed URLs and 404s for everything else. */
 function fakeFetch(present: string[], otherStatus = 404) {
   const calls: { url: string; init: any }[] = [];
-  const impl = jest.fn(async (url: any, init: any) => {
+  const impl = vi.fn(async (url: any, init: any) => {
     calls.push({ url: String(url), init });
     const ok = present.includes(String(url));
     return { status: ok ? 206 : otherStatus } as Response;

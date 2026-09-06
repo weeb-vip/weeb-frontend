@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   ANIME_PER_SITEMAP,
   chunkCount,
@@ -64,7 +65,7 @@ describe('per-origin URLs', () => {
 function fakeClient(handler: (query: string, vars: any) => any) {
   const calls: { query: string; vars: any }[] = [];
   const client = {
-    request: jest.fn(async (query: string, vars: any) => {
+    request: vi.fn(async (query: string, vars: any) => {
       calls.push({ query, vars });
       return handler(query, vars);
     })

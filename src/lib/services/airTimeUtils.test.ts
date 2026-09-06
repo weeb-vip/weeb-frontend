@@ -1,4 +1,4 @@
-import {describe, expect, test, beforeEach, beforeAll, afterAll, jest} from '@jest/globals';
+import { describe, test, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
 import {
   getCurrentTime,
   parseDurationToMinutes,
@@ -150,12 +150,12 @@ describe('getAirDateTime', () => {
 describe('isAiringToday (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 16:00:00 UTC
-    jest.useFakeTimers();
-    jest.setSystemTime(1914422400000); // 2030-08-31T16:00:00Z
+    vi.useFakeTimers();
+    vi.setSystemTime(1914422400000); // 2030-08-31T16:00:00Z
   });
 
   afterAll(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('returns true for episodes airing within 24 hours', () => {
@@ -185,12 +185,12 @@ describe('isAiringToday (static time)', () => {
 describe('isCurrentlyAiring (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 12:00:00 UTC
-    jest.useFakeTimers();
-    jest.setSystemTime(1914408000000); // 2030-08-31T12:00:00Z
+    vi.useFakeTimers();
+    vi.setSystemTime(1914408000000); // 2030-08-31T12:00:00Z
   });
 
   afterAll(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('returns true for episode currently airing', () => {
@@ -226,12 +226,12 @@ describe('isCurrentlyAiring (static time)', () => {
 describe('hasAlreadyAired (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 12:00:00 UTC
-    jest.useFakeTimers();
-    jest.setSystemTime(1914408000000); // 2030-08-31T12:00:00Z
+    vi.useFakeTimers();
+    vi.setSystemTime(1914408000000); // 2030-08-31T12:00:00Z
   });
 
   afterAll(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('returns true for episode that finished recently', () => {
@@ -261,12 +261,12 @@ describe('hasAlreadyAired (static time)', () => {
 describe('calculateCountdown (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 12:00:00 UTC
-    jest.useFakeTimers();
-    jest.setSystemTime(1914408000000); // 2030-08-31T12:00:00Z
+    vi.useFakeTimers();
+    vi.setSystemTime(1914408000000); // 2030-08-31T12:00:00Z
   });
 
   afterAll(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('returns countdown for future episode airing today', () => {
@@ -301,12 +301,12 @@ describe('calculateCountdown (static time)', () => {
 describe('getAirTimeInfo (static time)', () => {
   beforeAll(() => {
     // Freeze "now" to Sat Aug 31, 2030 16:00:00 UTC
-    jest.useFakeTimers();
-    jest.setSystemTime(1914422400000); // 2030-08-31T16:00:00Z
+    vi.useFakeTimers();
+    vi.setSystemTime(1914422400000); // 2030-08-31T16:00:00Z
   });
 
   afterAll(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('returns comprehensive air time info', () => {
@@ -430,12 +430,12 @@ describe('getAirTimeDisplay (static time)', () => {
   const FROZEN_NOW = 1914408000000; // 2030-08-31T12:00:00Z Sat 12:00 UTC
 
   beforeAll(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(FROZEN_NOW);
+    vi.useFakeTimers();
+    vi.setSystemTime(FROZEN_NOW);
   });
 
   afterAll(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('returns correct display for currently airing episode', () => {

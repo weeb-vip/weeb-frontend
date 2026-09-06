@@ -1,32 +1,34 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
+import { readable } from 'svelte/store';
+import {
+  fallbackUserFor,
+  UserProfileWrapperBloc,
+  type ProfileUser
+} from './UserProfileWrapper.bloc.svelte';
 
 /**
- * The rule under test lives in `UserProfileWrapper.bloc.svelte.ts` as the
- * exported pure function `fallbackUserFor`. That module is a runes module, so
- * ts-jest cannot load it; the function is small and total, and is mirrored
- * here verbatim. Change one and change the other.
+ * These assertions used to run against a copy of `fallbackUserFor` pasted into
+ * this file, because ts-jest could not load a `.svelte.ts` runes module and the
+ * bloc is one. A copy can drift from the original without anything failing,
+ * which is the opposite of what a test is for.
+ *
+ * Vitest compiles the module through vite-plugin-svelte, so the real bloc --
+ * runes, `fromStore` and all -- is imported directly, and `displayUser` and
+ * `status` are read off the real class rather than off a second copy of the
+ * rules. There is no mirror left in this file.
  */
-type ProfileUser = { username: string; profileImageUrl: string | null };
 
-function fallbackUserFor(isLoggedIn: boolean, hasError: boolean): ProfileUser | null {
-  if (!isLoggedIn || !hasError) return null;
-  return { username: 'User', profileImageUrl: null };
-}
-
-/** `displayUser` in the bloc: real data wins, the fallback covers a failure. */
-function displayUserFor(
-  user: ProfileUser | null | undefined,
+/** The bloc with its four ports stubbed; only the two reactive ones matter here. */
+function bloc(
   isLoggedIn: boolean,
-  hasError: boolean,
-): ProfileUser | null {
-  return user || fallbackUserFor(isLoggedIn, hasError);
-}
-
-/** The four states the view switches on. */
-function statusFor(isLoggedIn: boolean, isLoading: boolean, displayUser: ProfileUser | null) {
-  if (!isLoggedIn) return 'signed-out';
-  if (isLoading) return 'loading';
-  return displayUser ? 'ready' : 'stuck';
+  query: { data?: ProfileUser | null; isLoading?: boolean; isError?: boolean }
+) {
+  return new UserProfileWrapperBloc({
+    auth: readable({ isLoggedIn }),
+    userQuery: readable(query),
+    drawer: { open: () => {} },
+    prompt: { requestLogin: () => {}, requestRegister: () => {} }
+  });
 }
 
 describe('UserProfileWrapper logic', () => {
@@ -52,36 +54,42 @@ describe('UserProfileWrapper logic', () => {
 
   describe('display user', () => {
     it('prefers real user data over the fallback', () => {
-      const realUser = { username: 'realuser', profileImageUrl: 'real.jpg' };
+      const realUser = { username: 'realuser', profileImageUrl: 'real.jpg' } as ProfileUser;
 
-      expect(displayUserFor(realUser, true, true)).toEqual(realUser);
+      expect(bloc(true, { data: realUser, isError: true }).displayUser).toEqual(realUser);
     });
 
     it('falls back when the query returned nothing and failed', () => {
-      expect(displayUserFor(null, true, true)).toEqual({ username: 'User', profileImageUrl: null });
+      expect(bloc(true, { data: null, isError: true }).displayUser).toEqual({
+        username: 'User',
+        profileImageUrl: null
+      });
     });
 
     it('is null when the query returned nothing and did not fail', () => {
-      expect(displayUserFor(undefined, true, false)).toBeNull();
+      expect(bloc(true, { isError: false }).displayUser).toBeNull();
     });
   });
 
   describe('status', () => {
     it('is signed-out before anything is loaded', () => {
-      expect(statusFor(false, false, null)).toBe('signed-out');
+      expect(bloc(false, {}).status).toBe('signed-out');
     });
 
     it('is loading only while logged in', () => {
-      expect(statusFor(true, true, null)).toBe('loading');
+      expect(bloc(true, { isLoading: true }).status).toBe('loading');
+      expect(bloc(false, { isLoading: true }).status).toBe('signed-out');
     });
 
     it('is ready once there is someone to render', () => {
-      expect(statusFor(true, false, { username: 'User', profileImageUrl: null })).toBe('ready');
+      const user = { username: 'User', profileImageUrl: null } as ProfileUser;
+
+      expect(bloc(true, { data: user }).status).toBe('ready');
     });
 
     it('is stuck when the query settled with no user at all', () => {
       // The state that must NOT pulse: nothing is going to resolve it.
-      expect(statusFor(true, false, null)).toBe('stuck');
+      expect(bloc(true, { data: null, isLoading: false, isError: false }).status).toBe('stuck');
     });
   });
 });

@@ -114,8 +114,8 @@ export interface CurrentlyAiringDeps {
  * therefore disagree, and did.
  *
  * The pure half of it (grid, buckets, merge, countdown, zones) is in
- * `CurrentlyAiringPage.schedule.ts` where jest can reach it. What is left here
- * is the state and the fetching.
+ * `CurrentlyAiringPage.schedule.ts`, where a test can call it directly. What is
+ * left here is the state and the fetching.
  */
 export class CurrentlyAiringPageBloc {
   readonly #source: AiringAccessor;

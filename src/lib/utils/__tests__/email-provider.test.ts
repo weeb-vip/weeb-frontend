@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { emailProviderFor } from '$lib/utils/email-provider';
 
 describe('emailProviderFor', () => {

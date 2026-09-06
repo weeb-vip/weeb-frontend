@@ -1,4 +1,11 @@
-import { describe, expect, test } from '@jest/globals';
+/**
+ * @vitest-environment node
+ *
+ * Pure placement maths, and one case that asserts the SSR branch taken when
+ * there is no `window` at all. The default jsdom environment would supply one
+ * and quietly turn that case into an ordinary viewport-clamped placement.
+ */
+import { describe, test, expect } from 'vitest';
 import {
   computeAnchoredPosition,
   anchoredPositionStyle,
@@ -175,7 +182,7 @@ describe('computeAnchoredPosition — width', () => {
 
 describe('computeAnchoredPosition — no window', () => {
   test('falls back to an unconstrained placement below the anchor', () => {
-    // No viewport argument and no `window` in the jest node environment.
+    // No viewport argument, and no `window` in this file's node environment.
     const pos = computeAnchoredPosition(rect(600, 900, 120, 32), { height: 400, gap: 8 });
     expect(pos.top).toBe(640);
     expect(pos.left).toBe(900);

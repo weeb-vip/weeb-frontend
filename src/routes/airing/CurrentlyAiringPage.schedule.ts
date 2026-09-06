@@ -8,8 +8,9 @@
  * was wrong for months while it lived inside a 1444-line component where
  * nothing could reach it: the merge dropped episodes, the day bucketing and the
  * calendar counts spelled "which local day is this" three different ways, and
- * none of it had a test. Runes modules cannot be loaded by ts-jest; a `.ts`
- * module can, which is the whole reason for the split.
+ * none of it had a test. Pulled out as a plain module, every rule is callable
+ * from a test with no component and no runtime, which is the whole reason for
+ * the split.
  */
 
 import { formatInTimeZone } from 'date-fns-tz';

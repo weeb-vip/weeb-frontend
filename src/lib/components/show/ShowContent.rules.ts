@@ -3,10 +3,11 @@
  *
  * Everything here used to live as a reactive statement inside
  * `ShowContent.svelte` — which meant none of it could be exercised without
- * mounting 1,778 lines of component. It is deliberately a plain `.ts` module
- * rather than a `.svelte.ts` one so the test suite can import it directly:
- * ts-jest cannot load a runes module, and a rule that has to be re-typed into
- * its own test is a rule that drifts.
+ * mounting 1,778 lines of component. It is a plain `.ts` module rather than a
+ * `.svelte.ts` one because none of it needs runes -- keep `.svelte.ts` for what
+ * actually holds state. (Under the old ts-jest runner a runes module could not
+ * be loaded by a test at all; vitest removes that constraint, but not the
+ * reason to keep the arithmetic stateless.)
  *
  * The bloc (`ShowContent.bloc.svelte.ts`) owns the state and the ports; this
  * owns the arithmetic.

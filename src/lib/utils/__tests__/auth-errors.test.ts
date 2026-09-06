@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { isInvalidCredentialsError, isUnverifiedEmailError } from '$lib/utils/auth-errors';
 
 /**

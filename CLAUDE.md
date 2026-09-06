@@ -10,11 +10,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `yarn start` - Run the built server (`node build/index.js`)
 - `yarn check` - Type-check with `svelte-check`
 - `yarn check:gate` - Ratchet gate: fails if svelte-check errors/warnings exceed the committed baseline in `.svelte-check-baseline` (currently 0/0, so any new diagnostic fails)
-- `yarn test` - Unit tests (Jest + ts-jest, `testEnvironment: node`)
-- `yarn test:e2e` - End-to-end tests (Playwright); `tests/e2e/` is excluded from Jest
+- `yarn test` - Unit and component tests (Vitest, `jsdom`); `yarn test:watch` to re-run on change, `yarn test:coverage` for a v8 report in `coverage/`
+- `yarn test:e2e` - End-to-end tests (Playwright); `tests/e2e/` is outside vitest's `include`, so `yarn test` never picks it up
 - `yarn storybook` - Storybook on port 6006
 
 `packageManager` is yarn 4.13.0, but a `bun.lock` is committed and the Dockerfile builds with Bun. Keep both lockfiles in sync when changing dependencies.
+
+## Testing
+
+Unit and component tests run on **Vitest**, configured in the `test` block of
+`vite.config.ts` rather than a standalone config, so they go through the same
+Vite pipeline the app builds with. That is deliberate: `vite-plugin-svelte`
+compiles `.svelte` components and `.svelte.ts` runes modules, so a bloc can be
+imported into a test directly. Under the previous runner (ts-jest,
+`testEnvironment: node`) neither would load.
+
+- Tests are `src/**/*.test.ts`, beside the module they test. `tests/e2e/` is
+  Playwright's and is outside vitest's `include`.
+- Environment is `jsdom`. A file needing the no-`window` SSR branch opts out
+  with a `@vitest-environment node` docblock.
+- `globals: false` -- every test imports `describe`/`it`/`expect`/`vi` from
+  `vitest`, so `svelte-check` type-checks the same symbols the runner injects.
+- `vitest-setup.ts` registers the `@testing-library/jest-dom` matchers and
+  `@testing-library/svelte`'s between-test cleanup (the latter is not automatic
+  with `globals: false`).
+- Component tests use `@testing-library/svelte` and query by accessible role.
+  `src/lib/components/primitives/Button/Button.test.ts` is the reference.
+- Coverage is `@vitest/coverage-v8` (`yarn test:coverage`). The threshold block
+  is commented out; the target is 80% and it gets enabled once the component
+  suites are written.
+- `resolve.conditions` is set to `['browser']` only when `VITEST` is set --
+  without it components would render through svelte's server export instead of
+  mounting into jsdom.
 
 ## Debug Logging
 

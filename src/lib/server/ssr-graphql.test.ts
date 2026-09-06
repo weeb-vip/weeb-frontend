@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { isNotFoundError } from './ssr-graphql';
 
 /** The shape graphql-request throws for a missing anime, via the federation router. */

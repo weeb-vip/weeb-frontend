@@ -1,4 +1,4 @@
-import { describe, expect, test } from '@jest/globals';
+import { describe, it, test, expect } from 'vitest';
 import { isOutside, type MaybeElement } from '$lib/actions/clickOutside';
 
 /**

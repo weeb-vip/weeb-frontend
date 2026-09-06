@@ -1,15 +1,18 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { MockedFunction } from 'vitest';
 import type { AnimeForNotification, NotificationCallback, CountdownCallback } from './animeNotifications';
 
-// Mock the debug utility
-const mockDebug = {
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  anime: jest.fn(),
-};
+// Mock the debug utility. vi.mock is hoisted above the rest of the module, so
+// the object its factory closes over has to be built inside vi.hoisted() --
+// a plain const would still be in its temporal dead zone when the factory runs.
+const mockDebug = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  anime: vi.fn(),
+}));
 
-jest.mock('$lib/utils/debug', () => ({
+vi.mock('$lib/utils/debug', () => ({
   __esModule: true,
   default: mockDebug,
 }));
@@ -18,7 +21,7 @@ jest.mock('$lib/utils/debug', () => ({
 // Mock Worker class
 class MockWorker {
   private listeners: { [key: string]: ((event: any) => void)[] } = {};
-  public postMessage = jest.fn();
+  public postMessage = vi.fn();
 
   constructor() {
     this.listeners = {
@@ -187,12 +190,12 @@ class TestableAnimeNotificationService {
 describe('AnimeNotificationService', () => {
   let service: TestableAnimeNotificationService;
   let mockWorker: MockWorker;
-  let notificationCallback: jest.MockedFunction<NotificationCallback>;
-  let countdownCallback: jest.MockedFunction<CountdownCallback>;
-  let timingCallback: jest.MockedFunction<(animeId: string, timingData: any) => void>;
+  let notificationCallback: MockedFunction<NotificationCallback>;
+  let countdownCallback: MockedFunction<CountdownCallback>;
+  let timingCallback: MockedFunction<(animeId: string, timingData: any) => void>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Create fresh service instance
     service = new TestableAnimeNotificationService();
@@ -200,9 +203,9 @@ describe('AnimeNotificationService', () => {
     // Create fresh mock callbacks. These are the sole path the worker data
     // reaches the store (animeNotificationStore registers the same callbacks),
     // so asserting on them verifies the store would be updated.
-    notificationCallback = jest.fn();
-    countdownCallback = jest.fn();
-    timingCallback = jest.fn();
+    notificationCallback = vi.fn();
+    countdownCallback = vi.fn();
+    timingCallback = vi.fn();
 
     // Set up service callbacks
     service.setNotificationCallback(notificationCallback);

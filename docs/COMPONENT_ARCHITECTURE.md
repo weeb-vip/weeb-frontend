@@ -101,7 +101,9 @@ it sits at the group root beside the folders rather than inside one of them:
 Both are named for the component and distinguished by an infix, and the infix is
 not optional: `Foo.svelte.ts` would be imported as `'./Foo.svelte'`, which is the
 component. Keep `.svelte.ts` on anything using runes -- they only compile there
--- and use a plain `.ts` for everything else, so ts-jest can import it directly.
+-- and use a plain `.ts` for everything else. Both kinds import cleanly in a
+test: vitest compiles them through `vite-plugin-svelte`, so a `.svelte.ts` bloc
+is imported directly rather than mirrored into the test file.
 
 Only create one where there is something to put in it. A component whose props
 interface is its entire type surface keeps that interface in the `.svelte`; a
@@ -325,13 +327,45 @@ Cover the states that actually differ — empty, loading, error, populated,
 overflowing — not just the happy path. Each story gets a one-line doc comment
 explaining what it is showing.
 
+## Tests
+
+**Vitest**, configured in the `test` block of `vite.config.ts` so tests run
+through the app's own Vite pipeline. That is the whole reason for the runner
+choice: `vite-plugin-svelte` compiles both `.svelte` components and `.svelte.ts`
+runes modules, so a bloc is imported into its test like any other module. The
+previous runner (ts-jest, `testEnvironment: node`) could load neither, and the
+one bloc test in the tree had to keep a hand-copied duplicate of the function it
+was checking.
+
+A test lives beside what it tests, named for it -- `Button.test.ts`,
+`UserProfileWrapper.test.ts` -- and there are two kinds:
+
+- **Logic tests** call exported functions and blocs directly. Most tests are
+  these. A bloc is constructed with stub ports, exactly as a story constructs
+  one, and its getters are read.
+- **Component tests** mount the view with `@testing-library/svelte` and query it
+  by accessible role and name, never by class or test id. Children arrive as a
+  Svelte 5 snippet, so build one with `createRawSnippet`. See
+  `primitives/Button/Button.test.ts`.
+
+Prefer a logic test. Mount the component only for what the DOM decides: what is
+rendered at all, what is focusable, what a click actually calls.
+
+The environment is `jsdom`. A file that needs the SSR path -- code branching on
+`typeof window === 'undefined'` -- opts out with a `@vitest-environment node`
+docblock; `actions/__tests__/anchoredPosition.test.ts` is the example.
+
+Coverage is `@vitest/coverage-v8` over `src/` (`yarn test:coverage`). The
+threshold block in `vite.config.ts` is commented out and the target is 80%; it
+gets turned on once the component suites exist.
+
 ## Gates
 
 All of these must pass before a change lands:
 
 ```bash
 yarn check            # svelte-check: must stay at 0 errors
-yarn test             # jest
+yarn test             # vitest (unit + component); yarn test:watch while working
 yarn build-storybook  # must build clean
 yarn storybook:smoke  # against a running Storybook: must report 0 failing
 ```

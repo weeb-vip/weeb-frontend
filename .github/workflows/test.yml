@@ -38,7 +38,9 @@ jobs:
         run: bun run build
 
       - name: Unit Tests 🚨
-        run: bun run test
+        # test:coverage, not test: it runs the same suite and additionally
+        # writes coverage/, which the next step uploads.
+        run: bun run test:coverage
         
       - name: Upload coverage reports
         if: always()
