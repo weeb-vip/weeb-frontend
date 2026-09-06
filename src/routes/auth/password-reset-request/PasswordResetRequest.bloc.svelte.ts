@@ -1,5 +1,9 @@
 import debug from '$lib/utils/debug';
-import { realPasswordResetRequest, type PasswordResetRequestPort } from '$lib/components/auth/auth-shared';
+import {
+  EMAIL_PATTERN,
+  realPasswordResetRequest,
+  type PasswordResetRequestPort
+} from '$lib/components/auth/auth-shared';
 
 export interface PasswordResetRequestDeps {
   request?: PasswordResetRequestPort;
@@ -70,8 +74,19 @@ export class PasswordResetRequestBloc {
   async submit(): Promise<void> {
     if (this.isDisabled) return;
 
-    if (!this.#username.trim() || !this.#email.trim()) {
+    const username = this.#username.trim();
+    const email = this.#email.trim();
+
+    if (!username || !email) {
       this.#errorMessage = 'Please fill in all fields';
+      return;
+    }
+
+    // The same gate the resend screen puts in front of its port, worded the
+    // same way. Without it a typo with no `@` in it reaches the gateway and
+    // the only feedback is an email that never arrives.
+    if (!EMAIL_PATTERN.test(email)) {
+      this.#errorMessage = 'Please enter a valid email address.';
       return;
     }
 
@@ -79,7 +94,7 @@ export class PasswordResetRequestBloc {
     this.#blocked = true;
 
     try {
-      const result = await this.#request({ username: this.#username, email: this.#email });
+      const result = await this.#request({ username, email });
       if (result) {
         debug.auth('Password reset request successful');
         this.#submitted = true;

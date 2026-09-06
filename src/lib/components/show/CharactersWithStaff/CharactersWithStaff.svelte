@@ -45,11 +45,27 @@
   <EmptyState size="compact" message="No character data available." />
 {:else}
   <div class="chars-root">
+    <!-- `mode="toggle"` rather than ChipGroup's `tabs` default, which is what
+         this rendered as: a real `role="tablist"` of `role="tab"`s.
+         That was a promise the control cannot keep. Tabs name one of several
+         PANELS and reveal the one you pick, so assistive tech announces the move
+         and then expects a `tabpanel` to land in -- and there was none here, nor
+         anywhere in the app. This strip reveals nothing: it narrows ONE grid,
+         in place, and the grid stays the same region whichever chip is on.
+         The buckets are not disjoint panels either -- "All" is a superset of the
+         other three, which is a filter, not a tab set.
+         So the fix is to stop claiming tabs rather than to invent panels for
+         them: `toggle` keeps each chip a real button, marks the active one with
+         `aria-pressed`, and leaves every chip its own tab stop, which is what a
+         reader expects of a filter row. The grid below is described by the
+         group's own name instead of by an `aria-controls` that would have to
+         point at a panel that is not one. -->
     <ChipGroup
       items={bloc.filters.map((option) => ({ value: option.value, label: option.label }))}
       value={bloc.filter}
       onSelect={(value) => bloc.selectFilter(value)}
       variant="pill"
+      mode="toggle"
       ariaLabel="Filter characters by role"
     />
 

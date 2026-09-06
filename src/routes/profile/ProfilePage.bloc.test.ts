@@ -835,24 +835,52 @@ describe('what goes on the airing shelves', () => {
 
 describe('a show whose episode aired minutes ago', () => {
   /*
-    KNOWN BUG, pinned as it behaves today rather than as it should.
-
     The analysis walks the airing shows once to place the next episode, then
     walks the viewer's list again to find recently aired ones. An episode that
-    aired within the show's runtime satisfies both passes, so the same show is
-    pushed onto `recentlyAired` twice -- and both entries key on the same anime
-    id, which is a duplicate key in the shelf's keyed each-block.
+    aired within the show's runtime satisfies both passes, so the same show
+    used to be pushed onto `recentlyAired` twice -- and both entries keyed on
+    the same anime id, which is `each_key_duplicate` in the shelf's keyed
+    each-block (a dev crash, and silent DOM reuse in production). The second
+    pass now fills the slot the first one took rather than adding another.
   */
-  it('appears on the recently-aired shelf twice, under the same key', () => {
+  it('appears on the recently-aired shelf exactly once', () => {
     const bloc = withAiring([show('A', [-5 * MINUTE])]);
 
-    expect(bloc.recentlyAired.map((card) => card.id)).toEqual(['A', 'A']);
-    expect(bloc.recentlyAired[0].key).toBe(bloc.recentlyAired[1].key);
+    expect(bloc.recentlyAired.map((card) => card.id)).toEqual(['A']);
+  });
+
+  it('gives every card on the shelf a distinct key', () => {
+    const bloc = withAiring([
+      show('A', [-5 * MINUTE]),
+      show('B', [-2 * DAY]),
+      show('C', [-10 * MINUTE]),
+    ]);
+
+    const keys = bloc.recentlyAired.map((card) => card.key);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('keeps the just-aired show in its proper place in the ordering', () => {
+    // The surviving entry is the one that names the episode it is about, which
+    // is what the most-recent-first sort reads; keeping the other would sink a
+    // show that aired minutes ago below one that aired days ago.
+    const bloc = withAiring([show('A', [-5 * MINUTE]), show('B', [-2 * DAY])]);
+
+    expect(bloc.recentlyAired.map((card) => card.id)).toEqual(['A', 'B']);
   });
 
   it('does not double a show whose episode aired longer ago than its runtime', () => {
     const bloc = withAiring([show('A', [-3 * HOUR])]);
 
+    expect(bloc.recentlyAired.map((card) => card.id)).toEqual(['A']);
+  });
+
+  it('still lets the same show hold a slot on each shelf', () => {
+    // Airing-soon and recently-aired are different shelves with their own
+    // each-blocks, so a show with a past and a future episode belongs on both.
+    const bloc = withAiring([show('A', [-5 * MINUTE, 2 * DAY])]);
+
+    expect(bloc.airingSoon.map((card) => card.id)).toEqual(['A']);
     expect(bloc.recentlyAired.map((card) => card.id)).toEqual(['A']);
   });
 });

@@ -462,44 +462,101 @@ describe('server-side token refresh', () => {
     });
 
     /**
-     * FINDING (not a failure — this is what the code does today).
-     *
-     * `AuthStorage.getTokensFromCookieString` accepts the legacy `refreshToken`
-     * cookie name as a refresh token, so the hook decides a refresh is needed;
-     * `refreshTokenSSR` only ever reads `refresh_token`, so it bails out before
-     * making a request. The result is a visitor who is reported logged out on
-     * every request, with no request made and nothing cleared — so it never
-     * self-heals. The two readers disagree about which names count.
+     * REGRESSION GUARD. `AuthStorage.getTokensFromCookieString` accepts the
+     * legacy `refreshToken` cookie name as a refresh token, so the hook decides
+     * a refresh is due; `refreshTokenSSR` used to read `refresh_token` alone and
+     * so bailed out before making a request. No request, no error, nothing
+     * cleared — a visitor still holding the legacy cookie was reported logged
+     * out on every request and could never self-heal. Both readers now take
+     * their names from `$lib/utils/auth-cookie-names`, so they cannot drift
+     * apart again.
      */
-    it('gives up without a request when only the legacy refreshToken cookie is present', async () => {
+    it('refreshes off the legacy refreshToken cookie and rewrites the canonical names', async () => {
+      fetchMock.mockResolvedValue(refreshOk('new-access', 'new-refresh'));
       const handle = await loadHandle();
       const event = makeEvent({ path: '/', cookie: 'refreshToken=legacy-value' });
 
       await handle({ event, resolve: makeResolve() } as any);
 
-      expect(fetchMock).not.toHaveBeenCalled();
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(JSON.parse(String(init.body)).variables).toEqual({ token: 'legacy-value' });
+
+      expect(event.locals.auth.isLoggedIn).toBe(true);
+      expect(event.locals.auth.authToken).toBe('new-access');
+
+      // The self-heal: the visitor leaves this request holding the names the
+      // app writes today, so the legacy path is walked once and not again.
+      const written = new Set(event.cookies.sets.map((c: CookieCall) => c.name));
+      for (const name of AUTH_COOKIE_NAMES) {
+        expect(written).toContain(name);
+      }
+    });
+
+    it('prefers the canonical refresh cookie over the legacy one', async () => {
+      fetchMock.mockResolvedValue(refreshOk('new-access'));
+      const handle = await loadHandle();
+      const event = makeEvent({
+        path: '/',
+        cookie: 'refresh_token=canonical; refreshToken=legacy-value'
+      });
+
+      await handle({ event, resolve: makeResolve() } as any);
+
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(JSON.parse(String(init.body)).variables).toEqual({ token: 'canonical' });
+    });
+
+    it('clears everything when the legacy cookie’s refresh token is rejected', async () => {
+      fetchMock.mockResolvedValue(new Response('nope', { status: 401 }));
+      const handle = await loadHandle();
+      const event = makeEvent({ path: '/', cookie: 'refreshToken=revoked-legacy' });
+
+      await handle({ event, resolve: makeResolve() } as any);
+
+      expect(fetchMock).toHaveBeenCalledOnce();
       expect(event.locals.auth.isLoggedIn).toBe(false);
-      expect(event.locals.auth.hasRefreshToken).toBe(true);
-      expect(event.cookies.deletes).toEqual([]);
+      clearedEverything(event);
     });
 
     /**
-     * FINDING (documented, not asserted as correct): after the cookies are
-     * cleared, `locals.auth` still advertises the refresh token that was just
-     * deleted. `hasRefreshToken` is derived from the pre-refresh cookie read and
-     * never reset, so a downstream loader that branches on it will act on a
-     * credential the browser is about to drop.
+     * REGRESSION GUARD. `hasRefreshToken`/`refreshToken` used to be derived from
+     * the pre-refresh cookie read and never reset, so once `clearAuthCookies`
+     * had run on a failed refresh, `locals.auth` still advertised the token that
+     * had just been deleted and a downstream loader would act on a credential
+     * the browser was being told to drop.
      */
-    it('leaves a stale hasRefreshToken on locals after clearing the cookies', async () => {
+    it('forgets the cleared tokens on locals instead of advertising them', async () => {
       fetchMock.mockResolvedValue(new Response('nope', { status: 401 }));
       const handle = await loadHandle();
-      const event = makeEvent({ path: '/', cookie: 'refresh_token=revoked' });
+      const event = makeEvent({
+        path: '/',
+        cookie: `auth_token=${EXPIRED}; refresh_token=revoked`
+      });
 
       await handle({ event, resolve: makeResolve() } as any);
 
       expect(event.cookies.jar.has('refresh_token')).toBe(false);
+      expect(event.locals.auth).toEqual({
+        isLoggedIn: false,
+        authToken: undefined,
+        refreshToken: undefined,
+        hasAuthToken: false,
+        hasRefreshToken: false
+      });
+    });
+
+    it('still reports the tokens a transient failure left in place', async () => {
+      // The other side of the same rule: nothing was deleted, so nothing is
+      // forgotten — a loader can still tell "outage" from "signed out".
+      fetchMock.mockResolvedValue(new Response('bad gateway', { status: 502 }));
+      const handle = await loadHandle();
+      const event = makeEvent({ path: '/', cookie: 'refresh_token=r1' });
+
+      await handle({ event, resolve: makeResolve() } as any);
+
       expect(event.locals.auth.hasRefreshToken).toBe(true);
-      expect(event.locals.auth.refreshToken).toBe('revoked');
+      expect(event.locals.auth.refreshToken).toBe('r1');
     });
   });
 });
@@ -539,18 +596,30 @@ describe('route guards', () => {
   });
 
   /**
-   * FINDING: the guard is a prefix match on the bare string, not a segment
-   * match, so it captures any future route whose path merely starts with
-   * "/profile" — `/profiles`, `/profile-settings`, a public `/profile-of/:user`.
-   * Locking a page down by accident is the safe direction to fail, but it is
-   * still an accident: adding a public route under that prefix would silently
-   * become login-only.
+   * REGRESSION GUARD. The guard used to be a prefix match on the bare string
+   * rather than a segment match, so it captured any route whose path merely
+   * started with "/profile" — `/profiles`, `/profile-settings`, a public
+   * `/profile-of/:user`. Locking a page down by accident is the safe direction
+   * to fail, which is exactly why nobody would have noticed: the first public
+   * route under that prefix would silently have become login-only.
    */
-  it('also guards routes that merely share the /profile prefix', async () => {
+  it.each(['/profiles', '/profile-settings', '/profile-of/someone'])(
+    'does not guard %s, which merely shares the /profile prefix',
+    async (path) => {
+      const handle = await loadHandle();
+      const resolve = makeResolve();
+
+      await handle({ event: makeEvent({ path }), resolve } as any);
+
+      expect(resolve).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('still guards the segment boundary itself', async () => {
     const handle = await loadHandle();
 
     await expectRedirect(
-      handle({ event: makeEvent({ path: '/profiles' }), resolve: makeResolve() } as any),
+      handle({ event: makeEvent({ path: '/profile/anime/watching' }), resolve: makeResolve() } as any),
       '/auth/login'
     );
   });
@@ -753,6 +822,45 @@ describe('page cache', () => {
 
     // Logged out, but the cookie is still on the request, so the render may
     // still differ — it must not be published to the shared cache.
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
+  });
+
+  it('publicly caches a request whose auth cookies were just cleared', async () => {
+    // Once the refresh is rejected and `clearAuthCookies` has run, this render
+    // *is* the anonymous one — there is no session left to personalize it. It
+    // used to be judged by the cookies the request arrived with and handed
+    // `private, no-store`, throwing away a hit it was entitled to.
+    fetchMock.mockResolvedValue(new Response('nope', { status: 401 }));
+    const handle = await loadHandle();
+
+    const response = await handle({
+      event: makeEvent({
+        path: '/',
+        cookie: 'refresh_token=revoked',
+        platform: { cache: makePageCache() }
+      }),
+      resolve: makeResolve()
+    } as any);
+
+    expect(response.headers.get('Cache-Control')).toBe('public, max-age=300, s-maxage=3600');
+  });
+
+  it('keeps a request out of the shared cache while its cookies survive', async () => {
+    // The counterpart: a transient failure leaves the cookies alone, so the
+    // visitor may still be signed in on the next request and this render must
+    // not be published.
+    fetchMock.mockResolvedValue(new Response('bad gateway', { status: 502 }));
+    const handle = await loadHandle();
+
+    const response = await handle({
+      event: makeEvent({
+        path: '/',
+        cookie: 'refresh_token=r1',
+        platform: { cache: makePageCache() }
+      }),
+      resolve: makeResolve()
+    } as any);
+
     expect(response.headers.get('Cache-Control')).toBe('private, no-store');
   });
 

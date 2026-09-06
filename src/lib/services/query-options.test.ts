@@ -958,6 +958,117 @@ describe('refreshTokenSimple', () => {
     await expect(queryOptions.refreshTokenSimple()).resolves.toEqual({ id: 'u1' });
     expect(mockAuthStorage.setTokensForLocalhost).not.toHaveBeenCalled();
   });
+
+  /**
+   * The delayed cookie check a successful refresh leaves behind.
+   *
+   * It exists because the browser applies Set-Cookie after the fetch settles,
+   * so the jar has to be read a beat later to see the update. It logs and does
+   * nothing else -- no retry, no refetch, no scheduling -- and nothing awaits
+   * it, so it cannot affect what a query delivers. What it *could* do was
+   * outlive its environment: a suite triggered a refresh, finished, jsdom was
+   * torn down, and 100ms later an unguarded `document.cookie` threw from inside
+   * a timer, where no `catch` in the app could reach it, failing whichever
+   * suite happened to be running. There is no owner to cancel it on teardown --
+   * this is a module-level fire-and-forget function with no instance and no
+   * lifecycle -- so it is instead self-limiting and unable to throw.
+   */
+  describe('the delayed cookie check', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    // A fresh Response per call: a Body can only be read once, and one of
+    // these tests refreshes repeatedly.
+    const refreshOk = () =>
+      fetchMock.mockImplementation(async () =>
+        gqlOk({ RefreshToken: { id: 'u1', Credentials: { token: 't2' } } })
+      );
+
+    it('logs the jar a beat later, and makes no further request', async () => {
+      vi.useFakeTimers();
+      mockAuthStorage.getRefreshToken.mockReturnValue('r1');
+      refreshOk();
+
+      await queryOptions.refreshTokenSimple();
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(mockDebug.auth).toHaveBeenCalledWith(
+        'Cookies after refresh response:',
+        expect.any(String)
+      );
+      // The point of the guard: this is logging, not retry or refetch
+      // scheduling. One refresh is one request.
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('is a silent no-op when the DOM went away before it fired', async () => {
+      vi.useFakeTimers();
+      mockAuthStorage.getRefreshToken.mockReturnValue('r1');
+      refreshOk();
+
+      await queryOptions.refreshTokenSimple();
+      // Exactly the teardown that flaked the suite: scheduled with a document,
+      // fires without one.
+      vi.stubGlobal('document', undefined);
+
+      // Firing the timer must not throw: `document is not defined` out of a
+      // timer callback is an uncaught exception, not a rejected promise, and it
+      // fails whatever is running at the time rather than the code that caused
+      // it.
+      let thrown: unknown = null;
+      await vi.advanceTimersByTimeAsync(100).catch((error) => {
+        thrown = error;
+      });
+      expect(thrown).toBeNull();
+      expect(mockDebug.auth).not.toHaveBeenCalledWith(
+        'Cookies after refresh response:',
+        expect.anything()
+      );
+    });
+
+    it('schedules nothing at all when there is no DOM to inspect', async () => {
+      vi.useFakeTimers();
+      vi.stubGlobal('document', undefined);
+      mockAuthStorage.getRefreshToken.mockReturnValue('r1');
+      refreshOk();
+
+      // The refresh itself must survive: the pre-refresh jar read sits in the
+      // middle of the promise chain, so an unguarded `document.cookie` there
+      // would have surfaced as a failed refresh rather than a missing log.
+      await expect(queryOptions.refreshTokenSimple()).resolves.toEqual({
+        id: 'u1',
+        Credentials: { token: 't2' }
+      });
+      expect(mockDebug.auth).toHaveBeenCalledWith(
+        'Cookies before refresh response:',
+        '(no document)'
+      );
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('keeps at most one check outstanding across repeated refreshes', async () => {
+      vi.useFakeTimers();
+      mockAuthStorage.getRefreshToken.mockReturnValue('r1');
+      refreshOk();
+
+      await queryOptions.refreshTokenSimple();
+      await queryOptions.refreshTokenSimple();
+      await queryOptions.refreshTokenSimple();
+
+      // Self-limiting: a later refresh cancels the pending check rather than
+      // stacking another one behind it.
+      expect(vi.getTimerCount()).toBe(1);
+
+      await vi.advanceTimersByTimeAsync(100);
+      expect(
+        mockDebug.auth.mock.calls.filter(
+          (call: unknown[]) => call[0] === 'Cookies after refresh response:'
+        )
+      ).toHaveLength(1);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

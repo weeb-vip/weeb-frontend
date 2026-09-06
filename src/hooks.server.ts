@@ -160,6 +160,15 @@ export const handle: Handle = async ({ event, resolve }) => {
       authResult.isLoggedIn = false;
       if (refreshResult.authError) {
         clearAuthCookies(cookies);
+        // The cookies are gone as of this response, so what was read off the
+        // request is no longer a credential — it is a value the browser is
+        // being told to drop. Leaving it on `locals.auth` had downstream
+        // loaders branching on `hasRefreshToken` for a token that no longer
+        // exists, and kept the request out of the shared cache (see
+        // `isAnonymous` below) even though it now renders precisely the
+        // anonymous page. Forget it here, in the one place that knows.
+        authResult.tokens.authToken = undefined;
+        authResult.tokens.refreshToken = undefined;
       }
     }
   } else if (hasAccessToken && authResult.tokens.authToken && isTokenExpired(authResult.tokens.authToken)) {
@@ -176,10 +185,20 @@ export const handle: Handle = async ({ event, resolve }) => {
   };
 
   // Handle authentication for protected routes
+  //
+  // Matched by path segment, not by bare prefix: `/profile` and everything
+  // under `/profile/` are login-only, while `/profiles` or a public
+  // `/profile-of/:user` are not. A prefix match captured those too. Locking a
+  // page down by accident fails in the safe direction, which is exactly why it
+  // would have gone unnoticed — the first public route under this prefix would
+  // simply have redirected everyone to the login page with no warning.
   const protectedRoutes = ['/profile'];
   const authRoutes = ['/auth/login', '/auth/register'];
 
-  if (protectedRoutes.some(route => url.pathname.startsWith(route)) && !authResult.isLoggedIn) {
+  const isUnder = (pathname: string, route: string) =>
+    pathname === route || pathname.startsWith(`${route}/`);
+
+  if (protectedRoutes.some(route => isUnder(url.pathname, route)) && !authResult.isLoggedIn) {
     redirect(302, '/auth/login');
   }
 
@@ -245,7 +264,13 @@ export const handle: Handle = async ({ event, resolve }) => {
     // /anime/<slug> 404 or a /season/<bad> redirect would be handed a public
     // max-age, and this codebase has already had to dig itself out of soft-404s
     // being indexed.
-    const isAnonymous = !authResult.isLoggedIn && !hasRefreshToken && !hasAccessToken;
+    // Read from the post-refresh state, not from the cookie read at the top of
+    // the hook. A request whose refresh was rejected has had its auth cookies
+    // deleted by now and renders the anonymous page; judging it by the cookies
+    // it arrived with would hand it `private, no-store` and throw away the
+    // shared-cache hit it has every right to.
+    const isAnonymous =
+      !authResult.isLoggedIn && !authResult.tokens.refreshToken && !authResult.tokens.authToken;
     if (cachePolicy && response.status === 200) {
       response.headers.set(
         'Cache-Control',

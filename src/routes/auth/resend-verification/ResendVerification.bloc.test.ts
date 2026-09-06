@@ -140,17 +140,31 @@ describe('validation stands in front of the port', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('does NOT trim a pasted address, so surrounding space is a validation error', async () => {
-    // Current behaviour, pinned as-is: the blank check trims but the pattern
-    // check does not, so ` james@gmail.com ` -- which is what pasting from a
-    // mail client gives you -- is rejected as malformed rather than cleaned up.
+  it('trims a pasted address rather than refusing it as malformed', async () => {
+    // The blank check trimmed and the pattern check did not, so
+    // ` james@gmail.com ` -- which is what pasting from a mail client gives
+    // you -- was rejected as a malformed address. It is the same address.
+    silenceLogs();
+
     const leading = await submitWith(' james@gmail.com');
-    expect(leading.bloc.errorMessage).toBe('Please enter a valid email address.');
-    expect(leading.send).not.toHaveBeenCalled();
+    expect(leading.bloc.errorMessage).toBe('');
+    expect(leading.send).toHaveBeenCalledWith('james@gmail.com');
 
     const trailing = await submitWith('james@gmail.com ');
-    expect(trailing.bloc.errorMessage).toBe('Please enter a valid email address.');
-    expect(trailing.send).not.toHaveBeenCalled();
+    expect(trailing.bloc.errorMessage).toBe('');
+    expect(trailing.send).toHaveBeenCalledWith('james@gmail.com');
+
+    const both = await submitWith('\t james@gmail.com \n');
+    expect(both.bloc.errorMessage).toBe('');
+    expect(both.send).toHaveBeenCalledWith('james@gmail.com');
+  });
+
+  it('still refuses an address whose space is in the middle', async () => {
+    // Trimming the ends is a paste artefact; a space inside is a typo.
+    const { bloc, send } = await submitWith(' james @gmail.com ');
+
+    expect(bloc.errorMessage).toBe('Please enter a valid email address.');
+    expect(send).not.toHaveBeenCalled();
   });
 
   it('lets an ordinary address through', async () => {
@@ -225,10 +239,10 @@ describe('the in-flight flag', () => {
     expect(send).toHaveBeenCalledTimes(1);
   });
 
-  it('but shows a failure banner for that refused second submit', async () => {
-    // Pinned as current behaviour, not endorsed: the second submit is correctly
-    // a no-op at the port, yet it words the refusal as an error the user cannot
-    // act on -- and it wipes the success message the first send just produced.
+  it('and says nothing about that refused second submit', async () => {
+    // The second submit is correctly a no-op at the port; it used to word the
+    // refusal as an error the user could not act on, and wipe the success
+    // message the first send was about to produce.
     silenceLogs();
     const gate = deferred<unknown>();
     const { bloc } = harness(() => gate.promise);
@@ -239,7 +253,29 @@ describe('the in-flight flag', () => {
     const second = bloc.submit();
     await second;
 
-    expect(bloc.errorMessage).toBe('Failed to send verification email. Please try again.');
+    expect(bloc.errorMessage).toBe('');
+
+    gate.resolve({});
+    await first;
+
+    // The first send's success is what the screen ends up showing.
+    expect(bloc.successMessage).toBe(
+      'Verification email sent! Please check your inbox and spam folder.'
+    );
+    expect(bloc.errorMessage).toBe('');
+  });
+
+  it('does not clear the field on the refused second submit either', async () => {
+    silenceLogs();
+    const gate = deferred<unknown>();
+    const { bloc } = harness(() => gate.promise);
+    bloc.updateField('username', 'james@gmail.com');
+
+    const first = bloc.submit();
+    await flush();
+    await bloc.submit();
+
+    expect(bloc.username).toBe('james@gmail.com');
 
     gate.resolve({});
     await first;

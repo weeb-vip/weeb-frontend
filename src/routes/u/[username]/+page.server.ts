@@ -1,6 +1,12 @@
 import type { PageServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
-import { makeSSRFetcher, publicAuth, cookieHeaderFrom } from '$lib/server/ssr-graphql';
+import {
+  makeSSRFetcher,
+  publicAuth,
+  cookieHeaderFrom,
+  createSSRGraphQLClient,
+  isNotFoundError
+} from '$lib/server/ssr-graphql';
 import {
   getUserByUsername,
   queryPublicUserAnimes,
@@ -20,14 +26,30 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   const fetcher = makeSSRFetcher(config.graphql_host, cookieHeader);
 
   const username = params.username;
-  const userRes = await fetcher.fetchWithFallback(
-    getUserByUsername,
-    { username },
-    'public user'
-  );
-  const user = (userRes as any)?.userByUsername ?? null;
+
+  // The identity lookup goes through a raw client rather than the fetcher:
+  // fetchWithFallback answers null for every failure, which would make "the
+  // gateway is down" indistinguishable from "no such user" and 404 a live
+  // profile during an outage -- which is what deindexes real pages. Same split
+  // as /people and /series: a reported not-found is a 404, anything else is a
+  // 503 the crawler will come back to. The list fetches below keep the fetcher,
+  // where a null answer really does just mean an empty shelf.
+  let user: any = null;
+  try {
+    const client = createSSRGraphQLClient(config.graphql_host, cookieHeader);
+    const res: any = await client.request(getUserByUsername, { username });
+    user = res?.userByUsername ?? null;
+  } catch (err: any) {
+    if (isNotFoundError(err)) {
+      error(404, 'No such user');
+    }
+    console.error('[SSR] Failed to fetch public user:', err);
+    error(503, 'Unable to load this profile right now');
+  }
+
+  // A successful query with no user is the real 404.
   if (!user) {
-    throw error(404, 'No such user');
+    error(404, 'No such user');
   }
 
   // Usernames resolve case-insensitively, so /u/ThatCat and /u/THATCAT both

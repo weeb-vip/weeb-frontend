@@ -51,11 +51,23 @@ export class ResendVerificationBloc {
   }
 
   async submit(): Promise<void> {
-    if (!this.#username.trim()) {
+    // A second submit while the first is still in flight is the user being
+    // impatient, not the user being wrong. `ResendBloc` already refuses it at
+    // the port, so saying nothing is the whole job -- wording it as a failure
+    // put an error the user could not act on over the send that was about to
+    // succeed, and wiped its success message on the way.
+    if (this.resend.isSending) return;
+
+    // Trimmed before it is judged as well as before it is sent: a pasted
+    // ` james@gmail.com ` is the same address, and refusing it as malformed
+    // told the user their own address was wrong.
+    const username = this.#username.trim();
+
+    if (!username) {
       this.#errorMessage = 'Please enter your email address.';
       return;
     }
-    if (!EMAIL_PATTERN.test(this.#username)) {
+    if (!EMAIL_PATTERN.test(username)) {
       this.#errorMessage = 'Please enter a valid email address.';
       return;
     }
@@ -63,7 +75,7 @@ export class ResendVerificationBloc {
     this.#errorMessage = '';
     this.#successMessage = '';
 
-    const sent = await this.resend.resend(this.#username);
+    const sent = await this.resend.resend(username);
 
     if (sent) {
       debug.success('Verification email resent successfully');

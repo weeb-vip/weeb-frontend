@@ -503,6 +503,25 @@ export const executeWithAutoRefreshSSR = async <T>(
   throw lastError;
 };
 
+/**
+ * The cookie jar, for debug logging only, and never a reason to fail.
+ *
+ * `refreshTokenSimple` is reachable from any caller on any thread of control,
+ * so it cannot assume a DOM: on the server `AuthStorage.getRefreshToken()`
+ * returns null and it bails long before here, but a bare `document.cookie` in
+ * the middle of the promise chain would have turned "no DOM" into a *failed
+ * refresh*, rethrown from the catch below and reported to the caller as an auth
+ * failure. Logging must not be able to do that.
+ */
+const cookieJarForDebug = (): string =>
+  typeof document === 'undefined' ? '(no document)' : document.cookie;
+
+/**
+ * The one pending post-refresh cookie check, so at most one is ever
+ * outstanding. See where it is scheduled for why it is not simply cancelled.
+ */
+let pendingCookieCheck: ReturnType<typeof setTimeout> | null = null;
+
 export const refreshTokenSimple = async (): Promise<SigninResult> => {
   const refreshToken = AuthStorage.getRefreshToken();
   if (!refreshToken) {
@@ -588,8 +607,7 @@ export const refreshTokenSimple = async (): Promise<SigninResult> => {
     console.log("🔄 Token refresh successful - server updated cookies");
 
     // Debug cookie state before and after
-    const cookiesBefore = document.cookie;
-    debug.auth("Cookies before refresh response:", cookiesBefore);
+    debug.auth("Cookies before refresh response:", cookieJarForDebug());
 
     if (response.RefreshToken?.Credentials) {
       debug.auth("Refresh token response received - server manages cookie updates");
@@ -617,19 +635,43 @@ export const refreshTokenSimple = async (): Promise<SigninResult> => {
       // Note: Server should set HttpOnly cookies automatically for auth tokens in production
       // We only manually set cookies for localhost development
 
-      // Check cookies after a brief delay to see if they were updated
-      setTimeout(() => {
-        const cookiesAfter = document.cookie;
-        debug.auth("Cookies after refresh response:", cookiesAfter);
+      // Check cookies after a brief delay to see if they were updated: the
+      // browser applies Set-Cookie after the fetch settles, so reading the jar
+      // synchronously here can miss the very update being logged.
+      //
+      // It does nothing but log. No retry, no refetch, no scheduling — nothing
+      // downstream waits on it and its result is never read, so an exception in
+      // it cannot break a query's delivery. It could still take down whatever
+      // is running when it fires, which is what happened: a suite triggered a
+      // refresh, finished, jsdom was torn down, and 100ms later this touched
+      // `document` in bare node and threw where no `catch` could reach it.
+      //
+      // Cancelled on teardown would be better than guarded, but there is
+      // nothing to cancel it: this is a module-level fire-and-forget function
+      // with no instance, no component and no lifecycle hook that owns it. So
+      // it is made self-limiting instead — at most one is ever outstanding, and
+      // a second refresh cancels the first — and defended twice over: not
+      // scheduled without a DOM, dropped if the DOM went away between being
+      // scheduled and firing, and unable to throw regardless.
+      if (pendingCookieCheck) clearTimeout(pendingCookieCheck);
+      pendingCookieCheck = typeof document === 'undefined' ? null : setTimeout(() => {
+        pendingCookieCheck = null;
+        if (typeof document === 'undefined') return;
 
-        const authTokenAfter = AuthStorage.getAuthToken();
-        const refreshTokenAfter = AuthStorage.getRefreshToken();
-        debug.auth("Token check after refresh:", {
-          authTokenFromCookie: authTokenAfter ? "Present" : "Missing",
-          refreshTokenFromCookie: refreshTokenAfter ? "Present" : "Missing",
-          authTokenLength: authTokenAfter?.length,
-          refreshTokenLength: refreshTokenAfter?.length
-        });
+        try {
+          debug.auth("Cookies after refresh response:", cookieJarForDebug());
+
+          const authTokenAfter = AuthStorage.getAuthToken();
+          const refreshTokenAfter = AuthStorage.getRefreshToken();
+          debug.auth("Token check after refresh:", {
+            authTokenFromCookie: authTokenAfter ? "Present" : "Missing",
+            refreshTokenFromCookie: refreshTokenAfter ? "Present" : "Missing",
+            authTokenLength: authTokenAfter?.length,
+            refreshTokenLength: refreshTokenAfter?.length
+          });
+        } catch (error) {
+          debug.error("Post-refresh cookie check failed (logging only):", error);
+        }
       }, 100);
     }
 

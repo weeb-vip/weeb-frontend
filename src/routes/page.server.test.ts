@@ -195,30 +195,42 @@ describe('the payload handed to the page', () => {
   });
 });
 
-describe('a gateway failure is indistinguishable from an empty homepage', () => {
-  // FINDING, pinned as it stands rather than fixed. fetchWithFallback swallows
-  // every error and answers null, and Promise.allSettled never rejects, so the
-  // catch below it can only fire on a synchronous throw. A total outage
-  // therefore renders as a homepage with nothing on it and ssrError null --
-  // no error banner, no way for the reader to tell.
-  it('reports no error when every shelf answered null', async () => {
+describe('a gateway failure is told apart from an empty homepage', () => {
+  // fetchWithFallback swallows every error and answers null, and
+  // Promise.allSettled never rejects, so the catch inside the loader can only
+  // fire on a synchronous throw. The loader therefore checks the answers: when
+  // nothing at all came back it says so, instead of rendering a homepage with
+  // nothing on it and no explanation.
+  it('reports an error when every shelf answered null', async () => {
     fetchWithFallback.mockResolvedValue(null);
 
     const result = await run(event());
 
-    expect(result.ssrError).toBeNull();
+    expect(result.ssrError).toBe('Failed to load data');
     expect(result.homeData).toBeNull();
   });
 
-  it('reports no error when every request rejected', async () => {
+  it('reports an error when every request rejected', async () => {
     fetchWithFallback.mockRejectedValue(new Error('gateway 502'));
 
-    expect((await run(event())).ssrError).toBeNull();
+    expect((await run(event())).ssrError).toBe('Failed to load data');
   });
 
-  it('only reaches its error message when a request throws synchronously', async () => {
-    // The one path into the catch: the real fetchWithFallback is async and
-    // never does this, which is why the message is unreachable in production.
+  it('stays quiet while any one shelf still answered', async () => {
+    // A single quiet shelf is not an outage: the page still has something to
+    // render, and an error banner over a working homepage is its own bug.
+    fetchWithFallback.mockImplementation(
+      async (_query: unknown, _vars: unknown, description: string) =>
+        description === 'home data' ? { topRatedAnime: [{ id: 'top' }] } : null
+    );
+
+    const result = await run(event());
+
+    expect(result.ssrError).toBeNull();
+    expect(result.homeData).toEqual({ topRatedAnime: [{ id: 'top' }] });
+  });
+
+  it('reports an error when a request throws synchronously', async () => {
     fetchWithFallback.mockImplementation(() => {
       throw new Error('client construction failed');
     });

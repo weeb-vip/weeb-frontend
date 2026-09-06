@@ -49,6 +49,7 @@ import {
   resolveShow,
   scheduleLabel,
   sectionElementId,
+  isThenable,
   sectionScrollTop,
   sectionTabs,
   stickyStackHeight,
@@ -94,8 +95,13 @@ export interface NotifyPort {
   error(message: string): void;
 }
 
-/** Same-page navigation. Used for the section deep link, so a tab is shareable. */
-export type NavigatePort = (href: string) => void;
+/**
+ * Same-page navigation. Used for the section deep link, so a tab is shareable.
+ *
+ * Returns whatever the router hands back -- `goto`'s promise for the real one --
+ * because the section jump has to wait for it. See `selectSection`.
+ */
+export type NavigatePort = (href: string) => unknown;
 
 /**
  * Everything the scroll spy and the sticky stack need from the window and the
@@ -319,7 +325,7 @@ export class ShowContentBloc {
     config = configStore,
     flags = { isEnabled: isFeatureEnabled },
     viewport = browserViewport,
-    navigate = (href) => void goto(href, { replaceState: true, noScroll: true, keepFocus: true }),
+    navigate = (href) => goto(href, { replaceState: true, noScroll: true, keepFocus: true }),
     notify = trackingNotify,
     clock = getCurrentTime,
     imageUrl = getSafeImageUrl,
@@ -591,21 +597,48 @@ export class ShowContentBloc {
   /**
    * Take the reader to a section, and leave the hash behind so the position is
    * shareable. `replaceState` rather than a push: a tab strip is not history.
+   *
+   * The hash goes FIRST and the scroll waits for it. `goto(..., { noScroll })`
+   * does not mean "do not touch the scroll position" -- it means "put it back
+   * where it was", and SvelteKit implements that with a `window.scrollTo(x, y)`
+   * of the position it recorded as the navigation started. Issued after our
+   * own `scrollTo({ behavior: 'smooth' })`, that call cancelled the smooth
+   * scroll outright: the page stopped a few hundred pixels short of the
+   * section, the scroll spy then found that nothing had crossed its threshold
+   * and fell back to `sections[0]`, and the marker snapped back to Synopsis
+   * the instant it had been set here. That is the whole of the reported bug --
+   * the marker never moving, on the click or afterwards.
+   *
+   * Awaiting the navigation puts our scroll after SvelteKit's restore, so the
+   * smooth scroll is the last word and actually lands on the section. A port
+   * that returns nothing (every test stub, and any caller that does not
+   * navigate) still scrolls synchronously.
    */
   selectSection(section: string): void {
     this.#activeSection = section;
+    const settled = this.#navigate(`#${sectionElementId(section)}`);
+    const scroll = () => this.#scrollToSection(section);
+
+    if (isThenable(settled)) void settled.then(scroll, scroll);
+    else scroll();
+  }
+
+  /**
+   * Measured at the moment of the scroll rather than before the navigation:
+   * the sticky header can come and go in between, and the offset it adds is
+   * part of where the section has to land.
+   */
+  #scrollToSection(section: string): void {
     const top = this.#viewport.sectionTop(sectionElementId(section));
-    if (top !== null) {
-      this.#viewport.scrollTo(
-        sectionScrollTop(
-          top,
-          this.#viewport.scrollY(),
-          this.#viewport.cssLength('--weeb-nav-height', 60),
-          this.stickyOffset,
-        ),
-      );
-    }
-    this.#navigate(`#${sectionElementId(section)}`);
+    if (top === null) return;
+    this.#viewport.scrollTo(
+      sectionScrollTop(
+        top,
+        this.#viewport.scrollY(),
+        this.#viewport.cssLength('--weeb-nav-height', 60),
+        this.stickyOffset,
+      ),
+    );
   }
 
   // ── The pinned bars ───────────────────────────────────────

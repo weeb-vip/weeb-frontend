@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForShowPage } from './helpers';
+import { waitForShowPage, forceFeatureFlag } from './helpers';
 
 /**
  * The News section is fed by fields added to getAnimeDetailsByID / getAnimeNewsByID.
@@ -70,35 +70,13 @@ test.describe('legacy show URLs', () => {
 
 test.describe('anime news', () => {
   /**
-   * The section is behind the `anime-news` flag. Tests force it on rather than depending
-   * on PostHog's rollout in whatever environment they run against — otherwise the suite
-   * would pass or fail on flag state rather than on the code under test.
-   *
-   * PostHog is NOT initialised in local dev (no key), so window.posthog is undefined and
-   * isFeatureEnabled returns false for everything. A patch-what-exists approach therefore
-   * has nothing to attach to; this installs a stub when absent and re-patches if the real
-   * SDK loads later and replaces it.
+   * The section is behind the `anime-news` flag. Tests force it on rather than
+   * depending on PostHog's rollout in whatever environment they run against --
+   * otherwise the suite would pass or fail on flag state rather than on the code
+   * under test. See forceFeatureFlag for why the stub's shape matters.
    */
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      const FLAG = 'anime-news';
-      const install = () => {
-        const w = window as any;
-        if (!w.posthog) {
-          w.posthog = { isFeatureEnabled: (key: string) => key === FLAG };
-          return;
-        }
-        if (w.posthog.__flagPatched) return;
-        const original = typeof w.posthog.isFeatureEnabled === 'function'
-          ? w.posthog.isFeatureEnabled.bind(w.posthog)
-          : () => false;
-        w.posthog.isFeatureEnabled = (key: string) => (key === FLAG ? true : original(key));
-        w.posthog.__flagPatched = true;
-      };
-      install();
-      const iv = setInterval(install, 25);
-      setTimeout(() => clearInterval(iv), 10000);
-    });
+    await forceFeatureFlag(page, 'anime-news');
   });
 
   test('the show page renders a News tab and section', async ({ page }) => {
@@ -132,10 +110,9 @@ test.describe('anime news', () => {
     // before you click it.
     expect((await newsChip.innerText()).trim()).toMatch(/\d/);
 
-    // Buttons in a nav, not tabs in a tablist. Scoped to the nav on purpose:
-    // the Characters & Staff role filter on this same page IS still a tablist of
-    // tabs, so widening this would turn a guard on the section nav into a
-    // failing assertion about a different component.
+    // Buttons in a nav, not tabs in a tablist. Still scoped to the nav: this is
+    // a guard on the section nav, and it should keep meaning that even if some
+    // other strip on the page grows tab semantics of its own.
     await expect(nav).not.toHaveAttribute('role', 'tablist');
     await expect(nav.locator('[role="tab"]')).toHaveCount(0);
 
@@ -153,20 +130,17 @@ test.describe('anime news', () => {
   });
 
   /*
-    KNOWN BUG -- marked `fail` so the suite stays honest about it rather than
-    quietly not covering it. Delete the `test.fail()` line when it is fixed; the
-    test will then start failing for being unexpectedly green, which is the
-    reminder.
+    FIXED, and this is the guard.
 
     The section nav's whole job is to say which part of a very long page you are
-    in. Clicking News scrolls there and sets the hash (the test above proves
-    it), but the marker never leaves Synopsis -- not on the click, and not from
-    the scroll-spy afterwards either. So the bar shows the reader as being in a
-    section they have scrolled well past.
+    in. Clicking News set the hash but left the marker on Synopsis, because
+    `goto(..., { noScroll: true })` does not leave the scroll alone -- it puts
+    it back where it was, cancelling the smooth scroll the click had just
+    started. The page stopped short of the section, the scroll spy found that
+    nothing had crossed its threshold and fell back to the first section. The
+    jump now waits for the navigation before it scrolls.
   */
   test('the section nav marks the section you jumped to', async ({ page }) => {
-    test.fail();
-
     await page.goto(ANIME_PATH);
     await waitForShowPage(page);
 
@@ -177,9 +151,10 @@ test.describe('anime news', () => {
     await newsChip.click();
     await expect(page.getByRole('heading', { name: /^News$/ })).toBeInViewport({ timeout: 15000 });
 
-    // Short timeout on purpose: the marker does not move at all, so a long one
-    // only makes every run of the suite wait for a result already known.
-    await expect(newsChip).toHaveAttribute('aria-pressed', 'true', { timeout: 4000 });
+    // The scroll spy runs on every event of the smooth scroll and only agrees
+    // with the click once the page has arrived, so this polls rather than
+    // reading the marker the instant the heading appears.
+    await expect(newsChip).toHaveAttribute('aria-pressed', 'true', { timeout: 15000 });
     await expect(nav.locator('[aria-pressed="true"]')).toHaveCount(1);
   });
 

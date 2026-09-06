@@ -44,6 +44,17 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     ssrError = 'Failed to load data';
   }
 
+  // Nothing at all came back, which is a failure rather than an empty
+  // catalogue. fetchWithFallback swallows every error and answers null, and
+  // Promise.allSettled never rejects, so without this check the catch above can
+  // only fire on a synchronous throw and a total outage renders as a homepage
+  // with nothing on it and no error to explain it. Checked as "nothing
+  // arrived", not "something is missing": one quiet shelf is still a page.
+  // Same rule as loadWorksBrowse.
+  if (!ssrError && !homeData && !currentlyAiringData && !seasonalData && !publishingWorksData) {
+    ssrError = 'Failed to load data';
+  }
+
   const isTokenExpired = fetcher.wasTokenExpired();
   const effectiveAuth = isTokenExpired ? loggedOutAuth() : publicAuth(auth);
 

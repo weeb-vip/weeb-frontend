@@ -154,18 +154,44 @@ describe('config-loader', () => {
       expect(isConfigLoaded()).toBe(true);
     });
 
-    it('never retries after a failed fetch: the rejection is cached for the session', async () => {
-      // FINDING (behaviour, not a crash): `configPromise` is assigned before the
-      // request settles and is never cleared on failure, so one transient blip
-      // on /config.json leaves every later caller with the same rejection until
-      // a full page load. Asserted here so a change to it is a deliberate one.
+    it('retries after a failed fetch instead of caching the rejection', async () => {
+      // `configPromise` is stored before the request settles, so it has to be
+      // cleared when that request fails: otherwise one transient blip on
+      // /config.json hands every later caller the same rejection until a full
+      // page load. The SSR path stores no promise and has always recovered.
       fetchMock.mockRejectedValue(new Error('transient blip'));
       const { ensureConfigLoaded } = await loadModule();
 
       await expect(ensureConfigLoaded()).rejects.toThrow('transient blip');
 
       fetchMock.mockResolvedValue(jsonResponse(CONFIG));
-      await expect(ensureConfigLoaded()).rejects.toThrow('transient blip');
+      await expect(ensureConfigLoaded()).resolves.toEqual(CONFIG);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('retries after a non-2xx answer too, not just a rejected request', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse(null, false, 503));
+      const { ensureConfigLoaded, isConfigLoaded } = await loadModule();
+
+      await expect(ensureConfigLoaded()).rejects.toThrow('Failed to fetch config: 503');
+      expect(isConfigLoaded()).toBe(false);
+
+      fetchMock.mockResolvedValueOnce(jsonResponse(CONFIG));
+      await expect(ensureConfigLoaded()).resolves.toEqual(CONFIG);
+    });
+
+    it('still shares one failing request between concurrent callers', async () => {
+      // Retrying must not mean every waiter fires its own request: callers
+      // already in flight share the one that failed, and only a caller arriving
+      // afterwards starts a new one.
+      fetchMock.mockRejectedValue(new Error('offline'));
+      const { ensureConfigLoaded } = await loadModule();
+
+      const a = ensureConfigLoaded();
+      const b = ensureConfigLoaded();
+
+      await expect(a).rejects.toThrow('offline');
+      await expect(b).rejects.toThrow('offline');
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
   });

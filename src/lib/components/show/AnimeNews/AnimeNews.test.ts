@@ -314,26 +314,43 @@ describe('AnimeNews', () => {
   });
 
   /**
-   * A11y FINDING, not fixed here. The headline is an `<h4>` while its enclosing
-   * `ShowSection` emits an `<h2>` -- the outline jumps h2 -> h4 with no h3
-   * between, and the month divider that groups the entries is a plain `<div>`
-   * rather than the heading it reads as. Both are source changes (AnimeNews
-   * would need the level passed in, or the dividers promoted), so this is
-   * skipped rather than made to pass.
-   *
-   * Reproduce: render `ShowSection` with heading "News" around `AnimeNews` with
-   * one entry, and read the heading levels: [2, 4].
+   * The headline used to be a hardcoded `<h4>` while its enclosing
+   * `ShowSection` emits an `<h2>`, so the outline read h2 -> h4 and skipped a
+   * level, which breaks heading navigation. The level is now the caller's,
+   * defaulting to the show page's nesting.
    */
-  it.skip('nests its headlines one level under the section heading', () => {
+  it('nests its headlines one level under the section heading', () => {
     render(AnimeNews, { props: { news: [item()] } });
 
     expect(screen.getByRole('heading', { name: /Season 2 confirmed/ }).tagName).toBe('H3');
   });
 
-  it('renders the headline as a heading, at the level it currently uses', () => {
-    render(AnimeNews, { props: { news: [item()] } });
+  it('takes the level from the page when the rail is nested differently', () => {
+    // The all-news page's rail sits straight under its <h1>.
+    render(AnimeNews, { props: { news: [item()], headingLevel: 2 } });
 
-    // Asserted as-is so the finding above is visible from the passing suite too.
-    expect(screen.getByRole('heading', { name: /Season 2 confirmed/ }).tagName).toBe('H4');
+    expect(screen.getByRole('heading', { name: /Season 2 confirmed/ })).toHaveProperty(
+      'tagName',
+      'H2'
+    );
+  });
+
+  it('is a heading at whatever level, so the outline never loses the headline', () => {
+    for (const [headingLevel, tag] of [[2, 'H2'], [3, 'H3'], [4, 'H4']] as const) {
+      const { unmount } = render(AnimeNews, { props: { news: [item()], headingLevel } });
+
+      expect(screen.getByRole('heading', { name: /Season 2 confirmed/ }).tagName).toBe(tag);
+      unmount();
+    }
+  });
+
+  it('keeps the headline styling on the class, so the level carries no visual weight', () => {
+    // The tag change must not shrink the headline: `.title` owns the size and
+    // the weight, and swapping h4 for h3 must not move that onto the element.
+    const { container } = render(AnimeNews, { props: { news: [item()] } });
+
+    const heading = screen.getByRole('heading', { name: /Season 2 confirmed/ });
+    expect(heading).toHaveClass('title');
+    expect(container.querySelector('h3.title')).toBe(heading);
   });
 });

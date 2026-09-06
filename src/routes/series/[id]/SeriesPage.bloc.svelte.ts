@@ -180,8 +180,13 @@ export class SeriesPageBloc {
     return this.#groups;
   }
 
+  /**
+   * The numbered seasons only. `startsWith('s')` also matched 'specials', which
+   * counted TheTVDB's season 0 as a season of the show and reported "2 entries
+   * across 2 seasons" for one season plus its specials.
+   */
   get seasonCount(): number {
-    return this.#groups.filter((group) => group.key.startsWith('s')).length;
+    return this.#groups.filter((group) => /^s\d+$/.test(group.key)).length;
   }
 
   get summary(): string {

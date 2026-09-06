@@ -1,4 +1,5 @@
 import { test, expect, devices } from '@playwright/test';
+import { forceFeatureFlag } from './helpers';
 
 // Same anime as anime-news.spec.ts — hardcoded so the overflow check runs against a
 // show that actually has news and episodes, which is what makes the layout dense.
@@ -67,28 +68,10 @@ test.describe('Mobile Experience', () => {
 
     await page.setViewportSize({ width: 320, height: 800 });
 
-    // Force the `anime-news` flag on, the same way anime-news.spec.ts does. Without it
-    // the news section may not render at all in some environments, and a page with no
-    // content trivially "passes" an overflow check.
-    await page.addInitScript(() => {
-      const FLAG = 'anime-news';
-      const install = () => {
-        const w = window as any;
-        if (!w.posthog) {
-          w.posthog = { isFeatureEnabled: (key: string) => key === FLAG };
-          return;
-        }
-        if (w.posthog.__flagPatched) return;
-        const original = typeof w.posthog.isFeatureEnabled === 'function'
-          ? w.posthog.isFeatureEnabled.bind(w.posthog)
-          : () => false;
-        w.posthog.isFeatureEnabled = (key: string) => (key === FLAG ? true : original(key));
-        w.posthog.__flagPatched = true;
-      };
-      install();
-      const iv = setInterval(install, 25);
-      setTimeout(() => clearInterval(iv), 10000);
-    });
+    // Force the `anime-news` flag on. Without it the news section may not render
+    // at all in some environments, and a page with no content trivially "passes"
+    // an overflow check.
+    await forceFeatureFlag(page, 'anime-news');
 
     for (const path of paths) {
       await page.goto(path);

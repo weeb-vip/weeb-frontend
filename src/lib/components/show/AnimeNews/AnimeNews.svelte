@@ -20,14 +20,30 @@
     limit = null,
     /** Where "View all" points. Omitted (on the all-news page itself) hides the link. */
     viewAllHref = null,
+    /**
+     * The heading level each headline takes in the page outline.
+     *
+     * The rail does not know what it is nested under, and a heading level is a
+     * fact about the page, not about the component -- so it is passed in. The
+     * default is 3, one level under the `<h2>` `ShowSection` emits, which is
+     * where this rail is used on the show page; these were `<h4>` regardless,
+     * so that outline read h2 -> h4 and skipped a level. The all-news page,
+     * whose rail sits directly under its `<h1>`, passes 2.
+     *
+     * The look does NOT come from the tag: `.title` sets the size and weight
+     * itself, so changing the level changes the outline and nothing on screen.
+     */
+    headingLevel = 3,
   }: {
     news?: any[];
     limit?: number | null;
     viewAllHref?: string | null;
+    headingLevel?: 2 | 3 | 4;
   } = $props();
 
   const view = $derived(newsRailView(news, limit));
   const groups = $derived(view.groups);
+  const headingTag = $derived(`h${headingLevel}` as 'h2' | 'h3' | 'h4');
 </script>
 
 {#if groups.length}
@@ -41,7 +57,7 @@
              Now the headline is the link to the article and each reference is its own
              link; the row keeps its hover treatment through :focus-within / :hover. -->
         <article class="row" style="--dot: {colorFor(item.category)}">
-          <h4 class="title">
+          <svelte:element this={headingTag} class="title">
             {#if item.sourceUrl}
               <a class="title-link" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">
                 {item.title}
@@ -50,7 +66,7 @@
             {:else}
               {item.title}
             {/if}
-          </h4>
+          </svelte:element>
           <span class="date">{dayLabel(item.publishedDate)}</span>
 
           {#if item.summary}

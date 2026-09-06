@@ -75,7 +75,14 @@ export function animeListConfig(
       const anime = entry?.anime;
       const title = getAnimeTitle(anime, titleLanguage());
       const rating = anime?.rating;
-      const score = rating && rating !== 'N/A' ? parseFloat(rating) : null;
+      // Guarded ONCE, here, rather than at each of the two places that read it.
+      // The row used to re-check `Number.isFinite` while the card was handed the
+      // raw `parseFloat` result, so a rating that is a non-empty string which
+      // does not parse -- MyAnimeList's content ratings, "R - 17+ (violence)",
+      // are exactly that shape -- left the row scoreless while the card drew a
+      // chip reading "NaN". Absent means null, everywhere.
+      const parsed = rating && rating !== 'N/A' ? parseFloat(rating) : null;
+      const score = parsed !== null && Number.isFinite(parsed) ? parsed : null;
       return {
         key: String(entry?.id ?? anime?.id ?? title),
         href: animeHref(anime),
@@ -85,7 +92,7 @@ export function animeListConfig(
         // rendered nothing.
         image: GetImageFromAnime(anime),
         imagePath: 'posters',
-        score: score != null && Number.isFinite(score) ? score : null,
+        score,
         typeBadge: anime?.type ?? '',
         status: entry?.status ?? null,
         progress: {

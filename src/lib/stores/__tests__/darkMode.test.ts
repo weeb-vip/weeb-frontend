@@ -329,16 +329,13 @@ describe('useSystemTheme', () => {
   });
 
   /*
-   * LEAK (reported, not worked around): the listener `initializeTheme()`
-   * registers when no preference is saved is never removed — there is no
-   * teardown method on the store, and `useSystemTheme()` only removes the
-   * handler it registered itself. In a browser the store lives as long as the
-   * document, so this leaks one handler rather than growing without bound; but
-   * it does mean the system listener keeps writing the `dark` class after the
-   * user has explicitly chosen a theme. Un-skip when the store exposes a
-   * teardown (or `setDarkMode`/`toggleDarkMode` detach the system listener).
+   * The listener `initializeTheme()` registers when no preference is saved
+   * used to outlive the choice that replaced it: nothing removed it, so the
+   * next OS change wrote the `dark` class back over whatever the user had
+   * explicitly picked. Every explicit choice now detaches it — and going back
+   * to "system" reattaches it.
    */
-  it.skip('stops following the system once the user picks a theme explicitly', async () => {
+  it('stops following the system once the user picks a theme explicitly', async () => {
     const media = stubMatchMedia(false);
     const store = await loadStore();
     store.initializeTheme();
@@ -349,16 +346,75 @@ describe('useSystemTheme', () => {
     expect(get(store).isDarkMode).toBe(false);
   });
 
-  it('currently keeps following the system after an explicit choice (documents the leak above)', async () => {
+  it('detaches the system listener on an explicit choice', async () => {
+    const media = stubMatchMedia(false);
+    const store = await loadStore();
+    store.initializeTheme();
+    expect(media.listeners()).toHaveLength(1);
+
+    store.setDarkMode(false);
+
+    expect(media.listeners()).toHaveLength(0);
+    // The class and the meta tag stay where the choice put them.
+    expect(isDarkClassOn()).toBe(false);
+    expect(themeColor()).toBe(LIGHT);
+  });
+
+  it('detaches it for a toggle too, not just setDarkMode', async () => {
     const media = stubMatchMedia(false);
     const store = await loadStore();
     store.initializeTheme();
 
-    store.setDarkMode(false);
-    expect(media.listeners()).toHaveLength(1);
-    media.emit(true);
+    store.toggleDarkMode();
 
     expect(get(store).isDarkMode).toBe(true);
+    expect(media.listeners()).toHaveLength(0);
+
+    media.emit(false);
+    expect(get(store).isDarkMode).toBe(true);
+    expect(isDarkClassOn()).toBe(true);
+  });
+
+  it('follows the system again when the user goes back to system', async () => {
+    const media = stubMatchMedia(false);
+    const store = await loadStore();
+    store.initializeTheme();
+
+    store.setDarkMode(true);
+    expect(media.listeners()).toHaveLength(0);
+
+    store.useSystemTheme();
+
+    expect(media.listeners()).toHaveLength(1);
+    expect(get(store).isDarkMode).toBe(false);
+
+    media.emit(true);
+    expect(get(store).isDarkMode).toBe(true);
+    expect(isDarkClassOn()).toBe(true);
+    expect(themeColor()).toBe(DARK);
+  });
+
+  it('attaches no listener at all when initialising over a saved preference', async () => {
+    const media = stubMatchMedia(true);
+    localStorage.setItem('darkMode', 'false');
+    const store = await loadStore();
+
+    store.initializeTheme();
+
+    expect(media.listeners()).toHaveLength(0);
+    media.emit(true);
+    expect(get(store).isDarkMode).toBe(false);
+  });
+
+  it('exposes a teardown that detaches the system listener', async () => {
+    const media = stubMatchMedia(false);
+    const store = await loadStore();
+    store.initializeTheme();
+    expect(media.listeners()).toHaveLength(1);
+
+    store.dispose();
+
+    expect(media.listeners()).toHaveLength(0);
   });
 });
 

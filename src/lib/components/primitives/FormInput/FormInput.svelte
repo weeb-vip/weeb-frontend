@@ -43,6 +43,16 @@
     isPasswordVisible = !isPasswordVisible;
   }
 
+  /**
+   * The toggle's accessible name. Its only content is a decorative icon, so
+   * without this it announces as "button" and there is no non-visual way to
+   * tell what it does. It names the ACTION -- the state the press moves to --
+   * rather than the current state, which is the convention for a button (an
+   * `aria-pressed` toggle would name the state instead), and it flips with
+   * `isPasswordVisible` so it never describes the wrong direction.
+   */
+  const passwordToggleLabel = $derived(isPasswordVisible ? 'Hide password' : 'Show password');
+
   function handleInput(event: Event) {
     const target = event.target as HTMLInputElement;
     value = target.value;
@@ -94,6 +104,8 @@
         type="button"
         class="weeb-password-toggle"
         onclick={togglePasswordVisibility}
+        aria-label={passwordToggleLabel}
+        title={passwordToggleLabel}
         tabindex="-1"
       >
         <Fa icon={isPasswordVisible ? faEyeSlash : faEye} />

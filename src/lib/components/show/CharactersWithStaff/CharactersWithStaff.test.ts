@@ -320,7 +320,9 @@ describe('CharactersWithStaff', () => {
 
       expect(container.querySelector('.chars-spinner')).toBeInTheDocument();
       expect(screen.queryByText('No character data available.')).not.toBeInTheDocument();
-      expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('group', { name: 'Filter characters by role' })
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -388,7 +390,9 @@ describe('CharactersWithStaff', () => {
       renderCast([]);
 
       expect(screen.getByText('No character data available.')).toBeInTheDocument();
-      expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('group', { name: 'Filter characters by role' })
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -418,35 +422,32 @@ describe('CharactersWithStaff', () => {
     it('offers every bucket, opening on "All"', () => {
       renderCast();
 
-      const strip = screen.getByRole('tablist', { name: 'Filter characters by role' });
-      expect(within(strip).getAllByRole('tab').map((tab) => tab.textContent?.trim())).toEqual([
-        'All',
-        'Main',
-        'Supporting',
-        'Minor'
-      ]);
-      expect(screen.getByRole('tab', { name: 'All' })).toHaveAttribute('aria-selected', 'true');
+      const strip = screen.getByRole('group', { name: 'Filter characters by role' });
+      expect(
+        within(strip).getAllByRole('button').map((chip) => chip.textContent?.trim())
+      ).toEqual(['All', 'Main', 'Supporting', 'Minor']);
+      expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
     });
 
     it('narrows the grid to the chosen bucket', async () => {
       const { container } = renderCast();
 
-      await userEvent.click(screen.getByRole('tab', { name: 'Main' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Main' }));
 
       await waitFor(() => {
         expect(
           Array.from(container.querySelectorAll('.char-name')).map((node) => node.textContent)
         ).toEqual(['Adam', 'Nia']);
       });
-      expect(screen.getByRole('tab', { name: 'Main' })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByRole('button', { name: 'Main' })).toHaveAttribute('aria-pressed', 'true');
     });
 
     it('puts everything back when "All" is chosen again', async () => {
       const { container } = renderCast();
-      await userEvent.click(screen.getByRole('tab', { name: 'Minor' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Minor' }));
       await waitFor(() => expect(container.querySelectorAll('.char-name')).toHaveLength(1));
 
-      await userEvent.click(screen.getByRole('tab', { name: 'All' }));
+      await userEvent.click(screen.getByRole('button', { name: 'All' }));
 
       await waitFor(() => expect(container.querySelectorAll('.char-name')).toHaveLength(4));
     });
@@ -454,61 +455,78 @@ describe('CharactersWithStaff', () => {
     it('says the filter is empty -- not that the show has no cast -- and offers the way back', async () => {
       const { container } = renderCast([character('Zoe', 'Supporting')]);
 
-      await userEvent.click(screen.getByRole('tab', { name: 'Main' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Main' }));
 
       expect(await screen.findByText('No characters found for this filter.')).toBeInTheDocument();
       // The strip stays: this is a narrowing, not an absence.
-      expect(screen.getByRole('tablist')).toBeInTheDocument();
+      expect(screen.getByRole('group', { name: 'Filter characters by role' })).toBeInTheDocument();
       expect(container.querySelectorAll('.char-name')).toHaveLength(0);
     });
 
     it('undoes the filter from the empty state’s own control', async () => {
       const { container } = renderCast([character('Zoe', 'Supporting')]);
-      await userEvent.click(screen.getByRole('tab', { name: 'Main' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Main' }));
       await screen.findByText('No characters found for this filter.');
 
       await userEvent.click(screen.getByRole('button', { name: 'Show all' }));
 
       await waitFor(() => expect(container.querySelectorAll('.char-name')).toHaveLength(1));
-      expect(screen.getByRole('tab', { name: 'All' })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
     });
 
     /**
-     * KNOWN A11Y FINDING, asserted as-is rather than fixed.
+     * The strip used to render `ChipGroup`'s `mode="tabs"` default -- a real
+     * `role="tablist"` of `role="tab"`s -- with no `role="tabpanel"` here or
+     * anywhere in the app. Assistive tech was told it had moved to a tab and
+     * then told nothing about what appeared.
      *
-     * `ChipGroup` defaults to `mode="tabs"`, so this strip renders a real
-     * `role="tablist"` of `role="tab"`s -- but there is no `role="tabpanel"`
-     * anywhere in the codebase, and none here: the grid below is a plain `div`
-     * with no `id`, so the tabs have nothing to point `aria-controls` at and no
-     * panel announces itself when the selection changes. A screen reader is told
-     * it moved to a tab and then told nothing about what appeared.
-     *
-     * The strip does not reveal panels -- it filters one list in place -- so the
-     * correct shape is almost certainly `mode="toggle"` with `aria-pressed`, the
-     * same call `ChipGroup.test.ts` documents for the season strips. That is a
-     * change to application source and is out of scope here; the test below pins
-     * what ships today, and the skipped one states what it should be.
+     * Of the two honest fixes -- own a tabpanel, or stop claiming tabs -- this
+     * is the second, because the control does not behave like tabs: it narrows
+     * ONE grid in place rather than swapping between panels, and its buckets
+     * overlap ("All" contains the other three). It is a filter, so it is a
+     * group of pressed buttons.
      */
-    it('renders a tablist whose tabs control no panel -- today’s shape', () => {
+    it('should either own a tabpanel or not claim to be tabs at all', () => {
       renderCast();
 
-      expect(screen.getByRole('tablist')).toBeInTheDocument();
+      // Nothing claims to be tabs, so nothing has to own a panel.
+      expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+      expect(screen.queryAllByRole('tab')).toHaveLength(0);
       expect(screen.queryAllByRole('tabpanel')).toHaveLength(0);
-      for (const tab of screen.getAllByRole('tab')) {
-        expect(tab).not.toHaveAttribute('aria-controls');
+
+      // What it is instead: a named group of buttons, exactly one pressed.
+      const strip = screen.getByRole('group', { name: 'Filter characters by role' });
+      const chips = within(strip).getAllByRole('button');
+      expect(chips.filter((chip) => chip.getAttribute('aria-pressed') === 'true')).toHaveLength(1);
+      for (const chip of chips) {
+        expect(chip).toHaveAttribute('aria-pressed');
+        expect(chip).not.toHaveAttribute('aria-controls');
       }
     });
 
-    it.skip('should either own a tabpanel or not claim to be tabs at all', () => {
-      // Either of these is correct; neither holds today. Un-skip whichever the
-      // fix takes.
+    it('leaves every chip its own tab stop -- a filter row is not a roving tablist', () => {
       renderCast();
 
-      const grid = screen.getByRole('tabpanel');
-      expect(screen.getByRole('tab', { name: 'All' })).toHaveAttribute(
-        'aria-controls',
-        grid.id
+      const strip = screen.getByRole('group', { name: 'Filter characters by role' });
+      for (const chip of within(strip).getAllByRole('button')) {
+        expect(chip).not.toHaveAttribute('tabindex');
+      }
+    });
+
+    it('moves the pressed marker with the selection, leaving only one on', async () => {
+      renderCast();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Supporting' }));
+
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Supporting' })).toHaveAttribute(
+          'aria-pressed',
+          'true'
+        )
       );
+      for (const name of ['All', 'Main', 'Minor']) {
+        expect(screen.getByRole('button', { name })).toHaveAttribute('aria-pressed', 'false');
+      }
     });
   });
 

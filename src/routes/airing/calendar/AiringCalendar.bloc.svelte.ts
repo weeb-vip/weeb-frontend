@@ -21,6 +21,7 @@ import { fetchCurrentlyAiringWithDatesAndEpisodes } from '$lib/services/query-op
 import { createQueryClient, getQueryClient } from '$lib/services/query-client';
 import {
   groupShowsByDay,
+  isoDay,
   isoDayInZone,
   type AiringShow,
 } from '../CurrentlyAiringPage.schedule';
@@ -209,11 +210,23 @@ export class AiringCalendarBloc {
     groupShowsByDay(this.#query.current.data?.currentlyAiring ?? [], this.#zone),
   );
 
-  /** Every cell in the visible range, with its shows already attached. */
+  /**
+   * Every cell in the visible range, with its shows already attached.
+   *
+   * The grid walks host-local days and `dayNumber`/`weekdayShort` print that
+   * same local date, so the cell's key has to be that date too -- `isoDay`, not
+   * `isoDayInZone`. Keying the cell in the chosen zone instead put every cell's
+   * `iso` a day away from the number printed on it whenever the zone was behind
+   * the host, which the app never saw only because it always passes the host's
+   * own zone. The entries are still bucketed in the zone (an episode's instant
+   * decides which calendar day it belongs to) and `isToday` still asks the zone
+   * what day it is now; both are then compared against a day label, which is
+   * what a calendar cell is.
+   */
   readonly cells: CalendarCell[] = $derived.by(() => {
     const todayIso = isoDayInZone(this.#clock(), this.#zone);
     return eachDayOfInterval({ start: this.rangeStart, end: this.rangeEnd }).map((date) => {
-      const iso = isoDayInZone(date, this.#zone);
+      const iso = isoDay(date);
       return {
         iso,
         date,

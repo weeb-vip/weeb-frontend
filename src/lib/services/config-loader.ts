@@ -135,6 +135,16 @@ async function initializeConfigClient(): Promise<IConfig> {
           console.log('[Client] Config loaded successfully');
         }
         return config;
+      })
+      .catch((error) => {
+        // The promise is stored before the request settles, so without this a
+        // single transient blip on /config.json would hand every later caller
+        // the same rejection until a full page load. Clearing it lets the next
+        // caller start a fresh request, which is what the SSR path (which
+        // stores no promise) already does. Runs after the assignment below,
+        // since a catch callback is always a later tick.
+        configPromise = null;
+        throw error;
       });
   }
 

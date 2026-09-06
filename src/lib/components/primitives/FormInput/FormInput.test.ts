@@ -120,24 +120,48 @@ describe('FormInput', () => {
     });
 
     /**
-     * A11y GAP -- currently failing, left skipped rather than fixed, because
-     * this suite does not edit application source.
-     *
-     * The toggle is a <button> whose only content is a decorative FontAwesome
-     * SVG and which carries no `aria-label`, so it has no accessible name at
-     * all. It is `tabindex="-1"`, so a keyboard user cannot reach it, but a
-     * screen-reader user browsing the form still lands on an unnamed button --
-     * and there is then no non-visual way to reveal the password.
-     *
-     * Un-skip once FormInput.svelte gives it a name (e.g.
-     * `aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}`).
+     * The toggle's only content is a decorative FontAwesome SVG, so without an
+     * `aria-label` it announced as a bare "button" and there was no non-visual
+     * way to tell what it did -- let alone to reveal the password.
      */
-    it.skip('names itself for a screen reader', () => {
+    it('names itself for a screen reader', () => {
       render(FormInput, {
         props: { ...base, id: 'pw', name: 'pw', label: 'Password', type: 'password', showPasswordToggle: true }
       });
 
       expect(screen.getByRole('button', { name: /password/i })).toBeInTheDocument();
+    });
+
+    it('names the state the press moves to, not the state it is in', () => {
+      render(FormInput, {
+        props: { ...base, id: 'pw', name: 'pw', label: 'Password', type: 'password', showPasswordToggle: true }
+      });
+
+      // Hidden to begin with, so the press ahead is "show".
+      expect(screen.getByRole('button', { name: 'Show password' })).toBeInTheDocument();
+    });
+
+    it('keeps its name honest once the password is showing', async () => {
+      render(FormInput, {
+        props: { ...base, id: 'pw', name: 'pw', label: 'Password', type: 'password', showPasswordToggle: true }
+      });
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show password' }));
+
+      // A name that still said "Show password" over a visible password would be
+      // worse than none: it would describe the opposite of what the press does.
+      expect(screen.getByRole('button', { name: 'Hide password' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Show password' })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Hide password' }));
+
+      expect(screen.getByRole('button', { name: 'Show password' })).toBeInTheDocument();
+    });
+
+    it('draws no toggle at all when the field does not ask for one', () => {
+      render(FormInput, { props: { ...base, id: 'pw', name: 'pw', label: 'Password', type: 'password' } });
+
+      expect(screen.queryByRole('button', { name: /password/i })).not.toBeInTheDocument();
     });
   });
 

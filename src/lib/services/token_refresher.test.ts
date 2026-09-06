@@ -384,12 +384,11 @@ describe('TokenRefresher', () => {
       refresher.cancel();
     });
 
-    it('has no in-flight de-duplication: two overlapping triggers make two calls', async () => {
-      // Documented behaviour, not an endorsement. Nothing in the class tracks a
-      // pending refresh, so two callers that both find the token expired each
-      // start their own request. It is tolerable only because the sole
-      // scheduled caller is the single timer; a second *manual* start() while a
-      // refresh is in flight really does hit the endpoint twice.
+    it('de-duplicates overlapping triggers onto the one in-flight refresh', async () => {
+      // A second trigger arriving while the first request is still open used to
+      // send its own. Wasted at best, and a rotation race at worst: two
+      // refreshes against a rotating refresh token, where the response that
+      // lands second may already have been invalidated by the first.
       const TokenRefresher = await loadTokenRefresher();
       let release: (value: SigninResult) => void = () => {};
       const pending = new Promise<SigninResult>((resolve) => {
@@ -402,10 +401,70 @@ describe('TokenRefresher', () => {
       refresher.start(tokenExpiringInMs(-1));
       await vi.advanceTimersByTimeAsync(0);
 
-      expect(refresh).toHaveBeenCalledTimes(2);
+      expect(refresh).toHaveBeenCalledTimes(1);
 
+      // The joined caller gets the real outcome, not a no-op: the store is
+      // marked logged in exactly once, when the single request lands.
       release(credentials(tokenExpiringInMs(60 * MINUTE)));
       await vi.advanceTimersByTimeAsync(0);
+      expect(mockLoggedInStore.setLoggedIn).toHaveBeenCalledTimes(1);
+
+      refresher.cancel();
+    });
+
+    it('releases the in-flight slot so the next trigger refreshes for real', async () => {
+      // De-duplication must not become a permanent lock: once a refresh has
+      // settled, a later trigger has to reach the endpoint again.
+      const TokenRefresher = await loadTokenRefresher();
+      const refresh = vi.fn(async () => credentials(tokenExpiringInMs(60 * MINUTE)));
+      const refresher = TokenRefresher.getInstance(refresh, 5 * MINUTE);
+
+      refresher.start(tokenExpiringInMs(-1));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(refresh).toHaveBeenCalledTimes(1);
+
+      refresher.start(tokenExpiringInMs(-1));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(refresh).toHaveBeenCalledTimes(2);
+
+      refresher.cancel();
+    });
+
+    it('releases the slot after a failed refresh too, so a retry is still possible', async () => {
+      const TokenRefresher = await loadTokenRefresher();
+      const refresh = vi
+        .fn<() => Promise<SigninResult>>()
+        .mockRejectedValueOnce(new Error('network down'))
+        .mockResolvedValue(credentials(tokenExpiringInMs(60 * MINUTE)));
+      const refresher = TokenRefresher.getInstance(refresh, 5 * MINUTE);
+
+      refresher.start(tokenExpiringInMs(-1));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(refresh).toHaveBeenCalledTimes(1);
+
+      refresher.start(tokenExpiringInMs(-1));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(refresh).toHaveBeenCalledTimes(2);
+      expect(mockLoggedInStore.setLoggedIn).toHaveBeenCalledTimes(1);
+
+      refresher.cancel();
+    });
+
+    it('lets a refreshed-but-already-stale token refresh again immediately', async () => {
+      // The slot is released before the reschedule, so a server that hands back
+      // a token already inside the refresh window does not deadlock the
+      // refresher against the call that just returned it.
+      const TokenRefresher = await loadTokenRefresher();
+      const refresh = vi
+        .fn<() => Promise<SigninResult>>()
+        .mockResolvedValueOnce(credentials(tokenExpiringInMs(1 * MINUTE)))
+        .mockResolvedValue(credentials(tokenExpiringInMs(60 * MINUTE)));
+      const refresher = TokenRefresher.getInstance(refresh, 5 * MINUTE);
+
+      refresher.start(tokenExpiringInMs(-1));
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(refresh).toHaveBeenCalledTimes(2);
       refresher.cancel();
     });
   });
