@@ -1,4 +1,7 @@
 import { expect, type Page } from '@playwright/test';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
 /**
  * Wait for page to be ready with explicit element checks instead of networkidle.
@@ -71,44 +74,85 @@ export async function waitForShowPage(page: Page) {
   await page.locator('main, body').first().waitFor({ state: 'visible', timeout: 15000 });
 }
 
+/* ------------------------------------------------------------------ *
+ * Mailpit
+ *
+ * Two things used to make the mail-dependent specs fail in a full run while
+ * passing in isolation, and neither of them was "the inbox service is down".
+ *
+ * 1. Both helpers below read `/api/v1/messages`, which returns the *first page*
+ *    of the mailbox. The shared staging mailbox sits at several hundred
+ *    messages, so a scan of the first 50 answers "is this address in the
+ *    newest 50?", not "did this address get mail?". Worse, the cleanup helper
+ *    had the same blind spot, so it deleted almost nothing and the mailbox only
+ *    ever grew -- steadily widening the window in which a real message is
+ *    invisible. Mailpit has a search API; both helpers now use it, so the size
+ *    of the mailbox stops mattering.
+ *
+ * 2. The polling window was 45s (15 x 3s). Under `fullyParallel` that is not
+ *    long enough: see `withRegistrationSlot` below for why the sends bunch up.
+ *    The window is now ~3 minutes with a backoff, which costs nothing when the
+ *    mail arrives promptly.
+ * ------------------------------------------------------------------ */
+
+const MAILPIT = 'https://mailhog.staging.weeb.vip';
+
+type MailpitMessage = {
+  ID: string;
+  Created: string;
+  To?: { Address: string }[];
+  Bcc?: { Address: string }[];
+};
+
+async function mailpitFetch(endpoint: string, init?: RequestInit, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(`${MAILPIT}${endpoint}`, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Every message addressed to `recipientEmail`, newest first.
+ *
+ * The `to:` search is done server-side so a busy mailbox can't hide a message,
+ * and the result is then filtered again here: a search backend that ignored the
+ * field prefix would otherwise hand back the whole mailbox and the caller would
+ * happily verify somebody else's account.
+ */
+async function messagesFor(recipientEmail: string): Promise<MailpitMessage[]> {
+  const response = await mailpitFetch(
+    `/api/v1/search?query=${encodeURIComponent(`to:${recipientEmail}`)}&limit=200`
+  );
+  if (!response.ok) throw new Error(`Mailpit search failed: HTTP ${response.status}`);
+  const data = await response.json();
+  const messages: MailpitMessage[] = data.messages || [];
+
+  return messages
+    .filter((msg) => {
+      const addresses = [...(msg.To || []), ...(msg.Bcc || [])].map((t) => t.Address);
+      return addresses.some((addr) => addr === recipientEmail || addr === `<${recipientEmail}>`);
+    })
+    .sort((a, b) => Date.parse(b.Created) - Date.parse(a.Created));
+}
+
 /**
  * Delete emails for a recipient from Mailpit (staging email server)
  */
 export async function deleteEmailsForRecipient(recipientEmail: string) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
   try {
-    const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages', {
-      signal: controller.signal
+    const ids = (await messagesFor(recipientEmail)).map((msg) => msg.ID);
+    if (ids.length === 0) return;
+
+    await mailpitFetch('/api/v1/messages', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ IDs: ids })
     });
-    const data = await response.json();
-
-    if (!data.messages || data.messages.length === 0) {
-      clearTimeout(timeoutId);
-      return;
-    }
-
-    const emailsToDelete = data.messages
-      .filter((msg: any) => {
-        const toMatch = msg.To?.some((t: any) => t.Address === recipientEmail);
-        const bccMatch = msg.Bcc?.some((t: any) => t.Address === recipientEmail);
-        return toMatch || bccMatch;
-      })
-      .map((msg: any) => msg.ID);
-
-    if (emailsToDelete.length > 0) {
-      await fetch('https://mailhog.staging.weeb.vip/api/v1/messages', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ IDs: emailsToDelete }),
-        signal: controller.signal
-      });
-      console.log(`Cleaned up ${emailsToDelete.length} emails for ${recipientEmail}`);
-    }
-    clearTimeout(timeoutId);
+    console.log(`Cleaned up ${ids.length} emails for ${recipientEmail}`);
   } catch (error) {
-    clearTimeout(timeoutId);
     if (error instanceof Error && error.name === 'AbortError') {
       console.log('Email cleanup timed out, continuing...');
     } else {
@@ -117,44 +161,126 @@ export async function deleteEmailsForRecipient(recipientEmail: string) {
   }
 }
 
-// Helper function to check Mailpit for emails
-export async function getLatestEmail(recipientEmail: string, retries = 15, delay = 3000) {
+/**
+ * The newest message for an address, with its body, waiting for it to arrive.
+ *
+ * Backs off from 2s to 5s over about three minutes. The long tail is there
+ * because the send, not the delivery, is what runs late under load -- and the
+ * callers' own `test.setTimeout` values allow for the whole of it, so that a
+ * mail that never comes is reported as a mail that never came rather than as a
+ * bare test timeout with nothing pointing at the cause.
+ */
+export async function getLatestEmail(recipientEmail: string, retries = 40, delay = 2000) {
   console.log(`Looking for email for ${recipientEmail}...`);
+  const started = Date.now();
 
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch('https://mailhog.staging.weeb.vip/api/v1/messages');
-      const data = await response.json();
-
-      console.log(`Attempt ${i + 1}: Found ${data.messages?.length || 0} total emails in Mailpit`);
-
-      if (data.messages && data.messages.length > 0) {
-        const recipients = data.messages.map((msg: any) => msg.To?.[0]?.Address).filter(Boolean);
-        console.log(`Recipients found: ${recipients.join(', ')}`);
-
-        const email = data.messages.find((msg: any) => {
-          const toAddresses = msg.To?.map((t: any) => t.Address) || [];
-          return toAddresses.some((addr: string) =>
-            addr === recipientEmail || addr === `<${recipientEmail}>`
-          );
-        });
-
-        if (email) {
-          console.log(`Found email for ${recipientEmail}! Fetching full message...`);
-          // Fetch full message to get body content
-          const fullMsgResponse = await fetch(`https://mailhog.staging.weeb.vip/api/v1/message/${email.ID}`);
-          const fullMsg = await fullMsgResponse.json();
-          return fullMsg;
-        }
+      const [newest] = await messagesFor(recipientEmail);
+      if (newest) {
+        console.log(
+          `Found email for ${recipientEmail} after ${Math.round((Date.now() - started) / 1000)}s; fetching full message...`
+        );
+        const full = await mailpitFetch(`/api/v1/message/${newest.ID}`);
+        return await full.json();
+      }
+      if (i === 0 || i % 5 === 0) {
+        console.log(`Attempt ${i + 1}: no mail for ${recipientEmail} yet`);
       }
     } catch (error) {
       console.log(`Attempt ${i + 1} failed:`, error instanceof Error ? error.message : String(error));
     }
 
-    await new Promise(resolve => setTimeout(resolve, delay));
+    // 2s early on so a prompt send is not made to wait, easing off to 5s so a
+    // slow one is still caught without hammering the API for three minutes.
+    await new Promise((resolve) => setTimeout(resolve, Math.min(delay + i * 250, 5000)));
   }
 
-  throw new Error(`No email found for ${recipientEmail} after ${retries} attempts`);
+  throw new Error(
+    `No email found for ${recipientEmail} after ${retries} attempts (${Math.round((Date.now() - started) / 1000)}s)`
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Registration throttle
+ *
+ * Eight spec files register accounts. Each is already `describe.serial`, which
+ * orders the tests *within* a file and does nothing at all between files -- and
+ * with `fullyParallel` and a worker per core, the suite opens by firing every
+ * one of those registrations at shared staging within the same second. The
+ * accounts are created (the redirect to /auth/check-email happens), but for the
+ * addresses in the middle of the burst no verification mail is ever sent: they
+ * return zero hits in Mailpit long after the run, so no amount of polling on
+ * this side would have found them. Run any of those files on its own and it
+ * passes.
+ *
+ * `describe.serial` can't express "one at a time across files", per-project
+ * `workers` doesn't exist, and putting the mail specs in their own project
+ * would take them out of `--project=chromium` -- which is the command the suite
+ * is actually run with. So the constraint is enforced where it belongs, around
+ * the submit itself: a lock directory (mkdir is atomic, and works across worker
+ * processes) admits one registration at a time and holds the slot briefly after
+ * it, spacing the sends out. Everything else in these specs still runs in
+ * parallel; only the moment of hitting the registration endpoint is queued.
+ * ------------------------------------------------------------------ */
+
+const REGISTRATION_LOCK = path.join(os.tmpdir(), 'weeb-e2e-registration.lock');
+
+/** Left between one registration and the next, so sends never bunch up. */
+const REGISTRATION_GAP_MS = 2500;
+
+/** A slot older than this belongs to a worker that died holding it. */
+const SLOT_STALE_MS = 180000;
+
+/** Longest a spec will queue before giving up and going ahead anyway. */
+const SLOT_WAIT_MS = 420000;
+
+async function acquireRegistrationSlot(): Promise<void> {
+  const startedWaiting = Date.now();
+
+  while (Date.now() - startedWaiting < SLOT_WAIT_MS) {
+    try {
+      await fs.mkdir(REGISTRATION_LOCK);
+      return;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+
+      try {
+        const heldFor = Date.now() - (await fs.stat(REGISTRATION_LOCK)).mtimeMs;
+        if (heldFor > SLOT_STALE_MS) {
+          console.log('Breaking a stale registration slot');
+          await fs.rm(REGISTRATION_LOCK, { recursive: true, force: true });
+        }
+      } catch {
+        // Another worker got there first; just go round again.
+      }
+
+      // Jittered, so the queue doesn't resolve into a thundering herd of its own.
+      await new Promise((resolve) => setTimeout(resolve, 150 + Math.random() * 250));
+    }
+  }
+
+  // Never fail a test over the queue itself -- the throttle is an optimisation,
+  // not a behaviour under test.
+  console.log('Waited too long for a registration slot; proceeding unthrottled');
+}
+
+/**
+ * Run `submit` as the only registration in flight across the whole run.
+ *
+ * Wrap the *submit*, not the whole flow: waiting for the verification mail can
+ * take a minute or more and holding the slot through that would serialise the
+ * suite for no benefit -- it is the send that has to be spaced out, not the
+ * wait.
+ */
+export async function withRegistrationSlot<T>(submit: () => Promise<T>): Promise<T> {
+  await acquireRegistrationSlot();
+  try {
+    return await submit();
+  } finally {
+    await new Promise((resolve) => setTimeout(resolve, REGISTRATION_GAP_MS));
+    await fs.rm(REGISTRATION_LOCK, { recursive: true, force: true }).catch(() => {});
+  }
 }
 
 export function extractVerificationLink(emailContent: string, baseUrl: string): string | null {
@@ -242,28 +368,32 @@ export async function registerNewUser(page: Page, email: string, password: strin
     { timeout: 15000 }
   );
 
-  for (let attempt = 0; attempt < 2; attempt++) {
-    if (page.url().includes('/auth/check-email')) break;
-    try {
-      // The button disables itself while the mutation is in flight. Waiting for
-      // it to be actionable means a merely-slow first submit is never retried
-      // against a disabled button, which otherwise hangs until the test timeout.
-      await expect(submitButton).toBeEnabled({ timeout: 30000 });
-      await submitButton.click({ timeout: 10000 });
-    } catch {
-      // Either we navigated away (button detached) or it never settled — the
-      // URL check below decides which.
-    }
-    try {
-      await page.waitForURL(/\/auth\/check-email/, { timeout: 25000 });
-      break;
-    } catch {
-      if (attempt === 0) {
-        // eslint-disable-next-line no-console
-        console.log('Registration redirect did not happen, retrying submit...');
+  // One registration in flight across the whole run — see withRegistrationSlot.
+  await withRegistrationSlot(async () => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (page.url().includes('/auth/check-email')) break;
+      try {
+        // The button disables itself while the mutation is in flight. Waiting
+        // for it to be actionable means a merely-slow first submit is never
+        // retried against a disabled button, which otherwise hangs until the
+        // test timeout.
+        await expect(submitButton).toBeEnabled({ timeout: 30000 });
+        await submitButton.click({ timeout: 10000 });
+      } catch {
+        // Either we navigated away (button detached) or it never settled — the
+        // URL check below decides which.
+      }
+      try {
+        await page.waitForURL(/\/auth\/check-email/, { timeout: 25000 });
+        break;
+      } catch {
+        if (attempt === 0) {
+          // eslint-disable-next-line no-console
+          console.log('Registration redirect did not happen, retrying submit...');
+        }
       }
     }
-  }
+  });
 
   await expect(page).toHaveURL(/\/auth\/check-email/, { timeout: 20000 });
   await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 15000 });

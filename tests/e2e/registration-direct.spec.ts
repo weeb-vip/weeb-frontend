@@ -10,7 +10,11 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
   test.describe.configure({ mode: 'serial' });
 
   // Increase timeout for CI where network to staging is slower
-  test.setTimeout(90000);
+  test.setTimeout(240000);
+  // Budget note: registration now queues behind a global slot (see
+  // helpers.withRegistrationSlot) and the mail wait runs to about three
+  // minutes, so the old budget expired mid-wait and reported a bare test
+  // timeout instead of the real cause.
 
   let testEmail: string;
   const testPassword = 'Password1!';

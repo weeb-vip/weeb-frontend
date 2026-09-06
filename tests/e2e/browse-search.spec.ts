@@ -112,4 +112,63 @@ test.describe('/search browse page', () => {
     expect((await page.locator(SELECTED_CHIP).innerText()).trim()).toBe(selectedBefore);
     await expectResults(page);
   });
+
+  /*
+    The genre row is a chip group with counts, and a one-way reveal.
+
+    Both halves have been lost before. The counts went missing when the row was
+    rebuilt off a plain string list -- the chips still worked, but a reader had
+    no way to tell a genre with four thousand titles from one with forty. And
+    the reveal is deliberately one-way here: unlike the season page's tag row,
+    once you have asked to see every genre the row stays open, because
+    collapsing it back would hide a chip the reader had just selected. A
+    "+N more" that turned into "Show less" would be that regression.
+  */
+  test('genre chips carry their counts', async ({ page }) => {
+    await waitForBrowseReady(page);
+
+    const chips = page.locator(GENRE_CHIP);
+    expect(await chips.count()).toBeGreaterThan(1);
+
+    // Every chip, not just one: a row where only the first had a count would be
+    // a partially-applied fix.
+    for (const label of await chips.allInnerTexts()) {
+      expect(label.replace(/\s+/g, ' ').trim()).toMatch(/^.+\s[\d,]+$/);
+    }
+
+    // The row is a labelled group, so the chips are announced as a set rather
+    // than as loose buttons scattered through the page.
+    await expect(page.getByRole('group', { name: 'Filter by genre' })).toBeVisible();
+  });
+
+  test('the +N more reveal opens the full genre row and does not fold back', async ({ page }) => {
+    await waitForBrowseReady(page);
+
+    const more = page.locator('.genre-tag--more');
+    test.skip((await more.count()) === 0, 'every genre already fits in the row');
+
+    // The affordance says how many are hidden, so the click is an informed one.
+    const label = (await more.innerText()).trim();
+    expect(label).toMatch(/^\+\d+ more$/);
+    const hidden = Number(label.match(/\d+/)![0]);
+
+    const before = await page.locator(GENRE_CHIP).count();
+    await more.click();
+
+    // Everything that was hidden is now on screen...
+    await expect
+      .poll(() => page.locator(GENRE_CHIP).count(), { timeout: 15000 })
+      .toBe(before + hidden);
+
+    // ...and the way back is gone, on purpose.
+    await expect(page.locator('.genre-tag--more')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Show less' })).toHaveCount(0);
+
+    // A revealed chip is a working chip, not just markup.
+    const revealed = page.locator(GENRE_CHIP).nth(before);
+    const name = (await revealed.innerText()).trim().split('\n')[0];
+    await revealed.click();
+    await expect(page).toHaveURL(/[?&]genre=/, { timeout: 15000 });
+    await expect(page.locator(SELECTED_CHIP)).toContainText(name, { timeout: 15000 });
+  });
 });

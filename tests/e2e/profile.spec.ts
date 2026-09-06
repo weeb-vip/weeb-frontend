@@ -9,7 +9,11 @@ import { waitForAuthForm, waitForPageReady, deleteEmailsForRecipient, getLatestE
 
 test.describe('Profile page (logged in)', () => {
   test.describe.configure({ mode: 'serial' });
-  test.setTimeout(120000);
+  test.setTimeout(300000);
+  // Budget note: registration now queues behind a global slot (see
+  // helpers.withRegistrationSlot) and the mail wait runs to about three
+  // minutes, so the old budget expired mid-wait and reported a bare test
+  // timeout instead of the real cause.
 
   let testEmail: string;
   const testPassword = 'Password1!';
@@ -72,5 +76,36 @@ test.describe('Profile page (logged in)', () => {
 
     // Header shows the logged-in avatar/menu rather than Login/Register
     await expect(page.locator('nav').getByRole('button', { name: 'Register', exact: true })).toHaveCount(0);
+
+    // --- the image cropper opens at its larger size ---
+    // Asserted here rather than in a spec of its own because reaching it costs
+    // another account against shared staging, and this test is already signed
+    // in on the page that owns it.
+    //
+    // The cropper is a crop UI in a dialog: at the default modal width the
+    // frame is too small to position a crop in. It used to ask for the width
+    // with `className="max-w-2xl"`, which Modal never applied -- the class went
+    // nowhere and the dialog quietly rendered at the small size. Modal now takes
+    // a `size`, and this pins the result rather than the prop: a dialog that
+    // came back at 440px would pass any check on the attribute.
+    const openCropper = page.getByRole('button', { name: 'Change profile picture' });
+    await expect(openCropper).toBeVisible({ timeout: 20000 });
+    await openCropper.click();
+
+    const cropper = page.getByRole('dialog');
+    await expect(cropper).toBeVisible({ timeout: 15000 });
+    await expect(cropper.getByText(/Drop an image, or click to choose/i)).toBeVisible({
+      timeout: 10000
+    });
+
+    const card = page.locator('.weeb-modal-card');
+    await expect(card).toHaveClass(/weeb-modal-card--lg/);
+    const width = (await card.boundingBox())!.width;
+    // The small size is 440 and the large one 720; anything in between means the
+    // size never reached the card.
+    expect(width, 'the cropper must open at the large modal width').toBeGreaterThan(600);
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 10000 });
   });
 });

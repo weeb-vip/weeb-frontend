@@ -64,7 +64,11 @@ async function chooseStatus(page: Page, option: string) {
 
 test.describe('Manga tracking (logged in)', () => {
   test.describe.configure({ mode: 'serial' });
-  test.setTimeout(240000);
+  test.setTimeout(360000);
+  // Budget note: registration now queues behind a global slot (see
+  // helpers.withRegistrationSlot) and the mail wait runs to about three
+  // minutes, so the old budget expired mid-wait and reported a bare test
+  // timeout instead of the real cause.
 
   let testEmail: string;
   const testPassword = 'Password1!';

@@ -17,16 +17,24 @@ async function openAuthModal(page: Page): Promise<{ dialog: Locator; isMobile: b
   const mobileMenu = page.getByRole('button', { name: 'Open menu' });
   const isMobile = await mobileMenu.isVisible().catch(() => false);
 
-  if (isMobile) {
-    await mobileMenu.click();
-    const drawerRegister = page.getByRole('button', { name: 'Register', exact: true });
-    await drawerRegister.waitFor({ state: 'visible', timeout: 5000 });
-    await drawerRegister.click();
-  } else {
-    await page.locator('nav').getByRole('button', { name: 'Register', exact: true }).click();
-  }
+  // Retry the whole open. The header renders server-side, so the button is
+  // there and clickable well before the handler that opens the modal is wired
+  // up -- and under a full parallel run hydration is slow enough that the first
+  // click lands in that gap and silently does nothing. This used to surface as
+  // a bare "waiting for getByRole('dialog')" timeout with nothing about focus
+  // in it, in a suite run rather than in isolation.
+  await expect(async () => {
+    if (isMobile) {
+      await mobileMenu.click();
+      const drawerRegister = page.getByRole('button', { name: 'Register', exact: true });
+      await drawerRegister.waitFor({ state: 'visible', timeout: 5000 });
+      await drawerRegister.click();
+    } else {
+      await page.locator('nav').getByRole('button', { name: 'Register', exact: true }).click();
+    }
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+  }).toPass({ timeout: 40000 });
 
-  await dialog.waitFor({ state: 'visible', timeout: 10000 });
   return { dialog, isMobile };
 }
 

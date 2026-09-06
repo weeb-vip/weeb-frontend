@@ -1,6 +1,14 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
-import { waitForHomepage, waitForAuthForm, waitForPageReady, deleteEmailsForRecipient, getLatestEmail, extractVerificationLink } from './helpers';
+import {
+  waitForHomepage,
+  waitForAuthForm,
+  waitForPageReady,
+  deleteEmailsForRecipient,
+  getLatestEmail,
+  extractVerificationLink,
+  withRegistrationSlot
+} from './helpers';
 
 // Opens the auth modal in register mode and returns the dialog locator.
 // Handles both desktop (direct header button) and mobile (drawer) flows.
@@ -41,27 +49,32 @@ async function fillAndSubmitRegister(dialog: Locator, page: Page, email: string,
   // Staging's registration endpoint intermittently drops the request under
   // parallel-shard load; retry the submit once if the redirect doesn't happen.
   const submit = dialog.locator('form button[type="submit"]');
-  for (let attempt = 0; attempt < 2; attempt++) {
-    if (page.url().includes('/auth/check-email')) break;
-    try {
-      // See helpers.registerNewUser: the submit button disables itself while the
-      // mutation is in flight, so a slow first submit must not be retried
-      // against a disabled button.
-      await expect(submit).toBeEnabled({ timeout: 30000 });
-      await dialog.locator('input[name="username"]').fill(email);
-      await dialog.locator('input[name="password"]').fill(password);
-      await dialog.locator('input[name="confirmPassword"]').fill(password);
-      await submit.evaluate((btn) => (btn as HTMLButtonElement).click());
-    } catch {
-      // navigated away (modal closed / inputs detached) or never settled
+  // The modal is the second way into the same endpoint, so it queues behind the
+  // same slot as helpers.registerNewUser — otherwise this file's registrations
+  // would be exactly the burst the slot exists to prevent.
+  await withRegistrationSlot(async () => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (page.url().includes('/auth/check-email')) break;
+      try {
+        // See helpers.registerNewUser: the submit button disables itself while
+        // the mutation is in flight, so a slow first submit must not be retried
+        // against a disabled button.
+        await expect(submit).toBeEnabled({ timeout: 30000 });
+        await dialog.locator('input[name="username"]').fill(email);
+        await dialog.locator('input[name="password"]').fill(password);
+        await dialog.locator('input[name="confirmPassword"]').fill(password);
+        await submit.evaluate((btn) => (btn as HTMLButtonElement).click());
+      } catch {
+        // navigated away (modal closed / inputs detached) or never settled
+      }
+      try {
+        await page.waitForURL(/\/auth\/check-email/, { timeout: 25000 });
+        break;
+      } catch {
+        if (attempt === 0) console.log('Registration redirect did not happen from modal, retrying submit...');
+      }
     }
-    try {
-      await page.waitForURL(/\/auth\/check-email/, { timeout: 25000 });
-      break;
-    } catch {
-      if (attempt === 0) console.log('Registration redirect did not happen from modal, retrying submit...');
-    }
-  }
+  });
   await expect(page).toHaveURL(/\/auth\/check-email/, { timeout: 20000 });
 }
 
@@ -71,7 +84,11 @@ test.describe('User Registration Flow', () => {
   test.describe.configure({ mode: 'serial' });
 
   // Increase timeout for CI where network to staging is slower
-  test.setTimeout(90000);
+  test.setTimeout(300000);
+  // Budget note: registration now queues behind a global slot (see
+  // helpers.withRegistrationSlot) and the mail wait runs to about three
+  // minutes, so the old budget expired mid-wait and reported a bare test
+  // timeout instead of the real cause.
 
   let testEmail: string;
   const testPassword = 'Password1!';
