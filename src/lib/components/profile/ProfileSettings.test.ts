@@ -185,13 +185,22 @@ describe('ProfileSettingsBloc', () => {
   });
 
   describe('saving', () => {
-    it('does nothing at all when there is no user to save', () => {
+    it('saves nothing before the user has loaded, and says why', () => {
       const port = settingsPort(null);
       const bloc = makeBloc({ settings: port });
 
       bloc.submit();
 
       expect(port.save).not.toHaveBeenCalled();
+      // Silence here was a bug: the form renders empty while the query is in
+      // flight, so a click on a live-looking Save button did nothing at all
+      // and looked identical to a save that worked.
+      expect(bloc.errorMessage).toBe('Still loading your profile. Try again in a moment.');
+    });
+
+    it('cannot save until the user has loaded', () => {
+      expect(makeBloc({ settings: settingsPort(null) }).canSave).toBe(false);
+      expect(makeBloc({ settings: settingsPort(SERVER_USER) }).canSave).toBe(true);
     });
 
     it('requires a username, and says so on the field', () => {

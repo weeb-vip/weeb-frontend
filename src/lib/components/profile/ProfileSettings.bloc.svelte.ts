@@ -134,6 +134,17 @@ export class ProfileSettingsBloc {
     return !!this.#user.current.data;
   }
 
+  /**
+   * Whether Save can do anything yet.
+   *
+   * There is nothing to save until the user query resolves -- the form's
+   * values are edits layered over a server row that has not arrived. The
+   * button reads this so it is visibly unavailable rather than inert.
+   */
+  get canSave(): boolean {
+    return this.hasUser && !this.isSaving;
+  }
+
   /** The server's row, as the form's fields. */
   get #server(): ProfileSettingsForm {
     const user = this.#user.current.data;
@@ -215,7 +226,15 @@ export class ProfileSettingsBloc {
    * -- the one field the account actually has.
    */
   submit(): void {
-    if (!this.hasUser) return;
+    if (!this.hasUser) {
+      // The form renders immediately, empty, while the user query is still in
+      // flight. Returning silently here meant a click on a live-looking Save
+      // button did nothing at all -- no request, no message, nothing to
+      // distinguish it from a save that worked. Say so instead; `canSave`
+      // below also disables the button, so this is the belt to that's braces.
+      this.#error = 'Still loading your profile. Try again in a moment.';
+      return;
+    }
 
     this.#usernameError = '';
     if (!this.form.username.trim()) {

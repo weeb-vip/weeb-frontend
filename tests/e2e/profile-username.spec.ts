@@ -64,6 +64,19 @@ test.describe('Profile settings — username errors', () => {
     const usernameInput = page.locator('#username');
     await expect(usernameInput).toBeVisible({ timeout: 20000 });
 
+    // Visible is not loaded. These fields render immediately and empty while
+    // the user query is still in flight, and the bloc treats "no user yet" as
+    // nothing to save: submit() returns before it ever builds a mutation. Edit
+    // inside that window and Save does nothing at all -- no request, no
+    // message -- so the waitForResponse below can only time out. That is
+    // exactly how this spec failed in CI: the snapshot showed First Name and
+    // Bio holding the typed text while Username and Email were still blank.
+    //
+    // Waiting for the server's own values to arrive is what makes the rest of
+    // this test about saving rather than about a race.
+    await expect(usernameInput).not.toHaveValue('', { timeout: 20000 });
+    await expect(page.locator('#email')).not.toHaveValue('', { timeout: 20000 });
+
     // --- the settings page itself, before any of it is stubbed ---
     // The page is the only way to edit any of this, so the whole form has to be
     // there: the identity fields, the public-page block that decides what a

@@ -201,7 +201,7 @@
         <div class="flex gap-4 pt-4">
           <!-- The submit is the form's own; it no longer relies on a button
                with no type defaulting to one. -->
-          <Button type="submit" loading={bloc.isSaving} className="flex-1">Save Changes</Button>
+          <Button type="submit" loading={bloc.isSaving} disabled={!bloc.canSave} className="flex-1">Save Changes</Button>
           <Button color="transparent" href="/profile">Cancel</Button>
         </div>
       </form>
