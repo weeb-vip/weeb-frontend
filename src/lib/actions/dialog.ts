@@ -56,7 +56,26 @@ function release(): void {
   style.left = '';
   style.right = '';
   style.overflow = '';
-  window.scrollTo(0, savedScrollY);
+
+  // The options form, with an explicit behavior, is required -- not a style
+  // preference. Restoring the offset after un-pinning the body works in
+  // Chromium every way you can express it, but in Firefox only this one takes
+  // effect. Measured against Firefox 150, immediately after clearing the pin:
+  //
+  //   window.scrollTo(0, y)                        -> no-op, stays at 0
+  //   document.documentElement.scrollTop = y       -> no-op, stays at 0
+  //   document.scrollingElement.scrollTop = y      -> no-op, stays at 0
+  //   window.scrollTo({ top: y, behavior: 'instant' }) -> lands on y
+  //
+  // It is not a layout-timing problem: the document has its full height back by
+  // this point (scrollHeight 3138, maxScroll 2338 in the probe), and forcing a
+  // reflow first changes nothing, as does waiting a frame or two.
+  //
+  // Getting this wrong drops the reader at the top of a page they had scrolled
+  // a long way down -- the exact bug the refcount above exists to prevent,
+  // reappearing one browser over. tests/e2e/drawer-scroll-lock.spec.ts covers
+  // it, and only caught it because CI runs Firefox as well as Chromium.
+  window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
 }
 
 /**
