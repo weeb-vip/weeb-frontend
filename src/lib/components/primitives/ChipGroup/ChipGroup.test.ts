@@ -11,8 +11,8 @@ import type { ChipGroupItem } from './ChipGroup.logic';
  * everything that looks for one -- which is exactly how `season.spec.ts` broke.
  *
  * Everything below is asserted through roles and accessible names. jsdom
- * applies no CSS, so the two skins (`pill` / `segmented`) are only checked as
- * the class the browser would key on, never as an appearance.
+ * applies no CSS, so the skins (`pill` / `segmented` / `underline`) are only
+ * checked as the class the browser would key on, never as an appearance.
  */
 
 const items: ChipGroupItem[] = [
@@ -384,29 +384,11 @@ describe('ChipGroup', () => {
   describe('skins', () => {
     it('carries the variant class the CSS keys on, on the row and on every chip', () => {
       const { container } = render(ChipGroup, {
-        props: { items, select: 'single', mode: 'tabs', variant: 'segmented', ariaLabel: 'Status' }
+        props: { items, select: 'single', mode: 'tabs', variant: 'underline', ariaLabel: 'Status' }
       });
 
-      expect(container.querySelector('.chipgroup')).toHaveClass('chipgroup--segmented');
-      expect(screen.getByRole('tab', { name: 'Winter' })).toHaveClass('cg-item--segmented');
-    });
-
-    /**
-     * The pill row has ONE ground. A link row and a static label row used to be
-     * filled while a selectable row was transparent, which made the same
-     * component read as two different things one above the other; `ghost` is now
-     * unconditional, so nothing in a pill row is filled until it is selected.
-     */
-    it.each([
-      ['single' as const, { value: 'winter', label: 'Winter' }],
-      ['multi' as const, { value: 'winter', label: 'Winter' }],
-      ['none' as const, { value: 'winter', label: 'Winter', href: '/season/winter' }]
-    ])('gives a %s row the same transparent ground', (select, item) => {
-      const { container } = render(ChipGroup, {
-        props: { items: [item], select, ariaLabel: 'Season' }
-      });
-
-      expect(container.querySelector('.chip.cg-item')).toHaveClass('chip--ghost');
+      expect(container.querySelector('.chipgroup')).toHaveClass('chipgroup--underline');
+      expect(screen.getByRole('tab', { name: 'Winter' })).toHaveClass('cg-item--underline');
     });
 
     it('touch is a height, not a type scale -- the chips stay at the default size', () => {

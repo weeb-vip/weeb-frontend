@@ -299,7 +299,7 @@ opposite — one at a time, never both.
 | `touch` | boolean | The taller of the two heights |
 | `selected` | boolean | The accent wash |
 | `tintAtRest` | boolean | `true` tints border, text and ground at rest (a chip that STATES something). `false` leaves the chip neutral until selected, colouring only the dot and the wash |
-| `ghost` | boolean | Transparent ground, with the hover tinted from the chip's own colour. Every chip in a `ChipGroup` row; a standalone `Chip` (a badge, a quick-info fact) keeps the filled surface |
+| `ghost` | boolean | Transparent ground, with the hover tinted from the chip's own colour. What a row you switch on and off sits on |
 | `dot` | boolean | A leading dot in the chip's own colour |
 | `count` | number | The shared count badge. `0` renders, muted |
 | `mono` | boolean | Mono tabular numerals |
@@ -317,7 +317,7 @@ adds no shape at all — only the row gap.
 |---|---|---|
 | `items` | `ChipGroupItem[]` | `{ value?, label, count?, icon?, title?, disabled?, accent?, href? }`. `value` defaults to `label` |
 | `select` | `single \| multi \| none` | One at a time, any number, or a row that selects nothing (links) |
-| `variant` | `pill \| segmented` | `Chip` as drawn — every free-flowing row, on one ground; or the boxed switch |
+| `variant` | `pill \| segmented \| underline` | `Chip` as drawn; the boxed switches; the underlined tabs |
 | `value` | string | `single`: the selected item's `value` |
 | `isSelected` | `(value) => boolean` | `multi`: whether a chip is on. A predicate, so a `Set` caller needs no accessor |
 | `onSelect` | `(value) => void` | A chip was activated |
@@ -331,27 +331,6 @@ adds no shape at all — only the row gap.
 | `ariaLabel` | string | Names the row |
 | `itemContent` | `Snippet<[item]>` | Full control of a chip's contents — the inline SVGs the pages use |
 | `class` / `itemClass` | string | Extra classes on the row / on every chip. The clear and more chips also get `<itemClass>--clear` / `--more` |
-
-### Two variants, and only two
-
-`pill` is every free-flowing row — a single-select filter, a multi-select facet
-row, a row of links, a row of static labels. All four sit on **one** ground:
-transparent inside a neutral outline, and tinted with an accent outline once
-selected. A link or a static label is not a different kind of thing from a
-filter, so it does not get a different ground; the fill in a pill row means
-"this one is on" and nothing else.
-
-`segmented` is the joined control that switches a view or a mode — Anime|Manga,
-grid|list, the season and year strips. One box, no gaps between the chips, the
-active side filled solid. Reach for it only when the choices switch *how* the
-same content is shown.
-
-There was a third, `underline` — flat text with a rule under the active one —
-for the profile status tabs and the show section nav. Three treatments for the
-one job (here is a row of choices; this one is on) is two too many, so both of
-those rows are pills. A row that must not wrap (the sticky show section nav)
-sets `flex-wrap: nowrap; overflow-x: auto` on `.chipgroup--pill` at the call
-site: that is a layout constraint of that bar, not a third skin.
 
 The homepage's "Browse by Tag" row is `select="none"` over `$lib/data/genres`.
 The genre taxonomy is data; a presentational primitive does not own it.

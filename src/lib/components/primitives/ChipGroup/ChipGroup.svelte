@@ -29,7 +29,7 @@
 
   /**
    * THE row of chips. One component for every selectable or linked strip in the
-   * app, in both skins.
+   * app, in all three skins.
    *
    * It exists because the row had been written three times over -- `Tabs`
    * (single-select, three variants), `FilterPills` (multi-select, counts, clear
@@ -40,10 +40,8 @@
    * counts and selected states before any of them existed.
    *
    * So the item here is always `Chip`. The `pill` variant adds no shape at all
-   * -- it is `Chip`, wrapped in a row gap -- and it is the ONE ground every
-   * free-flowing row sits on: transparent inside an outline, whether the row
-   * selects one of its chips, several, or none at all. `segmented` is not a
-   * pill, so that skin is the only CSS in this file that touches a chip.
+   * -- it is `Chip`, wrapped in a row gap. `segmented` and `underline` are not
+   * pills, so those two skins are the only CSS in this file that touches a chip.
    *
    * Presentational -- no bloc. What is selected is the caller's state.
    */
@@ -182,7 +180,7 @@
       {tone}
       color={item.accent}
       tintAtRest={select === 'none'}
-      ghost
+      ghost={select !== 'none'}
       dot={!!item.accent}
       selected={on}
       count={iconOnly ? null : item.count}
@@ -229,16 +227,55 @@
     display: inline-flex;
   }
 
-  /* ── pill ── every free-flowing row: filters, facets, links, static labels ──
+  /* ── pill ──────────────────────────────────────────────────
      Deliberately empty of pill CSS. The shape, the ground, the hover, the
      selected wash, the dot and the count badge are all `Chip`; this variant
-     owns the row gap and nothing else. One ground for the lot of them: the
-     chips are `ghost` whatever the row selects, so nothing in the row is
-     filled until it is on. */
+     owns the row gap and nothing else. */
   .chipgroup--pill {
     display: flex;
     flex-wrap: wrap;
     gap: var(--weeb-pill-row-gap);
+  }
+
+  /* ── underline ── the profile status tabs, the show section nav ──
+     Not a pill, so this skin overrides the chip outright: no border, no
+     radius, no ground, and a rule under the active one instead of a wash. */
+  .chipgroup--underline {
+    border-bottom: 1px solid var(--weeb-border);
+    overflow-x: auto;
+    scrollbar-width: none;
+    min-width: 0;
+  }
+  .chipgroup--underline::-webkit-scrollbar {
+    display: none;
+  }
+  .chipgroup--underline :global(.chip.cg-item--underline) {
+    min-height: 0;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    margin-bottom: -1px;
+    background: none;
+    color: var(--weeb-fg-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .chipgroup--underline.chipgroup--touch :global(.chip.cg-item--underline) {
+    min-height: var(--weeb-pill-min-height-touch);
+  }
+  .chipgroup--underline :global(button.chip.cg-item--underline:hover:not(:disabled)) {
+    background: none;
+    border-bottom-color: transparent;
+    color: var(--weeb-fg);
+  }
+  .chipgroup--underline :global(.chip.cg-item--underline.selected),
+  .chipgroup--underline :global(button.chip.cg-item--underline.selected:hover) {
+    color: var(--weeb-accent-text);
+    background: none;
+    border-bottom-color: var(--weeb-accent);
   }
 
   /* ── segmented ── the boxed mode switches and the season / year strips ──
@@ -284,7 +321,9 @@
     color: #fff;
   }
 
-  /* The boxed skin draws its focus ring inside, so the box does not clip it. */
+  /* Both boxed skins draw the focus ring inside, so it is not clipped by the
+     box or the row's own overflow. */
+  .chipgroup--underline :global(.chip.cg-item--underline:focus-visible),
   .chipgroup--segmented :global(.chip.cg-item--segmented:focus-visible) {
     outline-offset: -2px;
   }
