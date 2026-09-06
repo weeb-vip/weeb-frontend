@@ -254,8 +254,16 @@ export class AnimeNewsPageBloc {
     return this.total >= MIN_ITEMS_FOR_FILTERS && this.categories.length >= 2;
   }
 
+  /**
+   * Lowercased, because that is the form everything else here is in: the counts,
+   * the chips and the comparison in `filtered` all fold the story's category
+   * down. The page only ever writes the lowercase form itself, but a shared or
+   * hand-typed `?category=Staff` has to find the same stories as `?category=staff`
+   * rather than rendering an empty list.
+   */
   get selected(): string | null {
-    return new URLSearchParams(this.#url.current?.search ?? '').get('category');
+    const raw = new URLSearchParams(this.#url.current?.search ?? '').get('category');
+    return raw ? raw.toLowerCase() : null;
   }
 
   get filtered(): AnimeNewsItem[] {

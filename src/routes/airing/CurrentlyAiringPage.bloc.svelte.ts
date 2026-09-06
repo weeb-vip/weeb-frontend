@@ -297,9 +297,15 @@ export class CurrentlyAiringPageBloc {
     return this.#upcoming.length > this.#visibleDays;
   }
 
-  /** How many the next press reveals, so the button can say so. */
+  /**
+   * How many the next press reveals, so the button can say so.
+   *
+   * Floored at zero: once everything is revealed the remainder goes negative
+   * (`visible` overshoots by whatever the last batch did not need), and only
+   * `hasMoreDays` was keeping "Show next -4 days" off the screen.
+   */
   get nextDayBatch(): number {
-    return Math.min(DAY_PAGE, this.#upcoming.length - this.#visibleDays);
+    return Math.max(0, Math.min(DAY_PAGE, this.#upcoming.length - this.#visibleDays));
   }
 
   showMoreDays(): void {

@@ -127,26 +127,34 @@ describe('the payload handed to the page', () => {
   });
 });
 
-describe('a gateway failure is indistinguishable from nothing airing', () => {
-  // FINDING, pinned as it stands. fetchWithFallback answers null on any
-  // failure and never throws, so a subgraph outage returns ssrData null with
-  // ssrError null -- the page renders "nothing airing" for an outage.
-  it('reports no error when the request answered null', async () => {
+describe('a gateway failure is told apart from nothing airing', () => {
+  // fetchWithFallback answers null on any failure and never throws, so the
+  // loader checks the answer rather than relying on its catch: an outage has to
+  // reach the page as an error, not as an empty schedule.
+  it('reports an error when the request answered null', async () => {
     fetchWithFallback.mockResolvedValue(null);
 
     const result = await run(event());
 
     expect(result.ssrData).toBeNull();
-    expect(result.ssrError).toBeNull();
+    expect(result.ssrError).toBe('Failed to load data');
   });
 
-  it('sets the error only when the request throws', async () => {
+  it('reports an error when the request throws too', async () => {
     fetchWithFallback.mockRejectedValue(new Error('gateway 502'));
 
     const result = await run(event());
 
     expect(result.ssrError).toBe('Failed to load data');
     expect(result.ssrData).toBeNull();
+  });
+
+  it('does not report an error for a response with an empty list in it', async () => {
+    // The distinction the check turns on: a quiet week still answers with a
+    // response object, and must keep rendering as a quiet week.
+    fetchWithFallback.mockResolvedValue({ getAiringAnimeAll: [] });
+
+    expect((await run(event())).ssrError).toBeNull();
   });
 });
 

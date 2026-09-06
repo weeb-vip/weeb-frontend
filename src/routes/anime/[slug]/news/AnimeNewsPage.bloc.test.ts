@@ -395,14 +395,30 @@ describe('filtering', () => {
     expect(bloc.isEmptyCategory).toBe(false);
   });
 
-  it('treats an upper-case category parameter as no match at all', () => {
-    // Current behaviour: the URL value is compared raw against a lowercased
-    // category, so a hand-written `?category=Staff` finds nothing. The page
-    // itself only ever writes the lowercase form, so this is only reachable
-    // from a typed URL.
+  it('reads an upper-case category parameter as the same filter', () => {
+    // The page only ever writes the lowercase form, but a shared or typed
+    // `?category=Staff` has to find the same stories rather than rendering an
+    // empty list under a chip that looks selected.
     const { bloc } = build({ search: '?category=Staff', data: data({ news: mixed }) });
 
-    expect(bloc.filtered).toEqual([]);
+    expect(bloc.selected).toBe('staff');
+    expect(bloc.filtered).toHaveLength(2);
+    expect(bloc.isEmptyCategory).toBe(false);
+  });
+
+  it('reads a mixed-case parameter too, and pages it like any other', () => {
+    const { bloc } = build({ search: '?category=StAfF', data: data({ news: mixed }) });
+
+    expect(bloc.filtered).toHaveLength(2);
+    expect(bloc.visible).toHaveLength(2);
+    expect(bloc.lastShown).toBe(2);
+  });
+
+  it('treats an empty category parameter as no filter', () => {
+    const { bloc } = build({ search: '?category=', data: data({ news: mixed }) });
+
+    expect(bloc.selected).toBeNull();
+    expect(bloc.filtered).toHaveLength(7);
   });
 });
 

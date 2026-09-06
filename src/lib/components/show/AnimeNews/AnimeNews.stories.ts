@@ -121,6 +121,18 @@ export const Empty: Story = {
   },
 };
 
+/**
+ * The all-news page's nesting: that rail sits straight under the page's `<h1>`,
+ * so its headlines are `<h2>`. Nothing changes on screen -- `.title` owns the
+ * size and the weight -- but the heading outline is correct for where it sits.
+ */
+export const HeadlinesAtPageLevel: Story = {
+  args: {
+    news: ITEMS.slice(0, 3),
+    headingLevel: 2,
+  },
+};
+
 /** Entries with no usable title are dropped before anything renders. */
 export const OnlyUntitledEntries: Story = {
   args: {

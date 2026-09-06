@@ -10,6 +10,8 @@ export class TokenRefresher {
   private refreshTimeout: NodeJS.Timeout | null = null;
   private refreshFunction: RefreshTokenFunction<SigninResult>;
   private refreshWindow: number;
+  /** The refresh currently in flight, if any — see `refreshToken()`. */
+  private refreshInFlight: Promise<void> | null = null;
 
   private constructor(refreshFunction: RefreshTokenFunction<SigninResult>, refreshWindow: number = 5 * 60 * 1000) {
     this.refreshFunction = refreshFunction;
@@ -129,9 +131,38 @@ export class TokenRefresher {
   }
 
   /**
-   * Triggers the token refresh process.
+   * Triggers the token refresh process, de-duplicated against whatever is
+   * already in flight.
+   *
+   * There is more than one trigger — the scheduled timer, the constructor when
+   * a refresh token is already in storage, and any caller that restarts the
+   * refresher — and they overlap. Without this a second trigger arriving while
+   * the first request is still open sent a second request for the same token,
+   * which is at best wasted and at worst a rotation race: two refreshes against
+   * a rotating refresh token, where whichever response lands second may already
+   * have been invalidated by the first. A second caller now awaits the refresh
+   * that is already running.
+   *
+   * @returns the in-flight refresh, so a caller can await the real outcome.
    */
-  private async refreshToken(): Promise<void> {
+  private refreshToken(): Promise<void> {
+    if (this.refreshInFlight) {
+      debug.auth('Refresh already in flight - joining it rather than starting a second');
+      return this.refreshInFlight;
+    }
+
+    const inFlight = this.performRefresh().finally(() => {
+      // Only clear our own slot: `performRefresh` releases it before
+      // rescheduling, so by now a *newer* refresh may legitimately own it.
+      if (this.refreshInFlight === inFlight) {
+        this.refreshInFlight = null;
+      }
+    });
+    this.refreshInFlight = inFlight;
+    return inFlight;
+  }
+
+  private async performRefresh(): Promise<void> {
     try {
       if (!this.refreshFunction) {
         throw new Error('No refresh function provided.');
@@ -148,6 +179,13 @@ export class TokenRefresher {
       this.storeAuthToken(newToken);
 
       debug.auth('Token refreshed successfully - continuing without page reload');
+
+      // The request is finished, so release the in-flight slot before
+      // rescheduling. `start()` refreshes immediately for a token that is
+      // already inside the refresh window, and that refresh is a genuinely new
+      // one — de-duplicating it against the call that just returned would
+      // silently stall the session.
+      this.refreshInFlight = null;
 
       this.start(newToken); // Restart the process with the new token
     } catch (error) {

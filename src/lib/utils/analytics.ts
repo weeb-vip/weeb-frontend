@@ -118,6 +118,14 @@ export const analytics = {
 export function identifyUser(userId: string, userProperties?: Record<string, any>) {
   console.log('🔍 identifyUser called:', { userId, userProperties, hasWindow: typeof window !== 'undefined', hasPosthog: typeof window !== 'undefined' && !!window.posthog });
 
+  // A caller reading `user?.id` off a half-loaded profile hands us '' — and
+  // PostHog would happily key a person profile on it, so every such caller
+  // would collapse into one junk identity. There is nothing to identify yet.
+  if (!userId || !userId.trim()) {
+    console.warn('⚠️ identifyUser called with no id; nothing to identify');
+    return;
+  }
+
   if (typeof window !== 'undefined' && window.posthog) {
     try {
       console.log('📊 Calling posthog.identify with:', { userId, userProperties });

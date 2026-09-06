@@ -338,15 +338,34 @@ describe('counting the seasons', () => {
     expect(bloc.seasonCount).toBe(2);
   });
 
-  it('counts the specials bucket as a season as well', () => {
-    // Current behaviour, and it is wrong: `seasonCount` filters on
-    // `key.startsWith('s')`, which the "specials" key also satisfies. A series
-    // with one season and an OVA reports two seasons, in the summary line too.
+  it('does not count the specials bucket as a season', () => {
+    // The filter used to be `key.startsWith('s')`, which the "specials" key
+    // also satisfies, so a series with one season and an OVA claimed two
+    // seasons -- in the summary line too. Specials belong to the series but not
+    // to its run.
     const bloc = build([entry('a', { seasonNumber: 1 }), entry('ova', { seasonNumber: 0 })]);
 
     expect(bloc.groups.map((group) => group.key)).toEqual(['s1', 'specials']);
+    expect(bloc.seasonCount).toBe(1);
+    expect(bloc.summary).toBe('2 entries across 1 season');
+  });
+
+  it('counts nothing for a series that is only specials', () => {
+    const bloc = build([entry('ova', { seasonNumber: 0 }), entry('sp', { seasonNumber: 0 })]);
+
+    expect(bloc.groups.map((group) => group.key)).toEqual(['specials']);
+    expect(bloc.seasonCount).toBe(0);
+    expect(bloc.summary).toBe('2 entries');
+  });
+
+  it('counts a double-digit season, which is still a numbered one', () => {
+    const bloc = build([
+      entry('a', { seasonNumber: 10 }),
+      entry('b', { seasonNumber: 11 }),
+      entry('ova', { seasonNumber: 0 })
+    ]);
+
     expect(bloc.seasonCount).toBe(2);
-    expect(bloc.summary).toBe('2 entries across 2 seasons');
   });
 
   it('does not count the remainder bucket', () => {

@@ -137,16 +137,25 @@ describe('the redirect', () => {
     });
   });
 
-  it('BUG: does not fall back for an EMPTY-STRING slug — it redirects to /anime/', async () => {
-    // Current behaviour, pinned rather than fixed. The fallback is written
-    // `anime.slug ?? encodeURIComponent(anime.id)`, and `??` only guards
-    // null/undefined, so a row whose slug column is '' rather than NULL sends
-    // every legacy URL for that anime to /anime/ — the browse page, not the
-    // show. /anime/[slug] guards the same case with a truthiness check
-    // (`if (found?.slug)`), so the two routes disagree.
+  it('falls back to the id for an EMPTY-STRING slug as well as a null one', async () => {
+    // A slug column holding '' rather than NULL is the same "no slug yet"
+    // state. Under `??` it sent every legacy URL for that anime to /anime/ —
+    // the browse page, not the show. /anime/[slug] guards the case with a
+    // truthiness check (`if (found?.slug)`), and this route now agrees.
     request.mockResolvedValueOnce({ anime: { id: ID, slug: '' } });
 
-    await expect(run(ID)).rejects.toMatchObject({ status: 301, location: '/anime/' });
+    await expect(run(ID)).rejects.toMatchObject({
+      status: 301,
+      location: `/anime/${ID}`
+    });
+  });
+
+  it('keeps the query string on the empty-slug fallback too', async () => {
+    request.mockResolvedValueOnce({ anime: { id: ID, slug: '' } });
+
+    await expect(run(ID, '?page=2')).rejects.toMatchObject({
+      location: `/anime/${ID}?page=2`
+    });
   });
 
   it('encodes an id that would otherwise break the path', async () => {

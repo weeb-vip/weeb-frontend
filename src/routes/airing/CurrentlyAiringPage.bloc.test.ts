@@ -586,15 +586,22 @@ describe('the schedule slice and "show more days"', () => {
     expect(bloc.hasMoreDays).toBe(false);
   });
 
-  it('lets nextDayBatch go negative once everything is revealed', () => {
-    // Current behaviour, not desired behaviour: `nextDayBatch` is
-    // `min(7, upcoming - visible)` with no floor, so it reads -4 here. Only
-    // `hasMoreDays` keeps that number off the screen. Pinned so that a future
-    // change to the button's condition cannot silently ship "Show next -4 days".
+  it('offers nothing more once everything is revealed', () => {
+    // `min(7, upcoming - visible)` overshoots when the last batch was partial,
+    // so without a floor this reads -4 and only `hasMoreDays` keeps
+    // "Show next -4 days" off the screen.
     const bloc = loaded(dailyShows(10, 12));
     bloc.showMoreDays();
 
-    expect(bloc.nextDayBatch).toBe(-4);
+    expect(bloc.nextDayBatch).toBe(0);
+    expect(bloc.hasMoreDays).toBe(false);
+  });
+
+  it('offers nothing more when there was never anything to reveal', () => {
+    const bloc = loaded(dailyShows(3, 12));
+
+    expect(bloc.nextDayBatch).toBe(0);
+    expect(bloc.hasMoreDays).toBe(false);
   });
 
   it('reveals a full week when there is more than a week left', () => {

@@ -119,22 +119,43 @@ describe('animeListConfig', () => {
       }
     });
 
-    // FAILING — a real bug, left un-run rather than papered over.
-    //
-    // `score` is parsed once and then guarded twice differently: the row reads
-    // `Number.isFinite(score) ? score : null`, and the card is handed the raw
-    // `score`. A rating that is a non-empty, non-"N/A" string that does not
-    // parse -- MyAnimeList's content ratings are exactly this shape -- makes
-    // `parseFloat` return NaN, so `row.score` is null while `row.card.score`
-    // is NaN. `Score.hasScore(NaN)` is true and `Score.scoreText(NaN)` is
-    // "NaN", so the card draws a score chip reading NaN.
-    it.skip('gives the card no score for a rating that is not a number', () => {
+    // `score` used to be parsed once and then guarded twice differently: the row
+    // read `Number.isFinite(score) ? score : null` while the card was handed the
+    // raw `parseFloat` result. A rating that is a non-empty, non-"N/A" string
+    // which does not parse -- MyAnimeList's content ratings are exactly this
+    // shape -- made `parseFloat` return NaN, so `row.score` was null while
+    // `row.card.score` was NaN; `Score.hasScore(NaN)` is true and
+    // `Score.scoreText(NaN)` is "NaN", so the card drew a chip reading "NaN".
+    it('gives the card no score for a rating that is not a number', () => {
       const row = config().row({
         ...ENTRY,
         anime: { ...ENTRY.anime, rating: 'R - 17+ (violence)' }
       });
 
       expect(row.card.score).toBeNull();
+    });
+
+    it('treats every shape of absent rating as no score at all, on row and card', () => {
+      // Null and undefined are the API's two ways of not saying; '' is the
+      // empty column; 'abc' is a string that simply is not a number. None of
+      // them is a score, and none may reach the card as NaN.
+      for (const rating of [null, undefined, '', 'abc', 'N/A', 'R - 17+ (violence)']) {
+        const row = config().row({ ...ENTRY, anime: { ...ENTRY.anime, rating } });
+
+        expect(row.score, `row score for ${JSON.stringify(rating)}`).toBeNull();
+        expect(row.card.score, `card score for ${JSON.stringify(rating)}`).toBeNull();
+        expect(Number.isNaN(row.card.score as unknown as number)).toBe(false);
+      }
+    });
+
+    it('still passes a real score straight through to the card', () => {
+      // The guard must not swallow the values it exists to protect.
+      for (const [rating, expected] of [['8.94', 8.94], ['0', 0], ['10', 10]] as const) {
+        const row = config().row({ ...ENTRY, anime: { ...ENTRY.anime, rating } });
+
+        expect(row.score).toBe(expected);
+        expect(row.card.score).toBe(expected);
+      }
     });
 
     it('reports progress in episodes', () => {

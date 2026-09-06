@@ -120,6 +120,8 @@ interface Options {
   notify?: { error: any };
   flags?: { isEnabled: any };
   viewport?: ReturnType<typeof stubViewport>;
+  /** Returns a promise for the tests that care about the scroll's ordering against it. */
+  navigate?: Mock<(href: string) => unknown>;
   notifications?: any;
   titleLanguage?: 'english' | 'japanese';
   flagPollMs?: number;
@@ -138,7 +140,7 @@ function build(options: Options = {}) {
   };
   const notify = options.notify ?? { error: vi.fn() };
   const viewport = options.viewport ?? stubViewport();
-  const navigate = vi.fn();
+  const navigate = options.navigate ?? vi.fn();
   const configInit = vi.fn(async () => ({}));
 
   const bloc = new ShowContentBloc({
@@ -523,6 +525,67 @@ describe('the section nav', () => {
     // 500 + 1000 - 60 nav - 48 tab bar - 8 breathing room
     expect(viewport.scrollTo).toHaveBeenCalledWith(1384);
     expect(navigate).toHaveBeenCalledWith('#show-section-episodes');
+  });
+
+  it('scrolls only after the router has finished putting the scroll position back', async () => {
+    // `goto(..., { noScroll: true })` restores the scroll position it recorded
+    // as the navigation began -- a `window.scrollTo(x, y)` that cancels a smooth
+    // scroll already in flight. Scrolling first therefore did nothing: the page
+    // stopped short, the spy found nothing had crossed its threshold, and the
+    // marker snapped back to the first section. The scroll has to be last.
+    const client = inertClient();
+    seedDetails(client, record);
+    const viewport = stubViewport({
+      scrollY: vi.fn(() => 0),
+      sectionTop: vi.fn(() => 1254),
+      cssLength: vi.fn(() => 60),
+    });
+    let settle: () => void = () => {};
+    const navigate = vi.fn(() => new Promise<void>((resolve) => (settle = resolve)));
+    const { bloc } = build({ client, viewport, navigate });
+
+    bloc.measureChrome(0, 41);
+    bloc.selectSection('episodes');
+
+    // Navigation in flight: nothing has been scrolled yet.
+    expect(navigate).toHaveBeenCalledWith('#show-section-episodes');
+    expect(viewport.scrollTo).not.toHaveBeenCalled();
+    expect(bloc.activeSection).toBe('episodes');
+
+    settle();
+    await vi.waitFor(() => expect(viewport.scrollTo).toHaveBeenCalledTimes(1));
+    // 1254 + 0 - 60 nav - 41 tab bar - 8 breathing room
+    expect(viewport.scrollTo).toHaveBeenCalledWith(1145);
+  });
+
+  it('still scrolls when the navigation rejects, rather than leaving the reader put', async () => {
+    const client = inertClient();
+    seedDetails(client, record);
+    const viewport = stubViewport({ sectionTop: vi.fn(() => 500), cssLength: vi.fn(() => 60) });
+    const navigate = vi.fn(() => Promise.reject(new Error('router said no')));
+    const { bloc } = build({ client, viewport, navigate });
+
+    bloc.selectSection('episodes');
+
+    await vi.waitFor(() => expect(viewport.scrollTo).toHaveBeenCalledTimes(1));
+  });
+
+  it('measures the section at the moment it scrolls, not before it navigates', async () => {
+    // The sticky header can appear between the two, and the offset it adds is
+    // part of where the section has to land.
+    const client = inertClient();
+    seedDetails(client, record);
+    const viewport = stubViewport({ sectionTop: vi.fn(() => 900), cssLength: vi.fn(() => 60) });
+    const navigate = vi.fn(async () => {
+      viewport.sectionTop.mockReturnValue(300);
+    });
+    const { bloc } = build({ client, viewport, navigate });
+
+    bloc.selectSection('episodes');
+
+    await vi.waitFor(() => expect(viewport.scrollTo).toHaveBeenCalledTimes(1));
+    // 300, the position after the navigation -- not the 900 it was before it.
+    expect(viewport.scrollTo).toHaveBeenCalledWith(300 - 60 - 8);
   });
 
   it('still navigates when the section element is not in the document', () => {

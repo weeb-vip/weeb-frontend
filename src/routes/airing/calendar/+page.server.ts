@@ -24,6 +24,14 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     ssrError = 'Failed to load calendar data';
   }
 
+  // A null answer is a failure, not an empty month: fetchWithFallback swallows
+  // the error and returns null, so without this an outage renders as a blank
+  // calendar with nothing to say why. A month with nothing in it still arrives
+  // as a response object. Same rule as loadWorksBrowse.
+  if (!ssrError && !calendarData) {
+    ssrError = 'Failed to load calendar data';
+  }
+
   const isTokenExpired = fetcher.wasTokenExpired();
 
   return {

@@ -220,6 +220,40 @@ describe('the local layer', () => {
     // The total is what the catalogue said, not what survived the local pass.
     expect(bloc.totalResults).toBe(2);
   });
+
+  /*
+    Why the total is not narrowed with the results, since it looks like a bug
+    and is not one to fix here.
+
+    `totalResults` is the catalogue's count for the *query*, across every page.
+    The status and year filters run on the hits of the page in hand, so the
+    filtered count is a count of one page. Narrowing `totalResults` to it would
+    take `totalPages` -- `ceil(total / perPage)` -- down to one and `goToPage`
+    would then refuse every other page, stranding the reader on page one of a
+    catalogue that has fifty. The header being ahead of the grid is a smaller
+    wrong than the rest of the results becoming unreachable.
+
+    Making the header honest means filtering in the query rather than after it,
+    which is a change to the catalogue request and the search service, not to
+    this bloc. Pinned here so that the coupling is visible when someone does.
+  */
+  it('keeps the catalogue count driving pagination while a local filter is on', async () => {
+    const harness = await searched({
+      hits: [hit('1', { status: 'FINISHED_AIRING' }), hit('2', { status: 'CURRENTLY_AIRING' })],
+      total: 50, // 3 pages at 24 per page
+    });
+
+    harness.bloc.setStatus('CURRENTLY_AIRING');
+    expect(harness.bloc.results).toHaveLength(1);
+
+    // Still three pages, and the later ones are still reachable.
+    expect(harness.bloc.totalPages).toBe(3);
+    harness.bloc.goToPage(2);
+    await flush();
+
+    expect(harness.bloc.page).toBe(2);
+    expect(harness.lastRequest().page).toBe(2);
+  });
 });
 
 describe('the fetched layer', () => {

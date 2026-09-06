@@ -112,20 +112,57 @@ describe('server-side cookie-string parsing', () => {
   });
 
   /*
-   * BUG (reported, not worked around): `cookieFromString` calls
-   * `decodeURIComponent` on whatever it matched, and that throws `URIError` on
-   * a malformed escape. This runs on the server for every request, on an
-   * attacker-supplied header — `Cookie: auth_token=%E0%A4%A` is enough to
-   * throw out of `getTokenFromCookieString`, which none of its callers guard.
-   * Un-skip once the decode is wrapped (or `decodeURIComponent` swapped for a
-   * try/catch that falls back to the raw value).
+   * FIXED (was: `decodeURIComponent` threw `URIError` straight out of
+   * `getTokenFromCookieString`, on the server, for every request, on an
+   * attacker-supplied header that no caller guarded — `Cookie:
+   * auth_token=%E0%A4%A` was the whole exploit).
+   *
+   * The answer chosen is *absent*, not the raw bytes: everything the app issues
+   * is a base64url JWT and contains no `%` at all, so an undecodable value
+   * cannot be a token. Reporting it as one would advertise a session that
+   * cannot authenticate — and would let a visitor make their own response
+   * uncacheable with a junk cookie.
    */
-  it.skip('survives a malformed percent-escape instead of throwing', () => {
-    expect(AuthStorage.getTokenFromCookieString('auth_token=%E0%A4%A')).toBe('%E0%A4%A');
+  it('survives a malformed percent-escape instead of throwing', () => {
+    expect(() => AuthStorage.getTokenFromCookieString('auth_token=%E0%A4%A')).not.toThrow();
+    expect(AuthStorage.getTokenFromCookieString('auth_token=%E0%A4%A')).toBeUndefined();
   });
 
-  it('currently throws on a malformed percent-escape (documents the bug above)', () => {
-    expect(() => AuthStorage.getTokenFromCookieString('auth_token=%E0%A4%A')).toThrow(URIError);
+  it.each([
+    ['a truncated escape', 'auth_token=%E0%A4%A'],
+    ['a lone percent', 'auth_token=%'],
+    ['a percent followed by non-hex', 'auth_token=%ZZ'],
+    ['a stray high surrogate byte', 'auth_token=%C3%28']
+  ])('treats %s as no token at all', (_label, cookie) => {
+    expect(AuthStorage.getTokenFromCookieString(cookie)).toBeUndefined();
+    expect(AuthStorage.getTokensFromCookieString(cookie)).toEqual({
+      authToken: undefined,
+      refreshToken: undefined
+    });
+    expect(AuthStorage.isLoggedInFromCookieString(cookie)).toBe(false);
+  });
+
+  it('reads a malformed refresh cookie as absent too, not as a session', () => {
+    expect(AuthStorage.getTokensFromCookieString('refresh_token=%E0%A4%A')).toEqual({
+      authToken: undefined,
+      refreshToken: undefined
+    });
+    expect(AuthStorage.isLoggedInFromCookieString('refresh_token=%E0%A4%A')).toBe(false);
+  });
+
+  it('falls through to the next name when the preferred one will not decode', () => {
+    // "Absent" is meant literally: a junk `auth_token` must not shadow a
+    // perfectly good `access_token` behind it.
+    expect(
+      AuthStorage.getTokenFromCookieString('auth_token=%E0%A4%A; access_token=good')
+    ).toBe('good');
+    expect(
+      AuthStorage.getTokensFromCookieString('refresh_token=%; refreshToken=legacy-ok')
+    ).toEqual({ authToken: undefined, refreshToken: 'legacy-ok' });
+  });
+
+  it('is unbothered by a malformed escape on a cookie it does not care about', () => {
+    expect(AuthStorage.getTokenFromCookieString('theme=%E0%A4%A; auth_token=fine')).toBe('fine');
   });
 });
 

@@ -533,17 +533,16 @@ describe('the zone decides where a day starts', () => {
     expect(tokyo.cells.find((cell) => cell.isToday)?.iso).toBe('2026-03-12');
   });
 
-  it('offsets every cell key by a day for a zone behind the host', () => {
-    // Current behaviour, and a latent bug: the grid walks *host-local* days but
-    // keys each cell in the chosen zone, so for any zone behind the host every
-    // cell's `iso` is a day earlier than the `dayNumber` printed on it. In the
+  it('keys every cell by the day printed on it, even for a zone behind the host', () => {
+    // The grid walks *host-local* days, so the key has to be that same day.
+    // Keying each cell in the chosen zone instead put every `iso` a day earlier
+    // than the `dayNumber` printed on it for any zone behind the host. In the
     // app the two are always the same zone (`browserLocalZone`), which is the
-    // only reason this has never shown. Pinned so a second caller passing a
-    // different zone is not a silent off-by-one.
+    // only reason it never showed.
     const bloc = zoned('Etc/GMT+5');
 
     expect(bloc.cells[0].dayNumber).toBe('1');
-    expect(bloc.cells[0].iso).toBe('2026-02-28');
+    expect(bloc.cells[0].iso).toBe('2026-03-01');
   });
 
   it('lines the two up when the zone is the host"s own', () => {
@@ -551,6 +550,16 @@ describe('the zone decides where a day starts', () => {
 
     expect(bloc.cells[0].dayNumber).toBe('1');
     expect(bloc.cells[0].iso).toBe('2026-03-01');
+  });
+
+  it('keeps key and label in step across the whole grid, whatever the zone', () => {
+    for (const zone of ['Etc/GMT+5', 'Etc/UTC', 'Asia/Tokyo']) {
+      const cells = zoned(zone).cells;
+      expect(cells.length).toBeGreaterThan(0);
+      for (const cell of cells) {
+        expect(String(Number(cell.iso.slice(-2)))).toBe(cell.dayNumber);
+      }
+    }
   });
 });
 

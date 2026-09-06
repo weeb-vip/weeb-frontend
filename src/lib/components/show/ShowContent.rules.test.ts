@@ -16,6 +16,7 @@ import {
   resolveShow,
   scheduleLabel,
   sectionElementId,
+  isThenable,
   sectionScrollTop,
   sectionTabs,
   stickyStackHeight,
@@ -180,6 +181,20 @@ describe('the sticky stack', () => {
 
   test('never scrolls to a negative offset — the hero starts above the origin', () => {
     expect(sectionScrollTop(-2000, 0, 60, 113)).toBe(0);
+  });
+});
+
+describe('isThenable — whether the section jump has something to wait for', () => {
+  test('a promise, and anything else with a then', () => {
+    expect(isThenable(Promise.resolve())).toBe(true);
+    expect(isThenable({ then: () => {} })).toBe(true);
+    expect(isThenable(Object.assign(() => {}, { then: () => {} }))).toBe(true);
+  });
+
+  test('nothing at all, which is what a navigate port that does not navigate returns', () => {
+    for (const value of [undefined, null, 0, '', 'then', {}, [], { then: 1 }, () => {}]) {
+      expect(isThenable(value)).toBe(false);
+    }
   });
 });
 

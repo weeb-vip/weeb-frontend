@@ -27,6 +27,16 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     ssrError = 'Failed to load data';
   }
 
+  // A null answer is a failure, not an empty schedule. fetchWithFallback
+  // swallows the error and returns null rather than throwing, so without this
+  // the catch above almost never fires and a subgraph outage renders as
+  // "nothing airing" -- a lie the reader cannot tell from a quiet week. An
+  // actually empty schedule still arrives as a response object with an empty
+  // list, so it is unaffected. Same rule as loadWorksBrowse.
+  if (!ssrError && !currentlyAiringData) {
+    ssrError = 'Failed to load data';
+  }
+
   const isTokenExpired = fetcher.wasTokenExpired();
 
   return {

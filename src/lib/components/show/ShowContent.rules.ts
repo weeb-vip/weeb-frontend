@@ -136,6 +136,21 @@ export function activeSection(
 }
 
 /**
+ * Whether a value is something to wait on.
+ *
+ * The section jump has to run AFTER the router has finished putting the scroll
+ * position back, and the navigate port is allowed to return nothing -- every
+ * test stub does. This is the one question the bloc asks of what it got back.
+ */
+export function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return (
+    value != null &&
+    (typeof value === 'object' || typeof value === 'function') &&
+    typeof (value as PromiseLike<unknown>).then === 'function'
+  );
+}
+
+/**
  * Where the page must scroll so a section clears the nav and the sticky stack.
  * Never negative: the first section sits under a hero that starts above the
  * document origin, and a negative target scrolls nowhere in some browsers and

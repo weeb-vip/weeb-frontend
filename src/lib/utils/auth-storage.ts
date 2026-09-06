@@ -1,4 +1,5 @@
 import debug from './debug';
+import { ACCESS_TOKEN_COOKIE_NAMES, REFRESH_TOKEN_COOKIE_NAMES } from './auth-cookie-names';
 
 // Cookie utility functions
 class CookieUtils {
@@ -225,18 +226,46 @@ export class AuthStorage {
 
   // Match a cookie by exact name (word-boundary safe: 'access_token'
   // must not match a hypothetical 'guest_access_token')
+  //
+  // A malformed percent-escape reads as *absent* — not as an error, and not as
+  // the raw bytes. `decodeURIComponent` throws `URIError` on something as small
+  // as `auth_token=%E0%A4%A`, and this runs on the server for every request
+  // against an attacker-supplied header where no caller catches it, so one junk
+  // cookie was enough to take the whole render down.
+  //
+  // Absent rather than raw, because a value that cannot be decoded is not a
+  // token: everything the app issues is a base64url JWT, which contains no `%`
+  // at all. Handing the undecodable bytes back would advertise a session that
+  // cannot possibly authenticate — `isLoggedIn` true, a doomed refresh on every
+  // request, and the response marked uncacheable — all on a value the visitor
+  // chose. Treating it as no cookie falls through to the next name in the
+  // precedence chain, and otherwise renders the page anonymously.
   private static cookieFromString(cookieString: string, name: string): string | undefined {
     const match = cookieString.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
-    return match ? decodeURIComponent(match[1]) : undefined;
+    if (!match) return undefined;
+
+    try {
+      return decodeURIComponent(match[1]);
+    } catch {
+      // URIError: a malformed escape. Same answer as no cookie at all.
+      return undefined;
+    }
+  }
+
+  /** First readable cookie from an ordered list of names. */
+  private static firstCookie(cookieString: string, names: readonly string[]): string | undefined {
+    for (const name of names) {
+      const value = this.cookieFromString(cookieString, name);
+      if (value !== undefined) return value;
+    }
+    return undefined;
   }
 
   // Server-side utility to extract token from cookie string
   static getTokenFromCookieString(cookieString: string | undefined): string | undefined {
     if (!cookieString) return undefined;
 
-    return this.cookieFromString(cookieString, 'auth_token')
-      ?? this.cookieFromString(cookieString, 'access_token')
-      ?? this.cookieFromString(cookieString, 'authToken');
+    return this.firstCookie(cookieString, ACCESS_TOKEN_COOKIE_NAMES);
   }
 
   // Server-side utility to check if user is authenticated
@@ -252,11 +281,8 @@ export class AuthStorage {
     if (!cookieString) return {};
 
     return {
-      authToken: this.cookieFromString(cookieString, 'auth_token')
-        ?? this.cookieFromString(cookieString, 'access_token')
-        ?? this.cookieFromString(cookieString, 'authToken'),
-      refreshToken: this.cookieFromString(cookieString, 'refresh_token')
-        ?? this.cookieFromString(cookieString, 'refreshToken')
+      authToken: this.firstCookie(cookieString, ACCESS_TOKEN_COOKIE_NAMES),
+      refreshToken: this.firstCookie(cookieString, REFRESH_TOKEN_COOKIE_NAMES)
     };
   }
 }

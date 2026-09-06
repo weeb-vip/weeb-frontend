@@ -33,5 +33,9 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies }) => 
   // Prefer the slug, fall back to the id: /anime/<id> resolves too, and
   // redirects on to the slug once MySQL has it. Erroring here when the slug has
   // not landed yet would make a brand-new anime unreachable from its own links.
-  redirect(301, `/anime/${anime.slug ?? encodeURIComponent(anime.id)}/news${url.search}`);
+  //
+  // Truthiness, not `??`, for the same reason as the parent route: an empty
+  // slug is "no slug yet", and `??` would emit /anime//news, which is not a
+  // route at all.
+  redirect(301, `/anime/${anime.slug || encodeURIComponent(anime.id)}/news${url.search}`);
 };

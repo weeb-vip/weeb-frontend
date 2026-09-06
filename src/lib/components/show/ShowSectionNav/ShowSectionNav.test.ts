@@ -1,9 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, within } from '@testing-library/svelte';
+import { render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { readable } from 'svelte/store';
+import { QueryClient } from '@tanstack/svelte-query';
 import ShowSectionNav from './ShowSectionNav.svelte';
 import { stubResizeObserver } from '$lib/components/__tests__/jsdom-gaps';
 import { sectionTabs, type SectionTab } from '$lib/components/show/ShowContent.rules';
+// The page that owns `active`. Imported for exactly one test -- the one that
+// asks whether a click on this strip actually moves the marker -- because that
+// question is only answerable with the thing on the other end of `onSelect`.
+import { ShowContentBloc } from '../../../../routes/anime/[slug]/ShowContent.bloc.svelte';
+
+vi.mock('svelte-sonner', () => ({ toast: { error: vi.fn() } }));
 
 /**
  * The strip pinned under the nav that says which part of the page you are in.
@@ -35,6 +43,57 @@ const props = (overrides: Partial<Record<string, unknown>> = {}) => ({
   onSelect: () => {},
   ...overrides
 });
+
+/**
+ * The page behind the strip, with every port stubbed: no network, no window,
+ * no router. `navigate` returns a promise, because the real one is `goto` and
+ * the order of the scroll against it is the whole of the bug below.
+ */
+function showPage() {
+  const tops: Record<string, number> = {
+    'show-section-synopsis': 1036,
+    'show-section-episodes': 1254,
+    'show-section-characters': 2147
+  };
+  const viewport = {
+    scrollY: vi.fn(() => 0),
+    innerWidth: vi.fn(() => 1280),
+    sectionTop: vi.fn((id: string): number | null => tops[id] ?? null),
+    scrollTo: vi.fn((_top: number) => {}),
+    cssLength: vi.fn((_name: string, fallback: number) => fallback),
+    setStickyOffset: vi.fn((_px: number | null) => {}),
+    onScroll: vi.fn((_listener: () => void) => vi.fn())
+  };
+  const navigate = vi.fn(async (_href: string) => {});
+  const bloc = new ShowContentBloc({
+    source: () => ({
+      animeId: 'abc',
+      ssrAnimeData: { anime: { id: 'abc', episodes: [{ episodeNumber: 1 }] } },
+      ssrCharactersData: null,
+      ssrError: null
+    }),
+    details: ((id: string) => ({ queryKey: ['details', id], queryFn: async () => ({}) })) as any,
+    watched: ((id: string) => ({ queryKey: ['watched', id], queryFn: async () => [] })) as any,
+    tracking: { save: vi.fn(), markEpisode: vi.fn() } as any,
+    preferences: readable({ titleLanguage: 'english' }) as any,
+    notifications: readable({ timingData: {}, countdowns: {} }) as any,
+    config: { init: vi.fn(async () => ({})) } as any,
+    flags: { isEnabled: () => false },
+    viewport,
+    navigate,
+    notify: { error: vi.fn() },
+    clock: () => new Date('2025-03-01T12:00:00Z'),
+    imageUrl: (id: string) => id,
+    queryClient: new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, retryOnMount: false, refetchOnMount: false, staleTime: Infinity },
+        mutations: { retry: false }
+      }
+    }),
+    flagMaxTries: 0
+  });
+  return { bloc, viewport, navigate };
+}
 
 describe('ShowSectionNav', () => {
   describe('the ARIA shape', () => {
@@ -105,33 +164,84 @@ describe('ShowSectionNav', () => {
     });
 
     /**
-     * REPORTED BUG, left skipped: clicking a section on the show page sets the
-     * location hash but the pressed marker stays on the first item, both on
-     * click and via the scroll spy.
+     * THE reported bug, now a real test.
      *
-     * It is NOT in this component, and the two tests above are the proof: the
-     * marker follows `active` on the first render and on every rerender. Nor is
-     * it the obvious page-level candidate -- `ShowContentBloc.selectSection()`
-     * does set `#activeSection = section` before it scrolls and writes the hash.
-     * The remaining suspects are both things jsdom cannot reach: `syncScroll()`
-     * recomputing `activeSection(...)` from live element positions and
-     * overwriting the click's answer mid-smooth-scroll, and the threshold
-     * (`navHeight + 160`) disagreeing with where `sectionScrollTop()` actually
-     * lands the section. jsdom performs no layout, implements no
-     * `window.scrollTo` and reports every `getBoundingClientRect()` as zero, so
-     * a unit test here would only re-assert the stubs it was given.
+     * Clicking a section set the hash but left the marker on the first item,
+     * on the click and afterwards. It was never this component -- the two tests
+     * above are the proof -- and it was not the obvious page-level candidate
+     * either: `selectSection()` does set the section before anything else.
      *
-     * Reproduce in a browser: load /anime/<slug>, click "Episodes", observe
-     * `location.hash` become `#show-section-episodes` while
-     * `[aria-pressed="true"]` is still "Synopsis". Pinning it belongs to the
-     * Playwright layer; this placeholder is here because it is where a reader
-     * looks for it first.
+     * It was the ORDER of the two things it does next. `goto(..., { noScroll })`
+     * does not leave the scroll position alone; it puts it back where it was,
+     * with a `window.scrollTo(x, y)`. Issued after the section's own
+     * `scrollTo({ behavior: 'smooth' })`, that cancelled the smooth scroll
+     * outright: the page stopped short of the section, the scroll spy found
+     * that nothing had crossed its threshold, fell back to `sections[0]` and
+     * put the marker back on Synopsis. Measured in Chromium on the real page:
+     * the click asked for y=1145 and the page settled at y=461.
      *
-     * Do NOT "fix" ShowSectionNav to make this pass -- this source is correct.
+     * So the page half IS reachable from here after all -- what it turns on is
+     * whether the scroll waits for the navigation, which is ordering, not
+     * layout. This drives the strip against the real bloc with an async
+     * navigate port, which is the shape that used to lose the race.
      */
-    it.skip('the page moves the marker to the section a click scrolled to', () => {
-      // Belongs to a real browser: click "Episodes" -> the page's activeSection
-      // becomes "episodes" -> this component's `active` prop follows.
+    it('the page moves the marker to the section a click scrolled to', async () => {
+      const page = showPage();
+      const nav = () => ({
+        sections: page.bloc.sections,
+        active: page.bloc.activeSection,
+        onSelect: (section: string) => page.bloc.selectSection(section)
+      });
+
+      const { rerender } = render(ShowSectionNav, { props: nav() });
+      expect(screen.getByRole('button', { name: 'Synopsis' })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: /Episodes/ }));
+
+      // The navigation settles first, and only then is the section scrolled to
+      // -- the reverse of that is the bug.
+      await waitFor(() => expect(page.viewport.scrollTo).toHaveBeenCalledTimes(1));
+      expect(page.navigate).toHaveBeenCalledWith('#show-section-episodes');
+      expect(page.navigate.mock.invocationCallOrder[0]).toBeLessThan(
+        page.viewport.scrollTo.mock.invocationCallOrder[0]
+      );
+
+      // And the marker the page hands back is the section it scrolled to.
+      expect(page.bloc.activeSection).toBe('episodes');
+      await rerender(nav());
+      expect(screen.getByRole('button', { name: /Episodes/ })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+      expect(screen.getByRole('button', { name: 'Synopsis' })).toHaveAttribute(
+        'aria-pressed',
+        'false'
+      );
+    });
+
+    it('keeps the marker on the clicked section when the scroll spy runs after it', async () => {
+      // The spy runs on every scroll event of the smooth scroll. Once the page
+      // has actually arrived, it has to agree with the click rather than
+      // fall back to the first section -- which is what it did while the
+      // scroll was being cancelled underneath it.
+      const page = showPage();
+
+      page.bloc.selectSection('episodes');
+      await waitFor(() => expect(page.viewport.scrollTo).toHaveBeenCalled());
+
+      // Where the page now is: the section sits just under the pinned bars.
+      const arrived: Record<string, number> = {
+        'show-section-synopsis': -400,
+        'show-section-episodes': 108,
+        'show-section-characters': 900
+      };
+      page.viewport.sectionTop.mockImplementation((id: string): number | null => arrived[id] ?? null);
+      page.bloc.syncScroll();
+
+      expect(page.bloc.activeSection).toBe('episodes');
     });
   });
 

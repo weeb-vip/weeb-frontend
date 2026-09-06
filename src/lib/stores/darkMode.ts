@@ -38,103 +38,97 @@ function createDarkModeStore() {
     isDarkMode: getInitialTheme()
   });
 
+  // The current value, so `toggleDarkMode` can read it without re-entering
+  // `update` (its helpers call `set`, which inside an updater is a trap).
+  let current = getInitialTheme();
+  subscribe((state) => {
+    current = state.isDarkMode;
+  });
+
+  // The list is kept alongside the handler, not looked up again on the way
+  // out: `matchMedia` hands back a fresh MediaQueryList per call in a real
+  // browser, and removing a listener from a different object removes nothing.
+  let mediaQueryList: MediaQueryList | null = null;
   let mediaQueryListener: ((e: MediaQueryListEvent) => void) | null = null;
+
+  /** Store value, the `dark` class and the theme-color tag, always together. */
+  const applyTheme = (isDark: boolean) => {
+    set({ isDarkMode: isDark });
+    if (typeof window === 'undefined') return;
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    updateThemeColor(isDark);
+  };
+
+  /**
+   * Detaches the OS listener, if one is attached. Every explicit choice goes
+   * through here: a listener left behind would keep rewriting the class after
+   * the user has picked a theme, so a later OS change would silently override
+   * them.
+   */
+  const stopFollowingSystem = () => {
+    if (mediaQueryList && mediaQueryListener) {
+      mediaQueryList.removeEventListener('change', mediaQueryListener);
+    }
+    mediaQueryList = null;
+    mediaQueryListener = null;
+  };
+
+  /** Replaces any current listener, so repeated calls cannot stack handlers. */
+  const followSystem = () => {
+    if (typeof window === 'undefined') return;
+    stopFollowingSystem();
+    mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQueryListener = (e: MediaQueryListEvent) => applyTheme(e.matches);
+    mediaQueryList.addEventListener('change', mediaQueryListener);
+  };
+
+  const choose = (dark: boolean) => {
+    // An explicit pick outranks the OS, and stays outranking it.
+    stopFollowingSystem();
+    applyTheme(dark);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('darkMode', dark.toString());
+    }
+  };
 
   return {
     subscribe,
     initializeTheme: () => {
       if (typeof window !== 'undefined') {
         const initialTheme = getInitialTheme();
-        set({ isDarkMode: initialTheme });
-
-        if (initialTheme) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        updateThemeColor(initialTheme);
+        applyTheme(initialTheme);
 
         // Listen for system theme changes if no saved preference
         const savedTheme = localStorage.getItem('darkMode');
         if (savedTheme === null) {
-          const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-          mediaQueryListener = (e: MediaQueryListEvent) => {
-            const systemDark = e.matches;
-            set({ isDarkMode: systemDark });
-            if (systemDark) {
-              document.documentElement.classList.add('dark');
-            } else {
-              document.documentElement.classList.remove('dark');
-            }
-            updateThemeColor(systemDark);
-          };
-          mediaQuery.addEventListener('change', mediaQueryListener);
+          followSystem();
+        } else {
+          stopFollowingSystem();
         }
       }
     },
     toggleDarkMode: () => {
-      update(state => {
-        const newDarkMode = !state.isDarkMode;
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('darkMode', newDarkMode.toString());
-          if (newDarkMode) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-          updateThemeColor(newDarkMode);
-        }
-        return { isDarkMode: newDarkMode };
-      });
+      choose(!current);
     },
     setDarkMode: (dark: boolean) => {
-      set({ isDarkMode: dark });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('darkMode', dark.toString());
-        if (dark) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        updateThemeColor(dark);
-      }
+      choose(dark);
     },
     useSystemTheme: () => {
       if (typeof window !== 'undefined') {
         // Clear saved preference to use system theme
         localStorage.removeItem('darkMode');
 
-        // Get current system preference
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        set({ isDarkMode: systemDark });
-
-        if (systemDark) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        updateThemeColor(systemDark);
-
-        // Set up listener for system theme changes
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = (e: MediaQueryListEvent) => {
-          const newSystemDark = e.matches;
-          set({ isDarkMode: newSystemDark });
-          if (newSystemDark) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-          updateThemeColor(newSystemDark);
-        };
-
-        // Remove any existing listener first
-        if (mediaQueryListener) {
-          mediaQuery.removeEventListener('change', mediaQueryListener);
-        }
-        mediaQueryListener = handleChange;
-        mediaQuery.addEventListener('change', handleChange);
+        applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+        followSystem();
       }
+    },
+    /** Teardown for anything that outlives the document, e.g. a test. */
+    dispose: () => {
+      stopFollowingSystem();
     },
     set,
     update

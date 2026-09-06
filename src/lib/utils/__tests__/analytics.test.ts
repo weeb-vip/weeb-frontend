@@ -211,21 +211,34 @@ describe('identifyUser', () => {
   });
 
   /*
-   * BUG (reported, not worked around): `identifyUser` has no guard on `userId`,
-   * so an empty string — which is what a caller reading `user?.id` off a
-   * half-loaded profile hands it — is forwarded to PostHog and creates an
-   * anonymous person profile keyed on "". Un-skip when a falsy id returns early.
+   * `identifyUser` used to have no guard on `userId`, so an empty string —
+   * which is what a caller reading `user?.id` off a half-loaded profile hands
+   * it — was forwarded to PostHog and created a person profile keyed on "",
+   * which every such caller then shared. A falsy id now returns early.
    */
-  it.skip('does not identify without an id', () => {
+  it('does not identify without an id', () => {
     const posthog = stubPostHog();
     identifyUser('');
     expect(posthog.identify).not.toHaveBeenCalled();
   });
 
-  it('currently forwards an empty id (documents the bug above)', () => {
+  it('does not identify for an id of whitespace either', () => {
     const posthog = stubPostHog();
-    identifyUser('');
-    expect(posthog.identify).toHaveBeenCalledWith('', undefined);
+    identifyUser('   ');
+    expect(posthog.identify).not.toHaveBeenCalled();
+  });
+
+  it('does not identify for an id that is missing entirely', () => {
+    const posthog = stubPostHog();
+    identifyUser(undefined as unknown as string);
+    expect(posthog.identify).not.toHaveBeenCalled();
+  });
+
+  it('still identifies properties for a real id', () => {
+    // The guard is on the id alone: an id with no properties is a valid call.
+    const posthog = stubPostHog();
+    identifyUser('u-2');
+    expect(posthog.identify).toHaveBeenCalledWith('u-2', undefined);
   });
 });
 

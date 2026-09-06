@@ -400,3 +400,52 @@ export async function registerNewUser(page: Page, email: string, password: strin
   // The address must be on screen — that's the whole point of the screen.
   await expect(page.getByText(email, { exact: false }).first()).toBeVisible({ timeout: 10000 });
 }
+
+/**
+ * Force a PostHog feature flag on for the rest of the page's life.
+ *
+ * Specs that exercise a flagged section have to pin the flag, or they pass or
+ * fail on rollout state rather than on the code under test. PostHog is not
+ * initialised in local dev (no key), so `window.posthog` is undefined and every
+ * flag reads false; patching what exists therefore has nothing to attach to.
+ * This installs a stub when absent and re-patches if the real SDK loads later
+ * and replaces the method.
+ *
+ * Two details here are load-bearing, and both were learned from a bug:
+ *
+ * 1. The stub MUST be an array. PostHog's loader snippet puts an array on
+ *    `window.posthog` and pushes every queued call onto it until the real SDK
+ *    arrives. A plain object makes that `posthog.push(...)` throw during
+ *    hydration, and an exception mid-flush takes Svelte's effect graph down
+ *    with it: the page renders once and then never updates again. That is not
+ *    a visible crash -- it looks like a component that is simply broken, and
+ *    it cost a real debugging session in anime-news.spec.ts, where a section
+ *    marker appeared permanently stuck while the page underneath was fine.
+ *
+ * 2. The patched marker goes on the FUNCTION, not on `window.posthog`. The
+ *    real SDK replaces the method on the same object when it loads, so a flag
+ *    on the object would make the re-patch a no-op and silently lose the
+ *    override.
+ */
+export async function forceFeatureFlag(page: Page, flag: string) {
+  await page.addInitScript((FLAG: string) => {
+    const install = () => {
+      const w = window as any;
+      if (!w.posthog) w.posthog = [];
+      const posthog = w.posthog;
+      if (posthog.isFeatureEnabled?.__flagPatched) return;
+      const original =
+        typeof posthog.isFeatureEnabled === 'function'
+          ? posthog.isFeatureEnabled.bind(posthog)
+          : () => false;
+      const patched = (key: string) => (key === FLAG ? true : original(key));
+      patched.__flagPatched = true;
+      posthog.isFeatureEnabled = patched;
+    };
+    install();
+    // The real SDK can land well after the first paint and bring its own
+    // method with it, so keep re-patching for a while rather than once.
+    const iv = setInterval(install, 25);
+    setTimeout(() => clearInterval(iv), 10000);
+  }, flag);
+}

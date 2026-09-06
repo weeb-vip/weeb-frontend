@@ -49,7 +49,12 @@ export const WithIcon: Story = {
   },
 };
 
-/** Password with the reveal toggle; the eye button sits inside the field. */
+/**
+ * Password with the reveal toggle; the eye button sits inside the field. It is
+ * icon-only, so its accessible name comes from `aria-label` and names the state
+ * the press moves to -- "Show password" while hidden, "Hide password" once the
+ * value is visible.
+ */
 export const Password: Story = {
   args: {
     id: 'password',

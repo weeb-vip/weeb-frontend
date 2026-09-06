@@ -34,31 +34,52 @@ test.describe('Profile settings — username errors', () => {
   });
 
   /*
-    KNOWN BUG -- /profile/settings never populates for a freshly logged-in
-    account, so everything below the navigation is blocked.
+    KNOWN BUG -- /profile/settings does not populate Username and Email for a
+    freshly registered account, so everything below the navigation is blocked.
 
     Evidence, from three CI runs across both browsers and every retry: the page
     renders, the heading and all the fields are present, edits register (First
     Name and Bio held their typed text, the bio counter read 25/300, the accent
     swatches and the lists switch responded) -- but Username and Email, the two
-    values that come from the server, stayed empty. The user query never
-    delivers, so the bloc has no server row, `hasUser` stays false and Save has
-    nothing to submit.
+    values that come from the server, stayed empty.
 
-    It is not this branch's doing, and it is not a race. /profile shows the same
-    account's data fine because it has a `+page.server.ts` that seeds the user
-    server-side; /profile/settings has no loader at all and depends entirely on
-    a client-side authenticated query. The likelihood is that the client query
-    fails right after login on both pages and /profile simply hides it behind
-    its SSR data.
+    THE ORIGINAL DIAGNOSIS ABOVE WAS WRONG, and the evidence is what refutes it.
+    It read "the user query never delivers, so `hasUser` stays false". It cannot
+    have: `src/routes/profile/settings/+page.svelte` is one
+    `{#if bloc.isLoading}{:else if bloc.hasUser}` with NO `{:else}`, so the h1,
+    every field, the swatches and the switch exist only inside the `hasUser`
+    branch. A query that never delivers paints an empty page, not an empty form.
+    That is now pinned in `src/routes/profile/settings/page.test.ts`, which
+    renders this page against a bloc with no row and asserts the document is
+    literally empty -- and against a row whose `username` is blank, which
+    reproduces the symptom above exactly.
 
-    Marked `fail` rather than deleted or weakened: the assertions are correct
-    and should start passing the moment the page loads its user. Playwright
-    reports an unexpected pass as a failure, so fixing the bug will tell us
-    here rather than leaving a quietly skipped test behind. Do not "fix" this
-    by seeding the settings page from SSR without first working out why the
-    client query does not deliver -- that would paper over it on this page and
-    leave it wherever else it bites.
+    So the client query DOES deliver here; `hasUser` is true; the row that
+    arrives simply has no username and no email on it. Also ruled out:
+      - a failed client-side authenticated request. `add-to-list.spec.ts` runs
+        `AddAnime` through the same `authenticatedRequest` path, from the same
+        localhost origin to the same staging gateway, in the same CI, and
+        asserts on the response body. Client-side auth works.
+      - the malformed-cookie and legacy-cookie-name defects fixed alongside this
+        note. Neither applies: `setTokensForLocalhost` writes both the canonical
+        and the legacy names, and nothing here sends a malformed escape.
+
+    Why the save then makes no request is separate and worth knowing: `#username`
+    is `required`, so with it blank the browser's own constraint validation
+    refuses the form before `bloc.submit()` is ever reached. No mutation, and not
+    even the app's own "Username is required." -- which is why `waitForResponse`
+    below can only time out.
+
+    What is left is a server-side question this repo cannot settle: why
+    `UserDetails` comes back with an empty `username` for an account that
+    registered with one. (`email` is a different matter -- it is optional, the
+    registration form never collects it, so the `#email` assertion below is
+    likely wrong about a fresh account regardless.)
+
+    Marked `fail` rather than deleted or weakened, and left that way pending the
+    answer. Playwright reports an unexpected pass as a failure, so this will
+    speak up if the row starts arriving complete. Do not "fix" it by seeding the
+    settings page from SSR: the client query is not the fault.
   */
   test.fail();
   test('a taken username lands on the field; any other error lands in the banner', async ({ page }) => {

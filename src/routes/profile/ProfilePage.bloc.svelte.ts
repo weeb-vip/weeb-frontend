@@ -339,6 +339,16 @@ export class ProfilePageBloc {
 
     const airingSoon: any[] = [];
     const recentlyAired: any[] = [];
+    /**
+     * Where each show already sits in `recentlyAired`, by anime id.
+     *
+     * The two passes below overlap: an episode that aired inside its own
+     * runtime is both "just aired" to the first pass and "recently aired" to
+     * the second, so the same show reached the shelf twice under one key --
+     * `each_key_duplicate` in dev, and silent DOM reuse in production. A show
+     * gets one slot; the later, richer entry fills it.
+     */
+    const recentlyAiredAt = new Map<string, number>();
     const now = getCurrentTime();
     const sevenDaysFromNow = new Date(now.getTime() + WEEK);
     const twoWeeksAgo = new Date(now.getTime() - 2 * WEEK);
@@ -378,8 +388,12 @@ export class ProfilePageBloc {
         },
       };
 
-      if (airTime <= now) recentlyAired.push(enhanced);
-      else airingSoon.push(enhanced);
+      if (airTime <= now) {
+        recentlyAiredAt.set(String(airingInfo.id), recentlyAired.length);
+        recentlyAired.push(enhanced);
+      } else {
+        airingSoon.push(enhanced);
+      }
     }
 
     // Cross-reference the list with the airing shows for recently aired episodes.
@@ -419,7 +433,7 @@ export class ProfilePageBloc {
             ? 'Yesterday'
             : `${daysDiff} days ago`;
 
-      recentlyAired.push({
+      const card = {
         ...entry,
         airingInfo: {
           ...airingInfo,
@@ -433,7 +447,19 @@ export class ProfilePageBloc {
           nextEpisodeDate: airDate,
           daysSinceAired: daysDiff,
         },
-      });
+      };
+
+      // One slot per show. This entry supersedes a just-aired one from the
+      // first pass: it names the episode it is about, which is both what the
+      // card says and what the sort below orders on.
+      const id = String(anime.id);
+      const existing = recentlyAiredAt.get(id);
+      if (existing === undefined) {
+        recentlyAiredAt.set(id, recentlyAired.length);
+        recentlyAired.push(card);
+      } else {
+        recentlyAired[existing] = card;
+      }
     }
 
     // Soonest first.

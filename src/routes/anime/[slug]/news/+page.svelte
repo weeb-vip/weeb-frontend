@@ -164,7 +164,9 @@
     {:else}
       <!-- No limit prop: the page has already cut the list, and AnimeNews regroups by
            month over whatever it is handed, so each page gets its own headers. -->
-      <AnimeNews news={bloc.visible} />
+      <!-- headingLevel=2: this rail sits directly under the page's <h1>, not
+           under a ShowSection's <h2> the way the show page's does. -->
+      <AnimeNews news={bloc.visible} headingLevel={2} />
 
       {#if bloc.pageCount > 1}
         <nav class="pager" aria-label="News pages">

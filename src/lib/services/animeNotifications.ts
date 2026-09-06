@@ -171,6 +171,11 @@ class AnimeNotificationService {
       this.worker = null;
       debug.info('🔔 Stopped anime notification worker');
     }
+
+    // Cleared alongside the worker it describes: a stopped service can do
+    // nothing, so isReady() must not go on claiming otherwise. startWatching
+    // sets it again once a new worker has the list.
+    this.isWorkerReady = false;
   }
 }
 

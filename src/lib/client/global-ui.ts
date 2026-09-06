@@ -6,7 +6,31 @@ let progressTimer: ReturnType<typeof setInterval> | null = null;
 let progressTimeout: ReturnType<typeof setTimeout> | null = null;
 let isNavigating = false;
 
+/**
+ * Drops both progress-bar timers. Whoever holds the handles is the only one
+ * who can stop them, so every path that is about to overwrite them has to
+ * come through here first.
+ */
+function clearProgressTimers() {
+  if (progressTimeout) {
+    clearTimeout(progressTimeout);
+    progressTimeout = null;
+  }
+
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+}
+
 export function showInstantFeedback() {
+  // A second navigation started while the first is still in flight -- clicking
+  // another link on a slow connection -- must not orphan the first one's
+  // timers: nothing holds their handles once they are overwritten, so a stale
+  // interval would keep writing widths to the bar for the rest of the session
+  // and no later hide could stop it.
+  clearProgressTimers();
+
   document.body.style.cursor = 'wait';
   isNavigating = true;
 
@@ -30,10 +54,7 @@ export function showInstantFeedback() {
 export function hideNavigationFeedback() {
   document.body.style.cursor = '';
 
-  if (progressTimeout) {
-    clearTimeout(progressTimeout);
-    progressTimeout = null;
-  }
+  clearProgressTimers();
 
   const progressBar = document.getElementById('navigation-progress');
   if (progressBar) {
@@ -42,11 +63,6 @@ export function hideNavigationFeedback() {
       progressBar.style.opacity = '0';
       progressBar.style.transform = 'translateY(-100%)';
     }, 200);
-  }
-
-  if (progressTimer) {
-    clearInterval(progressTimer);
-    progressTimer = null;
   }
 
   isNavigating = false;
@@ -250,13 +266,21 @@ export function initPostHogWhenConfigured() {
     // register is stubbed, so it's safe to call immediately; tags all events.
     w.posthog.register({ environment });
 
-    // Persist toolbar enablement across sessions
+    // Persist toolbar enablement across sessions.
+    //
+    // `loadToolbar` is not on the bootstrap stub — only the real array.js
+    // defines it — so at this point the captured original is usually
+    // `undefined`. Remembering the intent is still worth doing (the reopen
+    // below is what acts on it), but calling through has to be guarded or
+    // every call, including the automatic reopen on the timer, throws
+    // `originalLoadToolbar.call is not a function`.
     const originalLoadToolbar = w.posthog.loadToolbar;
     w.posthog.loadToolbar = function(params: any) {
       localStorage.setItem('posthog_toolbar_enabled', 'true');
       if (params) {
         localStorage.setItem('posthog_toolbar_params', JSON.stringify(params));
       }
+      if (typeof originalLoadToolbar !== 'function') return undefined;
       return originalLoadToolbar.call(this, params);
     };
 

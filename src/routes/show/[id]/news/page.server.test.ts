@@ -133,13 +133,24 @@ describe('the redirect', () => {
     await expect(run('a b/c')).rejects.toMatchObject({ location: '/anime/a%20b%2Fc/news' });
   });
 
-  it('BUG: does not fall back for an EMPTY-STRING slug — it redirects to /anime//news', async () => {
-    // Same `??`-instead-of-truthiness fallback as the parent route: a row whose
-    // slug column is '' rather than NULL redirects to /anime//news, which is
-    // not a route. Pinned as current behaviour, not fixed.
+  it('falls back to the id for an EMPTY-STRING slug, not to /anime//news', async () => {
+    // Same truthiness fallback as the parent route: a row whose slug column is
+    // '' rather than NULL used to redirect to /anime//news, which is not a
+    // route at all.
     request.mockResolvedValueOnce({ anime: { id: ID, slug: '' } });
 
-    await expect(run(ID)).rejects.toMatchObject({ status: 301, location: '/anime//news' });
+    await expect(run(ID)).rejects.toMatchObject({
+      status: 301,
+      location: `/anime/${ID}/news`
+    });
+  });
+
+  it('keeps the query string on the empty-slug fallback too', async () => {
+    request.mockResolvedValueOnce({ anime: { id: ID, slug: '' } });
+
+    await expect(run(ID, '?page=2')).rejects.toMatchObject({
+      location: `/anime/${ID}/news?page=2`
+    });
   });
 });
 

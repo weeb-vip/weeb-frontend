@@ -251,7 +251,7 @@ describe('the auth state handed to the client', () => {
 });
 
 describe('what happens when the season data does not arrive', () => {
-  it('reports an error only when the fetcher actually threw', async () => {
+  it('reports an error when the fetcher threw', async () => {
     fetchWithFallback.mockRejectedValue(new Error('boom'));
 
     const result = await run(args('SPRING_2025'));
@@ -260,22 +260,23 @@ describe('what happens when the season data does not arrive', () => {
     expect(result.seasonalData).toBeNull();
   });
 
-  it('leaves ssrError null for a null answer -- see the note below', async () => {
-    // BUG (pinned as current behaviour, not fixed): makeSSRFetcher's
-    // fetchWithFallback swallows every failure and RETURNS null rather than
-    // throwing, so the try/catch above almost never fires. A gateway outage
-    // therefore reaches the page as `seasonalData: null, ssrError: null` and
-    // renders as "no anime this season" instead of as a recoverable error.
-    // Compare loadWorksBrowse, which explicitly checks the answer for null.
+  it('reports an error for a null answer as well', async () => {
+    // makeSSRFetcher's fetchWithFallback swallows every failure and RETURNS
+    // null rather than throwing, so the loader's try/catch almost never fires.
+    // Without the loader's own null check a gateway outage would reach the page
+    // as `seasonalData: null, ssrError: null` and render as "no anime this
+    // season" instead of as a recoverable error. Same rule as loadWorksBrowse.
     fetchWithFallback.mockResolvedValue(null);
 
     const result = await run(args('SPRING_2025'));
 
     expect(result.seasonalData).toBeNull();
-    expect(result.ssrError).toBeNull();
+    expect(result.ssrError).toBe('Failed to load data');
   });
 
   it('leaves ssrError null for a response missing the seasonalAnime field', async () => {
+    // A response that arrived is not an outage, whatever fields it carries:
+    // the check is on the answer, not on its shape.
     fetchWithFallback.mockResolvedValue({ somethingElse: true });
 
     expect((await run(args('SPRING_2025'))).ssrError).toBeNull();

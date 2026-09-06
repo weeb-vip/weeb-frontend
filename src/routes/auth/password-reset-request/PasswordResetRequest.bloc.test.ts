@@ -147,30 +147,56 @@ describe('validation stands in front of the port', () => {
     expect(bloc.isSubmitting).toBe(false);
   });
 
-  it('does NOT check the address is shaped like one', async () => {
-    // Current behaviour, pinned as-is: unlike the resend page this screen has
-    // no `EMAIL_PATTERN` gate, so a value with no @ reaches the gateway and the
-    // user only learns it was wrong from an email that never arrives.
+  it('checks the address is shaped like one, the way the resend screen does', async () => {
+    // This screen used to have no `EMAIL_PATTERN` gate, so a value with no @
+    // reached the gateway and the user only learned it was wrong from an email
+    // that never arrived. Same gate, same wording, as /auth/resend-verification.
     silenceLogs();
     const { bloc, request } = harness();
     fill(bloc, 'jamesat', 'not-an-email');
 
     await bloc.submit();
 
-    expect(request).toHaveBeenCalledWith({ username: 'jamesat', email: 'not-an-email' });
-    expect(bloc.submitted).toBe(true);
+    expect(bloc.errorMessage).toBe('Please enter a valid email address.');
+    expect(request).not.toHaveBeenCalled();
+    expect(bloc.submitted).toBe(false);
   });
 
-  it('passes both fields through untrimmed', async () => {
-    // The blank check trims; what is sent does not. Pinned so a later trim is a
-    // deliberate change rather than an accident.
+  it('refuses an address with no domain dot, or nothing after the @', async () => {
+    for (const bad of ['james@localhost', 'james@', '@gmail.com', 'james gmail.com']) {
+      const { bloc, request } = harness();
+      fill(bloc, 'jamesat', bad);
+
+      await bloc.submit();
+
+      expect(bloc.errorMessage).toBe('Please enter a valid email address.');
+      expect(request).not.toHaveBeenCalled();
+    }
+  });
+
+  it('leaves the form usable after a malformed address, so it can be corrected', async () => {
+    const { bloc } = harness();
+    fill(bloc, 'jamesat', 'not-an-email');
+
+    await bloc.submit();
+
+    expect(bloc.isDisabled).toBe(false);
+    expect(bloc.isSubmitting).toBe(false);
+  });
+
+  it('trims both fields on the way to the port', async () => {
+    // ` james@gmail.com ` is what pasting from a mail client gives you; it is
+    // the same address, so it is cleaned up rather than refused as malformed.
     silenceLogs();
     const { bloc, request } = harness();
     fill(bloc, ' jamesat ', ' james@gmail.com ');
 
     await bloc.submit();
 
-    expect(request).toHaveBeenCalledWith({ username: ' jamesat ', email: ' james@gmail.com ' });
+    expect(request).toHaveBeenCalledWith({ username: 'jamesat', email: 'james@gmail.com' });
+    expect(bloc.submitted).toBe(true);
+    // The boxes keep what the user typed; only what is sent is cleaned.
+    expect(bloc.email).toBe(' james@gmail.com ');
   });
 });
 

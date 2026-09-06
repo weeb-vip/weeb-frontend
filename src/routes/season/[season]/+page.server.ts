@@ -42,6 +42,16 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     ssrError = 'Failed to load data';
   }
 
+  // A null answer is a failure, not an empty season. fetchWithFallback swallows
+  // every failure and RETURNS null rather than throwing, so the try/catch above
+  // almost never fires and an outage would reach the page as "no anime this
+  // season" instead of as a recoverable error the client can retry. A season
+  // that really is empty still arrives as a response object. Same rule as
+  // loadWorksBrowse.
+  if (!ssrError && !seasonalData) {
+    ssrError = 'Failed to load data';
+  }
+
   const isTokenExpired = fetcher.wasTokenExpired();
 
   return {

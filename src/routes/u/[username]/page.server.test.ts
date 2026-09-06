@@ -18,26 +18,50 @@ import { Status, WorkStatus } from '../../../gql/graphql';
  * (so a redirect never pays for work the canonical request redoes), the five
  * documents and their variables, and the unwrapping of each response alias.
  *
- * `makeSSRFetcher` is mocked at the module seam; `publicAuth` is left real so
- * the test also pins that no token material rides the payload.
+ * The identity lookup and the list fetches use different seams, on purpose: the
+ * user query goes through a raw client so a thrown gateway error can be
+ * classified (not-found is a 404, an outage is not), while the lists go through
+ * `makeSSRFetcher`, where a null answer means an empty shelf. Both are mocked
+ * here; `isNotFoundError` and `publicAuth` are left real -- classifying the
+ * error IS the rule, and the latter pins that no token material rides the
+ * payload.
  */
 
 const fetchWithFallback =
   vi.fn<(query: unknown, variables: unknown, description: string) => Promise<unknown>>();
 const wasTokenExpired = vi.fn<() => boolean>(() => false);
 const makeSSRFetcher = vi.fn<(host: string, cookieHeader: string | null) => unknown>();
+const request = vi.fn<(document: unknown, variables?: unknown) => Promise<unknown>>();
+const createClient = vi.fn<(host: string, cookieHeader: string | null) => unknown>();
 
 vi.mock('$lib/server/ssr-graphql', async (importOriginal) => {
   const actual = await importOriginal<typeof import('$lib/server/ssr-graphql')>();
   return {
     ...actual,
     cookieHeaderFrom: () => 'cookie-header',
+    createSSRGraphQLClient: (host: string, cookieHeader: string | null) => {
+      createClient(host, cookieHeader);
+      return { request };
+    },
     makeSSRFetcher: (host: string, cookieHeader: string | null) => {
       makeSSRFetcher(host, cookieHeader);
       return { fetchWithFallback, wasTokenExpired };
     }
   };
 });
+
+/** What the federation router throws when the subgraph has no such record. */
+const NOT_FOUND = {
+  message: "Failed to fetch from Subgraph 'user-api'.",
+  response: {
+    errors: [
+      {
+        message: "Failed to fetch from Subgraph 'user-api'.",
+        extensions: { errors: [{ message: 'record not found' }] }
+      }
+    ]
+  }
+};
 
 const { load } = await import('./+page.server');
 
@@ -77,9 +101,8 @@ function user(overrides: Record<string, unknown> = {}) {
 function respondWith(userRecord: unknown, lists: Record<string, unknown> = {}) {
   // `key in lists` rather than `??`, so a test can hand back an explicit null.
   const pick = (key: string, fallback: unknown) => (key in lists ? lists[key] : fallback);
+  request.mockImplementation(async () => ({ userByUsername: userRecord }));
   fetchWithFallback.mockImplementation(async (query) => {
-    if (query === getUserByUsername)
-      return userRecord === null ? null : { userByUsername: userRecord };
     if (query === queryPublicUserAnimes)
       return pick('watching', { PublicUserAnimes: { animes: [] } });
     if (query === queryPublicUserWorks) return pick('reading', { PublicUserWorks: { works: [] } });
@@ -93,6 +116,8 @@ function respondWith(userRecord: unknown, lists: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   fetchWithFallback.mockReset();
+  request.mockReset();
+  createClient.mockClear();
   wasTokenExpired.mockReset();
   wasTokenExpired.mockReturnValue(false);
   makeSSRFetcher.mockClear();
@@ -109,18 +134,15 @@ describe('finding the user', () => {
 
     await run(args('thatcat'));
 
-    expect(fetchWithFallback).toHaveBeenCalledWith(
-      getUserByUsername,
-      { username: 'thatcat' },
-      'public user'
-    );
+    expect(request).toHaveBeenCalledWith(getUserByUsername, { username: 'thatcat' });
   });
 
-  it('builds the fetcher against the configured host and the request cookies', async () => {
+  it('builds both clients against the configured host and the request cookies', async () => {
     respondWith(user());
 
     await run(args('thatcat'));
 
+    expect(createClient).toHaveBeenCalledWith('https://api.test/graphql', 'cookie-header');
     expect(makeSSRFetcher).toHaveBeenCalledWith('https://api.test/graphql', 'cookie-header');
   });
 
@@ -133,31 +155,53 @@ describe('finding the user', () => {
     });
   });
 
-  it('404s when the field came back null', async () => {
-    fetchWithFallback.mockResolvedValue({ userByUsername: null });
+  it('404s when the response carried no data at all', async () => {
+    request.mockResolvedValue(null);
 
     await expect(load(args('nobody'))).rejects.toMatchObject({ status: 404 });
   });
 
-  it('404s a gateway outage too -- see the note below', async () => {
-    // BUG (pinned as current behaviour, not fixed): fetchWithFallback swallows
-    // every failure and returns null, so an outage is indistinguishable here
-    // from "no such user" and a live profile answers 404 while the gateway is
-    // down. /people and /series both split these cases with isNotFoundError;
-    // this route does not, so a blip can deindex real profiles.
-    fetchWithFallback.mockResolvedValue(null);
+  it('404s when the gateway reported the record as not found', async () => {
+    // user-api reports a missing row as a thrown DOWNSTREAM_SERVICE_ERROR
+    // rather than a null field, the way anime-api does for /people.
+    request.mockRejectedValue(NOT_FOUND);
 
-    await expect(load(args('thatcat'))).rejects.toMatchObject({
+    await expect(load(args('nobody'))).rejects.toMatchObject({
       status: 404,
       body: { message: 'No such user' }
     });
+  });
+
+  it('does NOT 404 a gateway outage -- it answers 503', async () => {
+    // The whole point of the isNotFoundError split: telling a crawler that a
+    // live profile is gone because the gateway blinked is what deindexes it.
+    // 503 says "ask again later", which is the truth.
+    request.mockRejectedValue(new Error('connect ECONNREFUSED'));
+
+    await expect(load(args('thatcat'))).rejects.toMatchObject({
+      status: 503,
+      body: { message: 'Unable to load this profile right now' }
+    });
+  });
+
+  it('does not 404 a timeout either', async () => {
+    request.mockRejectedValue(new Error('Request timeout'));
+
+    await expect(load(args('thatcat'))).rejects.toMatchObject({ status: 503 });
   });
 
   it('does not fetch any lists once it has decided to 404', async () => {
     respondWith(null);
 
     await expect(load(args('nobody'))).rejects.toMatchObject({ status: 404 });
-    expect(fetchWithFallback).toHaveBeenCalledTimes(1);
+    expect(fetchWithFallback).not.toHaveBeenCalled();
+  });
+
+  it('does not fetch any lists during an outage either', async () => {
+    request.mockRejectedValue(new Error('connect ECONNREFUSED'));
+
+    await expect(load(args('thatcat'))).rejects.toMatchObject({ status: 503 });
+    expect(fetchWithFallback).not.toHaveBeenCalled();
   });
 });
 
@@ -176,7 +220,7 @@ describe('one profile, one address', () => {
     respondWith(user({ username: 'ThatCat', listsPublic: true }));
 
     await expect(load(args('thatcat'))).rejects.toMatchObject({ status: 308 });
-    expect(fetchWithFallback).toHaveBeenCalledTimes(1);
+    expect(fetchWithFallback).not.toHaveBeenCalled();
   });
 
   it('percent-encodes the canonical username into the location', async () => {
@@ -209,7 +253,7 @@ describe('the privacy gate', () => {
     const result = await run(args('thatcat'));
 
     expect(result.lists).toBeNull();
-    expect(fetchWithFallback).toHaveBeenCalledTimes(1);
+    expect(fetchWithFallback).not.toHaveBeenCalled();
   });
 
   it('treats a missing listsPublic flag as private', async () => {
@@ -231,7 +275,7 @@ describe('the privacy gate', () => {
 
     await run(args('thatcat'));
 
-    expect(fetchWithFallback).toHaveBeenCalledTimes(5);
+    expect(fetchWithFallback).toHaveBeenCalledTimes(4);
   });
 });
 

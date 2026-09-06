@@ -119,22 +119,29 @@ describe('the payload handed to the page', () => {
   });
 });
 
-describe('a gateway failure is indistinguishable from an empty month', () => {
-  // FINDING, pinned as it stands: fetchWithFallback swallows the failure and
-  // answers null, so an outage renders as a blank calendar with no error.
-  it('reports no error when the request answered null', async () => {
+describe('a gateway failure is told apart from an empty month', () => {
+  // fetchWithFallback swallows the failure and answers null, so the loader
+  // checks the answer: an outage must not render as a blank calendar with no
+  // error to explain it.
+  it('reports an error when the request answered null', async () => {
     fetchWithFallback.mockResolvedValue(null);
 
     const result = await run(event());
 
     expect(result.ssrData).toBeNull();
-    expect(result.ssrError).toBeNull();
+    expect(result.ssrError).toBe('Failed to load calendar data');
   });
 
   it('uses its own error message, distinguishable from the schedule page', async () => {
     fetchWithFallback.mockRejectedValue(new Error('gateway 502'));
 
     expect((await run(event())).ssrError).toBe('Failed to load calendar data');
+  });
+
+  it('keeps its own message on the null path too, not the schedule page"s', async () => {
+    fetchWithFallback.mockResolvedValue(null);
+
+    expect((await run(event())).ssrError).not.toBe('Failed to load data');
   });
 });
 

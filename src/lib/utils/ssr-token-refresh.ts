@@ -4,7 +4,7 @@ interface AstroCookies {
   get(name: string): { value: string } | undefined;
   set(name: string, value: string, options?: any): void;
 }
-import { AuthStorage } from './auth-storage';
+import { REFRESH_TOKEN_COOKIE_NAMES } from './auth-cookie-names';
 import debug from './debug';
 
 interface RefreshTokenResponse {
@@ -27,8 +27,21 @@ export async function refreshTokenSSR(
   graphqlHost: string
 ): Promise<RefreshTokenResponse> {
   try {
-    // Get refresh token from cookies
-    const refreshToken = cookies.get('refresh_token')?.value;
+    // Get refresh token from cookies, over the same ordered list of names that
+    // `AuthStorage` uses to decide a refresh is possible in the first place.
+    //
+    // This used to read `refresh_token` alone while AuthStorage also accepted
+    // the legacy `refreshToken`, and the two readers disagreeing was a trap: a
+    // visitor still holding only the legacy cookie made the hook decide a
+    // refresh was due, then made this function bail before sending a request —
+    // no error, nothing cleared, `isLoggedIn: false` on every request, forever.
+    // A legacy cookie now actually gets refreshed, and the response writes the
+    // canonical names back, so such a visitor heals on their next page view.
+    let refreshToken: string | undefined;
+    for (const name of REFRESH_TOKEN_COOKIE_NAMES) {
+      refreshToken = cookies.get(name)?.value;
+      if (refreshToken) break;
+    }
 
     if (!refreshToken) {
       debug.auth('[SSR] No refresh token found in cookies');

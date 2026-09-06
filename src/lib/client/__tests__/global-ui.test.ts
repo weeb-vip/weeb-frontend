@@ -201,17 +201,15 @@ describe('navigation feedback', () => {
   });
 
   /*
-   * BUG (reported, not worked around): `showInstantFeedback` overwrites
-   * `progressTimer`/`progressTimeout` without clearing what is already there.
-   * Two navigations that overlap — a user clicking a second link while the
-   * first is still loading, which is the ordinary case on a slow connection —
-   * leave the first `setInterval` running with nothing holding its handle, so
-   * it keeps writing widths to the progress bar forever and no later
-   * `hideNavigationFeedback` can stop it. Un-skip once `showInstantFeedback`
-   * clears the previous timers first (calling `hideNavigationFeedback()` at the
-   * top would do it).
+   * `showInstantFeedback` used to overwrite `progressTimer`/`progressTimeout`
+   * without clearing what was already there. Two navigations that overlap — a
+   * user clicking a second link while the first is still loading, which is the
+   * ordinary case on a slow connection — left the first `setInterval` running
+   * with nothing holding its handle, so it kept writing widths to the progress
+   * bar forever and no later `hideNavigationFeedback` could stop it. It now
+   * clears the previous pair before starting a new one.
    */
-  it.skip('does not stack intervals when navigation is retriggered', () => {
+  it('does not stack intervals when navigation is retriggered', () => {
     progressBar();
     showInstantFeedback();
     vi.advanceTimersByTime(150);
@@ -223,16 +221,46 @@ describe('navigation feedback', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('currently orphans the first interval on a retrigger (documents the bug above)', () => {
+  it('keeps exactly one interval alive across a retrigger', () => {
     progressBar();
     showInstantFeedback();
     vi.advanceTimersByTime(150);
+
+    // One interval, started by the first navigation.
+    expect(vi.getTimerCount()).toBe(1);
+
     showInstantFeedback();
+    // Between the retrigger and its 100ms delay there is a pending timeout and
+    // nothing else: the first navigation's interval is already gone.
+    expect(vi.getTimerCount()).toBe(1);
+
     vi.advanceTimersByTime(150);
+    expect(vi.getTimerCount()).toBe(1);
 
     hideNavigationFeedback();
     vi.advanceTimersByTime(500);
-    expect(vi.getTimerCount()).toBe(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('still drives the bar after a retrigger, rather than freezing it', () => {
+    // Clearing the old timers must not leave the new navigation without one.
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    try {
+      const bar = progressBar();
+
+      showInstantFeedback();
+      vi.advanceTimersByTime(150);
+      showInstantFeedback();
+      vi.advanceTimersByTime(100); // the retrigger's delay elapses
+      expect(bar.style.width).toBe('0%');
+
+      vi.advanceTimersByTime(200);
+      expect(bar.style.width).toBe('15%');
+    } finally {
+      random.mockRestore();
+      hideNavigationFeedback();
+      vi.advanceTimersByTime(500);
+    }
   });
 });
 
@@ -769,16 +797,14 @@ describe('initPostHogWhenConfigured', () => {
     });
 
     /*
-     * BUG (reported, not worked around): the `loadToolbar` wrapper captures
-     * `w.posthog.loadToolbar` at bootstrap time and ends with
-     * `originalLoadToolbar.call(this, params)`. The bootstrap stub has no
-     * `loadToolbar`, so before array.js has loaded that captured value is
-     * `undefined` and any call throws `TypeError: originalLoadToolbar.call is
-     * not a function` — including the automatic reopen on the 1s timer, which
-     * throws out of the timer callback for anyone who has ever used the
-     * toolbar. Un-skip once the wrapper guards the original.
+     * The `loadToolbar` wrapper captures `w.posthog.loadToolbar` at bootstrap
+     * time. The bootstrap stub has no `loadToolbar` — only the real array.js
+     * defines it — so before that chunk lands the captured value is
+     * `undefined`, and calling through unguarded threw `TypeError:
+     * originalLoadToolbar.call is not a function` out of the 1s reopen timer
+     * for anyone who had ever used the toolbar. The wrapper now checks it.
      */
-    it.skip('reopening the toolbar before array.js has loaded does not throw', () => {
+    it('reopening the toolbar before array.js has loaded does not throw', () => {
       localStorage.setItem('posthog_toolbar_enabled', 'true');
       seedScriptTag();
       w.config = { posthog_api_key: 'phc_test' };
@@ -787,13 +813,18 @@ describe('initPostHogWhenConfigured', () => {
       expect(() => vi.advanceTimersByTime(1000)).not.toThrow();
     });
 
-    it('currently throws when the toolbar reopens before array.js (documents the bug above)', () => {
-      localStorage.setItem('posthog_toolbar_enabled', 'true');
+    it('still records the intent when there is no library to call through to', () => {
+      // The enablement has to survive the un-callable reopen, or the toolbar
+      // would be forgotten on the very page load that could not open it.
       seedScriptTag();
       w.config = { posthog_api_key: 'phc_test' };
-
       initPostHogWhenConfigured();
-      expect(() => vi.advanceTimersByTime(1000)).toThrow(TypeError);
+
+      expect(() => w.posthog.loadToolbar({ token: 'abc' })).not.toThrow();
+
+      expect(localStorage.getItem('posthog_toolbar_enabled')).toBe('true');
+      expect(localStorage.getItem('posthog_toolbar_params')).toBe('{"token":"abc"}');
+      vi.clearAllTimers();
     });
   });
 });
