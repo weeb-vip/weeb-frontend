@@ -31,7 +31,7 @@ import type { GenreFacet } from './SearchPage.results';
 
 type UrlValue = { pathname: string; search: string };
 
-const EMPTY_RESPONSE: CatalogSearchResponse = { hits: [], total: 0, works: [] };
+const EMPTY_RESPONSE: CatalogSearchResponse = { hits: [], total: 0, works: [], totalHits: 0, totalWorks: 0 };
 
 function response(partial: Partial<CatalogSearchResponse> = {}): CatalogSearchResponse {
   return { ...EMPTY_RESPONSE, ...partial };
@@ -211,7 +211,7 @@ describe('the local layer', () => {
   it('narrows the results already on screen through the local filters', async () => {
     const { bloc } = await searched({
       hits: [hit('1', { status: 'FINISHED_AIRING' }), hit('2', { status: 'CURRENTLY_AIRING' })],
-      total: 2,
+      totalHits: 2,
     });
 
     bloc.setStatus('CURRENTLY_AIRING');
@@ -240,19 +240,19 @@ describe('the local layer', () => {
   it('keeps the catalogue count driving pagination while a local filter is on', async () => {
     const harness = await searched({
       hits: [hit('1', { status: 'FINISHED_AIRING' }), hit('2', { status: 'CURRENTLY_AIRING' })],
-      total: 50, // 3 pages at 24 per page
+      totalHits: 50, // 3 pages at 24 per page
     });
 
     harness.bloc.setStatus('CURRENTLY_AIRING');
     expect(harness.bloc.results).toHaveLength(1);
 
     // Still three pages, and the later ones are still reachable.
-    expect(harness.bloc.totalPages).toBe(3);
-    harness.bloc.goToPage(2);
+    expect(harness.bloc.totalResultsPages).toBe(3);
+    harness.bloc.goToPage(2, 'hits');
     await flush();
 
-    expect(harness.bloc.page).toBe(2);
-    expect(harness.lastRequest().page).toBe(2);
+    expect(harness.bloc.hitsPage).toBe(2);
+    expect(harness.lastRequest().hitsPage).toBe(2);
   });
 });
 
@@ -260,7 +260,7 @@ describe('the fetched layer', () => {
   it('holds the normalised hits, the works and the total from one response', async () => {
     const { bloc } = await searched({
       hits: [hit('1', { synopsis: 'A story.', genres: '["Action"]' })],
-      total: 42,
+      totalHits: 42,
       works: [{ slug: 'berserk', type: 'MANGA' }],
     });
 
@@ -503,9 +503,9 @@ describe('the request-sequence guard', () => {
     harness.bloc.syncFromUrl(); // search B
     expect(pending).toHaveLength(2);
 
-    pending[1].resolve(response({ hits: [hit('b')], total: 2 }));
+    pending[1].resolve(response({ hits: [hit('b')], totalHits: 2 }));
     await flush();
-    pending[0].resolve(response({ hits: [hit('a')], total: 1 }));
+    pending[0].resolve(response({ hits: [hit('a')], totalHits: 1 }));
     await flush();
     await first;
 
@@ -528,12 +528,12 @@ describe('the request-sequence guard', () => {
     harness.navigate({ search: '?query=b' });
     harness.bloc.syncFromUrl();
 
-    pending[1].resolve(response({ hits: [hit('b')], total: 2 }));
+    pending[1].resolve(response({ hits: [hit('b')], totalHits: 2 }));
     await flush();
     expect(harness.bloc.isLoading).toBe(false);
 
     // The stale one finishing must not put the spinner back.
-    pending[0].resolve(response({ hits: [hit('a')], total: 1 }));
+    pending[0].resolve(response({ hits: [hit('a')], totalHits: 1 }));
     await flush();
     await first;
 
@@ -556,7 +556,7 @@ describe('the request-sequence guard', () => {
     harness.navigate({ search: '?query=b' });
     harness.bloc.syncFromUrl();
 
-    pending[1].resolve(response({ hits: [hit('b')], total: 2 }));
+    pending[1].resolve(response({ hits: [hit('b')], totalHits: 2 }));
     await flush();
     pending[0].reject(new Error('the abandoned query timed out'));
     await flush();
@@ -576,7 +576,8 @@ describe('the request the search port receives', () => {
 
     expect(lastRequest()).toEqual({
       query: 'naruto',
-      page: 0,
+      hitsPage: 0,
+	  worksPage: 0,
       hitsPerPage: PAGE_SIZE_OPTIONS[0],
       genre: null,
       includeWorks: true,
@@ -589,7 +590,8 @@ describe('the request the search port receives', () => {
 
     expect(lastRequest()).toEqual({
       query: 'naruto',
-      page: 0,
+      hitsPage: 0,
+	  worksPage: 0,
       hitsPerPage: PAGE_SIZE_OPTIONS[0],
       genre: 'Action',
       includeWorks: false,
@@ -601,24 +603,10 @@ describe('the request the search port receives', () => {
 
     expect(lastRequest()).toEqual({
       query: '',
-      page: 0,
+      hitsPage: 0,
+	  worksPage: 0,
       hitsPerPage: PAGE_SIZE_OPTIONS[0],
       genre: 'Action',
-      includeWorks: false,
-    });
-  });
-
-  it('skips the works on every page after the first', async () => {
-    const harness = await searched({ hits: [hit('1')], total: 100 }, '?query=naruto');
-
-    harness.bloc.goToPage(1);
-    await flush();
-
-    expect(harness.lastRequest()).toEqual({
-      query: 'naruto',
-      page: 1,
-      hitsPerPage: PAGE_SIZE_OPTIONS[0],
-      genre: null,
       includeWorks: false,
     });
   });
@@ -630,9 +618,9 @@ describe('the request the search port receives', () => {
   });
 
   it('sends the page size the reader chose', async () => {
-    const harness = await searched({ hits: [hit('1')], total: 100 });
+    const harness = await searched({ hits: [hit('1')], totalHits: 100 });
 
-    harness.bloc.setPerPage(48);
+    harness.bloc.setHitsPerPage(48);
     await flush();
 
     expect(harness.lastRequest().hitsPerPage).toBe(48);
@@ -643,88 +631,88 @@ describe('the request the search port receives', () => {
 
 describe('pagination', () => {
   it('counts the pages by rounding a partial last page up', async () => {
-    const { bloc } = await searched({ hits: [hit('1')], total: 50 });
+    const { bloc } = await searched({ hits: [hit('1')], totalHits: 50 });
 
-    expect(bloc.perPage).toBe(24);
-    expect(bloc.totalPages).toBe(3);
+    expect(bloc.hitsPerPage).toBe(24);
+    expect(bloc.totalResultsPages).toBe(3);
   });
 
   it('has no pages at all when nothing matched', async () => {
-    const { bloc } = await searched({ hits: [], total: 0 });
+    const { bloc } = await searched({ hits: [], totalHits: 0 });
 
-    expect(bloc.totalPages).toBe(0);
-    expect(bloc.page).toBe(0);
+    expect(bloc.totalResultsPages).toBe(0);
+    expect(bloc.hitsPage).toBe(0);
   });
 
   it('refuses a page below zero and leaves the page where it was', async () => {
-    const harness = await searched({ hits: [hit('1')], total: 100 });
-    harness.bloc.goToPage(2);
+    const harness = await searched({ hits: [hit('1')], totalHits: 100 });
+    harness.bloc.goToPage(2, 'hits');
     await flush();
 
-    harness.bloc.goToPage(-1);
+    harness.bloc.goToPage(-1, 'hits');
     await flush();
 
-    expect(harness.bloc.page).toBe(2);
+    expect(harness.bloc.hitsPage).toBe(2);
     expect(harness.search).toHaveBeenCalledTimes(2);
   });
 
   it('refuses a page past the last one and leaves the page where it was', async () => {
-    const harness = await searched({ hits: [hit('1')], total: 50 }); // 3 pages: 0..2
-    harness.bloc.goToPage(1);
+    const harness = await searched({ hits: [hit('1')], totalHits: 50 }); // 3 pages: 0..2
+    harness.bloc.goToPage(1, 'hits');
     await flush();
 
-    harness.bloc.goToPage(3);
+    harness.bloc.goToPage(3, 'hits');
     await flush();
 
-    expect(harness.bloc.page).toBe(1);
+    expect(harness.bloc.hitsPage).toBe(1);
     expect(harness.search).toHaveBeenCalledTimes(2);
   });
 
   it('refuses any page when there is nothing to page through', async () => {
-    const harness = await searched({ hits: [], total: 0 });
+    const harness = await searched({ hits: [], totalHits: 0 });
 
-    harness.bloc.goToPage(0);
+    harness.bloc.goToPage(0, 'hits');
     await flush();
 
     expect(harness.search).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the page it was sent to rather than resetting to the first', async () => {
-    const harness = await searched({ hits: [hit('1')], total: 100 });
+    const harness = await searched({ hits: [hit('1')], totalHits: 100 });
 
-    harness.bloc.goToPage(2);
+    harness.bloc.goToPage(2, 'hits');
     await flush();
 
-    expect(harness.bloc.page).toBe(2);
-    expect(harness.lastRequest().page).toBe(2);
+    expect(harness.bloc.hitsPage).toBe(2);
+    expect(harness.lastRequest().hitsPage).toBe(2);
   });
 
   it('returns to the first page when the page size changes', async () => {
     // Page 3 of 24-per-page is not page 3 of 100-per-page; staying would land
     // the reader somewhere they did not ask for.
     const harness = await searched({ hits: [hit('1')], total: 500 });
-    harness.bloc.goToPage(4);
+    harness.bloc.goToPage(4, 'hits');
     await flush();
 
-    harness.bloc.setPerPage(100);
+    harness.bloc.setHitsPerPage(100);
     await flush();
 
-    expect(harness.bloc.page).toBe(0);
-    expect(harness.lastRequest().page).toBe(0);
-    expect(harness.bloc.perPage).toBe(100);
+    expect(harness.bloc.hitsPage).toBe(0);
+    expect(harness.lastRequest().hitsPage).toBe(0);
+    expect(harness.bloc.hitsPerPage).toBe(100);
   });
 
   it('resets to the first page for a brand new query', async () => {
     const harness = await searched({ hits: [hit('1')], total: 500 });
-    harness.bloc.goToPage(3);
+    harness.bloc.goToPage(3, 'hits');
     await flush();
 
     harness.navigate({ search: '?query=bleach' });
     harness.bloc.syncFromUrl();
     await flush();
 
-    expect(harness.bloc.page).toBe(0);
-    expect(harness.lastRequest().page).toBe(0);
+    expect(harness.bloc.hitsPage).toBe(0);
+    expect(harness.lastRequest().hitsPage).toBe(0);
   });
 });
 
@@ -744,20 +732,20 @@ describe('phase', () => {
     const running = harness.bloc.init();
     expect(harness.bloc.phase).toBe('loading');
 
-    pending.resolve(response({ hits: [hit('1')], total: 1 }));
+    pending.resolve(response({ hits: [hit('1')], totalHits: 1 }));
     await running;
     expect(harness.bloc.phase).toBe('results');
   });
 
   it('is empty when the search came back with nothing', async () => {
-    const { bloc } = await searched({ hits: [], total: 0 });
+    const { bloc } = await searched({ hits: [], totalHits: 0 });
 
     expect(bloc.phase).toBe('empty');
     expect(bloc.hasResults).toBe(false);
   });
 
   it('is empty when the local filters removed every hit', async () => {
-    const { bloc } = await searched({ hits: [hit('1', { status: 'FINISHED_AIRING' })], total: 1 });
+    const { bloc } = await searched({ hits: [hit('1', { status: 'FINISHED_AIRING' })], totalHits: 1 });
 
     bloc.setStatus('CURRENTLY_AIRING');
 
@@ -765,7 +753,7 @@ describe('phase', () => {
   });
 
   it('is back to browse once the search is cleared', async () => {
-    const { bloc } = await searched({ hits: [hit('1')], total: 1 });
+    const { bloc } = await searched({ hits: [hit('1')], totalHits: 1 });
 
     bloc.clear();
     bloc.syncFromUrl();
@@ -776,25 +764,25 @@ describe('phase', () => {
 
 describe('resultsSummary', () => {
   it('is singular for exactly one result', async () => {
-    const { bloc } = await searched({ hits: [hit('1')], total: 1 });
+    const { bloc } = await searched({ hits: [hit('1')], totalHits: 1 });
 
     expect(bloc.resultsSummary).toBe("1 result for 'naruto'");
   });
 
   it('is plural and grouped for a large total', async () => {
-    const { bloc } = await searched({ hits: [hit('1')], total: 1204 });
+    const { bloc } = await searched({ hits: [hit('1')], totalHits: 1204 });
 
     expect(bloc.resultsSummary).toBe("1,204 results for 'naruto'");
   });
 
   it('names the genre when there is no query', async () => {
-    const { bloc } = await searched({ hits: [hit('1')], total: 9 }, '?genre=Slice of Life');
+    const { bloc } = await searched({ hits: [hit('1')], totalHits: 9 }, '?genre=Slice of Life');
 
     expect(bloc.resultsSummary).toBe('9 results in Slice of Life');
   });
 
   it('prefers the query over the genre when both are set', async () => {
-    const { bloc } = await searched({ hits: [hit('1')], total: 3 }, '?query=naruto&genre=Action');
+    const { bloc } = await searched({ hits: [hit('1')], totalHits: 3 }, '?query=naruto&genre=Action');
 
     expect(bloc.resultsSummary).toBe("3 results for 'naruto'");
   });

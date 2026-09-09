@@ -83,18 +83,20 @@ const WORKS = [work(1, 'Vinland Saga', 'MANGA'), work(2, 'Spice and Wolf', 'LIGH
 function stubSearch(
   hits: Hit[],
   {
-    total = hits.length,
+    totalHits = hits.length,
     works = WORKS,
     genres = GENRES,
-  }: { total?: number; works?: Hit[]; genres?: GenreFacet[] } = {},
+  }: { totalHits?: number; works?: Hit[]; genres?: GenreFacet[] } = {},
 ): CatalogSearchPort {
   return {
     async search(request): Promise<CatalogSearchResponse> {
-      const start = request.page * request.hitsPerPage;
+      const start = request.hitsPage * request.hitsPerPage;
       return {
         hits: hits.slice(start, start + request.hitsPerPage),
-        total,
+        totalHits,
         works: request.includeWorks ? works : [],
+		totalWorks: request.includeWorks ? works.length : 0,
+		total: request.includeWorks ? works.length : 0,
       };
     },
     async genreFacets() {
@@ -196,8 +198,8 @@ export const FiltersApplied: Story = {
 export const Paginated: Story = {
   args: {
     bloc: (() => {
-      const b = bloc(stubSearch(HITS, { total: 1204, works: [] }), '?query=a');
-      b.goToPage(0);
+      const b = bloc(stubSearch(HITS, { totalHits: 1204, works: [] }), '?query=a');
+      b.goToPage(0, 'hits');
       return b;
     })(),
   },
@@ -205,7 +207,7 @@ export const Paginated: Story = {
 
 /** A query nothing matched: the shared EmptyState with a way to clear filters. */
 export const NoResults: Story = {
-  args: { bloc: bloc(stubSearch([], { total: 0, works: [] }), '?query=qqqzzz') },
+  args: { bloc: bloc(stubSearch([], { totalHits: 0, works: [] }), '?query=qqqzzz') },
 };
 
 /** Search itself failed. It reads as "no results" -- there is nothing to show. */

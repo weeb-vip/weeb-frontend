@@ -280,7 +280,19 @@
       </div>
     {/if}
 
-    <!-- Works: the manga, light novels and novels matching the same query.
+    {#if bloc.totalResultsPages > 1}
+      <Pagination
+        page={bloc.hitsPage}
+        totalPages={bloc.totalResultsPages}
+        perPage={bloc.hitsPerPage}
+        perPageOptions={bloc.pageSizeOptions}
+        onPageChange={(next) => bloc.goToPage(next, "hits")}
+        onPerPageChange={(next) => bloc.setHitsPerPage(next)}
+        label="Search results pagination"
+      />
+    {/if}
+
+	<!-- Works: the manga, light novels and novels matching the same query.
          A separate section rather than mixed into the grid above, because the
          two indices are ranked independently and their scores are not
          comparable -- interleaving them would be inventing an order. Renders
@@ -350,18 +362,6 @@
         {/if}
       </section>
     {/if}
-
-    {#if bloc.totalPages > 1}
-      <Pagination
-        page={bloc.page}
-        totalPages={bloc.totalPages}
-        perPage={bloc.perPage}
-        perPageOptions={bloc.pageSizeOptions}
-        onPageChange={(next) => bloc.goToPage(next)}
-        onPerPageChange={(next) => bloc.setPerPage(next)}
-        label="Search results pagination"
-      />
-    {/if}
   {:else}
     <!-- Nothing searched yet: the browse placeholder. -->
     <EmptyState
@@ -371,6 +371,18 @@
       message="Search by title or click a genre above to explore."
     />
   {/if}
+
+  {#if bloc.totalWorksPages > 1}
+      <Pagination
+        page={bloc.worksPage}
+        totalPages={bloc.totalWorksPages}
+        perPage={bloc.worksPerPage}
+        perPageOptions={bloc.pageSizeOptions}
+        onPageChange={(next) => bloc.goToPage(next, "works")}
+        onPerPageChange={(next) => bloc.setHitsPerPage(next)}
+        label="Search results pagination"
+      />
+{/if}
 </div>
 
 <style>
