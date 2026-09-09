@@ -218,7 +218,7 @@ describe('the local layer', () => {
 
     expect(bloc.results.map((r) => r.id)).toEqual(['2']);
     // The total is what the catalogue said, not what survived the local pass.
-    expect(bloc.totalResults).toBe(2);
+    expect(bloc.totalHits).toBe(2);
   });
 
   /*
@@ -247,7 +247,7 @@ describe('the local layer', () => {
     expect(harness.bloc.results).toHaveLength(1);
 
     // Still three pages, and the later ones are still reachable.
-    expect(harness.bloc.totalResultsPages).toBe(3);
+    expect(harness.bloc.totalHitsPages).toBe(3);
     harness.bloc.goToPage(2, 'hits');
     await flush();
 
@@ -268,7 +268,7 @@ describe('the fetched layer', () => {
     expect(bloc.results[0].description).toBe('A story.');
     expect(bloc.results[0].tags).toEqual(['Action']);
     expect(bloc.works).toHaveLength(1);
-    expect(bloc.totalResults).toBe(42);
+    expect(bloc.totalHits).toBe(42);
   });
 
   it('loads the genre strip', async () => {
@@ -437,7 +437,7 @@ describe('init', () => {
     // wrong thing to put in front of the results.
     const { bloc, search } = setup({
       search: '?query=naruto',
-      list: () => new Promise<Map<string, string>>(() => {}),
+      list: () => new Promise<Map<string, string>>(() => { }),
     });
 
     await bloc.init();
@@ -510,7 +510,7 @@ describe('the request-sequence guard', () => {
     await first;
 
     expect(harness.bloc.results.map((r) => r.id)).toEqual(['b']);
-    expect(harness.bloc.totalResults).toBe(2);
+    expect(harness.bloc.totalHits).toBe(2);
   });
 
   it('leaves loading finished once the newest response has landed', async () => {
@@ -541,7 +541,7 @@ describe('the request-sequence guard', () => {
   });
 
   it('does not let a superseded failure blank the newer results', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => { });
     const pending: ReturnType<typeof deferred<CatalogSearchResponse>>[] = [];
     const harness = setup({
       search: '?query=a',
@@ -552,7 +552,7 @@ describe('the request-sequence guard', () => {
       },
     });
 
-    const first = harness.bloc.init().catch(() => {});
+    const first = harness.bloc.init().catch(() => { });
     harness.navigate({ search: '?query=b' });
     harness.bloc.syncFromUrl();
 
@@ -563,7 +563,7 @@ describe('the request-sequence guard', () => {
     await first;
 
     expect(harness.bloc.results.map((r) => r.id)).toEqual(['b']);
-    expect(harness.bloc.totalResults).toBe(2);
+    expect(harness.bloc.totalHits).toBe(2);
     expect(harness.bloc.isLoading).toBe(false);
   });
 });
@@ -577,7 +577,7 @@ describe('the request the search port receives', () => {
     expect(lastRequest()).toEqual({
       query: 'naruto',
       hitsPage: 0,
-	  worksPage: 0,
+      worksPage: 0,
       hitsPerPage: PAGE_SIZE_OPTIONS[0],
       genre: null,
       includeWorks: true,
@@ -591,7 +591,7 @@ describe('the request the search port receives', () => {
     expect(lastRequest()).toEqual({
       query: 'naruto',
       hitsPage: 0,
-	  worksPage: 0,
+      worksPage: 0,
       hitsPerPage: PAGE_SIZE_OPTIONS[0],
       genre: 'Action',
       includeWorks: false,
@@ -604,7 +604,7 @@ describe('the request the search port receives', () => {
     expect(lastRequest()).toEqual({
       query: '',
       hitsPage: 0,
-	  worksPage: 0,
+      worksPage: 0,
       hitsPerPage: PAGE_SIZE_OPTIONS[0],
       genre: 'Action',
       includeWorks: false,
@@ -634,13 +634,13 @@ describe('pagination', () => {
     const { bloc } = await searched({ hits: [hit('1')], totalHits: 50 });
 
     expect(bloc.hitsPerPage).toBe(24);
-    expect(bloc.totalResultsPages).toBe(3);
+    expect(bloc.totalHitsPages).toBe(3);
   });
 
   it('has no pages at all when nothing matched', async () => {
     const { bloc } = await searched({ hits: [], totalHits: 0 });
 
-    expect(bloc.totalResultsPages).toBe(0);
+    expect(bloc.totalHitsPages).toBe(0);
     expect(bloc.hitsPage).toBe(0);
   });
 
@@ -766,31 +766,31 @@ describe('resultsSummary', () => {
   it('is singular for exactly one result', async () => {
     const { bloc } = await searched({ hits: [hit('1')], totalHits: 1 });
 
-    expect(bloc.resultsSummary).toBe("1 result for 'naruto'");
+    expect(bloc.hitsSummary).toBe("1 result for 'naruto'");
   });
 
   it('is plural and grouped for a large total', async () => {
     const { bloc } = await searched({ hits: [hit('1')], totalHits: 1204 });
 
-    expect(bloc.resultsSummary).toBe("1,204 results for 'naruto'");
+    expect(bloc.hitsSummary).toBe("1,204 results for 'naruto'");
   });
 
   it('names the genre when there is no query', async () => {
     const { bloc } = await searched({ hits: [hit('1')], totalHits: 9 }, '?genre=Slice of Life');
 
-    expect(bloc.resultsSummary).toBe('9 results in Slice of Life');
+    expect(bloc.hitsSummary).toBe('9 results in Slice of Life');
   });
 
   it('prefers the query over the genre when both are set', async () => {
     const { bloc } = await searched({ hits: [hit('1')], totalHits: 3 }, '?query=naruto&genre=Action');
 
-    expect(bloc.resultsSummary).toBe("3 results for 'naruto'");
+    expect(bloc.hitsSummary).toBe("3 results for 'naruto'");
   });
 
   it('is a bare count when nothing has been searched', () => {
     const { bloc } = setup();
 
-    expect(bloc.resultsSummary).toBe('0 results');
+    expect(bloc.hitsSummary).toBe('0 results');
   });
 });
 
@@ -991,7 +991,7 @@ describe('clear', () => {
 
     expect(bloc.results).toEqual([]);
     expect(bloc.works).toEqual([]);
-    expect(bloc.totalResults).toBe(0);
+    expect(bloc.totalHits).toBe(0);
     expect(bloc.hasSearched).toBe(false);
     expect(bloc.selectedGenre).toBeNull();
   });
@@ -1022,7 +1022,7 @@ describe('clear', () => {
 
 describe('a port that throws', () => {
   it('empties the results instead of throwing when the search rejects', async () => {
-    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => { });
     const harness = setup({
       search: '?query=naruto',
       respond: async () => {
@@ -1034,7 +1034,7 @@ describe('a port that throws', () => {
 
     expect(harness.bloc.results).toEqual([]);
     expect(harness.bloc.works).toEqual([]);
-    expect(harness.bloc.totalResults).toBe(0);
+    expect(harness.bloc.totalHits).toBe(0);
     expect(harness.bloc.isLoading).toBe(false);
     // hasSearched stays true, so the page shows "no results" rather than the
     // browse placeholder for a query that was genuinely attempted.
@@ -1044,7 +1044,7 @@ describe('a port that throws', () => {
   });
 
   it('leaves the genre strip empty and finished when the facets reject', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => { });
     const harness = setup({
       genres: async () => {
         throw new Error('facets unavailable');
@@ -1059,7 +1059,7 @@ describe('a port that throws', () => {
   });
 
   it('leaves every card undecorated when the viewer list rejects', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => { });
     const harness = setup({
       search: '?query=naruto',
       list: async () => {

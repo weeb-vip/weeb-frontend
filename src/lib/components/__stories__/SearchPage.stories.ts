@@ -95,8 +95,8 @@ function stubSearch(
         hits: hits.slice(start, start + request.hitsPerPage),
         totalHits,
         works: request.includeWorks ? works : [],
-		totalWorks: request.includeWorks ? works.length : 0,
-		total: request.includeWorks ? works.length : 0,
+        totalWorks: request.includeWorks ? works.length : 0,
+        total: request.includeWorks ? works.length : 0,
       };
     },
     async genreFacets() {
@@ -107,8 +107,8 @@ function stubSearch(
 
 /** A search that never settles, so the page stays on its skeletons. */
 const neverResolves: CatalogSearchPort = {
-  search: () => new Promise(() => {}),
-  genreFacets: () => new Promise(() => {}),
+  search: () => new Promise(() => { }),
+  genreFacets: () => new Promise(() => { }),
 };
 
 /** Every request fails: the page falls back to its no-results state. */
