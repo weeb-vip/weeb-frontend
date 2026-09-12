@@ -35,8 +35,15 @@ import {
 export interface CatalogSearchRequest {
   query: string;
   /** Zero-based, matching Algolia. */
-  page: number;
-  hitsPerPage: number;
+  /** Hits are actual anime results; works are manga, light novels and other such media. */
+  hitsPage: number;
+  worksPage: number;
+  /**
+   * Results per page, for both indices. The two are paged independently but
+   * sized together: a page showing 24 anime and 6 manga reads as a bug, not a
+   * design, so the size the viewer picks applies to the whole page.
+   */
+  perPage: number;
   genre: string | null;
   /** Works ride along in the same round trip when the query can carry them. */
   includeWorks: boolean;
@@ -44,8 +51,10 @@ export interface CatalogSearchRequest {
 
 export interface CatalogSearchResponse {
   hits: Hit[];
-  total: number;
+  totalHits: number;
   works: Hit[];
+  totalWorks: number;
+  total: number;
 }
 
 /**
@@ -89,13 +98,12 @@ export interface RoutePort {
 }
 
 const ANIME_INDEX_FALLBACK = 'anime-staging';
-const WORKS_HITS_PER_PAGE = 6;
 
 /** The real Algolia stack: lazily imported, configured from the config store. */
 export const algoliaCatalogSearchPort: CatalogSearchPort = {
   async search(request) {
     const client = await getClient();
-    if (!client) return { hits: [], total: 0, works: [] };
+    if (!client) return { hits: [], totalHits: 0, works: [], totalWorks: 0, total: 0 };
 
     const { searchClient, animeIndex, worksIndex } = client;
     // `tags` is an anime facet that no work carries, so a genre filter and a
@@ -106,8 +114,8 @@ export const algoliaCatalogSearchPort: CatalogSearchPort = {
       {
         indexName: animeIndex,
         query: request.query,
-        hitsPerPage: request.hitsPerPage,
-        page: request.page,
+        hitsPerPage: request.perPage,
+        page: request.hitsPage,
         filters: request.genre ? `tags:"${request.genre}"` : undefined,
       },
     ];
@@ -115,7 +123,8 @@ export const algoliaCatalogSearchPort: CatalogSearchPort = {
       requests.push({
         indexName: worksIndex,
         query: request.query,
-        hitsPerPage: WORKS_HITS_PER_PAGE,
+        hitsPerPage: request.perPage,
+        page: request.worksPage,
       });
     }
 
@@ -123,11 +132,16 @@ export const algoliaCatalogSearchPort: CatalogSearchPort = {
     // Algolia v5 puts results under `results`; older shapes answer flat.
     const first = response.results?.[0] || response;
     const hits = first?.hits || [];
+    const works = wantWorks ? response.results?.[1]?.hits || [] : [];
+    const totalHits = first?.nbHits ?? first?.totalHits ?? hits.length;
+    const totalWorks = wantWorks ? response.results?.[1]?.nbHits ?? response.results?.[1]?.totalHits ?? 0 : 0;
 
     return {
       hits,
-      total: first?.nbHits ?? first?.totalHits ?? hits.length,
-      works: wantWorks ? response.results?.[1]?.hits || [] : [],
+      totalHits,
+      works,
+      totalWorks,
+      total: totalHits + totalWorks,
     };
   },
 
@@ -302,11 +316,13 @@ export class SearchPageBloc {
   #draftQuery = $state('');
   #urlState = $state<SearchUrlState>({ query: '', genre: null });
 
-  #results = $state<NormalizedHit[]>([]);
-  #workResults = $state<Hit[]>([]);
-  #total = $state(0);
-  #currentPage = $state(0);
-  #perPage = $state(PAGE_SIZE_OPTIONS[0]);
+  #hits = $state<NormalizedHit[]>([]);
+  #works = $state<Hit[]>([]);
+  #totalHits = $state(0);
+  #totalWorks = $state(0);
+  #currentHitsPage = $state(0);
+  #currentWorksPage = $state(0);
+  #hitsPerPage = $state(PAGE_SIZE_OPTIONS[0]);
   #isLoading = $state(false);
   #hasSearched = $state(false);
 
@@ -385,20 +401,36 @@ export class SearchPageBloc {
     return this.#hasSearched;
   }
 
-  get totalResults(): number {
-    return this.#total;
+  get totalHits(): number {
+    return this.#totalHits;
   }
 
-  get page(): number {
-    return this.#currentPage;
+  get totalWorks(): number {
+    return this.#totalWorks;
   }
 
-  get perPage(): number {
-    return this.#perPage;
+  get hitsPage(): number {
+    return this.#currentHitsPage;
   }
 
-  get totalPages(): number {
-    return Math.ceil(this.#total / this.#perPage);
+  get worksPage(): number {
+    return this.#currentWorksPage;
+  }
+
+  get hitsPerPage(): number {
+    return this.#hitsPerPage;
+  }
+
+  get worksPerPage(): number {
+    return this.#hitsPerPage;
+  }
+
+  get totalHitsPages(): number {
+    return Math.ceil(this.#totalHits / this.#hitsPerPage);
+  }
+
+  get totalWorksPages(): number {
+    return Math.ceil(this.#totalWorks / this.#hitsPerPage);
   }
 
   get viewMode(): ViewMode {
@@ -444,8 +476,8 @@ export class SearchPageBloc {
     return this.#urlState.genre === name;
   }
 
-  readonly #filteredResults: NormalizedHit[] = $derived(
-    filterAndSortHits(this.#results, {
+  readonly #filteredHits: NormalizedHit[] = $derived(
+    filterAndSortHits(this.#hits, {
       genre: this.#urlState.genre,
       status: this.#status,
       year: this.#year,
@@ -454,7 +486,7 @@ export class SearchPageBloc {
   );
 
   get results(): NormalizedHit[] {
-    return this.#filteredResults;
+    return this.#filteredHits;
   }
 
   /**
@@ -464,11 +496,11 @@ export class SearchPageBloc {
    * out rather than shown.
    */
   get works(): Hit[] {
-    return this.#workResults.filter((work) => !!work?.slug);
+    return this.#works.filter((work) => !!work?.slug);
   }
 
   get hasResults(): boolean {
-    return this.#filteredResults.length > 0;
+    return this.#filteredHits.length > 0;
   }
 
   /** The state the page is in, so the view has one thing to switch on. */
@@ -478,9 +510,17 @@ export class SearchPageBloc {
     return this.hasResults ? 'results' : 'empty';
   }
 
-  /** "1,204 results for 'naruto'" -- assembled here so the markup has one string. */
-  get resultsSummary(): string {
-    const count = `${this.#total.toLocaleString()} ${this.#total === 1 ? 'result' : 'results'}`;
+  /** "1,204 results for 'naruto'" -- assembled here so the markup has one string. (anime) */
+  get hitsSummary(): string {
+    const count = `${this.#totalHits.toLocaleString()} ${this.#totalHits === 1 ? 'result' : 'results'}`;
+    if (this.#urlState.query) return `${count} for '${this.#urlState.query}'`;
+    if (this.#urlState.genre) return `${count} in ${this.#urlState.genre}`;
+    return count;
+  }
+
+  /** "18 results for 'one piece'" -- assembled here so the markup has one string. (manga) */
+  get worksSummary(): string {
+    const count = `${this.#totalWorks.toLocaleString()} ${this.#totalWorks === 1 ? 'result' : 'results'}`;
     if (this.#urlState.query) return `${count} for '${this.#urlState.query}'`;
     if (this.#urlState.genre) return `${count} in ${this.#urlState.genre}`;
     return count;
@@ -624,15 +664,21 @@ export class SearchPageBloc {
     this.#sort = String(value) as SortKey;
   }
 
-  goToPage(page: number): void {
-    if (page < 0 || page >= this.totalPages) return;
-    this.#currentPage = page;
+  goToPage(page: number, type: "hits" | "works"): void {
+    if (page < 0 || page >= (type === "hits" ? this.totalHitsPages : this.totalWorksPages)) return;
+    if (type === "hits") {
+      this.#currentHitsPage = page;
+    } else {
+      this.#currentWorksPage = page;
+    }
     void this.#runSearch({ resetPage: false });
   }
 
-  setPerPage(perPage: number): void {
-    this.#perPage = perPage;
-    this.#currentPage = 0;
+  /** One size for both grids, so both restart at their first page. */
+  setHitsPerPage(perPage: number): void {
+    this.#hitsPerPage = perPage;
+    this.#currentHitsPage = 0;
+    this.#currentWorksPage = 0;
     void this.#runSearch({ resetPage: false });
   }
 
@@ -644,15 +690,20 @@ export class SearchPageBloc {
 
   async #runSearch({ resetPage = true }: { resetPage?: boolean } = {}): Promise<void> {
     if (isBrowseState(this.#urlState)) {
-      this.#results = [];
-      this.#workResults = [];
+      this.#hits = [];
+      this.#works = [];
       this.#hasSearched = false;
-      this.#total = 0;
-      this.#currentPage = 0;
+      this.#totalHits = 0;
+      this.#totalWorks = 0;
+      this.#currentHitsPage = 0;
+      this.#currentWorksPage = 0;
       return;
     }
 
-    if (resetPage) this.#currentPage = 0;
+    if (resetPage) {
+      this.#currentHitsPage = 0;
+      this.#currentWorksPage = 0;
+    }
 
     const seq = ++this.#requestSeq;
     this.#isLoading = true;
@@ -661,27 +712,27 @@ export class SearchPageBloc {
     try {
       const response = await this.#search.search({
         query: this.#urlState.query.trim(),
-        page: this.#currentPage,
-        hitsPerPage: this.#perPage,
+        hitsPage: this.#currentHitsPage,
+        worksPage: this.#currentWorksPage,
+        perPage: this.#hitsPerPage,
         genre: this.#urlState.genre,
-        // Works are skipped under a genre filter, because `tags` is an anime
-        // facet no work carries, and on later pages, because pagination walks
-        // the anime results and a repeated works section under page 4 is noise.
         includeWorks:
-          !!this.#urlState.query.trim() && !this.#urlState.genre && this.#currentPage === 0,
+          !!this.#urlState.query.trim() && !this.#urlState.genre,
       });
 
       if (seq !== this.#requestSeq) return;
 
-      this.#results = response.hits.map(normalizeHit);
-      this.#workResults = response.works;
-      this.#total = response.total;
+      this.#hits = response.hits.map(normalizeHit);
+      this.#works = response.works;
+      this.#totalHits = response.totalHits;
+      this.#totalWorks = response.totalWorks;
     } catch (error) {
       if (seq !== this.#requestSeq) return;
       console.error('Search failed:', error);
-      this.#results = [];
-      this.#workResults = [];
-      this.#total = 0;
+      this.#hits = [];
+      this.#works = [];
+      this.#totalHits = 0;
+      this.#totalWorks = 0;
     } finally {
       if (seq === this.#requestSeq) this.#isLoading = false;
     }

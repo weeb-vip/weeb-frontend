@@ -1,18 +1,18 @@
 <script lang="ts">
-  import Seo from '$lib/Seo.svelte';
-  import { onMount } from 'svelte';
-  import PosterCard from '$lib/components/cards/PosterCard';
-  import PosterGrid from '$lib/components/primitives/PosterGrid';
-  import Pagination from '$lib/components/primitives/Pagination';
-  import EmptyState from '$lib/components/primitives/EmptyState';
-  import Score from '$lib/components/primitives/Score';
-  import Select from '$lib/components/primitives/Select';
-  import Skeleton from '$lib/components/primitives/Skeleton';
-  import ChipGroup from '$lib/components/primitives/ChipGroup';
-  import SafeImage from '$lib/components/primitives/SafeImage';
-  import { GetImageFromAnime } from '$lib/services/utils';
-  import { getStatusColor, getStatusLabel } from '$lib/utils/status';
-  import { SearchPageBloc } from './SearchPage.bloc.svelte';
+  import Seo from "$lib/Seo.svelte";
+  import { onMount } from "svelte";
+  import PosterCard from "$lib/components/cards/PosterCard";
+  import PosterGrid from "$lib/components/primitives/PosterGrid";
+  import Pagination from "$lib/components/primitives/Pagination";
+  import EmptyState from "$lib/components/primitives/EmptyState";
+  import Score from "$lib/components/primitives/Score";
+  import Select from "$lib/components/primitives/Select";
+  import Skeleton from "$lib/components/primitives/Skeleton";
+  import ChipGroup from "$lib/components/primitives/ChipGroup";
+  import SafeImage from "$lib/components/primitives/SafeImage";
+  import { GetImageFromAnime } from "$lib/services/utils";
+  import { getStatusColor, getStatusLabel } from "$lib/utils/status";
+  import { SearchPageBloc } from "./SearchPage.bloc.svelte";
 
   /**
    * /search — the browse-and-search page.
@@ -37,8 +37,8 @@
 
   /** Grid or list. Icons only: the two shapes say it faster than the words. */
   const VIEW_MODES = [
-    { value: 'grid', label: 'Grid', title: 'Grid view' },
-    { value: 'list', label: 'List', title: 'List view' },
+    { value: "grid", label: "Grid", title: "Grid view" },
+    { value: "list", label: "List", title: "List view" },
   ];
 </script>
 
@@ -70,12 +70,23 @@
         aria-label="Search anime"
         bind:value={bloc.draftQuery}
         onkeydown={(e) => {
-          if (e.key === 'Enter') bloc.submit();
+          if (e.key === "Enter") bloc.submit();
         }}
       />
       {#if bloc.draftQuery}
-        <button class="search-bar-clear" onclick={() => bloc.clear()} aria-label="Clear search">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+        <button
+          class="search-bar-clear"
+          onclick={() => bloc.clear()}
+          aria-label="Clear search"
+        >
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+          >
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         </button>
@@ -149,13 +160,22 @@
           <button class="filter-pill" onclick={filter.remove}>
             {filter.label}
             <span class="filter-pill-remove">
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+              <svg
+                width="8"
+                height="8"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3.5"
+              >
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </span>
           </button>
         {/each}
-        <button class="clear-all-btn" onclick={() => bloc.clear()}>Clear all</button>
+        <button class="clear-all-btn" onclick={() => bloc.clear()}
+          >Clear all</button
+        >
       </div>
     </section>
   {/if}
@@ -163,7 +183,9 @@
   <!-- Results Header -->
   {#if bloc.hasSearched}
     <div class="results-header">
-      <p class="results-count">{bloc.resultsSummary}</p>
+
+      <p class="results-count">{bloc.hitsSummary}</p>
+
       <ChipGroup
         mode="toggle"
         iconOnly
@@ -174,14 +196,45 @@
         ariaLabel="View mode"
       >
         {#snippet itemContent(item)}
-          {#if item.value === 'grid'}
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+          {#if item.value === "grid"}
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="7" height="7" /><rect
+                x="14"
+                y="3"
+                width="7"
+                height="7"
+              />
+              <rect x="3" y="14" width="7" height="7" /><rect
+                x="14"
+                y="14"
+                width="7"
+                height="7"
+              />
             </svg>
           {:else}
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" />
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <line x1="3" y1="6" x2="21" y2="6" /><line
+                x1="3"
+                y1="12"
+                x2="21"
+                y2="12"
+              />
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           {/if}
@@ -190,8 +243,10 @@
     </div>
   {/if}
 
+  <h2 class="works-heading" id="anime-heading">Anime</h2>
+
   <!-- Results -->
-  {#if bloc.phase === 'loading'}
+  {#if bloc.phase === "loading"}
     <PosterGrid class="results-grid">
       {#each Array(12) as _, i (i)}
         <div>
@@ -201,27 +256,33 @@
         </div>
       {/each}
     </PosterGrid>
-  {:else if bloc.phase === 'empty'}
+  {:else if bloc.phase === "empty"}
     <EmptyState
       class="empty-state"
       heading="No results found"
       message="Try adjusting your filters or search term."
-      action={{ label: 'Clear all filters', onClick: () => bloc.clear(), variant: 'ghost' }}
+      action={{
+        label: "Clear all filters",
+        onClick: () => bloc.clear(),
+        variant: "ghost",
+      }}
     />
-  {:else if bloc.phase === 'results'}
-    {#if bloc.viewMode === 'grid'}
+  {:else if bloc.phase === "results"}
+    {#if bloc.viewMode === "grid"}
       <PosterGrid class="results-grid">
         {#each bloc.results as item (item.objectID)}
           <PosterCard
-            id={item.id || ''}
+            id={item.id || ""}
             slug={item.url_slug ?? item.slug}
-            title={item.title_en || item.title_jp || ''}
+            title={item.title_en || item.title_jp || ""}
             image={GetImageFromAnime(item)}
             score={item.ratingNum}
             status={item.status || null}
-            sub={[item.yearNum, item.studiosList?.[0]].filter(Boolean).join(' · ')}
+            sub={[item.yearNum, item.studiosList?.[0]]
+              .filter(Boolean)
+              .join(" · ")}
             genres={item.tags || []}
-            description={item.description || ''}
+            description={item.description || ""}
             episodeCount={item.episodeCount}
             onList={bloc.listStatusFor(item)}
           />
@@ -234,7 +295,7 @@
             <div class="list-poster">
               <SafeImage
                 src={GetImageFromAnime(item)}
-                alt={item.title_en || ''}
+                alt={item.title_en || ""}
                 fallbackSrc="/assets/not found.jpg"
                 className="list-poster-img"
                 width="52"
@@ -242,11 +303,15 @@
               />
             </div>
             <div class="list-info">
-              <div class="list-title">{item.title_en || item.title_jp || ''}</div>
+              <div class="list-title">
+                {item.title_en || item.title_jp || ""}
+              </div>
               <div class="list-sub">
                 {#if item.yearNum}{item.yearNum}{/if}
-                {#if item.episodeCount} · {item.episodeCount} episodes{/if}
-                {#if item.studiosList?.[0]} · {item.studiosList[0]}{/if}
+                {#if item.episodeCount}
+                  · {item.episodeCount} episodes{/if}
+                {#if item.studiosList?.[0]}
+                  · {item.studiosList[0]}{/if}
               </div>
               {#if item.description}
                 <div class="list-desc">{bloc.excerpt(item.description)}</div>
@@ -266,7 +331,9 @@
                      from the ones the cards use. -->
                 <span
                   class="list-status-badge"
-                  style="--badge-color: {getStatusColor(bloc.listStatusFor(item))}"
+                  style="--badge-color: {getStatusColor(
+                    bloc.listStatusFor(item),
+                  )}"
                 >
                   {getStatusLabel(bloc.listStatusFor(item))}
                 </span>
@@ -280,6 +347,18 @@
       </div>
     {/if}
 
+    {#if bloc.totalHitsPages > 1}
+      <Pagination
+        page={bloc.hitsPage}
+        totalPages={bloc.totalHitsPages}
+        perPage={bloc.hitsPerPage}
+        perPageOptions={bloc.pageSizeOptions}
+        onPageChange={(next) => bloc.goToPage(next, "hits")}
+        onPerPageChange={(next) => bloc.setHitsPerPage(next)}
+        label="Search results pagination"
+      />
+    {/if}
+
     <!-- Works: the manga, light novels and novels matching the same query.
          A separate section rather than mixed into the grid above, because the
          two indices are ranked independently and their scores are not
@@ -288,18 +367,28 @@
          as this page did before. -->
     {#if bloc.works.length > 0}
       <section class="works-section" aria-labelledby="works-heading">
-        <h2 class="works-heading" id="works-heading">Manga &amp; light novels</h2>
-        {#if bloc.viewMode === 'grid'}
+        <!-- The count only. The view-mode toggle above governs both grids, so a
+             second copy of it here would be two controls for one piece of
+             state. -->
+        {#if bloc.hasSearched}
+          <div class="results-header">
+            <p class="results-count">{bloc.worksSummary}</p>
+          </div>
+        {/if}
+
+        <h2 class="works-heading" id="works-heading">Manga &amp; Light Novels</h2>
+
+        {#if bloc.viewMode === "grid"}
           <PosterGrid class="results-grid">
             {#each bloc.works as work (work.objectID)}
               <PosterCard
-                id={work.id || ''}
-                title={work.title_en || work.title_jp || ''}
-                image={work.id || ''}
+                id={work.id || ""}
+                title={work.title_en || work.title_jp || ""}
+                image={work.id || ""}
                 imagePath="works"
                 score={work.score}
                 sub={bloc.workSubtitle(work)}
-                description={work.description || ''}
+                description={work.description || ""}
                 href={bloc.workHref(work)}
               />
             {/each}
@@ -312,24 +401,30 @@
               <a class="list-item" href={bloc.workHref(work)}>
                 <div class="list-poster">
                   <SafeImage
-                    src={work.id || ''}
+                    src={work.id || ""}
                     path="works"
-                    alt={work.title_en || work.title_jp || ''}
-                    fallbackSrc={work.image_url || '/assets/not found.jpg'}
+                    alt={work.title_en || work.title_jp || ""}
+                    fallbackSrc={work.image_url || "/assets/not found.jpg"}
                     className="list-poster-img"
                     width="52"
                     height="78"
                   />
                 </div>
                 <div class="list-info">
-                  <div class="list-title">{work.title_en || work.title_jp || ''}</div>
+                  <div class="list-title">
+                    {work.title_en || work.title_jp || ""}
+                  </div>
                   <div class="list-sub">
                     {bloc.workSubtitle(work)}
-                    {#if work.volumes} · {work.volumes} volumes{/if}
-                    {#if work.chapters} · {work.chapters} chapters{/if}
+                    {#if work.volumes}
+                      · {work.volumes} volumes{/if}
+                    {#if work.chapters}
+                      · {work.chapters} chapters{/if}
                   </div>
                   {#if work.description}
-                    <div class="list-desc">{bloc.excerpt(work.description)}</div>
+                    <div class="list-desc">
+                      {bloc.excerpt(work.description)}
+                    </div>
                   {/if}
                   {#if work.authors?.length > 0}
                     <div class="list-tags">
@@ -348,19 +443,19 @@
             {/each}
           </div>
         {/if}
-      </section>
-    {/if}
 
-    {#if bloc.totalPages > 1}
-      <Pagination
-        page={bloc.page}
-        totalPages={bloc.totalPages}
-        perPage={bloc.perPage}
-        perPageOptions={bloc.pageSizeOptions}
-        onPageChange={(next) => bloc.goToPage(next)}
-        onPerPageChange={(next) => bloc.setPerPage(next)}
-        label="Search results pagination"
-      />
+        {#if bloc.totalWorksPages > 1}
+          <Pagination
+            page={bloc.worksPage}
+            totalPages={bloc.totalWorksPages}
+            perPage={bloc.worksPerPage}
+            perPageOptions={bloc.pageSizeOptions}
+            onPageChange={(next) => bloc.goToPage(next, "works")}
+            onPerPageChange={(next) => bloc.setHitsPerPage(next)}
+            label="Manga results pagination"
+          />
+        {/if}
+      </section>
     {/if}
   {:else}
     <!-- Nothing searched yet: the browse placeholder. -->
@@ -417,13 +512,16 @@
     font-size: 16px;
     color: var(--weeb-fg);
     background: var(--weeb-surface);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
     font-family: var(--weeb-font);
   }
   .search-bar-input:focus {
     outline: none;
     border-color: var(--weeb-accent);
-    box-shadow: 0 0 0 4px color-mix(in oklch, var(--weeb-accent) 12%, transparent);
+    box-shadow: 0 0 0 4px
+      color-mix(in oklch, var(--weeb-accent) 12%, transparent);
   }
   .search-bar-input::placeholder {
     color: var(--weeb-fg-muted);
@@ -679,7 +777,11 @@
     border-radius: var(--weeb-radius-full);
     color: var(--badge-color, var(--weeb-fg-secondary));
     border: 1px solid var(--badge-color, var(--weeb-border));
-    background: color-mix(in oklch, var(--badge-color, var(--weeb-surface)) 8%, transparent);
+    background: color-mix(
+      in oklch,
+      var(--badge-color, var(--weeb-surface)) 8%,
+      transparent
+    );
   }
 
   /* Responsive */

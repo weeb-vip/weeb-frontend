@@ -14,8 +14,11 @@ import { test, expect, type Page } from '@playwright/test';
 const GENRE_CHIP = '.genre-tag:not(.genre-tag--more)';
 const SELECTED_CHIP = '.genre-tag.selected';
 const SEARCH_INPUT = '.search-bar-input';
-const RESULTS_COUNT = '.results-count';
-const RESULTS_GRID = '.results-grid';
+// Scoped to the anime half: the manga section below carries a count and a grid
+// of its own, so the bare class matches two elements and trips strict mode.
+// `search-manga-pagination.spec.ts` owns the manga side.
+const RESULTS_COUNT = '.search-page > .results-header .results-count';
+const RESULTS_GRID = '.search-page > .results-grid';
 
 /** Wait for the browse page to hydrate and its Algolia genre facets to land. */
 async function waitForBrowseReady(page: Page) {
