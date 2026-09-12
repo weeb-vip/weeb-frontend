@@ -90,9 +90,9 @@ function stubSearch(
 ): CatalogSearchPort {
   return {
     async search(request): Promise<CatalogSearchResponse> {
-      const start = request.hitsPage * request.hitsPerPage;
+      const start = request.hitsPage * request.perPage;
       return {
-        hits: hits.slice(start, start + request.hitsPerPage),
+        hits: hits.slice(start, start + request.perPage),
         totalHits,
         works: request.includeWorks ? works : [],
         totalWorks: request.includeWorks ? works.length : 0,

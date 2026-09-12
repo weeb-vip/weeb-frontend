@@ -578,7 +578,7 @@ describe('the request the search port receives', () => {
       query: 'naruto',
       hitsPage: 0,
       worksPage: 0,
-      hitsPerPage: PAGE_SIZE_OPTIONS[0],
+      perPage: PAGE_SIZE_OPTIONS[0],
       genre: null,
       includeWorks: true,
     });
@@ -592,7 +592,7 @@ describe('the request the search port receives', () => {
       query: 'naruto',
       hitsPage: 0,
       worksPage: 0,
-      hitsPerPage: PAGE_SIZE_OPTIONS[0],
+      perPage: PAGE_SIZE_OPTIONS[0],
       genre: 'Action',
       includeWorks: false,
     });
@@ -605,7 +605,7 @@ describe('the request the search port receives', () => {
       query: '',
       hitsPage: 0,
       worksPage: 0,
-      hitsPerPage: PAGE_SIZE_OPTIONS[0],
+      perPage: PAGE_SIZE_OPTIONS[0],
       genre: 'Action',
       includeWorks: false,
     });
@@ -623,7 +623,7 @@ describe('the request the search port receives', () => {
     harness.bloc.setHitsPerPage(48);
     await flush();
 
-    expect(harness.lastRequest().hitsPerPage).toBe(48);
+    expect(harness.lastRequest().perPage).toBe(48);
   });
 });
 
@@ -700,6 +700,30 @@ describe('pagination', () => {
     expect(harness.bloc.hitsPage).toBe(0);
     expect(harness.lastRequest().hitsPage).toBe(0);
     expect(harness.bloc.hitsPerPage).toBe(100);
+  });
+
+  it('pages the works at the same size as the anime beside them', async () => {
+    // 24 anime above 6 manga reads as a bug, not a design.
+    const { bloc } = await searched({ hits: [hit('1')], totalHits: 50, totalWorks: 50 });
+
+    expect(bloc.worksPerPage).toBe(bloc.hitsPerPage);
+    expect(bloc.totalWorksPages).toBe(bloc.totalHitsPages);
+  });
+
+  it('returns both grids to their first page when the page size changes', async () => {
+    const harness = await searched({ hits: [hit('1')], totalHits: 500, totalWorks: 500 });
+    harness.bloc.goToPage(4, 'hits');
+    await flush();
+    harness.bloc.goToPage(3, 'works');
+    await flush();
+
+    harness.bloc.setHitsPerPage(100);
+    await flush();
+
+    expect(harness.bloc.hitsPage).toBe(0);
+    expect(harness.bloc.worksPage).toBe(0);
+    expect(harness.lastRequest().worksPage).toBe(0);
+    expect(harness.lastRequest().perPage).toBe(100);
   });
 
   it('resets to the first page for a brand new query', async () => {

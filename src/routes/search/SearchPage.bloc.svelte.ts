@@ -38,8 +38,12 @@ export interface CatalogSearchRequest {
   /** Hits are actual anime results; works are manga, light novels and other such media. */
   hitsPage: number;
   worksPage: number;
-  /** The number of hits per page may be selected and changed in the UI, while for works it's a code constant. */
-  hitsPerPage: number;
+  /**
+   * Results per page, for both indices. The two are paged independently but
+   * sized together: a page showing 24 anime and 6 manga reads as a bug, not a
+   * design, so the size the viewer picks applies to the whole page.
+   */
+  perPage: number;
   genre: string | null;
   /** Works ride along in the same round trip when the query can carry them. */
   includeWorks: boolean;
@@ -94,7 +98,6 @@ export interface RoutePort {
 }
 
 const ANIME_INDEX_FALLBACK = 'anime-staging';
-const WORKS_HITS_PER_PAGE = 6;
 
 /** The real Algolia stack: lazily imported, configured from the config store. */
 export const algoliaCatalogSearchPort: CatalogSearchPort = {
@@ -111,7 +114,7 @@ export const algoliaCatalogSearchPort: CatalogSearchPort = {
       {
         indexName: animeIndex,
         query: request.query,
-        hitsPerPage: request.hitsPerPage,
+        hitsPerPage: request.perPage,
         page: request.hitsPage,
         filters: request.genre ? `tags:"${request.genre}"` : undefined,
       },
@@ -120,7 +123,7 @@ export const algoliaCatalogSearchPort: CatalogSearchPort = {
       requests.push({
         indexName: worksIndex,
         query: request.query,
-        hitsPerPage: WORKS_HITS_PER_PAGE,
+        hitsPerPage: request.perPage,
         page: request.worksPage,
       });
     }
@@ -132,8 +135,6 @@ export const algoliaCatalogSearchPort: CatalogSearchPort = {
     const works = wantWorks ? response.results?.[1]?.hits || [] : [];
     const totalHits = first?.nbHits ?? first?.totalHits ?? hits.length;
     const totalWorks = wantWorks ? response.results?.[1]?.nbHits ?? response.results?.[1]?.totalHits ?? 0 : 0;
-
-    console.log("The total: ", first?.nbHits ?? first?.totalHits ?? hits.length);
 
     return {
       hits,
@@ -421,7 +422,7 @@ export class SearchPageBloc {
   }
 
   get worksPerPage(): number {
-    return WORKS_HITS_PER_PAGE;
+    return this.#hitsPerPage;
   }
 
   get totalHitsPages(): number {
@@ -429,7 +430,7 @@ export class SearchPageBloc {
   }
 
   get totalWorksPages(): number {
-    return Math.ceil(this.#totalWorks / WORKS_HITS_PER_PAGE);
+    return Math.ceil(this.#totalWorks / this.#hitsPerPage);
   }
 
   get viewMode(): ViewMode {
@@ -673,9 +674,11 @@ export class SearchPageBloc {
     void this.#runSearch({ resetPage: false });
   }
 
+  /** One size for both grids, so both restart at their first page. */
   setHitsPerPage(perPage: number): void {
     this.#hitsPerPage = perPage;
     this.#currentHitsPage = 0;
+    this.#currentWorksPage = 0;
     void this.#runSearch({ resetPage: false });
   }
 
@@ -711,7 +714,7 @@ export class SearchPageBloc {
         query: this.#urlState.query.trim(),
         hitsPage: this.#currentHitsPage,
         worksPage: this.#currentWorksPage,
-        hitsPerPage: this.#hitsPerPage,
+        perPage: this.#hitsPerPage,
         genre: this.#urlState.genre,
         includeWorks:
           !!this.#urlState.query.trim() && !this.#urlState.genre,
