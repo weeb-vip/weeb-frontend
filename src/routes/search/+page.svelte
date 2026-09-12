@@ -243,7 +243,7 @@
     </div>
   {/if}
 
-  <h2 class="works-heading" id="works-heading">Anime</h2>
+  <h2 class="works-heading" id="anime-heading">Anime</h2>
 
   <!-- Results -->
   {#if bloc.phase === "loading"}
@@ -367,73 +367,17 @@
          as this page did before. -->
     {#if bloc.works.length > 0}
       <section class="works-section" aria-labelledby="works-heading">
-        <!-- Results Header -->
+        <!-- The count only. The view-mode toggle above governs both grids, so a
+             second copy of it here would be two controls for one piece of
+             state. -->
         {#if bloc.hasSearched}
-
           <div class="results-header">
             <p class="results-count">{bloc.worksSummary}</p>
-
-            <ChipGroup
-              mode="toggle"
-              iconOnly
-              nowrap
-              items={VIEW_MODES}
-              value={bloc.viewMode}
-              onSelect={(mode) => bloc.setViewMode(mode)}
-              ariaLabel="View mode"
-            >
-              {#snippet itemContent(item)}
-                {#if item.value === "grid"}
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    aria-hidden="true"
-                  >
-                    <rect x="3" y="3" width="7" height="7" /><rect
-                      x="14"
-                      y="3"
-                      width="7"
-                      height="7"
-                    />
-                    <rect x="3" y="14" width="7" height="7" /><rect
-                      x="14"
-                      y="14"
-                      width="7"
-                      height="7"
-                    />
-                  </svg>
-                {:else}
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    aria-hidden="true"
-                  >
-                    <line x1="3" y1="6" x2="21" y2="6" /><line
-                      x1="3"
-                      y1="12"
-                      x2="21"
-                      y2="12"
-                    />
-                    <line x1="3" y1="18" x2="21" y2="18" />
-                  </svg>
-                {/if}
-              {/snippet}
-            </ChipGroup>
           </div>
         {/if}
 
-        <h2 class="works-heading" id="works-heading">
-              Manga & Light Novels
-            </h2>
-            
+        <h2 class="works-heading" id="works-heading">Manga &amp; Light Novels</h2>
+
         {#if bloc.viewMode === "grid"}
           <PosterGrid class="results-grid">
             {#each bloc.works as work (work.objectID)}
@@ -499,6 +443,18 @@
             {/each}
           </div>
         {/if}
+
+        {#if bloc.totalWorksPages > 1}
+          <Pagination
+            page={bloc.worksPage}
+            totalPages={bloc.totalWorksPages}
+            perPage={bloc.worksPerPage}
+            perPageOptions={bloc.pageSizeOptions}
+            onPageChange={(next) => bloc.goToPage(next, "works")}
+            onPerPageChange={(next) => bloc.setHitsPerPage(next)}
+            label="Manga results pagination"
+          />
+        {/if}
       </section>
     {/if}
   {:else}
@@ -508,18 +464,6 @@
       size="hero"
       heading="Browse anime"
       message="Search by title or click a genre above to explore."
-    />
-  {/if}
-
-  {#if bloc.totalWorksPages > 1}
-    <Pagination
-      page={bloc.worksPage}
-      totalPages={bloc.totalWorksPages}
-      perPage={bloc.worksPerPage}
-      perPageOptions={bloc.pageSizeOptions}
-      onPageChange={(next) => bloc.goToPage(next, "works")}
-      onPerPageChange={(next) => bloc.setHitsPerPage(next)}
-      label="Search results pagination"
     />
   {/if}
 </div>
