@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
-import { waitForAuthForm, deleteEmailsForRecipient, registerNewUser } from './helpers';
+import { waitForAuthForm, fillWhenHydrated, deleteEmailsForRecipient, registerNewUser } from './helpers';
 
 // This is an alternative test that navigates directly to the auth pages
 // instead of using the modal, in case the modal has issues
@@ -107,9 +107,9 @@ test.describe('User Registration Flow (Direct Navigation)', () => {
 
     await expect(page.locator('h2:has-text("Resend Email Verification")')).toBeVisible();
 
-    const emailInput = page.locator('input[type="email"], input[name="username"]').first();
-    await emailInput.waitFor({ state: 'visible' });
-    await emailInput.fill(testEmail);
+    // This page's submit button is never disabled, so `waitForAuthForm` has no
+    // hydration gate to wait on here — the fill has to confirm itself instead.
+    await fillWhenHydrated(page, 'input[type="email"], input[name="username"]', testEmail);
 
     // Submit - use evaluate for reliable click
     const submitButton = page.locator('button[type="submit"], button:has-text("Send Verification Email")').first();

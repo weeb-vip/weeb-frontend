@@ -57,12 +57,54 @@ export async function waitForSeasonGrid(page: Page) {
 }
 
 /**
- * Wait for auth page form to be ready
+ * Wait for an auth page's form to be *interactive*, not merely present.
+ *
+ * The old comment here -- "form visible indicates hydration complete" -- was
+ * simply untrue, and it is what made `registration.spec.ts > unverified login
+ * is blocked and explains why` fail in CI. These forms are server-rendered, so
+ * `form` is visible from the first paint, long before Svelte owns the inputs.
+ * A fill that lands in that window is lost twice over:
+ *
+ *   1. no `oninput` listener is attached yet, so the bloc never learns the
+ *      value, and
+ *   2. the component then hydrates and writes its own (empty) state back over
+ *      the DOM, so the field goes blank as well.
+ *
+ * The CI snapshot showed exactly that: both fields empty and both reading
+ * "... is required", on a form the test had just filled in. Reproduced locally
+ * by delaying `/_app/immutable/**` and entering at `waitUntil: 'commit'`.
+ *
+ * Login and register already gate their submit button on `markHydrated()` --
+ * see `LoginBloc.canSubmit` -- precisely because a pre-hydration submit is not
+ * a real submit. That gate opening is the app telling us hydration is done, so
+ * wait for it rather than guessing from the markup.
  */
 export async function waitForAuthForm(page: Page) {
   await page.waitForLoadState('domcontentloaded');
-  // Wait for form to be visible (indicates hydration complete)
   await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
+  await expect(page.locator('form button[type="submit"]').first()).toBeEnabled({ timeout: 20000 });
+}
+
+/**
+ * Fill a field and make sure the value survived hydration.
+ *
+ * `waitForAuthForm` closes the window described above on the screens whose
+ * submit button is gated on hydration. `/auth/resend-verification` has no such
+ * gate -- its button is enabled from the first paint -- so there is nothing to
+ * wait on there, and the fill has to defend itself: re-fill until the value
+ * stays put. Self-correcting, and a no-op once the page is hydrated.
+ */
+export async function fillWhenHydrated(page: Page, selector: string, value: string) {
+  const input = page.locator(selector).first();
+  await input.waitFor({ state: 'visible', timeout: 15000 });
+
+  await expect(async () => {
+    await input.fill(value);
+    // Hydration lands within a frame or two of the bundle arriving, so a beat
+    // here is what makes the re-read meaningful rather than instantaneous.
+    await page.waitForTimeout(250);
+    expect(await input.inputValue()).toBe(value);
+  }).toPass({ timeout: 20000, intervals: [250, 500, 1000] });
 }
 
 /**
@@ -349,8 +391,10 @@ export function extractVerificationLink(emailContent: string, baseUrl: string): 
  */
 export async function registerNewUser(page: Page, email: string, password: string) {
   await page.goto('/auth/register', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  // Waits out the hydration gate, so the fills below reach the bloc rather than
+  // being written over by the hydrating component. This used to happen after
+  // the fills, which is the wrong order and no protection at all.
   await waitForAuthForm(page);
-  await page.locator('form').waitFor({ state: 'visible', timeout: 15000 });
 
   await page.locator('input[type="email"], input[name="username"]').first().fill(email);
   await page.locator('input[name="password"][type="password"]').first().fill(password);
@@ -358,15 +402,6 @@ export async function registerNewUser(page: Page, email: string, password: strin
   if ((await confirm.count()) > 0) await confirm.fill(password);
 
   const submitButton = page.locator('form button[type="submit"]').first();
-  await submitButton.waitFor({ state: 'visible' });
-  // wait out the hydration gate before the first click
-  await page.waitForFunction(
-    () => {
-      const btn = document.querySelector('form button[type="submit"]') as HTMLButtonElement | null;
-      return !!btn && !btn.disabled;
-    },
-    { timeout: 15000 }
-  );
 
   // One registration in flight across the whole run — see withRegistrationSlot.
   await withRegistrationSlot(async () => {
