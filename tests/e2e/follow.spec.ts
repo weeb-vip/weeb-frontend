@@ -34,6 +34,20 @@ interface Account {
   page: Page;
 }
 
+/**
+ * Load a page and wait for the named GraphQL operation to answer, so a
+ * poll reads the rendered result rather than the pre-fetch placeholder.
+ */
+async function reloadAfter(page: Page, path: string, operationName: string): Promise<void> {
+  const answered = page.waitForResponse(
+    (r) => r.url().includes('/graphql') && (r.request().postData() ?? '').includes(`"operationName":"${operationName}"`),
+    { timeout: 60000 }
+  );
+  await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await answered;
+  await waitForPageReady(page);
+}
+
 async function signUp(browser: Browser, label: string): Promise<Account> {
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -141,10 +155,12 @@ test.describe('Follows, notifications and the feed', () => {
     // ── bob is told, through the bell ────────────────────────────────────
     // The notification is written by a consumer off a NATS subject, so it
     // may land a moment after the follow; reload until the bell counts it.
+    // The bell renders "Notifications" until its count query answers, so
+    // each reload has to wait for that answer before reading the label.
     await expect
       .poll(
         async () => {
-          await bob.page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+          await reloadAfter(bob.page, '/', 'UnreadNotificationCount');
           return bob.page.getByRole('button', { name: 'Notifications, 1 unread' }).count();
         },
         { timeout: 120000, intervals: [3000] }
@@ -204,7 +220,7 @@ test.describe('Follows, notifications and the feed', () => {
     await expect
       .poll(
         async () => {
-          await alice.page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 60000 });
+          await reloadAfter(alice.page, '/feed', 'Feed');
           return alice.page.getByRole('link', { name: new RegExp(bob.username) }).count();
         },
         { timeout: 180000, intervals: [5000] }
