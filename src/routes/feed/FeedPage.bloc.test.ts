@@ -57,19 +57,16 @@ describe('FeedPageBloc', () => {
   it('pages with the client query and clamps at the ends', async () => {
     const { bloc, port } = makeBloc();
     scopes.push(reactiveScope(() => bloc.items));
-    await settle();
-    expect(bloc.items.map((i) => i.key)).toEqual(['p1a', 'p1b']);
+    await vi.waitFor(() => expect(bloc.items.map((i) => i.key)).toEqual(['p1a', 'p1b']));
 
     bloc.next();
-    await settle();
     expect(bloc.page).toBe(2);
-    expect(bloc.items.map((i) => i.key)).toEqual(['p2a', 'p2b']);
+    await vi.waitFor(() => expect(bloc.items.map((i) => i.key)).toEqual(['p2a', 'p2b']));
     expect(port.page).toHaveBeenLastCalledWith(2, 2);
 
     bloc.goTo(99);
-    await settle();
     expect(bloc.page).toBe(3);
-    expect(bloc.hasNext).toBe(false);
+    await vi.waitFor(() => expect(bloc.hasNext).toBe(false));
 
     bloc.previous();
     bloc.previous();

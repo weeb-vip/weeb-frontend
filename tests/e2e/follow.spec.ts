@@ -35,17 +35,18 @@ interface Account {
 }
 
 /**
- * Load a page and wait for the named GraphQL operation to answer, so a
- * poll reads the rendered result rather than the pre-fetch placeholder.
+ * Open the feed and wait until it has settled on content, its empty state or
+ * its error state. The page is server-rendered, so there is no client query
+ * to wait for; a reload is the way to see rows that landed after the last one.
  */
-async function reloadAfter(page: Page, path: string, operationName: string): Promise<void> {
-  const answered = page.waitForResponse(
-    (r) => r.url().includes('/graphql') && (r.request().postData() ?? '').includes(`"operationName":"${operationName}"`),
-    { timeout: 60000 }
-  );
-  await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await answered;
+async function openFeed(page: Page): Promise<void> {
+  await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 60000 });
   await waitForPageReady(page);
+  const settled = page
+    .getByRole('heading', { name: /Your feed is quiet|Could not load your feed/ })
+    .or(page.locator('a.activity-actor'))
+    .first();
+  await expect(settled).toBeVisible({ timeout: 30000 });
 }
 
 async function signUp(browser: Browser, label: string): Promise<Account> {
@@ -154,18 +155,11 @@ test.describe('Follows, notifications and the feed', () => {
 
     // ── bob is told, through the bell ────────────────────────────────────
     // The notification is written by a consumer off a NATS subject, so it
-    // may land a moment after the follow; reload until the bell counts it.
-    // The bell renders "Notifications" until its count query answers, so
-    // each reload has to wait for that answer before reading the label.
-    await expect
-      .poll(
-        async () => {
-          await reloadAfter(bob.page, '/', 'UnreadNotificationCount');
-          return bob.page.getByRole('button', { name: 'Notifications, 1 unread' }).count();
-        },
-        { timeout: 120000, intervals: [3000] }
-      )
-      .toBe(1);
+    // may land a moment after the follow. The bell is client-rendered and
+    // polls on its own, so one load and a patient wait is enough.
+    await bob.page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForPageReady(bob.page);
+    await expect(bob.page.getByRole('button', { name: 'Notifications, 1 unread' })).toBeVisible({ timeout: 120000 });
     await bob.page.getByRole('button', { name: 'Notifications, 1 unread' }).click();
     await expect(bob.page.getByRole('link', { name: new RegExp(`${alice.username} started following you`) })).toBeVisible({ timeout: 20000 });
     await bob.page.getByRole('button', { name: 'Mark all read' }).click();
@@ -220,7 +214,7 @@ test.describe('Follows, notifications and the feed', () => {
     await expect
       .poll(
         async () => {
-          await reloadAfter(alice.page, '/feed', 'Feed');
+          await openFeed(alice.page);
           return alice.page.getByRole('link', { name: new RegExp(bob.username) }).count();
         },
         { timeout: 180000, intervals: [5000] }
