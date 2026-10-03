@@ -202,7 +202,7 @@ test.describe('Follows, notifications and the feed', () => {
       .poll(
         async () => {
           await alice.page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 60000 });
-          return alice.page.getByRole('link', { name: new RegExp(alice.username.length ? bob.username : '') }).count();
+          return alice.page.getByRole('link', { name: new RegExp(bob.username) }).count();
         },
         { timeout: 180000, intervals: [5000] }
       )
