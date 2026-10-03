@@ -6,7 +6,7 @@ import {
   type QueryObserverResult,
 } from '@tanstack/svelte-query';
 import { fromStore } from 'svelte/store';
-import { getUser, updateUserDetails } from '$lib/services/query-options';
+import { fetchFollowSettings, getUser, updateUserDetails } from '$lib/services/query-options';
 import { Language, type UpdateUserInput } from '../../../gql/graphql';
 import { ACCENT_OPTIONS, type AccentOption } from '$lib/utils/accents';
 import { defaultQueryClient } from './MediaList.bloc.svelte';
@@ -37,11 +37,18 @@ export interface ProfileSettingsForm {
 /** Where the form's row comes from and where it goes. */
 export interface ProfileSettingsPort {
   user(): any;
+  /**
+   * The follow-approval flag, as its own query: it is served by the follow
+   * API, which a gateway may not have yet. Optional so older ports and tests
+   * need not provide it; absent or failing, the switch reads as off.
+   */
+  followSettings?(): any;
   save(input: UpdateUserInput): Promise<any>;
 }
 
 export const realProfileSettings: ProfileSettingsPort = {
   user: () => getUser(),
+  followSettings: () => fetchFollowSettings(),
   save: (input) => updateUserDetails().mutationFn(input),
 };
 
@@ -76,6 +83,7 @@ export class ProfileSettingsBloc {
   ];
 
   readonly #user: { readonly current: QueryObserverResult<any, unknown> };
+  readonly #followSettings: { readonly current: QueryObserverResult<any, unknown> } | null;
   readonly #save: { readonly current: CreateBaseMutationResult<any, unknown, UpdateUserInput> };
   readonly #confirmationMs: number;
 
@@ -97,6 +105,9 @@ export class ProfileSettingsBloc {
     this.#confirmationMs = confirmationMs;
 
     this.#user = fromStore(createQuery(settings.user(), queryClient));
+    this.#followSettings = settings.followSettings
+      ? fromStore(createQuery({ ...settings.followSettings(), retry: false }, queryClient))
+      : null;
 
     this.#save = fromStore(
       createMutation(
@@ -107,6 +118,7 @@ export class ProfileSettingsBloc {
             this.#error = '';
             this.#edits = {};
             queryClient.setQueryData(['user'], updated);
+            queryClient.invalidateQueries({ queryKey: ['follow-settings'] });
             this.#clearConfirmationLater();
           },
           onError: (error: any) => {
@@ -160,7 +172,7 @@ export class ProfileSettingsBloc {
       bio: user.bio || '',
       accentColor: user.accentColor || '',
       listsPublic: user.listsPublic ?? false,
-      followApprovalRequired: user.followApprovalRequired ?? false,
+      followApprovalRequired: !!this.#followSettings?.current.data?.followApprovalRequired,
     };
   }
 

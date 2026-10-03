@@ -911,7 +911,6 @@ export const queryUserDetails = graphql(`
             bio
             accentColor
             listsPublic
-            followApprovalRequired
             active_sessions {
                 id
                 ip_address
@@ -937,7 +936,6 @@ export const mutateUpdateUserDetails = graphql(`
             bio
             accentColor
             listsPublic
-            followApprovalRequired
         }
     }
 `)
@@ -1032,6 +1030,21 @@ export const getUserByUsername = graphql(`
             bio
             accentColor
             listsPublic
+        }
+    }
+`)
+
+// ── Follow graph (user-service) ─────────────────────────────────────────────
+//
+// The follow fields live in their own documents rather than on the queries
+// above, so a gateway that does not serve the follow API yet (staging before
+// the backend ships) fails only these, and the pages fall back to hiding the
+// follow UI instead of breaking.
+
+export const queryPublicUserFollowInfo = graphql(`
+    query PublicUserFollowInfo($username: String!) {
+        userByUsername(username: $username) {
+            id
             followApprovalRequired
             followerCount
             followingCount
@@ -1040,7 +1053,14 @@ export const getUserByUsername = graphql(`
     }
 `)
 
-// ── Follow graph (user-service) ─────────────────────────────────────────────
+export const queryFollowSettings = graphql(`
+    query FollowSettings {
+        UserDetails {
+            id
+            followApprovalRequired
+        }
+    }
+`)
 //
 // followers/following are visible to anyone for an open account; a user who
 // requires approval shows them only to themselves and accepted followers, and

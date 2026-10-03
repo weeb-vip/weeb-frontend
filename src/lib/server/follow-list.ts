@@ -1,7 +1,7 @@
 import type { Cookies } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
 import { cookieHeaderFrom, createSSRGraphQLClient, isNotFoundError, makeSSRFetcher, publicAuth } from '$lib/server/ssr-graphql';
-import { getUserByUsername, queryFollowers, queryFollowing } from '$lib/services/api/graphql/queries';
+import { getUserByUsername, queryFollowers, queryFollowing, queryPublicUserFollowInfo } from '$lib/services/api/graphql/queries';
 
 export const FOLLOW_LIST_PAGE_SIZE = 30;
 
@@ -33,16 +33,21 @@ export async function loadFollowList(
 
   const fetcher = makeSSRFetcher(config.graphql_host, cookieHeader);
   const document = kind === 'followers' ? queryFollowers : queryFollowing;
-  const result: any = await fetcher.fetchWithFallback(document, { userID: user.id, page, limit: FOLLOW_LIST_PAGE_SIZE }, kind);
+  const [result, infoResult]: any[] = await Promise.all([
+    fetcher.fetchWithFallback(document, { userID: user.id, page, limit: FOLLOW_LIST_PAGE_SIZE }, kind),
+    fetcher.fetchWithFallback(queryPublicUserFollowInfo, { username: user.username }, 'public follow info'),
+  ]);
   const list = result?.[kind] ?? { page, limit: FOLLOW_LIST_PAGE_SIZE, total: 0, users: [] };
+  const followInfo = infoResult?.userByUsername ?? null;
 
   // An approval-required account hides names from non-followers: the page
   // comes back empty with a true total. That is the signal the view uses.
-  const hidden = !!user.followApprovalRequired && list.users.length === 0 && Number(list.total) > 0;
+  const hidden = !!followInfo?.followApprovalRequired && list.users.length === 0 && Number(list.total) > 0;
 
   return {
     auth: publicAuth(auth),
     user,
+    followInfo,
     kind,
     list: { ...list, users: list.users ?? [] },
     page,

@@ -18,7 +18,7 @@ import type { FollowTarget } from '$lib/components/profile/FollowButton/FollowBu
 export type ConfigPort = Readable<{ cdn_user_url?: string } | null | undefined>;
 
 /** What the view knows: the loader's user row and its lists, if any. */
-export type PublicUserSource = () => { user: any; lists: any; activity?: any };
+export type PublicUserSource = () => { user: any; lists: any; activity?: any; followInfo?: any };
 
 export interface PublicUserPageDeps {
   source?: PublicUserSource;
@@ -170,25 +170,40 @@ export class PublicUserPageBloc {
 
   // ── follow graph ────────────────────────────────────────────
 
+  get #followInfo(): any {
+    return this.#source().followInfo ?? null;
+  }
+
+  /** False when the follow API answered nothing; the page then shows no follow UI. */
+  get hasFollowInfo(): boolean {
+    return !!this.#followInfo;
+  }
+
   /** What the Follow button needs: who, and how the viewer stands with them. */
   get followTarget(): FollowTarget {
     const user = this.user;
+    const info = this.#followInfo;
     return {
       userID: user?.id ?? '',
       username: user?.username ?? '',
-      status: user?.viewerFollowStatus ?? 'NONE',
-      followApprovalRequired: !!user?.followApprovalRequired,
+      status: info?.viewerFollowStatus ?? 'NONE',
+      followApprovalRequired: !!info?.followApprovalRequired,
     };
   }
 
   get followerCount(): number {
-    const base = num(this.user?.followerCount);
+    const base = num(this.#followInfo?.followerCount);
     const delta = this.#followerDelta.userID === (this.user?.id ?? '') ? this.#followerDelta.delta : 0;
     return Math.max(0, base + delta);
   }
 
   get followingCount(): number {
-    return num(this.user?.followingCount);
+    return num(this.#followInfo?.followingCount);
+  }
+
+  /** False when notifications-service answered nothing; the section is hidden. */
+  get hasActivity(): boolean {
+    return this.isPublic && this.#source().activity != null;
   }
 
   /** The Follow button reports its own effect so the tile moves at once. */

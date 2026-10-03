@@ -22,8 +22,7 @@ const SERVER_USER = {
   language: Language.En,
   bio: 'Counting.',
   accentColor: 'violet',
-  listsPublic: true,
-  followApprovalRequired: false
+  listsPublic: true
 };
 
 const ACCENTS = [
@@ -43,6 +42,19 @@ function settingsPort(
       ...(user ? { initialData: user } : {})
     }),
     save
+  };
+}
+
+/** A port whose follow-approval query answers at once with the given flag. */
+function settingsPortWithApproval(user: Record<string, unknown> | null, followApprovalRequired: boolean) {
+  const port = settingsPort(user);
+  return {
+    ...port,
+    followSettings: () => ({
+      queryKey: ['follow-settings'],
+      queryFn: async () => ({ followApprovalRequired }),
+      initialData: { followApprovalRequired }
+    })
   };
 }
 
@@ -76,7 +88,7 @@ describe('ProfileSettingsBloc', () => {
       const bloc = makeBloc();
 
       expect(bloc.hasUser).toBe(true);
-      expect(bloc.form).toEqual(SERVER_USER);
+      expect(bloc.form).toEqual({ ...SERVER_USER, followApprovalRequired: false });
       expect(bloc.bioLength).toBe(SERVER_USER.bio.length);
     });
 
@@ -414,14 +426,14 @@ describe('ProfileSettingsBloc', () => {
 });
 
 describe('follow approval', () => {
-  it('reads the server flag and defaults a missing one to off', () => {
+  it('reads its own query and is off when there is none', () => {
     expect(makeBloc().form.followApprovalRequired).toBe(false);
-    const bloc = makeBloc({ settings: settingsPort({ username: 'ada', followApprovalRequired: true }) });
+    const bloc = makeBloc({ settings: settingsPortWithApproval(SERVER_USER, true) });
     expect(bloc.form.followApprovalRequired).toBe(true);
   });
 
   it('toggles as an edit and saves only that field', async () => {
-    const port = settingsPort(SERVER_USER);
+    const port = settingsPortWithApproval(SERVER_USER, false);
     const bloc = makeBloc({ settings: port });
     const stop = reactiveScope(() => bloc.form, () => bloc.isSaving);
     try {

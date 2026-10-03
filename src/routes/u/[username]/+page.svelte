@@ -17,10 +17,10 @@
   let {
     data,
     bloc = new PublicUserPageBloc({
-      source: () => ({ user: data.user, lists: data.lists ?? null, activity: data.activity ?? null }),
+      source: () => ({ user: data.user, lists: data.lists ?? null, activity: data.activity ?? null, followInfo: data.followInfo ?? null }),
     }),
   }: {
-    data: { user: any; lists?: any; activity?: any };
+    data: { user: any; lists?: any; activity?: any; followInfo?: any };
     bloc?: PublicUserPageBloc;
   } = $props();
 
@@ -71,14 +71,18 @@
       <div class="hero-identity">
         <div class="hero-name-row">
           <h1 class="hero-name">{bloc.displayName}</h1>
-          <FollowButton target={bloc.followTarget} onFollowerCountChange={(delta) => bloc.adjustFollowers(delta)} />
+          {#if bloc.hasFollowInfo}
+            <FollowButton target={bloc.followTarget} onFollowerCountChange={(delta) => bloc.adjustFollowers(delta)} />
+          {/if}
         </div>
         <p class="hero-handle">@{bloc.username}</p>
-        <p class="hero-follows">
-          <a href={bloc.followersHref}><strong>{bloc.followerCount}</strong> {bloc.followerCount === 1 ? 'follower' : 'followers'}</a>
-          <span aria-hidden="true">·</span>
-          <a href={bloc.followingHref}><strong>{bloc.followingCount}</strong> following</a>
-        </p>
+        {#if bloc.hasFollowInfo}
+          <p class="hero-follows">
+            <a href={bloc.followersHref}><strong>{bloc.followerCount}</strong> {bloc.followerCount === 1 ? 'follower' : 'followers'}</a>
+            <span aria-hidden="true">·</span>
+            <a href={bloc.followingHref}><strong>{bloc.followingCount}</strong> following</a>
+          </p>
+        {/if}
         {#if bloc.bio}
           <p class="hero-bio">{bloc.bio}</p>
         {/if}
@@ -137,16 +141,18 @@
         {@render shelf(bloc.reading, 'Not reading anything right now.')}
       </section>
 
-      <section class="section">
-        <div class="section-header">
-          <div class="section-header-left">
-            <svg width="18" height="18" fill="none" stroke="var(--weeb-accent)" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            <h2 class="section-title">Recent activity</h2>
+      {#if bloc.hasActivity}
+        <section class="section">
+          <div class="section-header">
+            <div class="section-header-left">
+              <svg width="18" height="18" fill="none" stroke="var(--weeb-accent)" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <h2 class="section-title">Recent activity</h2>
+            </div>
           </div>
-        </div>
 
-        <ActivityFeed items={bloc.activity} showActor={false} empty="No list activity yet." />
-      </section>
+          <ActivityFeed items={bloc.activity} showActor={false} empty="No list activity yet." />
+        </section>
+      {/if}
     {/if}
   </div>
 </div>

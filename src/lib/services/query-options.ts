@@ -17,6 +17,8 @@ import {AuthStorage} from "$lib/utils/auth-storage";
 
 import { ensureConfigLoaded } from './config-loader';
 import {
+  queryPublicUserFollowInfo,
+  queryFollowSettings,
   queryFollowers,
   queryFollowing,
   queryFollowRequests,
@@ -881,6 +883,26 @@ export const getCharactersAndStaffByAnimeID = (id: string) => ({
 // Reads go through authenticatedRequest too: the lists are viewer-aware (an
 // approval-required account shows names only to its followers), so the
 // cookies have to ride along even though the queries themselves are public.
+
+export const fetchPublicUserFollowInfo = (username: string) => ({
+  queryKey: ['public-user-follow-info', username],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryPublicUserFollowInfo, { username });
+      return response.userByUsername;
+    });
+  }
+});
+
+export const fetchFollowSettings = () => ({
+  queryKey: ['follow-settings'],
+  queryFn: async (): Promise<{ followApprovalRequired: boolean }> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryFollowSettings);
+      return { followApprovalRequired: !!response.UserDetails?.followApprovalRequired };
+    });
+  }
+});
 
 export const fetchFollowers = (userID: string, page = 1, limit = 20) => ({
   queryKey: ['followers', userID, page, limit],

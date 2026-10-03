@@ -253,7 +253,9 @@ describe('the privacy gate', () => {
     const result = await run(args('thatcat'));
 
     expect(result.lists).toBeNull();
-    expect(fetchWithFallback).not.toHaveBeenCalled();
+    // Only the follow info is fetched; it is public either way.
+    expect(fetchWithFallback).toHaveBeenCalledTimes(1);
+    expect(fetchWithFallback.mock.calls[0][2]).toBe('public follow info');
   });
 
   it('treats a missing listsPublic flag as private', async () => {
@@ -270,12 +272,12 @@ describe('the privacy gate', () => {
     expect(result.user).toMatchObject({ id: 'user-1', avatarUrl: 'https://cdn.test/a.png' });
   });
 
-  it('fetches the four list queries and the recent activity for a public profile', async () => {
+  it('fetches the four list queries, the recent activity and the follow info for a public profile', async () => {
     respondWith(user({ listsPublic: true }));
 
     await run(args('thatcat'));
 
-    expect(fetchWithFallback).toHaveBeenCalledTimes(5);
+    expect(fetchWithFallback).toHaveBeenCalledTimes(6);
   });
 });
 
@@ -394,12 +396,12 @@ describe('unwrapping the list responses', () => {
 });
 
 describe('the payload', () => {
-  it('is the viewer auth, the user record, the lists and the activity, and nothing else', async () => {
+  it('is the viewer auth, the user record, the lists, the activity and the follow info, and nothing else', async () => {
     respondWith(user());
 
     const result = await run(args('thatcat'));
 
-    expect(Object.keys(result).sort()).toEqual(['activity', 'auth', 'lists', 'user']);
+    expect(Object.keys(result).sort()).toEqual(['activity', 'auth', 'followInfo', 'lists', 'user']);
   });
 
   it('carries the public view of the VIEWER auth, not the viewed user', async () => {

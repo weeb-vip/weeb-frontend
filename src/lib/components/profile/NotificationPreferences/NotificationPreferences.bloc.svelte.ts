@@ -63,7 +63,7 @@ export class NotificationPreferencesBloc {
     notify = { error: (message) => toast.error(message) },
   }: NotificationPreferencesDeps = {}) {
     this.#query = fromStore(
-      createQuery(derived(auth, (state) => ({ ...port.list(), enabled: state.isLoggedIn, staleTime: 60_000 })), queryClient),
+      createQuery(derived(auth, (state) => ({ ...port.list(), enabled: state.isLoggedIn, staleTime: 60_000, retry: false })), queryClient),
     );
 
     this.#update = fromStore(

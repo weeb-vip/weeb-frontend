@@ -18,8 +18,8 @@
 <div class="follow-page">
   <nav class="follow-tabs" aria-label="Profile sections">
     <a href={base}>@{user?.username}</a>
-    <a href={`${base}/followers`} aria-current={isFollowers ? 'page' : undefined}>Followers <strong>{user?.followerCount ?? 0}</strong></a>
-    <a href={`${base}/following`} aria-current={!isFollowers ? 'page' : undefined}>Following <strong>{user?.followingCount ?? 0}</strong></a>
+    <a href={`${base}/followers`} aria-current={isFollowers ? 'page' : undefined}>Followers <strong>{data.followInfo?.followerCount ?? 0}</strong></a>
+    <a href={`${base}/following`} aria-current={!isFollowers ? 'page' : undefined}>Following <strong>{data.followInfo?.followingCount ?? 0}</strong></a>
   </nav>
 
   <h1 class="follow-title">{title}</h1>

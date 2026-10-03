@@ -13,7 +13,8 @@ import {
   queryPublicUserWorks,
   queryPublicUserAnimeStatusCounts,
   queryPublicUserWorkStatusCounts,
-  queryUserActivity
+  queryUserActivity,
+  queryPublicUserFollowInfo
 } from '$lib/services/api/graphql/queries';
 import { Status, WorkStatus } from '../../../gql/graphql';
 
@@ -72,8 +73,19 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     workCounts: any;
   } | null = null;
 
+  // The follow side of the page -- counts and how the viewer stands -- is its
+  // own query with a fallback: a gateway without the follow API yet answers
+  // null, and the page hides the follow UI rather than failing.
+  const followInfoResult: any = await fetcher.fetchWithFallback(
+    queryPublicUserFollowInfo,
+    { username: user.username },
+    'public follow info'
+  );
+  const followInfo = followInfoResult?.userByUsername ?? null;
+
   // Recent list activity, from notifications-service. Gated server-side by
-  // the same flag; the service also refuses it for a private user.
+  // the same flag; the service also refuses it for a private user. Null when
+  // the service is unavailable, which hides the section.
   let activity: any = null;
 
   if (user.listsPublic) {
@@ -117,6 +129,7 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     auth: publicAuth(auth),
     user,
     lists,
-    activity
+    activity,
+    followInfo
   };
 };

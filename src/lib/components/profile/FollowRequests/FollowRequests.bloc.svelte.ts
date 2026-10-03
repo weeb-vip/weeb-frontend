@@ -55,7 +55,7 @@ export class FollowRequestsBloc {
   }: FollowRequestsDeps = {}) {
     this.#query = fromStore(
       createQuery(
-        derived(auth, (state) => ({ ...port.list(limit), enabled: state.isLoggedIn, staleTime: 30_000 })),
+        derived(auth, (state) => ({ ...port.list(limit), enabled: state.isLoggedIn, staleTime: 30_000, retry: false })),
         queryClient,
       ),
     );

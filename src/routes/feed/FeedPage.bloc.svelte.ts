@@ -63,6 +63,7 @@ export class FeedPageBloc {
         enabled: state.isLoggedIn,
         ...(ssr ? { initialData: ssr } : {}),
         staleTime: 30_000,
+        retry: false,
       };
     });
     this.#query = fromStore(createQuery(options, queryClient));
