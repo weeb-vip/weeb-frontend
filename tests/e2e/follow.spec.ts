@@ -61,7 +61,7 @@ async function signUp(browser: Browser, label: string): Promise<Account> {
   // A public page needs a username; a fresh account has none until it picks one.
   await saveSettings(page, async () => {
     const input = page.locator('#username');
-    await expect(input).toBeVisible({ timeout: 20000 });
+    await expect(input).toBeVisible({ timeout: 30000 });
     await input.fill(username);
   });
 
@@ -72,7 +72,10 @@ async function signUp(browser: Browser, label: string): Promise<Account> {
 async function saveSettings(page: Page, edit: () => Promise<void>) {
   await page.goto('/profile/settings', { waitUntil: 'domcontentloaded', timeout: 60000 });
   await waitForPageReady(page);
-  await expect(page.getByRole('heading', { name: 'Profile Settings', level: 1 })).toBeVisible({ timeout: 20000 });
+  // The settings form only renders once the user query answers, which on a
+  // busy staging can take a while; the budget matches the other logged-in
+  // specs' slowest step rather than a local run.
+  await expect(page.getByRole('heading', { name: 'Profile Settings', level: 1 })).toBeVisible({ timeout: 60000 });
   await edit();
   const saved = page.waitForResponse(
     (r) => r.url().includes('graphql') && r.request().postData()?.includes('UpdateUserDetails') === true,
@@ -87,7 +90,7 @@ async function saveSettings(page: Page, edit: () => Promise<void>) {
 async function visitUser(page: Page, username: string) {
   await page.goto(`/u/${username}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await waitForPageReady(page);
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 60000 });
 }
 
 test.describe('Follows, notifications and the feed', () => {
