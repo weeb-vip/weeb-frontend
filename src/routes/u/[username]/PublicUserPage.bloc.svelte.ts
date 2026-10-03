@@ -3,6 +3,8 @@ import { configStore } from '$lib/stores/config';
 import { workSubtitle } from '$lib/utils/workDisplay';
 import { accentValue } from '$lib/utils/accents';
 import type { MediaListCard } from '$lib/components/profile/MediaList.bloc.svelte';
+import { toActivityItems, type ActivityItem } from '$lib/components/feed/activity';
+import type { FollowTarget } from '$lib/components/profile/FollowButton/FollowButton.bloc.svelte';
 
 /**
  * Someone else's profile, at /u/<username>.
@@ -16,11 +18,13 @@ import type { MediaListCard } from '$lib/components/profile/MediaList.bloc.svelt
 export type ConfigPort = Readable<{ cdn_user_url?: string } | null | undefined>;
 
 /** What the view knows: the loader's user row and its lists, if any. */
-export type PublicUserSource = () => { user: any; lists: any };
+export type PublicUserSource = () => { user: any; lists: any; activity?: any };
 
 export interface PublicUserPageDeps {
   source?: PublicUserSource;
   config?: ConfigPort;
+  /** The clock for relative times in the activity list; a port so tests are stable. */
+  now?: () => number;
 }
 
 export interface PublicUserStat {
@@ -45,10 +49,14 @@ const num = (value: any): number => {
 export class PublicUserPageBloc {
   readonly #source: PublicUserSource;
   readonly #config: { readonly current: { cdn_user_url?: string } | null | undefined };
+  readonly #now: () => number;
+  /** Follower count moved by this session's own follow/unfollow, per user. */
+  #followerDelta = $state<{ userID: string; delta: number }>({ userID: '', delta: 0 });
 
-  constructor({ source = () => ({ user: null, lists: null }), config = configStore }: PublicUserPageDeps = {}) {
+  constructor({ source = () => ({ user: null, lists: null }), config = configStore, now = () => Date.now() }: PublicUserPageDeps = {}) {
     this.#source = source;
     this.#config = fromStore(config);
+    this.#now = now;
   }
 
   get user(): any {
@@ -158,5 +166,50 @@ export class PublicUserPageBloc {
       { label: 'Reading', value: num(work?.reading) },
       { label: 'Manga done', value: num(work?.completed) },
     ];
+  }
+
+  // ── follow graph ────────────────────────────────────────────
+
+  /** What the Follow button needs: who, and how the viewer stands with them. */
+  get followTarget(): FollowTarget {
+    const user = this.user;
+    return {
+      userID: user?.id ?? '',
+      username: user?.username ?? '',
+      status: user?.viewerFollowStatus ?? 'NONE',
+      followApprovalRequired: !!user?.followApprovalRequired,
+    };
+  }
+
+  get followerCount(): number {
+    const base = num(this.user?.followerCount);
+    const delta = this.#followerDelta.userID === (this.user?.id ?? '') ? this.#followerDelta.delta : 0;
+    return Math.max(0, base + delta);
+  }
+
+  get followingCount(): number {
+    return num(this.user?.followingCount);
+  }
+
+  /** The Follow button reports its own effect so the tile moves at once. */
+  adjustFollowers(delta: number): void {
+    const userID = this.user?.id ?? '';
+    const current = this.#followerDelta.userID === userID ? this.#followerDelta.delta : 0;
+    this.#followerDelta = { userID, delta: current + delta };
+  }
+
+  get followersHref(): string {
+    return `/u/${encodeURIComponent(this.username)}/followers`;
+  }
+
+  get followingHref(): string {
+    return `/u/${encodeURIComponent(this.username)}/following`;
+  }
+
+  // ── activity ────────────────────────────────────────────────
+
+  get activity(): ActivityItem[] {
+    if (!this.isPublic) return [];
+    return toActivityItems(this.#source().activity?.activities, this.#now());
   }
 }

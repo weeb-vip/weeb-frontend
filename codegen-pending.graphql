@@ -1,0 +1,147 @@
+# Schema additions not yet deployed to the staging gateway, merged into codegen
+# until they are (see codegen.ts). Plain SDL: no federation directives, since
+# this describes the composed supergraph, not a subgraph.
+
+# ── user-service: follow graph ───────────────────────────────────────────────
+
+enum FollowStatus {
+  NONE
+  REQUESTED
+  FOLLOWING
+  SELF
+}
+
+type PublicUserPaginated {
+  page: Int!
+  limit: Int!
+  total: Int!
+  users: [PublicUser!]!
+}
+
+extend type PublicUser {
+  followApprovalRequired: Boolean!
+  followerCount: Int!
+  followingCount: Int!
+  viewerFollowStatus: FollowStatus!
+}
+
+extend type User {
+  followApprovalRequired: Boolean!
+}
+
+extend input UpdateUserInput {
+  followApprovalRequired: Boolean
+}
+
+# ── notifications-service: feed and inbox ────────────────────────────────────
+
+enum ActivityType {
+  ANIME_ADDED
+  ANIME_STATUS_CHANGED
+  ANIME_SCORED
+  WORK_ADDED
+  WORK_STATUS_CHANGED
+  WORK_SCORED
+}
+
+type Activity {
+  id: ID!
+  type: ActivityType!
+  actor: PublicUser!
+  anime: Anime
+  work: Work
+  status: String
+  previousStatus: String
+  score: Float
+  occurredAt: String!
+}
+
+type ActivityPaginated {
+  page: Int!
+  limit: Int!
+  total: Int!
+  activities: [Activity!]!
+}
+
+enum NotificationType {
+  FOLLOW_REQUESTED
+  FOLLOW_ACCEPTED
+  NEW_FOLLOWER
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  EMAIL
+}
+
+type Notification {
+  id: ID!
+  type: NotificationType!
+  actor: PublicUser
+  activity: Activity
+  payload: String
+  readAt: String
+  createdAt: String!
+}
+
+type NotificationPaginated {
+  page: Int!
+  limit: Int!
+  total: Int!
+  notifications: [Notification!]!
+}
+
+type NotificationPreference {
+  type: NotificationType!
+  channel: NotificationChannel!
+  enabled: Boolean!
+}
+
+enum PushPlatform {
+  WEB
+  IOS
+  ANDROID
+}
+
+input PushSubscriptionInput {
+  platform: PushPlatform!
+  endpoint: String!
+  p256dh: String
+  auth: String
+  userAgent: String
+}
+
+type PushSubscription {
+  id: ID!
+  platform: PushPlatform!
+  endpoint: String!
+  createdAt: String!
+}
+
+extend type Query {
+  publicUserByID(id: ID!): PublicUser
+  followers(userID: ID!, page: Int!, limit: Int!): PublicUserPaginated!
+  following(userID: ID!, page: Int!, limit: Int!): PublicUserPaginated!
+  followRequests(page: Int!, limit: Int!): PublicUserPaginated!
+  followerIDs(userID: ID!, after: ID, limit: Int!): [ID!]!
+  feed(page: Int!, limit: Int!): ActivityPaginated!
+  userActivity(userID: ID!, page: Int!, limit: Int!): ActivityPaginated!
+  notifications(page: Int!, limit: Int!, unreadOnly: Boolean): NotificationPaginated!
+  unreadNotificationCount: Int!
+  notificationPreferences: [NotificationPreference!]!
+  pushSubscriptions: [PushSubscription!]!
+}
+
+extend type Mutation {
+  follow(userID: ID!): FollowStatus!
+  unfollow(userID: ID!): Boolean!
+  acceptFollowRequest(followerID: ID!): Boolean!
+  declineFollowRequest(followerID: ID!): Boolean!
+  removeFollower(followerID: ID!): Boolean!
+  markNotificationsRead(ids: [ID!]!): Boolean!
+  markAllNotificationsRead: Boolean!
+  updateNotificationPreference(type: NotificationType!, channel: NotificationChannel!, enabled: Boolean!): NotificationPreference!
+  registerPushSubscription(input: PushSubscriptionInput!): PushSubscription!
+  unregisterPushSubscription(endpoint: String!): Boolean!
+}

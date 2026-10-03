@@ -1,4 +1,5 @@
 <script lang="ts">
+  import NotificationPreferences from '$lib/components/profile/NotificationPreferences';
   import Seo from '$lib/Seo.svelte';
   import { faUser, faEnvelope, faGlobe, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
   import Fa from 'svelte-fa';
@@ -188,6 +189,23 @@
               <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform {bloc.form.listsPublic ? 'translate-x-5' : ''}"></span>
             </button>
           </div>
+
+          <div class="mt-4 flex items-center justify-between gap-4">
+            <div>
+              <span class="block text-sm font-medium text-weeb-fg-secondary">Approve followers</span>
+              <span class="block text-xs text-weeb-fg-muted">New follows wait for your approval, and only your followers can see who you follow.</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={bloc.form.followApprovalRequired}
+              aria-label="Require approval before someone can follow me"
+              onclick={() => bloc.toggleFollowApproval()}
+              class="relative shrink-0 w-11 h-6 rounded-full transition-colors {bloc.form.followApprovalRequired ? 'bg-weeb-accent' : 'bg-weeb-surface-hover'}"
+            >
+              <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform {bloc.form.followApprovalRequired ? 'translate-x-5' : ''}"></span>
+            </button>
+          </div>
         </div>
 
         {#if bloc.successMessage}
@@ -206,5 +224,7 @@
         </div>
       </form>
     </div>
+
+    <NotificationPreferences />
   </div>
 {/if}

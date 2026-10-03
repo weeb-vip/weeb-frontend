@@ -136,6 +136,8 @@ Key pages:
 - Season (`/season/[season]`)
 - Search (`/search`)
 - Profile (`/profile`, `/profile/anime`, `/profile/settings`)
+- Social: public profile follow button, counts and recent activity (`/u/[username]`), follower lists (`/u/[username]/followers`, `/following`), the feed (`/feed`), follow requests on `/profile`, follow-approval toggle and notification preferences on `/profile/settings`, and the notifications bell in the header. Components live under `src/lib/components/profile/{FollowButton,FollowRequests,FollowList,NotificationPreferences}`, `src/lib/components/feed` and `src/lib/components/shell/NotificationsBell`.
+- `codegen-pending.graphql` holds the follow/feed/notification schema until the staging gateway serves it; run `yarn graphql-codegen --config codegen.ts` after changing documents, and delete that file plus its entry in `codegen.ts` once the backend is deployed to staging.
 - Settings (`/settings`), About (`/about`)
 - Auth flows under `/auth/` (login, register, verification, password reset)
 - Generated XML sitemaps and OG images (`/sitemap*.xml`, `/og/[id]`)

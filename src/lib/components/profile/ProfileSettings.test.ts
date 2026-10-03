@@ -22,7 +22,8 @@ const SERVER_USER = {
   language: Language.En,
   bio: 'Counting.',
   accentColor: 'violet',
-  listsPublic: true
+  listsPublic: true,
+  followApprovalRequired: false
 };
 
 const ACCENTS = [
@@ -409,5 +410,28 @@ describe('ProfileSettingsBloc', () => {
 
       expect(bloc.usernameError).toBe('');
     });
+  });
+});
+
+describe('follow approval', () => {
+  it('reads the server flag and defaults a missing one to off', () => {
+    expect(makeBloc().form.followApprovalRequired).toBe(false);
+    const bloc = makeBloc({ settings: settingsPort({ username: 'ada', followApprovalRequired: true }) });
+    expect(bloc.form.followApprovalRequired).toBe(true);
+  });
+
+  it('toggles as an edit and saves only that field', async () => {
+    const port = settingsPort(SERVER_USER);
+    const bloc = makeBloc({ settings: port });
+    const stop = reactiveScope(() => bloc.form, () => bloc.isSaving);
+    try {
+      bloc.toggleFollowApproval();
+      expect(bloc.form.followApprovalRequired).toBe(true);
+      bloc.submit();
+      await settle();
+      expect(port.save).toHaveBeenCalledWith({ followApprovalRequired: true });
+    } finally {
+      stop();
+    }
   });
 });

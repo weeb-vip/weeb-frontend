@@ -270,12 +270,12 @@ describe('the privacy gate', () => {
     expect(result.user).toMatchObject({ id: 'user-1', avatarUrl: 'https://cdn.test/a.png' });
   });
 
-  it('fetches all four list queries for a public profile', async () => {
+  it('fetches the four list queries and the recent activity for a public profile', async () => {
     respondWith(user({ listsPublic: true }));
 
     await run(args('thatcat'));
 
-    expect(fetchWithFallback).toHaveBeenCalledTimes(4);
+    expect(fetchWithFallback).toHaveBeenCalledTimes(5);
   });
 });
 
@@ -394,12 +394,12 @@ describe('unwrapping the list responses', () => {
 });
 
 describe('the payload', () => {
-  it('is the viewer auth, the user record and the lists, and nothing else', async () => {
+  it('is the viewer auth, the user record, the lists and the activity, and nothing else', async () => {
     respondWith(user());
 
     const result = await run(args('thatcat'));
 
-    expect(Object.keys(result).sort()).toEqual(['auth', 'lists', 'user']);
+    expect(Object.keys(result).sort()).toEqual(['activity', 'auth', 'lists', 'user']);
   });
 
   it('carries the public view of the VIEWER auth, not the viewed user', async () => {

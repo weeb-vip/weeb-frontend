@@ -911,6 +911,7 @@ export const queryUserDetails = graphql(`
             bio
             accentColor
             listsPublic
+            followApprovalRequired
             active_sessions {
                 id
                 ip_address
@@ -936,6 +937,7 @@ export const mutateUpdateUserDetails = graphql(`
             bio
             accentColor
             listsPublic
+            followApprovalRequired
         }
     }
 `)
@@ -1030,6 +1032,242 @@ export const getUserByUsername = graphql(`
             bio
             accentColor
             listsPublic
+            followApprovalRequired
+            followerCount
+            followingCount
+            viewerFollowStatus
+        }
+    }
+`)
+
+// ── Follow graph (user-service) ─────────────────────────────────────────────
+//
+// followers/following are visible to anyone for an open account; a user who
+// requires approval shows them only to themselves and accepted followers, and
+// everyone else gets an empty page whose total is still right.
+
+export const queryFollowers = graphql(`
+    query Followers($userID: ID!, $page: Int!, $limit: Int!) {
+        followers(userID: $userID, page: $page, limit: $limit) {
+            page
+            limit
+            total
+            users {
+                id
+                username
+                firstname
+                lastname
+                profileImageUrl
+                viewerFollowStatus
+            }
+        }
+    }
+`)
+
+export const queryFollowing = graphql(`
+    query Following($userID: ID!, $page: Int!, $limit: Int!) {
+        following(userID: $userID, page: $page, limit: $limit) {
+            page
+            limit
+            total
+            users {
+                id
+                username
+                firstname
+                lastname
+                profileImageUrl
+                viewerFollowStatus
+            }
+        }
+    }
+`)
+
+export const queryFollowRequests = graphql(`
+    query FollowRequests($page: Int!, $limit: Int!) {
+        followRequests(page: $page, limit: $limit) {
+            page
+            limit
+            total
+            users {
+                id
+                username
+                firstname
+                lastname
+                profileImageUrl
+            }
+        }
+    }
+`)
+
+export const mutateFollow = graphql(`
+    mutation Follow($userID: ID!) {
+        follow(userID: $userID)
+    }
+`)
+
+export const mutateUnfollow = graphql(`
+    mutation Unfollow($userID: ID!) {
+        unfollow(userID: $userID)
+    }
+`)
+
+export const mutateAcceptFollowRequest = graphql(`
+    mutation AcceptFollowRequest($followerID: ID!) {
+        acceptFollowRequest(followerID: $followerID)
+    }
+`)
+
+export const mutateDeclineFollowRequest = graphql(`
+    mutation DeclineFollowRequest($followerID: ID!) {
+        declineFollowRequest(followerID: $followerID)
+    }
+`)
+
+export const mutateRemoveFollower = graphql(`
+    mutation RemoveFollower($followerID: ID!) {
+        removeFollower(followerID: $followerID)
+    }
+`)
+
+// ── Feed and inbox (notifications-service) ──────────────────────────────────
+//
+// actor, anime and work are other subgraphs' entities, stitched in by the
+// router; the feed service itself only stores their ids.
+
+export const queryFeed = graphql(`
+    query Feed($page: Int!, $limit: Int!) {
+        feed(page: $page, limit: $limit) {
+            page
+            limit
+            total
+            activities {
+                id
+                type
+                status
+                previousStatus
+                score
+                occurredAt
+                actor {
+                    id
+                    username
+                    firstname
+                    lastname
+                    profileImageUrl
+                }
+                anime {
+                    id
+                    slug
+                    titleEn
+                    titleJp
+                }
+                work {
+                    id
+                    urlSlug
+                    titleEn
+                    titleJp
+                    type
+                }
+            }
+        }
+    }
+`)
+
+export const queryUserActivity = graphql(`
+    query UserActivity($userID: ID!, $page: Int!, $limit: Int!) {
+        userActivity(userID: $userID, page: $page, limit: $limit) {
+            page
+            limit
+            total
+            activities {
+                id
+                type
+                status
+                previousStatus
+                score
+                occurredAt
+                actor {
+                    id
+                    username
+                    firstname
+                    lastname
+                    profileImageUrl
+                }
+                anime {
+                    id
+                    slug
+                    titleEn
+                    titleJp
+                }
+                work {
+                    id
+                    urlSlug
+                    titleEn
+                    titleJp
+                    type
+                }
+            }
+        }
+    }
+`)
+
+export const queryNotifications = graphql(`
+    query Notifications($page: Int!, $limit: Int!, $unreadOnly: Boolean) {
+        notifications(page: $page, limit: $limit, unreadOnly: $unreadOnly) {
+            page
+            limit
+            total
+            notifications {
+                id
+                type
+                payload
+                readAt
+                createdAt
+                actor {
+                    id
+                    username
+                    firstname
+                    lastname
+                    profileImageUrl
+                }
+            }
+        }
+    }
+`)
+
+export const queryUnreadNotificationCount = graphql(`
+    query UnreadNotificationCount {
+        unreadNotificationCount
+    }
+`)
+
+export const mutateMarkNotificationsRead = graphql(`
+    mutation MarkNotificationsRead($ids: [ID!]!) {
+        markNotificationsRead(ids: $ids)
+    }
+`)
+
+export const mutateMarkAllNotificationsRead = graphql(`
+    mutation MarkAllNotificationsRead {
+        markAllNotificationsRead
+    }
+`)
+
+export const queryNotificationPreferences = graphql(`
+    query NotificationPreferences {
+        notificationPreferences {
+            type
+            channel
+            enabled
+        }
+    }
+`)
+
+export const mutateUpdateNotificationPreference = graphql(`
+    mutation UpdateNotificationPreference($type: NotificationType!, $channel: NotificationChannel!, $enabled: Boolean!) {
+        updateNotificationPreference(type: $type, channel: $channel, enabled: $enabled) {
+            type
+            channel
+            enabled
         }
     }
 `)

@@ -4,6 +4,7 @@
   import PosterGrid from '$lib/components/primitives/PosterGrid';
   import ProfileImageUpload from '$lib/components/profile/ProfileImageUpload';
   import ProfileAvatar from '$lib/components/profile/ProfileAvatar';
+  import FollowRequests from '$lib/components/profile/FollowRequests';
   import EmptyState from '$lib/components/primitives/EmptyState';
   import Skeleton from '$lib/components/primitives/Skeleton';
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton';
@@ -128,6 +129,9 @@
     {/if}
   </div>
 </header>
+
+<!-- Pending follow requests, only when there are any. -->
+<FollowRequests />
 
 <!-- Stats Strip -->
 <div class="stats-strip">

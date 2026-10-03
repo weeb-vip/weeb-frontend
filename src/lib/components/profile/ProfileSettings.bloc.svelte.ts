@@ -31,6 +31,7 @@ export interface ProfileSettingsForm {
   bio: string;
   accentColor: string;
   listsPublic: boolean;
+  followApprovalRequired: boolean;
 }
 
 /** Where the form's row comes from and where it goes. */
@@ -61,6 +62,7 @@ const EMPTY: ProfileSettingsForm = {
   bio: '',
   accentColor: '',
   listsPublic: false,
+  followApprovalRequired: false,
 };
 
 const BIO_LIMIT = 300;
@@ -158,6 +160,7 @@ export class ProfileSettingsBloc {
       bio: user.bio || '',
       accentColor: user.accentColor || '',
       listsPublic: user.listsPublic ?? false,
+      followApprovalRequired: user.followApprovalRequired ?? false,
     };
   }
 
@@ -217,6 +220,12 @@ export class ProfileSettingsBloc {
     this.#clearMessages();
   }
 
+  /** Whether a follow has to be approved before it is live. */
+  toggleFollowApproval(): void {
+    this.#edits = { ...this.#edits, followApprovalRequired: !this.form.followApprovalRequired };
+    this.#clearMessages();
+  }
+
   /**
    * Only the username is required.
    *
@@ -266,6 +275,9 @@ export class ProfileSettingsBloc {
     if (form.bio !== server.bio) changed.bio = form.bio;
     if (form.accentColor !== server.accentColor) changed.accentColor = form.accentColor;
     if (form.listsPublic !== server.listsPublic) changed.listsPublic = form.listsPublic;
+    if (form.followApprovalRequired !== server.followApprovalRequired) {
+      changed.followApprovalRequired = form.followApprovalRequired;
+    }
     return changed;
   }
 
