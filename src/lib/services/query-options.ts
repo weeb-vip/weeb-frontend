@@ -46,6 +46,7 @@ import {
   type CurrentlyAiringQuery,
   type GetAnimeDetailsByIdQuery,
   type GetHomePageDataQuery,
+  type GetUserDetailsQuery,
   type LoginInput,
   type RefreshTokenMutation,
   type RegisterInput,
@@ -344,7 +345,10 @@ export const withAutoRefreshSSR = <T>(queryFn: (authToken?: string) => Promise<T
 
 export const getUser = () => ({
   queryKey: ["user"],
-  queryFn: async (): Promise<User> => {
+  // Typed by what the query selects rather than the full User type: the
+  // follow-approval flag is read by its own query (fetchFollowSettings), so
+  // the row here is the profile without it.
+  queryFn: async (): Promise<GetUserDetailsQuery['UserDetails']> => {
     return authenticatedRequest(async (client) => {
       const response = await client.request(queryUserDetails);
       return response.UserDetails;
