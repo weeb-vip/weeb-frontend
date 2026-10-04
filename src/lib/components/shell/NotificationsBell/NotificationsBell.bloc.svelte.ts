@@ -4,6 +4,7 @@ import { loggedInStore } from '$lib/stores/auth';
 import { fetchNotifications, fetchUnreadNotificationCount, markAllNotificationsRead } from '$lib/services/query-options';
 import { defaultQueryClient } from '$lib/components/profile/MediaList.bloc.svelte';
 import { actorOf, relativeTime, type ActivityActor } from '$lib/components/feed/activity';
+import { resolveLoggedIn, type ClientAuthState, type ServerAuth } from '$lib/stores/server-auth';
 
 /**
  * The bell in the header: an unread count that polls while you are signed in,
@@ -38,7 +39,10 @@ export const realNotificationsPort: NotificationsPort = {
 
 export interface NotificationsBellDeps {
   port?: NotificationsPort;
-  auth?: Readable<{ isLoggedIn: boolean }>;
+  auth?: Readable<ClientAuthState>;
+  /** The server's answer, believed until `auth` has resolved: the bell is in
+   * the HTML for a signed-in response, so the nav does not shift at hydration. */
+  serverAuth?: ServerAuth | null;
   queryClient?: QueryClient;
   pollMs?: number;
   limit?: number;
@@ -62,7 +66,8 @@ export function describeNotification(notification: any): { text: string; href: s
 }
 
 export class NotificationsBellBloc {
-  readonly #auth: { readonly current: { isLoggedIn: boolean } };
+  readonly #auth: { readonly current: ClientAuthState };
+  readonly #serverAuth: ServerAuth | null;
   readonly #open = writable(false);
   readonly #count: { readonly current: QueryObserverResult<number, unknown> };
   readonly #list: { readonly current: QueryObserverResult<any, unknown> };
@@ -73,12 +78,14 @@ export class NotificationsBellBloc {
   constructor({
     port = realNotificationsPort,
     auth = loggedInStore,
+    serverAuth = null,
     queryClient = defaultQueryClient(),
     pollMs = 60_000,
     limit = 10,
     now = () => Date.now(),
   }: NotificationsBellDeps = {}) {
     this.#auth = fromStore(auth);
+    this.#serverAuth = serverAuth;
     this.#now = now;
 
     this.#count = fromStore(
@@ -123,7 +130,7 @@ export class NotificationsBellBloc {
   }
 
   get isLoggedIn(): boolean {
-    return this.#auth.current.isLoggedIn;
+    return resolveLoggedIn(this.#auth.current, this.#serverAuth);
   }
 
   get isOpen(): boolean {

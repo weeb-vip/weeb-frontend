@@ -78,3 +78,11 @@ describe('FollowRequestsBloc', () => {
     expect(bloc.hasRequests).toBe(false);
   });
 });
+
+describe("the server's answer, before the client store has resolved", () => {
+  it('is believed until the store resolves, then the store wins', () => {
+    const client = () => new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    expect(new FollowRequestsBloc({ port: makePort(), auth: writable({ isLoggedIn: false, isAuthInitialized: false }), serverAuth: { isLoggedIn: true }, notify: { error: vi.fn() }, queryClient: client() }).isLoggedIn).toBe(true);
+    expect(new FollowRequestsBloc({ port: makePort(), auth: writable({ isLoggedIn: false, isAuthInitialized: true }), serverAuth: { isLoggedIn: true }, notify: { error: vi.fn() }, queryClient: client() }).isLoggedIn).toBe(false);
+  });
+});

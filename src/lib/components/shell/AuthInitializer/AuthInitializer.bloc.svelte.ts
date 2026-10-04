@@ -217,8 +217,13 @@ export class AuthInitializerBloc {
 
       debug.success('SSR data shows user is logged in');
 
-      // Only for PostHog identification. A failure here must not cost the
-      // visitor their session -- they are logged in either way.
+      // Signed in now, not after a round trip: everything gated on the store
+      // (header, bell, feed, follow buttons) was waiting on the user fetch
+      // below, which exists only for analytics identification.
+      this.#session.setLoggedIn();
+
+      // A failure here must not cost the visitor their session -- they are
+      // logged in either way.
       try {
         const user = await this.#users.fetch();
         this.#session.setLoggedIn({
@@ -228,7 +233,6 @@ export class AuthInitializerBloc {
         });
       } catch (error) {
         debug.warn('Failed to fetch user data for analytics:', error);
-        this.#session.setLoggedIn();
       }
 
       if (ssrAuth.hasRefreshToken && ssrAuth.authTokenExpiresAt) {

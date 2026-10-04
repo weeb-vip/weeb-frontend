@@ -13,7 +13,7 @@
    */
   let {
     data,
-    bloc = new FeedPageBloc({ source: () => ({ ssr: data.ssr ?? null }), pageSize: FEED_PAGE_SIZE }),
+    bloc = new FeedPageBloc({ source: () => ({ ssr: data.ssr ?? null }), serverAuth: data.auth ?? null, pageSize: FEED_PAGE_SIZE }),
   }: {
     data: { ssr?: any; auth?: any };
     bloc?: FeedPageBloc;

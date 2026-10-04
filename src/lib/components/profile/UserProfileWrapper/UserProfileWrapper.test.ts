@@ -93,3 +93,60 @@ describe('UserProfileWrapper logic', () => {
     });
   });
 });
+
+describe("the server's answer, before the client store has resolved", () => {
+  const unresolved = (isLoggedIn = false) => readable({ isLoggedIn, isAuthInitialized: false });
+  const resolved = (isLoggedIn: boolean) => readable({ isLoggedIn, isAuthInitialized: true });
+  const make = (auth: ReturnType<typeof unresolved>, serverAuth: { isLoggedIn: boolean } | null, query = {}) =>
+    new UserProfileWrapperBloc({
+      auth,
+      serverAuth,
+      userQuery: readable(query),
+      drawer: { open: () => {} },
+      prompt: { requestLogin: () => {}, requestRegister: () => {} }
+    });
+
+  it('renders the signed-in placeholder for a signed-in server, not Login/Register', () => {
+    const bloc = make(unresolved(), { isLoggedIn: true });
+    expect(bloc.isLoggedIn).toBe(true);
+    expect(bloc.status).toBe('loading');
+  });
+
+  it('stays signed out when the server said so', () => {
+    expect(make(unresolved(), { isLoggedIn: false }).status).toBe('signed-out');
+  });
+
+  it('is ready once the user details are in, even before the store resolves', () => {
+    const bloc = make(unresolved(), { isLoggedIn: true }, { data: { id: 'u1', username: 'ada', firstname: 'A', lastname: 'L' } });
+    expect(bloc.status).toBe('ready');
+  });
+
+  it('lets the resolved client store win over the server', () => {
+    expect(make(resolved(false), { isLoggedIn: true }).status).toBe('signed-out');
+    expect(make(resolved(true), { isLoggedIn: false }, { isError: true }).status).toBe('ready');
+  });
+
+  it('behaves as before without a server answer', () => {
+    expect(make(unresolved(), null).status).toBe('signed-out');
+  });
+});
+
+describe('the header slot as the server renders it', () => {
+  it('shows the placeholder rather than Login/Register for a signed-in response', async () => {
+    const { render, screen } = await import('@testing-library/svelte');
+    const { default: UserProfileWrapper } = await import('./UserProfileWrapper.svelte');
+    const bloc = new UserProfileWrapperBloc({
+      auth: readable({ isLoggedIn: false, isAuthInitialized: false }),
+      serverAuth: { isLoggedIn: true },
+      userQuery: readable({}),
+      drawer: { open: () => {} },
+      prompt: { requestLogin: () => {}, requestRegister: () => {} }
+    });
+
+    const { container } = render(UserProfileWrapper, { props: { bloc } });
+
+    expect(screen.queryByRole('button', { name: 'Login' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Register' })).toBeNull();
+    expect(container.querySelector('.animate-pulse')).not.toBeNull();
+  });
+});

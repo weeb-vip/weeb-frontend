@@ -1,6 +1,7 @@
 import { createQuery, type QueryClient, type QueryObserverResult } from '@tanstack/svelte-query';
 import { derived, fromStore, writable, type Readable } from 'svelte/store';
 import { loggedInStore } from '$lib/stores/auth';
+import { resolveLoggedIn, type ClientAuthState, type ServerAuth } from '$lib/stores/server-auth';
 import { fetchFeed } from '$lib/services/query-options';
 import { defaultQueryClient } from '$lib/components/profile/MediaList.bloc.svelte';
 import { toActivityItems, type ActivityItem } from '$lib/components/feed/activity';
@@ -28,7 +29,11 @@ export const realFeedPort: FeedPort = {
 export interface FeedPageDeps {
   source?: () => FeedPageSource;
   port?: FeedPort;
-  auth?: Readable<{ isLoggedIn: boolean }>;
+  auth?: Readable<ClientAuthState>;
+  /** The server's answer (the loader already fetched the feed on its strength),
+   * believed until `auth` has resolved: a signed-in response renders its items
+   * rather than "Sign in to see your feed". */
+  serverAuth?: ServerAuth | null;
   queryClient?: QueryClient;
   pageSize?: number;
   now?: () => number;
@@ -37,7 +42,8 @@ export interface FeedPageDeps {
 export class FeedPageBloc {
   readonly pageSize: number;
   readonly #source: () => FeedPageSource;
-  readonly #auth: { readonly current: { isLoggedIn: boolean } };
+  readonly #auth: { readonly current: ClientAuthState };
+  readonly #serverAuth: ServerAuth | null;
   readonly #page = writable(1);
   readonly #query: { readonly current: QueryObserverResult<any, unknown> };
   readonly #now: () => number;
@@ -47,6 +53,7 @@ export class FeedPageBloc {
     source = () => ({ ssr: null }),
     port = realFeedPort,
     auth = loggedInStore,
+    serverAuth = null,
     queryClient = defaultQueryClient(),
     pageSize = 24,
     now = () => Date.now(),
@@ -54,6 +61,7 @@ export class FeedPageBloc {
     this.pageSize = pageSize;
     this.#source = source;
     this.#auth = fromStore(auth);
+    this.#serverAuth = serverAuth;
     this.#now = now;
 
     const options = derived([this.#page, auth], ([page, state]) => {
@@ -70,7 +78,7 @@ export class FeedPageBloc {
   }
 
   get isLoggedIn(): boolean {
-    return this.#auth.current.isLoggedIn;
+    return resolveLoggedIn(this.#auth.current, this.#serverAuth);
   }
 
   get isLoading(): boolean {

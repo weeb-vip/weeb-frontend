@@ -2,6 +2,7 @@ import { createMutation, createQuery, type CreateBaseMutationResult, type QueryC
 import { derived, fromStore, type Readable } from 'svelte/store';
 import { toast } from 'svelte-sonner';
 import { loggedInStore } from '$lib/stores/auth';
+import { resolveLoggedIn, type ClientAuthState, type ServerAuth } from '$lib/stores/server-auth';
 import { acceptFollowRequest, declineFollowRequest, fetchFollowRequests } from '$lib/services/query-options';
 import { defaultQueryClient } from '$lib/components/profile/MediaList.bloc.svelte';
 import { actorOf, type ActivityActor } from '$lib/components/feed/activity';
@@ -31,7 +32,9 @@ export interface NotifyPort {
 
 export interface FollowRequestsDeps {
   port?: FollowRequestsPort;
-  auth?: Readable<{ isLoggedIn: boolean }>;
+  auth?: Readable<ClientAuthState>;
+  /** The server's answer, believed until `auth` has resolved. */
+  serverAuth?: ServerAuth | null;
   queryClient?: QueryClient;
   notify?: NotifyPort;
   limit?: number;
@@ -40,6 +43,8 @@ export interface FollowRequestsDeps {
 type Decision = { followerID: string; accept: boolean };
 
 export class FollowRequestsBloc {
+  readonly #auth: { readonly current: ClientAuthState };
+  readonly #serverAuth: ServerAuth | null;
   readonly #query: { readonly current: QueryObserverResult<any, unknown> };
   readonly #decide: { readonly current: CreateBaseMutationResult<boolean, unknown, Decision> };
   /** Requests answered this session, hidden before the refetch lands. */
@@ -49,10 +54,13 @@ export class FollowRequestsBloc {
   constructor({
     port = realFollowRequestsPort,
     auth = loggedInStore,
+    serverAuth = null,
     queryClient = defaultQueryClient(),
     notify = { error: (message) => toast.error(message) },
     limit = 20,
   }: FollowRequestsDeps = {}) {
+    this.#auth = fromStore(auth);
+    this.#serverAuth = serverAuth;
     this.#query = fromStore(
       createQuery(
         derived(auth, (state) => ({ ...port.list(limit), enabled: state.isLoggedIn, staleTime: 30_000, retry: false })),
@@ -84,6 +92,11 @@ export class FollowRequestsBloc {
         queryClient,
       ),
     );
+  }
+
+  /** Who the panel is for: the client store once resolved, else the server's answer. */
+  get isLoggedIn(): boolean {
+    return resolveLoggedIn(this.#auth.current, this.#serverAuth);
   }
 
   get isLoading(): boolean {

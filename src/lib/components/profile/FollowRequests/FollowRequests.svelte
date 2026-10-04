@@ -2,8 +2,10 @@
   import Button from '$lib/components/primitives/Button';
   import ProfileAvatar from '$lib/components/profile/ProfileAvatar';
   import { FollowRequestsBloc } from './FollowRequests.bloc.svelte';
+  import { serverAuthFromContext } from '$lib/stores/server-auth';
 
-  let { bloc = new FollowRequestsBloc() }: { bloc?: FollowRequestsBloc } = $props();
+  const serverAuth = serverAuthFromContext();
+  let { bloc = new FollowRequestsBloc({ serverAuth }) }: { bloc?: FollowRequestsBloc } = $props();
 </script>
 
 {#if bloc.hasRequests}
