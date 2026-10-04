@@ -308,6 +308,48 @@ describe('SafeImage', () => {
     });
   });
 
+  describe('with widths', () => {
+    const useResize = async (on: boolean) => {
+      const { configStore } = await import('$lib/stores/config');
+      configStore.setConfig({ cdn_url: 'https://cdn.weeb.vip/weeb', cdn_image_resize: on } as any);
+    };
+    afterEach(async () => {
+      const { configStore } = await import('$lib/stores/config');
+      configStore.setConfig(null as any);
+    });
+
+    it('offers a srcset of the widths and the sizes the caller laid the element out at', async () => {
+      await useResize(true);
+      render(SafeImage, { sources: ['https://cdn.weeb.vip/weeb/posters/one'], cdnWidth: 360, widths: [180, 360], sizes: '180px', alt: 'One' });
+
+      const el = img();
+      expect(el.getAttribute('src')).toContain('width=360');
+      expect(el.getAttribute('srcset')).toBe(
+        'https://cdn.weeb.vip/cdn-cgi/image/width=180,format=auto,quality=85,fit=cover/weeb/posters/one 180w, ' +
+          'https://cdn.weeb.vip/cdn-cgi/image/width=360,format=auto,quality=85,fit=cover/weeb/posters/one 360w',
+      );
+      expect(el.getAttribute('sizes')).toBe('180px');
+    });
+
+    it('offers none where the source cannot be resized, so nothing lies about the fallback', async () => {
+      await useResize(false);
+      render(SafeImage, { sources: SOURCES, cdnWidth: 360, widths: [180, 360], sizes: '180px' });
+
+      expect(img().hasAttribute('srcset')).toBe(false);
+      expect(img().hasAttribute('sizes')).toBe(false);
+    });
+
+    it('drops the srcset once the walk lands on the fallback image', async () => {
+      await useResize(true);
+      render(SafeImage, { sources: ['https://cdn.weeb.vip/weeb/posters/one'], cdnWidth: 360, widths: [180, 360], sizes: '180px' });
+
+      await fireEvent.error(img()); // resized
+      await fireEvent.error(img()); // raw
+      await waitFor(() => expect(img().getAttribute('src')).toBe('/assets/not found.jpg'));
+      expect(img().hasAttribute('srcset')).toBe(false);
+    });
+  });
+
   describe('with a phone ordering', () => {
     const PHONE = ['https://cdn.example/posters/one', 'https://cdn.example/one'];
     const DESKTOP = ['https://cdn.example/banners/one', 'https://cdn.example/posters/one'];

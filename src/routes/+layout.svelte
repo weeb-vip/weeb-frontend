@@ -19,6 +19,7 @@
   import { initTelemetryWhenConfigured } from '$lib/client/telemetry';
   import { configStore } from '$lib/stores/config';
   import { provideServerAuth } from '$lib/stores/server-auth';
+  import { imagePolicyFor, provideImagePolicy } from '$lib/stores/image-policy';
   import '../scss/base.scss';
   import '../styles/design-tokens.css';
 
@@ -36,6 +37,10 @@
   // browser) believe this until the store has resolved, so a logged-in
   // response renders logged in. See $lib/stores/server-auth.
   provideServerAuth(untrack(() => data.auth));
+
+  // Lighter images for a visitor who sent Save-Data; the default for everyone
+  // else. Per request, like the auth answer. See $lib/stores/image-policy.
+  provideImagePolicy(imagePolicyFor(untrack(() => data.saveData)));
 
   // One QueryClient for the whole app via context. In the browser this is
   // the shared singleton; during SSR each layout render gets a fresh

@@ -64,6 +64,15 @@
   const normalizedStatus = $derived(normalizeStatus(onList));
   const airingState = $derived(airingStateOf(status));
   const posterSources = $derived(posterSourcesFor(image, imagePath));
+
+  /**
+   * What a card is laid out at, so the browser can pick a variant for its own
+   * pixel density: PosterGrid caps a card at 220/240/260px by breakpoint and
+   * gives phones three columns. The widths span 1x of the smallest card to 3x
+   * of the largest; `cdnWidth` above stays the plain src.
+   */
+  const POSTER_WIDTHS = [180, 260, 360, 520, 780];
+  const POSTER_SIZES = '(max-width: 767px) 31vw, (min-width: 1800px) 260px, (min-width: 1400px) 240px, 220px';
 </script>
 
 <a
@@ -79,6 +88,8 @@
       fallbackSrc="/assets/not found.jpg"
       placeholderTitle={title}
       cdnWidth={360}
+      widths={POSTER_WIDTHS}
+      sizes={POSTER_SIZES}
       {priority}
     />
     {#if score}

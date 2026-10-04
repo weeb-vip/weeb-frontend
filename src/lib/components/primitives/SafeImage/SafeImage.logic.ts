@@ -1,4 +1,5 @@
 import { getSafeImageUrl, resizeCdnUrl } from '$lib/utils/image';
+import { cappedWidth, DEFAULT_IMAGE_POLICY, type ImagePolicy } from '$lib/stores/image-policy';
 
 /**
  * SafeImage's rules, with no DOM state around them: which URLs to try and in
@@ -73,21 +74,66 @@ export function orderedSources(
   sources: string[],
   src: string,
   path: string,
-  cdnWidth: number | undefined
+  cdnWidth: number | undefined,
+  policy: ImagePolicy = DEFAULT_IMAGE_POLICY
 ): string[] {
-  // Nothing named: no candidates, rather than a request for the CDN root.
-  if (sources.length === 0 && !src) return [];
-  const base =
-    sources.length > 0
-      ? sources.map((s) => (ABSOLUTE.test(s) ? s : getSafeImageUrl(s, path)))
-      : [getSafeImageUrl(src, path)];
-
+  const base = rawSources(sources, src, path);
   if (!cdnWidth) return base;
 
   return base.flatMap((u) => {
-    const resized = resizeCdnUrl(u, cdnWidth);
+    const resized = resizeCdnUrl(u, cappedWidth(cdnWidth, policy), { quality: policy.quality });
     return resized === u ? [u] : [resized, u];
   });
+}
+
+/** The candidates as stored, before any resize step: what a srcset is built from. */
+export function rawSources(sources: string[], src: string, path: string): string[] {
+  // Nothing named: no candidates, rather than a request for the CDN root.
+  if (sources.length === 0 && !src) return [];
+  return sources.length > 0
+    ? sources.map((s) => (ABSOLUTE.test(s) ? s : getSafeImageUrl(s, path)))
+    : [getSafeImageUrl(src, path)];
+}
+
+/**
+ * The raw candidate that an `orderedSources` entry came from. With a width
+ * the list interleaves [resized, raw] pairs, so entry i maps to raw i/2; a
+ * candidate the resizer left alone stands for itself.
+ */
+export function rawFor(ordered: string[], raw: string[], index: number): string | null {
+  const url = ordered[index];
+  if (url == null) return null;
+  if (raw.includes(url)) return url;
+  // A resized entry: find the raw one that follows it in the ordering.
+  const next = ordered[index + 1];
+  return next != null && raw.includes(next) ? next : null;
+}
+
+/**
+ * A `srcset` of width descriptors for one raw candidate, so the browser picks
+ * the variant its own pixel density and the element's `sizes` call for. One
+ * width asked for everywhere (360 for every poster card) is double what a 1x
+ * desktop draws and short of what a 3x phone could show.
+ *
+ * Null where the URL cannot be resized -- a local asset, resizing off -- so
+ * the element falls back to its plain `src`. Under a policy with a width cap,
+ * widths above it are dropped (the smallest always survives), and the cap is
+ * what a data-saver visitor sees instead of their density.
+ */
+export function candidateSrcset(
+  raw: string,
+  widths: number[],
+  policy: ImagePolicy = DEFAULT_IMAGE_POLICY
+): string | null {
+  const wanted = [...new Set(widths.filter((w) => w > 0).map(Math.round))].sort((a, b) => a - b);
+  if (wanted.length === 0) return null;
+  const kept = policy.maxWidth ? wanted.filter((w, i) => i === 0 || w <= policy.maxWidth!) : wanted;
+  const entries = kept.map((w) => {
+    const url = resizeCdnUrl(raw, w, { quality: policy.quality });
+    return url === raw ? null : `${url} ${w}w`;
+  });
+  if (entries.some((e) => e === null)) return null;
+  return entries.join(', ');
 }
 
 /**
@@ -106,6 +152,6 @@ export function loadReason(index: number, total: number): 'load' | 'last-source'
  * `<link rel="preload" as="image">` for the element has to name, or the hint
  * warms the wrong bytes.
  */
-export function firstCandidate(sources: string[], cdnWidth?: number): string | null {
-  return orderedSources(sources, '', '', cdnWidth)[0] ?? null;
+export function firstCandidate(sources: string[], cdnWidth?: number, policy: ImagePolicy = DEFAULT_IMAGE_POLICY): string | null {
+  return orderedSources(sources, '', '', cdnWidth, policy)[0] ?? null;
 }

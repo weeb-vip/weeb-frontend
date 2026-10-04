@@ -3,10 +3,14 @@ import { configStore } from '$lib/stores/config';
 import type { IConfig } from '../../../../config/interfaces';
 import {
   DEFAULT_REJECT_PATTERNS,
+  candidateSrcset,
   defaultAccept,
   loadReason,
   orderedSources,
+  rawFor,
+  rawSources,
 } from './SafeImage.logic';
+import { SAVE_DATA_POLICY } from '$lib/stores/image-policy';
 
 /**
  * The candidate list, the CDN-resize fallback chain, and the walk over them.
@@ -164,5 +168,62 @@ describe('loadReason', () => {
   it('calls out only the last of several', () => {
     expect(loadReason(2, 3)).toBe('last-source');
     expect(loadReason(1, 2)).toBe('last-source');
+  });
+});
+
+describe('candidateSrcset', () => {
+  const RAW = `${CDN}/posters/one`;
+
+  it('offers each width as a resized variant with a width descriptor, smallest first', () => {
+    useConfig(true);
+    expect(candidateSrcset(RAW, [360, 180, 540])).toBe(
+      `${ORIGIN}/cdn-cgi/image/width=180,format=auto,quality=85,fit=cover/weeb/posters/one 180w, ` +
+        `${ORIGIN}/cdn-cgi/image/width=360,format=auto,quality=85,fit=cover/weeb/posters/one 360w, ` +
+        `${ORIGIN}/cdn-cgi/image/width=540,format=auto,quality=85,fit=cover/weeb/posters/one 540w`,
+    );
+  });
+
+  it('is nothing where the URL cannot be resized, so the element keeps its plain src', () => {
+    useConfig(false);
+    expect(candidateSrcset(RAW, [180, 360])).toBeNull();
+    useConfig(true);
+    expect(candidateSrcset('/assets/not found.jpg', [180, 360])).toBeNull();
+    expect(candidateSrcset(RAW, [])).toBeNull();
+  });
+
+  it('drops duplicate and nonsense widths', () => {
+    useConfig(true);
+    expect(candidateSrcset(RAW, [360, 360, 0, -1])).toBe(
+      `${ORIGIN}/cdn-cgi/image/width=360,format=auto,quality=85,fit=cover/weeb/posters/one 360w`,
+    );
+  });
+
+  it('lowers the quality and caps the widths for a data-saver visitor, keeping the smallest', () => {
+    useConfig(true);
+    expect(candidateSrcset(RAW, [180, 360, 780], SAVE_DATA_POLICY)).toBe(
+      `${ORIGIN}/cdn-cgi/image/width=180,format=auto,quality=60,fit=cover/weeb/posters/one 180w, ` +
+        `${ORIGIN}/cdn-cgi/image/width=360,format=auto,quality=60,fit=cover/weeb/posters/one 360w`,
+    );
+    // A single width above the cap still yields something rather than nothing.
+    expect(candidateSrcset(RAW, [780], SAVE_DATA_POLICY)).toContain('width=780');
+  });
+
+  it('maps an ordered candidate back to the raw URL it was built from', () => {
+    useConfig(true);
+    const raw = rawSources([`${CDN}/posters/one`, `${CDN}/one`], '', '');
+    const ordered = orderedSources([`${CDN}/posters/one`, `${CDN}/one`], '', '', 360);
+    expect(ordered).toHaveLength(4);
+    expect(rawFor(ordered, raw, 0)).toBe(raw[0]); // resized poster -> poster
+    expect(rawFor(ordered, raw, 1)).toBe(raw[0]); // the raw poster itself
+    expect(rawFor(ordered, raw, 2)).toBe(raw[1]);
+    expect(rawFor(ordered, raw, 9)).toBeNull();
+  });
+});
+
+describe('orderedSources under a policy', () => {
+  it('requests the capped width at the lower quality for a data-saver visitor', () => {
+    useConfig(true);
+    const [first] = orderedSources([`${CDN}/banners/one`], '', '', 1600, SAVE_DATA_POLICY);
+    expect(first).toBe(`${ORIGIN}/cdn-cgi/image/width=640,format=auto,quality=60,fit=cover/weeb/banners/one`);
   });
 });

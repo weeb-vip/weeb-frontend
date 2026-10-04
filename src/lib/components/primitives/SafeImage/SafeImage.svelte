@@ -1,11 +1,15 @@
 <script lang="ts">
   import debug from '$lib/utils/debug';
   import { PHONE_QUERY } from '$lib/stores/viewport';
+  import { imagePolicyFromContext } from '$lib/stores/image-policy';
   import {
     DEFAULT_REJECT_PATTERNS,
+    candidateSrcset,
     defaultAccept,
     loadReason,
     orderedSources,
+    rawFor,
+    rawSources,
     type ChosenDetail
   } from './SafeImage.logic';
 
@@ -59,6 +63,16 @@
     phoneSources = [],
     /** `cdnWidth` for the phone ordering. Defaults to `cdnWidth`. */
     phoneCdnWidth = undefined,
+    /**
+     * Widths to offer in a `srcset`, with `sizes` saying how wide the element
+     * is laid out. The browser then picks the variant for its own pixel
+     * density instead of everyone taking `cdnWidth`; `cdnWidth` stays the
+     * plain `src` for anything that ignores srcset. Only CDN sources get one.
+     */
+    widths = [],
+    sizes = undefined,
+    /** `widths` for the phone ordering. Defaults to `widths`. */
+    phoneWidths = undefined,
     /** Optional: reject by URL pattern (e.g., 404 placeholders) */
     rejectPatterns = DEFAULT_REJECT_PATTERNS,
     /** Custom acceptance check (URL + decoded dimensions) */
@@ -89,16 +103,25 @@
     sources?: string[];
     phoneSources?: string[];
     phoneCdnWidth?: number;
+    widths?: number[];
+    sizes?: string;
+    phoneWidths?: number[];
     rejectPatterns?: (string | RegExp)[];
     accept?: (img: HTMLImageElement, url: string) => boolean;
     perTryTimeoutMs?: number;
     onChosen?: (detail: ChosenDetail) => void;
   } = $props();
 
-  const candidates = $derived(orderedSources(sources, src, path, cdnWidth));
+  // The request's policy: the default, or the data-saver one. Read once; a
+  // policy is per visitor, not per render.
+  const policy = imagePolicyFromContext();
+
+  const candidates = $derived(orderedSources(sources, src, path, cdnWidth, policy));
+  const raw = $derived(rawSources(sources, src, path));
   const phoneCandidates = $derived(
-    phoneSources.length > 0 ? orderedSources(phoneSources, '', path, phoneCdnWidth ?? cdnWidth) : []
+    phoneSources.length > 0 ? orderedSources(phoneSources, '', path, phoneCdnWidth ?? cdnWidth, policy) : []
   );
+  const phoneRaw = $derived(phoneSources.length > 0 ? rawSources(phoneSources, '', path) : []);
   const candidatesKey = $derived([...candidates, '|', ...phoneCandidates].join('\n'));
   const actualLoading = $derived(loading || (priority ? 'eager' : 'lazy'));
 
@@ -124,6 +147,19 @@
   const phoneCurrent = $derived.by<string | null>(() => {
     if (exhausted || phoneCandidates.length === 0) return null;
     return phoneCandidates[Math.min(index, phoneCandidates.length - 1)] ?? null;
+  });
+
+  /** The srcset for the candidate on screen, where it can have one. */
+  const currentSrcset = $derived.by<string | null>(() => {
+    if (exhausted || widths.length === 0) return null;
+    const source = rawFor(candidates, raw, index);
+    return source ? candidateSrcset(source, widths, policy) : null;
+  });
+  const phoneSrcset = $derived.by<string | null>(() => {
+    const list = phoneWidths ?? widths;
+    if (exhausted || list.length === 0 || phoneCandidates.length === 0) return null;
+    const source = rawFor(phoneCandidates, phoneRaw, Math.min(index, phoneCandidates.length - 1));
+    return source ? candidateSrcset(source, list, policy) : null;
   });
 
   // Plain bookkeeping the template never reads.
@@ -296,7 +332,7 @@
     {#key generation}
       {#if phoneCurrent}
         <picture class="relative block w-full h-full">
-          <source media={PHONE_QUERY} srcset={phoneCurrent} />
+          <source media={PHONE_QUERY} srcset={phoneSrcset ?? phoneCurrent} sizes={phoneSrcset ? sizes : undefined} />
           {@render image()}
         </picture>
       {:else}
@@ -313,6 +349,8 @@
   <img
     bind:this={imgEl}
     src={current}
+    srcset={currentSrcset ?? undefined}
+    sizes={currentSrcset ? sizes : undefined}
     {alt}
     class="relative w-full h-full object-cover"
     {width}

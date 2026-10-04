@@ -41,22 +41,26 @@ function isCdnResizeEnabled(): boolean {
   return false;
 }
 
+/** The resizer's encoder quality when the caller names none. */
+export const DEFAULT_CDN_QUALITY = 85;
+
 /**
  * Route a CDN image URL through Cloudflare Image Resizing when enabled:
  *   https://cdn.weeb.vip/weeb/<slug>
  *     -> https://cdn.weeb.vip/cdn-cgi/image/width=W,format=auto,quality=85,fit=cover/weeb/<slug>
- * `width` is the intended device-pixel width (pass ~1.5-2x the CSS size for retina).
+ * `width` is the device-pixel width wanted; `quality` the encoder quality,
+ * lowered only for a visitor who asked to save data (see $lib/stores/image-policy).
  * Returns the URL unchanged when resizing is disabled, the URL isn't a CDN URL,
  * already transformed, or unparseable — so it is always safe to call.
  */
-export function resizeCdnUrl(url: string, width: number): string {
+export function resizeCdnUrl(url: string, width: number, { quality = DEFAULT_CDN_QUALITY }: { quality?: number } = {}): string {
   if (!width || !isCdnResizeEnabled()) return url;
   if (!/^https?:\/\//i.test(url)) return url; // local assets (fallbacks) pass through
   try {
     const u = new URL(url);
     if (!u.hostname.endsWith('cdn.weeb.vip')) return url;
     if (u.pathname.startsWith('/cdn-cgi/image/')) return url; // don't double-transform
-    const opts = `width=${Math.round(width)},format=auto,quality=85,fit=cover`;
+    const opts = `width=${Math.round(width)},format=auto,quality=${Math.round(quality)},fit=cover`;
     return `${u.origin}/cdn-cgi/image/${opts}${u.pathname}${u.search}`;
   } catch {
     return url;
