@@ -12,7 +12,9 @@ import {
   queryPublicUserAnimes,
   queryPublicUserWorks,
   queryPublicUserAnimeStatusCounts,
-  queryPublicUserWorkStatusCounts
+  queryPublicUserWorkStatusCounts,
+  queryUserActivity,
+  queryPublicUserFollowInfo
 } from '$lib/services/api/graphql/queries';
 import { Status, WorkStatus } from '../../../gql/graphql';
 
@@ -71,8 +73,23 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
     workCounts: any;
   } | null = null;
 
+  // The follow side of the page -- counts and how the viewer stands -- is its
+  // own query with a fallback: a gateway without the follow API yet answers
+  // null, and the page hides the follow UI rather than failing.
+  const followInfoResult: any = await fetcher.fetchWithFallback(
+    queryPublicUserFollowInfo,
+    { username: user.username },
+    'public follow info'
+  );
+  const followInfo = followInfoResult?.userByUsername ?? null;
+
+  // Recent list activity, from notifications-service. Gated server-side by
+  // the same flag; the service also refuses it for a private user. Null when
+  // the service is unavailable, which hides the section.
+  let activity: any = null;
+
   if (user.listsPublic) {
-    const [watching, reading, animeCounts, workCounts] = await Promise.all([
+    const [watching, reading, animeCounts, workCounts, recent] = await Promise.all([
       fetcher.fetchWithFallback(
         queryPublicUserAnimes,
         { userID: user.id, input: { status: Status.Watching, limit: 60, page: 1 } },
@@ -92,8 +109,14 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
         queryPublicUserWorkStatusCounts,
         { userID: user.id },
         'public work counts'
+      ),
+      fetcher.fetchWithFallback(
+        queryUserActivity,
+        { userID: user.id, page: 1, limit: 12 },
+        'public activity'
       )
     ]);
+    activity = (recent as any)?.userActivity ?? null;
     lists = {
       watching: (watching as any)?.PublicUserAnimes ?? null,
       reading: (reading as any)?.PublicUserWorks ?? null,
@@ -105,6 +128,8 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   return {
     auth: publicAuth(auth),
     user,
-    lists
+    lists,
+    activity,
+    followInfo
   };
 };

@@ -4,6 +4,8 @@
   import PosterGrid from '$lib/components/primitives/PosterGrid';
   import EmptyState from '$lib/components/primitives/EmptyState';
   import ProfileAvatar from '$lib/components/profile/ProfileAvatar';
+  import FollowButton from '$lib/components/profile/FollowButton';
+  import { ActivityFeed } from '$lib/components/feed';
   import { PublicUserPageBloc, type PublicUserCard } from './PublicUserPage.bloc.svelte';
 
   /**
@@ -15,10 +17,10 @@
   let {
     data,
     bloc = new PublicUserPageBloc({
-      source: () => ({ user: data.user, lists: data.lists ?? null }),
+      source: () => ({ user: data.user, lists: data.lists ?? null, activity: data.activity ?? null, followInfo: data.followInfo ?? null }),
     }),
   }: {
-    data: { user: any; lists?: any };
+    data: { user: any; lists?: any; activity?: any; followInfo?: any };
     bloc?: PublicUserPageBloc;
   } = $props();
 
@@ -67,8 +69,20 @@
       </div>
 
       <div class="hero-identity">
-        <h1 class="hero-name">{bloc.displayName}</h1>
+        <div class="hero-name-row">
+          <h1 class="hero-name">{bloc.displayName}</h1>
+          {#if bloc.hasFollowInfo}
+            <FollowButton target={bloc.followTarget} onFollowerCountChange={(delta) => bloc.adjustFollowers(delta)} />
+          {/if}
+        </div>
         <p class="hero-handle">@{bloc.username}</p>
+        {#if bloc.hasFollowInfo}
+          <p class="hero-follows">
+            <a href={bloc.followersHref}><strong>{bloc.followerCount}</strong> {bloc.followerCount === 1 ? 'follower' : 'followers'}</a>
+            <span aria-hidden="true">·</span>
+            <a href={bloc.followingHref}><strong>{bloc.followingCount}</strong> following</a>
+          </p>
+        {/if}
         {#if bloc.bio}
           <p class="hero-bio">{bloc.bio}</p>
         {/if}
@@ -126,6 +140,19 @@
 
         {@render shelf(bloc.reading, 'Not reading anything right now.')}
       </section>
+
+      {#if bloc.hasActivity}
+        <section class="section">
+          <div class="section-header">
+            <div class="section-header-left">
+              <svg width="18" height="18" fill="none" stroke="var(--weeb-accent)" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <h2 class="section-title">Recent activity</h2>
+            </div>
+          </div>
+
+          <ActivityFeed items={bloc.activity} showActor={false} empty="No list activity yet." />
+        </section>
+      {/if}
     {/if}
   </div>
 </div>
@@ -203,6 +230,31 @@
     align-self: end;
     padding-bottom: 0.25rem;
     min-width: 0;
+  }
+  .hero-name-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+  .hero-follows {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.4rem 0 0;
+    font-size: 0.85rem;
+    color: var(--weeb-fg-muted);
+  }
+  .hero-follows a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .hero-follows a:hover {
+    text-decoration: underline;
+  }
+  .hero-follows strong {
+    color: var(--weeb-fg);
+    font-family: var(--weeb-font-mono, ui-monospace, monospace);
   }
   .hero-name {
     font-size: clamp(1.4rem, 3vw, 1.9rem);

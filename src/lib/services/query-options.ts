@@ -16,6 +16,26 @@ import debug from "$lib/utils/debug";
 import {AuthStorage} from "$lib/utils/auth-storage";
 
 import { ensureConfigLoaded } from './config-loader';
+import {
+  queryPublicUserFollowInfo,
+  queryFollowSettings,
+  queryFollowers,
+  queryFollowing,
+  queryFollowRequests,
+  mutateFollow,
+  mutateUnfollow,
+  mutateAcceptFollowRequest,
+  mutateDeclineFollowRequest,
+  mutateRemoveFollower,
+  queryFeed,
+  queryUserActivity,
+  queryNotifications,
+  queryUnreadNotificationCount,
+  mutateMarkNotificationsRead,
+  mutateMarkAllNotificationsRead,
+  queryNotificationPreferences,
+  mutateUpdateNotificationPreference,
+} from './api/graphql/queries';
 import { withSpan, graphqlOperationName } from '$lib/tracing';
 
 // Config accessor that dynamically ensures config is loaded
@@ -26,6 +46,7 @@ import {
   type CurrentlyAiringQuery,
   type GetAnimeDetailsByIdQuery,
   type GetHomePageDataQuery,
+  type GetUserDetailsQuery,
   type LoginInput,
   type RefreshTokenMutation,
   type RegisterInput,
@@ -324,7 +345,10 @@ export const withAutoRefreshSSR = <T>(queryFn: (authToken?: string) => Promise<T
 
 export const getUser = () => ({
   queryKey: ["user"],
-  queryFn: async (): Promise<User> => {
+  // Typed by what the query selects rather than the full User type: the
+  // follow-approval flag is read by its own query (fetchFollowSettings), so
+  // the row here is the profile without it.
+  queryFn: async (): Promise<GetUserDetailsQuery['UserDetails']> => {
     return authenticatedRequest(async (client) => {
       const response = await client.request(queryUserDetails);
       return response.UserDetails;
@@ -856,3 +880,184 @@ export const getCharactersAndStaffByAnimeID = (id: string) => ({
     return data.charactersAndStaffByAnimeId;
   }
 })
+
+
+// ── Follow graph ────────────────────────────────────────────────────────────
+//
+// Reads go through authenticatedRequest too: the lists are viewer-aware (an
+// approval-required account shows names only to its followers), so the
+// cookies have to ride along even though the queries themselves are public.
+
+export const fetchPublicUserFollowInfo = (username: string) => ({
+  queryKey: ['public-user-follow-info', username],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryPublicUserFollowInfo, { username });
+      return response.userByUsername;
+    });
+  }
+});
+
+export const fetchFollowSettings = () => ({
+  queryKey: ['follow-settings'],
+  queryFn: async (): Promise<{ followApprovalRequired: boolean }> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryFollowSettings);
+      return { followApprovalRequired: !!response.UserDetails?.followApprovalRequired };
+    });
+  }
+});
+
+export const fetchFollowers = (userID: string, page = 1, limit = 20) => ({
+  queryKey: ['followers', userID, page, limit],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryFollowers, { userID, page, limit });
+      return response.followers;
+    });
+  }
+});
+
+export const fetchFollowing = (userID: string, page = 1, limit = 20) => ({
+  queryKey: ['following', userID, page, limit],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryFollowing, { userID, page, limit });
+      return response.following;
+    });
+  }
+});
+
+export const fetchFollowRequests = (page = 1, limit = 20) => ({
+  queryKey: ['follow-requests', page, limit],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryFollowRequests, { page, limit });
+      return response.followRequests;
+    });
+  }
+});
+
+export const followUser = () => ({
+  mutationFn: async (userID: string): Promise<string> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(mutateFollow, { userID });
+      return response.follow;
+    });
+  }
+});
+
+export const unfollowUser = () => ({
+  mutationFn: async (userID: string): Promise<boolean> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(mutateUnfollow, { userID });
+      return response.unfollow;
+    });
+  }
+});
+
+export const acceptFollowRequest = () => ({
+  mutationFn: async (followerID: string): Promise<boolean> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(mutateAcceptFollowRequest, { followerID });
+      return response.acceptFollowRequest;
+    });
+  }
+});
+
+export const declineFollowRequest = () => ({
+  mutationFn: async (followerID: string): Promise<boolean> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(mutateDeclineFollowRequest, { followerID });
+      return response.declineFollowRequest;
+    });
+  }
+});
+
+export const removeFollower = () => ({
+  mutationFn: async (followerID: string): Promise<boolean> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(mutateRemoveFollower, { followerID });
+      return response.removeFollower;
+    });
+  }
+});
+
+// ── Feed and inbox ──────────────────────────────────────────────────────────
+
+export const fetchFeed = (page = 1, limit = 24) => ({
+  queryKey: ['feed', page, limit],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryFeed, { page, limit });
+      return response.feed;
+    });
+  }
+});
+
+export const fetchUserActivity = (userID: string, page = 1, limit = 12) => ({
+  queryKey: ['user-activity', userID, page, limit],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryUserActivity, { userID, page, limit });
+      return response.userActivity;
+    });
+  }
+});
+
+export const fetchNotifications = (page = 1, limit = 20, unreadOnly = false) => ({
+  queryKey: ['notifications', page, limit, unreadOnly],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryNotifications, { page, limit, unreadOnly });
+      return response.notifications;
+    });
+  }
+});
+
+export const fetchUnreadNotificationCount = () => ({
+  queryKey: ['unread-notification-count'],
+  queryFn: async (): Promise<number> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryUnreadNotificationCount);
+      return response.unreadNotificationCount ?? 0;
+    });
+  }
+});
+
+export const markNotificationsRead = () => ({
+  mutationFn: async (ids: string[]): Promise<boolean> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(mutateMarkNotificationsRead, { ids });
+      return response.markNotificationsRead;
+    });
+  }
+});
+
+export const markAllNotificationsRead = () => ({
+  mutationFn: async (): Promise<boolean> => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(mutateMarkAllNotificationsRead);
+      return response.markAllNotificationsRead;
+    });
+  }
+});
+
+export const fetchNotificationPreferences = () => ({
+  queryKey: ['notification-preferences'],
+  queryFn: async () => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(queryNotificationPreferences);
+      return response.notificationPreferences;
+    });
+  }
+});
+
+export const updateNotificationPreference = () => ({
+  mutationFn: async (input: { type: string; channel: string; enabled: boolean }) => {
+    return authenticatedRequest(async (client) => {
+      const response: any = await client.request(mutateUpdateNotificationPreference, input as any);
+      return response.updateNotificationPreference;
+    });
+  }
+});

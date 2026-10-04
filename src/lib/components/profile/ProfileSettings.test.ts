@@ -45,6 +45,19 @@ function settingsPort(
   };
 }
 
+/** A port whose follow-approval query answers at once with the given flag. */
+function settingsPortWithApproval(user: Record<string, unknown> | null, followApprovalRequired: boolean) {
+  const port = settingsPort(user);
+  return {
+    ...port,
+    followSettings: () => ({
+      queryKey: ['follow-settings'],
+      queryFn: async () => ({ followApprovalRequired }),
+      initialData: { followApprovalRequired }
+    })
+  };
+}
+
 function makeBloc(deps: Partial<ProfileSettingsDeps> = {}) {
   return new ProfileSettingsBloc({
     settings: settingsPort(SERVER_USER),
@@ -75,7 +88,7 @@ describe('ProfileSettingsBloc', () => {
       const bloc = makeBloc();
 
       expect(bloc.hasUser).toBe(true);
-      expect(bloc.form).toEqual(SERVER_USER);
+      expect(bloc.form).toEqual({ ...SERVER_USER, followApprovalRequired: false });
       expect(bloc.bioLength).toBe(SERVER_USER.bio.length);
     });
 
@@ -409,5 +422,28 @@ describe('ProfileSettingsBloc', () => {
 
       expect(bloc.usernameError).toBe('');
     });
+  });
+});
+
+describe('follow approval', () => {
+  it('reads its own query and is off when there is none', () => {
+    expect(makeBloc().form.followApprovalRequired).toBe(false);
+    const bloc = makeBloc({ settings: settingsPortWithApproval(SERVER_USER, true) });
+    expect(bloc.form.followApprovalRequired).toBe(true);
+  });
+
+  it('toggles as an edit and saves only that field', async () => {
+    const port = settingsPortWithApproval(SERVER_USER, false);
+    const bloc = makeBloc({ settings: port });
+    const stop = reactiveScope(() => bloc.form, () => bloc.isSaving);
+    try {
+      bloc.toggleFollowApproval();
+      expect(bloc.form.followApprovalRequired).toBe(true);
+      bloc.submit();
+      await settle();
+      expect(port.save).toHaveBeenCalledWith({ followApprovalRequired: true });
+    } finally {
+      stop();
+    }
   });
 });

@@ -5,6 +5,7 @@
   import UserProfileHandler from '$lib/components/shell/UserProfileHandler';
   import AuthInitializer from '$lib/components/shell/AuthInitializer';
   import TitleLanguageToggle from '$lib/components/shell/TitleLanguageToggle';
+  import NotificationsBell from '$lib/components/shell/NotificationsBell';
   import { HeaderBloc } from './Header.bloc.svelte';
 
   let {
@@ -65,6 +66,7 @@
          have two detail URLs, and the alternative is neither lit. -->
     <a href="/manga" aria-current={bloc.isCurrent('/manga') ? 'page' : undefined}>Manga</a>
     <a href="/light-novels" aria-current={bloc.isCurrent('/light-novels') ? 'page' : undefined}>Light novels</a>
+    <a href="/feed" aria-current={bloc.isCurrent('/feed') ? 'page' : undefined}>Feed</a>
   </div>
 
   <!-- Search -->
@@ -75,11 +77,13 @@
   <!-- Right: Language toggle + Auth -->
   <div class="nav-right">
     <TitleLanguageToggle />
+    <NotificationsBell />
     <UserProfileHandler isMobile={false} />
   </div>
 
   <!-- Mobile: simplified right side -->
   <div class="nav-right-mobile">
+    <NotificationsBell />
     <UserProfileHandler isMobile={true} />
   </div>
 </nav>

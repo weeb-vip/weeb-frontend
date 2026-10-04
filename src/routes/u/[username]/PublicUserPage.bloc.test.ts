@@ -465,3 +465,59 @@ describe('keying on the username', () => {
     expect(bound.accentStyle).toBe('');
   });
 });
+
+describe('follow graph and activity', () => {
+  const NOW = Date.parse('2026-10-03T12:00:00Z');
+  const publicUser = { id: 'user_bob', username: 'bob', firstname: 'Bob', lastname: '', listsPublic: true };
+  const followInfo = { id: 'user_bob', followApprovalRequired: true, followerCount: 3, followingCount: 1, viewerFollowStatus: 'REQUESTED' };
+  const activity = {
+    activities: [
+      { id: 'a1', type: 'ANIME_ADDED', status: 'WATCHING', occurredAt: '2026-10-03T11:00:00Z', actor: { id: 'user_bob', username: 'bob' }, anime: { id: 'anime-1', slug: 's', titleEn: 'T' } },
+    ],
+  };
+
+  it('hands the Follow button what it needs, and nothing when the follow API is absent', () => {
+    const bloc = new PublicUserPageBloc({ source: () => ({ user: publicUser, lists: null, activity, followInfo }), config: readable({ cdn_user_url: 'x' }), now: () => NOW });
+    expect(bloc.hasFollowInfo).toBe(true);
+    expect(bloc.followTarget).toEqual({ userID: 'user_bob', username: 'bob', status: 'REQUESTED', followApprovalRequired: true });
+
+    const without = new PublicUserPageBloc({ source: () => ({ user: publicUser, lists: null, activity, followInfo: null }), config: readable({ cdn_user_url: 'x' }), now: () => NOW });
+    expect(without.hasFollowInfo).toBe(false);
+    expect(without.followTarget.status).toBe('NONE');
+    expect(without.followerCount).toBe(0);
+    expect(bloc.followersHref).toBe('/u/bob/followers');
+    expect(bloc.followingHref).toBe('/u/bob/following');
+  });
+
+  it('counts follow as the viewer follows and unfollows, never below zero, per user', () => {
+    let user: any = publicUser;
+    let info: any = followInfo;
+    const bloc = new PublicUserPageBloc({ source: () => ({ user, lists: null, activity: null, followInfo: info }), config: readable({ cdn_user_url: 'x' }), now: () => NOW });
+    expect(bloc.followerCount).toBe(3);
+    expect(bloc.followingCount).toBe(1);
+
+    bloc.adjustFollowers(1);
+    expect(bloc.followerCount).toBe(4);
+    bloc.adjustFollowers(-1);
+    bloc.adjustFollowers(-1);
+    expect(bloc.followerCount).toBe(2);
+
+    user = { ...publicUser, id: 'user_carol', username: 'carol' };
+    info = { ...followInfo, id: 'user_carol', followerCount: 0 };
+    expect(bloc.followerCount).toBe(0);
+    bloc.adjustFollowers(-1);
+    expect(bloc.followerCount).toBe(0);
+  });
+
+  it('maps recent activity only when the lists are public, and knows when the service answered nothing', () => {
+    const bloc = new PublicUserPageBloc({ source: () => ({ user: publicUser, lists: null, activity }), config: readable({ cdn_user_url: 'x' }), now: () => NOW });
+    expect(bloc.hasActivity).toBe(true);
+    expect(bloc.activity).toHaveLength(1);
+    const unavailable = new PublicUserPageBloc({ source: () => ({ user: publicUser, lists: null, activity: null }), config: readable({ cdn_user_url: 'x' }), now: () => NOW });
+    expect(unavailable.hasActivity).toBe(false);
+    expect(bloc.activity[0]).toMatchObject({ key: 'a1', verb: 'started watching', when: '1h' });
+
+    const closed = new PublicUserPageBloc({ source: () => ({ user: { ...publicUser, listsPublic: false }, lists: null, activity }), config: readable({ cdn_user_url: 'x' }), now: () => NOW });
+    expect(closed.activity).toEqual([]);
+  });
+});

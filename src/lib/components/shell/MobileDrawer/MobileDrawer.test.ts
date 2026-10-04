@@ -142,8 +142,8 @@ describe('MobileDrawerBloc', () => {
 
       // "My List": the page behind it is one list with an Anime | Manga switch,
       // and both of the old names picked a side.
-      expect(links.map((l) => l.label)).toEqual(['My List', 'Settings']);
-      expect(links[0].href).toBe('/profile/anime');
+      expect(links.map((l) => l.label)).toEqual(['Feed', 'My List', 'Settings']);
+      expect(links.find((l) => l.label === 'My List')?.href).toBe('/profile/anime');
     });
 
     it('has no "My Profile" row -- the user card above it is that link', () => {

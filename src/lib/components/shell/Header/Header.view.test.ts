@@ -91,7 +91,7 @@ describe('Header', () => {
   });
 
   describe('the sections', () => {
-    it('lists the six of them, in order, in the one Main landmark', () => {
+    it('lists the seven of them, in order, in the one Main landmark', () => {
       render(Header, { props: { ssrAuth: null, bloc: makeBloc() } });
 
       const links = within(bar())
@@ -105,7 +105,8 @@ describe('Header', () => {
         'Airing',
         'Browse',
         'Manga',
-        'Light novels'
+        'Light novels',
+        'Feed'
       ]);
     });
 
