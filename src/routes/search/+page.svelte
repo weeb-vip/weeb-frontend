@@ -12,7 +12,7 @@
   import SafeImage from "$lib/components/primitives/SafeImage";
   import { GetImageFromAnime } from "$lib/services/utils";
   import { getStatusColor, getStatusLabel } from "$lib/utils/status";
-  import { SearchPageBloc } from "./SearchPage.bloc.svelte";
+  import { SearchPageBloc, type SearchPageSeed } from "./SearchPage.bloc.svelte";
 
   /**
    * /search — the browse-and-search page.
@@ -20,11 +20,27 @@
    * A view over the bloc. What is being searched lives in the URL, what came
    * back and how it is narrowed lives in the bloc, and this file renders it.
    */
-  let { bloc = new SearchPageBloc() }: { bloc?: SearchPageBloc } = $props();
+  let {
+    data,
+    bloc = new SearchPageBloc({ source: () => data?.search ?? null }),
+  }: { data?: { search?: SearchPageSeed | null }; bloc?: SearchPageBloc } = $props();
 
   onMount(() => {
     void bloc.init();
   });
+
+  // A navigation brings the server's answer for the new URL with it; the bloc
+  // takes it instead of asking Algolia a second time. Reading `data` here is
+  // what subscribes this effect to it.
+  $effect(() => {
+    void data?.search;
+    bloc.adoptSeed();
+  });
+
+  function handleSubmit(event: SubmitEvent) {
+    event.preventDefault();
+    bloc.submit();
+  }
 
   /**
    * The URL is the source of truth, so every navigation -- back button, a chip
@@ -48,7 +64,10 @@
   <!-- Search Hero -->
   <section class="search-hero">
     <h1>Browse Anime</h1>
-    <div class="search-bar-wrap">
+    <!-- A real form: Enter submits a GET to this page, which the server
+         answers in full, so the box works before hydration and without a
+         script at all. With a script the bloc takes the submit over. -->
+    <form class="search-bar-wrap" method="get" action="/search" role="search" onsubmit={handleSubmit}>
       <svg
         class="search-icon"
         width="20"
@@ -62,19 +81,22 @@
         <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
       </svg>
       <input
-        type="text"
+        type="search"
+        name="query"
         class="search-bar-input"
         placeholder="Search by title, studio, genre..."
         autocomplete="off"
         spellcheck="false"
         aria-label="Search anime"
         bind:value={bloc.draftQuery}
-        onkeydown={(e) => {
-          if (e.key === "Enter") bloc.submit();
-        }}
       />
+      {#if bloc.selectedGenre}
+        <!-- Keeps the chip's filter on a scriptless submit. -->
+        <input type="hidden" name="genre" value={bloc.selectedGenre} />
+      {/if}
       {#if bloc.draftQuery}
         <button
+          type="button"
           class="search-bar-clear"
           onclick={() => bloc.clear()}
           aria-label="Clear search"
@@ -91,7 +113,7 @@
           </svg>
         </button>
       {/if}
-    </div>
+    </form>
   </section>
 
   <!-- Filter Bar -->
@@ -270,7 +292,7 @@
   {:else if bloc.phase === "results"}
     {#if bloc.viewMode === "grid"}
       <PosterGrid class="results-grid">
-        {#each bloc.results as item (item.objectID)}
+        {#each bloc.results as item, index (item.objectID)}
           <PosterCard
             id={item.id || ""}
             slug={item.url_slug ?? item.slug}
@@ -285,6 +307,7 @@
             description={item.description || ""}
             episodeCount={item.episodeCount}
             onList={bloc.listStatusFor(item)}
+            priority={index < 6}
           />
         {/each}
       </PosterGrid>
@@ -355,6 +378,7 @@
         perPageOptions={bloc.pageSizeOptions}
         onPageChange={(next) => bloc.goToPage(next, "hits")}
         onPerPageChange={(next) => bloc.setHitsPerPage(next)}
+        hrefFor={(next) => bloc.hrefForPage(next, "hits")}
         label="Search results pagination"
       />
     {/if}
@@ -452,6 +476,7 @@
             perPageOptions={bloc.pageSizeOptions}
             onPageChange={(next) => bloc.goToPage(next, "works")}
             onPerPageChange={(next) => bloc.setHitsPerPage(next)}
+            hrefFor={(next) => bloc.hrefForPage(next, "works")}
             label="Manga results pagination"
           />
         {/if}

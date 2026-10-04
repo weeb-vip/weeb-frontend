@@ -212,7 +212,10 @@ export class AutocompleteAdvancedBloc {
   readonly #dismissDelayMs: number;
 
   #session: SearchSession | null = null;
-  #status: 'loading' | 'ready' | 'unavailable' = $state('loading');
+  #connecting: Promise<void> | null = null;
+  /** Typed before the backend was connected; replayed the moment it is. */
+  #pendingQuery = '';
+  #status: 'idle' | 'connecting' | 'ready' | 'unavailable' = $state('idle');
   #state: SearchState = $state({ query: '', isOpen: false, collections: [] });
   #isFocused = $state(false);
   #activeIndex = $state(-1);
@@ -230,8 +233,12 @@ export class AutocompleteAdvancedBloc {
     this.#dismissDelayMs = dismissDelayMs;
   }
 
-  /** `loading` draws the skeleton, `unavailable` the plain non-search input. */
-  get status(): 'loading' | 'ready' | 'unavailable' {
+  /**
+   * `idle` and `connecting` both draw the real search form -- the backend is
+   * only reached for once the field is used, and a form that submits to
+   * /search needs nothing from it. `unavailable` draws the plain input.
+   */
+  get status(): 'idle' | 'connecting' | 'ready' | 'unavailable' {
     return this.#status;
   }
 
@@ -326,20 +333,41 @@ export class AutocompleteAdvancedBloc {
     return searchHref(this.query);
   }
 
-  /** Connect to the search backend. Idempotent; called once from the view. */
-  async init(): Promise<void> {
-    if (this.#session) return;
+  /**
+   * Connect to the search backend. Idempotent. Not called at mount any more:
+   * the three Algolia modules are fetched the first time the field is focused
+   * or typed into, so a page that is only read never pays for them, and the
+   * server-rendered form is complete without them.
+   */
+  init(): Promise<void> {
+    if (!this.#connecting) this.#connecting = this.#connect();
+    return this.#connecting;
+  }
+
+  async #connect(): Promise<void> {
+    this.#status = 'connecting';
     const session = await this.#search.connect((state) => {
       this.#state = state;
     });
     this.#session = session;
     this.#status = session ? 'ready' : 'unavailable';
+    if (!session) return;
+
+    // Whatever happened while connecting is replayed, so the first keystrokes
+    // are not lost and a field that is still focused opens its panel.
+    if (this.#pendingQuery) {
+      session.setQuery(this.#pendingQuery);
+      session.refresh();
+      this.#pendingQuery = '';
+    }
+    if (this.#isFocused) session.setIsOpen(true);
   }
 
   focus(): void {
     this.#clearDismissTimer();
     this.#isFocused = true;
-    this.#session?.setIsOpen(true);
+    if (this.#session) this.#session.setIsOpen(true);
+    else void this.init();
   }
 
   /**
@@ -354,8 +382,13 @@ export class AutocompleteAdvancedBloc {
     // Results are about to change; drop the highlight so it cannot point at a
     // stale row (Enter would otherwise open the wrong show).
     this.#activeIndex = -1;
-    this.#session?.setQuery(value);
-    this.#session?.refresh();
+    if (!this.#session) {
+      this.#pendingQuery = value;
+      void this.init();
+      return;
+    }
+    this.#session.setQuery(value);
+    this.#session.refresh();
   }
 
   /** Enter, arrows and Escape; the view only reports the key. */
@@ -443,6 +476,7 @@ export class AutocompleteAdvancedBloc {
     this.#clearDismissTimer();
     this.#activeIndex = -1;
     this.#isFocused = false;
+    this.#pendingQuery = '';
     this.#session?.setIsOpen(false);
     this.#session?.setQuery('');
   }

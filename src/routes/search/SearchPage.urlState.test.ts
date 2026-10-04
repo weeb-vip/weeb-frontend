@@ -193,3 +193,11 @@ describe('the full cycle a chip click makes', () => {
     expect(state).toEqual({ query: 'naruto', genre: 'Action' });
   });
 });
+
+describe('the q alias', () => {
+  it('reads ?q= as the query and never writes it back', () => {
+    expect(readSearchUrl('?q=naruto')).toEqual({ query: 'naruto', genre: null });
+    expect(readSearchUrl('?q=naruto&query=bleach').query).toBe('bleach');
+    expect(writeSearchUrl('?q=naruto', { query: 'naruto', genre: null })).toBe('?query=naruto');
+  });
+});

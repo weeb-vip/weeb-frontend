@@ -31,7 +31,9 @@ export function readSearchUrl(search: string | URLSearchParams): SearchUrlState 
   const genre = params.get('genre');
 
   return {
-    query: params.get('query') || '',
+    // `q` is accepted as an alias so a plain `<form action="/search">` and a
+    // hand-typed link both land; `query` stays the parameter the page writes.
+    query: params.get('query') || params.get('q') || '',
     // A `?genre=` with nothing after it is not a selection.
     genre: genre ? genre : null,
   };
@@ -50,6 +52,8 @@ export function writeSearchUrl(currentSearch: string, next: SearchUrlState): str
 
   if (next.query) params.set('query', next.query);
   else params.delete('query');
+  // The alias never survives a write: one spelling in the address bar.
+  params.delete('q');
 
   if (next.genre) params.set('genre', next.genre);
   else params.delete('genre');

@@ -174,12 +174,33 @@ describe('AutocompleteAdvanced', () => {
   });
 
   describe('before the search backend answers', () => {
-    it('draws a skeleton rather than a dead search box', async () => {
+    it('is a working form from the first byte, not a skeleton', async () => {
       const { container } = mount({ search: neverConnects });
 
-      expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-      expect(container.querySelector('.ac-skeleton-pill')).not.toBeNull();
+      const forms = container.querySelectorAll('form[action="/search"][method="get"]');
+      expect(forms.length).toBeGreaterThanOrEqual(2);
+      expect(container.querySelector('.ac-skeleton-pill')).toBeNull();
+      expect(desktopInput()).toHaveAttribute('name', 'query');
+      expect(screen.getAllByRole('combobox')).toHaveLength(2);
+    });
+
+    it('does not reach for the backend until the field is used', async () => {
+      const connect = vi.fn(() => new Promise<null>(() => {}));
+      mount({ search: { connect } });
+      expect(connect).not.toHaveBeenCalled();
+
+      await userEvent.click(desktopInput());
+
+      expect(connect).toHaveBeenCalledTimes(1);
+    });
+
+    it('searches for the typed text on Enter even while still connecting', async () => {
+      const navigate = vi.fn();
+      mount({ search: neverConnects, navigate });
+
+      await userEvent.type(desktopInput(), 'spice{Enter}');
+
+      expect(navigate).toHaveBeenCalledWith('/search?query=spice');
     });
   });
 
@@ -191,6 +212,8 @@ describe('AutocompleteAdvanced', () => {
      */
     it('falls back to a plain input with no combobox semantics', async () => {
       mount({ search: unavailable });
+      // The backend is only reached for once the field is used.
+      await userEvent.click(desktopInput());
 
       const input = await screen.findByPlaceholderText('Search anime...');
       expect(input).not.toHaveAttribute('role', 'combobox');
@@ -200,6 +223,7 @@ describe('AutocompleteAdvanced', () => {
 
     it('still runs a full search on Enter', async () => {
       const { navigate } = mount({ search: unavailable });
+      await userEvent.click(desktopInput());
 
       const input = await screen.findByPlaceholderText('Search anime...');
       await userEvent.type(input, 'spice and wolf{Enter}');
@@ -209,6 +233,7 @@ describe('AutocompleteAdvanced', () => {
 
     it('ignores an Enter on an empty box', async () => {
       const { navigate } = mount({ search: unavailable });
+      await userEvent.click(desktopInput());
 
       const input = await screen.findByPlaceholderText('Search anime...');
       await userEvent.type(input, '   {Enter}');
@@ -500,21 +525,13 @@ describe('AutocompleteAdvanced', () => {
      * are what actually dismiss the panel -- so it is asserted as a node that
      * arrives and leaves, not as a control.
      */
-    it('is put up while the desktop field has focus and taken down again', async () => {
+    it('is no longer built: a full-viewport blur on the focusing tap was the costliest paint on the site', async () => {
       mount({ state: RESULTS });
 
       await focusDesktop();
-      await waitFor(() =>
-        expect(document.getElementById('desktop-search-backdrop')).not.toBeNull()
-      );
-      expect(document.getElementById('desktop-search-backdrop')).toHaveAttribute(
-        'role',
-        'presentation'
-      );
+      await waitFor(() => expect(screen.getAllByRole('listbox').length).toBeGreaterThan(0));
 
-      await userEvent.keyboard('{Escape}');
-
-      await waitFor(() => expect(document.getElementById('desktop-search-backdrop')).toBeNull());
+      expect(document.getElementById('desktop-search-backdrop')).toBeNull();
     });
   });
 });

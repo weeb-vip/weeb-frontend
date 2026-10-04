@@ -94,8 +94,33 @@ describe('searchHref', () => {
 
 describe('AutocompleteAdvancedBloc', () => {
   describe('connecting', () => {
-    it('draws the skeleton until the backend answers', () => {
-      expect(makeBloc().bloc.status).toBe('loading');
+    it('starts idle: the server-rendered form needs no backend', () => {
+      expect(makeBloc().bloc.status).toBe('idle');
+    });
+
+    it('reaches for the backend on first focus, and opens the panel once it answers', async () => {
+      const { port, session } = searchPort(true);
+      const connect = vi.spyOn(port, 'connect');
+      const { bloc } = makeBloc({ search: port });
+
+      bloc.focus();
+      expect(connect).toHaveBeenCalledTimes(1);
+      await bloc.init();
+
+      expect(bloc.status).toBe('ready');
+      expect(session.setIsOpen).toHaveBeenCalledWith(true);
+    });
+
+    it('replays text typed while connecting, so the first keystrokes are not lost', async () => {
+      const { port, session } = searchPort(true);
+      const { bloc } = makeBloc({ search: port });
+
+      bloc.input('spi');
+      bloc.input('spic');
+      await bloc.init();
+
+      expect(session.setQuery).toHaveBeenCalledWith('spic');
+      expect(session.refresh).toHaveBeenCalled();
     });
 
     it('is ready once connected', async () => {
