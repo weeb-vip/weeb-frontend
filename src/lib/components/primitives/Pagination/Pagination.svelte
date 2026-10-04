@@ -20,6 +20,7 @@
     onPageChange,
     onPerPageChange,
     label = 'Pagination',
+    hrefFor = undefined,
   }: {
     /** Zero-based index of the current page. */
     page: number;
@@ -31,7 +32,19 @@
     onPerPageChange?: (perPage: number) => void;
     /** Accessible name for the nav landmark, when a page has more than one. */
     label?: string;
+    /**
+     * A link for a page, when the owner can name one. Prev/Next then render as
+     * anchors (still announced as buttons, which is what they do with a script:
+     * the click is taken over by `onPageChange`), so a visitor without
+     * JavaScript still gets the next page from the href.
+     */
+    hrefFor?: (page: number) => string;
   } = $props();
+
+  function follow(event: MouseEvent, next: number): void {
+    event.preventDefault();
+    onPageChange(next);
+  }
 
   const canGoPrev = $derived(hasPrev(page));
   const canGoNext = $derived(hasNext(page, totalPages));
@@ -45,18 +58,27 @@
 
 <nav class="pg" aria-label={label}>
   <div class="pg-left">
-    <button
-      type="button"
-      class="pg-btn"
-      aria-label="Previous page"
-      disabled={!canGoPrev}
-      onclick={() => onPageChange(page - 1)}
-    >
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M15 18l-6-6 6-6" />
-      </svg>
-      <span class="pg-btn-label">Previous</span>
-    </button>
+    {#if hrefFor && canGoPrev}
+      <a class="pg-btn" role="button" aria-label="Previous page" href={hrefFor(page - 1)} onclick={(event) => follow(event, page - 1)}>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        <span class="pg-btn-label">Previous</span>
+      </a>
+    {:else}
+      <button
+        type="button"
+        class="pg-btn"
+        aria-label="Previous page"
+        disabled={!canGoPrev}
+        onclick={() => onPageChange(page - 1)}
+      >
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        <span class="pg-btn-label">Previous</span>
+      </button>
+    {/if}
 
     {#if totalPages > 1}
       <!-- Announced on change so a keyboard user paging with the buttons hears
@@ -66,18 +88,27 @@
       </span>
     {/if}
 
-    <button
-      type="button"
-      class="pg-btn"
-      aria-label="Next page"
-      disabled={!canGoNext}
-      onclick={() => onPageChange(page + 1)}
-    >
-      <span class="pg-btn-label">Next</span>
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9 18l6-6-6-6" />
-      </svg>
-    </button>
+    {#if hrefFor && canGoNext}
+      <a class="pg-btn" role="button" aria-label="Next page" href={hrefFor(page + 1)} onclick={(event) => follow(event, page + 1)}>
+        <span class="pg-btn-label">Next</span>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </a>
+    {:else}
+      <button
+        type="button"
+        class="pg-btn"
+        aria-label="Next page"
+        disabled={!canGoNext}
+        onclick={() => onPageChange(page + 1)}
+      >
+        <span class="pg-btn-label">Next</span>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
+    {/if}
   </div>
 
   {#if showPerPage}

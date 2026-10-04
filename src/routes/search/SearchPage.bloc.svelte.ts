@@ -11,13 +11,32 @@ import {
   filterAndSortHits,
   listExcerpt,
   normalizeHit,
-  toGenreFacets,
   yearOptions,
   type GenreFacet,
   type Hit,
   type NormalizedHit,
   type SortKey,
 } from './SearchPage.results';
+import {
+  buildGenreFacetRequest,
+  buildSearchRequests,
+  indexesFrom,
+  parseGenreFacetResponse,
+  parseSearchResponse,
+  resolveAlgoliaFactory,
+  searchPageHref,
+  wantsWorks,
+  ALGOLIA_APP_ID,
+  ALGOLIA_SEARCH_KEY,
+  PAGE_SIZE_OPTIONS,
+  type AlgoliaIndexes,
+  type CatalogSearchRequest,
+  type CatalogSearchResponse,
+  type SearchPageSeed,
+} from './search.logic';
+
+export { PAGE_SIZE_OPTIONS };
+export type { CatalogSearchRequest, CatalogSearchResponse, SearchPageSeed };
 import {
   clearSearch,
   isBrowseState,
@@ -30,32 +49,6 @@ import {
 } from './SearchPage.urlState';
 
 /* ── Ports ───────────────────────────────────────────────────────────────── */
-
-/** One page of catalogue results, plus the works that matched the same query. */
-export interface CatalogSearchRequest {
-  query: string;
-  /** Zero-based, matching Algolia. */
-  /** Hits are actual anime results; works are manga, light novels and other such media. */
-  hitsPage: number;
-  worksPage: number;
-  /**
-   * Results per page, for both indices. The two are paged independently but
-   * sized together: a page showing 24 anime and 6 manga reads as a bug, not a
-   * design, so the size the viewer picks applies to the whole page.
-   */
-  perPage: number;
-  genre: string | null;
-  /** Works ride along in the same round trip when the query can carry them. */
-  includeWorks: boolean;
-}
-
-export interface CatalogSearchResponse {
-  hits: Hit[];
-  totalHits: number;
-  works: Hit[];
-  totalWorks: number;
-  total: number;
-}
 
 /**
  * Where results come from.
@@ -97,74 +90,32 @@ export interface RoutePort {
   replace(search: string): void;
 }
 
-const ANIME_INDEX_FALLBACK = 'anime-staging';
-
-/** The real Algolia stack: lazily imported, configured from the config store. */
+/**
+ * The real Algolia stack: lazily imported, configured from the config store.
+ * Requests and parsing come from `search.logic`, the same module the server
+ * loader uses for the first render, so a search run here answers exactly what
+ * the HTML already showed.
+ */
 export const algoliaCatalogSearchPort: CatalogSearchPort = {
   async search(request) {
     const client = await getClient();
     if (!client) return { hits: [], totalHits: 0, works: [], totalWorks: 0, total: 0 };
 
-    const { searchClient, animeIndex, worksIndex } = client;
-    // `tags` is an anime facet that no work carries, so a genre filter and a
-    // works request cannot both be honoured in one query.
-    const wantWorks = request.includeWorks && !!worksIndex;
-
-    const requests: any[] = [
-      {
-        indexName: animeIndex,
-        query: request.query,
-        hitsPerPage: request.perPage,
-        page: request.hitsPage,
-        filters: request.genre ? `tags:"${request.genre}"` : undefined,
-      },
-    ];
-    if (wantWorks) {
-      requests.push({
-        indexName: worksIndex,
-        query: request.query,
-        hitsPerPage: request.perPage,
-        page: request.worksPage,
-      });
-    }
-
-    const response = await searchClient.search({ requests });
-    // Algolia v5 puts results under `results`; older shapes answer flat.
-    const first = response.results?.[0] || response;
-    const hits = first?.hits || [];
-    const works = wantWorks ? response.results?.[1]?.hits || [] : [];
-    const totalHits = first?.nbHits ?? first?.totalHits ?? hits.length;
-    const totalWorks = wantWorks ? response.results?.[1]?.nbHits ?? response.results?.[1]?.totalHits ?? 0 : 0;
-
-    return {
-      hits,
-      totalHits,
-      works,
-      totalWorks,
-      total: totalHits + totalWorks,
-    };
+    const requests = buildSearchRequests(request, client);
+    const response = await client.searchClient.search({ requests });
+    return parseSearchResponse(response, wantsWorks(request, client));
   },
 
   async genreFacets() {
     const client = await getClient();
     if (!client) return [];
 
-    const response = await client.searchClient.search({
-      requests: [
-        {
-          indexName: client.animeIndex,
-          query: '',
-          hitsPerPage: 0,
-          facets: ['tags'],
-        },
-      ],
-    });
-
-    return toGenreFacets(response.results?.[0]?.facets?.tags);
+    const response = await client.searchClient.search({ requests: [buildGenreFacetRequest(client)] });
+    return parseGenreFacetResponse(response);
   },
 };
 
-type AlgoliaClient = { searchClient: any; animeIndex: string; worksIndex: string };
+type AlgoliaClient = AlgoliaIndexes & { searchClient: any };
 let clientPromise: Promise<AlgoliaClient | null> | null = null;
 
 /** One client per browser session; both port methods share it. */
@@ -184,25 +135,14 @@ async function createClient(): Promise<AlgoliaClient | null> {
 
   try {
     const module: any = await import('algoliasearch/lite');
-    const algoliasearch =
-      typeof module?.default === 'function'
-        ? module.default
-        : typeof module === 'function'
-          ? module
-          : module?.liteClient;
-
-    if (typeof algoliasearch !== 'function') {
+    const algoliasearch = resolveAlgoliaFactory(module);
+    if (!algoliasearch) {
       throw new Error('Unable to find algoliasearch function in module');
     }
 
-    const config = configStore.get();
-
     return {
-      searchClient: algoliasearch('A2HF2P5C6X', '45216ed5ac3f9e0a478d3c354d353d58'),
-      animeIndex: config?.algolia_index || ANIME_INDEX_FALLBACK,
-      // Empty when unconfigured, which is the signal to skip the works request
-      // entirely rather than query an index that may not exist.
-      worksIndex: config?.algolia_works_index || '',
+      searchClient: algoliasearch(ALGOLIA_APP_ID, ALGOLIA_SEARCH_KEY),
+      ...indexesFrom(configStore.get()),
     };
   } catch (error) {
     console.error('Algolia init failed:', error);
@@ -250,8 +190,6 @@ export const graphqlUserListPort: UserListPort = {
 
 /* ── Constants the view renders ──────────────────────────────────────────── */
 
-export const PAGE_SIZE_OPTIONS = [24, 48, 72, 100];
-
 export const STATUS_FILTERS = [
   { value: '', label: 'All' },
   { value: 'CURRENTLY_AIRING', label: 'Airing' },
@@ -284,6 +222,13 @@ export interface SearchPageDeps {
   route?: RoutePort;
   /** The page the browse strip lives on. Only /search syncs from the URL. */
   pathname?: string;
+  /**
+   * What the server already answered for the current URL (`+page.server.ts`).
+   * Read through a getter so a navigation that brings new page data is seen.
+   * Null where there is no loader -- a story, or the browse strip on another
+   * page -- in which case everything is fetched from the browser as before.
+   */
+  source?: () => SearchPageSeed | null;
 }
 
 /* ── Bloc ────────────────────────────────────────────────────────────────── */
@@ -311,6 +256,9 @@ export class SearchPageBloc {
   readonly #route: RoutePort;
   readonly #pathname: string;
   readonly #url: { current: { pathname: string; search: string } };
+  readonly #source: () => SearchPageSeed | null;
+  /** The `key` of the seed most recently adopted, so one is never adopted twice. */
+  #seedKey: string | null = null;
 
   /** The text in the box, which is not yet the text that was searched for. */
   #draftQuery = $state('');
@@ -367,12 +315,67 @@ export class SearchPageBloc {
       },
     },
     pathname = '/search',
+    source = () => null,
   }: SearchPageDeps = {}) {
     this.#search = search;
     this.#userList = userList;
     this.#route = route;
     this.#pathname = pathname;
     this.#url = fromStore(route.url);
+    this.#source = source;
+    // In the constructor rather than init(): init() runs on the client only,
+    // and the server's render has to carry the results it already has.
+    this.adoptSeed();
+  }
+
+  /**
+   * Take the server's answer for the current URL, when there is a new one.
+   * Called by the view whenever the page data changes, and by the constructor
+   * for the first render. A seed for a URL other than the one on screen is
+   * left alone: the URL is the source of truth, and syncFromUrl() will ask
+   * for it when the navigation lands.
+   */
+  adoptSeed(): void {
+    const seed = this.#source();
+    if (!seed || seed.key === this.#seedKey) return;
+    if (seed.key !== this.#url.current.search) return;
+    this.#seedKey = seed.key;
+    this.#lastSeenSearch = seed.key;
+
+    this.#urlState = { query: seed.params.query, genre: seed.params.genre };
+    this.#draftQuery = seed.params.query;
+    this.#hitsPerPage = seed.params.perPage;
+    this.#currentHitsPage = seed.params.hitsPage;
+    this.#currentWorksPage = seed.params.worksPage;
+
+    if (seed.genres) {
+      this.#browseGenres = seed.genres;
+      this.#isLoadingGenres = false;
+    }
+
+    if (isBrowseState(this.#urlState)) {
+      this.#hits = [];
+      this.#works = [];
+      this.#totalHits = 0;
+      this.#totalWorks = 0;
+      this.#hasSearched = false;
+    } else if (seed.results) {
+      this.#hits = seed.results.hits.map(normalizeHit);
+      this.#works = seed.results.works;
+      this.#totalHits = seed.results.totalHits;
+      this.#totalWorks = seed.results.totalWorks;
+      this.#hasSearched = true;
+      this.#isLoading = false;
+    }
+    // A searching URL whose seed carries no results (Algolia was slow or down
+    // on the server) is left for the browser: init()/syncFromUrl() run the
+    // search as they always did.
+  }
+
+  /** Whether the server answered the search the current URL names. */
+  get #seededForCurrentUrl(): boolean {
+    const seed = this.#source();
+    return !!seed && seed.key === this.#seedKey && seed.key === this.#url.current.search && (isBrowseState(this.#urlState) || !!seed.results);
   }
 
   /* ── Reads ─────────────────────────────────────────────────────────────── */
@@ -457,15 +460,27 @@ export class SearchPageBloc {
     return this.#showAllGenres;
   }
 
-  /** The chips on screen: the busiest genres first, the rest behind "+N more". */
+  /**
+   * The chips on screen: the busiest genres first, the rest behind "+N more".
+   * The selected genre is always among them. A navigation rebuilds the strip
+   * from the server's seed, and a filter the visitor just chose from behind
+   * "+N more" must not vanish back behind it.
+   */
   get visibleGenres(): GenreFacet[] {
-    return this.#showAllGenres
-      ? this.#browseGenres
-      : this.#browseGenres.slice(0, INITIAL_GENRE_COUNT);
+    if (this.#showAllGenres) return this.#browseGenres;
+    const head = this.#browseGenres.slice(0, INITIAL_GENRE_COUNT);
+    const selected = this.#urlState.genre;
+    if (!selected || head.some((g) => g.name === selected)) return head;
+    const chosen = this.#browseGenres.find((g) => g.name === selected);
+    return chosen ? [...head, chosen] : head;
   }
 
+  /** How many "+N more" would reveal. Unchanged by the reveal itself: the view drops the chip on `showAllGenres`. */
   get hiddenGenreCount(): number {
-    return Math.max(0, this.#browseGenres.length - INITIAL_GENRE_COUNT);
+    const head = this.#browseGenres.slice(0, INITIAL_GENRE_COUNT);
+    const selected = this.#urlState.genre;
+    const pinned = selected && !head.some((g) => g.name === selected) && this.#browseGenres.some((g) => g.name === selected) ? 1 : 0;
+    return Math.max(0, this.#browseGenres.length - INITIAL_GENRE_COUNT - pinned);
   }
 
   get hasGenres(): boolean {
@@ -581,6 +596,24 @@ export class SearchPageBloc {
     return this.#userAnimeMap.get(hit?.id) ?? null;
   }
 
+  /**
+   * A link to another page of the current search: what the pagers carry so a
+   * visitor without a script still gets page two. With a script the pager's
+   * click handler takes over and pages in place, as it always has.
+   */
+  hrefForPage(page: number, type: 'hits' | 'works'): string {
+    return searchPageHref(
+      {
+        query: this.#urlState.query,
+        genre: this.#urlState.genre,
+        hitsPage: this.#currentHitsPage,
+        worksPage: this.#currentWorksPage,
+        perPage: this.#hitsPerPage,
+      },
+      type === 'hits' ? { hitsPage: page } : { worksPage: page }
+    );
+  }
+
   /* ── Intents ───────────────────────────────────────────────────────────── */
 
   /**
@@ -594,7 +627,10 @@ export class SearchPageBloc {
     // Not awaited: the list only decorates cards, and blocking the first
     // search on a five-request round trip is the wrong trade.
     void this.#loadUserList();
-    void this.#loadGenres();
+    if (this.#browseGenres.length === 0) void this.#loadGenres();
+
+    // The server already answered this URL: nothing to fetch.
+    if (this.#seededForCurrentUrl) return;
 
     this.#urlState = readSearchUrl(this.#url.current.search);
     this.#draftQuery = this.#urlState.query;
@@ -615,6 +651,13 @@ export class SearchPageBloc {
     if (!this.#initialized) return;
     if (pathname !== this.#pathname) return;
     if (search === this.#lastSeenSearch) return;
+
+    // A navigation that brought the server's answer with it needs no request.
+    const seed = this.#source();
+    if (seed && seed.key === search && seed.key !== this.#seedKey) {
+      this.adoptSeed();
+      if (this.#seededForCurrentUrl) return;
+    }
 
     this.#lastSeenSearch = search;
     const next = readSearchUrl(search);

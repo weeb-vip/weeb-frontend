@@ -139,38 +139,32 @@ describe('the top-rated shelf', () => {
     expect(bloc.topRated).toEqual([]);
   });
 
-  it('is cut to the shelf limit for the breakpoint', () => {
+  it('carries 20 cards whatever the viewport -- the breakpoint cap is PosterGrid CSS', () => {
     const many = Array.from({ length: 40 }, (_, i) => ({ id: `a${i}` }));
 
     expect(makeBloc({ homeData: { topRatedAnime: many } }).bloc.topRated).toHaveLength(20);
     expect(
       makeBloc(
         { homeData: { topRatedAnime: many } },
-        { viewport: { isPhone: readable(false), isTablet: readable(true) } }
-      ).bloc.topRated
-    ).toHaveLength(12);
-    expect(
-      makeBloc(
-        { homeData: { topRatedAnime: many } },
         { viewport: { isPhone: readable(true), isTablet: readable(true) } }
       ).bloc.topRated
-    ).toHaveLength(6);
+    ).toHaveLength(20);
   });
 });
 
 describe('the shelf limit', () => {
   it.each([
-    [false, false, 20],
-    [false, true, 12],
-    [true, false, 6],
-    [true, true, 6]
-  ])('is %o phone / %o tablet -> %i cards', (phone, tablet, expected) => {
+    [false, false],
+    [false, true],
+    [true, false],
+    [true, true]
+  ])('is 20 cards at %o phone / %o tablet; the server cannot know the viewport', (phone, tablet) => {
     const { bloc } = makeBloc(
       {},
       { viewport: { isPhone: readable(phone), isTablet: readable(tablet) } }
     );
 
-    expect(bloc.shelfLimit).toBe(expected);
+    expect(bloc.shelfLimit).toBe(20);
   });
 });
 
@@ -203,7 +197,7 @@ describe('the publishing-works shelf', () => {
         { publishingWorksData: { currentlyPublishingWorks: many } },
         { viewport: { isPhone: readable(true), isTablet: readable(false) } }
       ).bloc.publishingWorks
-    ).toHaveLength(6);
+    ).toHaveLength(20);
   });
 
   it('describes a work by kind and year', () => {
@@ -340,7 +334,7 @@ describe('the season shelf', () => {
       { viewport: { isPhone: readable(true), isTablet: readable(false) } }
     );
 
-    expect(bloc.seasonalAnime).toHaveLength(6);
+    expect(bloc.seasonalAnime).toHaveLength(20);
   });
 });
 

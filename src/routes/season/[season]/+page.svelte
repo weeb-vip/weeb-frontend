@@ -2,7 +2,6 @@
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
-  import { fly } from 'svelte/transition';
   import PosterCard from '$lib/components/cards/PosterCard';
   import PosterGrid from '$lib/components/primitives/PosterGrid';
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton';
@@ -77,7 +76,9 @@
 
   const canonical = $derived(`${SITE_URL}/season/${data.season}`);
   const schemas = $derived([
-    itemListSchema(data.seasonalData?.animeBySeasons, {
+    // Capped: a 500-entry ItemList in <head> sits in front of the body bytes
+    // and the first paint, and search engines take the first entries anyway.
+    itemListSchema(data.seasonalData?.animeBySeasons?.slice(0, 50), {
       name: `${data.displayName} Anime`,
       url: canonical,
       siteUrl: SITE_URL
@@ -203,6 +204,8 @@
                 src={bloc.imageFor(anime)}
                 alt={bloc.titleFor(anime)}
                 className="w-full h-full object-cover"
+                priority={index < 3}
+                cdnWidth={96}
               />
             </div>
             <div class="top-strip-info">
@@ -275,22 +278,23 @@
           : undefined}
       />
     {:else}
+      <!-- No per-card intro: a season is up to 500 cards, and a staggered fly
+           on each one meant 500 transitions rebuilt on every tag toggle. -->
       {#each bloc.filtered as anime, index (anime.id)}
-        <div in:fly={{ y: 15, duration: 200, delay: Math.min(index * 20, 400) }}>
-          <PosterCard
-            id={anime.id}
-            slug={anime.slug}
-            title={bloc.titleFor(anime)}
-            image={bloc.imageFor(anime)}
-            score={bloc.scoreFor(anime)}
-            status={anime.status || null}
-            sub={bloc.subFor(anime)}
-            genres={anime.tags || []}
-            description={anime.description || ''}
-            episodeCount={anime.episodeCount}
-            onList={anime.userAnime?.status || null}
-          />
-        </div>
+        <PosterCard
+          id={anime.id}
+          slug={anime.slug}
+          title={bloc.titleFor(anime)}
+          image={bloc.imageFor(anime)}
+          score={bloc.scoreFor(anime)}
+          status={anime.status || null}
+          sub={bloc.subFor(anime)}
+          genres={anime.tags || []}
+          description={anime.description || ''}
+          episodeCount={anime.episodeCount}
+          onList={anime.userAnime?.status || null}
+          priority={index < 3}
+        />
       {/each}
     {/if}
   </PosterGrid>

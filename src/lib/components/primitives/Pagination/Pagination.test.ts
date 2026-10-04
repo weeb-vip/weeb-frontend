@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
-import { render, screen, within } from '@testing-library/svelte';
+import { render, screen, within, fireEvent } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import Pagination from './Pagination.svelte';
 
@@ -138,5 +138,27 @@ describe('Pagination', () => {
       expect(onPerPageChange).toHaveBeenCalledWith(50);
       expect(onPerPageChange.mock.calls[0][0]).toBeTypeOf('number');
     });
+  });
+});
+
+describe('with hrefs', () => {
+  it('renders Prev/Next as links to the pages, still announced as buttons, and lets the handler take the click', async () => {
+    const onPageChange = vi.fn();
+    render(Pagination, { props: { page: 1, totalPages: 3, onPageChange, hrefFor: (p: number) => `/list?page=${p + 1}` } });
+
+    const next = screen.getByRole('button', { name: 'Next page' });
+    const prev = screen.getByRole('button', { name: 'Previous page' });
+    expect(next).toHaveAttribute('href', '/list?page=3');
+    expect(prev).toHaveAttribute('href', '/list?page=1');
+
+    await fireEvent.click(next);
+    expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  it('keeps a disabled button at the ends rather than a link to nowhere', () => {
+    render(Pagination, { props: { page: 0, totalPages: 1, onPageChange: vi.fn(), hrefFor: (p: number) => `/p/${p}` } });
+
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Previous page' })).not.toHaveAttribute('href');
   });
 });

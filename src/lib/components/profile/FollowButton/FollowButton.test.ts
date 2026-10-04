@@ -138,3 +138,22 @@ describe('FollowButtonBloc', () => {
     expect(bloc.status).toBe('FOLLOWING');
   });
 });
+
+describe("a click before the client store has resolved", () => {
+  it('follows on the server\'s word instead of opening the login modal', async () => {
+    const { bloc, prompt } = makeBloc({ auth: writable({ isLoggedIn: false, isAuthInitialized: false }), serverAuth: { isLoggedIn: true } });
+
+    await bloc.toggle();
+
+    expect(prompt.requireAuth).not.toHaveBeenCalled();
+    expect(bloc.status).not.toBe('NONE');
+  });
+
+  it('still asks to sign in when the server said signed out', async () => {
+    const { bloc, prompt } = makeBloc({ auth: writable({ isLoggedIn: false, isAuthInitialized: false }), serverAuth: { isLoggedIn: false } });
+
+    await bloc.toggle();
+
+    expect(prompt.requireAuth).toHaveBeenCalledTimes(1);
+  });
+});

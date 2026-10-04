@@ -63,6 +63,9 @@
       class="profile-banner-img"
       src={bloc.bannerUrl}
       alt=""
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
       onerror={() => bloc.bannerFailed()}
     />
   {/if}

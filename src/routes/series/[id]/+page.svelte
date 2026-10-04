@@ -5,6 +5,7 @@
   import PosterCard from '$lib/components/cards/PosterCard';
   import PosterGrid from '$lib/components/primitives/PosterGrid';
   import KeyArtStage from '$lib/components/show/KeyArtStage';
+  import { heroSources, heroPhoneSources, heroPreloads, HERO_CDN_WIDTH, HERO_PHONE_CDN_WIDTH } from '$lib/components/home/HeroBanner/hero-art';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner';
   import EmptyState from '$lib/components/primitives/EmptyState';
   import { GetImageFromAnime, seriesHref } from '$lib/services/utils';
@@ -54,9 +55,17 @@
       { name: data.seriesTitle, url: canonical }
     ])
   ]);
+  const heroHints = $derived(heroPreloads(bloc?.anchorImageId ?? null));
 </script>
 
 <Seo title={data.seriesTitle} description={data.seriesDescription} image={data.seriesImage} />
+
+<svelte:head>
+  <!-- One hint per viewport, naming the URL KeyArtStage requests for it. -->
+  {#each heroHints as hint (hint.href)}
+    <link rel="preload" as="image" href={hint.href} media={hint.media} fetchpriority="high" />
+  {/each}
+</svelte:head>
 <StructuredData {schemas} />
 
 <div class="series-page">
@@ -69,7 +78,13 @@
          the subject; here the subject is the list, and a full-screen banner
          would push every season below the fold on the one page whose whole job
          is showing them together. -->
-    <KeyArtStage imageId={bloc.anchorImageId} minHeight="clamp(300px, 46svh, 520px)">
+    <KeyArtStage
+      sources={bloc.anchorImageId ? heroSources(bloc.anchorImageId) : []}
+      phoneSources={bloc.anchorImageId ? heroPhoneSources(bloc.anchorImageId) : []}
+      cdnWidth={HERO_CDN_WIDTH}
+      phoneCdnWidth={HERO_PHONE_CDN_WIDTH}
+      minHeight="clamp(300px, 46svh, 520px)"
+    >
       <header class="page-header">
         <p class="page-eyebrow">Series</p>
         <h1 class="page-title">{bloc.seriesTitle}</h1>

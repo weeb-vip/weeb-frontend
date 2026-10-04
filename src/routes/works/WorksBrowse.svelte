@@ -102,7 +102,7 @@
       />
     {:else}
       <PosterGrid>
-        {#each bloc.pageWorks as work (work.id)}
+        {#each bloc.pageWorks as work, index (work.id)}
           <PosterCard
             id={work.id ?? ''}
             title={work.titleEn || work.titleJp || ''}
@@ -111,6 +111,7 @@
             score={work.score}
             sub={bloc.subtitleFor(work)}
             href={bloc.hrefForWork(work)}
+            priority={index < 6}
           />
         {/each}
       </PosterGrid>
@@ -143,15 +144,15 @@
   </section>
 {:else if bloc.mode === 'shelves'}
   <!-- Shelf view: the three sorts, each a section. -->
-  {#each bloc.shelves as shelf (shelf.sort)}
+  {#each bloc.shelves as shelf, shelfIndex (shelf.sort)}
     <section class="section">
       <SectionHeader
         title={shelf.label}
         href="{bloc.basePath}?sort={shelf.sort}"
         linkText="See all →"
       />
-      <PosterGrid>
-        {#each shelf.works as work (work.id)}
+      <PosterGrid shelf={true}>
+        {#each shelf.works as work, index (work.id)}
           <PosterCard
             id={work.id ?? ''}
             title={work.titleEn || work.titleJp || ''}
@@ -160,6 +161,7 @@
             score={work.score}
             sub={bloc.subtitleFor(work)}
             href={bloc.hrefForWork(work)}
+            priority={shelfIndex === 0 && index < 6}
           />
         {/each}
       </PosterGrid>

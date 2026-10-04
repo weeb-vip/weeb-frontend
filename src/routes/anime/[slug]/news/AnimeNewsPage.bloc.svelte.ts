@@ -148,8 +148,17 @@ export class AnimeNewsPageBloc {
 
   /* ── Gate ──────────────────────────────────────────────────────────────── */
 
+  /**
+   * Shown unless the flag has resolved as off. The flag is client-only, so on
+   * the server (and therefore in the cached HTML, and in the first client
+   * render) it is simply unknown -- and unknown used to mean hidden, which
+   * left every visitor staring at a bare hero for up to six seconds of
+   * polling, and crawlers forever. The stories are already in the payload;
+   * the flag's job is to hide them when someone has turned it off, which it
+   * still does the moment it says so.
+   */
   get newsEnabled(): boolean {
-    return this.#enabled;
+    return this.#resolved ? this.#enabled : true;
   }
 
   /** False only while PostHog still owes us an answer. */
@@ -321,7 +330,21 @@ export class AnimeNewsPageBloc {
     this.#navigate({ page });
   }
 
+  /** The address of a category view, for a chip that is a real link. */
+  categoryHref(category: string | null): string {
+    return this.#target({ category });
+  }
+
+  /** The address of a page, for a pager that works without a script. */
+  pageHref(page: number): string {
+    return this.#target({ page });
+  }
+
   #navigate(params: { category?: string | null; page?: number | null }): void {
+    this.#route.replace(this.#target(params));
+  }
+
+  #target(params: { category?: string | null; page?: number | null }): string {
     const current = this.#url.current ?? { pathname: '', search: '' };
     const search = new URLSearchParams(current.search);
 
@@ -339,6 +362,6 @@ export class AnimeNewsPageBloc {
     }
 
     const query = search.toString();
-    this.#route.replace(`${current.pathname}${query ? `?${query}` : ''}`);
+    return `${current.pathname}${query ? `?${query}` : ''}`;
   }
 }

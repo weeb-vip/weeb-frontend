@@ -4,6 +4,7 @@
   import ProfileAvatar from '$lib/components/profile/ProfileAvatar';
   import Button from '$lib/components/primitives/Button';
   import { UserProfileWrapperBloc } from './UserProfileWrapper.bloc.svelte';
+  import { serverAuthFromContext } from '$lib/stores/server-auth';
 
   let {
     isMobile = false,
@@ -18,7 +19,8 @@
   // Built here, in the init body, and not as a prop default: the real bloc
   // calls createQuery, and the QueryClient is only reachable from Svelte
   // context during component initialisation.
-  const bloc = untrack(() => injected) ?? new UserProfileWrapperBloc();
+  // The layout's per-request auth answer, read here during init where context is reachable.
+  const bloc = untrack(() => injected) ?? new UserProfileWrapperBloc({ serverAuth: serverAuthFromContext() });
 
   function handleMobileProfileClick() {
     bloc.openDrawer();

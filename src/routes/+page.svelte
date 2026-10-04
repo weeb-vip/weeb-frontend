@@ -106,7 +106,7 @@
   {#if bloc.myAiring.length > 0}
     <section class="section">
       <SectionHeader title="Airing from your list" href="/profile/anime" linkText="Your list →" />
-      <PosterGrid>
+      <PosterGrid shelf={true}>
         {#each bloc.myAiring as entry (entry.anime.id)}
           <!-- status comes off airingInfo: the anime object is rebuilt field by
                field in the bloc and drops animeStatus, while airingInfo spreads
@@ -158,7 +158,7 @@
         />
       </div>
     </div>
-    <PosterGrid>
+    <PosterGrid shelf={true}>
       {#if bloc.isSeasonLoading}
         {#each Array(12) as _, index (index)}
           <PosterCardSkeleton />
@@ -187,7 +187,7 @@
   {#if bloc.hasTopRated}
     <section class="section">
       <SectionHeader title="Top Rated" href="/search" linkText="See all →" />
-      <PosterGrid>
+      <PosterGrid shelf={true}>
         {#each bloc.topRated as anime (anime.id)}
           <PosterCard
             id={anime.id}
@@ -211,7 +211,7 @@
   {#if bloc.publishingWorks.length > 0}
     <section class="section">
       <SectionHeader title="Still Publishing" />
-      <PosterGrid>
+      <PosterGrid shelf={true}>
         {#each bloc.publishingWorks as work (work.id)}
           <PosterCard
             id={work.id}

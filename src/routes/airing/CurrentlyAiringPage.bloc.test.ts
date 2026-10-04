@@ -1055,3 +1055,43 @@ describe('the shared clock', () => {
     expect(reads).toBe(afterOneTick);
   });
 });
+
+describe('the clock and the schedule', () => {
+  it('keeps the schedule stable across ticks -- only countdowns move', () => {
+    vi.useFakeTimers();
+    let at = NOW;
+    const bloc = loaded([show('a', [{ episodeNumber: 1, airTime: LATE_NIGHT_JST }])], {
+      clock: () => at,
+    });
+    const stop = bloc.init();
+    const before = bloc.entries;
+    const groupsBefore = bloc.scheduleDays;
+    const countdownBefore = bloc.countdownFor(before[0]).text;
+
+    // Two hours later, same day: the countdown reads differently, but the
+    // entries and the day groups are the same objects, so no card re-renders.
+    at = new Date(NOW.getTime() + 2 * 60 * 60 * 1000);
+    vi.advanceTimersByTime(30_000);
+
+    expect(bloc.entries).toBe(before);
+    expect(bloc.scheduleDays[0]).toBe(groupsBefore[0]);
+    expect(bloc.countdownFor(bloc.entries[0]).text).not.toBe(countdownBefore);
+    stop();
+  });
+
+  it('moves the schedule on when the day turns', () => {
+    vi.useFakeTimers();
+    let at = NOW;
+    const bloc = loaded([show('a', [{ episodeNumber: 1, airTime: LATE_NIGHT_JST }])], {
+      clock: () => at,
+    });
+    const stop = bloc.init();
+    const before = bloc.entries;
+
+    at = new Date(NOW.getTime() + 36 * 60 * 60 * 1000);
+    vi.advanceTimersByTime(30_000);
+
+    expect(bloc.entries).not.toBe(before);
+    stop();
+  });
+});

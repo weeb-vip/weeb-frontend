@@ -1,4 +1,5 @@
 import { createQuery, type QueryClient, type QueryObserverResult } from '@tanstack/svelte-query';
+import { resizeCdnUrl } from '$lib/utils/image';
 import { fromStore } from 'svelte/store';
 import { format } from 'date-fns';
 import {
@@ -192,7 +193,7 @@ export class ProfilePageBloc {
   get bannerUrl(): string | null {
     const name = this.user?.bannerImageUrl;
     if (!name || this.#bannerFailed) return null;
-    return `${this.#config.cdnUserUrl()}/${name}`;
+    return resizeCdnUrl(`${this.#config.cdnUserUrl()}/${name}`, 1600);
   }
 
   get isUploadOpen(): boolean {

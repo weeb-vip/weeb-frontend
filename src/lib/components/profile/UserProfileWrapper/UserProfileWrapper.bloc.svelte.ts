@@ -3,6 +3,7 @@ import { createQuery } from '@tanstack/svelte-query';
 import { loggedInStore } from '$lib/stores/auth';
 import { userQueryOptions } from '$lib/services/query-hooks';
 import { openMobileDrawer } from '$lib/stores/mobileDrawer';
+import { resolveLoggedIn, type ClientAuthState, type ServerAuth } from '$lib/stores/server-auth';
 
 /** The shape the profile surfaces render. Only these fields are ever read. */
 export interface ProfileUser {
@@ -14,8 +15,8 @@ export interface ProfileUser {
   profileImageUrl?: string | null;
 }
 
-/** Just "is someone signed in" -- the store carries more, none of it used here. */
-export type AuthPort = Readable<{ isLoggedIn: boolean }>;
+/** "Is someone signed in", and whether the store has resolved that yet. */
+export type AuthPort = Readable<ClientAuthState>;
 
 /**
  * The three flags a TanStack query result contributes. Narrowed to this so a
@@ -79,6 +80,8 @@ export function fallbackUserFor(isLoggedIn: boolean, hasError: boolean): Profile
 
 export interface UserProfileWrapperDeps {
   auth?: AuthPort;
+  /** The server's answer, believed until `auth` has resolved. */
+  serverAuth?: ServerAuth | null;
   userQuery?: UserQueryPort;
   drawer?: DrawerPort;
   prompt?: AuthPromptPort;
@@ -89,13 +92,15 @@ export interface UserProfileWrapperDeps {
  * intents behind them.
  */
 export class UserProfileWrapperBloc {
-  readonly #auth: { current: { isLoggedIn: boolean } };
+  readonly #auth: { current: ClientAuthState };
+  readonly #serverAuth: ServerAuth | null;
   readonly #query: { current: { data?: ProfileUser | null; isLoading?: boolean; isError?: boolean } };
   readonly #drawer: DrawerPort;
   readonly #prompt: AuthPromptPort;
 
   constructor({
     auth = loggedInStore,
+    serverAuth = null,
     // Evaluated only when no stub is supplied, so a story never reaches for a
     // QueryClient that is not there.
     userQuery = createUserQuery(),
@@ -103,17 +108,31 @@ export class UserProfileWrapperBloc {
     prompt = realAuthPrompt
   }: UserProfileWrapperDeps = {}) {
     this.#auth = fromStore(auth);
+    this.#serverAuth = serverAuth;
     this.#query = fromStore(userQuery);
     this.#drawer = drawer;
     this.#prompt = prompt;
   }
 
   get isLoggedIn(): boolean {
-    return this.#auth.current?.isLoggedIn ?? false;
+    const state = this.#auth.current;
+    if (!state) return this.#serverAuth?.isLoggedIn ?? false;
+    return resolveLoggedIn(state, this.#serverAuth);
   }
 
+  /** Signed in on the server's word alone; the store has not caught up yet. */
+  get #awaitingStore(): boolean {
+    return this.#auth.current?.isAuthInitialized === false && Boolean(this.#serverAuth?.isLoggedIn);
+  }
+
+  /**
+   * Loading covers the server render too: the server knows the visitor is
+   * signed in but has no user details, so the HTML carries the pulsing
+   * placeholder the client then fills, instead of Login/Register buttons that
+   * flip to an avatar after hydration.
+   */
   get isLoading(): boolean {
-    return this.isLoggedIn && Boolean(this.#query.current?.isLoading);
+    return this.isLoggedIn && (Boolean(this.#query.current?.isLoading) || (this.#awaitingStore && !this.#query.current?.data));
   }
 
   get hasError(): boolean {

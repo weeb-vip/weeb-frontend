@@ -301,13 +301,15 @@ export class ShowContentBloc {
 
   readonly #sections = $derived.by(() =>
     sectionTabs({
-      newsEnabled: this.#newsEnabled,
+      newsEnabled: this.newsEnabled,
       newsCount: this.#resolved.anime?.news?.length ?? 0,
       episodeCount: this.#resolved.anime?.episodes?.length ?? 0,
     }),
   );
 
   #newsEnabled = $state(false);
+  /** The flag has answered -- on, or off after the poll gave up. */
+  #newsResolved = $state(false);
   #activeSection = $state<string>(SYNOPSIS);
   #stickyVisible = $state(false);
   #stickyHeight = $state(0);
@@ -345,6 +347,7 @@ export class ShowContentBloc {
     this.#flagPollMs = flagPollMs;
     this.#flagMaxTries = flagMaxTries;
     this.#newsEnabled = flags.isEnabled(NEWS_FLAG);
+    this.#newsResolved = this.#newsEnabled;
 
     this.#prefs = fromStore(preferences);
     this.#notifications = fromStore(notifications);
@@ -438,13 +441,26 @@ export class ShowContentBloc {
    * again — so re-ask briefly until it resolves.
    */
   #watchNewsFlag(): () => void {
-    if (this.#newsEnabled) return () => {};
+    if (this.#newsResolved) return () => {};
     let tries = 0;
     const timer = setInterval(() => {
       this.#newsEnabled = this.#flags.isEnabled(NEWS_FLAG);
-      if (this.#newsEnabled || ++tries >= this.#flagMaxTries) clearInterval(timer);
+      if (this.#newsEnabled || ++tries >= this.#flagMaxTries) {
+        this.#newsResolved = true;
+        clearInterval(timer);
+      }
     }, this.#flagPollMs);
     return () => clearInterval(timer);
+  }
+
+  /**
+   * The news row shows unless the flag has resolved as off. The flag is
+   * client-only, so the server (and the cached HTML, and the first client
+   * render) never knows it; unknown used to mean hidden, which cut the row
+   * out of every server render. The flag still hides it the moment it says so.
+   */
+  get newsEnabled(): boolean {
+    return this.#newsResolved ? this.#newsEnabled : true;
   }
 
   /** Re-reads the scroll position: which section is in view, and whether the compact header shows. */
@@ -562,9 +578,6 @@ export class ShowContentBloc {
 
   // ── Sections ──────────────────────────────────────────────
 
-  get newsEnabled(): boolean {
-    return this.#newsEnabled;
-  }
 
   get news(): any[] {
     return this.#newsEnabled ? (this.anime?.news ?? []) : [];

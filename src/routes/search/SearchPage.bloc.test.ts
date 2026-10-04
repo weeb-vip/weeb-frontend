@@ -7,7 +7,9 @@ import {
   type CatalogSearchRequest,
   type CatalogSearchResponse,
   type RoutePort,
+  type SearchPageSeed,
 } from './SearchPage.bloc.svelte';
+import { readSearchParams } from './search.logic';
 import type { GenreFacet } from './SearchPage.results';
 
 /**
@@ -57,6 +59,8 @@ function deferred<T>() {
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 interface SetupOptions {
+  /** What +page.server.ts answered, as a getter so a test can swap it. */
+  source?: () => SearchPageSeed | null;
   /** The search string the URL starts on. */
   search?: string;
   /** The pathname the URL starts on. */
@@ -101,6 +105,7 @@ function setup(options: SetupOptions = {}) {
     userList: { load },
     route,
     pathname: options.blocPathname ?? '/search',
+    source: options.source,
   });
 
   return {
@@ -894,6 +899,17 @@ describe('the genre strip', () => {
     return harness;
   }
 
+  it('keeps the selected genre on screen even when it sits behind "+N more"', async () => {
+    const harness = setup({ search: '?genre=Genre 20', genres: async () => genreList(30) });
+    await harness.bloc.init();
+    await vi.waitFor(() => expect(harness.bloc.isLoadingGenres).toBe(false));
+
+    const names = harness.bloc.visibleGenres.map((g) => g.name);
+    expect(names).toHaveLength(INITIAL_GENRE_COUNT + 1);
+    expect(names).toContain('Genre 20');
+    expect(harness.bloc.hiddenGenreCount).toBe(30 - INITIAL_GENRE_COUNT - 1);
+  });
+
   it('shows nothing and hides nothing when the facet came back empty', async () => {
     const { bloc } = await withGenres(0);
 
@@ -1133,5 +1149,110 @@ describe('yearSelectOptions', () => {
 
     expect(bloc.yearSelectOptions[0]).toEqual({ value: '', label: 'All years' });
     expect(bloc.yearSelectOptions.length).toBeGreaterThan(1);
+  });
+});
+
+/* ── The server's answer ─────────────────────────────────────────────────── */
+
+function seedFor(search: string, partial: Partial<SearchPageSeed> = {}): SearchPageSeed {
+  return {
+    key: search,
+    params: readSearchParams(search),
+    results: response({ hits: [hit('s1'), hit('s2')], totalHits: 2 }),
+    genres: genreList(3),
+    ...partial,
+  };
+}
+
+describe('the server seed', () => {
+  it('renders the results and the genre strip before init(), for the server', () => {
+    const { bloc } = setup({ search: '?query=naruto', source: () => seedFor('?query=naruto') });
+
+    expect(bloc.phase).toBe('results');
+    expect(bloc.results.map((h) => h.id)).toEqual(['s1', 's2']);
+    expect(bloc.committedQuery).toBe('naruto');
+    expect(bloc.draftQuery).toBe('naruto');
+    expect(bloc.isLoadingGenres).toBe(false);
+    expect(bloc.visibleGenres).toHaveLength(3);
+  });
+
+  it('does not search or fetch genres again at init() when the server already answered', async () => {
+    const { bloc, search, genreFacets, load } = setup({ search: '?query=naruto', source: () => seedFor('?query=naruto') });
+
+    await bloc.init();
+
+    expect(search).not.toHaveBeenCalled();
+    expect(genreFacets).not.toHaveBeenCalled();
+    // The viewer's list still decorates the cards.
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('seeds the paging the URL asked for', () => {
+    const { bloc } = setup({ search: '?query=naruto&page=3&perPage=48', source: () => seedFor('?query=naruto&page=3&perPage=48') });
+
+    expect(bloc.hitsPage).toBe(2);
+    expect(bloc.hitsPerPage).toBe(48);
+  });
+
+  it('keeps the browse state when the URL names no search, with the strip ready', async () => {
+    const { bloc, search } = setup({ search: '', source: () => seedFor('', { results: null }) });
+
+    expect(bloc.phase).toBe('browse');
+    await bloc.init();
+    expect(search).not.toHaveBeenCalled();
+  });
+
+  it('searches from the browser when the server could not answer', async () => {
+    const { bloc, search } = setup({
+      search: '?query=naruto',
+      source: () => seedFor('?query=naruto', { results: null, genres: null }),
+      respond: async () => response({ hits: [hit('c1')], totalHits: 1 }),
+    });
+
+    expect(bloc.phase).toBe('browse');
+    await bloc.init();
+
+    expect(search).toHaveBeenCalledTimes(1);
+    expect(bloc.phase).toBe('results');
+  });
+
+  it('ignores a seed for a URL other than the one on screen', () => {
+    const { bloc } = setup({ search: '?query=bleach', source: () => seedFor('?query=naruto') });
+
+    expect(bloc.phase).toBe('browse');
+    expect(bloc.committedQuery).toBe('');
+  });
+
+  it('adopts the seed a navigation brings instead of searching again', async () => {
+    let seed = seedFor('?query=naruto');
+    const { bloc, search, navigate } = setup({ search: '?query=naruto', source: () => seed });
+    await bloc.init();
+
+    seed = seedFor('?query=bleach', { results: response({ hits: [hit('b1')], totalHits: 1 }) });
+    navigate({ search: '?query=bleach' });
+    bloc.syncFromUrl();
+
+    expect(search).not.toHaveBeenCalled();
+    expect(bloc.committedQuery).toBe('bleach');
+    expect(bloc.results.map((h) => h.id)).toEqual(['b1']);
+  });
+
+  it('is adopted once: calling adoptSeed() again changes nothing', async () => {
+    const seed = seedFor('?query=naruto');
+    const { bloc } = setup({ search: '?query=naruto', source: () => seed });
+    bloc.draftQuery = 'typed since';
+
+    bloc.adoptSeed();
+
+    expect(bloc.draftQuery).toBe('typed since');
+  });
+});
+
+describe('page links', () => {
+  it('names the next page of the same search, so a pager works without a script', async () => {
+    const { bloc } = await searched({ hits: [hit('a')], totalHits: 100 }, '?query=naruto&genre=Action');
+
+    expect(bloc.hrefForPage(1, 'hits')).toBe('/search?query=naruto&genre=Action&page=2');
+    expect(bloc.hrefForPage(2, 'works')).toBe('/search?query=naruto&genre=Action&wpage=3');
   });
 });

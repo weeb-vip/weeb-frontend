@@ -3,6 +3,7 @@
   import StructuredData from '$lib/StructuredData.svelte';
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
   import ChipGroup from '$lib/components/primitives/ChipGroup';
+  import Chip from '$lib/components/primitives/Chip';
   import EmptyState from '$lib/components/primitives/EmptyState';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner';
   import Skeleton from '$lib/components/primitives/Skeleton';
@@ -84,14 +85,12 @@
       </div>
 
       <div class="page-header-controls">
-        <ChipGroup
-          items={VIEWS}
-          value={bloc.view}
-          onSelect={(value) => bloc.selectView(value)}
-          nowrap
-          ariaLabel="Schedule or calendar"
-          itemContent={viewIcon}
-        />
+        <!-- Two pages, so two links: the switch works before hydration and
+             without a script, and each view has an address of its own. -->
+        <nav class="view-switch" aria-label="Schedule or calendar">
+          <Chip href="/airing" selected={true} ariaCurrent="page">{@render viewIcon(VIEWS[0])}</Chip>
+          <Chip href="/airing/calendar">{@render viewIcon(VIEWS[1])}</Chip>
+        </nav>
 
         <!-- `Select`, not a native <select>: this one sits in a dark filter bar
              and dropped a white OS menu out of it. -->
@@ -160,7 +159,7 @@
       {:else if bloc.scheduleDays.length === 0}
         <EmptyState heading="Nothing scheduled" message="No upcoming airing anime found." />
       {:else}
-        {#each bloc.scheduleDays as group (group.id)}
+        {#each bloc.scheduleDays as group, dayIndex (group.id)}
           {@const collapsed = bloc.isCollapsed(group.id)}
           <div class="day-section" class:collapsed data-day-group={group.id}>
             <button
@@ -185,23 +184,29 @@
 
             {#if !collapsed}
               <div class="day-cards">
-                {#each group.entries as entry (entry.id)}
+                {#each group.entries as entry, entryIndex (entry.id)}
                   {@const countdown = bloc.countdownFor(entry)}
                   {@const title = bloc.titleFor(entry)}
+                  {@const aboveFold = dayIndex === 0 && entryIndex < 4}
+                  <!-- The card is a plain link (the router handles the click);
+                       the add button sits beside it rather than inside it,
+                       because a <button> inside an <a> is invalid content and
+                       the browser is free to split it out. -->
+                  <div class="show-card-wrap">
                   <a
                     href={bloc.hrefFor(entry)}
                     class="show-card"
                     data-anime-id={entry.airingInfo.id}
-                    onclick={(event) => {
-                      event.preventDefault();
-                      bloc.open(entry);
-                    }}
                   >
                     <div class="show-poster">
                       <img
                         src={bloc.imageFor(entry, 160)}
                         alt={title}
-                        loading="lazy"
+                        width="50"
+                        height="70"
+                        loading={aboveFold ? 'eager' : 'lazy'}
+                        fetchpriority={aboveFold ? 'high' : 'auto'}
+                        decoding="async"
                         onerror={(event) => {
                           (event.currentTarget as HTMLImageElement).style.display = 'none';
                         }}
@@ -220,22 +225,19 @@
                         {countdown.text}
                       </span>
                     </div>
+                  </a>
                     {#if !bloc.isOnList(entry)}
                       <button
                         type="button"
                         class="show-add-btn"
                         title="Add to list"
                         aria-label="Add to list"
-                        onclick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          bloc.addToList(entry);
-                        }}
+                        onclick={() => bloc.addToList(entry)}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                       </button>
                     {/if}
-                  </a>
+                  </div>
                 {/each}
               </div>
             {/if}
@@ -576,6 +578,17 @@
   .day-cards::-webkit-scrollbar-track { background: transparent; }
   .day-cards::-webkit-scrollbar-thumb { background: var(--weeb-border); border-radius: 2px; }
 
+  /* The add button anchors to the wrap, not the link, now that it is a sibling. */
+  .show-card-wrap {
+    position: relative;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+  .view-switch {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
   .show-card {
     position: relative;
     flex-shrink: 0;

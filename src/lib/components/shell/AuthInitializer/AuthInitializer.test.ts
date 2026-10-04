@@ -104,6 +104,25 @@ describe('AuthInitializerBloc', () => {
       expect(session.setAuthInitialized).toHaveBeenCalledTimes(1);
     });
 
+    it('marks the session signed in before the analytics fetch resolves', async () => {
+      let release: () => void = () => {};
+      const users = { fetch: vi.fn(() => new Promise<typeof USER>((resolve) => { release = () => resolve(USER); })) };
+      const { bloc, session } = ports({ users });
+
+      bloc.start(ssr());
+      await Promise.resolve();
+
+      // Everything gated on the store (header, bell, feed, follow buttons) is
+      // waiting on this; the fetch below exists only to identify the user.
+      expect(session.setLoggedIn).toHaveBeenCalledWith();
+      expect(session.setLoggedIn).toHaveBeenCalledTimes(1);
+
+      release();
+      await settle();
+      expect(session.setLoggedIn).toHaveBeenLastCalledWith({ id: 'u1', username: 'ada', email: 'ada@example.com' });
+      expect(session.setAuthInitialized).toHaveBeenCalledTimes(1);
+    });
+
     it('keeps the session when the analytics fetch fails', async () => {
       const { bloc, session } = ports({
         users: { fetch: vi.fn(async () => Promise.reject(new Error('gateway down'))) }

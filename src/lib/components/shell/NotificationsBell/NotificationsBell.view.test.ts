@@ -44,3 +44,17 @@ describe('NotificationsBell', () => {
     expect(markAllRead).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("rendered on the server's word", () => {
+  it('draws the bell before the client store has resolved', () => {
+    const bloc = new NotificationsBellBloc({
+      port: { unreadCount: () => ({ queryKey: ['unread-notification-count'], queryFn: async () => 0 }), list: () => ({ queryKey: ['notifications'], queryFn: async () => ({ total: 0, notifications: [] }) }), markAllRead: async () => true },
+      auth: writable({ isLoggedIn: false, isAuthInitialized: false }),
+      serverAuth: { isLoggedIn: true },
+      queryClient: new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } }),
+      pollMs: 100_000,
+    });
+    render(NotificationsBell, { props: { bloc } });
+    expect(screen.getByRole('button', { name: 'Notifications' })).toBeInTheDocument();
+  });
+});

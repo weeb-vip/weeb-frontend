@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { animate, stagger } from 'motion';
   import AutocompleteItem from '$lib/components/shell/AutocompleteItem';
   import EmptyState from '$lib/components/primitives/EmptyState';
   import { clickOutside } from '$lib/actions/clickOutside';
@@ -15,8 +14,8 @@
 
   let desktopInputRef = $state<HTMLInputElement | null>(null);
   let mobileInputRef = $state<HTMLInputElement | null>(null);
-  let desktopFormRef = $state<HTMLDivElement | null>(null);
-  let mobileFormRef = $state<HTMLDivElement | null>(null);
+  let desktopFormRef = $state<HTMLFormElement | null>(null);
+  let mobileFormRef = $state<HTMLFormElement | null>(null);
   let desktopPanelRef = $state<HTMLDivElement | null>(null);
   let mobilePanelRef = $state<HTMLDivElement | null>(null);
 
@@ -25,14 +24,24 @@
   // user's typing.
   let text = $state('');
 
-  onMount(() => {
-    bloc.init();
+  // No connect at mount: the backend is reached for on first focus or
+  // keystroke (see the bloc). The form below submits to /search on its own.
+  onMount(() => () => bloc.destroy());
 
-    return () => {
-      bloc.destroy();
-      removeDesktopBackdrop();
-    };
-  });
+  /**
+   * `motion` arrives on first use rather than in the layout bundle: every page
+   * carried it for a spring on a search field most visits never focus.
+   */
+  let motionModule: Promise<typeof import('motion')> | null = null;
+  const motion = () => (motionModule ??= import('motion'));
+  async function play(target: Element | Element[], keyframes: any, options: any): Promise<void> {
+    try {
+      const { animate } = await motion();
+      await animate(target as any, keyframes, options);
+    } catch {
+      // Animations are decoration; a page without them is still a page.
+    }
+  }
 
   /** Whichever of the two panels is actually on screen; both are in the DOM. */
   function visiblePanel(): HTMLElement | null {
@@ -51,61 +60,31 @@
     document.getElementById(`ac-opt-${activeDevice()}-${index}`)?.scrollIntoView({ block: 'nearest' });
   });
 
-  function createDesktopBackdrop() {
-    if (typeof window === 'undefined') return;
-
-    // Remove existing backdrop
-    document.getElementById('desktop-search-backdrop')?.remove();
-
-    // Create backdrop element at body level (outside header constraints)
-    const backdrop = document.createElement('div');
-    backdrop.id = 'desktop-search-backdrop';
-    backdrop.className = 'fixed inset-0 bg-weeb-surface/50 bg-weeb-bg/50 backdrop-blur-sm';
-    backdrop.style.cssText =
-      'z-index: 35; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); opacity: 0;'; // Start invisible
-    backdrop.setAttribute('role', 'presentation');
-    backdrop.addEventListener('click', () => desktopInputRef?.blur());
-
-    document.body.appendChild(backdrop);
-    animate(backdrop, { opacity: [0, 1] }, { duration: 0.3, ease: 'easeOut' });
-  }
-
-  function removeDesktopBackdrop() {
-    if (typeof window === 'undefined') return;
-    const backdrop = document.getElementById('desktop-search-backdrop');
-    if (!backdrop) return;
-    // Animate backdrop out before removing
-    animate(backdrop, { opacity: [1, 0] }, { duration: 0.2, ease: 'easeIn' }).then(() =>
-      backdrop.remove()
-    );
-  }
-
   function animatePanelOut() {
     const panel = visiblePanel();
     if (panel && bloc.isPanelOpen) {
-      animate(panel, { opacity: [1, 0], y: [0, -10] }, { duration: 0.2, ease: 'easeOut' });
+      void play(panel, { opacity: [1, 0], y: [0, -10] }, { duration: 0.2, ease: 'easeOut' });
     }
   }
 
+  // The full-viewport blur that used to be built here on desktop focus is
+  // gone: a backdrop-filter over the whole page on the very tap that focuses
+  // the field was the costliest paint on the site, right inside the
+  // interaction window. The panel's own shadow does the separating.
   function handleFocus() {
     bloc.focus();
-
-    // Create backdrop for desktop only, bypassing header constraints
-    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      createDesktopBackdrop();
-    }
 
     // Animate search input container on focus
     const container = window.innerWidth >= 640 ? desktopFormRef : mobileFormRef;
     if (container) {
-      animate(container, { scale: [1, 1.02, 1] }, { type: 'spring', stiffness: 300, damping: 25 });
+      void play(container, { scale: [1, 1.02, 1] }, { type: 'spring', stiffness: 300, damping: 25 });
     }
 
     // Animate panel opening when results appear
     setTimeout(() => {
       const panel = visiblePanel();
       if (panel && bloc.isPanelOpen) {
-        animate(
+        void play(
           panel,
           { opacity: [0, 1], y: [-10, 0], scale: [0.95, 1] },
           { type: 'spring', stiffness: 400, damping: 30 }
@@ -117,7 +96,24 @@
   function handleBlur() {
     animatePanelOut();
     bloc.blur();
-    removeDesktopBackdrop();
+  }
+
+  /**
+   * The form's own submit: Enter in either field, or a scriptless browser
+   * following `action="/search"`. With a script, a highlighted row wins,
+   * otherwise the typed text becomes a full search via the router -- which
+   * does not need the backend to be connected yet.
+   */
+  function handleSubmit(event: SubmitEvent) {
+    event.preventDefault();
+    const outcome = bloc.submit();
+    if (outcome !== 'submitted') {
+      if (!text.trim()) return;
+      bloc.searchFor(text);
+    }
+    text = '';
+    desktopInputRef?.blur();
+    mobileInputRef?.blur();
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -127,9 +123,10 @@
     if (outcome === 'dismissed') animatePanelOut();
     if (outcome === 'submitted') text = '';
     if (outcome === 'submitted' || outcome === 'dismissed') {
-      removeDesktopBackdrop();
       (event.currentTarget as HTMLInputElement).blur();
     }
+    // An Enter the bloc ignored (nothing highlighted, backend not connected)
+    // falls through to the form's submit, which searches for the text.
   }
 
   function handleSelect(item: unknown) {
@@ -147,17 +144,18 @@
   // milliseconds.
   const RESULTS_STAGGER_BUDGET_S = 0.12;
 
-  function animateResultsIn() {
+  async function animateResultsIn() {
     const panel = visiblePanel();
     const items = panel ? [...panel.querySelectorAll('[data-autocomplete-item]')] : [];
-    if (items.length === 0 || typeof animate !== 'function') return;
+    if (items.length === 0) return;
 
     try {
+      const { animate, stagger } = await motion();
       const animationOptions: any = { type: 'spring', stiffness: 300, damping: 25 };
       if (typeof stagger === 'function') {
         animationOptions.delay = stagger(RESULTS_STAGGER_BUDGET_S / items.length);
       }
-      animate(items, { opacity: [0, 1], y: [12, 0] }, animationOptions);
+      animate(items as any, { opacity: [0, 1], y: [12, 0] }, animationOptions);
     } catch (e) {
       // Silently fail - animations are not critical
     }
@@ -188,13 +186,13 @@
 
   // Svelte action for mobile backdrop animation
   function animateBackdrop(node: HTMLElement) {
-    animate(node, { opacity: [0, 1] }, { duration: 0.3, ease: 'easeOut' });
+    void play(node, { opacity: [0, 1] }, { duration: 0.3, ease: 'easeOut' });
 
     return {
       destroy() {
         // Animate out (if still mounted)
         if (node.parentNode) {
-          animate(node, { opacity: [1, 0] }, { duration: 0.2, ease: 'easeIn' });
+          void play(node, { opacity: [1, 0] }, { duration: 0.2, ease: 'easeIn' });
         }
       }
     };
@@ -248,30 +246,21 @@
   {/if}
 {/snippet}
 
-{#if bloc.status === 'loading'}
-  <!-- Loading skeleton -->
-  <div class="ac-skeleton-wrap">
-    <div class="ac-skeleton-pill">
-      <div class="ac-skeleton-bar"></div>
-      <div class="ac-skeleton-spinner"></div>
-    </div>
-  </div>
-{:else if bloc.status === 'unavailable'}
+{#if bloc.status === 'unavailable'}
   <!-- Algolia could not be reached: a plain input that still runs a full
        search, rather than a dead search box. -->
-  <div class="ac-fallback-wrap">
+  <form class="ac-fallback-wrap" method="get" action="/search" role="search" onsubmit={handleSubmit}>
     <input
       type="text"
+      name="query"
       placeholder="Search anime..."
       class="ac-simple-input"
-      onkeydown={(e) => {
-        if (e.key === 'Enter') bloc.searchFor(e.currentTarget.value);
-      }}
+      bind:value={text}
     />
     <svg aria-hidden="true" focusable="false" class="ac-fallback-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
-  </div>
+  </form>
 {:else}
 
   <!-- Mobile backdrop overlay when focused -->
@@ -285,10 +274,16 @@
     ></div>
   {/if}
 
-  <!-- Mobile: nearly full-screen search -->
+  <!-- Mobile: nearly full-screen search. A real form on both shells: the
+       server HTML is a working search box, and Enter before hydration (or
+       with no script at all) is a GET to /search, which renders the results. -->
   <div class="ac-mobile-container" class:ac-mobile-container--focused={bloc.isFocused}>
-    <div
+    <form
       bind:this={mobileFormRef}
+      method="get"
+      action="/search"
+      role="search"
+      onsubmit={handleSubmit}
       class="ac-mobile-form"
       class:ac-mobile-form--open={bloc.isPanelOpen}
       class:ac-mobile-form--focused={bloc.isFocused && !bloc.isPanelOpen}
@@ -305,6 +300,7 @@
       <input
         bind:this={mobileInputRef}
         bind:value={text}
+        name="query"
         class="ac-input ac-input--mobile"
         class:ac-input--panel-open={bloc.isPanelOpen}
         class:ac-input--focused={bloc.isFocused && !bloc.isPanelOpen}
@@ -312,7 +308,7 @@
         onblur={handleBlur}
         onkeydown={handleKeydown}
         oninput={(e) => bloc.input(e.currentTarget.value)}
-        id="search-desktop"
+        id="search-mobile"
         placeholder={bloc.isFocused ? 'Search anime...' : 'Search'}
         aria-label="Search anime"
         role="combobox"
@@ -333,14 +329,18 @@
           {@render panelBody('mobile')}
         </div>
       {/if}
-    </div>
+    </form>
   </div>
 
   <!-- Desktop: floating, always-visible search -->
-  <div
+  <form
     class="ac-desktop-container"
     class:ac-desktop-container--open={bloc.isPanelOpen}
     bind:this={desktopFormRef}
+    method="get"
+    action="/search"
+    role="search"
+    onsubmit={handleSubmit}
     style="transform-origin: center top;"
     use:clickOutside={{
       handler: () => desktopInputRef?.blur(),
@@ -354,6 +354,8 @@
     <input
       bind:this={desktopInputRef}
       bind:value={text}
+      name="query"
+      id="search-desktop"
       class="ac-input ac-input--desktop"
       class:ac-input--panel-open={bloc.isPanelOpen}
       onfocus={handleFocus}
@@ -382,7 +384,7 @@
         </div>
       {/if}
     </div>
-  </div>
+  </form>
 
 {/if}
 
@@ -424,39 +426,6 @@
 
   @keyframes ac-spin {
     to { transform: rotate(360deg); }
-  }
-
-  /* ── Loading skeleton ── */
-  .ac-skeleton-wrap {
-    position: relative;
-  }
-
-  .ac-skeleton-pill {
-    display: flex;
-    align-items: center;
-    height: 38px;
-    padding: 0 16px;
-    border: 1px solid var(--_ac-border);
-    border-radius: 19px;
-    background: var(--_ac-surface-hover);
-    animation: ac-pulse 1.8s ease-in-out infinite;
-  }
-
-  .ac-skeleton-bar {
-    height: 14px;
-    width: 120px;
-    border-radius: 7px;
-    background: var(--_ac-surface-hover);
-  }
-
-  .ac-skeleton-spinner {
-    margin-left: auto;
-    height: 16px;
-    width: 16px;
-    border: 2px solid var(--_ac-border);
-    border-top-color: var(--_ac-fg-muted);
-    border-radius: 50%;
-    animation: ac-spin 0.8s linear infinite;
   }
 
   /* ── Fallback / disabled states ── */

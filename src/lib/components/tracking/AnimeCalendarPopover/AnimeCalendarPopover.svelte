@@ -38,18 +38,21 @@
   });
   const bloc = $derived(injected ?? ownBloc);
 
-  let buttonRef = $state<HTMLButtonElement | undefined>();
-
-  $effect(() => bloc.watchViewport());
-
+  let buttonRef = $state<HTMLAnchorElement | undefined>();
 </script>
 
-<button
+<!-- A link to the show in the HTML: without a script the click navigates;
+     with one it opens the card in place instead. -->
+<a
   bind:this={buttonRef}
-  onclick={() => bloc.togglePopover()}
+  href={bloc.href}
+  onclick={(event) => {
+    event.preventDefault();
+    bloc.togglePopover();
+  }}
   title={bloc.buttonTitle}
   aria-expanded={bloc.isOpen}
-  class="text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col"
+  class="cell-trigger text-xs text-weeb-accent-text text-left hover:bg-weeb-surface-hover bg-weeb-surface px-2 py-1 rounded transition-colors duration-300 w-full flex flex-col"
 >
   <span class="truncate">
     {bloc.title} (Ep {bloc.episodeNumber})
@@ -59,7 +62,7 @@
       {bloc.airTimeText}
     </span>
   {/if}
-</button>
+</a>
 
 {#if bloc.isOpen}
   <!-- Phone backdrop: a bigger target for dismissing than the card's own edge.

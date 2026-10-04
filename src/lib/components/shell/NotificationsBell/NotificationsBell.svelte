@@ -2,8 +2,11 @@
   import ProfileAvatar from '$lib/components/profile/ProfileAvatar';
   import { clickOutside } from '$lib/actions/clickOutside';
   import { NotificationsBellBloc } from './NotificationsBell.bloc.svelte';
+  import { serverAuthFromContext } from '$lib/stores/server-auth';
 
-  let { bloc = new NotificationsBellBloc() }: { bloc?: NotificationsBellBloc } = $props();
+  // Read during init, where the layout's per-request auth context is reachable.
+  const serverAuth = serverAuthFromContext();
+  let { bloc = new NotificationsBellBloc({ serverAuth }) }: { bloc?: NotificationsBellBloc } = $props();
 </script>
 
 {#if bloc.isLoggedIn}

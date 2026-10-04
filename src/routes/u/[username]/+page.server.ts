@@ -76,12 +76,13 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   // The follow side of the page -- counts and how the viewer stands -- is its
   // own query with a fallback: a gateway without the follow API yet answers
   // null, and the page hides the follow UI rather than failing.
-  const followInfoResult: any = await fetcher.fetchWithFallback(
+  // Started here and awaited with the lists below: it is independent of them,
+  // and awaiting it first put a whole round trip in front of the page.
+  const followInfoPromise: Promise<any> = fetcher.fetchWithFallback(
     queryPublicUserFollowInfo,
     { username: user.username },
     'public follow info'
   );
-  const followInfo = followInfoResult?.userByUsername ?? null;
 
   // Recent list activity, from notifications-service. Gated server-side by
   // the same flag; the service also refuses it for a private user. Null when
@@ -124,6 +125,8 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
       workCounts: (workCounts as any)?.PublicUserWorkStatusCounts ?? null
     };
   }
+
+  const followInfo = (await followInfoPromise)?.userByUsername ?? null;
 
   return {
     auth: publicAuth(auth),

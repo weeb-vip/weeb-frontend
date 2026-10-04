@@ -108,11 +108,11 @@ describe('linkableWorks', () => {
 
 describe('shelfLimitFor', () => {
   it('holds six cards on a phone', () => {
-    expect(shelfLimitFor(true, false)).toBe(6);
+    expect(shelfLimitFor(true, false)).toBe(20);
   });
 
   it('holds twelve on a tablet, where a shelf costs more rows than it looks', () => {
-    expect(shelfLimitFor(false, true)).toBe(12);
+    expect(shelfLimitFor(false, true)).toBe(20);
   });
 
   it('holds twenty on the desktop layout', () => {
@@ -120,7 +120,7 @@ describe('shelfLimitFor', () => {
   });
 
   it('lets phone win when both breakpoints somehow answer true', () => {
-    expect(shelfLimitFor(true, true)).toBe(6);
+    expect(shelfLimitFor(true, true)).toBe(20);
   });
 });
 
@@ -307,13 +307,13 @@ describe('shelves', () => {
     expect(bloc.shelves).toEqual([]);
   });
 
-  it('trims each shelf to the breakpoint limit', () => {
+  it('carries 20 cards per shelf whatever the viewport -- the breakpoint cap is PosterGrid CSS', () => {
     const { bloc } = setup(
       { shelves: [{ sort: 'POPULARITY', label: 'Most popular', works: works(40) }] },
       { phone: false, tablet: true },
     );
 
-    expect(bloc.shelves[0].works).toHaveLength(12);
+    expect(bloc.shelves[0].works).toHaveLength(20);
   });
 
   it('drops the unlinkable works before it counts to the limit', () => {
@@ -324,7 +324,7 @@ describe('shelves', () => {
       { phone: true, tablet: false },
     );
 
-    expect(bloc.shelves[0].works).toHaveLength(6);
+    expect(bloc.shelves[0].works).toHaveLength(10);
     expect(bloc.shelves[0].works.every((w) => !!w.urlSlug)).toBe(true);
   });
 
@@ -397,27 +397,19 @@ describe('shelfLimit', () => {
     expect(bloc.shelfLimit).toBe(20);
   });
 
-  it('follows the viewport across a breakpoint', () => {
-    const { bloc, isPhone, isTablet } = setup();
-    expect(bloc.shelfLimit).toBe(20);
-
-    isTablet.set(true);
-    expect(bloc.shelfLimit).toBe(12);
-
-    isTablet.set(false);
-    isPhone.set(true);
-    expect(bloc.shelfLimit).toBe(6);
-  });
-
-  it('reshapes the shelves when the viewport changes under them', () => {
-    const { bloc, isPhone } = setup({
+  it('does not reshape the shelves when the viewport changes under them', () => {
+    // The server cannot know the viewport; slicing on the client removed
+    // cards at hydration. The cap lives in CSS now, so the data holds still.
+    const { bloc, isPhone, isTablet } = setup({
       shelves: [{ sort: 'POPULARITY', label: 'Most popular', works: works(40) }],
     });
     expect(bloc.shelves[0].works).toHaveLength(20);
 
+    isTablet.set(true);
     isPhone.set(true);
 
-    expect(bloc.shelves[0].works).toHaveLength(6);
+    expect(bloc.shelfLimit).toBe(20);
+    expect(bloc.shelves[0].works).toHaveLength(20);
   });
 });
 

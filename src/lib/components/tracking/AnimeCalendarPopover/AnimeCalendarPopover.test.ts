@@ -1,15 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { readable } from 'svelte/store';
+import { readable, writable } from 'svelte/store';
 import type { TitleLanguage } from '$lib/stores/preferences';
 import { stubNeverLoadingImages } from '$lib/components/__tests__/jsdom-gaps';
 import AnimeCalendarPopover from './AnimeCalendarPopover.svelte';
 import {
   AnimeCalendarPopoverBloc,
-  browserMediaQuery,
-  type AnimeCalendarPopoverDeps,
-  type MediaQueryPort
+  type AnimeCalendarPopoverDeps
 } from './AnimeCalendarPopover.bloc.svelte';
 
 const ANIME = {
@@ -23,31 +21,6 @@ const ANIME = {
   episodes: [{ episodeNumber: 12, titleEn: 'Frieren the Slayer', airDate: '2024-03-01T14:30:00Z' }]
 };
 
-/** A media query the test can flip. */
-function media(initial: boolean) {
-  let listener: ((matches: boolean) => void) | null = null;
-  let matches = initial;
-  const port: MediaQueryPort = {
-    matches: () => matches,
-    onChange: (_query, fn) => {
-      listener = fn;
-      return () => {
-        listener = null;
-      };
-    }
-  };
-  return {
-    port,
-    get listening() {
-      return listener !== null;
-    },
-    resizeTo(next: boolean) {
-      matches = next;
-      listener?.(next);
-    }
-  };
-}
-
 function makeBloc(
   anime: unknown = ANIME,
   deps: AnimeCalendarPopoverDeps = {},
@@ -57,7 +30,7 @@ function makeBloc(
     { anime },
     {
       preferences: readable({ titleLanguage: language }),
-      mediaQuery: media(false).port,
+      viewport: readable(false),
       ...deps
     }
   );
@@ -166,59 +139,21 @@ describe('AnimeCalendarPopoverBloc', () => {
   });
 
   describe('the viewport', () => {
-    it('takes the media query’s answer at construction', () => {
-      expect(makeBloc(ANIME, { mediaQuery: media(true).port }).isCompact).toBe(true);
-      expect(makeBloc(ANIME, { mediaQuery: media(false).port }).isCompact).toBe(false);
+    it('is compact exactly when the shared phone store says so', () => {
+      expect(makeBloc(ANIME, { viewport: readable(true) }).isCompact).toBe(true);
+      expect(makeBloc(ANIME, { viewport: readable(false) }).isCompact).toBe(false);
     });
 
-    it('follows a resize across the breakpoint', () => {
-      const screen = media(false);
-      const bloc = makeBloc(ANIME, { mediaQuery: screen.port });
-      bloc.watchViewport();
+    it('follows the store across the breakpoint -- one listener for the whole calendar', () => {
+      const phone = writable(false);
+      const bloc = makeBloc(ANIME, { viewport: phone });
 
-      screen.resizeTo(true);
+      phone.set(true);
       expect(bloc.isCompact).toBe(true);
 
-      screen.resizeTo(false);
+      phone.set(false);
       expect(bloc.isCompact).toBe(false);
     });
-
-    it('hands its teardown back for the view’s effect', () => {
-      const screen = media(false);
-      const bloc = makeBloc(ANIME, { mediaQuery: screen.port });
-
-      const stop = bloc.watchViewport();
-      expect(screen.listening).toBe(true);
-
-      stop();
-      expect(screen.listening).toBe(false);
-    });
-  });
-});
-
-describe('browserMediaQuery', () => {
-  it('asks the browser and answers change events', () => {
-    const listeners: ((e: { matches: boolean }) => void)[] = [];
-    const removeEventListener = vi.fn();
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({
-        matches: true,
-        addEventListener: (_: string, fn: (e: { matches: boolean }) => void) => listeners.push(fn),
-        removeEventListener
-      }))
-    );
-
-    expect(browserMediaQuery.matches('(max-width: 767px)')).toBe(true);
-
-    const listener = vi.fn();
-    const stop = browserMediaQuery.onChange('(max-width: 767px)', listener);
-    listeners[0]({ matches: false });
-    expect(listener).toHaveBeenCalledWith(false);
-
-    stop();
-    expect(removeEventListener).toHaveBeenCalledTimes(1);
-    vi.unstubAllGlobals();
   });
 });
 
@@ -277,19 +212,20 @@ describe('AnimeCalendarPopover', () => {
     const anime = options.anime ?? ANIME;
     const bloc = makeBloc(
       anime,
-      { mediaQuery: media(options.compact ?? false).port },
+      { viewport: readable(options.compact ?? false) },
       options.language ?? 'english'
     );
     const result = render(AnimeCalendarPopover, { props: { anime, bloc, track } });
     return { ...result, track, bloc };
   }
 
-  const cell = () => screen.getByRole('button', { expanded: false }) as HTMLButtonElement;
+  // The trigger is a link to the show that a script turns into an in-place card.
+  const cell = () => document.querySelector('a.cell-trigger') as HTMLAnchorElement;
   const popover = () => document.querySelector('.calendar-popover') as HTMLElement;
 
   async function open(rendered = renderCell()) {
     await userEvent.click(cell());
-    await screen.findByRole('link');
+    await waitFor(() => expect(within(popover()).getByRole('link')).toBeInTheDocument());
     return rendered;
   }
 
@@ -307,7 +243,7 @@ describe('AnimeCalendarPopover', () => {
       const { container } = renderCell();
 
       // The same clock string the tooltip uses, rendered as its own line.
-      const time = container.querySelector('button span:last-child');
+      const time = container.querySelector('a.cell-trigger span:last-child');
       expect(time?.textContent?.trim()).toMatch(/^\d{1,2}:\d{2} (AM|PM)$/);
     });
 
@@ -323,7 +259,7 @@ describe('AnimeCalendarPopover', () => {
       renderCell();
 
       expect(popover()).not.toBeInTheDocument();
-      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+      expect(document.querySelector('.calendar-popover')).toBeNull();
     });
   });
 
@@ -332,13 +268,13 @@ describe('AnimeCalendarPopover', () => {
       await open();
 
       expect(popover()).toBeInTheDocument();
-      expect(screen.getByRole('button', { expanded: true })).toBeInTheDocument();
+      expect(cell()).toHaveAttribute('aria-expanded', 'true');
     });
 
     it('is one link to the show, carrying the title, the tags and the episode', async () => {
       await open();
 
-      const row = screen.getByRole('link');
+      const row = within(popover()).getByRole('link');
       expect(row).toHaveAttribute('href', '/anime/frieren');
       expect(row).toHaveTextContent('Frieren');
       expect(row).toHaveTextContent('Frieren the Slayer');
@@ -348,7 +284,7 @@ describe('AnimeCalendarPopover', () => {
     it('shows the three tags that fit beside the poster, and no more', async () => {
       await open();
 
-      const row = screen.getByRole('link');
+      const row = within(popover()).getByRole('link');
       for (const tag of ['Adventure', 'Fantasy', 'Drama']) {
         expect(within(row).getByText(tag)).toBeInTheDocument();
       }
@@ -364,14 +300,14 @@ describe('AnimeCalendarPopover', () => {
     it('dates the episode', async () => {
       await open();
 
-      expect(screen.getByRole('link')).toHaveTextContent(/\w{3} \w{3} \d+(st|nd|rd|th) at/);
+      expect(within(popover()).getByRole('link')).toHaveTextContent(/\w{3} \w{3} \d+(st|nd|rd|th) at/);
     });
 
     it('reports the view when the row is opened', async () => {
       const track = vi.fn();
       await open(renderCell({ track }));
 
-      await userEvent.click(screen.getByRole('link'));
+      await userEvent.click(within(popover()).getByRole('link'));
 
       expect(track).toHaveBeenCalledWith('a1', 'Frieren');
     });
@@ -424,7 +360,7 @@ describe('AnimeCalendarPopover', () => {
     it('closes when the cell is used a second time', async () => {
       await open();
 
-      await userEvent.click(screen.getByRole('button', { expanded: true }));
+      await userEvent.click(cell());
 
       await waitFor(() => expect(popover()).not.toBeInTheDocument());
     });

@@ -81,8 +81,11 @@ export async function waitForSeasonGrid(page: Page) {
  */
 export async function waitForAuthForm(page: Page) {
   await page.waitForLoadState('domcontentloaded');
-  await page.locator('form').first().waitFor({ state: 'visible', timeout: 15000 });
-  await expect(page.locator('form button[type="submit"]').first()).toBeEnabled({ timeout: 20000 });
+  // Not the first form on the page: the header carries search forms now (one
+  // of them hidden at any given width), so this targets the auth form itself.
+  const form = page.locator('form:not([role="search"])').first();
+  await form.waitFor({ state: 'visible', timeout: 15000 });
+  await expect(form.locator('button[type="submit"]').first()).toBeEnabled({ timeout: 20000 });
 }
 
 /**

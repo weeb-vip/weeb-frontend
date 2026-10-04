@@ -96,3 +96,33 @@ describe('FeedPageBloc', () => {
     expect(bloc.totalPages).toBe(1);
   });
 });
+
+describe("the server's answer, before the client store has resolved", () => {
+  it('renders the feed the loader already fetched instead of "Sign in"', async () => {
+    const bloc = new FeedPageBloc({
+      source: () => ({ ssr: { feed: pageOf(['a', 'b'], 2) } }),
+      port: { page: vi.fn(() => ({ queryKey: ['feed', 1], queryFn: async () => { throw new Error('should not fetch on the server'); } })) },
+      auth: writable({ isLoggedIn: false, isAuthInitialized: false }),
+      serverAuth: { isLoggedIn: true },
+      pageSize: 2,
+      now: () => NOW,
+      queryClient: new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+    });
+    scopes.push(reactiveScope(() => bloc.items));
+    await settle();
+
+    expect(bloc.isLoggedIn).toBe(true);
+    expect(bloc.isLoading).toBe(false);
+    expect(bloc.items.map((i) => i.key)).toEqual(['a', 'b']);
+  });
+
+  it('says signed out when the server did, and when the resolved store does', () => {
+    const make = (auth: any, serverAuth: any) => new FeedPageBloc({
+      port: { page: vi.fn(() => ({ queryKey: ['feed', 1], queryFn: async () => pageOf([], 0) })) },
+      auth, serverAuth, pageSize: 2, now: () => NOW,
+      queryClient: new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+    });
+    expect(make(writable({ isLoggedIn: false, isAuthInitialized: false }), { isLoggedIn: false }).isLoggedIn).toBe(false);
+    expect(make(writable({ isLoggedIn: false, isAuthInitialized: true }), { isLoggedIn: true }).isLoggedIn).toBe(false);
+  });
+});

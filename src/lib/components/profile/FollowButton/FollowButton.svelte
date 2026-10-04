@@ -1,11 +1,14 @@
 <script lang="ts">
   import Button from '$lib/components/primitives/Button';
   import { FollowButtonBloc, type FollowTarget } from './FollowButton.bloc.svelte';
+  import { serverAuthFromContext } from '$lib/stores/server-auth';
 
+  // Read during init, where the layout's per-request auth context is reachable.
+  const serverAuth = serverAuthFromContext();
   let {
     target,
     onFollowerCountChange = () => {},
-    bloc = new FollowButtonBloc({ source: () => target, onFollowerCountChange }),
+    bloc = new FollowButtonBloc({ source: () => target, onFollowerCountChange, serverAuth }),
     className = '',
   }: {
     target: FollowTarget;

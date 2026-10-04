@@ -2,31 +2,16 @@ import { format } from 'date-fns';
 import { fromStore, type Readable } from 'svelte/store';
 import { getAnimeTitle, preferencesStore, type TitleLanguage } from '$lib/stores/preferences';
 import { animeHref } from '$lib/services/utils';
+import { isPhone } from '$lib/stores/viewport';
 
 export interface PreferencesPort extends Readable<{ titleLanguage: TitleLanguage }> {}
 
-/**
- * `window.matchMedia`, as the two calls this needs. A port because a story has
- * no viewport to speak of and a unit test has no `window` at all.
+/*
+ * Below the phone breakpoint the popover centres on its cell instead of
+ * hanging off its left edge. The answer comes from the shared `isPhone`
+ * store: a month of entries used to each own a `matchMedia` listener, which
+ * was a few hundred listeners registered in one hydration task.
  */
-export interface MediaQueryPort {
-  matches: (query: string) => boolean;
-  onChange: (query: string, listener: (matches: boolean) => void) => () => void;
-}
-
-export const browserMediaQuery: MediaQueryPort = {
-  matches: (query) => (typeof window === 'undefined' ? false : window.matchMedia(query).matches),
-  onChange: (query, listener) => {
-    if (typeof window === 'undefined') return () => {};
-    const list = window.matchMedia(query);
-    const handler = (event: MediaQueryListEvent) => listener(event.matches);
-    list.addEventListener('change', handler);
-    return () => list.removeEventListener('change', handler);
-  }
-};
-
-/** Below this the popover centres on its cell instead of hanging off its left edge. */
-const COMPACT_QUERY = '(max-width: 767px)';
 
 /** The props the view feeds in. A getter, so the bloc reads it live. */
 export interface AnimeCalendarPopoverInputs {
@@ -35,7 +20,8 @@ export interface AnimeCalendarPopoverInputs {
 
 export interface AnimeCalendarPopoverDeps {
   preferences?: PreferencesPort;
-  mediaQuery?: MediaQueryPort;
+  /** Phone-width or not; one shared store rather than a listener per entry. */
+  viewport?: Readable<boolean>;
 }
 
 /**
@@ -49,16 +35,14 @@ export interface AnimeCalendarPopoverDeps {
  */
 export class AnimeCalendarPopoverBloc {
   readonly #inputs: AnimeCalendarPopoverInputs;
-  readonly #mediaQuery: MediaQueryPort;
+  readonly #viewport: { readonly current: boolean };
   readonly #prefs: { current: { titleLanguage: TitleLanguage } };
 
   #isOpen = $state(false);
-  #isCompact = $state(false);
 
   constructor(inputs: AnimeCalendarPopoverInputs, deps: AnimeCalendarPopoverDeps = {}) {
     this.#inputs = inputs;
-    this.#mediaQuery = deps.mediaQuery ?? browserMediaQuery;
-    this.#isCompact = this.#mediaQuery.matches(COMPACT_QUERY);
+    this.#viewport = fromStore(deps.viewport ?? isPhone);
     this.#prefs = fromStore(deps.preferences ?? preferencesStore);
   }
 
@@ -86,13 +70,7 @@ export class AnimeCalendarPopoverBloc {
 
   /** Phone-width: the card centres on its cell rather than hanging off its left edge. */
   get isCompact(): boolean {
-    return this.#isCompact;
-  }
-
-  /** Keeps {@link isCompact} true. Call from an effect and return the teardown. */
-  watchViewport(): () => void {
-    this.#isCompact = this.#mediaQuery.matches(COMPACT_QUERY);
-    return this.#mediaQuery.onChange(COMPACT_QUERY, (matches) => (this.#isCompact = matches));
+    return this.#viewport.current;
   }
 
   get title(): string {

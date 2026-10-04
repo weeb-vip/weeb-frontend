@@ -20,11 +20,20 @@
     minHeight = null,
     /** Dim the grid during a refetch, without collapsing it. */
     loading = false,
+    /**
+     * A homepage shelf: show at most 6 cards on a phone and 12 on a tablet.
+     * Done in CSS rather than by slicing the data, because the server has no
+     * viewport: slicing meant every phone received 20 cards in its HTML and
+     * then watched 14 of them disappear at hydration -- a layout shift and a
+     * DOM rewrite on the page's first interaction window.
+     */
+    shelf = false,
     class: className = '',
     children,
   }: {
     minHeight?: string | null;
     loading?: boolean;
+    shelf?: boolean;
     class?: string;
     children?: Snippet;
   } = $props();
@@ -33,6 +42,7 @@
 <div
   class="poster-grid {className}"
   class:loading
+  class:shelf
   style={minHeight ? `min-height: ${minHeight};` : ''}
 >
   {@render children?.()}
@@ -89,5 +99,17 @@
 
   @media (max-width: 400px) {
     .poster-grid { gap: 10px; }
+  }
+
+  /* Shelf caps: tablet keeps 12, phone keeps 6. Breakpoints match viewport.ts. */
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .poster-grid.shelf > :nth-child(n + 13) {
+      display: none;
+    }
+  }
+  @media (max-width: 767px) {
+    .poster-grid.shelf > :nth-child(n + 7) {
+      display: none;
+    }
   }
 </style>

@@ -18,6 +18,7 @@
   } from '$lib/client/global-ui';
   import { initTelemetryWhenConfigured } from '$lib/client/telemetry';
   import { configStore } from '$lib/stores/config';
+  import { provideServerAuth } from '$lib/stores/server-auth';
   import '../scss/base.scss';
   import '../styles/design-tokens.css';
 
@@ -29,6 +30,12 @@
   // per-user, so that's safe. Read untracked: hydrate() is first-value-wins, so
   // only the initial value can ever matter.
   configStore.hydrate(untrack(() => data.config));
+
+  // The server's auth answer, as a per-request context value: components that
+  // gate on `loggedInStore` (which starts signed out and only resolves in the
+  // browser) believe this until the store has resolved, so a logged-in
+  // response renders logged in. See $lib/stores/server-auth.
+  provideServerAuth(untrack(() => data.auth));
 
   // One QueryClient for the whole app via context. In the browser this is
   // the shared singleton; during SSR each layout render gets a fresh

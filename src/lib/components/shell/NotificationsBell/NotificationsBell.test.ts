@@ -102,3 +102,17 @@ describe('NotificationsBellBloc', () => {
     expect(port.markAllRead).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("the server's answer, before the client store has resolved", () => {
+  const client = () => new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+
+  it('is in the HTML for a signed-in response, so the nav does not shift at hydration', () => {
+    const bloc = new NotificationsBellBloc({ port: makePort(), auth: writable({ isLoggedIn: false, isAuthInitialized: false }), serverAuth: { isLoggedIn: true }, queryClient: client() });
+    expect(bloc.isLoggedIn).toBe(true);
+  });
+
+  it('is absent when the server said signed out, and once the resolved store says so', () => {
+    expect(new NotificationsBellBloc({ port: makePort(), auth: writable({ isLoggedIn: false, isAuthInitialized: false }), serverAuth: { isLoggedIn: false }, queryClient: client() }).isLoggedIn).toBe(false);
+    expect(new NotificationsBellBloc({ port: makePort(), auth: writable({ isLoggedIn: false, isAuthInitialized: true }), serverAuth: { isLoggedIn: true }, queryClient: client() }).isLoggedIn).toBe(false);
+  });
+});

@@ -1,4 +1,5 @@
 import { fromStore, type Readable } from 'svelte/store';
+import { resizeCdnUrl } from '$lib/utils/image';
 import { configStore } from '$lib/stores/config';
 import { workSubtitle } from '$lib/utils/workDisplay';
 import { accentValue } from '$lib/utils/accents';
@@ -101,9 +102,10 @@ export class PublicUserPageBloc {
     return this.#config.current?.cdn_user_url || 'https://cdn.weeb.vip/weeb-user-staging';
   }
 
+  /** Resized to the hero's width where the CDN supports it; it is the page's largest paint. */
   get bannerUrl(): string | null {
     const name = this.user?.bannerImageUrl;
-    return name ? `${this.#cdnBase}/${name}` : null;
+    return name ? resizeCdnUrl(`${this.#cdnBase}/${name}`, 1600) : null;
   }
 
   get avatarUrl(): string | null {
