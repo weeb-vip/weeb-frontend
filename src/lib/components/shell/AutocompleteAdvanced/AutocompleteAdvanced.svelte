@@ -22,11 +22,27 @@
   // The text in the box. The bloc's `query` is the search backend's idea of
   // it, which arrives a tick later; binding the input to that would fight the
   // user's typing.
-  let text = $state('');
+  // Starts undefined on purpose: Svelte then takes the hydrated value FROM the
+  // element instead of writing '' over it, so text typed into the server's
+  // form before the script arrived is kept.
+  let text = $state<string | undefined>();
 
   // No connect at mount: the backend is reached for on first focus or
   // keystroke (see the bloc). The form below submits to /search on its own.
-  onMount(() => () => bloc.destroy());
+  // What already happened before the script arrived is adopted here: a field
+  // the visitor focused or typed into during hydration fired no handler, so
+  // without this the panel never opened for them.
+  onMount(() => {
+    for (const el of [desktopInputRef, mobileInputRef]) {
+      if (!el) continue;
+      const focused = document.activeElement === el;
+      if (el.value || focused) {
+        text = el.value;
+        bloc.adopt(el.value, focused);
+      }
+    }
+    return () => bloc.destroy();
+  });
 
   /**
    * `motion` arrives on first use rather than in the layout bundle: every page
@@ -108,7 +124,7 @@
     event.preventDefault();
     const outcome = bloc.submit();
     if (outcome !== 'submitted') {
-      if (!text.trim()) return;
+      if (!text?.trim()) return;
       bloc.searchFor(text);
     }
     text = '';

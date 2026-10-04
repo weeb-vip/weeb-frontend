@@ -1,13 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-import { v4 as uuidv4 } from 'uuid';
-import {
-  waitForAuthForm,
-  waitForShowPage,
-  deleteEmailsForRecipient,
-  getLatestEmail,
-  extractVerificationLink,
-  registerNewUser,
-} from './helpers';
+import { test, expect, type Page } from './account.fixture';
+import { waitForShowPage } from './helpers';
 
 /*
   Ticking individual episodes.
@@ -52,34 +44,6 @@ function watchButton(page: Page, episodeNumber: number) {
  * request, and navigating away too early leaves the account unverified, which
  * then surfaces as a login that never redirects.
  */
-async function signUpAndIn(page: Page, email: string, password: string) {
-  await registerNewUser(page, email, password);
-
-  const baseUrl = page.url().match(/^https?:\/\/[^/]+/)![0];
-  const mail = await getLatestEmail(email);
-  const link = extractVerificationLink(mail.HTML || mail.Text || '', baseUrl);
-  expect(link).toBeTruthy();
-  await page.goto(link!, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await expect(
-    page.getByRole('heading', { name: /you're verified|this link didn't work/i }),
-  ).toBeVisible({ timeout: 30000 });
-
-  // Navigate to login explicitly -- the verification screen bounces there on a
-  // timer, and racing that redirect fills a form that is being replaced.
-  await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await waitForAuthForm(page);
-  await page.fill('input[name="username"]', email);
-  await page.fill('input[name="password"]', password);
-  const submit = page.locator('form button[type="submit"]').first();
-  await expect(submit).toBeEnabled({ timeout: 15000 });
-  await submit.click();
-  // Poll rather than waitForURL: staging's login is slow enough under load that
-  // the single navigation predicate misses it, and the flow then fails on
-  // something that did in fact succeed.
-  await expect
-    .poll(() => new URL(page.url()).pathname, { timeout: 90000, intervals: [1000] })
-    .not.toContain('/auth/login');
-}
 
 /**
  * Put a show with a real episode list on the account, and return its episode
@@ -133,25 +97,9 @@ async function trackShowWithEpisodes(page: Page): Promise<number[]> {
 
 test.describe('Episode tracking (logged in)', () => {
   test.describe.configure({ mode: 'serial' });
-  test.setTimeout(420000);
-  // Budget note: registration now queues behind a global slot (see
-  // helpers.withRegistrationSlot) and the mail wait runs to about three
-  // minutes, so the old budget expired mid-wait and reported a bare test
-  // timeout instead of the real cause.
-
-  let testEmail: string;
-  const testPassword = 'Password1!';
-
-  test.beforeEach(async () => {
-    testEmail = `${uuidv4()}@weeb.vip`;
-  });
-
-  test.afterEach(async () => {
-    await deleteEmailsForRecipient(testEmail);
-  });
+  test.setTimeout(240000);
 
   test('marks one episode, not everything below it, and it survives a reload', async ({ page }) => {
-    await signUpAndIn(page, testEmail, testPassword);
 
     const numbers = await trackShowWithEpisodes(page);
     test.skip(numbers.length === 0, 'no show on the homepage has a scraped episode list');

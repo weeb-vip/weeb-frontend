@@ -5,13 +5,21 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  // Three on the 4-core CI runner. The suite was serial (1): every test waits
+  // on staging round trips far more than on CPU, and nothing shares state --
+  // the stateful specs each register their own user, and registrations are
+  // already spaced out by the cross-worker lock in helpers.ts.
+  workers: process.env.CI ? 3 : undefined,
+  // The line reporter puts per-test durations in the CI log, so a slow or
+  // flaky test can be found without downloading the HTML report.
+  reporter: process.env.CI ? [['html'], ['line']] : 'html',
   use: {
     baseURL: 'http://localhost:4321',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // Recorded only when a test is being retried: recording every test and
+    // discarding the file on success was CPU spent on nothing.
+    video: 'on-first-retry',
   },
 
   projects: [

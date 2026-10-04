@@ -38,8 +38,8 @@ test('anime search functionality', async ({ page }) => {
       // Wait for search results or trigger search
       await page.keyboard.press('Enter');
       
-      // Wait for results to load
-      await page.waitForTimeout(3000);
+      // Wait for results to load: either the page navigated to /search or the panel answered.
+      await page.waitForURL(/\/search/, { timeout: 10000 }).catch(() => {});
       
       // Check if results are displayed or if page navigation occurred
       const currentUrl = page.url();

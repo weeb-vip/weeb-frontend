@@ -363,6 +363,16 @@ export class AutocompleteAdvancedBloc {
     if (this.#isFocused) session.setIsOpen(true);
   }
 
+  /**
+   * The state of the server-rendered field when the script arrived: focused,
+   * typed into, or both. Those events fired before any handler existed, so
+   * the view hands them over once at mount.
+   */
+  adopt(value: string, focused: boolean): void {
+    if (focused) this.focus();
+    if (value) this.input(value);
+  }
+
   focus(): void {
     this.#clearDismissTimer();
     this.#isFocused = true;

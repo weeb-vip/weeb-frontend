@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `yarn check` - Type-check with `svelte-check`
 - `yarn check:gate` - Ratchet gate: fails if svelte-check errors/warnings exceed the committed baseline in `.svelte-check-baseline` (currently 0/0, so any new diagnostic fails)
 - `yarn test` - Unit and component tests (Vitest, `jsdom`); `yarn test:watch` to re-run on change, `yarn test:coverage` for a v8 report in `coverage/`
-- `yarn test:e2e` - End-to-end tests (Playwright); `tests/e2e/` is outside vitest's `include`, so `yarn test` never picks it up
+- `yarn test:e2e` - End-to-end tests (Playwright); `tests/e2e/` is outside vitest's `include`, so `yarn test` never picks it up. A spec that needs a signed-in user imports `test` from `tests/e2e/account.fixture.ts`, which registers, verifies and signs in ONE account per worker and starts every page from its storage state; registering per test cost 30-90s each. Only a spec that needs its own user (token expiry, two people) registers itself. CI runs 3 workers per shard; nothing may depend on being alone on the server.
 - `yarn storybook` - Storybook on port 6006
 
 `packageManager` is yarn 4.13.0, but a `bun.lock` is committed and the Dockerfile builds with Bun. Keep both lockfiles in sync when changing dependencies.

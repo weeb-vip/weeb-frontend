@@ -1,13 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-import { v4 as uuidv4 } from 'uuid';
-import {
-  waitForAuthForm,
-  waitForShowPage,
-  deleteEmailsForRecipient,
-  getLatestEmail,
-  extractVerificationLink,
-  registerNewUser,
-} from './helpers';
+import { test, expect, type Page } from './account.fixture';
+import { waitForShowPage } from './helpers';
 
 /*
   Putting a manga on your list, and taking it off again.
@@ -64,63 +56,28 @@ async function chooseStatus(page: Page, option: string) {
 
 test.describe('Manga tracking (logged in)', () => {
   test.describe.configure({ mode: 'serial' });
-  test.setTimeout(360000);
-  // Budget note: registration now queues behind a global slot (see
-  // helpers.withRegistrationSlot) and the mail wait runs to about three
-  // minutes, so the old budget expired mid-wait and reported a bare test
-  // timeout instead of the real cause.
-
-  let testEmail: string;
-  const testPassword = 'Password1!';
-
-  test.beforeEach(async () => {
-    testEmail = `${uuidv4()}@weeb.vip`;
-  });
-
-  test.afterEach(async () => {
-    await deleteEmailsForRecipient(testEmail);
-  });
+  test.setTimeout(180000);
 
   test('a reader can set a status, and it survives a reload', async ({ page }) => {
     const workHref = await findWork(page);
     test.skip(workHref === null, 'no seeded work is in the read store yet');
 
-    await registerNewUser(page, testEmail, testPassword);
-
-    const baseUrl = page.url().match(/^https?:\/\/[^/]+/)![0];
-    const email = await getLatestEmail(testEmail);
-    const verificationLink = extractVerificationLink(email.HTML || email.Text || '', baseUrl);
-    expect(verificationLink).toBeTruthy();
-    await page.goto(verificationLink!, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    // Wait for verification to actually land. Opening the link starts the
-    // request; navigating away before it resolves leaves the account
-    // unverified, and the failure then shows up as a login that never
-    // redirects rather than as anything about verification.
-    await expect(
-      page.getByRole('heading', { name: /you're verified|this link didn't work/i }),
-    ).toBeVisible({ timeout: 30000 });
-
-    // Navigate to login explicitly: the verification screen bounces there on a
-    // timer, and racing that redirect fills a form that is being replaced.
-    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await waitForAuthForm(page);
-    await page.fill('input[name="username"]', testEmail);
-    await page.fill('input[name="password"]', testPassword);
-    const loginButton = page.locator('form button[type="submit"]').first();
-    await expect(loginButton).toBeEnabled({ timeout: 15000 });
-    await loginButton.click();
-    // Poll rather than waitForURL. Staging's login is slow enough under load
-    // that the single navigation predicate misses it, and the whole flow then
-    // fails on something that did in fact succeed.
-    await expect
-      .poll(() => new URL(page.url()).pathname, { timeout: 90000, intervals: [1000] })
-      .not.toContain('/auth/login');
 
     await page.goto(workHref!, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForShowPage(page);
 
     await expect(statusControl(page)).toBeVisible({ timeout: 20000 });
-    await expect(statusControl(page)).toHaveText(/not tracking/i);
+    // The account is shared by the specs on this worker; a previous one may
+    // have left the work on a shelf. Start from "not tracking" either way.
+    if (!/not tracking/i.test((await statusControl(page).innerText()) ?? '')) {
+      const cleared = page.waitForResponse(
+        (r) => r.url().includes('graphql') && (r.request().postData() || '').includes('DeleteWork'),
+        { timeout: 30000 },
+      );
+      await chooseStatus(page, 'Not tracking');
+      await cleared;
+    }
+    await expect(statusControl(page)).toHaveText(/not tracking/i, { timeout: 15000 });
 
     // --- set it ---
     const added = page.waitForResponse(
@@ -158,17 +115,23 @@ test.describe('Manga tracking (logged in)', () => {
   });
 });
 
-test('the status control is present but inert when signed out', async ({ page }) => {
-  const workHref = await findWork(page);
-  test.skip(workHref === null, 'no seeded work is in the read store yet');
+// Outside the shared account on purpose: this one is about a visitor who is
+// not signed in, so it starts from an empty storage state.
+test.describe('signed out', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
 
-  await page.goto(workHref!, { waitUntil: 'domcontentloaded' });
-  await waitForShowPage(page);
+  test('the status control is present but inert when signed out', async ({ page }) => {
+    const workHref = await findWork(page);
+    test.skip(workHref === null, 'no seeded work is in the read store yet');
 
-  // Signed out, userWork resolves to null rather than erroring -- which it did
-  // not always do: the Work entity reference panicked in list-service and took
-  // the whole page query down with it. The control rendering at all is the
-  // guard on that.
-  await expect(statusControl(page)).toBeVisible({ timeout: 20000 });
-  await expect(statusControl(page)).toHaveText(/not tracking/i);
+    await page.goto(workHref!, { waitUntil: 'domcontentloaded' });
+    await waitForShowPage(page);
+
+    // Signed out, userWork resolves to null rather than erroring -- which it did
+    // not always do: the Work entity reference panicked in list-service and took
+    // the whole page query down with it. The control rendering at all is the
+    // guard on that.
+    await expect(statusControl(page)).toBeVisible({ timeout: 20000 });
+    await expect(statusControl(page)).toHaveText(/not tracking/i);
+  });
 });

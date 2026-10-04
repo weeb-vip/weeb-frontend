@@ -325,6 +325,28 @@ describe('AutocompleteAdvancedBloc', () => {
     });
   });
 
+  describe('what happened before the script arrived', () => {
+    it('adopts a field that was focused and typed into during hydration', async () => {
+      const { bloc, search } = makeBloc();
+      const session = search.session;
+
+      bloc.adopt('Naruto', true);
+      await vi.waitFor(() => expect(bloc.status).toBe('ready'));
+
+      expect(bloc.isFocused).toBe(true);
+      expect(session.setQuery).toHaveBeenCalledWith('Naruto');
+      expect(session.refresh).toHaveBeenCalled();
+      expect(session.setIsOpen).toHaveBeenCalledWith(true);
+    });
+
+    it('does nothing for an untouched field', () => {
+      const { bloc } = makeBloc();
+      bloc.adopt('', false);
+      expect(bloc.status).toBe('idle');
+      expect(bloc.isFocused).toBe(false);
+    });
+  });
+
   describe('typing', () => {
     it('pushes the query at the session and refreshes', async () => {
       const { bloc, search } = makeBloc();

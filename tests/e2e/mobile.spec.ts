@@ -77,7 +77,7 @@ test.describe('Mobile Experience', () => {
       await page.goto(path);
       await page.waitForLoadState('domcontentloaded');
       // Let async sections (news, episodes) render — they are what overflows.
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       const { scrollWidth, clientWidth } = await page.evaluate(() => ({
         scrollWidth: document.documentElement.scrollWidth,

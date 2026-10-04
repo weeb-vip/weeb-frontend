@@ -1,13 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-import { v4 as uuidv4 } from 'uuid';
-import {
-  waitForAuthForm,
-  waitForShowPage,
-  deleteEmailsForRecipient,
-  getLatestEmail,
-  extractVerificationLink,
-  registerNewUser,
-} from './helpers';
+import { test, expect, type Page } from './account.fixture';
+import { waitForShowPage } from './helpers';
 
 /*
   A manga on the profile's reading list.
@@ -52,48 +44,12 @@ async function chooseStatus(page: Page, option: string) {
 
 test.describe('Profile reading list (logged in)', () => {
   test.describe.configure({ mode: 'serial' });
-  test.setTimeout(360000);
-  // Budget note: registration now queues behind a global slot (see
-  // helpers.withRegistrationSlot) and the mail wait runs to about three
-  // minutes, so the old budget expired mid-wait and reported a bare test
-  // timeout instead of the real cause.
-
-  let testEmail: string;
-  const testPassword = 'Password1!';
-
-  test.beforeEach(async () => {
-    testEmail = `${uuidv4()}@weeb.vip`;
-  });
-
-  test.afterEach(async () => {
-    await deleteEmailsForRecipient(testEmail);
-  });
+  test.setTimeout(180000);
 
   test('a manga set to Reading appears on the reading list', async ({ page }) => {
     const slug = await firstResolvingSlug(page);
     test.skip(slug === null, 'no seeded work is in the read store yet');
 
-    await registerNewUser(page, testEmail, testPassword);
-
-    const baseUrl = page.url().match(/^https?:\/\/[^/]+/)![0];
-    const email = await getLatestEmail(testEmail);
-    const verificationLink = extractVerificationLink(email.HTML || email.Text || '', baseUrl);
-    expect(verificationLink).toBeTruthy();
-    await page.goto(verificationLink!, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await expect(
-      page.getByRole('heading', { name: /you're verified|this link didn't work/i }),
-    ).toBeVisible({ timeout: 30000 });
-
-    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await waitForAuthForm(page);
-    await page.fill('input[name="username"]', testEmail);
-    await page.fill('input[name="password"]', testPassword);
-    const loginButton = page.locator('form button[type="submit"]').first();
-    await expect(loginButton).toBeEnabled({ timeout: 15000 });
-    await loginButton.click();
-    await expect
-      .poll(() => new URL(page.url()).pathname, { timeout: 90000, intervals: [1000] })
-      .not.toContain('/auth/login');
 
     // Put the work on the Reading shelf from its own page.
     await page.goto(`/manga/${slug}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
