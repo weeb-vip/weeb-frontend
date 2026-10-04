@@ -336,6 +336,9 @@
         aria-expanded={bloc.isPanelOpen && bloc.hasResults}
         data-hydrated={hydrated ? 'true' : undefined}
         data-status={bloc.status}
+        data-focused={bloc.isFocused}
+        data-open={bloc.isPanelOpen}
+        data-results={bloc.hasResults}
         aria-controls="ac-listbox-mobile"
         aria-autocomplete="list"
         aria-activedescendant={bloc.activeIndex >= 0 ? `ac-opt-mobile-${bloc.activeIndex}` : undefined}
@@ -391,6 +394,9 @@
       aria-expanded={bloc.isPanelOpen && bloc.hasResults}
       data-hydrated={hydrated ? 'true' : undefined}
       data-status={bloc.status}
+      data-focused={bloc.isFocused}
+      data-open={bloc.isPanelOpen}
+      data-results={bloc.hasResults}
       aria-controls="ac-listbox-desktop"
       aria-autocomplete="list"
       aria-activedescendant={bloc.activeIndex >= 0 ? `ac-opt-desktop-${bloc.activeIndex}` : undefined}

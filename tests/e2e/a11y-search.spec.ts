@@ -24,6 +24,12 @@ test.describe('Search autocomplete keyboard navigation (a11y)', () => {
       .then(() => true)
       .catch(() => false);
     test.skip(!visible, 'desktop search input is not visible on this viewport');
+
+    // The search backend connects on first focus. Warm it here, with a budget
+    // that allows for a loaded runner, so each test below is about the panel
+    // and the keyboard rather than about how long Algolia took to arrive.
+    await desktopInput.click();
+    await expect(desktopInput).toHaveAttribute('data-status', 'ready', { timeout: 45000 });
   });
 
   test('exposes combobox + listbox roles once results load', async ({ page }) => {
@@ -33,6 +39,10 @@ test.describe('Search autocomplete keyboard navigation (a11y)', () => {
     // Typed text connects the search backend lazily; a missing panel is a different
     // failure from a backend that never came up, so say which.
     await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 15000 });
+    // focused,open,results -- so a failure says which of the three is missing.
+    await expect
+      .poll(() => search.evaluate((el) => [el.dataset.focused, el.dataset.open, el.dataset.results].join(',')), { timeout: 15000 })
+      .toBe('true,true,true');
 
     const options = page.locator('#ac-listbox-desktop [role="option"]');
     await expect(options.first()).toBeVisible({ timeout: 15000 });

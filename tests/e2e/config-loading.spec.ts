@@ -28,6 +28,7 @@ test.describe('Config loading', () => {
 
     if (desktop) {
       await search.click();
+      await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 45000 });
       await search.fill('Naruto');
       // Typed text connects the search backend lazily; a missing panel is a different
       // failure from a backend that never came up, so say which.
