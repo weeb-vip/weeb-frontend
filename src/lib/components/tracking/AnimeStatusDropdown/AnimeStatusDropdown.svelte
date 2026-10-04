@@ -7,7 +7,6 @@
     type AnimeStatusDropdownEntry,
     type AnimeStatusDropdownVariant
   } from './AnimeStatusDropdown.bloc.svelte';
-  import '@fortawesome/fontawesome-free/css/all.min.css';
 
   let {
     entry,

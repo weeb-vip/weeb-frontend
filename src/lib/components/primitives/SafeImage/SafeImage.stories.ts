@@ -3,7 +3,7 @@ import SafeImage from './SafeImage.svelte';
 import StoryContainer from '$lib/components/__stories__/StoryContainer.svelte';
 
 /**
- * SafeImage probes each candidate over the network with a per-attempt timeout,
+ * SafeImage walks its candidates from the element's own load and error events,
  * so real URLs would make these stories slow and flaky. Inline data: sources
  * resolve (or fail) in the same tick and are passed through untouched.
  */
@@ -31,8 +31,6 @@ const meta = {
   ],
   args: {
     className: 'block w-full aspect-[2/3]',
-    // Short, because every story here resolves without a network round trip.
-    perTryTimeoutMs: 500,
   },
 } satisfies Meta<typeof SafeImage>;
 

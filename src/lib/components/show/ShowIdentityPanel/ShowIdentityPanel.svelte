@@ -41,12 +41,15 @@
        above it so it costs no vertical space on a phone. -->
   <div class="hero-identity">
     <div class="hero-poster">
+      <!-- On a phone this poster, not the banner behind it, is the largest
+           paint: eager and high priority, and the page preloads the same URL. -->
       <SafeImage
         src={GetImageFromAnime(anime)}
         alt=""
         className="hero-poster-img"
         fallbackSrc="/assets/not found.jpg"
         cdnWidth={300}
+        priority={true}
       />
     </div>
 

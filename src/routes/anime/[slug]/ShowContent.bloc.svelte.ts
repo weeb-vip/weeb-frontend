@@ -28,7 +28,7 @@ import { isFeatureEnabled } from '$lib/utils/analytics';
 import { animeNotificationStore } from '$lib/stores/animeNotifications';
 import { configStore } from '$lib/stores/config';
 import { getAnimeTitle, preferencesStore, type TitleLanguage } from '$lib/stores/preferences';
-import { getSafeImageUrl } from '$lib/utils/image';
+import { getSafeImageUrl, resizeCdnUrl } from '$lib/utils/image';
 import { defaultQueryClient } from '$lib/components/tracking/WorkStatusControl';
 import type { ConfigPort, NotificationsPort } from '$lib/components/home/HeroBanner';
 import type { FeatureFlagPort } from '$lib/components/show/StreamingPlatforms';
@@ -529,9 +529,15 @@ export class ShowContentBloc {
     return this.#sources;
   }
 
-  /** The first candidate, blurred behind the compact header. */
+  /**
+   * The first candidate, blurred behind the compact header -- at the same CDN
+   * width the hero requests it, so it is a cache hit rather than a second
+   * download. As the untransformed URL it cost every anime page view a 200KB
+   * fetch at high priority, alongside the hero's 80KB resized one.
+   */
   get stickyBackground(): string {
-    return this.imageSources[0] ?? '';
+    const first = this.imageSources[0];
+    return first ? resizeCdnUrl(first, 1600) : '';
   }
 
   get artLoaded(): boolean {

@@ -75,6 +75,8 @@ export function orderedSources(
   path: string,
   cdnWidth: number | undefined
 ): string[] {
+  // Nothing named: no candidates, rather than a request for the CDN root.
+  if (sources.length === 0 && !src) return [];
   const base =
     sources.length > 0
       ? sources.map((s) => (ABSOLUTE.test(s) ? s : getSafeImageUrl(s, path)))
@@ -99,79 +101,11 @@ export function loadReason(index: number, total: number): 'load' | 'last-source'
   return index === total - 1 && total > 1 ? 'last-source' : 'load';
 }
 
-/** Decodes a candidate and resolves only if `accept` says it is a real image. */
-export function loadOne(
-  url: string,
-  accept: (img: HTMLImageElement, url: string) => boolean,
-  register: (img: HTMLImageElement) => void
-): Promise<{ url: string; img: HTMLImageElement }> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    register(img);
-    img.decoding = 'async';
-    img.onload = async () => {
-      try {
-        if (img.decode) {
-          try {
-            await img.decode();
-          } catch {
-            /* ignore */
-          }
-        }
-        if (accept(img, url)) resolve({ url, img });
-        else reject(new Error(`Rejected by accept(): ${url}`));
-      } catch (e) {
-        reject(e);
-      }
-    };
-    img.onerror = () => reject(new Error(`Failed load: ${url}`));
-    img.src = url;
-  });
-}
-
-export function withTimeout<T>(p: Promise<T>, ms?: number): Promise<T> {
-  if (!ms || ms <= 0) return p;
-  return new Promise<T>((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error('timeout')), ms);
-    p.then(
-      (v) => {
-        clearTimeout(t);
-        resolve(v);
-      },
-      (e) => {
-        clearTimeout(t);
-        reject(e);
-      }
-    );
-  });
-}
-
 /**
- * Walks the candidates in priority order and stops at the first that loads.
- *
- * This used to start every candidate at once and discard the losers. That costs
- * one wasted request per fallback on every image the app renders, and the cost
- * scales with the chain: a poster shelf of 54 cards with a two-step fallback
- * fetches 108 images to show 54. The race only ever bought latency in the case
- * where the preferred source fails, which is the rare one -- and the per-try
- * timeout already bounds how long that case can take.
- *
- * `abandoned` is checked between attempts so a destroyed or superseded run
- * stops walking; it returns `undefined` when that happens.
+ * The URL SafeImage will put in the HTML for these inputs: what a
+ * `<link rel="preload" as="image">` for the element has to name, or the hint
+ * warms the wrong bytes.
  */
-export async function firstThatLoads(
-  urls: string[],
-  attempt: (url: string) => Promise<unknown>,
-  abandoned: () => boolean
-): Promise<{ url: string; index: number } | null | undefined> {
-  for (let index = 0; index < urls.length; index++) {
-    try {
-      await attempt(urls[index]);
-      return { url: urls[index], index };
-    } catch {
-      // try the next candidate
-    }
-    if (abandoned()) return undefined;
-  }
-  return null;
+export function firstCandidate(sources: string[], cdnWidth?: number): string | null {
+  return orderedSources(sources, '', '', cdnWidth)[0] ?? null;
 }

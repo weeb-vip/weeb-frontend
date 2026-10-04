@@ -12,16 +12,15 @@
     <!-- Performance optimizations: DNS prefetch and preconnect -->
     <link rel="dns-prefetch" href="//gateway.weeb.vip" />
     <link rel="dns-prefetch" href="//cdn.weeb.vip" />
-    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
     <!-- The analytics proxy. This pointed at eu.posthog.com, which was doubly
          wrong: the project is US, and traffic goes through the proxy now. -->
     <link rel="dns-prefetch" href="//n.weeb.vip" />
 
     <link rel="preconnect" href="//gateway.weeb.vip" crossorigin />
-    <link rel="preconnect" href="//cdn.weeb.vip" crossorigin />
-    <link rel="preconnect" href="//fonts.googleapis.com" crossorigin />
-    <link rel="preconnect" href="//fonts.gstatic.com" crossorigin />
+    <!-- No crossorigin: artwork is fetched as a plain <img>, and a CORS
+         connection cannot be reused for it. Fonts are system fonts, so the
+         Google Fonts hints that used to sit here warmed nothing. -->
+    <link rel="preconnect" href="//cdn.weeb.vip" />
 
     <!-- Favicons & PWA Icons -->
     <link rel="icon" href="/assets/icons/favicon.ico" sizes="any">

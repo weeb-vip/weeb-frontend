@@ -1,5 +1,7 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
+  import { firstCandidate } from '$lib/components/primitives/SafeImage/SafeImage.logic';
+  import { PHONE_QUERY, DESKTOP_QUERY } from '$lib/stores/viewport';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
   /*
@@ -61,9 +63,24 @@
       { name: data.workTitle, url: canonical }
     ])
   ]);
+
+  const heroPreload = $derived(firstCandidate(bloc?.heroSources ?? [], 1600));
+  const coverPreload = $derived(firstCandidate(bloc?.coverSources ?? [], 300));
 </script>
 
 <Seo title={data.workTitle} description={data.workDescription} image={data.workImage} />
+
+<svelte:head>
+  <!-- One hint per viewport: on a phone the cover in the panel is the largest
+       paint, on a wider screen the banner behind it. Each names the URL the
+       element requests, so the bytes start with the HTML parse. -->
+  {#if coverPreload}
+    <link rel="preload" as="image" href={coverPreload} media={PHONE_QUERY} fetchpriority="high" />
+  {/if}
+  {#if heroPreload}
+    <link rel="preload" as="image" href={heroPreload} media={DESKTOP_QUERY} fetchpriority="high" />
+  {/if}
+</svelte:head>
 <StructuredData {schemas} />
 
 {#if bloc.ssrError}
@@ -83,7 +100,7 @@
             loading="eager"
             priority={true}
             fallbackSrc="/assets/not found.jpg"
-            perTryTimeoutMs={3000}
+            cdnWidth={1600}
             className="hero-bg-img"
             style=""
             onChosen={(detail) => bloc.heroChosen(detail)}
@@ -100,6 +117,7 @@
               <SafeImage
                 sources={bloc.coverSources}
                 alt=""
+                priority={true}
                 className="hero-cover-img"
                 fallbackSrc="/assets/not found.jpg"
                 cdnWidth={300}

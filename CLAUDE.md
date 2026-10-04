@@ -141,3 +141,14 @@ Key pages:
 - Settings (`/settings`), About (`/about`)
 - Auth flows under `/auth/` (login, register, verification, password reset)
 - Generated XML sitemaps and OG images (`/sitemap*.xml`, `/og/[id]`)
+
+### First-paint contracts
+
+These exist because the mobile LCP sat at 5-7s and no artwork rendered without JavaScript. Keep them when touching the pieces involved.
+
+- `SafeImage` renders its first candidate as a real `<img>` on the server and walks the fallback chain from the element's own `error` event. Never gate artwork behind hydration, `onMount` or a probe; a page's hero must be in the HTML with `priority` (eager + `fetchpriority=high`), everything below the fold lazy. It reports `onChosen` even for an element the browser finished before hydration, so a fade gate must be opened by that callback and must be applied only after hydration (see `KeyArtStage`'s `bgOpacity`).
+- The server has no viewport. Art that differs by viewport goes through `phoneSources` (a `<picture>` source on `PHONE_QUERY`), not through `isPhone` in a bloc, or phones download the desktop image and then the phone one. The home hero's preload hints (`heroPreloads` in `src/lib/components/home/HeroBanner/hero-art.ts`) carry the same media queries and must stay in step with `heroSources`/`heroPhoneSources`.
+- `src/lib/server/rocket-loader.ts` marks SvelteKit's init script `data-cfasync="false"`. Cloudflare Rocket Loader is on for the zone and the `cf-rocket` meta does not stop it; without the attribute hydration waits on Cloudflare's deferred loader.
+- `vite.config.ts` sets `cssCodeSplit: false` (one stylesheet, cached across pages, instead of 17 render-blocking links). Do not import icon-font stylesheets; icons are `svelte-fa`.
+- Public pages that exist are listed in `CACHEABLE_ROUTES` in `src/hooks.server.ts` (the adapter stores only 200s, so a redirecting route there caches nothing).
+

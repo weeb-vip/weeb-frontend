@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/svelte';
+import { render, screen, waitFor, within, fireEvent } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import ShowHero from './ShowHero.svelte';
 import { stubNeverLoadingImages } from '$lib/components/__tests__/jsdom-gaps';
@@ -114,10 +114,14 @@ describe('ShowHero', () => {
         props: { ...base, imageSources: ['/banners/a1', '/a1'], onArtChosen }
       });
 
-      // With every probe failing, SafeImage settles on the fallback -- which is
-      // still a settled decision, and the page must be told or the artwork
+      // With every candidate failing, SafeImage settles on the fallback -- which
+      // is still a settled decision, and the page must be told or the artwork
       // stays at opacity 0 forever. (That was the bug KeyArtStage dropped the
       // gate over; here the gate is still the page's.)
+      const art = () => document.querySelector('.key-art__bg img') as HTMLImageElement;
+      await fireEvent.error(art());
+      await waitFor(() => expect(art().getAttribute('src')).not.toContain('banners'));
+      await fireEvent.error(art());
       await waitFor(() => expect(onArtChosen).toHaveBeenCalled());
     });
 

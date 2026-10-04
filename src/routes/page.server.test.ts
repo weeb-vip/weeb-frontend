@@ -63,7 +63,7 @@ function answers(byDescription: Record<string, unknown>) {
   );
 }
 
-const AIRING_ONE = { getAiringAnimeAll: [{ id: 'anime-1' }] };
+const AIRING_ONE = { currentlyAiring: [{ id: 'anime-1' }] };
 
 beforeEach(() => {
   fetchWithFallback.mockReset();
@@ -236,66 +236,6 @@ describe('a gateway failure is told apart from an empty homepage', () => {
     });
 
     expect((await run(event())).ssrError).toBe('Failed to load data');
-  });
-});
-
-describe('the banner preload hint', () => {
-  it('points at the first airing show on the configured CDN', async () => {
-    answers({ 'currently airing data': AIRING_ONE });
-
-    expect((await run(event())).bannerImageUrl).toBe('https://cdn.test/weeb/banners/anime-1');
-  });
-
-  it('strips trailing slashes rather than emitting a doubled path', async () => {
-    answers({ 'currently airing data': AIRING_ONE });
-
-    const result = await run(
-      event({
-        locals: {
-          auth: { isLoggedIn: false, hasAuthToken: false, hasRefreshToken: false },
-          config: { graphql_host: 'https://api.test/graphql', cdn_url: 'https://cdn.test/weeb//' }
-        }
-      })
-    );
-
-    expect(result.bannerImageUrl).toBe('https://cdn.test/weeb/banners/anime-1');
-  });
-
-  it('encodes an id that would otherwise break the path', async () => {
-    answers({ 'currently airing data': { getAiringAnimeAll: [{ id: 'a b/c' }] } });
-
-    expect((await run(event())).bannerImageUrl).toBe('https://cdn.test/weeb/banners/a%20b%2Fc');
-  });
-
-  it('falls back to the production bucket when no cdn_url is configured', async () => {
-    answers({ 'currently airing data': AIRING_ONE });
-
-    const result = await run(
-      event({
-        locals: {
-          auth: { isLoggedIn: false, hasAuthToken: false, hasRefreshToken: false },
-          config: { graphql_host: 'https://api.test/graphql' }
-        }
-      })
-    );
-
-    expect(result.bannerImageUrl).toBe('https://cdn.weeb.vip/weeb/banners/anime-1');
-  });
-
-  it('is null when nothing is airing', async () => {
-    answers({ 'currently airing data': { getAiringAnimeAll: [] } });
-
-    expect((await run(event())).bannerImageUrl).toBeNull();
-  });
-
-  it('is null when the airing request answered null', async () => {
-    expect((await run(event())).bannerImageUrl).toBeNull();
-  });
-
-  it('is null when the first show carries no id', async () => {
-    answers({ 'currently airing data': { getAiringAnimeAll: [{ titleEn: 'no id' }] } });
-
-    expect((await run(event())).bannerImageUrl).toBeNull();
   });
 });
 

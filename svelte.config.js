@@ -18,6 +18,12 @@ const config = {
   },
   kit: {
     adapter,
+    // Component stylesheets under this size are inlined into the page instead
+    // of linked. Production served 17 render-blocking <link rel="stylesheet">
+    // tags before the first paint, all but two of them under 2KB; Vite's
+    // cssCodeSplit cannot help because SvelteKit forces it on for the client
+    // build. The remaining large sheets still arrive as cached links.
+    inlineStyleThreshold: 20 * 1024,
     files: {
       assets: 'public'
     },

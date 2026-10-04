@@ -1,5 +1,6 @@
 import { fromStore, type Readable } from 'svelte/store';
 import { getSafeImageUrl } from '$lib/utils/image';
+import { HERO_CDN_WIDTH, HERO_PHONE_CDN_WIDTH, heroPhoneSources, heroSources } from './hero-art';
 import type { EpisodeTiming } from '$lib/services/airTimeUtils';
 import { configStore } from '$lib/stores/config';
 import { animeNotificationStore } from '$lib/stores/animeNotifications';
@@ -78,6 +79,14 @@ export interface HeroBannerInputs {
    * Null on the fallback banner (top-rated), which has no schedule at all.
    */
   readonly timing: EpisodeTiming | null;
+  /**
+   * What the server knew from the cookies: true when it rendered the page for
+   * a signed-out visitor. The client auth store starts unresolved, so without
+   * this the sign-up line waited for hydration -- and on a phone that line is
+   * the largest paint, so the whole LCP waited with it. Undefined where the
+   * server said nothing, in which case the line still waits for the store.
+   */
+  readonly serverSignedOut?: boolean;
 }
 
 export interface HeroBannerDeps {
@@ -169,27 +178,27 @@ export class HeroBannerBloc {
    */
   get imageSources(): string[] {
     const id = this.#inputs.anime?.id;
-    if (!id) return [];
+    return id ? heroSources(id, this.#imageUrl) : [];
+  }
 
-    // TheTVDB's 680x1000 series poster, synced by thetvdb-enrichment.
-    const tvdbPoster = this.#imageUrl(id, 'posters');
-    // TheTVDB's wide background artwork.
-    const banner = this.#imageUrl(id, 'banners');
-    // The scraper's MyAnimeList image at the bucket root -- 225px wide, so it
-    // is the last resort at hero scale rather than a peer of the other two.
-    const malImage = this.#imageUrl(id);
+  /**
+   * The tall ordering, handed to SafeImage as a <picture> source rather than
+   * chosen here from `isPhone`: the server has no viewport, and picking one
+   * list meant phones received the desktop banner in their HTML and swapped
+   * to the poster after hydration, paying for both.
+   */
+  get phoneImageSources(): string[] {
+    const id = this.#inputs.anime?.id;
+    return id ? heroPhoneSources(id, this.#imageUrl) : [];
+  }
 
-    return this.#isPhone
-      ? // Tall box: prefer tall art, and prefer the high-resolution one.
-        [tvdbPoster, malImage, banner]
-      : // Wide box: the banner is composed for this shape. A poster cropped to
-        // a wide frame still beats a 225px image blown up to fill it.
-        [banner, tvdbPoster, malImage];
+  get heroCdnWidth(): number {
+    return HERO_CDN_WIDTH;
   }
 
   /** A phone never needs 1600px of hero art. */
-  get heroCdnWidth(): number {
-    return this.#isPhone ? 800 : 1600;
+  get phoneCdnWidth(): number {
+    return HERO_PHONE_CDN_WIDTH;
   }
 
   /** False again the moment the banner retargets, so the new art fades in too. */
@@ -221,10 +230,16 @@ export class HeroBannerBloc {
     return this.#inputs.anime?.description ?? '';
   }
 
-  /** Only while signed out, and only once auth has resolved. */
+  /**
+   * Only while signed out, and only once auth has resolved -- which the server
+   * already has, from the cookies, for the render it is producing. The client
+   * store takes over the moment it resolves, so a cached anonymous page that
+   * reaches a signed-in visitor drops the line at hydration.
+   */
   get showSignUpLine(): boolean {
     const auth = this.#auth.current;
-    return auth.isAuthInitialized && !auth.isLoggedIn;
+    if (auth.isAuthInitialized) return !auth.isLoggedIn;
+    return this.#inputs.serverSignedOut === true;
   }
 
   get showJstPopover(): boolean {

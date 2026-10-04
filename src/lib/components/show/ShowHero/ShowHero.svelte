@@ -43,6 +43,7 @@
 <KeyArtStage
   ariaLabel="Anime overview"
   sources={imageSources}
+  cdnWidth={1600}
   {loaded}
   fade="100px"
   fadeMobile="70px"

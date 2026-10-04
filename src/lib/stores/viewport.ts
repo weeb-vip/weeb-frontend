@@ -20,6 +20,8 @@ import { readable } from 'svelte/store';
  * columns, which measured as a 12,414px page at exactly 768px.
  */
 export const PHONE_QUERY = '(max-width: 767px)';
+/** Everything PHONE_QUERY is not; the pair partitions every width. */
+export const DESKTOP_QUERY = '(min-width: 768px)';
 export const TABLET_QUERY = '(min-width: 768px) and (max-width: 1199px)';
 
 function media(query: string) {

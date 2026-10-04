@@ -58,16 +58,6 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
   const isTokenExpired = fetcher.wasTokenExpired();
   const effectiveAuth = isTokenExpired ? loggedOutAuth() : publicAuth(auth);
 
-  // First banner image for preloading
-  let bannerImageUrl: string | null = null;
-  const firstAnime = currentlyAiringData?.getAiringAnimeAll?.[0];
-  if (firstAnime?.id) {
-    // From locals.config, not a hardcoded host: the preload hint has to point at
-    // the same bucket SafeImage will request, or it warms the wrong origin.
-    const cdnBase = (config?.cdn_url || 'https://cdn.weeb.vip/weeb').replace(/\/+$/, '');
-    bannerImageUrl = `${cdnBase}/banners/${encodeURIComponent(firstAnime.id)}`;
-  }
-
   return {
     auth: effectiveAuth,
     homeData,
@@ -76,7 +66,6 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     publishingWorksData,
     currentSeason,
     ssrError,
-    isTokenExpired,
-    bannerImageUrl
+    isTokenExpired
   };
 };

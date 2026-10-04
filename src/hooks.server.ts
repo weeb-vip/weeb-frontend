@@ -1,4 +1,5 @@
 import { redirect, type Handle } from '@sveltejs/kit';
+import { shieldFromRocketLoader } from '$lib/server/rocket-loader';
 import { getConfig } from './config/build-time-loader';
 import { AuthStorage } from '$lib/utils/auth-storage';
 import { refreshTokenSSR, isTokenExpired } from '$lib/utils/ssr-token-refresh';
@@ -71,11 +72,16 @@ const CACHEABLE_ROUTES: Array<{
   { pattern: /^\/season\/([^/]+)$/,     ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: (m) => [`season:${m[1]}`] },
 
   // Synopsis, studio and cast do not change. Episode count does, weekly, for a
-  // currently-airing show — purged by `show:<id>` when the episode sync runs.
-  { pattern: /^\/show\/([^/]+)$/,       ttl: 12 * HOUR, swr: DAY, maxAge: 60,  sMaxAge: 600,  tags: (m) => [`show:${m[1]}`] },
+  // currently-airing show — purged by `show:<slug>` when the episode sync runs.
+  // /show/<id> is a 301 to /anime/<slug> now, and the adapter stores only
+  // 200s, so the entries are keyed on the page a visitor actually receives.
+  { pattern: /^\/anime\/([^/]+)$/,      ttl: 12 * HOUR, swr: DAY, maxAge: 60,  sMaxAge: 600,  tags: (m) => [`show:${m[1]}`] },
+  { pattern: /^\/manga\/([^/]+)$/,      ttl: 12 * HOUR, swr: DAY, maxAge: 60,  sMaxAge: 600,  tags: (m) => [`work:${m[1]}`] },
+  { pattern: /^\/series\/([^/]+)$/,     ttl: 12 * HOUR, swr: DAY, maxAge: 60,  sMaxAge: 600,  tags: (m) => [`series:${m[1]}`] },
+  { pattern: /^\/people\/([^/]+)$/,     ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: (m) => [`person:${m[1]}`] },
 
   // News arrives in batches from the ingest, which can purge `news`.
-  { pattern: /^\/show\/([^/]+)\/news$/, ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: (m) => [`show:${m[1]}`, 'news'] }
+  { pattern: /^\/anime\/([^/]+)\/news$/, ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: (m) => [`show:${m[1]}`, 'news'] }
 ];
 
 function cachePolicyFor(pathname: string) {
@@ -226,7 +232,11 @@ export const handle: Handle = async ({ event, resolve }) => {
     pageCache!.ttl(cachePolicy.ttl).swr(cachePolicy.swr).tag(cachePolicy.tags);
   }
 
-  const response = await resolve(event);
+  const response = await resolve(event, {
+    // See rocket-loader.ts: without this, Cloudflare defers the script that
+    // starts hydration, and every image on the page waited on that script.
+    transformPageChunk: ({ html }) => shieldFromRocketLoader(html)
+  });
 
   if (response.headers) {
     // Security headers

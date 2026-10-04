@@ -10,6 +10,7 @@
   let {
     anime,
     timing = null,
+    serverSignedOut = undefined,
     bloc: injected
   }: {
     anime: any;
@@ -18,6 +19,8 @@
      * Null on the fallback banner (top-rated), which has no schedule at all.
      */
     timing?: EpisodeTiming | null;
+    /** The server's view of the visitor; see HeroBannerInputs.serverSignedOut. */
+    serverSignedOut?: boolean;
     bloc?: HeroBannerBloc;
   } = $props();
 
@@ -27,6 +30,9 @@
     },
     get timing() {
       return timing;
+    },
+    get serverSignedOut() {
+      return serverSignedOut;
     }
   });
   const bloc = $derived(injected ?? ownBloc);
@@ -48,7 +54,9 @@
 <KeyArtStage
   class="hero"
   sources={bloc.imageSources}
+  phoneSources={bloc.phoneImageSources}
   cdnWidth={bloc.heroCdnWidth}
+  phoneCdnWidth={bloc.phoneCdnWidth}
   loaded={bloc.bgLoaded}
   fadeMs={500}
   fade="var(--hero-fade, 0px)"
