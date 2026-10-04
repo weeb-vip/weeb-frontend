@@ -28,7 +28,13 @@ export interface ChipGroupItem {
    * apart while still being one chip. The chip stays neutral at rest.
    */
   accent?: string;
-  /** `select="none"` only: makes the chip a link. */
+  /**
+   * Where the chip leads. With `select="none"` that is all it does. With a
+   * selecting row it makes the chip an <a> that still calls `onSelect` --
+   * the click is prevented and the caller navigates its own way -- so the
+   * row works before hydration and without a script, where the link is
+   * simply followed.
+   */
   href?: string;
 }
 

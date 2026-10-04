@@ -598,6 +598,15 @@ export class SearchPageBloc {
     return searchPageHref(this.#urlState, type === 'hits' ? { hitsPage: page } : { worksPage: page });
   }
 
+  /**
+   * Where a genre chip leads: the same state `toggleGenre` would write, as a
+   * link, so the strip works with no script. With one, the click handler
+   * takes over and navigates in place.
+   */
+  genreHref(genre: string): string {
+    return searchPageHref(toggleGenre(this.#urlState, genre, { hasDraftQuery: !!this.#draftQuery }));
+  }
+
   /* ── Intents ───────────────────────────────────────────────────────────── */
 
   /**

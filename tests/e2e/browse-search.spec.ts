@@ -127,7 +127,31 @@ test.describe('/search browse page', () => {
     await expect(page.locator(GENRE_CHIP).first()).toBeVisible();
     await expect(page.locator('.empty-state')).toHaveCount(0);
 
+    // The chips are links, so the strip works too.
+    const chip = page.locator(GENRE_CHIP).first();
+    const genreName = (await chip.innerText()).trim().split('\n')[0];
+    await chip.click();
+    await expect(page).toHaveURL(/[?&]genre=/);
+    await expect(page.locator(SELECTED_CHIP)).toContainText(genreName);
+    await expect(page.locator(RESULTS_COUNT)).toContainText(`in ${genreName}`);
+
+    // And the filters are a form: native selects and Apply, shown only here.
+    await page.locator('select[name="status"]').selectOption('NOT_YET_AIRED');
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect(page).toHaveURL(/[?&]status=NOT_YET_AIRED/);
+    await expect(page).toHaveURL(/[?&]genre=/);
+    await expect(page.locator('.filter-pill')).toContainText('Upcoming');
+    await expect(page.locator('select[name="status"]')).toHaveValue('NOT_YET_AIRED');
+
     await context.close();
+  });
+
+  test('the scriptless form is not on the page when there is a script', async ({ page }) => {
+    await waitForBrowseReady(page);
+
+    await expect(page.locator('select[name="status"]')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Apply' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Filter by status' })).toBeVisible();
   });
 
   /*

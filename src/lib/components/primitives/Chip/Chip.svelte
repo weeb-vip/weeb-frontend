@@ -78,7 +78,7 @@
   }: {
     label?: string;
     href?: string | undefined;
-    onclick?: (() => void) | undefined;
+    onclick?: ((event: MouseEvent) => void) | undefined;
     tone?: ChipTone;
     size?: ChipSize;
     color?: string | undefined;

@@ -768,11 +768,11 @@ describe('pagination', () => {
     const harness = await searched({ hits: [hit('1')], total: 500 });
     await harness.act(() => harness.bloc.goToPage(4, 'hits'));
 
-    await harness.act(() => harness.bloc.setHitsPerPage(100));
+    await harness.act(() => harness.bloc.setHitsPerPage(96));
 
     expect(harness.bloc.hitsPage).toBe(0);
     expect(harness.lastRequest().hitsPage).toBe(0);
-    expect(harness.bloc.hitsPerPage).toBe(100);
+    expect(harness.bloc.hitsPerPage).toBe(96);
   });
 
   it('pages the works at the same size as the anime beside them', async () => {
@@ -789,12 +789,12 @@ describe('pagination', () => {
     await harness.act(() => harness.bloc.goToPage(3, 'works'));
     expect(harness.replace).toHaveBeenLastCalledWith('?query=naruto&page=5&wpage=4');
 
-    await harness.act(() => harness.bloc.setHitsPerPage(100));
+    await harness.act(() => harness.bloc.setHitsPerPage(96));
 
     expect(harness.bloc.hitsPage).toBe(0);
     expect(harness.bloc.worksPage).toBe(0);
     expect(harness.lastRequest().worksPage).toBe(0);
-    expect(harness.lastRequest().perPage).toBe(100);
+    expect(harness.lastRequest().perPage).toBe(96);
   });
 
   it('resets to the first page for a brand new query', async () => {
@@ -1326,6 +1326,20 @@ describe('page links', () => {
 
     expect(bloc.hrefForPage(1, 'hits')).toBe('/search?query=naruto&genre=Action&page=2');
     expect(bloc.hrefForPage(2, 'works')).toBe('/search?query=naruto&genre=Action&wpage=3');
+  });
+
+  it('gives every genre chip the link its click would write, so the strip works without a script', async () => {
+    const { bloc } = await searched({}, '?query=naruto&status=FINISHED_AIRING&page=3');
+
+    // Selecting: keeps the query and the status, starts from page one.
+    expect(bloc.genreHref('Action')).toBe('/search?query=naruto&genre=Action&status=FINISHED_AIRING');
+
+    bloc.toggleGenre('Action');
+    bloc.syncFromUrl();
+    // Deselecting the chip that is on: the query survives because it is still in the box.
+    expect(bloc.genreHref('Action')).toBe('/search?query=naruto&status=FINISHED_AIRING');
+    bloc.draftQuery = '';
+    expect(bloc.genreHref('Action')).toBe('/search?status=FINISHED_AIRING');
   });
 
   it('carries the filters and the layout, so page two is the same page', async () => {

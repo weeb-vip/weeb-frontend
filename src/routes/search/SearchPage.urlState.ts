@@ -20,7 +20,12 @@
  */
 import type { SortKey } from './SearchPage.results';
 
-export const PAGE_SIZE_OPTIONS = [24, 48, 72, 100];
+/**
+ * Every size divides by 3, 4, 6, 8 and 12 -- the column counts the results
+ * grid takes -- so a page is always full rows. 100 was not, and left a
+ * ragged last row at most widths.
+ */
+export const PAGE_SIZE_OPTIONS = [24, 48, 72, 96];
 /** The page's spelling of the status filter; `search.logic` turns it into dates. */
 export const STATUS_VALUES = ['CURRENTLY_AIRING', 'FINISHED_AIRING', 'NOT_YET_AIRED'];
 export const SORT_KEYS: SortKey[] = ['relevance', 'score', 'newest', 'title'];
