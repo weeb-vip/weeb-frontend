@@ -259,7 +259,8 @@ test.describe('anime news', () => {
     // Retried: the news block sits behind a feature flag resolved by a client-side poll,
     // so a click can land while Svelte is recreating that block and be lost.
     await expect(async () => {
-      await page.getByRole('button', { name: '2', exact: true }).click();
+      // The pager is links now, so paging works without a script.
+      await page.locator('.pager').getByRole('link', { name: '2', exact: true }).click();
       await expect(page).toHaveURL(/[?&]page=2/, { timeout: 1000 });
     }).toPass({ timeout: 20000 });
   });

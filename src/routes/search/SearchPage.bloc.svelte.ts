@@ -460,15 +460,27 @@ export class SearchPageBloc {
     return this.#showAllGenres;
   }
 
-  /** The chips on screen: the busiest genres first, the rest behind "+N more". */
+  /**
+   * The chips on screen: the busiest genres first, the rest behind "+N more".
+   * The selected genre is always among them. A navigation rebuilds the strip
+   * from the server's seed, and a filter the visitor just chose from behind
+   * "+N more" must not vanish back behind it.
+   */
   get visibleGenres(): GenreFacet[] {
-    return this.#showAllGenres
-      ? this.#browseGenres
-      : this.#browseGenres.slice(0, INITIAL_GENRE_COUNT);
+    if (this.#showAllGenres) return this.#browseGenres;
+    const head = this.#browseGenres.slice(0, INITIAL_GENRE_COUNT);
+    const selected = this.#urlState.genre;
+    if (!selected || head.some((g) => g.name === selected)) return head;
+    const chosen = this.#browseGenres.find((g) => g.name === selected);
+    return chosen ? [...head, chosen] : head;
   }
 
+  /** How many "+N more" would reveal. Unchanged by the reveal itself: the view drops the chip on `showAllGenres`. */
   get hiddenGenreCount(): number {
-    return Math.max(0, this.#browseGenres.length - INITIAL_GENRE_COUNT);
+    const head = this.#browseGenres.slice(0, INITIAL_GENRE_COUNT);
+    const selected = this.#urlState.genre;
+    const pinned = selected && !head.some((g) => g.name === selected) && this.#browseGenres.some((g) => g.name === selected) ? 1 : 0;
+    return Math.max(0, this.#browseGenres.length - INITIAL_GENRE_COUNT - pinned);
   }
 
   get hasGenres(): boolean {

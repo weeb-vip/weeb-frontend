@@ -899,6 +899,17 @@ describe('the genre strip', () => {
     return harness;
   }
 
+  it('keeps the selected genre on screen even when it sits behind "+N more"', async () => {
+    const harness = setup({ search: '?genre=Genre 20', genres: async () => genreList(30) });
+    await harness.bloc.init();
+    await vi.waitFor(() => expect(harness.bloc.isLoadingGenres).toBe(false));
+
+    const names = harness.bloc.visibleGenres.map((g) => g.name);
+    expect(names).toHaveLength(INITIAL_GENRE_COUNT + 1);
+    expect(names).toContain('Genre 20');
+    expect(harness.bloc.hiddenGenreCount).toBe(30 - INITIAL_GENRE_COUNT - 1);
+  });
+
   it('shows nothing and hides nothing when the facet came back empty', async () => {
     const { bloc } = await withGenres(0);
 
