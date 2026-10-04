@@ -1,530 +1,357 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/svelte';
 import SafeImage from './SafeImage.svelte';
 
 /**
- * SafeImage walks a list of candidate URLs and stops at the first that decodes.
- * The ordering rules themselves are pure and already covered by
- * `SafeImage.logic`; what is left for a component test is the state machine
- * around them -- which element ends up in the DOM, and what `onChosen` reports.
+ * SafeImage puts its first candidate straight into the HTML and walks the rest
+ * from the element's own `error` event. The ordering rules are pure and live
+ * in `SafeImage.logic`; what is left for a component test is the element: what
+ * it points at after each failure, and what `onChosen` reports.
  *
- * jsdom loads no resources, so a real `new Image()` here would neither fire
- * `load` nor `error` and every attempt would sit until the 3s per-try timeout.
- * The constructor is stubbed instead, with a predicate saying which URLs
- * "exist". That is the only way to exercise the walk at all in this
- * environment; it also means nothing below proves anything about real decoding,
- * caching or the bfcache retries -- those need a browser.
+ * jsdom never fetches, so the events are fired by hand and the decoded size
+ * is stubbed on the element. Nothing here proves anything about real decoding
+ * or the bfcache retries -- those need a browser.
  */
 
-let attempted: string[] = [];
-let succeeds: (url: string) => boolean;
-const OriginalImage = globalThis.Image;
+const img = () => document.querySelector('img') as HTMLImageElement;
 
-class StubImage {
-  onload: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  decoding = 'auto';
-  naturalWidth = 0;
-  naturalHeight = 0;
-  #src = '';
-
-  get src(): string {
-    return this.#src;
-  }
-
-  set src(value: string) {
-    this.#src = value;
-    attempted.push(value);
-    queueMicrotask(() => {
-      if (succeeds(value)) {
-        this.naturalWidth = 680;
-        this.naturalHeight = 1000;
-        this.onload?.();
-      } else {
-        this.onerror?.();
-      }
-    });
-  }
+function decoded(el: HTMLImageElement, width = 680, height = 1000) {
+  Object.defineProperty(el, 'naturalWidth', { value: width, configurable: true });
+  Object.defineProperty(el, 'naturalHeight', { value: height, configurable: true });
 }
 
-beforeEach(() => {
-  attempted = [];
-  succeeds = () => true;
-  globalThis.Image = StubImage as unknown as typeof Image;
-});
+async function loads(el: HTMLImageElement, width = 680, height = 1000) {
+  decoded(el, width, height);
+  await fireEvent.load(el);
+}
+
+const SOURCES = ['https://cdn.example/posters/one', 'https://cdn.example/one'];
 
 afterEach(() => {
-  globalThis.Image = OriginalImage;
+  vi.restoreAllMocks();
 });
 
 describe('SafeImage', () => {
-  it('shows a decorative skeleton before anything has painted', () => {
-    succeeds = () => false;
-    const { container } = render(SafeImage, {
-      props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-    });
+  it('renders the first candidate before any script has run', () => {
+    render(SafeImage, { sources: SOURCES, alt: 'One' });
 
-    const skeleton = container.querySelector('.skeleton') as HTMLElement;
-    expect(skeleton).toBeInTheDocument();
-    // A shelf of 60 cards must not produce 60 polite live regions, nor prefix
-    // every card's accessible name with "Loading...".
-    expect(skeleton).toHaveAttribute('aria-hidden', 'true');
+    const el = screen.getByRole('img', { name: 'One' }) as HTMLImageElement;
+    expect(el.getAttribute('src')).toBe(SOURCES[0]);
+    expect(el.getAttribute('decoding')).toBe('async');
   });
 
-  it('renders the first candidate that loads, and reports it', async () => {
+  it('keeps a decorative skeleton under the element until it has decoded', async () => {
+    const { container } = render(SafeImage, { sources: SOURCES });
+    expect(container.querySelector('.skeleton')).not.toBeNull();
+    expect(container.querySelector('.skeleton')?.getAttribute('aria-hidden')).toBe('true');
+
+    await loads(img());
+
+    await waitFor(() => expect(container.querySelector('.skeleton')).toBeNull());
+  });
+
+  it('reports the candidate that decoded', async () => {
     const onChosen = vi.fn();
-    render(SafeImage, {
-      props: {
-        sources: ['https://cdn.example/a.jpg', 'https://cdn.example/b.jpg'],
-        alt: 'Cowboy Bebop',
-        onChosen
-      }
-    });
+    render(SafeImage, { sources: SOURCES, onChosen });
 
-    const img = await screen.findByAltText('Cowboy Bebop');
-    expect(img).toHaveAttribute('src', 'https://cdn.example/a.jpg');
-    expect(onChosen).toHaveBeenCalledWith({ src: 'https://cdn.example/a.jpg', reason: 'load' });
+    await loads(img());
 
-    // Stopped at the first: it does not fetch the fallbacks it did not need.
-    expect(attempted).toEqual(['https://cdn.example/a.jpg']);
+    expect(onChosen).toHaveBeenCalledTimes(1);
+    expect(onChosen).toHaveBeenCalledWith({ src: SOURCES[0], reason: 'load' });
   });
 
   it('falls through to the next candidate when the preferred one fails', async () => {
     const onChosen = vi.fn();
-    succeeds = (url) => url.endsWith('b.jpg');
-    render(SafeImage, {
-      props: {
-        sources: ['https://cdn.example/a.jpg', 'https://cdn.example/b.jpg'],
-        alt: 'Cowboy Bebop',
-        onChosen
-      }
-    });
+    render(SafeImage, { sources: SOURCES, onChosen });
 
-    const img = await screen.findByAltText('Cowboy Bebop');
-    expect(img).toHaveAttribute('src', 'https://cdn.example/b.jpg');
-    // Landing on the last of several is called out, but is not an error.
-    expect(onChosen).toHaveBeenCalledWith({
-      src: 'https://cdn.example/b.jpg',
-      reason: 'last-source'
-    });
-    expect(attempted).toEqual(['https://cdn.example/a.jpg', 'https://cdn.example/b.jpg']);
+    await fireEvent.error(img());
+
+    await waitFor(() => expect(img().getAttribute('src')).toBe(SOURCES[1]));
+    expect(onChosen).not.toHaveBeenCalled();
+
+    await loads(img());
+
+    expect(onChosen).toHaveBeenCalledWith({ src: SOURCES[1], reason: 'last-source' });
   });
 
   it('rejects a decoded image that is only an error sprite', async () => {
     const onChosen = vi.fn();
-    render(SafeImage, {
-      props: {
-        sources: ['https://cdn.example/a.jpg', 'https://cdn.example/b.jpg'],
-        alt: 'Cowboy Bebop',
-        onChosen,
-        // A 1x1 tracking pixel decodes perfectly well and is not the artwork.
-        accept: (img: HTMLImageElement, url: string) => url.endsWith('b.jpg') && img.naturalWidth > 2
-      }
-    });
+    render(SafeImage, { sources: SOURCES, onChosen });
 
-    const img = await screen.findByAltText('Cowboy Bebop');
-    expect(img).toHaveAttribute('src', 'https://cdn.example/b.jpg');
+    await loads(img(), 1, 1);
+
+    await waitFor(() => expect(img().getAttribute('src')).toBe(SOURCES[1]));
+    expect(onChosen).not.toHaveBeenCalled();
   });
 
-  describe('when nothing loads', () => {
+  it('honours a custom accept check', async () => {
+    const accept = vi.fn(() => false);
+    render(SafeImage, { sources: SOURCES, accept });
+
+    await loads(img());
+
+    expect(accept).toHaveBeenCalledWith(expect.any(HTMLImageElement), SOURCES[0]);
+    await waitFor(() => expect(img().getAttribute('src')).toBe(SOURCES[1]));
+  });
+
+  describe('when every candidate fails', () => {
     it('draws the titled panel rather than a bright not-found illustration', async () => {
       const onChosen = vi.fn();
-      succeeds = () => false;
-      render(SafeImage, {
-        props: {
-          sources: ['https://cdn.example/a.jpg'],
-          alt: '',
-          placeholderTitle: 'Cowboy Bebop',
-          onChosen
-        }
-      });
+      const { container } = render(SafeImage, { sources: SOURCES, placeholderTitle: 'Koupen-chan', onChosen });
 
-      const panel = await screen.findByRole('img', {
-        name: 'Cowboy Bebop — no artwork available'
-      });
-      expect(panel).toHaveTextContent('Cowboy Bebop');
-      expect(onChosen).toHaveBeenCalledWith({ src: null, reason: 'placeholder' });
-    });
+      await fireEvent.error(img());
+      await waitFor(() => expect(img().getAttribute('src')).toBe(SOURCES[1]));
+      await fireEvent.error(img());
 
-    it('stops the skeleton once the panel is final -- there is nothing left to wait for', async () => {
-      succeeds = () => false;
-      const { container } = render(SafeImage, {
-        props: {
-          sources: ['https://cdn.example/a.jpg'],
-          placeholderTitle: 'Cowboy Bebop'
-        }
-      });
-
-      await screen.findByRole('img', { name: /Cowboy Bebop/ });
+      const panel = await screen.findByRole('img', { name: 'Koupen-chan — no artwork available' });
+      expect(panel).toHaveTextContent('Koupen-chan');
+      expect(container.querySelector('img')).toBeNull();
+      // Nothing left to wait for, so the skeleton stops here too.
       expect(container.querySelector('.skeleton')).toBeNull();
+      expect(onChosen).toHaveBeenCalledWith({ src: null, reason: 'placeholder' });
     });
 
     it('uses the fallback image where no placeholder title was given', async () => {
       const onChosen = vi.fn();
-      succeeds = () => false;
-      render(SafeImage, {
-        props: {
-          sources: ['https://cdn.example/a.jpg'],
-          alt: 'Cowboy Bebop',
-          fallbackSrc: '/assets/not found.jpg',
-          onChosen
-        }
-      });
+      render(SafeImage, { sources: SOURCES, fallbackSrc: '/assets/not found.jpg', onChosen });
 
-      await waitFor(() => {
-        expect(onChosen).toHaveBeenCalledWith({
-          src: '/assets/not found.jpg',
-          reason: 'all-failed'
-        });
-      });
-      expect(await screen.findByAltText('Cowboy Bebop')).toHaveAttribute(
-        'src',
-        '/assets/not found.jpg'
-      );
+      await fireEvent.error(img());
+      await waitFor(() => expect(img().getAttribute('src')).toBe(SOURCES[1]));
+      await fireEvent.error(img());
+
+      await waitFor(() => expect(img().getAttribute('src')).toBe('/assets/not found.jpg'));
+      expect(onChosen).toHaveBeenCalledWith({ src: '/assets/not found.jpg', reason: 'all-failed' });
+
+      // A broken fallback is the end of the line, not another walk.
+      await fireEvent.error(img());
+      expect(img().getAttribute('src')).toBe('/assets/not found.jpg');
+      expect(onChosen).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not report the fallback a second time when it decodes', async () => {
+      const onChosen = vi.fn();
+      render(SafeImage, { sources: [SOURCES[0]], fallbackSrc: '/assets/not found.jpg', onChosen });
+
+      await fireEvent.error(img());
+      await waitFor(() => expect(img().getAttribute('src')).toBe('/assets/not found.jpg'));
+      await loads(img());
+
+      expect(onChosen).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('the <img> it emits', () => {
-    it('is lazy by default and eager when the caller says it is above the fold', async () => {
-      const lazy = render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Lazy' }
-      });
-      expect(await screen.findByAltText('Lazy')).toHaveAttribute('loading', 'lazy');
-      lazy.unmount();
+  describe('with nothing to show', () => {
+    it('falls straight through to the fallback', async () => {
+      const onChosen = vi.fn();
+      render(SafeImage, { sources: [], fallbackSrc: '/assets/not found.jpg', onChosen });
 
-      render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Eager', priority: true }
-      });
-      const eager = await screen.findByAltText('Eager');
-      expect(eager).toHaveAttribute('loading', 'eager');
-      expect(eager).toHaveAttribute('fetchpriority', 'high');
+      expect(img().getAttribute('src')).toBe('/assets/not found.jpg');
+      await waitFor(() => expect(onChosen).toHaveBeenCalledWith({ src: '/assets/not found.jpg', reason: 'all-failed' }));
+    });
+
+    it('draws the panel instead, where the caller gave one', async () => {
+      const onChosen = vi.fn();
+      render(SafeImage, { sources: [], placeholderTitle: 'Untitled', onChosen });
+
+      expect(screen.getByRole('img', { name: 'Untitled — no artwork available' })).toBeInTheDocument();
+      await waitFor(() => expect(onChosen).toHaveBeenCalledWith({ src: null, reason: 'placeholder' }));
+    });
+  });
+
+  describe('loading hints', () => {
+    it('is lazy by default and eager with a high priority when above the fold', () => {
+      const { unmount } = render(SafeImage, { sources: SOURCES });
+      expect(img().getAttribute('loading')).toBe('lazy');
+      expect(img().getAttribute('fetchpriority')).toBe('auto');
+      unmount();
+
+      render(SafeImage, { sources: SOURCES, priority: true });
+      expect(img().getAttribute('loading')).toBe('eager');
+      expect(img().getAttribute('fetchpriority')).toBe('high');
+    });
+
+    it('lets an explicit loading value win', () => {
+      render(SafeImage, { sources: SOURCES, priority: true, loading: 'lazy' });
+      expect(img().getAttribute('loading')).toBe('lazy');
+    });
+
+    it('takes a bare `src` as its single candidate, keyed through the CDN', () => {
+      render(SafeImage, { src: 'abc', path: 'posters' });
+      expect(img().getAttribute('src')).toBe('https://cdn.weeb.vip/weeb/posters/abc');
     });
 
     it('adds no duplicate request for a cdnWidth the config has not enabled resizing for', async () => {
-      render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop', cdnWidth: 360 }
-      });
+      render(SafeImage, { sources: [SOURCES[0]], cdnWidth: 360, placeholderTitle: 'x' });
+      expect(img().getAttribute('src')).toBe(SOURCES[0]);
 
-      await screen.findByAltText('Cowboy Bebop');
-      // `resizeCdnUrl` returns its input unchanged when resizing is off, and a
-      // duplicate candidate would just be a second identical request.
-      expect(attempted).toEqual(['https://cdn.example/a.jpg']);
-    });
-  });
-});
+      await fireEvent.error(img());
 
-/**
- * The rest of the state machine: what the DOM `<img>`'s own load and error
- * events do once a candidate has been chosen, what happens when the props name
- * a different image after mount, and the four ways a restored page asks for the
- * artwork again.
- *
- * Same stub as above -- `StubImage` decides which URLs "exist" -- and the same
- * caveat, more sharply: nothing here proves anything about real decoding, real
- * caching, or what a browser actually does on bfcache restore. jsdom fires no
- * `pageshow`, has no back/forward cache and paints nothing; the events below
- * are dispatched by hand, so what is asserted is that the component *responds*
- * to them by re-probing, not that the restore works. That is a browser fact and
- * belongs to the e2e layer, as does whether the CDN serves the artwork at all.
- */
-describe('SafeImage, once a candidate is in the DOM', () => {
-  describe('the <img>’s own events', () => {
-    it('clears the skeleton once the element has actually painted', async () => {
-      const { container } = render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-      });
-
-      const img = await screen.findByAltText('Cowboy Bebop');
-      // Chosen, but not yet painted: the element is held transparent over the
-      // skeleton rather than popping in.
-      expect(img).toHaveClass('opacity-0');
-      expect(container.querySelector('.skeleton')).toBeInTheDocument();
-
-      await fireEvent.load(img);
-
-      expect(img).not.toHaveClass('opacity-0');
-      expect(container.querySelector('.skeleton')).toBeNull();
-    });
-
-    /**
-     * The probe accepted the URL and the element still failed -- a cache miss,
-     * a URL that 404s only for the real request. The fallback is the answer
-     * when the caller gave no placeholder title.
-     */
-    it('swaps in the fallback when the chosen element fails anyway', async () => {
-      render(SafeImage, {
-        props: {
-          sources: ['https://cdn.example/a.jpg'],
-          alt: 'Cowboy Bebop',
-          fallbackSrc: '/assets/not found.jpg'
-        }
-      });
-
-      const img = await screen.findByAltText('Cowboy Bebop');
-      await fireEvent.error(img);
-
-      expect(await screen.findByAltText('Cowboy Bebop')).toHaveAttribute(
-        'src',
-        '/assets/not found.jpg'
-      );
-    });
-
-    it('draws the titled panel instead, where the caller gave one', async () => {
-      render(SafeImage, {
-        props: {
-          sources: ['https://cdn.example/a.jpg'],
-          alt: 'Cowboy Bebop',
-          placeholderTitle: 'Cowboy Bebop'
-        }
-      });
-
-      await fireEvent.error(await screen.findByAltText('Cowboy Bebop'));
-
-      // `/assets/not found.jpg` is a bright white illustration; on this ground
-      // it would be the highest-contrast object in the viewport.
-      const panel = await screen.findByRole('img', { name: 'Cowboy Bebop' });
-      expect(panel).toHaveTextContent('Cowboy Bebop');
-      expect(screen.queryByAltText('Cowboy Bebop')).not.toBeInTheDocument();
+      // One candidate, so one failure is the end: no second request to the same URL.
+      expect(await screen.findByRole('img', { name: /no artwork/ })).toBeInTheDocument();
     });
   });
 
-  describe('when the props name a different image', () => {
+  describe('an element the browser finished before hydration', () => {
+    it('reports it without waiting for a load event that already fired', async () => {
+      vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+      vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(680);
+      vi.spyOn(HTMLImageElement.prototype, 'naturalHeight', 'get').mockReturnValue(1000);
+      const onChosen = vi.fn();
+
+      render(SafeImage, { sources: SOURCES, onChosen });
+
+      await waitFor(() => expect(onChosen).toHaveBeenCalledWith({ src: SOURCES[0], reason: 'load' }));
+      expect(onChosen).toHaveBeenCalledTimes(1);
+    });
+
+    it('moves on when the browser had already given up on it', async () => {
+      vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+      vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(0);
+
+      render(SafeImage, { sources: SOURCES, placeholderTitle: 'x' });
+
+      // Both candidates read as finished-and-empty, so the walk ends on the panel.
+      expect(await screen.findByRole('img', { name: /no artwork/ })).toBeInTheDocument();
+    });
+  });
+
+  describe('when the candidates change', () => {
     it('walks the new candidates and swaps the element', async () => {
-      const { rerender } = render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-      });
-      await screen.findByAltText('Cowboy Bebop');
+      const onChosen = vi.fn();
+      const { rerender } = render(SafeImage, { sources: SOURCES, onChosen });
+      await loads(img());
+      const before = img();
 
-      await rerender({ sources: ['https://cdn.example/c.jpg'], alt: 'Cowboy Bebop' });
+      await rerender({ sources: ['https://cdn.example/two'], onChosen });
 
-      await waitFor(() =>
-        expect(screen.getByAltText('Cowboy Bebop')).toHaveAttribute(
-          'src',
-          'https://cdn.example/c.jpg'
-        )
-      );
-      expect(attempted).toEqual(['https://cdn.example/a.jpg', 'https://cdn.example/c.jpg']);
+      await waitFor(() => expect(img().getAttribute('src')).toBe('https://cdn.example/two'));
+      expect(img()).not.toBe(before);
+      await loads(img());
+      expect(onChosen).toHaveBeenLastCalledWith({ src: 'https://cdn.example/two', reason: 'load' });
     });
 
     it('re-walks when only the CDN folder changes', async () => {
-      const { rerender } = render(SafeImage, {
-        props: { src: 'abc123', path: 'posters', alt: 'Cowboy Bebop' }
-      });
-      await screen.findByAltText('Cowboy Bebop');
-      const first = attempted[0];
-
-      await rerender({ src: 'abc123', path: 'banners', alt: 'Cowboy Bebop' });
-
-      await waitFor(() => expect(attempted).toHaveLength(2));
-      expect(attempted[1]).not.toBe(first);
-      expect(attempted[1]).toContain('banners');
+      const { rerender } = render(SafeImage, { src: 'abc', path: 'posters' });
+      await rerender({ src: 'abc', path: 'banners' });
+      await waitFor(() => expect(img().getAttribute('src')).toBe('https://cdn.weeb.vip/weeb/banners/abc'));
     });
 
-    it('re-reports an image it has already painted rather than fetching it twice', async () => {
-      const onChosen = vi.fn();
-      const { rerender } = render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop', onChosen }
-      });
-      await fireEvent.load(await screen.findByAltText('Cowboy Bebop'));
-      onChosen.mockClear();
+    it('leaves a painted element alone when nothing named a different image', async () => {
+      const { rerender } = render(SafeImage, { sources: SOURCES, alt: 'a' });
+      await loads(img());
+      const before = img();
 
-      // `src` changes but `sources` wins, so the candidate list is the same one
-      // that is already on screen. The parent may have reset its own fade gate,
-      // so it is told again -- but nothing is re-requested.
-      await rerender({
-        sources: ['https://cdn.example/a.jpg'],
-        src: 'ignored-because-sources-win',
-        alt: 'Cowboy Bebop',
-        onChosen
-      });
+      await rerender({ sources: [...SOURCES], alt: 'b' });
 
-      await waitFor(() =>
-        expect(onChosen).toHaveBeenCalledWith({
-          src: 'https://cdn.example/a.jpg',
-          reason: 'already-loaded'
-        })
-      );
-      expect(attempted).toEqual(['https://cdn.example/a.jpg']);
-    });
-
-    it('reports a retry when the same candidate wins but has not painted yet', async () => {
-      const onChosen = vi.fn();
-      const { rerender } = render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop', onChosen }
-      });
-      await screen.findByAltText('Cowboy Bebop');
-      onChosen.mockClear();
-
-      // Same list, and this time the DOM element never fired `load`.
-      await rerender({
-        sources: ['https://cdn.example/a.jpg'],
-        src: 'ignored-because-sources-win',
-        alt: 'Cowboy Bebop',
-        onChosen
-      });
-
-      await waitFor(() =>
-        expect(onChosen).toHaveBeenCalledWith({
-          src: 'https://cdn.example/a.jpg',
-          reason: 'retry-same'
-        })
-      );
-    });
-
-    it('reports a re-walk that lands back on the painted fallback candidate', async () => {
-      const onChosen = vi.fn();
-      succeeds = (url) => url.endsWith('b.jpg');
-      const { rerender } = render(SafeImage, {
-        props: {
-          sources: ['https://cdn.example/a.jpg', 'https://cdn.example/b.jpg'],
-          alt: 'Cowboy Bebop',
-          onChosen
-        }
-      });
-      await fireEvent.load(await screen.findByAltText('Cowboy Bebop'));
-      onChosen.mockClear();
-
-      // The first candidate still fails, so the walk is real -- and it ends on
-      // the element already on screen.
-      await rerender({
-        sources: ['https://cdn.example/a.jpg', 'https://cdn.example/b.jpg'],
-        src: 'ignored-because-sources-win',
-        alt: 'Cowboy Bebop',
-        onChosen
-      });
-
-      await waitFor(() =>
-        expect(onChosen).toHaveBeenCalledWith({
-          src: 'https://cdn.example/b.jpg',
-          reason: 'same-already-loaded'
-        })
-      );
+      expect(img()).toBe(before);
     });
   });
 
-  describe('a page that comes back', () => {
-    /**
-     * jsdom has no back/forward cache, so these events are dispatched by hand.
-     * What is assertable is the response -- the candidates are probed again --
-     * and not that a real restore triggers it. That needs a browser.
-     */
-    const restored = async (event: Event) => {
+  describe('restores', () => {
+    const restore = (persisted: boolean) => {
+      const event = new Event('pageshow') as PageTransitionEvent;
+      Object.defineProperty(event, 'persisted', { value: persisted });
       window.dispatchEvent(event);
-      await waitFor(() => expect(attempted.length).toBeGreaterThan(1));
     };
 
-    it('re-probes after a bfcache restore', async () => {
-      render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-      });
-      await screen.findByAltText('Cowboy Bebop');
+    it('re-requests after a bfcache restore when the image never arrived', async () => {
+      render(SafeImage, { sources: SOURCES });
+      const before = img();
 
-      await restored(Object.assign(new Event('pageshow'), { persisted: true }));
+      restore(true);
 
-      expect(attempted).toEqual(['https://cdn.example/a.jpg', 'https://cdn.example/a.jpg']);
+      await waitFor(() => expect(img()).not.toBe(before));
+      expect(img().getAttribute('src')).toBe(SOURCES[0]);
     });
 
     it('ignores a pageshow that is not a restore', async () => {
-      render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-      });
-      await screen.findByAltText('Cowboy Bebop');
-
-      window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: false }));
+      render(SafeImage, { sources: SOURCES });
+      const before = img();
+      restore(false);
       await Promise.resolve();
-
-      expect(attempted).toEqual(['https://cdn.example/a.jpg']);
+      expect(img()).toBe(before);
     });
 
-    it('re-probes after a mobile swipe-back', async () => {
-      render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-      });
-      await screen.findByAltText('Cowboy Bebop');
-
-      await restored(new Event('swipe-navigation-restored'));
-
-      expect(attempted).toHaveLength(2);
-    });
-
-    it('re-probes when a hidden tab comes back with the image still unpainted', async () => {
-      render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-      });
-      // Chosen but never painted -- the state a backgrounded mobile tab leaves
-      // the element in.
-      await screen.findByAltText('Cowboy Bebop');
-
-      document.dispatchEvent(new Event('visibilitychange'));
-      await waitFor(() => expect(attempted).toHaveLength(2));
-    });
-
-    it('does not re-probe for a tab whose image has already painted', async () => {
-      render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-      });
-      await fireEvent.load(await screen.findByAltText('Cowboy Bebop'));
-
-      document.dispatchEvent(new Event('visibilitychange'));
-      await Promise.resolve();
-
-      expect(attempted).toEqual(['https://cdn.example/a.jpg']);
-    });
-
-    it('collapses two restores in the same frame into one walk', async () => {
-      render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-      });
-      await screen.findByAltText('Cowboy Bebop');
-
-      // Both handlers queue a walk; the second finds one already in progress
-      // and drops it rather than racing the first.
-      window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true }));
+    it('re-requests after a mobile swipe-back', async () => {
+      render(SafeImage, { sources: SOURCES });
+      const before = img();
       window.dispatchEvent(new Event('swipe-navigation-restored'));
+      await waitFor(() => expect(img()).not.toBe(before));
+    });
 
-      await waitFor(() => expect(attempted).toHaveLength(2));
-      // Settle anything still queued, then confirm nothing further ran.
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      expect(attempted).toHaveLength(2);
+    it('re-requests when a hidden tab comes back with the image still unpainted', async () => {
+      render(SafeImage, { sources: SOURCES });
+      const before = img();
+      vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
+      document.dispatchEvent(new Event('visibilitychange'));
+      await waitFor(() => expect(img()).not.toBe(before));
+    });
+
+    it('does not touch an element that has already painted', async () => {
+      render(SafeImage, { sources: SOURCES });
+      await loads(img());
+      const before = img();
+
+      restore(true);
+      window.dispatchEvent(new Event('swipe-navigation-restored'));
+      await Promise.resolve();
+
+      expect(img()).toBe(before);
     });
 
     it('drops its handlers when it goes away', async () => {
-      const { unmount } = render(SafeImage, {
-        props: { sources: ['https://cdn.example/a.jpg'], alt: 'Cowboy Bebop' }
-      });
-      await screen.findByAltText('Cowboy Bebop');
-
+      const remove = vi.spyOn(window, 'removeEventListener');
+      const { unmount } = render(SafeImage, { sources: SOURCES });
       unmount();
-      window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true }));
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(attempted).toEqual(['https://cdn.example/a.jpg']);
+      expect(remove).toHaveBeenCalledWith('pageshow', expect.any(Function));
+      expect(remove).toHaveBeenCalledWith('swipe-navigation-restored', expect.any(Function));
     });
   });
 
-  describe('a caller that gave it nothing to go on', () => {
-    it('falls straight through to the fallback', async () => {
-      const onChosen = vi.fn();
-      succeeds = () => false;
-      render(SafeImage, { props: { alt: 'Cowboy Bebop', onChosen } });
+  describe('with a phone ordering', () => {
+    const PHONE = ['https://cdn.example/posters/one', 'https://cdn.example/one'];
+    const DESKTOP = ['https://cdn.example/banners/one', 'https://cdn.example/posters/one'];
 
-      await waitFor(() =>
-        expect(onChosen).toHaveBeenCalledWith({
-          src: '/assets/not found.jpg',
-          reason: 'all-failed'
-        })
-      );
+    it('offers the phone candidate through a <picture> source the browser picks itself', () => {
+      const { container } = render(SafeImage, { sources: DESKTOP, phoneSources: PHONE });
+      const source = container.querySelector('picture > source') as HTMLSourceElement;
+      expect(source.getAttribute('media')).toBe('(max-width: 767px)');
+      expect(source.getAttribute('srcset')).toBe(PHONE[0]);
+      expect(img().getAttribute('src')).toBe(DESKTOP[0]);
     });
 
-    it('takes a bare `src` as its single candidate, keyed through the CDN', async () => {
-      render(SafeImage, { props: { src: 'abc123', alt: 'Cowboy Bebop' } });
+    it('walks both orderings in step when the element fails', async () => {
+      const { container } = render(SafeImage, { sources: DESKTOP, phoneSources: PHONE });
 
-      const img = await screen.findByAltText('Cowboy Bebop');
-      expect(attempted).toHaveLength(1);
-      expect(img).toHaveAttribute('src', attempted[0]);
-      // The host comes from config's `cdn_url`, so it is not asserted here --
-      // building that URL is `SafeImage.logic`'s job and has its own suite.
-      expect(attempted[0]).toContain('abc123');
+      await fireEvent.error(img());
+
+      await waitFor(() => expect(img().getAttribute('src')).toBe(DESKTOP[1]));
+      expect(container.querySelector('picture > source')?.getAttribute('srcset')).toBe(PHONE[1]);
+    });
+
+    it('drops the source once the walk ends on the fallback', async () => {
+      const { container } = render(SafeImage, { sources: [DESKTOP[0]], phoneSources: [PHONE[0]], fallbackSrc: '/f.jpg' });
+
+      await fireEvent.error(img());
+
+      await waitFor(() => expect(img().getAttribute('src')).toBe('/f.jpg'));
+      expect(container.querySelector('picture')).toBeNull();
+    });
+  });
+
+  describe('per-candidate deadline', () => {
+    it('moves on when a candidate neither loads nor fails in time', async () => {
+      vi.useFakeTimers();
+      try {
+        render(SafeImage, { sources: SOURCES, perTryTimeoutMs: 50 });
+        expect(img().getAttribute('src')).toBe(SOURCES[0]);
+
+        await vi.advanceTimersByTimeAsync(60);
+
+        expect(img().getAttribute('src')).toBe(SOURCES[1]);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });

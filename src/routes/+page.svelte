@@ -10,7 +10,6 @@
   import ChipGroup from '$lib/components/primitives/ChipGroup';
   import { BROWSE_GENRE_LINKS } from '$lib/data/genres';
   import { HomepageBloc, type HomeAnime, type PublishingWork } from './HomepageSSR.bloc.svelte';
-  import '@fortawesome/fontawesome-free/css/all.min.css';
 
   /**
    * The homepage: the airing hero and its rail, then the shelves.
@@ -39,8 +38,6 @@
       publishingWorksData?: { currentlyPublishingWorks?: PublishingWork[] | null } | null;
       currentSeason: string;
       isTokenExpired?: boolean;
-      /** Preloaded in `<svelte:head>`; the hero resolves its own art from the data. */
-      bannerImageUrl?: string | null;
     };
     bloc?: HomepageBloc;
   } = $props();
@@ -60,9 +57,12 @@
 />
 
 <svelte:head>
-  {#if data.bannerImageUrl}
-    <link rel="preload" as="image" href={data.bannerImageUrl} fetchpriority="high" />
-  {/if}
+  <!-- The hero is the largest paint. These let its bytes start with the HTML
+       parse instead of after the stylesheet, one hint per viewport so a phone
+       warms the poster and nothing else. -->
+  {#each bloc.heroPreloads as hint (hint.href)}
+    <link rel="preload" as="image" href={hint.href} media={hint.media} fetchpriority="high" />
+  {/each}
 </svelte:head>
 
 <div class="homepage">

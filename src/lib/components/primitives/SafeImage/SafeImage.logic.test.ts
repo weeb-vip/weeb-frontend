@@ -4,11 +4,8 @@ import type { IConfig } from '../../../../config/interfaces';
 import {
   DEFAULT_REJECT_PATTERNS,
   defaultAccept,
-  firstThatLoads,
-  loadOne,
   loadReason,
   orderedSources,
-  withTimeout
 } from './SafeImage.logic';
 
 /**
@@ -77,6 +74,11 @@ describe('defaultAccept', () => {
 });
 
 describe('orderedSources', () => {
+  it('has no candidates when nothing was named, rather than the CDN root', () => {
+    expect(orderedSources([], '', '', undefined)).toEqual([]);
+    expect(orderedSources([], '', 'posters', 360)).toEqual([]);
+  });
+
   it('builds one CDN URL from `src` when no list was given', () => {
     expect(orderedSources([], 'abc', 'banners', undefined)).toEqual([`${CDN}/banners/abc`]);
   });
@@ -162,167 +164,5 @@ describe('loadReason', () => {
   it('calls out only the last of several', () => {
     expect(loadReason(2, 3)).toBe('last-source');
     expect(loadReason(1, 2)).toBe('last-source');
-  });
-});
-
-describe('loadOne', () => {
-  /** Runs `loadOne` and hands back the <img> it created, so the test can fire events. */
-  function attempt(url: string, accept: (img: HTMLImageElement, url: string) => boolean) {
-    let img!: HTMLImageElement;
-    const promise = loadOne(url, accept, (created) => (img = created));
-    return { promise, get img() { return img; } };
-  }
-
-  it('registers the element before it starts loading, so a caller can abort it', () => {
-    const register = vi.fn();
-    void loadOne(`${CDN}/a`, () => true, register).catch(() => {});
-
-    expect(register).toHaveBeenCalledTimes(1);
-    expect(register.mock.calls[0][0]).toBeInstanceOf(HTMLImageElement);
-  });
-
-  it('sets the URL it was asked to try and decodes off the main thread', () => {
-    const run = attempt(`${CDN}/a`, () => true);
-    void run.promise.catch(() => {});
-
-    expect(run.img.getAttribute('src')).toBe(`${CDN}/a`);
-    expect(run.img.decoding).toBe('async');
-  });
-
-  it('resolves with the URL and the element once it loads and is accepted', async () => {
-    const run = attempt(`${CDN}/a`, () => true);
-    run.img.onload?.(new Event('load'));
-
-    await expect(run.promise).resolves.toEqual({ url: `${CDN}/a`, img: run.img });
-  });
-
-  it('rejects an image that loaded but `accept` turned down', async () => {
-    const run = attempt('/assets/404.jpg', () => false);
-    run.img.onload?.(new Event('load'));
-
-    await expect(run.promise).rejects.toThrow('Rejected by accept()');
-  });
-
-  it('rejects a URL that failed outright', async () => {
-    const run = attempt(`${CDN}/a`, () => true);
-    run.img.onerror?.(new Event('error'));
-
-    await expect(run.promise).rejects.toThrow('Failed load');
-  });
-
-  it('accepts anyway when decode() throws -- a failed decode is not a failed image', async () => {
-    const run = attempt(`${CDN}/a`, () => true);
-    run.img.decode = () => Promise.reject(new Error('decode unsupported'));
-    run.img.onload?.(new Event('load'));
-
-    await expect(run.promise).resolves.toMatchObject({ url: `${CDN}/a` });
-  });
-
-  it('rejects when `accept` itself throws rather than hanging', async () => {
-    const run = attempt(`${CDN}/a`, () => {
-      throw new Error('accept exploded');
-    });
-    run.img.onload?.(new Event('load'));
-
-    await expect(run.promise).rejects.toThrow('accept exploded');
-  });
-});
-
-describe('withTimeout', () => {
-  it('returns the promise untouched when there is no bound to apply', async () => {
-    const p = Promise.resolve('ok');
-
-    expect(withTimeout(p, undefined)).toBe(p);
-    expect(withTimeout(p, 0)).toBe(p);
-    expect(withTimeout(p, -1)).toBe(p);
-  });
-
-  it('passes a value through before the deadline', async () => {
-    await expect(withTimeout(Promise.resolve('ok'), 50)).resolves.toBe('ok');
-  });
-
-  it('passes a rejection through unchanged', async () => {
-    await expect(withTimeout(Promise.reject(new Error('boom')), 50)).rejects.toThrow('boom');
-  });
-
-  it('rejects with a timeout when nothing settles in time', async () => {
-    vi.useFakeTimers();
-    const pending = withTimeout(new Promise(() => {}), 100);
-    const assertion = expect(pending).rejects.toThrow('timeout');
-
-    await vi.advanceTimersByTimeAsync(100);
-    await assertion;
-  });
-
-  it('clears its timer once the promise settles', async () => {
-    vi.useFakeTimers();
-    await expect(withTimeout(Promise.resolve('ok'), 100)).resolves.toBe('ok');
-
-    expect(vi.getTimerCount()).toBe(0);
-  });
-});
-
-describe('firstThatLoads', () => {
-  it('stops at the first candidate that loads', async () => {
-    const attempt = vi.fn(async () => undefined);
-
-    await expect(firstThatLoads(['a', 'b', 'c'], attempt, () => false)).resolves.toEqual({
-      url: 'a',
-      index: 0
-    });
-    // One request per image, not one per candidate: 54 cards with a two-step
-    // fallback used to fetch 108 images to show 54.
-    expect(attempt).toHaveBeenCalledTimes(1);
-  });
-
-  it('walks to the next candidate when one fails', async () => {
-    const attempt = vi.fn(async (url: string) => {
-      if (url !== 'c') throw new Error('nope');
-    });
-
-    await expect(firstThatLoads(['a', 'b', 'c'], attempt, () => false)).resolves.toEqual({
-      url: 'c',
-      index: 2
-    });
-    expect(attempt).toHaveBeenCalledTimes(3);
-  });
-
-  it('reports null when every candidate failed', async () => {
-    const attempt = vi.fn(async () => Promise.reject(new Error('nope')));
-
-    await expect(firstThatLoads(['a', 'b'], attempt, () => false)).resolves.toBeNull();
-  });
-
-  it('reports null for an empty candidate list without attempting anything', async () => {
-    const attempt = vi.fn();
-
-    await expect(firstThatLoads([], attempt, () => false)).resolves.toBeNull();
-    expect(attempt).not.toHaveBeenCalled();
-  });
-
-  it('gives up as undefined once the run has been abandoned', async () => {
-    const attempt = vi.fn(async () => Promise.reject(new Error('nope')));
-
-    await expect(firstThatLoads(['a', 'b', 'c'], attempt, () => true)).resolves.toBeUndefined();
-    // Checked between attempts, so the first one still ran and no more did.
-    expect(attempt).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not abandon a run that already succeeded', async () => {
-    const attempt = vi.fn(async () => undefined);
-
-    await expect(firstThatLoads(['a', 'b'], attempt, () => true)).resolves.toEqual({
-      url: 'a',
-      index: 0
-    });
-  });
-
-  it('stops walking as soon as the run is superseded mid-chain', async () => {
-    const attempt = vi.fn(async () => Promise.reject(new Error('nope')));
-    let calls = 0;
-    const abandoned = () => ++calls >= 2;
-
-    await expect(firstThatLoads(['a', 'b', 'c'], attempt, abandoned)).resolves.toBeUndefined();
-    expect(attempt).toHaveBeenCalledTimes(2);
   });
 });

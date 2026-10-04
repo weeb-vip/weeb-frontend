@@ -34,6 +34,8 @@
     sources: explicitSources = null,
     /** Intended device-pixel width, for CDN resizing. Undefined = full-res. */
     cdnWidth = undefined,
+    phoneSources = [],
+    phoneCdnWidth = undefined,
     /**
      * Full viewport suits a page whose subject is the artwork. A page whose
      * subject is a list wants to show some of the list.
@@ -57,10 +59,11 @@
     focus = 'center 50%',
     /**
      * False holds the artwork at opacity 0 so it fades in once something has
-     * painted. Left true by a caller that wants no gate -- SafeImage only
-     * dispatches `chosen` on some of its paths (a cached priority image takes
-     * another one), and a gate on a page that cannot guarantee the event is how
-     * a fully loaded banner ends up sitting at opacity 0 forever.
+     * painted; left true by a caller that wants no gate. Only applied after
+     * hydration (see `bgOpacity`), and SafeImage reports `onChosen` for an
+     * element the browser finished before the script ran, so the gate can
+     * always be opened -- a fully loaded banner used to sit at opacity 0
+     * forever when the event took a path that skipped it.
      */
     loaded = true,
     /** How long that fade takes. */
@@ -102,7 +105,10 @@
   }: {
     imageId?: string | null;
     sources?: string[] | null;
+    /** A phone-width ordering, offered as a <picture> source. See SafeImage. */
+    phoneSources?: string[];
     cdnWidth?: number;
+    phoneCdnWidth?: number;
     minHeight?: string;
     fade?: string;
     fadeMobile?: string | null;
@@ -126,6 +132,16 @@
   // local and staging read production artwork, which hid staging having no
   // banners of its own.
   const artSources = $derived(explicitSources ?? bannerSourcesFor(imageId));
+  // The fade gate exists only once a script can open it. The server's HTML
+  // shows the art outright: with the gate applied there, a visitor without
+  // JavaScript (or one whose hydration is still on its way) would sit on an
+  // empty stage, and the art would be invisible for exactly the time it takes
+  // to become the largest paint.
+  let hydrated = $state(false);
+  $effect(() => {
+    hydrated = true;
+  });
+  const bgOpacity = $derived(hydrated && !loaded ? 0 : 1);
 
   // Two names for one number: the inline value, and the value at <=768px. An
   // inline custom property cannot be overridden by a media query, so the
@@ -146,16 +162,17 @@
   style="min-height: calc({minHeight} + var(--art-fade)); {vars}"
 >
   {#if artSources.length > 0}
-    <div class="key-art__bg" style="opacity: {loaded ? 1 : 0};">
+    <div class="key-art__bg" style="opacity: {bgOpacity};">
       <SafeImage
         sources={artSources}
         alt=""
         loading="eager"
         priority={true}
         fallbackSrc="/assets/not found.jpg"
-        perTryTimeoutMs={3000}
         className="key-art__bg-img"
         {cdnWidth}
+        {phoneSources}
+        {phoneCdnWidth}
         {onChosen}
       />
     </div>

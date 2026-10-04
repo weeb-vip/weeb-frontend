@@ -15,6 +15,7 @@ import { GetImageFromAnime, getYearUTC } from '$lib/services/utils';
 import { parseDurationToMinutes, resolveEpisodeTiming, type EpisodeTiming } from '$lib/services/airTimeUtils';
 import { getAnimeTitle, preferencesStore, type TitleLanguage } from '$lib/stores/preferences';
 import { isPhone, isTablet } from '$lib/stores/viewport';
+import { heroPreloads, type HeroPreload } from '$lib/components/home/HeroBanner/hero-art';
 import { loggedInStore } from '$lib/stores/auth';
 import { animeNotificationService } from '$lib/services/animeNotifications';
 import { AuthStorage } from '$lib/utils/auth-storage';
@@ -569,6 +570,16 @@ export class HomepageBloc {
   /** Nothing is airing, so the hero falls back to the best-rated show we have. */
   get fallbackBannerAnime(): HomeAnime | null {
     return this.hasAiring ? null : (this.topRated[0] ?? null);
+  }
+
+  /**
+   * Preload hints for the hero art, one per viewport, from the same pick the
+   * page renders. Computed here rather than in the loader: the loader's
+   * `[0]` is not the hero once the entries are re-sorted by air time, and a
+   * hint for the wrong image is a wasted request on the critical path.
+   */
+  get heroPreloads(): HeroPreload[] {
+    return heroPreloads(this.bannerId ?? this.fallbackBannerAnime?.id ?? null);
   }
 
   select(info: { id?: string | null } | null | undefined): void {

@@ -1,46 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, within } from '@testing-library/svelte';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, within, fireEvent, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import PosterCard from './PosterCard.svelte';
 import { noCardTracking } from '$lib/components/cards/Card.bloc.svelte';
 
-/**
- * The card the homepage draws 54 of. It is presentational, so the assertions
- * are about what it composes and, above all, about the ONE thing its top-right
- * corner is allowed to say: the viewer's own list status if the show is on it,
- * otherwise where the show is in its run -- never both.
- *
- * Tracking arrives as a port, so the analytics ping is injected rather than
- * mocked out of a module. The poster goes through SafeImage, whose `new Image()`
- * probe never resolves in jsdom; it is stubbed to fail, which puts the card in
- * its titled-placeholder state and leaves the rest of the card assertable.
- */
-
-const OriginalImage = globalThis.Image;
-
-class NeverLoadsImage {
-  onload: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  decoding = 'auto';
-  naturalWidth = 0;
-  naturalHeight = 0;
-  #src = '';
-  get src(): string {
-    return this.#src;
-  }
-  set src(value: string) {
-    this.#src = value;
-    queueMicrotask(() => this.onerror?.());
-  }
-}
-
-beforeEach(() => {
-  globalThis.Image = NeverLoadsImage as unknown as typeof Image;
-});
-
-afterEach(() => {
-  globalThis.Image = OriginalImage;
-});
 
 const base = {
   id: 'abc123',
@@ -205,13 +168,22 @@ describe('PosterCard', () => {
   });
 
   describe('the poster', () => {
-    it('names the image with the title', async () => {
+    it('names the image with the title', () => {
       render(PosterCard, { props: base });
 
-      // Every candidate fails under the stub, so the card lands on its titled
-      // placeholder -- which is the state that has to stay named. The card
-      // passes `alt={title}`, so the panel is named by the title rather than by
-      // SafeImage's "<title> — no artwork available" fallback wording.
+      expect(screen.getByRole('img', { name: 'Cowboy Bebop' })).toHaveAttribute('loading', 'lazy');
+    });
+
+    it('lands on a titled placeholder, still named by the title, when every candidate fails', async () => {
+      render(PosterCard, { props: base });
+
+      // The card passes `alt={title}`, so the panel is named by the title rather
+      // than by SafeImage's "<title> — no artwork available" fallback wording.
+      const poster = () => document.querySelector('.poster img') as HTMLImageElement;
+      await fireEvent.error(poster());
+      await waitFor(() => expect(poster()).not.toBeNull());
+      if (poster()) await fireEvent.error(poster());
+
       const panel = await screen.findByRole('img', { name: 'Cowboy Bebop' });
       expect(panel).toHaveClass('art-placeholder');
       expect(panel).toHaveTextContent('Cowboy Bebop');

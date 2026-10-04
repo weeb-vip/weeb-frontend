@@ -1,18 +1,29 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
-  import { getSafeImageUrl } from '$lib/utils/image';
   import debug from '$lib/utils/debug';
+  import { PHONE_QUERY } from '$lib/stores/viewport';
   import {
     DEFAULT_REJECT_PATTERNS,
     defaultAccept,
-    firstThatLoads,
-    loadOne,
     loadReason,
     orderedSources,
-    withTimeout,
     type ChosenDetail
   } from './SafeImage.logic';
 
+  /**
+   * An <img> with a fallback chain, rendered on the server.
+   *
+   * The first candidate goes straight into the HTML, so the browser starts the
+   * request from the preload scanner, honours `loading="lazy"` and
+   * `fetchpriority`, and paints without JavaScript. Only the fallback walk needs
+   * a script: the element's own `error` event (or an `accept` rejection on
+   * `load`) swaps in the next candidate, and once every candidate is spent the
+   * fallback image or the titled panel takes over.
+   *
+   * This replaces a probe that created `new Image()` per candidate after
+   * hydration and only then rendered the element. That meant no artwork at all
+   * before the JS ran, every image on the page downloading at once regardless of
+   * `loading`, and a hero that reached the screen seconds after the HTML did.
+   */
   let {
     src = '',
     alt = '',
@@ -38,12 +49,27 @@
     cdnWidth = undefined,
     /** Ordered list of candidate URLs (first has highest priority) */
     sources = [],
+    /**
+     * A second ordering for phone-width viewports, offered through a <picture>
+     * source so the browser picks it before any script runs. The server has no
+     * viewport: with one list, every phone first received the desktop art in
+     * its HTML and swapped after hydration, paying for both. Walked in step with
+     * `sources`: the i-th phone candidate falls with the i-th desktop one.
+     */
+    phoneSources = [],
+    /** `cdnWidth` for the phone ordering. Defaults to `cdnWidth`. */
+    phoneCdnWidth = undefined,
     /** Optional: reject by URL pattern (e.g., 404 placeholders) */
     rejectPatterns = DEFAULT_REJECT_PATTERNS,
     /** Custom acceptance check (URL + decoded dimensions) */
     accept = (img: HTMLImageElement, url: string) => defaultAccept(img, url, rejectPatterns),
-    /** Per-attempt timeout (ms). 0/undefined = no timeout per image */
-    perTryTimeoutMs = 3000,
+    /**
+     * Give up on a candidate that has neither loaded nor errored after this
+     * many ms. Off by default: a real <img> reports a failure itself, and a
+     * timer that fires mid-download on a slow link would abandon a good image
+     * for the larger untransformed one behind it.
+     */
+    perTryTimeoutMs = 0,
     /** Called once a candidate has been settled on -- including the failure
      * cases, where `src` is the fallback or null. */
     onChosen,
@@ -61,280 +87,202 @@
     loading?: 'lazy' | 'eager';
     cdnWidth?: number;
     sources?: string[];
+    phoneSources?: string[];
+    phoneCdnWidth?: number;
     rejectPatterns?: (string | RegExp)[];
     accept?: (img: HTMLImageElement, url: string) => boolean;
     perTryTimeoutMs?: number;
     onChosen?: (detail: ChosenDetail) => void;
   } = $props();
 
+  const candidates = $derived(orderedSources(sources, src, path, cdnWidth));
+  const phoneCandidates = $derived(
+    phoneSources.length > 0 ? orderedSources(phoneSources, '', path, phoneCdnWidth ?? cdnWidth) : []
+  );
+  const candidatesKey = $derived([...candidates, '|', ...phoneCandidates].join('\n'));
   const actualLoading = $derived(loading || (priority ? 'eager' : 'lazy'));
 
-  let isLoaded = $state(false);
-  let isError = $state(false);
-  let showPlaceholder = $state(false);
-  let chosenSrc = $state<string | null>(null);
-  let domImageLoaded = $state(false); // Track when the DOM <img> has loaded
-  // Bookkeeping the template never reads, so plain locals: making these state
-  // would only add reactivity nothing subscribes to.
-  let destroyed = false;
-  let runId = 0;
-  let mounted = false; // Track if component is mounted
-  let isLoadingInProgress = false; // Prevent concurrent loads
-  const imgs: HTMLImageElement[] = [];
+  /** Which candidate the element currently points at. */
+  let index = $state(0);
+  /** Every candidate failed; the fallback or the panel is showing. */
+  let failed = $state(false);
+  /** The element has decoded something real (or the fallback). */
+  let painted = $state(false);
+  /** Bumped to recreate the element, which is the only way to make the browser
+   * re-request a URL it already gave up on. */
+  let generation = $state(0);
+  let imgEl = $state<HTMLImageElement | null>(null);
 
-  async function tryInOrder() {
-    // Prevent concurrent loads
-    if (isLoadingInProgress) {
-      debug.warn('Load already in progress, skipping duplicate call');
-      return;
-    }
+  const exhausted = $derived(failed || candidates.length === 0);
+  const showPlaceholder = $derived(exhausted && !!placeholderTitle);
+  const onFallback = $derived(exhausted && !placeholderTitle);
+  const current = $derived.by<string | null>(() => {
+    if (!exhausted) return candidates[index] ?? null;
+    return placeholderTitle ? null : fallbackSrc || null;
+  });
+  /** The phone candidate shown beside `current`; none once the walk is over. */
+  const phoneCurrent = $derived.by<string | null>(() => {
+    if (exhausted || phoneCandidates.length === 0) return null;
+    return phoneCandidates[Math.min(index, phoneCandidates.length - 1)] ?? null;
+  });
 
-    isLoadingInProgress = true;
-    const id = ++runId;
+  // Plain bookkeeping the template never reads.
+  let settledFor = '';
+  let reportedEmpty = false;
 
-    if (sources.length === 0 && !src) debug.warn('No image sources or src provided');
-    const candidates = orderedSources(sources, src, path, cdnWidth);
-
-    debug.log(`Trying ${candidates.length} image sources in priority order`);
-
-    // Only reset states if we're loading a different image
-    const newFirstSource = candidates[0];
-    if (newFirstSource === chosenSrc && domImageLoaded) {
-      // Same image already loaded, no need to reload
-      debug.log('Same image source already loaded, skipping reload');
-      debug.log(`  Reporting the already-loaded image: ${chosenSrc}`);
-      // Report it so the parent knows the image is ready (important if it reset bgLoaded)
-      onChosen?.({ src: chosenSrc, reason: 'already-loaded' });
-      isLoadingInProgress = false;
-      return;
-    }
-
-    // Don't reset states yet - keep current image visible while loading new one
-    const previousSrc = chosenSrc;
-    const wasLoaded = domImageLoaded;
-
-    const abandoned = () => destroyed || id !== runId;
-    const best = await firstThatLoads(
-      candidates,
-      (url) => withTimeout(loadOne(url, accept, (img) => imgs.push(img)), perTryTimeoutMs),
-      abandoned
-    );
-    if (best === undefined) {
-      isLoadingInProgress = false;
-      return;
-    }
-
-    if (destroyed || id !== runId) {
-      isLoadingInProgress = false;
-      return;
-    }
-
-    if (best) {
-
-      debug.success(`Image loaded successfully: ${best.url} (priority ${best.index + 1})`);
-      showPlaceholder = false;
-
-      // Only reset states if we actually have a different image
-      if (best.url !== previousSrc) {
-        debug.log(`Setting new chosenSrc: ${best.url} (was: ${previousSrc})`);
-        chosenSrc = best.url;
-        isLoaded = true;
-        domImageLoaded = false; // Reset so new image can load in DOM
-      } else if (!domImageLoaded) {
-        // Same image but DOM hasn't loaded it yet - this might be a retry
-        debug.log('Same image but DOM not loaded, resetting domImageLoaded');
-        domImageLoaded = false;
-        onChosen?.({ src: chosenSrc, reason: 'retry-same' });
-      } else {
-        // Same image, already loaded in DOM - still notify the parent
-        debug.log('Same image already loaded in DOM, keeping current state');
-        debug.log('Reporting the chosen image so the parent knows it is ready');
-        onChosen?.({ src: chosenSrc, reason: 'same-already-loaded' });
-        isLoadingInProgress = false;
-        return;
-      }
-
-      // Landing on a later candidate is not degradation, so nothing here is
-      // marked as an error state. This used to blur whenever the LAST of several
-      // sources won -- reasonable when the chain was [real image,
-      // not-found.jpg], and wrong the moment callers pass genuine alternatives.
-      // A poster shelf asking for [tvdb poster, scraper image] hits the second
-      // for every show TheTVDB does not carry, and blurred every one of them.
-      isError = false;
-      onChosen?.({ src: chosenSrc, reason: loadReason(best.index, candidates.length) });
-      isLoadingInProgress = false;
-      return;
-    }
-
-    // none worked → fallback
-    if (!destroyed && id === runId) {
-      debug.error('All image sources failed, using fallback');
-      if (placeholderTitle) {
-        // Nothing further to fetch: the panel is the final state, so the skeleton
-        // stops here rather than waiting on an image that will never arrive.
-        chosenSrc = null;
-        showPlaceholder = true;
-        domImageLoaded = true;
-        isError = true;
-        isLoaded = true;
-        onChosen?.({ src: null, reason: 'placeholder' });
-      } else {
-        if (fallbackSrc !== previousSrc) {
-          chosenSrc = fallbackSrc ?? null;
-          domImageLoaded = false; // Need to load fallback image
-        }
-        isError = true;
-        isLoaded = true;
-        onChosen?.({ src: chosenSrc, reason: 'all-failed' });
-      }
-    }
-    isLoadingInProgress = false;
+  function report(detail: ChosenDetail) {
+    onChosen?.(detail);
   }
 
-  // Track previous values to detect actual changes (initialised on mount to avoid pre-mount comparisons)
-  let prevSrc = '';
-  let prevSources: string[] = [];
-  let prevPath = '';
+  /** Called for a decoded element: on `load`, or at mount for an element the
+   * browser finished before hydration -- a cached hero never fires `load` for
+   * the script, and a gate waiting on `onChosen` would otherwise hold it at
+   * opacity 0 forever. */
+  function settle(img: HTMLImageElement) {
+    const url = current;
+    if (!url) return;
+    const key = `${generation}:${url}`;
+    if (settledFor === key) return;
+    settledFor = key;
 
-  // Runs once: every read below is untracked, so nothing here re-subscribes.
-  $effect(() => {
-    mounted = true;
-
-    // Reset all state on mount to handle View Transitions properly
-    // When navigating back to a page, the component may have stale state
-    domImageLoaded = false;
-    isLoadingInProgress = false;
-    isLoaded = false;
-    isError = false;
-    showPlaceholder = false;
-    destroyed = false;
-    chosenSrc = null; // Force fresh image selection
-    runId = 0; // Reset run ID
-
-    // Clean up any previous image elements
-    for (const img of imgs) {
-      img.onload = null;
-      img.onerror = null;
+    if (onFallback) {
+      painted = true;
+      return;
     }
-    imgs.length = 0;
-
-    // Initialize tracking with current values
-    prevSrc = untrack(() => src);
-    prevSources = untrack(() => sources);
-    prevPath = untrack(() => path);
-
-    // Small delay to ensure DOM is ready after View Transitions
-    requestAnimationFrame(() => {
-      if (!destroyed) {
-        tryInOrder();
-      }
-    });
-
-    // Handle browser back/forward cache (bfcache) restoration
-    const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) {
-        debug.log('Page restored from bfcache, reloading images');
-        forceReloadImages();
-      }
-    };
-
-    // Handle mobile swipe-back navigation (custom event from swipe-navigation.ts)
-    const handleSwipeNavigationRestored = () => {
-      debug.log('Swipe navigation restored, reloading images');
-      forceReloadImages();
-    };
-
-    // Handle visibility change (mobile browsers may need to reload images when tab becomes visible)
-    const handleVisibilityChange = () => {
-      if (!document.hidden && !domImageLoaded && chosenSrc) {
-        debug.log('Page became visible with incomplete image load, retrying');
-        forceReloadImages();
-      }
-    };
-
-    // Helper to force reload images
-    function forceReloadImages() {
-      domImageLoaded = false;
-      isLoadingInProgress = false;
-      showPlaceholder = false;
-      chosenSrc = null;
-      requestAnimationFrame(() => {
-        if (!destroyed) {
-          tryInOrder();
-        }
-      });
+    if (!accept(img, url)) {
+      debug.warn(`Rejected decoded image: ${url}`);
+      advance();
+      return;
     }
+    painted = true;
+    debug.success(`Image loaded: ${url} (candidate ${index + 1}/${candidates.length})`);
+    // What the browser actually chose, where it says: the phone source and
+    // the desktop one differ, and callers key their treatment off the path.
+    report({ src: img.currentSrc || url, reason: loadReason(index, candidates.length) });
+  }
 
-    window.addEventListener('pageshow', handlePageShow);
-    window.addEventListener('swipe-navigation-restored', handleSwipeNavigationRestored);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+  function advance() {
+    painted = false;
+    if (index + 1 < candidates.length) {
+      index += 1;
+      return;
+    }
+    giveUp();
+  }
 
-    return () => {
-      destroyed = true;
-      window.removeEventListener('pageshow', handlePageShow);
-      window.removeEventListener('swipe-navigation-restored', handleSwipeNavigationRestored);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      for (const img of imgs) {
-        img.onload = null;
-        img.onerror = null;
-      }
-    };
-  });
-
-  // Reload only when the props that actually name an image change. This effect
-  // is declared after the mount one, so on the first flush `mounted` is already
-  // true and the prev* values already match -- it is a no-op until a real change.
-  $effect(() => {
-    const nextSrc = src;
-    const nextPath = path;
-    const sourcesStr = JSON.stringify(sources);
-
-    if (!mounted) return;
-
-    const prevSourcesStr = JSON.stringify(prevSources);
-    if (nextSrc === prevSrc && sourcesStr === prevSourcesStr && nextPath === prevPath) return;
-
-    debug.log(`=== Props changed after mount ===`);
-    if (nextSrc !== prevSrc) debug.log(`  src: ${prevSrc} -> ${nextSrc}`);
-    if (sourcesStr !== prevSourcesStr) debug.log(`  sources changed`);
-    if (nextPath !== prevPath) debug.log(`  path: ${prevPath} -> ${nextPath}`);
-
-    prevSrc = nextSrc;
-    prevSources = [...sources];
-    prevPath = nextPath;
-    untrack(() => tryInOrder());
-  });
-
-  // Fallback error handler for simple mode
-  function handleSimpleError() {
-    debug.error(`Image failed to load: ${chosenSrc}`);
+  function giveUp() {
+    failed = true;
     if (placeholderTitle) {
-      chosenSrc = null;
-      showPlaceholder = true;
-      domImageLoaded = true;
-      isError = true;
-      isLoaded = true;
-      return;
+      // Nothing further to fetch: the panel is the final state.
+      painted = true;
+      report({ src: null, reason: 'placeholder' });
+    } else {
+      debug.error('All image sources failed, using fallback');
+      report({ src: fallbackSrc || null, reason: 'all-failed' });
     }
-    chosenSrc = fallbackSrc;
-    domImageLoaded = false; // Reset to load fallback
-    isError = true;
-    isLoaded = true;
   }
 
-  function handleSimpleLoad() {
-    debug.log(`DOM image loaded: ${chosenSrc}`);
-    isLoaded = true;
-    domImageLoaded = true; // Image fully loaded in DOM
+  function handleError() {
+    if (onFallback) {
+      // The fallback itself is broken; there is nothing left to try.
+      painted = true;
+      return;
+    }
+    debug.warn(`Image failed to load: ${current}`);
+    advance();
   }
+
+  function handleLoad(event: Event) {
+    settle(event.currentTarget as HTMLImageElement);
+  }
+
+  function rewalk() {
+    index = 0;
+    failed = false;
+    painted = false;
+    settledFor = '';
+    generation += 1;
+  }
+
+  // Candidate changes after the first render start the walk over with a fresh
+  // element. The first run is the server's element: leaving it alone is what
+  // keeps the SSR request from being thrown away at hydration.
+  let prevKey: string | null = null;
+  $effect(() => {
+    const key = candidatesKey;
+    if (prevKey === null) {
+      prevKey = key;
+      return;
+    }
+    if (key === prevKey) return;
+    prevKey = key;
+    debug.log('Image candidates changed; walking again');
+    rewalk();
+  });
+
+  // A page with nothing to show reports that once, so a caller gating on
+  // `onChosen` is not left waiting.
+  $effect(() => {
+    if (candidates.length > 0 || reportedEmpty) return;
+    reportedEmpty = true;
+    debug.warn('No image sources or src provided');
+    giveUp();
+  });
+
+  // An element the browser already finished with before this ran.
+  $effect(() => {
+    const img = imgEl;
+    const url = current;
+    if (!img || !url || !img.complete) return;
+    if (img.naturalWidth > 0) settle(img);
+    else handleError();
+  });
+
+  // Optional per-candidate deadline.
+  $effect(() => {
+    const url = current;
+    if (!perTryTimeoutMs || perTryTimeoutMs <= 0 || !url || painted) return;
+    const t = setTimeout(() => {
+      debug.warn(`Image timed out: ${url}`);
+      if (onFallback) painted = true;
+      else advance();
+    }, perTryTimeoutMs);
+    return () => clearTimeout(t);
+  });
+
+  // bfcache restores and mobile swipe-back can hand back a document whose
+  // images never finished; a tab that was hidden mid-load can do the same.
+  $effect(() => {
+    const incomplete = () => {
+      if (painted) return false;
+      const img = imgEl;
+      return !img || !img.complete || img.naturalWidth === 0;
+    };
+    const retry = () => {
+      if (incomplete()) rewalk();
+    };
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) retry();
+    };
+    const handleVisibilityChange = () => {
+      if (!document.hidden) retry();
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('swipe-navigation-restored', retry);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('swipe-navigation-restored', retry);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  });
 </script>
 
 <div class="relative {className}" {style}>
-  {#if !domImageLoaded && !showPlaceholder}
-    <!-- Show skeleton while image is loading or selecting source -->
-    <!-- Decorative: a shelf of 60 cards produced 60 polite live regions and
-         prefixed every card's accessible name with "Loading...". The card's own
-         title already names it. -->
+  {#if !painted && !showPlaceholder}
+    <!-- Sits under the element until it has decoded. Decorative: a shelf of
+         60 cards produced 60 polite live regions and prefixed every card's
+         accessible name with "Loading...". The card's own title names it. -->
     <div class="absolute inset-0 bg-weeb-surface skeleton rounded" aria-hidden="true"></div>
   {/if}
 
@@ -344,22 +292,38 @@
     <div class="art-placeholder" role="img" aria-label={alt || `${placeholderTitle} — no artwork available`}>
       <span class="art-placeholder__title">{placeholderTitle}</span>
     </div>
-  {:else if chosenSrc}
-    <img
-      src={chosenSrc}
-      {alt}
-      class="w-full h-full object-cover {!domImageLoaded ? 'opacity-0' : ''}"
-      {width}
-      {height}
-      loading={actualLoading}
-      fetchpriority={priority ? 'high' : 'auto'}
-      data-original-src={getSafeImageUrl(src, path)}
-      data-sources={sources.length > 0 ? JSON.stringify(sources) : undefined}
-      onerror={handleSimpleError}
-      onload={handleSimpleLoad}
-    />
+  {:else if current}
+    {#key generation}
+      {#if phoneCurrent}
+        <picture class="relative block w-full h-full">
+          <source media={PHONE_QUERY} srcset={phoneCurrent} />
+          {@render image()}
+        </picture>
+      {:else}
+        {@render image()}
+      {/if}
+    {/key}
   {/if}
 </div>
+
+{#snippet image()}
+  <!-- `relative` so the element paints above the positioned skeleton. No
+       opacity gate: the server's element should show the moment it decodes,
+       script or no script. -->
+  <img
+    bind:this={imgEl}
+    src={current}
+    {alt}
+    class="relative w-full h-full object-cover"
+    {width}
+    {height}
+    loading={actualLoading}
+    fetchpriority={priority ? 'high' : 'auto'}
+    decoding="async"
+    onerror={handleError}
+    onload={handleLoad}
+  />
+{/snippet}
 
 <style>
   .art-placeholder {

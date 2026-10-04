@@ -5,6 +5,7 @@
   import { animeSchema, breadcrumbSchema } from '$lib/structured-data';
   import QueryProvider from '$lib/components/shell/QueryProvider';
   import { untrack } from 'svelte';
+  import { firstCandidate } from '$lib/components/primitives/SafeImage/SafeImage.logic';
   import { format } from 'date-fns';
   import AnimeNews from '$lib/components/show/AnimeNews';
   import CharactersWithStaff from '$lib/components/show/CharactersWithStaff';
@@ -103,6 +104,8 @@
       { name: data.animeTitle, url: canonical }
     ])
   ]);
+
+  const heroPreload = $derived(firstCandidate(bloc?.imageSources ?? [], 1600));
 </script>
 
 <Seo
@@ -110,6 +113,14 @@
   description={data.animeDescription}
   image={data.animeImage}
 />
+
+<svelte:head>
+  <!-- The hero is the largest paint; the same URL ShowHero puts in the HTML,
+       so its bytes start with the parse rather than after the stylesheet. -->
+  {#if heroPreload}
+    <link rel="preload" as="image" href={heroPreload} fetchpriority="high" />
+  {/if}
+</svelte:head>
 
 <StructuredData {schemas} />
 

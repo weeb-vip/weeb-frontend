@@ -1,5 +1,6 @@
 <script lang="ts">
   import Seo from '$lib/Seo.svelte';
+  import { firstCandidate } from '$lib/components/primitives/SafeImage/SafeImage.logic';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
   /*
@@ -61,9 +62,17 @@
       { name: data.workTitle, url: canonical }
     ])
   ]);
+
+  const heroPreload = $derived(firstCandidate(bloc?.heroSources ?? [], 1600));
 </script>
 
 <Seo title={data.workTitle} description={data.workDescription} image={data.workImage} />
+
+<svelte:head>
+  {#if heroPreload}
+    <link rel="preload" as="image" href={heroPreload} fetchpriority="high" />
+  {/if}
+</svelte:head>
 <StructuredData {schemas} />
 
 {#if bloc.ssrError}
@@ -83,7 +92,7 @@
             loading="eager"
             priority={true}
             fallbackSrc="/assets/not found.jpg"
-            perTryTimeoutMs={3000}
+            cdnWidth={1600}
             className="hero-bg-img"
             style=""
             onChosen={(detail) => bloc.heroChosen(detail)}

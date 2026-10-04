@@ -48,7 +48,9 @@
 <KeyArtStage
   class="hero"
   sources={bloc.imageSources}
+  phoneSources={bloc.phoneImageSources}
   cdnWidth={bloc.heroCdnWidth}
+  phoneCdnWidth={bloc.phoneCdnWidth}
   loaded={bloc.bgLoaded}
   fadeMs={500}
   fade="var(--hero-fade, 0px)"

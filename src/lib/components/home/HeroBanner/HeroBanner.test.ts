@@ -82,12 +82,12 @@ describe('HeroBannerBloc', () => {
       expect(bloc.imageSources).toEqual(['cdn/banners/a1', 'cdn/posters/a1', 'cdn/a1']);
     });
 
-    it('leads with the tall poster on a phone', () => {
-      const bloc = makeBloc({}, { mediaQuery: media(true).port });
+    it('offers the tall poster first in the phone ordering, whatever the viewport', () => {
+      const bloc = makeBloc({}, { mediaQuery: media(false).port });
 
       // Cropping a 16:9 banner into a 100svh box usually frames background
       // with the subject outside it.
-      expect(bloc.imageSources).toEqual(['cdn/posters/a1', 'cdn/a1', 'cdn/banners/a1']);
+      expect(bloc.phoneImageSources).toEqual(['cdn/posters/a1', 'cdn/a1', 'cdn/banners/a1']);
     });
 
     it('keeps the 225px MyAnimeList image out of first place either way', () => {
@@ -95,6 +95,7 @@ describe('HeroBannerBloc', () => {
         const bloc = makeBloc({}, { mediaQuery: media(phone).port });
 
         expect(bloc.imageSources[0]).not.toBe('cdn/a1');
+        expect(bloc.phoneImageSources[0]).not.toBe('cdn/a1');
       }
     });
 
@@ -110,11 +111,12 @@ describe('HeroBannerBloc', () => {
       screen.resizeTo(true);
 
       expect(bloc.isPhone).toBe(true);
-      expect(bloc.imageSources[0]).toBe('cdn/posters/a1');
+      // The art itself does not re-pick: the browser's <picture> does that.
+      expect(bloc.imageSources[0]).toBe('cdn/banners/a1');
     });
 
     it('asks the CDN for less art on a phone', () => {
-      expect(makeBloc({}, { mediaQuery: media(true).port }).heroCdnWidth).toBe(800);
+      expect(makeBloc({}, { mediaQuery: media(true).port }).phoneCdnWidth).toBe(800);
       expect(makeBloc({}, { mediaQuery: media(false).port }).heroCdnWidth).toBe(1600);
     });
   });
