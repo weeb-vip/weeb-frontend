@@ -752,6 +752,7 @@ describe('page cache', () => {
     ['/manga', ['works']],
     ['/light-novels', ['works']],
     ['/about', ['static']],
+    ['/auth/login', ['static']],
     ['/anime/abc123/news', ['show:abc123', 'news']]
   ])('tags %s with %j so an ingest can purge it', async (path, tags) => {
     const cache = makePageCache();
