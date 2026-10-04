@@ -535,3 +535,14 @@ describe('AutocompleteAdvanced', () => {
     });
   });
 });
+
+describe('the hydration marker', () => {
+  it('marks both fields once the script is in charge, with the backend status', async () => {
+    const { container } = render(AutocompleteAdvanced);
+    await waitFor(() => {
+      const inputs = container.querySelectorAll('input[data-hydrated="true"]');
+      expect(inputs.length).toBe(2);
+    });
+    expect(container.querySelector('input.ac-input--desktop')?.getAttribute('data-status')).toBe('idle');
+  });
+});

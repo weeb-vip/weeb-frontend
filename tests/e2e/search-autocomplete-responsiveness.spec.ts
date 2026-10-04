@@ -13,7 +13,7 @@ import { waitForHomepage } from './helpers';
  * all of that delay was ours.
  */
 
-const DESKTOP_INPUT = 'input.ac-input--desktop';
+const DESKTOP_INPUT = 'input.ac-input--desktop[data-hydrated="true"]';
 const OPTIONS = '#ac-listbox-desktop [role="option"]';
 
 // Generous next to the ~200ms this now takes, but far under the ~2s the
@@ -41,6 +41,9 @@ test.describe('Search autocomplete responsiveness', () => {
 
     const started = Date.now();
     await search.fill('naruto');
+    // Typed text connects the search backend lazily; a missing panel is a different
+    // failure from a backend that never came up, so say which.
+    await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 15000 });
 
     await expect(page.locator(OPTIONS).first()).toBeVisible({ timeout: 15000 });
 
@@ -62,6 +65,9 @@ test.describe('Search autocomplete responsiveness', () => {
     const search = page.locator(DESKTOP_INPUT);
     await search.click();
     await search.fill('naruto');
+    // Typed text connects the search backend lazily; a missing panel is a different
+    // failure from a backend that never came up, so say which.
+    await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 15000 });
     await expect(page.locator(OPTIONS).first()).toBeVisible({ timeout: 15000 });
 
     // Let the opening animation finish first. Playwright's visibility check

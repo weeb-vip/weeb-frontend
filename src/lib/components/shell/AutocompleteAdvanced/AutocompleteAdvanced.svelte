@@ -26,6 +26,10 @@
   // element instead of writing '' over it, so text typed into the server's
   // form before the script arrived is kept.
   let text = $state<string | undefined>();
+  // Set once the script is in charge of the field. Tests gate on it: the
+  // field is in the server HTML and usable before that, but a test that
+  // types into it and then asserts on the panel wants the script's answer.
+  let hydrated = $state(false);
 
   // No connect at mount: the backend is reached for on first focus or
   // keystroke (see the bloc). The form below submits to /search on its own.
@@ -33,6 +37,7 @@
   // the visitor focused or typed into during hydration fired no handler, so
   // without this the panel never opened for them.
   onMount(() => {
+    hydrated = true;
     for (const el of [desktopInputRef, mobileInputRef]) {
       if (!el) continue;
       const focused = document.activeElement === el;
@@ -329,6 +334,8 @@
         aria-label="Search anime"
         role="combobox"
         aria-expanded={bloc.isPanelOpen && bloc.hasResults}
+        data-hydrated={hydrated ? 'true' : undefined}
+        data-status={bloc.status}
         aria-controls="ac-listbox-mobile"
         aria-autocomplete="list"
         aria-activedescendant={bloc.activeIndex >= 0 ? `ac-opt-mobile-${bloc.activeIndex}` : undefined}
@@ -382,6 +389,8 @@
       aria-label="Search anime"
       role="combobox"
       aria-expanded={bloc.isPanelOpen && bloc.hasResults}
+      data-hydrated={hydrated ? 'true' : undefined}
+      data-status={bloc.status}
       aria-controls="ac-listbox-desktop"
       aria-autocomplete="list"
       aria-activedescendant={bloc.activeIndex >= 0 ? `ac-opt-desktop-${bloc.activeIndex}` : undefined}

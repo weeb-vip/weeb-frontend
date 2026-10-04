@@ -18,7 +18,7 @@ test.describe('Search autocomplete keyboard navigation (a11y)', () => {
     // point-checking. On mobile projects it is display:none and never becomes
     // visible, so the wait times out and we skip (the contract is identical,
     // but these locators target the desktop markup).
-    const desktopInput = page.locator('input.ac-input--desktop');
+    const desktopInput = page.locator('input.ac-input--desktop[data-hydrated="true"]');
     const visible = await desktopInput
       .waitFor({ state: 'visible', timeout: 15000 })
       .then(() => true)
@@ -27,9 +27,12 @@ test.describe('Search autocomplete keyboard navigation (a11y)', () => {
   });
 
   test('exposes combobox + listbox roles once results load', async ({ page }) => {
-    const search = page.locator('input.ac-input--desktop');
+    const search = page.locator('input.ac-input--desktop[data-hydrated="true"]');
     await search.click();
     await search.fill(QUERY);
+    // Typed text connects the search backend lazily; a missing panel is a different
+    // failure from a backend that never came up, so say which.
+    await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 15000 });
 
     const options = page.locator('#ac-listbox-desktop [role="option"]');
     await expect(options.first()).toBeVisible({ timeout: 15000 });
@@ -41,10 +44,13 @@ test.describe('Search autocomplete keyboard navigation (a11y)', () => {
   });
 
   test('Arrow keys move the highlight and sync aria-activedescendant', async ({ page }) => {
-    const search = page.locator('input.ac-input--desktop');
+    const search = page.locator('input.ac-input--desktop[data-hydrated="true"]');
     const options = page.locator('#ac-listbox-desktop [role="option"]');
     await search.click();
     await search.fill(QUERY);
+    // Typed text connects the search backend lazily; a missing panel is a different
+    // failure from a backend that never came up, so say which.
+    await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 15000 });
     await expect(options.first()).toBeVisible({ timeout: 15000 });
 
     // Nothing highlighted until the user arrows into the list.
@@ -65,10 +71,13 @@ test.describe('Search autocomplete keyboard navigation (a11y)', () => {
   });
 
   test('Enter on the highlighted option opens that show', async ({ page }) => {
-    const search = page.locator('input.ac-input--desktop');
+    const search = page.locator('input.ac-input--desktop[data-hydrated="true"]');
     const options = page.locator('#ac-listbox-desktop [role="option"]');
     await search.click();
     await search.fill(QUERY);
+    // Typed text connects the search backend lazily; a missing panel is a different
+    // failure from a backend that never came up, so say which.
+    await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 15000 });
     await expect(options.first()).toBeVisible({ timeout: 15000 });
 
     await search.press('ArrowDown');
@@ -79,10 +88,13 @@ test.describe('Search autocomplete keyboard navigation (a11y)', () => {
   });
 
   test('Enter with no highlight runs a full search', async ({ page }) => {
-    const search = page.locator('input.ac-input--desktop');
+    const search = page.locator('input.ac-input--desktop[data-hydrated="true"]');
     const options = page.locator('#ac-listbox-desktop [role="option"]');
     await search.click();
     await search.fill(QUERY);
+    // Typed text connects the search backend lazily; a missing panel is a different
+    // failure from a backend that never came up, so say which.
+    await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 15000 });
     await expect(options.first()).toBeVisible({ timeout: 15000 });
 
     // No ArrowDown → no active option → Enter falls through to /search.
