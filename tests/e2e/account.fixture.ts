@@ -52,19 +52,27 @@ export async function signUpAndIn(page: Page, email: string, password: string): 
   ).toBeVisible({ timeout: 30000 });
 
   // The verification screen bounces to login on a timer; navigating there
-  // explicitly avoids filling a form that is being replaced.
-  await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await waitForAuthForm(page);
-  await page.fill('input[name="username"]', email);
-  await page.fill('input[name="password"]', password);
-  const submit = page.locator('form:not([role="search"]) button[type="submit"]').first();
-  await expect(submit).toBeEnabled({ timeout: 15000 });
-  await submit.click();
-  // Poll rather than waitForURL: staging's login is slow enough under load
-  // that a single navigation predicate misses it.
-  await expect
-    .poll(() => new URL(page.url()).pathname, { timeout: 90000, intervals: [1000] })
-    .not.toContain('/auth/login');
+  // explicitly avoids filling a form that is being replaced. Two attempts:
+  // with several workers signing in at the same moment, staging has answered
+  // a login so slowly that the first form submit was lost.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForAuthForm(page);
+    await page.fill('input[name="username"]', email);
+    await page.fill('input[name="password"]', password);
+    const submit = page.locator('form:not([role="search"]) button[type="submit"]').first();
+    await expect(submit).toBeEnabled({ timeout: 15000 });
+    await submit.click();
+    // Poll rather than waitForURL: staging's login is slow enough under load
+    // that a single navigation predicate misses it.
+    const left = await expect
+      .poll(() => new URL(page.url()).pathname, { timeout: 60000, intervals: [1000] })
+      .not.toContain('/auth/login')
+      .then(() => true, () => false);
+    if (left) return;
+    console.log(`Login did not redirect (attempt ${attempt + 1}); trying again`);
+  }
+  throw new Error(`Login for ${email} never left /auth/login`);
 }
 
 export const test = base.extend<{}, { account: Account }>({
@@ -88,7 +96,9 @@ export const test = base.extend<{}, { account: Account }>({
 
       await deleteEmailsForRecipient(email).catch(() => {});
     },
-    { scope: 'worker' },
+    // Its own budget, not the first test's: registration, the mail wait and
+    // two login attempts can add up to more than a test is allowed.
+    { scope: 'worker', timeout: 300000 },
   ],
   // Every page in a spec that imports this `test` starts from the account's
   // cookies and storage, i.e. signed in.

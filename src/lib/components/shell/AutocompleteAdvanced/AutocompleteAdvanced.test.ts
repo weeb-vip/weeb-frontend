@@ -339,6 +339,17 @@ describe('AutocompleteAdvancedBloc', () => {
       expect(session.setIsOpen).toHaveBeenCalledWith(true);
     });
 
+    it('opens for typed text even when focus was lost during hydration', async () => {
+      const { bloc, search } = makeBloc();
+
+      bloc.adopt('Naruto', false);
+      await vi.waitFor(() => expect(bloc.status).toBe('ready'));
+
+      expect(bloc.isFocused).toBe(true);
+      expect(search.session.setQuery).toHaveBeenCalledWith('Naruto');
+      expect(search.session.setIsOpen).toHaveBeenCalledWith(true);
+    });
+
     it('does nothing for an untouched field', () => {
       const { bloc } = makeBloc();
       bloc.adopt('', false);
