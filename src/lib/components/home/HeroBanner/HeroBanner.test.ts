@@ -223,6 +223,20 @@ describe('HeroBannerBloc', () => {
       ).toBe(false);
     });
 
+    it('trusts the server about a signed-out visitor until the client store resolves', () => {
+      const unresolved = readable({ isLoggedIn: false, isAuthInitialized: false });
+      // The server rendered this page signed out: the line is in the HTML, so
+      // the largest paint on a phone does not wait for hydration.
+      expect(makeBloc({ serverSignedOut: true }, { auth: unresolved }).showSignUpLine).toBe(true);
+      expect(makeBloc({ serverSignedOut: false }, { auth: unresolved }).showSignUpLine).toBe(false);
+      // Once the client knows better (a cached anonymous page reaching a
+      // signed-in visitor), the client wins.
+      expect(
+        makeBloc({ serverSignedOut: true }, { auth: readable({ isLoggedIn: true, isAuthInitialized: true }) })
+          .showSignUpLine
+      ).toBe(false);
+    });
+
     it('toggles the broadcast-slot popover', () => {
       const bloc = makeBloc();
 

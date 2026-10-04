@@ -38,6 +38,8 @@
       publishingWorksData?: { currentlyPublishingWorks?: PublishingWork[] | null } | null;
       currentSeason: string;
       isTokenExpired?: boolean;
+      /** The server's view of the visitor, from the cookies; the hero's sign-up line follows it until the client store resolves. */
+      auth?: { isLoggedIn: boolean } | null;
     };
     bloc?: HomepageBloc;
   } = $props();
@@ -76,7 +78,7 @@
     <div class="hero-wrapper">
       {#if bloc.bannerAnime}
         {#key bloc.bannerId}
-          <HeroBanner anime={bloc.bannerAnime} timing={bloc.bannerTiming} />
+          <HeroBanner anime={bloc.bannerAnime} timing={bloc.bannerTiming} serverSignedOut={data.auth?.isLoggedIn === false} />
         {/key}
       {:else}
         <HeroBannerSkeleton />
@@ -92,7 +94,7 @@
     </div>
   {:else if bloc.fallbackBannerAnime}
     <div class="hero-wrapper">
-      <HeroBanner anime={bloc.fallbackBannerAnime} />
+      <HeroBanner anime={bloc.fallbackBannerAnime} serverSignedOut={data.auth?.isLoggedIn === false} />
     </div>
   {/if}
 

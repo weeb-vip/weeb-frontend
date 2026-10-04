@@ -79,6 +79,14 @@ export interface HeroBannerInputs {
    * Null on the fallback banner (top-rated), which has no schedule at all.
    */
   readonly timing: EpisodeTiming | null;
+  /**
+   * What the server knew from the cookies: true when it rendered the page for
+   * a signed-out visitor. The client auth store starts unresolved, so without
+   * this the sign-up line waited for hydration -- and on a phone that line is
+   * the largest paint, so the whole LCP waited with it. Undefined where the
+   * server said nothing, in which case the line still waits for the store.
+   */
+  readonly serverSignedOut?: boolean;
 }
 
 export interface HeroBannerDeps {
@@ -222,10 +230,16 @@ export class HeroBannerBloc {
     return this.#inputs.anime?.description ?? '';
   }
 
-  /** Only while signed out, and only once auth has resolved. */
+  /**
+   * Only while signed out, and only once auth has resolved -- which the server
+   * already has, from the cookies, for the render it is producing. The client
+   * store takes over the moment it resolves, so a cached anonymous page that
+   * reaches a signed-in visitor drops the line at hydration.
+   */
   get showSignUpLine(): boolean {
     const auth = this.#auth.current;
-    return auth.isAuthInitialized && !auth.isLoggedIn;
+    if (auth.isAuthInitialized) return !auth.isLoggedIn;
+    return this.#inputs.serverSignedOut === true;
   }
 
   get showJstPopover(): boolean {
