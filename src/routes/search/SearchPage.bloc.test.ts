@@ -195,14 +195,51 @@ describe('the local layer', () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it('does not re-query the catalogue for a local filter', async () => {
-    const { bloc, search } = await searched({ hits: [hit('1')], total: 1 });
+  it('re-asks the catalogue with the status and year, and re-counts the genres under them', async () => {
+    const { bloc, search, genreFacets, lastRequest } = await searched({ hits: [hit('1')], total: 1 });
+    genreFacets.mockClear();
 
     bloc.setStatus('FINISHED_AIRING');
+    await flush();
+    expect(lastRequest().status).toBe('FINISHED_AIRING');
+    expect(lastRequest().year).toBeNull();
+    expect(genreFacets).toHaveBeenLastCalledWith({ status: 'FINISHED_AIRING', year: null });
+
     bloc.setYear('2001');
+    await flush();
+    expect(lastRequest().year).toBe(2001);
+    expect(genreFacets).toHaveBeenLastCalledWith({ status: 'FINISHED_AIRING', year: 2001 });
+    expect(search).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not re-ask for the same value twice', async () => {
+    const { bloc, search } = await searched();
+    bloc.setStatus('FINISHED_AIRING');
+    bloc.setStatus('FINISHED_AIRING');
+    await flush();
+    expect(search).toHaveBeenCalledTimes(2);
+  });
+
+  it('sort and view mode stay local', async () => {
+    const { bloc, search } = await searched();
+    bloc.setSort('score');
+    bloc.setViewMode('list');
+    await flush();
+    expect(search).toHaveBeenCalledTimes(1);
+  });
+
+  it('a status or year alone is a search, not browsing', async () => {
+    const { bloc, search, lastRequest } = setup({ search: '' });
+    await bloc.init();
+    expect(search).not.toHaveBeenCalled();
+
+    bloc.setStatus('CURRENTLY_AIRING');
     await flush();
 
     expect(search).toHaveBeenCalledTimes(1);
+    expect(lastRequest().query).toBe('');
+    expect(lastRequest().status).toBe('CURRENTLY_AIRING');
+    expect(bloc.phase).not.toBe('browse');
   });
 
   it('coerces the numbers a select can hand back into strings', async () => {
@@ -213,51 +250,20 @@ describe('the local layer', () => {
     expect(bloc.year).toBe('2019');
   });
 
-  it('narrows the results already on screen through the local filters', async () => {
-    const { bloc } = await searched({
-      hits: [hit('1', { status: 'FINISHED_AIRING' }), hit('2', { status: 'CURRENTLY_AIRING' })],
-      totalHits: 2,
-    });
-
-    bloc.setStatus('CURRENTLY_AIRING');
-
-    expect(bloc.results.map((r) => r.id)).toEqual(['2']);
-    // The total is what the catalogue said, not what survived the local pass.
-    expect(bloc.totalHits).toBe(2);
-  });
-
-  /*
-    Why the total is not narrowed with the results, since it looks like a bug
-    and is not one to fix here.
-
-    `totalResults` is the catalogue's count for the *query*, across every page.
-    The status and year filters run on the hits of the page in hand, so the
-    filtered count is a count of one page. Narrowing `totalResults` to it would
-    take `totalPages` -- `ceil(total / perPage)` -- down to one and `goToPage`
-    would then refuse every other page, stranding the reader on page one of a
-    catalogue that has fifty. The header being ahead of the grid is a smaller
-    wrong than the rest of the results becoming unreachable.
-
-    Making the header honest means filtering in the query rather than after it,
-    which is a change to the catalogue request and the search service, not to
-    this bloc. Pinned here so that the coupling is visible when someone does.
-  */
-  it('keeps the catalogue count driving pagination while a local filter is on', async () => {
-    const harness = await searched({
-      hits: [hit('1', { status: 'FINISHED_AIRING' }), hit('2', { status: 'CURRENTLY_AIRING' })],
-      totalHits: 50, // 3 pages at 24 per page
-    });
+  it('shows what the catalogue answered for the status, and lets the total drive the pager', async () => {
+    const harness = await searched({ hits: [hit('2', { status: 'CURRENTLY_AIRING' })], totalHits: 50 });
 
     harness.bloc.setStatus('CURRENTLY_AIRING');
-    expect(harness.bloc.results).toHaveLength(1);
+    await flush();
 
-    // Still three pages, and the later ones are still reachable.
+    // The catalogue did the narrowing; the page shows its answer whole.
+    expect(harness.bloc.results.map((r) => r.id)).toEqual(['2']);
+    expect(harness.bloc.totalHits).toBe(50);
     expect(harness.bloc.totalHitsPages).toBe(3);
     harness.bloc.goToPage(2, 'hits');
     await flush();
-
-    expect(harness.bloc.hitsPage).toBe(2);
     expect(harness.lastRequest().hitsPage).toBe(2);
+    expect(harness.lastRequest().status).toBe('CURRENTLY_AIRING');
   });
 });
 
@@ -585,6 +591,8 @@ describe('the request the search port receives', () => {
       worksPage: 0,
       perPage: PAGE_SIZE_OPTIONS[0],
       genre: null,
+      status: null,
+      year: null,
       includeWorks: true,
     });
   });
@@ -599,6 +607,8 @@ describe('the request the search port receives', () => {
       worksPage: 0,
       perPage: PAGE_SIZE_OPTIONS[0],
       genre: 'Action',
+      status: null,
+      year: null,
       includeWorks: false,
     });
   });
@@ -612,6 +622,8 @@ describe('the request the search port receives', () => {
       worksPage: 0,
       perPage: PAGE_SIZE_OPTIONS[0],
       genre: 'Action',
+      status: null,
+      year: null,
       includeWorks: false,
     });
   });
@@ -773,10 +785,12 @@ describe('phase', () => {
     expect(bloc.hasResults).toBe(false);
   });
 
-  it('is empty when the local filters removed every hit', async () => {
-    const { bloc } = await searched({ hits: [hit('1', { status: 'FINISHED_AIRING' })], totalHits: 1 });
+  it('is empty when the catalogue has nothing for the status', async () => {
+    const { bloc, search } = await searched({ hits: [hit('1', { status: 'FINISHED_AIRING' })], totalHits: 1 });
+    search.mockResolvedValueOnce(EMPTY_RESPONSE);
 
     bloc.setStatus('CURRENTLY_AIRING');
+    await flush();
 
     expect(bloc.phase).toBe('empty');
   });

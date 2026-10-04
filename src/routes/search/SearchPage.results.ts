@@ -101,16 +101,17 @@ export function toGenreFacets(facets: Record<string, number> | null | undefined)
 }
 
 /**
- * The client-side pass over the page of hits Algolia returned.
- *
- * Deliberately client-side: status, year and sort narrow *this page* rather
- * than re-querying, so flipping between them is instant. The genre is applied
- * server-side as well; repeating it here catches the window between a chip
- * click and the response landing, when the old page is still on screen.
+ * The client-side pass over the page of hits Algolia returned: the sort, and
+ * the genre. The genre is applied in the query as well; repeating it here
+ * catches the window between a chip click and the response landing, when the
+ * old page is still on screen. Status and year are query filters only -- the
+ * index spells status differently from the page, and narrowing a page that
+ * had already been fetched left the total, the pager and the genre counts
+ * describing a catalogue the grid did not show.
  */
 export function filterAndSortHits(
   hits: NormalizedHit[],
-  filters: { genre: string | null; status: string; year: string; sort: SortKey },
+  filters: { genre: string | null; sort: SortKey },
 ): NormalizedHit[] {
   let out = [...hits];
 
@@ -118,9 +119,6 @@ export function filterAndSortHits(
     const wanted = filters.genre.toLowerCase();
     out = out.filter((hit) => hit.tags?.some((tag: string) => tag.toLowerCase() === wanted));
   }
-
-  if (filters.status) out = out.filter((hit) => hit.status === filters.status);
-  if (filters.year) out = out.filter((hit) => hit.yearNum === parseInt(filters.year, 10));
 
   if (filters.sort === 'score') {
     out.sort((a, b) => (b.ratingNum || 0) - (a.ratingNum || 0));

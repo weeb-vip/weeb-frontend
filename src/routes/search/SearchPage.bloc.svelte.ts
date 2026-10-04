@@ -64,8 +64,8 @@ import {
  */
 export interface CatalogSearchPort {
   search(request: CatalogSearchRequest): Promise<CatalogSearchResponse>;
-  /** The genre browse strip. Facet counts over the whole index, not one page. */
-  genreFacets(): Promise<GenreFacet[]>;
+  /** The genre browse strip: counts over the catalogue under the status and year in play. */
+  genreFacets(filters?: { status: string | null; year: number | null }): Promise<GenreFacet[]>;
 }
 
 /** The viewer's list, as a lookup from anime id to the status they gave it. */
@@ -106,11 +106,11 @@ export const algoliaCatalogSearchPort: CatalogSearchPort = {
     return parseSearchResponse(response, wantsWorks(request, client));
   },
 
-  async genreFacets() {
+  async genreFacets(filters = { status: null, year: null }) {
     const client = await getClient();
     if (!client) return [];
 
-    const response = await client.searchClient.search({ requests: [buildGenreFacetRequest(client)] });
+    const response = await client.searchClient.search({ requests: [buildGenreFacetRequest(client, filters)] });
     return parseGenreFacetResponse(response);
   },
 };
@@ -492,13 +492,19 @@ export class SearchPageBloc {
   }
 
   readonly #filteredHits: NormalizedHit[] = $derived(
-    filterAndSortHits(this.#hits, {
-      genre: this.#urlState.genre,
-      status: this.#status,
-      year: this.#year,
-      sort: this.#sort,
-    }),
+    filterAndSortHits(this.#hits, { genre: this.#urlState.genre, sort: this.#sort }),
   );
+
+  /** The year as the request wants it, or null when the select says any. */
+  get #yearNumber(): number | null {
+    const n = Number.parseInt(this.#year, 10);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  /** Nothing to search for: no query, no genre, and no status or year either. */
+  get #isBrowsing(): boolean {
+    return isBrowseState(this.#urlState) && !this.#status && !this.#yearNumber;
+  }
 
   get results(): NormalizedHit[] {
     return this.#filteredHits;
@@ -694,13 +700,25 @@ export class SearchPageBloc {
     this.#viewMode = mode as ViewMode;
   }
 
-  /** Local filters: they narrow the page already on screen, so no navigation. */
+  /**
+   * Status and year are query filters: the results, their total and the
+   * genre counts all narrow to them. They used to narrow only the page on
+   * screen, which left the total, the pager and every genre count describing
+   * a different catalogue from the one in the grid. Not in the URL, so no
+   * navigation; the page re-asks the catalogue itself.
+   */
   setStatus(value: string | number): void {
+    if (String(value) === this.#status) return;
     this.#status = String(value);
+    void this.#runSearch();
+    void this.#loadGenres();
   }
 
   setYear(value: string | number): void {
+    if (String(value) === this.#year) return;
     this.#year = String(value);
+    void this.#runSearch();
+    void this.#loadGenres();
   }
 
   setSort(value: string | number): void {
@@ -732,7 +750,7 @@ export class SearchPageBloc {
   }
 
   async #runSearch({ resetPage = true }: { resetPage?: boolean } = {}): Promise<void> {
-    if (isBrowseState(this.#urlState)) {
+    if (this.#isBrowsing) {
       this.#hits = [];
       this.#works = [];
       this.#hasSearched = false;
@@ -759,6 +777,8 @@ export class SearchPageBloc {
         worksPage: this.#currentWorksPage,
         perPage: this.#hitsPerPage,
         genre: this.#urlState.genre,
+        status: this.#status || null,
+        year: this.#yearNumber,
         includeWorks:
           !!this.#urlState.query.trim() && !this.#urlState.genre,
       });
@@ -784,7 +804,7 @@ export class SearchPageBloc {
   async #loadGenres(): Promise<void> {
     this.#isLoadingGenres = true;
     try {
-      this.#browseGenres = await this.#search.genreFacets();
+      this.#browseGenres = await this.#search.genreFacets({ status: this.#status || null, year: this.#yearNumber });
     } catch (error) {
       console.error('Failed to fetch genres:', error);
       this.#browseGenres = [];
