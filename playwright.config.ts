@@ -10,9 +10,9 @@ export default defineConfig({
   // the stateful specs each register their own user, and registrations are
   // already spaced out by the cross-worker lock in helpers.ts.
   workers: process.env.CI ? 3 : undefined,
-  // The line reporter puts per-test durations in the CI log, so a slow or
+  // The list reporter puts every test's duration in the CI log, so a slow or
   // flaky test can be found without downloading the HTML report.
-  reporter: process.env.CI ? [['html'], ['line']] : 'html',
+  reporter: process.env.CI ? [['html'], ['list']] : 'html',
   use: {
     baseURL: 'http://localhost:4321',
     trace: 'on-first-retry',

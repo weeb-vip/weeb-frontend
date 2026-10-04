@@ -1,6 +1,7 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import fs from 'fs/promises';
 import {
   deleteEmailsForRecipient,
   extractVerificationLink,
@@ -75,10 +76,11 @@ export const test = base.extend<{}, { account: Account }>({
       const context = await browser.newContext({ baseURL: workerInfo.project.use.baseURL });
       const page = await context.newPage();
       await signUpAndIn(page, email, PASSWORD);
-      const storageState = path.join(
-        workerInfo.project.outputDir,
-        `account-${workerInfo.project.name}-${workerInfo.parallelIndex}.json`
-      );
+      // Under test-results, not the HTML report: the report is uploaded as a
+      // CI artifact, and this file holds the account's cookies.
+      const dir = path.join(workerInfo.config.rootDir, 'test-results', 'accounts');
+      await fs.mkdir(dir, { recursive: true });
+      const storageState = path.join(dir, `account-${workerInfo.project.name}-${workerInfo.parallelIndex}.json`);
       await context.storageState({ path: storageState });
       await context.close();
 
