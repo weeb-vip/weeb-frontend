@@ -71,6 +71,11 @@ const CACHEABLE_ROUTES: Array<{
   // Browse pages and the static about page: anonymous and identical for everyone.
   { pattern: /^\/(manga|light-novels)$/, ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: () => ['works'] },
   { pattern: /^\/about$/,               ttl: DAY,       swr: DAY, maxAge: 3600, sMaxAge: 86400, tags: () => ['static'] },
+  // Search results are server-rendered now. The adapter keys on path plus the
+  // normalised query string, so each distinct search caches on its own; a
+  // signed-in visitor never reaches the shared segment.
+  { pattern: /^\/search$/,              ttl: HOUR,      swr: 6 * HOUR, maxAge: 60, sMaxAge: 600, tags: () => ['search'] },
+
   // The signed-out auth forms are static; a signed-in visitor is redirected
   // away above, so the anonymous render is the only one that reaches here.
   { pattern: /^\/auth\/(login|register|password-reset-request|resend-verification|check-email)$/, ttl: DAY, swr: DAY, maxAge: 300, sMaxAge: 3600, tags: () => ['static'] },
