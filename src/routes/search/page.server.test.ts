@@ -48,14 +48,28 @@ describe('the /search loader', () => {
     });
   });
 
-  it('fetches only the genre strip for the browse state', async () => {
-    search.mockResolvedValue({ results: [{ facets: { tags: { Drama: 1 } } }] });
+  it('searches the whole catalogue for a URL that names nothing, so the page is never blank', async () => {
+    search.mockResolvedValue({ results: [{ facets: { tags: { Drama: 1 } } }, { hits: [{ id: 'a1' }], nbHits: 30000 }] });
 
     const data = await run('/search');
 
-    expect(search.mock.calls[0][0].requests).toHaveLength(1);
-    expect(data.search.results).toBeNull();
+    const { requests } = search.mock.calls[0][0];
+    expect(requests).toHaveLength(2);
+    expect(requests[1]).toMatchObject({ indexName: 'anime', query: '', page: 0, hitsPerPage: 24 });
+    expect(requests[1].filters).toBeUndefined();
+    expect(data.search.results).toMatchObject({ hits: [{ id: 'a1' }], totalHits: 30000, works: [] });
     expect(data.search.genres).toEqual([{ name: 'Drama', count: 1 }]);
+  });
+
+  it('narrows both the results and the genre counts to the status and year in the URL', async () => {
+    search.mockResolvedValue({ results: [{}, { hits: [], nbHits: 0 }] });
+
+    await run('/search?status=FINISHED_AIRING&year=1998&page=2');
+
+    const { requests } = search.mock.calls[0][0];
+    expect(requests).toHaveLength(2);
+    expect(requests[0].filters).toBe('status:"Finished Airing" AND year:1998');
+    expect(requests[1]).toMatchObject({ page: 1, filters: 'status:"Finished Airing" AND year:1998' });
   });
 
   it('skips the works index for a genre filter', async () => {

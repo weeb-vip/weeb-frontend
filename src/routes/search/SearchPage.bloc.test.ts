@@ -22,8 +22,8 @@ import type { GenreFacet } from './SearchPage.results';
  *
  * Three rules earned their tests the hard way:
  *
- *  - the query and the genre are URL-backed, so a handler that assigned them
- *    directly raced the navigation and lost;
+ *  - everything the reader chooses is URL-backed, so a handler that assigned
+ *    it directly raced the navigation and lost;
  *  - the genre is one value, so a second chip must *replace* the first rather
  *    than being silently dropped on the next navigation;
  *  - a superseded in-flight search must never land on top of a newer one.
@@ -118,6 +118,12 @@ function setup(options: SetupOptions = {}) {
     /** Move the address bar without going through the bloc. */
     navigate: (next: Partial<UrlValue>) => store.update((current) => ({ ...current, ...next })),
     lastRequest: () => search.mock.calls.at(-1)![0] as CatalogSearchRequest,
+    /** A handler, then the navigation landing, then every request settling. */
+    act: async (handler: () => void) => {
+      handler();
+      bloc.syncFromUrl();
+      await flush();
+    },
   };
 }
 
@@ -177,75 +183,73 @@ describe('the URL-backed layer', () => {
   });
 });
 
-describe('the local layer', () => {
-  it('applies status, year, sort and view mode without navigating', async () => {
+describe('the status and year filters', () => {
+  it('writes the status and year to the URL rather than assigning them', async () => {
     const { bloc, replace } = await searched();
 
     bloc.setStatus('CURRENTLY_AIRING');
-    bloc.setYear('2019');
-    bloc.setSort('score');
-    bloc.setViewMode('list');
 
+    // The handler wrote a URL and nothing else; a reload or Back would land
+    // on the same page. The select catches up when the navigation does.
+    expect(replace).toHaveBeenCalledWith('?query=naruto&status=CURRENTLY_AIRING');
+    expect(bloc.status).toBe('');
+    bloc.syncFromUrl();
     expect(bloc.status).toBe('CURRENTLY_AIRING');
+
+    bloc.setYear('2019');
+    expect(replace).toHaveBeenLastCalledWith('?query=naruto&status=CURRENTLY_AIRING&year=2019');
+    bloc.syncFromUrl();
     expect(bloc.year).toBe('2019');
-    expect(bloc.sort).toBe('score');
-    expect(bloc.viewMode).toBe('list');
-    // These narrow the page already on screen; a history entry for each would
-    // make the back button undo a dropdown.
-    expect(replace).not.toHaveBeenCalled();
   });
 
   it('re-asks the catalogue with the status and year, and re-counts the genres under them', async () => {
-    const { bloc, search, genreFacets, lastRequest } = await searched({ hits: [hit('1')], total: 1 });
+    const { bloc, search, genreFacets, lastRequest, act } = await searched({ hits: [hit('1')], total: 1 });
     genreFacets.mockClear();
 
-    bloc.setStatus('FINISHED_AIRING');
-    await flush();
+    await act(() => bloc.setStatus('FINISHED_AIRING'));
     expect(lastRequest().status).toBe('FINISHED_AIRING');
     expect(lastRequest().year).toBeNull();
     expect(genreFacets).toHaveBeenLastCalledWith({ status: 'FINISHED_AIRING', year: null });
 
-    bloc.setYear('2001');
-    await flush();
+    await act(() => bloc.setYear('2001'));
     expect(lastRequest().year).toBe(2001);
     expect(genreFacets).toHaveBeenLastCalledWith({ status: 'FINISHED_AIRING', year: 2001 });
     expect(search).toHaveBeenCalledTimes(3);
   });
 
-  it('does not re-ask for the same value twice', async () => {
-    const { bloc, search } = await searched();
+  it('does not navigate for the value already in play', async () => {
+    const { bloc, replace, act } = await searched();
+    await act(() => bloc.setStatus('FINISHED_AIRING'));
+
     bloc.setStatus('FINISHED_AIRING');
-    bloc.setStatus('FINISHED_AIRING');
-    await flush();
-    expect(search).toHaveBeenCalledTimes(2);
+
+    expect(replace).toHaveBeenCalledTimes(1);
   });
 
-  it('sort and view mode stay local', async () => {
-    const { bloc, search } = await searched();
-    bloc.setSort('score');
-    bloc.setViewMode('list');
-    await flush();
-    expect(search).toHaveBeenCalledTimes(1);
+  it('ignores a status it has no option for', async () => {
+    const { bloc, replace } = await searched();
+
+    bloc.setStatus('SOMETHING_NEW');
+
+    expect(replace).not.toHaveBeenCalled();
   });
 
-  it('a status or year alone is a search, not browsing', async () => {
-    const { bloc, search, lastRequest } = setup({ search: '' });
+  it('narrows the whole catalogue when there is no query', async () => {
+    const { bloc, search, lastRequest, act } = setup({ search: '' });
     await bloc.init();
-    expect(search).not.toHaveBeenCalled();
-
-    bloc.setStatus('CURRENTLY_AIRING');
-    await flush();
-
     expect(search).toHaveBeenCalledTimes(1);
+
+    await act(() => bloc.setStatus('CURRENTLY_AIRING'));
+
+    expect(search).toHaveBeenCalledTimes(2);
     expect(lastRequest().query).toBe('');
     expect(lastRequest().status).toBe('CURRENTLY_AIRING');
-    expect(bloc.phase).not.toBe('browse');
   });
 
   it('coerces the numbers a select can hand back into strings', async () => {
-    const { bloc } = await searched();
+    const { bloc, act } = await searched();
 
-    bloc.setYear(2019 as unknown as number);
+    await act(() => bloc.setYear(2019 as unknown as number));
 
     expect(bloc.year).toBe('2019');
   });
@@ -253,17 +257,54 @@ describe('the local layer', () => {
   it('shows what the catalogue answered for the status, and lets the total drive the pager', async () => {
     const harness = await searched({ hits: [hit('2', { status: 'CURRENTLY_AIRING' })], totalHits: 50 });
 
-    harness.bloc.setStatus('CURRENTLY_AIRING');
-    await flush();
+    await harness.act(() => harness.bloc.setStatus('CURRENTLY_AIRING'));
 
     // The catalogue did the narrowing; the page shows its answer whole.
     expect(harness.bloc.results.map((r) => r.id)).toEqual(['2']);
     expect(harness.bloc.totalHits).toBe(50);
     expect(harness.bloc.totalHitsPages).toBe(3);
-    harness.bloc.goToPage(2, 'hits');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(2, 'hits'));
     expect(harness.lastRequest().hitsPage).toBe(2);
     expect(harness.lastRequest().status).toBe('CURRENTLY_AIRING');
+  });
+});
+
+describe('the sort and the view', () => {
+  it('apply on the spot and go into the URL, so a reload keeps them', async () => {
+    const { bloc, replace } = await searched();
+
+    bloc.setSort('score');
+    expect(bloc.sort).toBe('score');
+    expect(replace).toHaveBeenLastCalledWith('?query=naruto&sort=score');
+
+    bloc.setViewMode('list');
+    expect(bloc.viewMode).toBe('list');
+    expect(replace).toHaveBeenLastCalledWith('?query=naruto&sort=score&view=list');
+  });
+
+  it('ask the catalogue nothing: the answer on screen is still the answer', async () => {
+    const { bloc, search, act } = await searched();
+
+    await act(() => bloc.setSort('score'));
+    await act(() => bloc.setViewMode('list'));
+
+    expect(search).toHaveBeenCalledTimes(1);
+  });
+
+  it('do not navigate for the value already in play', async () => {
+    const { bloc, replace } = await searched();
+
+    bloc.setSort('relevance');
+    bloc.setViewMode('grid');
+
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it('are read back from a deep link', async () => {
+    const { bloc } = await searched({}, '?query=naruto&sort=title&view=list');
+
+    expect(bloc.sort).toBe('title');
+    expect(bloc.viewMode).toBe('list');
   });
 });
 
@@ -337,15 +378,15 @@ describe('genre selection', () => {
   });
 
   it('drops the abandoned query when the last filter goes and the box is empty', async () => {
-    const { bloc } = await searched({}, '?genre=Action');
+    const { bloc, lastRequest, act } = await searched({}, '?genre=Action');
     bloc.draftQuery = '';
 
-    bloc.toggleGenre('Action');
-    bloc.syncFromUrl();
+    await act(() => bloc.toggleGenre('Action'));
 
     expect(bloc.selectedGenre).toBeNull();
     expect(bloc.committedQuery).toBe('');
-    expect(bloc.phase).toBe('browse');
+    // Not a blank page: the whole catalogue again.
+    expect(lastRequest()).toMatchObject({ query: '', genre: null });
   });
 
   it('re-queries the catalogue with the genre once the URL lands', async () => {
@@ -456,17 +497,19 @@ describe('init', () => {
     expect(search).toHaveBeenCalledTimes(1);
   });
 
-  it('skips the search entirely in the browse state', async () => {
-    const { bloc, search } = setup({ search: '' });
+  it('searches the whole catalogue for an empty URL, so the page is never blank', async () => {
+    const { bloc, search, lastRequest } = setup({ search: '', respond: async () => response({ hits: [hit('1')], totalHits: 30000 }) });
 
     await bloc.init();
 
-    expect(search).not.toHaveBeenCalled();
-    expect(bloc.hasSearched).toBe(false);
-    expect(bloc.phase).toBe('browse');
+    expect(search).toHaveBeenCalledTimes(1);
+    expect(lastRequest()).toMatchObject({ query: '', genre: null, status: null, year: null, hitsPage: 0, includeWorks: false });
+    expect(bloc.hasSearched).toBe(true);
+    expect(bloc.phase).toBe('results');
+    expect(bloc.hitsSummary).toBe('30,000 results');
   });
 
-  it('still loads the genre strip in the browse state', async () => {
+  it('still loads the genre strip for an empty URL', async () => {
     const { bloc, genreFacets } = setup({ search: '', genres: async () => genreList(2) });
 
     await bloc.init();
@@ -485,13 +528,24 @@ describe('init', () => {
     expect(bloc.hasSearched).toBe(true);
   });
 
-  it('treats a whitespace-only query as the browse state', async () => {
-    const { bloc, search } = setup({ search: '?query=%20%20' });
+  it('treats a whitespace-only query as no query', async () => {
+    const { bloc, lastRequest } = setup({ search: '?query=%20%20' });
 
     await bloc.init();
 
-    expect(search).not.toHaveBeenCalled();
-    expect(bloc.phase).toBe('browse');
+    expect(lastRequest().query).toBe('');
+  });
+
+  it('resumes the page, filters and layout a deep link names', async () => {
+    const { bloc, lastRequest } = setup({ search: '?query=naruto&status=FINISHED_AIRING&year=1998&sort=title&view=list&page=3&perPage=48' });
+
+    await bloc.init();
+
+    expect(lastRequest()).toMatchObject({ query: 'naruto', status: 'FINISHED_AIRING', year: 1998, hitsPage: 2, perPage: 48, includeWorks: false });
+    expect(bloc.hitsPage).toBe(2);
+    expect(bloc.hitsPerPage).toBe(48);
+    expect(bloc.sort).toBe('title');
+    expect(bloc.viewMode).toBe('list');
   });
 });
 
@@ -637,8 +691,7 @@ describe('the request the search port receives', () => {
   it('sends the page size the reader chose', async () => {
     const harness = await searched({ hits: [hit('1')], totalHits: 100 });
 
-    harness.bloc.setHitsPerPage(48);
-    await flush();
+    await harness.act(() => harness.bloc.setHitsPerPage(48));
 
     expect(harness.lastRequest().perPage).toBe(48);
   });
@@ -661,13 +714,22 @@ describe('pagination', () => {
     expect(bloc.hitsPage).toBe(0);
   });
 
+  it('pages by writing the URL, so Back and reload land on the same page', async () => {
+    const harness = await searched({ hits: [hit('1')], totalHits: 100 });
+
+    harness.bloc.goToPage(2, 'hits');
+
+    expect(harness.replace).toHaveBeenCalledWith('?query=naruto&page=3');
+    expect(harness.bloc.hitsPage).toBe(0);
+    harness.bloc.syncFromUrl();
+    expect(harness.bloc.hitsPage).toBe(2);
+  });
+
   it('refuses a page below zero and leaves the page where it was', async () => {
     const harness = await searched({ hits: [hit('1')], totalHits: 100 });
-    harness.bloc.goToPage(2, 'hits');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(2, 'hits'));
 
-    harness.bloc.goToPage(-1, 'hits');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(-1, 'hits'));
 
     expect(harness.bloc.hitsPage).toBe(2);
     expect(harness.search).toHaveBeenCalledTimes(2);
@@ -675,11 +737,9 @@ describe('pagination', () => {
 
   it('refuses a page past the last one and leaves the page where it was', async () => {
     const harness = await searched({ hits: [hit('1')], totalHits: 50 }); // 3 pages: 0..2
-    harness.bloc.goToPage(1, 'hits');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(1, 'hits'));
 
-    harness.bloc.goToPage(3, 'hits');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(3, 'hits'));
 
     expect(harness.bloc.hitsPage).toBe(1);
     expect(harness.search).toHaveBeenCalledTimes(2);
@@ -688,8 +748,7 @@ describe('pagination', () => {
   it('refuses any page when there is nothing to page through', async () => {
     const harness = await searched({ hits: [], totalHits: 0 });
 
-    harness.bloc.goToPage(0, 'hits');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(0, 'hits'));
 
     expect(harness.search).toHaveBeenCalledTimes(1);
   });
@@ -697,8 +756,7 @@ describe('pagination', () => {
   it('keeps the page it was sent to rather than resetting to the first', async () => {
     const harness = await searched({ hits: [hit('1')], totalHits: 100 });
 
-    harness.bloc.goToPage(2, 'hits');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(2, 'hits'));
 
     expect(harness.bloc.hitsPage).toBe(2);
     expect(harness.lastRequest().hitsPage).toBe(2);
@@ -708,15 +766,13 @@ describe('pagination', () => {
     // Page 3 of 24-per-page is not page 3 of 100-per-page; staying would land
     // the reader somewhere they did not ask for.
     const harness = await searched({ hits: [hit('1')], total: 500 });
-    harness.bloc.goToPage(4, 'hits');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(4, 'hits'));
 
-    harness.bloc.setHitsPerPage(100);
-    await flush();
+    await harness.act(() => harness.bloc.setHitsPerPage(96));
 
     expect(harness.bloc.hitsPage).toBe(0);
     expect(harness.lastRequest().hitsPage).toBe(0);
-    expect(harness.bloc.hitsPerPage).toBe(100);
+    expect(harness.bloc.hitsPerPage).toBe(96);
   });
 
   it('pages the works at the same size as the anime beside them', async () => {
@@ -729,29 +785,26 @@ describe('pagination', () => {
 
   it('returns both grids to their first page when the page size changes', async () => {
     const harness = await searched({ hits: [hit('1')], totalHits: 500, totalWorks: 500 });
-    harness.bloc.goToPage(4, 'hits');
-    await flush();
-    harness.bloc.goToPage(3, 'works');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(4, 'hits'));
+    await harness.act(() => harness.bloc.goToPage(3, 'works'));
+    expect(harness.replace).toHaveBeenLastCalledWith('?query=naruto&page=5&wpage=4');
 
-    harness.bloc.setHitsPerPage(100);
-    await flush();
+    await harness.act(() => harness.bloc.setHitsPerPage(96));
 
     expect(harness.bloc.hitsPage).toBe(0);
     expect(harness.bloc.worksPage).toBe(0);
     expect(harness.lastRequest().worksPage).toBe(0);
-    expect(harness.lastRequest().perPage).toBe(100);
+    expect(harness.lastRequest().perPage).toBe(96);
   });
 
   it('resets to the first page for a brand new query', async () => {
     const harness = await searched({ hits: [hit('1')], total: 500 });
-    harness.bloc.goToPage(3, 'hits');
-    await flush();
+    await harness.act(() => harness.bloc.goToPage(3, 'hits'));
 
-    harness.navigate({ search: '?query=bleach' });
-    harness.bloc.syncFromUrl();
-    await flush();
+    harness.bloc.draftQuery = 'bleach';
+    await harness.act(() => harness.bloc.submit());
 
+    expect(harness.replace).toHaveBeenLastCalledWith('?query=bleach');
     expect(harness.bloc.hitsPage).toBe(0);
     expect(harness.lastRequest().hitsPage).toBe(0);
   });
@@ -760,10 +813,10 @@ describe('pagination', () => {
 /* ── What the view switches on ───────────────────────────────────────────── */
 
 describe('phase', () => {
-  it('is browse before anything has been searched', () => {
+  it('is loading before anything has been searched: a search is always on the way', () => {
     const { bloc } = setup();
 
-    expect(bloc.phase).toBe('browse');
+    expect(bloc.phase).toBe('loading');
   });
 
   it('is loading while a search is in flight', async () => {
@@ -790,18 +843,19 @@ describe('phase', () => {
     search.mockResolvedValueOnce(EMPTY_RESPONSE);
 
     bloc.setStatus('CURRENTLY_AIRING');
+    bloc.syncFromUrl();
     await flush();
 
     expect(bloc.phase).toBe('empty');
   });
 
-  it('is back to browse once the search is cleared', async () => {
-    const { bloc } = await searched({ hits: [hit('1')], totalHits: 1 });
+  it('shows the whole catalogue once the search is cleared, never a blank page', async () => {
+    const { bloc, lastRequest, act } = await searched({ hits: [hit('1')], totalHits: 1 });
 
-    bloc.clear();
-    bloc.syncFromUrl();
+    await act(() => bloc.clear());
 
-    expect(bloc.phase).toBe('browse');
+    expect(lastRequest()).toMatchObject({ query: '', genre: null });
+    expect(bloc.phase).toBe('results');
   });
 });
 
@@ -848,20 +902,11 @@ describe('activeFilters', () => {
   });
 
   it('lists the genre, then the status, then the year', async () => {
-    const { bloc } = await searched({}, '?query=naruto&genre=Action');
-    bloc.setStatus('CURRENTLY_AIRING');
-    bloc.setYear('2019');
+    const { bloc } = await searched({}, '?query=naruto&genre=Action&status=CURRENTLY_AIRING&year=2019');
 
     expect(bloc.activeFilters.map((f) => f.key)).toEqual(['genre:Action', 'status', 'year']);
     expect(bloc.activeFilters.map((f) => f.label)).toEqual(['Action', 'Airing', '2019']);
     expect(bloc.hasActiveFilters).toBe(true);
-  });
-
-  it('falls back to the raw value for a status it has no label for', async () => {
-    const { bloc } = await searched();
-    bloc.setStatus('SOMETHING_NEW');
-
-    expect(bloc.activeFilters[0].label).toBe('SOMETHING_NEW');
   });
 
   it('removes the genre when the genre pill is dismissed', async () => {
@@ -875,20 +920,21 @@ describe('activeFilters', () => {
   });
 
   it('removes the status when the status pill is dismissed', async () => {
-    const { bloc } = await searched();
-    bloc.setStatus('CURRENTLY_AIRING');
+    const { bloc, replace } = await searched({}, '?query=naruto&status=CURRENTLY_AIRING');
 
     bloc.activeFilters[0].remove();
+    bloc.syncFromUrl();
 
+    expect(replace).toHaveBeenCalledWith('?query=naruto');
     expect(bloc.status).toBe('');
     expect(bloc.hasActiveFilters).toBe(false);
   });
 
   it('removes the year when the year pill is dismissed', async () => {
-    const { bloc } = await searched();
-    bloc.setYear('2019');
+    const { bloc } = await searched({}, '?query=naruto&year=2019');
 
     bloc.activeFilters[0].remove();
+    bloc.syncFromUrl();
 
     expect(bloc.year).toBe('');
     expect(bloc.hasActiveFilters).toBe(false);
@@ -1024,30 +1070,27 @@ describe('hrefFor', () => {
 /* ── Clearing ────────────────────────────────────────────────────────────── */
 
 describe('clear', () => {
-  it('empties the draft, the status and the year and writes the browse URL', async () => {
-    const { bloc, replace } = await searched({ hits: [hit('1')], total: 1 });
-    bloc.setStatus('CURRENTLY_AIRING');
-    bloc.setYear('2019');
+  it('empties the draft and writes the URL of the whole catalogue', async () => {
+    const { bloc, replace } = await searched({ hits: [hit('1')], total: 1 }, '?query=naruto&status=CURRENTLY_AIRING&year=2019');
 
     bloc.clear();
 
     expect(bloc.draftQuery).toBe('');
+    expect(replace).toHaveBeenCalledWith('');
+    bloc.syncFromUrl();
     expect(bloc.status).toBe('');
     expect(bloc.year).toBe('');
-    expect(replace).toHaveBeenCalledWith('');
   });
 
-  it('drops the results once the browse URL lands', async () => {
-    const { bloc } = await searched({ hits: [hit('1')], total: 12 }, '?query=naruto&genre=Action');
+  it('shows the whole catalogue once the URL lands', async () => {
+    const { bloc, lastRequest, act } = await searched({ hits: [hit('1')], total: 12 }, '?query=naruto&genre=Action');
 
-    bloc.clear();
-    bloc.syncFromUrl();
+    await act(() => bloc.clear());
 
-    expect(bloc.results).toEqual([]);
-    expect(bloc.works).toEqual([]);
-    expect(bloc.totalHits).toBe(0);
-    expect(bloc.hasSearched).toBe(false);
+    expect(lastRequest()).toMatchObject({ query: '', genre: null, status: null, year: null });
     expect(bloc.selectedGenre).toBeNull();
+    expect(bloc.committedQuery).toBe('');
+    expect(bloc.hasSearched).toBe(true);
   });
 
   it('keeps parameters it does not own on the way out', async () => {
@@ -1058,17 +1101,20 @@ describe('clear', () => {
     expect(replace).toHaveBeenCalledWith('?utm_source=twitter');
   });
 
-  it('does not leave the sort or the view mode behind', async () => {
+  it('does not leave the sort, the view mode or the page size behind', async () => {
     // Deliberate: these are presentation, not a search, so clearing a search
     // must not throw away how the reader likes the page laid out.
-    const { bloc } = await searched();
-    bloc.setSort('title');
-    bloc.setViewMode('list');
+    const { bloc, replace, act } = await searched({ hits: [hit('1')], totalHits: 500 });
+    await act(() => bloc.setSort('title'));
+    await act(() => bloc.setViewMode('list'));
+    await act(() => bloc.setHitsPerPage(48));
 
-    bloc.clear();
+    await act(() => bloc.clear());
 
+    expect(replace).toHaveBeenLastCalledWith('?sort=title&view=list&perPage=48');
     expect(bloc.sort).toBe('title');
     expect(bloc.viewMode).toBe('list');
+    expect(bloc.hitsPerPage).toBe(48);
   });
 });
 
@@ -1208,12 +1254,24 @@ describe('the server seed', () => {
     expect(bloc.hitsPerPage).toBe(48);
   });
 
-  it('keeps the browse state when the URL names no search, with the strip ready', async () => {
-    const { bloc, search } = setup({ search: '', source: () => seedFor('', { results: null }) });
+  it('renders the whole catalogue for an empty URL, with the strip ready', async () => {
+    const { bloc, search } = setup({ search: '', source: () => seedFor('') });
 
-    expect(bloc.phase).toBe('browse');
+    expect(bloc.phase).toBe('results');
+    expect(bloc.hitsSummary).toBe('2 results');
     await bloc.init();
     expect(search).not.toHaveBeenCalled();
+  });
+
+  it('seeds the filters and the layout the URL asked for', () => {
+    const link = '?status=FINISHED_AIRING&year=1998&sort=title&view=list';
+    const { bloc } = setup({ search: link, source: () => seedFor(link) });
+
+    expect(bloc.status).toBe('FINISHED_AIRING');
+    expect(bloc.year).toBe('1998');
+    expect(bloc.sort).toBe('title');
+    expect(bloc.viewMode).toBe('list');
+    expect(bloc.activeFilters.map((f) => f.label)).toEqual(['Finished', '1998']);
   });
 
   it('searches from the browser when the server could not answer', async () => {
@@ -1223,7 +1281,7 @@ describe('the server seed', () => {
       respond: async () => response({ hits: [hit('c1')], totalHits: 1 }),
     });
 
-    expect(bloc.phase).toBe('browse');
+    expect(bloc.phase).toBe('loading');
     await bloc.init();
 
     expect(search).toHaveBeenCalledTimes(1);
@@ -1233,7 +1291,7 @@ describe('the server seed', () => {
   it('ignores a seed for a URL other than the one on screen', () => {
     const { bloc } = setup({ search: '?query=bleach', source: () => seedFor('?query=naruto') });
 
-    expect(bloc.phase).toBe('browse');
+    expect(bloc.phase).toBe('loading');
     expect(bloc.committedQuery).toBe('');
   });
 
@@ -1268,5 +1326,25 @@ describe('page links', () => {
 
     expect(bloc.hrefForPage(1, 'hits')).toBe('/search?query=naruto&genre=Action&page=2');
     expect(bloc.hrefForPage(2, 'works')).toBe('/search?query=naruto&genre=Action&wpage=3');
+  });
+
+  it('gives every genre chip the link its click would write, so the strip works without a script', async () => {
+    const { bloc } = await searched({}, '?query=naruto&status=FINISHED_AIRING&page=3');
+
+    // Selecting: keeps the query and the status, starts from page one.
+    expect(bloc.genreHref('Action')).toBe('/search?query=naruto&genre=Action&status=FINISHED_AIRING');
+
+    bloc.toggleGenre('Action');
+    bloc.syncFromUrl();
+    // Deselecting the chip that is on: the query survives because it is still in the box.
+    expect(bloc.genreHref('Action')).toBe('/search?query=naruto&status=FINISHED_AIRING');
+    bloc.draftQuery = '';
+    expect(bloc.genreHref('Action')).toBe('/search?status=FINISHED_AIRING');
+  });
+
+  it('carries the filters and the layout, so page two is the same page', async () => {
+    const { bloc } = await searched({ hits: [hit('a')], totalHits: 100 }, '?status=FINISHED_AIRING&sort=title&view=list&perPage=48');
+
+    expect(bloc.hrefForPage(1, 'hits')).toBe('/search?status=FINISHED_AIRING&sort=title&view=list&page=2&perPage=48');
   });
 });

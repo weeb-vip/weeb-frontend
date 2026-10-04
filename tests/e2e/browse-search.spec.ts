@@ -20,13 +20,20 @@ const SEARCH_INPUT = '.search-bar-input';
 const RESULTS_COUNT = '.search-page > .results-header .results-count';
 const RESULTS_GRID = '.search-page > .results-grid';
 
-/** Wait for the browse page to hydrate and its Algolia genre facets to land. */
+/** Wait for the browse page to hydrate, with its genre strip on screen. */
 async function waitForBrowseReady(page: Page) {
   await page.goto('/search');
   await page.waitForLoadState('domcontentloaded');
   await page.locator(SEARCH_INPUT).waitFor({ state: 'visible', timeout: 15000 });
-  // Genre chips come from an Algolia facet query, so they arrive after hydration.
+  // The strip is in the server's HTML; the browser fetches it only when the
+  // server could not.
   await page.locator(GENRE_CHIP).first().waitFor({ state: 'visible', timeout: 20000 });
+}
+
+/** The custom Select: open it by its label, pick an option by its text. */
+async function choose(page: Page, label: string, option: string) {
+  await page.getByRole('button', { name: label }).click();
+  await page.getByRole('option', { name: option, exact: true }).click();
 }
 
 /** A results grid holding at least one card, i.e. a search actually resolved. */
@@ -85,20 +92,115 @@ test.describe('/search browse page', () => {
     await expectResults(page);
   });
 
-  test('deselecting the active genre returns to the browse placeholder', async ({ page }) => {
+  test('deselecting the active genre returns to the whole catalogue, not a blank page', async ({ page }) => {
     await waitForBrowseReady(page);
 
     await page.locator(GENRE_CHIP).first().click();
     await expect(page).toHaveURL(/[?&]genre=/, { timeout: 15000 });
     await expectResults(page);
+    await expect(page.locator(RESULTS_COUNT)).toContainText(' in ');
 
     // Clicking the selected chip again clears it.
     await page.locator(SELECTED_CHIP).click();
 
     await expect(page).not.toHaveURL(/[?&]genre=/, { timeout: 15000 });
     await expect(page.locator(SELECTED_CHIP)).toHaveCount(0);
-    await expect(page.locator(RESULTS_COUNT)).toHaveCount(0);
-    await expect(page.locator('.empty-state')).toBeVisible();
+    await expect(page.locator(RESULTS_COUNT)).not.toContainText(' in ', { timeout: 20000 });
+    await expectResults(page);
+    await expect(page.locator('.empty-state')).toHaveCount(0);
+  });
+
+  /*
+    There is no blank state. /search with nothing in the URL used to render a
+    "Browse anime" placeholder and wait to be typed into; it now shows the
+    first page of the catalogue, and shows it from the server's HTML, so the
+    page is full before any script runs.
+  */
+  test('the bare page shows the catalogue, in the HTML, before any script', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/search');
+
+    await expect(page.locator(RESULTS_COUNT)).toBeVisible();
+    await expect(page.locator(RESULTS_COUNT)).toContainText(/^[\d,]+ results$/);
+    expect(await page.locator(`${RESULTS_GRID} > *`).count()).toBeGreaterThan(0);
+    await expect(page.locator(GENRE_CHIP).first()).toBeVisible();
+    await expect(page.locator('.empty-state')).toHaveCount(0);
+
+    // The chips are links, so the strip works too.
+    const chip = page.locator(GENRE_CHIP).first();
+    const genreName = (await chip.innerText()).trim().split('\n')[0];
+    await chip.click();
+    await expect(page).toHaveURL(/[?&]genre=/);
+    await expect(page.locator(SELECTED_CHIP)).toContainText(genreName);
+    await expect(page.locator(RESULTS_COUNT)).toContainText(`in ${genreName}`);
+
+    // And the filters are a form: native selects and Apply, shown only here.
+    await page.locator('select[name="status"]').selectOption('NOT_YET_AIRED');
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect(page).toHaveURL(/[?&]status=NOT_YET_AIRED/);
+    await expect(page).toHaveURL(/[?&]genre=/);
+    // Two pills now: the genre's and the status's.
+    await expect(page.locator('.filter-pill', { hasText: 'Upcoming' })).toBeVisible();
+    await expect(page.locator('.filter-pill', { hasText: genreName })).toBeVisible();
+    await expect(page.locator('select[name="status"]')).toHaveValue('NOT_YET_AIRED');
+
+    await context.close();
+  });
+
+  test('the scriptless form is not on the page when there is a script', async ({ page }) => {
+    await waitForBrowseReady(page);
+
+    await expect(page.locator('select[name="status"]')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Apply' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Filter by status' })).toBeVisible();
+  });
+
+  /*
+    Everything the reader chooses is in the URL -- the status, the year, the
+    sort, the view and the page, not only the query and genre -- so a reload
+    or Back lands on the same page rather than page one of everything.
+  */
+  test('the status filter goes into the URL and survives a reload', async ({ page }) => {
+    await waitForBrowseReady(page);
+    const unfiltered = (await page.locator(RESULTS_COUNT).innerText()).trim();
+
+    await choose(page, 'Filter by status', 'Upcoming');
+
+    await expect(page).toHaveURL(/[?&]status=NOT_YET_AIRED/, { timeout: 15000 });
+    await expect(page.locator(RESULTS_COUNT)).not.toHaveText(unfiltered, { timeout: 20000 });
+    await expectResults(page);
+    // The pill row says what is narrowing the page.
+    await expect(page.locator('.filter-pill', { hasText: 'Upcoming' })).toBeVisible();
+
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(page).toHaveURL(/[?&]status=NOT_YET_AIRED/);
+    await expect(page.locator('.filter-pill', { hasText: 'Upcoming' })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole('button', { name: 'Filter by status' })).toContainText('Upcoming');
+    await expectResults(page);
+  });
+
+  test('the page the reader is on comes back with Back', async ({ page }) => {
+    await waitForBrowseReady(page);
+    await expectResults(page);
+
+    // Page two, then away to a show, then Back.
+    await page.getByRole('button', { name: 'Next page' }).first().click();
+    await expect(page).toHaveURL(/[?&]page=2/, { timeout: 15000 });
+    await expectResults(page);
+    // The card is the link; its href is the stable identity of what page two showed.
+    const card = page.locator(`${RESULTS_GRID} a[href^="/anime/"]`).first();
+    const href = await card.getAttribute('href');
+    await card.click();
+    await expect(page).toHaveURL(/\/anime\//, { timeout: 20000 });
+
+    await page.goBack();
+
+    await expect(page).toHaveURL(/[?&]page=2/, { timeout: 15000 });
+    await expectResults(page);
+    await expect(page.locator(`${RESULTS_GRID} a[href^="/anime/"]`).first()).toHaveAttribute('href', href!, { timeout: 20000 });
   });
 
   test('genre selection survives a reload via the URL', async ({ page }) => {

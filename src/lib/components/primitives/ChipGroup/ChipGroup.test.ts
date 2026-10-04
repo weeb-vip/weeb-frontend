@@ -241,6 +241,35 @@ describe('ChipGroup', () => {
   });
 
   describe('select="none" -- the link row', () => {
+    /**
+     * A selecting row whose chips also carry an href: the /search genre strip.
+     * The link is what works with no script; once hydrated the caller is told
+     * and the browser must NOT also follow the link, or every chip click would
+     * be a full page load on top of the in-place navigation.
+     */
+    it('a selectable chip with an href is a link that calls back and does not navigate', async () => {
+      const onSelect = vi.fn();
+      render(ChipGroup, {
+        props: {
+          items: [{ value: 'action', label: 'Action', href: '/search?genre=Action' }],
+          select: 'multi',
+          isSelected: () => false,
+          onSelect
+        }
+      });
+      const link = screen.getByRole('link', { name: 'Action' });
+      expect(link).toHaveAttribute('href', '/search?genre=Action');
+
+      // Svelte delegates the handler to the mount root, so the verdict is read
+      // one level further out, after that handler has run.
+      let prevented: boolean | null = null;
+      document.addEventListener('click', (event) => { prevented = event.defaultPrevented; }, { once: true });
+      await userEvent.click(link);
+
+      expect(onSelect).toHaveBeenCalledWith('action');
+      expect(prevented).toBe(true);
+    });
+
     /** REGRESSION: a chip with an href renders an <a>, not a button. */
     it('renders links, not buttons', () => {
       render(ChipGroup, {

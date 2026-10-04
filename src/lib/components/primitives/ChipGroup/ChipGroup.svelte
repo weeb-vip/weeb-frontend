@@ -139,6 +139,18 @@
      Where they land is `keyTarget`'s call; this half only moves the focus. */
   let root = $state<HTMLDivElement | null>(null);
 
+  /**
+   * A selectable chip that also carries an `href` is a link the caller
+   * enhances: before hydration, and with no script at all, the browser
+   * follows it; once this handler is attached the caller is told instead and
+   * the navigation is left to it. Same shape as the pager's links.
+   */
+  function activate(event: MouseEvent, key: string, item: ChipGroupItem): void {
+    if (!onSelect) return;
+    if (item.href) event.preventDefault();
+    onSelect(key);
+  }
+
   function focusAndSelect(index: number): void {
     const item = items[index];
     if (!item || item.disabled) return;
@@ -193,8 +205,8 @@
       class={['cg-item', `cg-item--${variant}`, iconOnly ? 'cg-icon-only' : '', itemClass]
         .filter(Boolean)
         .join(' ')}
-      href={select === 'none' ? item.href : undefined}
-      onclick={select === 'none' ? undefined : () => onSelect?.(key)}
+      href={item.href}
+      onclick={select === 'none' ? undefined : (event) => activate(event, key, item)}
       size={chipSize}
       touch={isTouch}
       {tone}

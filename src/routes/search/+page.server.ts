@@ -3,7 +3,6 @@ import {
   buildGenreFacetRequest,
   buildSearchRequests,
   indexesFrom,
-  isBrowseState,
   parseGenreFacetResponse,
   parseSearchResponse,
   readSearchParams,
@@ -52,29 +51,30 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 }
 
 /**
- * The first render of /search, built on the server: the genre strip and, for
- * a URL that names a search, the page of results it asks for. One Algolia
- * round trip carries both. Any failure degrades to the client search rather
- * than an error page -- a search box must never be the thing that is down.
+ * The first render of /search, built on the server: the genre strip and the
+ * page of results the URL asks for -- the whole catalogue, best first, when it
+ * asks for nothing in particular. One Algolia round trip carries both. Any
+ * failure degrades to the client search rather than an error page -- a search
+ * box must never be the thing that is down.
  */
 export const load: PageServerLoad = async ({ url, locals }) => {
   const params = readSearchParams(url.searchParams);
   const indexes = indexesFrom(locals.config);
-  const browse = isBrowseState(params);
   const request = toCatalogRequest(params);
   const seed: SearchPageSeed = { key: url.search, params, results: null, genres: null };
 
   try {
     const client = await serverClient();
     if (client) {
-      const requests = [buildGenreFacetRequest(indexes)];
-      if (!browse) requests.push(...buildSearchRequests(request, indexes));
+      const now = Date.now();
+      const requests = [
+        buildGenreFacetRequest(indexes, { status: params.status, year: params.year }, now),
+        ...buildSearchRequests(request, indexes, now),
+      ];
       const response = await withTimeout(client.search({ requests }), ALGOLIA_TIMEOUT_MS);
       const results: any[] = response?.results ?? [];
       seed.genres = parseGenreFacetResponse({ results: [results[0]] });
-      if (!browse) {
-        seed.results = parseSearchResponse({ results: results.slice(1) }, wantsWorks(request, indexes));
-      }
+      seed.results = parseSearchResponse({ results: results.slice(1) }, wantsWorks(request, indexes));
     }
   } catch (error) {
     console.error('[search] server search failed; the browser will search instead:', error);

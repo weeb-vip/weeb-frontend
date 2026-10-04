@@ -51,6 +51,16 @@
     bloc.syncFromUrl();
   });
 
+  /**
+   * The URL fields a scriptless form must carry that it does not ask about,
+   * in the page's own spelling: defaults are left out, as `writeSearchUrl`
+   * leaves them out, so the submit lands on the same URL a click would.
+   */
+  function carried(names: string[]): { name: string; value: string }[] {
+    const params = new URLSearchParams(bloc.hrefForPage(bloc.hitsPage, 'hits').split('?')[1] ?? '');
+    return names.filter((name) => params.has(name)).map((name) => ({ name, value: params.get(name)! }));
+  }
+
   /** Grid or list. Icons only: the two shapes say it faster than the words. */
   const VIEW_MODES = [
     { value: "grid", label: "Grid", title: "Grid view" },
@@ -90,10 +100,10 @@
         aria-label="Search anime"
         bind:value={bloc.draftQuery}
       />
-      {#if bloc.selectedGenre}
-        <!-- Keeps the chip's filter on a scriptless submit. -->
-        <input type="hidden" name="genre" value={bloc.selectedGenre} />
-      {/if}
+      <!-- Keeps the filters and layout on a scriptless submit. -->
+      {#each carried(['genre', 'status', 'year', 'sort', 'view', 'perPage']) as field (field.name)}
+        <input type="hidden" name={field.name} value={field.value} />
+      {/each}
       {#if bloc.draftQuery}
         <button
           type="button"
@@ -137,6 +147,7 @@
             value: genre.name,
             label: genre.name,
             count: genre.count,
+            href: bloc.genreHref(genre.name),
           }))}
           isSelected={(name) => bloc.isGenreSelected(name)}
           onSelect={(name) => bloc.toggleGenre(name)}
@@ -151,26 +162,60 @@
       {/if}
     </div>
 
-    <div class="filter-row filter-row--controls">
-      <Select
-        value={bloc.status}
-        options={bloc.statusFilters}
-        ariaLabel="Filter by status"
-        onChange={(detail) => bloc.setStatus(detail.value)}
-      />
-      <Select
-        value={bloc.year}
-        options={bloc.yearSelectOptions}
-        ariaLabel="Filter by year"
-        onChange={(detail) => bloc.setYear(detail.value)}
-      />
-      <Select
-        value={bloc.sort}
-        options={bloc.sortOptions}
-        ariaLabel="Sort results"
-        onChange={(detail) => bloc.setSort(detail.value)}
-      />
-    </div>
+    <!-- A real form, like the search box: without a script the native selects
+         and Apply submit a GET the server answers in full; with one the custom
+         selects navigate in place and the natives stay hidden. The hidden
+         fields carry what the form does not ask about. -->
+    <form class="filter-row filter-row--controls" method="get" action="/search">
+      {#each carried(['query', 'genre', 'view', 'perPage']) as field (field.name)}
+        <input type="hidden" name={field.name} value={field.value} />
+      {/each}
+      <span class="js-only">
+        <Select
+          value={bloc.status}
+          options={bloc.statusFilters}
+          ariaLabel="Filter by status"
+          onChange={(detail) => bloc.setStatus(detail.value)}
+        />
+      </span>
+      <span class="js-only">
+        <Select
+          value={bloc.year}
+          options={bloc.yearSelectOptions}
+          ariaLabel="Filter by year"
+          onChange={(detail) => bloc.setYear(detail.value)}
+        />
+      </span>
+      <span class="js-only">
+        <Select
+          value={bloc.sort}
+          options={bloc.sortOptions}
+          ariaLabel="Sort results"
+          onChange={(detail) => bloc.setSort(detail.value)}
+        />
+      </span>
+      <noscript>
+        <select name="status" class="native-select" aria-label="Filter by status">
+          {#each bloc.statusFilters as option (option.value)}
+            <option value={option.value} selected={option.value === bloc.status}>{option.label}</option>
+          {/each}
+        </select>
+        <select name="year" class="native-select" aria-label="Filter by year">
+          {#each bloc.yearSelectOptions as option (option.value)}
+            <option value={option.value} selected={option.value === bloc.year}>{option.label}</option>
+          {/each}
+        </select>
+        <select name="sort" class="native-select" aria-label="Sort results">
+          {#each bloc.sortOptions as option (option.value)}
+            <option value={option.value} selected={option.value === bloc.sort}>{option.label}</option>
+          {/each}
+        </select>
+        <button type="submit" class="native-apply">Apply</button>
+        <style>
+          .js-only { display: none; }
+        </style>
+      </noscript>
+    </form>
   </section>
 
   <!-- Active Filters -->
@@ -482,14 +527,6 @@
         {/if}
       </section>
     {/if}
-  {:else}
-    <!-- Nothing searched yet: the browse placeholder. -->
-    <EmptyState
-      class="empty-state"
-      size="hero"
-      heading="Browse anime"
-      message="Search by title or click a genre above to explore."
-    />
   {/if}
 </div>
 
@@ -542,6 +579,14 @@
       box-shadow 0.2s;
     font-family: var(--weeb-font);
   }
+  /* type="search" for the semantics; the browser's own cancel button would
+     sit beside ours as a second ×, so it is the one that goes. */
+  .search-bar-input::-webkit-search-cancel-button,
+  .search-bar-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
   .search-bar-input:focus {
     outline: none;
     border-color: var(--weeb-accent);
@@ -588,6 +633,57 @@
   }
   .filter-row--controls {
     gap: 10px;
+  }
+  /* The scriptless fallbacks: native selects in the page's chrome. Only ever
+     on screen inside <noscript>, where the custom selects are hidden. */
+  .native-select,
+  .native-apply {
+    font: inherit;
+    font-size: 13px;
+    color: var(--weeb-fg);
+    background: var(--weeb-surface);
+    border: 1px solid var(--weeb-border);
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+  .native-apply {
+    cursor: pointer;
+    background: var(--weeb-accent);
+    border-color: var(--weeb-accent);
+    color: #fff;
+  }
+
+  /*
+    Full rows. The shared grid auto-fills columns, which at most widths gives
+    a count a page of 24 does not divide by -- 7 at 1280, 9 at 1920, 13 at
+    2560 -- and a last row with three cards on it. Here the count is fixed per
+    breakpoint to one that divides every page size (3, 4, 6, 8, 12), so every
+    page but the last of a result set is a full rectangle. The card stays the
+    size it is on every other page: 8 columns at 1920 is 214px against the
+    shared grid's 197px.
+  */
+  .search-page :global(.results-grid) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  @media (min-width: 1024px) {
+    .search-page :global(.results-grid) {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1600px) {
+    .search-page :global(.results-grid) {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 2400px) {
+    .search-page :global(.results-grid) {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 767px) {
+    .search-page :global(.results-grid) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
   .filter-label {
     font-size: 12px;
