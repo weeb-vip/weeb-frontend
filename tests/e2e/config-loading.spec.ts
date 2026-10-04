@@ -20,7 +20,7 @@ test.describe('Config loading', () => {
 
     // Prove config actually resolved: the search index name comes from config,
     // so getting results means the hydrated config reached the store.
-    const search = page.locator('input.ac-input--desktop');
+    const search = page.locator('input.ac-input--desktop[data-hydrated="true"]');
     const desktop = await search
       .waitFor({ state: 'visible', timeout: 15000 })
       .then(() => true)
@@ -28,7 +28,11 @@ test.describe('Config loading', () => {
 
     if (desktop) {
       await search.click();
+      await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 45000 });
       await search.fill('Naruto');
+      // Typed text connects the search backend lazily; a missing panel is a different
+      // failure from a backend that never came up, so say which.
+      await expect(search).toHaveAttribute('data-status', 'ready', { timeout: 15000 });
       await expect(
         page.locator('#ac-listbox-desktop [role="option"]').first()
       ).toBeVisible({ timeout: 15000 });

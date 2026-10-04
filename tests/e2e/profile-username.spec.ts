@@ -1,13 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './account.fixture';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  waitForAuthForm,
-  waitForPageReady,
-  deleteEmailsForRecipient,
-  getLatestEmail,
-  extractVerificationLink,
-  registerNewUser
-} from './helpers';
+import { waitForPageReady } from './helpers';
 
 // The settings form must reflect a username error the right way: a collision is
 // about the username field and belongs on it, while any other failure belongs
@@ -16,22 +9,7 @@ import {
 // the user-service and is covered there.
 test.describe('Profile settings — username errors', () => {
   test.describe.configure({ mode: 'serial' });
-  test.setTimeout(300000);
-  // Budget note: registration now queues behind a global slot (see
-  // helpers.withRegistrationSlot) and the mail wait runs to about three
-  // minutes, so the old budget expired mid-wait and reported a bare test
-  // timeout instead of the real cause.
-
-  let testEmail: string;
-  const testPassword = 'Password1!';
-
-  test.beforeEach(async () => {
-    testEmail = `${uuidv4()}@weeb.vip`;
-  });
-
-  test.afterEach(async () => {
-    await deleteEmailsForRecipient(testEmail);
-  });
+  test.setTimeout(180000);
 
   /*
     KNOWN BUG -- /profile/settings does not populate Username and Email for a
@@ -83,26 +61,6 @@ test.describe('Profile settings — username errors', () => {
   */
   test.fail();
   test('a taken username lands on the field; any other error lands in the banner', async ({ page }) => {
-    // Register -> verify -> login (same path as profile.spec).
-    await registerNewUser(page, testEmail, testPassword);
-
-    const baseUrl = page.url().match(/^https?:\/\/[^\/]+/)![0];
-    const email = await getLatestEmail(testEmail);
-    const link = extractVerificationLink(email.HTML || email.Text || '', baseUrl);
-    expect(link).toBeTruthy();
-    await page.goto(link!, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await expect(
-      page.getByRole('heading', { name: /you're verified|this link didn't work/i })
-    ).toBeVisible({ timeout: 20000 });
-
-    await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await waitForAuthForm(page);
-    await page.fill('input[name="username"]', testEmail);
-    await page.fill('input[name="password"]', testPassword);
-    const loginButton = page.locator('form button[type="submit"]').first();
-    await expect(loginButton).toBeEnabled({ timeout: 10000 });
-    await loginButton.click();
-    await page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 60000 });
 
     // Settings, with the username field populated from the real user query.
     await page.goto('/profile/settings', { waitUntil: 'domcontentloaded', timeout: 60000 });

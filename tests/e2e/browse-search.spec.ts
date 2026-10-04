@@ -56,7 +56,7 @@ test.describe('/search browse page', () => {
     await expectResults(page);
 
     // Hold, then re-assert: the revert happened asynchronously after the click.
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(750);
     await expect(page.locator(SELECTED_CHIP)).toHaveCount(1);
     await expect(page.locator(`${RESULTS_GRID} > *`).first()).toBeVisible();
   });
@@ -72,7 +72,7 @@ test.describe('/search browse page', () => {
     await expectResults(page);
 
     // The input must not be reset by the URL-sync block.
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(750);
     await expect(page.locator(SEARCH_INPUT)).toHaveValue('naruto');
   });
 

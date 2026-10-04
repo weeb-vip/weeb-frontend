@@ -6,8 +6,11 @@ import { waitForAuthForm, fillWhenHydrated, deleteEmailsForRecipient, registerNe
 // instead of using the modal, in case the modal has issues
 
 test.describe('User Registration Flow (Direct Navigation)', () => {
-  // Run serially — these hit the shared staging API which can throttle parallel requests
-  test.describe.configure({ mode: 'serial' });
+  // Not serial. Each test registers its own address (set in beforeEach, on
+  // this worker's copy of the module), and registrations are already spaced
+  // out by the cross-worker slot in helpers.ts. Serial mode ran these one
+  // after another on one worker -- the longest chain in the whole suite -- and
+  // skipped the rest of the file whenever one of them failed.
 
   // Increase timeout for CI where network to staging is slower
   test.setTimeout(240000);

@@ -34,7 +34,7 @@ describe('NotificationPreferencesBloc', () => {
   it('reads stored rows and defaults the rest to in-app only', async () => {
     const { bloc } = makeBloc();
     scopes.push(reactiveScope(() => bloc.isReady));
-    await settle();
+    await vi.waitFor(() => expect(bloc.isReady).toBe(true));
     expect(bloc.isEnabled('FOLLOW_REQUESTED', 'EMAIL')).toBe(true);
     expect(bloc.isEnabled('FOLLOW_REQUESTED', 'PUSH')).toBe(false);
     expect(bloc.isEnabled('NEW_FOLLOWER', 'IN_APP')).toBe(true);
@@ -44,7 +44,7 @@ describe('NotificationPreferencesBloc', () => {
   it('flips at once and saves the flipped value', async () => {
     const { bloc, port } = makeBloc();
     scopes.push(reactiveScope(() => bloc.isReady, () => bloc.isSaving('NEW_FOLLOWER', 'PUSH')));
-    await settle();
+    await vi.waitFor(() => expect(bloc.isReady).toBe(true));
 
     bloc.toggle('NEW_FOLLOWER', 'PUSH');
     expect(bloc.isEnabled('NEW_FOLLOWER', 'PUSH')).toBe(true);
@@ -57,7 +57,7 @@ describe('NotificationPreferencesBloc', () => {
     const port = makePort(vi.fn(async (_input: any) => { throw new Error('nope'); }));
     const { bloc, notify } = makeBloc(port);
     scopes.push(reactiveScope(() => bloc.isReady, () => bloc.isSaving('NEW_FOLLOWER', 'EMAIL')));
-    await settle();
+    await vi.waitFor(() => expect(bloc.isReady).toBe(true));
 
     bloc.toggle('NEW_FOLLOWER', 'EMAIL');
     expect(bloc.isEnabled('NEW_FOLLOWER', 'EMAIL')).toBe(true);
