@@ -473,10 +473,17 @@ describe('the section nav', () => {
     expect(bloc.sections.find((tab) => tab.value === 'episodes')?.count).toBe(3);
   });
 
-  it('hides the news tab while the flag is off, even for a show that has news', () => {
+  it('hides the news tab once the flag has resolved as off, even for a show that has news', () => {
+    vi.useFakeTimers();
     const client = inertClient();
     seedDetails(client, record);
-    const { bloc } = build({ client, flags: { isEnabled: () => false } });
+    const { bloc } = build({ client, flags: { isEnabled: () => false }, flagPollMs: 10, flagMaxTries: 2 });
+
+    // Unknown is not off: the server never knows the flag, so the tab stays
+    // until the poll has actually resolved it.
+    expect(bloc.showsNews).toBe(true);
+    bloc.init();
+    vi.advanceTimersByTime(100);
 
     expect(bloc.showsNews).toBe(false);
     // And the section itself renders nothing, so the flag cannot be worked
@@ -754,11 +761,12 @@ describe('the news feature flag', () => {
       .mockReturnValue(true);
     const { bloc } = build({ flags: { isEnabled }, flagPollMs: 10, flagMaxTries: 25 });
 
-    expect(bloc.newsEnabled).toBe(false);
+    // Unknown is not off: the row stays until the flag resolves as off.
+    expect(bloc.newsEnabled).toBe(true);
     bloc.init();
 
     vi.advanceTimersByTime(10);
-    expect(bloc.newsEnabled).toBe(false);
+    expect(bloc.newsEnabled).toBe(true);
 
     vi.advanceTimersByTime(10);
     expect(bloc.newsEnabled).toBe(true);
@@ -777,6 +785,7 @@ describe('the news feature flag', () => {
     vi.advanceTimersByTime(1000);
 
     expect(isEnabled).toHaveBeenCalledTimes(4); // once up front, then three tries
+    // Resolved as off: only now does the row go.
     expect(bloc.newsEnabled).toBe(false);
   });
 

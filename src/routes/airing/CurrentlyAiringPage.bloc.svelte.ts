@@ -18,6 +18,7 @@ import { getCurrentSeason, getSeasonDisplayName } from '$lib/utils/seasonUtils';
 import {
   buildCalendarGrid,
   buildDayGroups,
+  isoDayInZone,
   countdownFor,
   dayLabel,
   entriesOnDay,
@@ -154,6 +155,14 @@ export class CurrentlyAiringPageBloc {
 
   /** Advanced by `init`; every countdown reads it so they all move together. */
   #tick = $state(0);
+  /**
+   * The "now" the schedule itself is built from. Fixed at load and moved only
+   * when the day turns: the entries, their order and the day groups used to
+   * be rebuilt from the ticking clock, so every card on the page received new
+   * props every 30 seconds -- a full re-render for the sake of the countdown
+   * text, which is the one thing that actually needs the tick.
+   */
+  #anchor = $state<Date>(new Date(0));
 
   constructor({
     source = () => ({ ssrData: null }),
@@ -175,6 +184,7 @@ export class CurrentlyAiringPageBloc {
     this.#addAnime = addAnime ?? defaultAddAnime();
 
     const start = clock();
+    this.#anchor = start;
     // A whole month back and a whole month forward, so the calendar opens on
     // both the month you are in and the one you are most likely to page to.
     this.#rangeStart = new Date(start.getFullYear(), start.getMonth(), 1);
@@ -200,7 +210,15 @@ export class CurrentlyAiringPageBloc {
   /** Starts the shared clock. Returns the teardown. */
   init(): () => void {
     if (typeof setInterval !== 'function') return () => {};
-    const id = setInterval(() => (this.#tick += 1), TICK_MS);
+    const id = setInterval(() => {
+      this.#tick += 1;
+      // The schedule's own "now" moves only across a day boundary, when
+      // yesterday's groups should drop and "Today" should point elsewhere.
+      const current = this.#clock();
+      if (isoDayInZone(current, this.zone) !== isoDayInZone(this.#anchor, this.zone)) {
+        this.#anchor = current;
+      }
+    }, TICK_MS);
     return () => clearInterval(id);
   }
 
@@ -271,8 +289,8 @@ export class CurrentlyAiringPageBloc {
     mergeAiringPages(this.#query.current.data?.currentlyAiring, this.#extraShows),
   );
 
-  /** One entry per episode, in air order. */
-  readonly entries: AiringEntry[] = $derived(expandEpisodes(this.#shows, this.now));
+  /** One entry per episode, in air order. Built from the anchor, not the tick. */
+  readonly entries: AiringEntry[] = $derived(expandEpisodes(this.#shows, this.#anchor));
 
   get isEmpty(): boolean {
     return this.entries.length === 0;
@@ -281,11 +299,11 @@ export class CurrentlyAiringPageBloc {
   // ── Schedule view ─────────────────────────────────────────────
 
   readonly #dayGroups: DayGroup[] = $derived(
-    buildDayGroups(this.entries, this.now, this.zone, this.#myListOnly),
+    buildDayGroups(this.entries, this.#anchor, this.zone, this.#myListOnly),
   );
 
   readonly #upcoming: DayGroup[] = $derived(
-    upcomingDayGroups(this.#dayGroups, this.now, this.zone),
+    upcomingDayGroups(this.#dayGroups, this.#anchor, this.zone),
   );
 
   /** The days actually on screen. The rest are behind "show next N days". */

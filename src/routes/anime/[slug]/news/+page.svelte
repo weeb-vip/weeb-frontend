@@ -37,13 +37,16 @@
   /* "All" is the empty value, so deselecting a category is just picking it.
      `--cat-*` are declared on .news-page below and inherit down into the
      buttons, so the accent resolves without the page knowing the category list. */
+  // Real links (`select="none"` + href): filtering works before hydration and
+  // without a script, and SvelteKit's router still handles the click in-app.
   const categoryItems = $derived<ChipGroupItem[]>([
-    { value: '', label: 'All', count: bloc.total },
+    { value: '', label: 'All', count: bloc.total, href: bloc.categoryHref(null) },
     ...bloc.categories.map((c) => ({
       value: c,
       label: bloc.label(c),
       count: bloc.counts[c],
       accent: `var(--cat-${c}, var(--weeb-fg-muted))`,
+      href: bloc.categoryHref(c),
     })),
   ]);
 
@@ -151,13 +154,12 @@
            draws the leading dot and tints the selected wash; that is all
            `.chip.cat` ever did. The `.filters .chip` hook anime-news.spec.ts
            selects on is `Chip`'s own class -- the items ARE chips now. -->
-      <div class="filters">
+      <div class="filters" data-sveltekit-noscroll>
         <ChipGroup
           items={categoryItems}
-          value={bloc.selected ?? ''}
-          onSelect={(value) => bloc.selectCategory(value || null)}
+          select="none"
+          isSelected={(value) => value === (bloc.selected ?? '')}
           variant="pill"
-          mode="toggle"
           ariaLabel="Filter by category"
         />
       </div>
@@ -175,7 +177,7 @@
       <div class="empty">
         <strong>No {bloc.label(bloc.selected ?? '').toLowerCase()} stories</strong>
         <span>Nothing in this category yet for {bloc.title}.</span>
-        <button class="reset" onclick={() => bloc.selectCategory(null)}>Show all {bloc.total}</button>
+        <a class="reset" href={bloc.categoryHref(null)} data-sveltekit-noscroll>Show all {bloc.total}</a>
       </div>
     {:else}
       <!-- No limit prop: the page has already cut the list, and AnimeNews regroups by
@@ -185,17 +187,28 @@
       <AnimeNews news={bloc.visible} headingLevel={2} />
 
       {#if bloc.pageCount > 1}
-        <nav class="pager" aria-label="News pages">
-          <button class="pg nav" disabled={bloc.current === 1} onclick={() => bloc.goToPage(bloc.current - 1)} aria-label="Previous page">←</button>
+        <!-- Links, not buttons: paging is a display cut over data already in
+             the HTML, so it must work before hydration and without a script.
+             The ends render as inert spans rather than disabled buttons. -->
+        <nav class="pager" aria-label="News pages" data-sveltekit-noscroll>
+          {#if bloc.current === 1}
+            <span class="pg nav" aria-disabled="true" aria-label="Previous page">←</span>
+          {:else}
+            <a class="pg nav" href={bloc.pageHref(bloc.current - 1)} aria-label="Previous page">←</a>
+          {/if}
           {#each bloc.pageNumbers as n (n)}
-            <button
+            <a
               class="pg"
               class:on={bloc.current === n}
               aria-current={bloc.current === n ? 'page' : undefined}
-              onclick={() => bloc.goToPage(n)}
-            >{n}</button>
+              href={bloc.pageHref(n)}
+            >{n}</a>
           {/each}
-          <button class="pg nav" disabled={bloc.current === bloc.pageCount} onclick={() => bloc.goToPage(bloc.current + 1)} aria-label="Next page">→</button>
+          {#if bloc.current === bloc.pageCount}
+            <span class="pg nav" aria-disabled="true" aria-label="Next page">→</span>
+          {:else}
+            <a class="pg nav" href={bloc.pageHref(bloc.current + 1)} aria-label="Next page">→</a>
+          {/if}
         </nav>
       {/if}
     {/if}

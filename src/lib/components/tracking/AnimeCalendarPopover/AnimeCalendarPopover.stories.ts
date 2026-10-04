@@ -1,16 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
-import { writable } from 'svelte/store';
+import { readable, writable } from 'svelte/store';
 import AnimeCalendarPopover from './AnimeCalendarPopover.svelte';
 import {
   AnimeCalendarPopoverBloc,
-  type MediaQueryPort,
 } from './AnimeCalendarPopover.bloc.svelte';
 import StoryContainer from '$lib/components/__stories__/StoryContainer.svelte';
 
 /** A viewport that never changes, so no story listens to a real breakpoint. */
-function stubMediaQuery(matches: boolean): MediaQueryPort {
-  return { matches: () => matches, onChange: () => () => {} };
-}
 
 const anime = {
   id: '154587',
@@ -36,7 +32,7 @@ function bloc(overrides: Record<string, unknown> = {}, compact = false) {
     { anime: { ...anime, ...overrides } },
     {
       preferences: writable({ titleLanguage: 'english' as const }),
-      mediaQuery: stubMediaQuery(compact),
+      viewport: readable(compact),
     }
   );
 }
@@ -104,7 +100,7 @@ export const JapaneseTitle: Story = {
       { anime },
       {
         preferences: writable({ titleLanguage: 'japanese' as const }),
-        mediaQuery: stubMediaQuery(false),
+        viewport: readable(false),
       }
     ),
   },

@@ -106,11 +106,12 @@ describe('the feature gate', () => {
     expect(bloc.flagsResolved).toBe(true);
   });
 
-  it('separates "flags have not loaded" from "flag is off"', () => {
+  it('shows the news while the flag is still unknown -- the server never knows it', () => {
     const { bloc } = build({ enabled: false });
 
-    // Without this the page renders its not-available message on every load.
-    expect(bloc.newsEnabled).toBe(false);
+    // Unresolved is not off: the stories are in the payload, and hiding them
+    // until PostHog answered left the cached HTML with a bare hero.
+    expect(bloc.newsEnabled).toBe(true);
     expect(bloc.flagsResolved).toBe(false);
   });
 
@@ -139,7 +140,7 @@ describe('the feature gate', () => {
     bloc.watchFlag();
 
     vi.advanceTimersByTime(10);
-    expect(bloc.newsEnabled).toBe(false);
+    expect(bloc.newsEnabled).toBe(true);
     expect(bloc.flagsResolved).toBe(false);
 
     vi.advanceTimersByTime(10);
@@ -159,9 +160,9 @@ describe('the feature gate', () => {
     vi.advanceTimersByTime(1000);
 
     expect(isEnabled).toHaveBeenCalledTimes(4); // once up front, then three tries
+    // Only now, with a resolved "off", does the section give way to the
+    // not-available message.
     expect(bloc.newsEnabled).toBe(false);
-    // Resolved, so the page finally says the section is unavailable rather
-    // than pulsing forever.
     expect(bloc.flagsResolved).toBe(true);
   });
 
