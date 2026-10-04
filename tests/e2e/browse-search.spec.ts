@@ -164,8 +164,9 @@ test.describe('/search browse page', () => {
     await page.getByRole('button', { name: 'Next page' }).first().click();
     await expect(page).toHaveURL(/[?&]page=2/, { timeout: 15000 });
     await expectResults(page);
-    const card = page.locator(`${RESULTS_GRID} > *`).first().locator('a').first();
-    const title = ((await card.getAttribute('aria-label')) || (await card.innerText())).trim().split('\n')[0];
+    // The card is the link; its href is the stable identity of what page two showed.
+    const card = page.locator(`${RESULTS_GRID} a[href^="/anime/"]`).first();
+    const href = await card.getAttribute('href');
     await card.click();
     await expect(page).toHaveURL(/\/anime\//, { timeout: 20000 });
 
@@ -173,7 +174,7 @@ test.describe('/search browse page', () => {
 
     await expect(page).toHaveURL(/[?&]page=2/, { timeout: 15000 });
     await expectResults(page);
-    await expect(page.locator(`${RESULTS_GRID} > *`).first()).toContainText(title.slice(0, 12), { timeout: 20000 });
+    await expect(page.locator(`${RESULTS_GRID} a[href^="/anime/"]`).first()).toHaveAttribute('href', href!, { timeout: 20000 });
   });
 
   test('genre selection survives a reload via the URL', async ({ page }) => {

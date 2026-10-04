@@ -31,8 +31,11 @@ const WORKS_NAV = 'nav[aria-label="Manga results pagination"]';
  * page-size assertion reads the size and not the size of the catalogue.
  */
 const DEEP_QUERY = 'love';
-/** A query whose manga fit on a single page, whatever size that page is. */
-const SHALLOW_MANGA_QUERY = 'one piece';
+/**
+ * A query whose manga fit on a single page while its anime run to several.
+ * "one piece" used to be it, until the works index grew past 24 of them.
+ */
+const SHALLOW_MANGA_QUERY = 'gintama';
 
 const DEFAULT_PAGE_SIZE = 24;
 
