@@ -39,14 +39,20 @@ export { PAGE_SIZE_OPTIONS };
 export type { CatalogSearchRequest, CatalogSearchResponse, SearchPageSeed };
 import {
   clearSearch,
-  isBrowseState,
   isSameSearch,
+  laidOut,
+  narrow,
+  paged,
   readSearchUrl,
   submitQuery,
   toggleGenre,
   writeSearchUrl,
+  EMPTY_SEARCH_STATE,
+  STATUS_VALUES,
   type SearchUrlState,
+  type ViewMode,
 } from './SearchPage.urlState';
+export type { ViewMode };
 
 /* ── Ports ───────────────────────────────────────────────────────────────── */
 
@@ -74,7 +80,7 @@ export interface UserListPort {
 }
 
 /**
- * The address bar. The page reads its query and genre from it and writes them
+ * The address bar. The page reads everything it shows from it and writes it
  * back, so both halves are one dependency -- a story hands over a plain store
  * and a spy, and the whole URL cycle runs with no router.
  */
@@ -207,8 +213,6 @@ export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 /** How many genre chips the strip shows before the "+N more" chip. */
 export const INITIAL_GENRE_COUNT = 12;
 
-export type ViewMode = 'grid' | 'list';
-
 /** One pill in the active-filters row, and what removing it does. */
 export interface ActiveFilter {
   key: string;
@@ -235,16 +239,23 @@ export interface SearchPageDeps {
 
 /**
  * The /search page: what is being searched, what came back, and how it is
- * narrowed and paged.
+ * narrowed, sorted and paged.
  *
- * The state splits three ways and the split is the whole design.
+ * The state splits two ways and the split is the whole design.
  *
- *  - **URL-backed**: the query and the genre. Handlers never assign these; they
+ *  - **URL-backed**: everything the reader chose -- query, genre, status,
+ *    year, sort, view, pages, page size. Handlers never assign these; they
  *    write a URL and `syncFromUrl()` derives them once the navigation lands.
- *    See `SearchPage.urlState.ts`.
- *  - **Local**: status, year, sort and view mode. These narrow the page that is
- *    already on screen, so they are instant and not worth a history entry.
+ *    That is what makes Back and reload resume the page as it was. See
+ *    `SearchPage.urlState.ts`. The sort and the view are also applied on the
+ *    spot, because they rearrange what is on screen without asking the
+ *    catalogue for anything, and a dropdown that answers a beat later feels
+ *    broken.
  *  - **Fetched**: the results, the facet strip and the viewer's list.
+ *
+ * There is always something on screen: a URL that narrows nothing shows the
+ * whole catalogue, best first, rather than a placeholder asking to be typed
+ * into.
  */
 export class SearchPageBloc {
   readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
@@ -262,22 +273,14 @@ export class SearchPageBloc {
 
   /** The text in the box, which is not yet the text that was searched for. */
   #draftQuery = $state('');
-  #urlState = $state<SearchUrlState>({ query: '', genre: null });
+  #urlState = $state<SearchUrlState>({ ...EMPTY_SEARCH_STATE });
 
   #hits = $state<NormalizedHit[]>([]);
   #works = $state<Hit[]>([]);
   #totalHits = $state(0);
   #totalWorks = $state(0);
-  #currentHitsPage = $state(0);
-  #currentWorksPage = $state(0);
-  #hitsPerPage = $state(PAGE_SIZE_OPTIONS[0]);
   #isLoading = $state(false);
   #hasSearched = $state(false);
-
-  #status = $state('');
-  #year = $state('');
-  #sort = $state<SortKey>('relevance');
-  #viewMode = $state<ViewMode>('grid');
 
   #browseGenres = $state<GenreFacet[]>([]);
   #isLoadingGenres = $state(true);
@@ -340,42 +343,32 @@ export class SearchPageBloc {
     if (!seed || seed.key === this.#seedKey) return;
     if (seed.key !== this.#url.current.search) return;
     this.#seedKey = seed.key;
-    this.#lastSeenSearch = seed.key;
-
-    this.#urlState = { query: seed.params.query, genre: seed.params.genre };
-    this.#draftQuery = seed.params.query;
-    this.#hitsPerPage = seed.params.perPage;
-    this.#currentHitsPage = seed.params.hitsPage;
-    this.#currentWorksPage = seed.params.worksPage;
 
     if (seed.genres) {
       this.#browseGenres = seed.genres;
       this.#isLoadingGenres = false;
     }
 
-    if (isBrowseState(this.#urlState)) {
-      this.#hits = [];
-      this.#works = [];
-      this.#totalHits = 0;
-      this.#totalWorks = 0;
-      this.#hasSearched = false;
-    } else if (seed.results) {
-      this.#hits = seed.results.hits.map(normalizeHit);
-      this.#works = seed.results.works;
-      this.#totalHits = seed.results.totalHits;
-      this.#totalWorks = seed.results.totalWorks;
-      this.#hasSearched = true;
-      this.#isLoading = false;
-    }
-    // A searching URL whose seed carries no results (Algolia was slow or down
-    // on the server) is left for the browser: init()/syncFromUrl() run the
-    // search as they always did.
+    // A seed with no results (Algolia was slow or down on the server) is left
+    // for the browser: init()/syncFromUrl() read the URL and search as they
+    // always did. Only a full answer moves the state, or the sync that follows
+    // would see nothing to do.
+    if (!seed.results) return;
+    this.#lastSeenSearch = seed.key;
+    this.#urlState = { ...seed.params };
+    this.#draftQuery = seed.params.query;
+    this.#hits = seed.results.hits.map(normalizeHit);
+    this.#works = seed.results.works;
+    this.#totalHits = seed.results.totalHits;
+    this.#totalWorks = seed.results.totalWorks;
+    this.#hasSearched = true;
+    this.#isLoading = false;
   }
 
   /** Whether the server answered the search the current URL names. */
   get #seededForCurrentUrl(): boolean {
     const seed = this.#source();
-    return !!seed && seed.key === this.#seedKey && seed.key === this.#url.current.search && (isBrowseState(this.#urlState) || !!seed.results);
+    return !!seed && seed.key === this.#seedKey && seed.key === this.#url.current.search && !!seed.results;
   }
 
   /* ── Reads ─────────────────────────────────────────────────────────────── */
@@ -413,43 +406,45 @@ export class SearchPageBloc {
   }
 
   get hitsPage(): number {
-    return this.#currentHitsPage;
+    return this.#urlState.hitsPage;
   }
 
   get worksPage(): number {
-    return this.#currentWorksPage;
+    return this.#urlState.worksPage;
   }
 
   get hitsPerPage(): number {
-    return this.#hitsPerPage;
+    return this.#urlState.perPage;
   }
 
   get worksPerPage(): number {
-    return this.#hitsPerPage;
+    return this.#urlState.perPage;
   }
 
   get totalHitsPages(): number {
-    return Math.ceil(this.#totalHits / this.#hitsPerPage);
+    return Math.ceil(this.#totalHits / this.#urlState.perPage);
   }
 
   get totalWorksPages(): number {
-    return Math.ceil(this.#totalWorks / this.#hitsPerPage);
+    return Math.ceil(this.#totalWorks / this.#urlState.perPage);
   }
 
   get viewMode(): ViewMode {
-    return this.#viewMode;
+    return this.#urlState.view;
   }
 
+  /** As the select wants it: '' for any. */
   get status(): string {
-    return this.#status;
+    return this.#urlState.status ?? '';
   }
 
+  /** As the select wants it: '' for any. */
   get year(): string {
-    return this.#year;
+    return this.#urlState.year ? String(this.#urlState.year) : '';
   }
 
   get sort(): SortKey {
-    return this.#sort;
+    return this.#urlState.sort;
   }
 
   get isLoadingGenres(): boolean {
@@ -492,19 +487,8 @@ export class SearchPageBloc {
   }
 
   readonly #filteredHits: NormalizedHit[] = $derived(
-    filterAndSortHits(this.#hits, { genre: this.#urlState.genre, sort: this.#sort }),
+    filterAndSortHits(this.#hits, { genre: this.#urlState.genre, sort: this.#urlState.sort }),
   );
-
-  /** The year as the request wants it, or null when the select says any. */
-  get #yearNumber(): number | null {
-    const n = Number.parseInt(this.#year, 10);
-    return Number.isFinite(n) ? n : null;
-  }
-
-  /** Nothing to search for: no query, no genre, and no status or year either. */
-  get #isBrowsing(): boolean {
-    return isBrowseState(this.#urlState) && !this.#status && !this.#yearNumber;
-  }
 
   get results(): NormalizedHit[] {
     return this.#filteredHits;
@@ -524,10 +508,13 @@ export class SearchPageBloc {
     return this.#filteredHits.length > 0;
   }
 
-  /** The state the page is in, so the view has one thing to switch on. */
-  get phase(): 'loading' | 'empty' | 'results' | 'browse' {
-    if (this.#isLoading) return 'loading';
-    if (!this.#hasSearched) return 'browse';
+  /**
+   * The state the page is in, so the view has one thing to switch on. Before
+   * the first answer it is loading, not blank: there is always a search on
+   * the way, even for a URL that asks for nothing in particular.
+   */
+  get phase(): 'loading' | 'empty' | 'results' {
+    if (this.#isLoading || !this.#hasSearched) return 'loading';
     return this.hasResults ? 'results' : 'empty';
   }
 
@@ -557,16 +544,16 @@ export class SearchPageBloc {
   /** Every filter currently narrowing the page, each with the way to drop it. */
   get activeFilters(): ActiveFilter[] {
     const out: ActiveFilter[] = [];
-    const genre = this.#urlState.genre;
+    const { genre, status, year } = this.#urlState;
     if (genre) {
       out.push({ key: `genre:${genre}`, label: genre, remove: () => this.toggleGenre(genre) });
     }
-    if (this.#status) {
-      const label = STATUS_FILTERS.find((s) => s.value === this.#status)?.label ?? this.#status;
+    if (status) {
+      const label = STATUS_FILTERS.find((s) => s.value === status)?.label ?? status;
       out.push({ key: 'status', label, remove: () => this.setStatus('') });
     }
-    if (this.#year) {
-      out.push({ key: 'year', label: this.#year, remove: () => this.setYear('') });
+    if (year) {
+      out.push({ key: 'year', label: String(year), remove: () => this.setYear('') });
     }
     return out;
   }
@@ -608,16 +595,7 @@ export class SearchPageBloc {
    * click handler takes over and pages in place, as it always has.
    */
   hrefForPage(page: number, type: 'hits' | 'works'): string {
-    return searchPageHref(
-      {
-        query: this.#urlState.query,
-        genre: this.#urlState.genre,
-        hitsPage: this.#currentHitsPage,
-        worksPage: this.#currentWorksPage,
-        perPage: this.#hitsPerPage,
-      },
-      type === 'hits' ? { hitsPage: page } : { worksPage: page }
-    );
+    return searchPageHref(this.#urlState, type === 'hits' ? { hitsPage: page } : { worksPage: page });
   }
 
   /* ── Intents ───────────────────────────────────────────────────────────── */
@@ -633,21 +611,24 @@ export class SearchPageBloc {
     // Not awaited: the list only decorates cards, and blocking the first
     // search on a five-request round trip is the wrong trade.
     void this.#loadUserList();
-    if (this.#browseGenres.length === 0) void this.#loadGenres();
 
     // The server already answered this URL: nothing to fetch.
-    if (this.#seededForCurrentUrl) return;
+    if (this.#seededForCurrentUrl) {
+      if (this.#browseGenres.length === 0) void this.#loadGenres();
+      return;
+    }
 
     this.#urlState = readSearchUrl(this.#url.current.search);
     this.#draftQuery = this.#urlState.query;
     this.#lastSeenSearch = this.#url.current.search;
 
-    if (!isBrowseState(this.#urlState)) await this.#runSearch();
+    if (this.#browseGenres.length === 0) void this.#loadGenres();
+    await this.#runSearch();
   }
 
   /**
    * Called from an effect in the view on every URL change. The URL is the
-   * source of truth, so this is the only place query and genre are assigned.
+   * source of truth, so this is the only place the chosen state is assigned.
    */
   syncFromUrl(): void {
     // Read first, always: this is what subscribes the caller's effect to the
@@ -666,12 +647,18 @@ export class SearchPageBloc {
     }
 
     this.#lastSeenSearch = search;
+    const previous = this.#urlState;
     const next = readSearchUrl(search);
-    if (isSameSearch(next, this.#urlState) && this.#hasSearched) return;
-
     this.#urlState = next;
     this.#draftQuery = next.query;
+
+    // The sort or the view alone: the answer on screen is still the answer.
+    if (isSameSearch(previous, next) && this.#hasSearched) return;
+
     void this.#runSearch();
+    // The strip counts under the status and year in play; a genre change
+    // never moves it, so it is not re-asked for every search.
+    if (previous.status !== next.status || previous.year !== next.year) void this.#loadGenres();
   }
 
   /** Commit whatever is in the box. A blank submission is a no-op. */
@@ -680,12 +667,10 @@ export class SearchPageBloc {
     if (next) this.#applyUrl(next);
   }
 
-  /** The × on the field, and "Clear all": back to the browse placeholder. */
+  /** The × on the field, and "Clear all": the whole catalogue again. */
   clear(): void {
     this.#draftQuery = '';
-    this.#status = '';
-    this.#year = '';
-    this.#applyUrl(clearSearch());
+    this.#applyUrl(clearSearch(this.#urlState));
   }
 
   toggleGenre(genre: string): void {
@@ -696,51 +681,48 @@ export class SearchPageBloc {
     this.#showAllGenres = true;
   }
 
-  setViewMode(mode: string): void {
-    this.#viewMode = mode as ViewMode;
-  }
-
   /**
    * Status and year are query filters: the results, their total and the
    * genre counts all narrow to them. They used to narrow only the page on
    * screen, which left the total, the pager and every genre count describing
-   * a different catalogue from the one in the grid. Not in the URL, so no
-   * navigation; the page re-asks the catalogue itself.
+   * a different catalogue from the one in the grid. In the URL, so a reload
+   * or Back keeps them; the navigation re-asks the catalogue.
    */
   setStatus(value: string | number): void {
-    if (String(value) === this.#status) return;
-    this.#status = String(value);
-    void this.#runSearch();
-    void this.#loadGenres();
+    const status = STATUS_VALUES.includes(String(value)) ? String(value) : null;
+    if (status === this.#urlState.status) return;
+    this.#applyUrl(narrow(this.#urlState, { status }));
   }
 
   setYear(value: string | number): void {
-    if (String(value) === this.#year) return;
-    this.#year = String(value);
-    void this.#runSearch();
-    void this.#loadGenres();
+    const n = Number.parseInt(String(value), 10);
+    const year = Number.isFinite(n) ? n : null;
+    if (year === this.#urlState.year) return;
+    this.#applyUrl(narrow(this.#urlState, { year }));
   }
 
+  /**
+   * The sort and the view rearrange what is already on screen, so they are
+   * applied on the spot as well as written to the URL -- a dropdown that only
+   * answered once a navigation landed would feel broken. The sync that
+   * follows reads the same values back and asks the catalogue nothing.
+   */
   setSort(value: string | number): void {
-    this.#sort = String(value) as SortKey;
+    this.#layOut({ sort: String(value) as SortKey });
   }
 
-  goToPage(page: number, type: "hits" | "works"): void {
-    if (page < 0 || page >= (type === "hits" ? this.totalHitsPages : this.totalWorksPages)) return;
-    if (type === "hits") {
-      this.#currentHitsPage = page;
-    } else {
-      this.#currentWorksPage = page;
-    }
-    void this.#runSearch({ resetPage: false });
+  setViewMode(mode: string): void {
+    this.#layOut({ view: mode as ViewMode });
+  }
+
+  goToPage(page: number, type: 'hits' | 'works'): void {
+    if (page < 0 || page >= (type === 'hits' ? this.totalHitsPages : this.totalWorksPages)) return;
+    this.#applyUrl(paged(this.#urlState, type === 'hits' ? { hitsPage: page } : { worksPage: page }));
   }
 
   /** One size for both grids, so both restart at their first page. */
   setHitsPerPage(perPage: number): void {
-    this.#hitsPerPage = perPage;
-    this.#currentHitsPage = 0;
-    this.#currentWorksPage = 0;
-    void this.#runSearch({ resetPage: false });
+    this.#applyUrl(paged(this.#urlState, { perPage }));
   }
 
   /* ── Internals ─────────────────────────────────────────────────────────── */
@@ -749,38 +731,30 @@ export class SearchPageBloc {
     this.#route.replace(writeSearchUrl(this.#url.current.search, next));
   }
 
-  async #runSearch({ resetPage = true }: { resetPage?: boolean } = {}): Promise<void> {
-    if (this.#isBrowsing) {
-      this.#hits = [];
-      this.#works = [];
-      this.#hasSearched = false;
-      this.#totalHits = 0;
-      this.#totalWorks = 0;
-      this.#currentHitsPage = 0;
-      this.#currentWorksPage = 0;
-      return;
-    }
+  #layOut(patch: Partial<Pick<SearchUrlState, 'sort' | 'view'>>): void {
+    const next = laidOut(this.#urlState, patch);
+    if (next.sort === this.#urlState.sort && next.view === this.#urlState.view) return;
+    this.#urlState = next;
+    this.#applyUrl(next);
+  }
 
-    if (resetPage) {
-      this.#currentHitsPage = 0;
-      this.#currentWorksPage = 0;
-    }
-
+  async #runSearch(): Promise<void> {
+    const state = this.#urlState;
     const seq = ++this.#requestSeq;
     this.#isLoading = true;
     this.#hasSearched = true;
 
     try {
+      const query = state.query.trim();
       const response = await this.#search.search({
-        query: this.#urlState.query.trim(),
-        hitsPage: this.#currentHitsPage,
-        worksPage: this.#currentWorksPage,
-        perPage: this.#hitsPerPage,
-        genre: this.#urlState.genre,
-        status: this.#status || null,
-        year: this.#yearNumber,
-        includeWorks:
-          !!this.#urlState.query.trim() && !this.#urlState.genre,
+        query,
+        hitsPage: state.hitsPage,
+        worksPage: state.worksPage,
+        perPage: state.perPage,
+        genre: state.genre,
+        status: state.status,
+        year: state.year,
+        includeWorks: !!query && !state.genre && !state.status && !state.year,
       });
 
       if (seq !== this.#requestSeq) return;
@@ -804,7 +778,7 @@ export class SearchPageBloc {
   async #loadGenres(): Promise<void> {
     this.#isLoadingGenres = true;
     try {
-      this.#browseGenres = await this.#search.genreFacets({ status: this.#status || null, year: this.#yearNumber });
+      this.#browseGenres = await this.#search.genreFacets({ status: this.#urlState.status, year: this.#urlState.year });
     } catch (error) {
       console.error('Failed to fetch genres:', error);
       this.#browseGenres = [];

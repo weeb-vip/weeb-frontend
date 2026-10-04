@@ -482,14 +482,6 @@
         {/if}
       </section>
     {/if}
-  {:else}
-    <!-- Nothing searched yet: the browse placeholder. -->
-    <EmptyState
-      class="empty-state"
-      size="hero"
-      heading="Browse anime"
-      message="Search by title or click a genre above to explore."
-    />
   {/if}
 </div>
 

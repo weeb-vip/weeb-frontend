@@ -8,14 +8,15 @@
  * here touches the network or a rune.
  */
 import { toGenreFacets, type GenreFacet, type Hit } from './SearchPage.results';
-import { readSearchUrl, writeSearchUrl, isBrowseState, type SearchUrlState } from './SearchPage.urlState';
+import { readSearchUrl, writeSearchUrl, PAGE_SIZE_OPTIONS, type SearchUrlState } from './SearchPage.urlState';
+
+export { PAGE_SIZE_OPTIONS };
 
 /** Public search-only credentials; the same ones the header autocomplete uses. */
 export const ALGOLIA_APP_ID = 'A2HF2P5C6X';
 export const ALGOLIA_SEARCH_KEY = '45216ed5ac3f9e0a478d3c354d353d58';
 export const ANIME_INDEX_FALLBACK = 'anime-staging';
 
-export const PAGE_SIZE_OPTIONS = [24, 48, 72, 100];
 
 /** One page of catalogue results, plus the works that matched the same query. */
 export interface CatalogSearchRequest {
@@ -30,7 +31,7 @@ export interface CatalogSearchRequest {
    */
   perPage: number;
   genre: string | null;
-  /** One of STATUS_FILTERS' values (CURRENTLY_AIRING, ...), or null for any. */
+  /** One of STATUS_VALUES (CURRENTLY_AIRING, ...), or null for any. */
   status: string | null;
   /** A broadcast year, or null for any. */
   year: number | null;
@@ -38,21 +39,55 @@ export interface CatalogSearchRequest {
   includeWorks: boolean;
 }
 
-/** The index spells status in words; the page spells it as an enum. */
-export const ALGOLIA_STATUS: Record<string, string> = {
-  CURRENTLY_AIRING: 'Currently Airing',
-  FINISHED_AIRING: 'Finished Airing',
-  NOT_YET_AIRED: 'Not yet aired',
-};
+/**
+ * The index's label for a run that is over, as MyAnimeList spells it. The
+ * only label the filters consult: see `buildFilters`.
+ */
+export const FINISHED_LABEL = 'Finished Airing';
+
+/**
+ * The clock the date filters compare against, in unix seconds, floored to
+ * the hour. A filter string that changed every millisecond would defeat
+ * Algolia's query cache and the page cache in front of this route; an hour
+ * is well inside how precisely a broadcast date is known.
+ */
+export function filterClock(now: number = Date.now()): number {
+  return Math.floor(now / 3_600_000) * 3600;
+}
 
 /** Which anime are in play: the genre, the status and the year, as one Algolia filter string. */
 export type CatalogFilters = { genre?: string | null; status?: string | null; year?: number | null };
 
-export function buildFilters(f: CatalogFilters): string | undefined {
+/**
+ * The status filter is decided by the dates where the index has them, not by
+ * the label.
+ *
+ * The label is MyAnimeList's, copied at scrape time, and it goes stale: the
+ * index carried dozens of "Not yet aired" shows that had started months
+ * before, and they vanished from both Airing and Upcoming. The start date is
+ * indexed as a number (`date_rank`, unix seconds), so Upcoming is "starts
+ * after now" and Airing is "started by now" -- with the one label the
+ * catalogue is reliable about, "Finished Airing", ruling out runs that are
+ * over. Finished has only the label to go on: the end date is indexed as
+ * text, and most records lack one.
+ *
+ * `now` is a millisecond timestamp, as `Date.now()` gives; tests pass one.
+ */
+export function buildFilters(f: CatalogFilters, now: number = Date.now()): string | undefined {
   const parts: string[] = [];
   if (f.genre) parts.push(`tags:"${f.genre}"`);
-  const status = f.status ? ALGOLIA_STATUS[f.status] : null;
-  if (status) parts.push(`status:"${status}"`);
+  const clock = filterClock(now);
+  switch (f.status) {
+    case 'CURRENTLY_AIRING':
+      parts.push(`date_rank <= ${clock} AND NOT status:"${FINISHED_LABEL}"`);
+      break;
+    case 'FINISHED_AIRING':
+      parts.push(`status:"${FINISHED_LABEL}"`);
+      break;
+    case 'NOT_YET_AIRED':
+      parts.push(`date_rank > ${clock}`);
+      break;
+  }
   if (f.year) parts.push(`year:${f.year}`);
   return parts.length ? parts.join(' AND ') : undefined;
 }
@@ -102,14 +137,14 @@ export function wantsWorks(request: CatalogSearchRequest, indexes: AlgoliaIndexe
   return request.includeWorks && !!indexes.worksIndex;
 }
 
-export function buildSearchRequests(request: CatalogSearchRequest, indexes: AlgoliaIndexes): any[] {
+export function buildSearchRequests(request: CatalogSearchRequest, indexes: AlgoliaIndexes, now: number = Date.now()): any[] {
   const requests: any[] = [
     {
       indexName: indexes.animeIndex,
       query: request.query,
       hitsPerPage: request.perPage,
       page: request.hitsPage,
-      filters: buildFilters(request),
+      filters: buildFilters(request, now),
     },
   ];
   if (wantsWorks(request, indexes)) {
@@ -139,8 +174,8 @@ export function parseSearchResponse(response: any, wantWorks: boolean): CatalogS
  * narrowed by the status and year in play, never by the genre, so every chip
  * still shows what choosing it would give.
  */
-export function buildGenreFacetRequest(indexes: AlgoliaIndexes, filters: Omit<CatalogFilters, 'genre'> = {}): any {
-  const f = buildFilters({ status: filters.status, year: filters.year });
+export function buildGenreFacetRequest(indexes: AlgoliaIndexes, filters: Omit<CatalogFilters, 'genre'> = {}, now: number = Date.now()): any {
+  const f = buildFilters({ status: filters.status, year: filters.year }, now);
   return { indexName: indexes.animeIndex, query: '', hitsPerPage: 0, facets: ['tags'], ...(f ? { filters: f } : {}) };
 }
 
@@ -152,48 +187,23 @@ export function parseGenreFacetResponse(response: any): GenreFacet[] {
 /* ── The URL, including paging ───────────────────────────────────────────── */
 
 /** Everything a /search URL asks for. Pages are zero-based here; `?page=` is one-based for people. */
-export interface SearchPageParams extends SearchUrlState {
-  hitsPage: number;
-  worksPage: number;
-  perPage: number;
-}
+/**
+ * Everything the URL says about the page. One type with `SearchUrlState`:
+ * the pages and the size used to live only here, and the filters only there,
+ * until Back stopped resuming the page the reader had scrolled to.
+ */
+export type SearchPageParams = SearchUrlState;
 
-function pageParam(params: URLSearchParams, name: string): number {
-  const n = Number.parseInt(params.get(name) || '', 10);
-  return Number.isFinite(n) && n >= 1 ? n - 1 : 0;
-}
-
-export function readSearchParams(search: string | URLSearchParams): SearchPageParams {
-  const params = typeof search === 'string' ? new URLSearchParams(search) : search;
-  const perPageRaw = Number.parseInt(params.get('perPage') || '', 10);
-  return {
-    ...readSearchUrl(params),
-    hitsPage: pageParam(params, 'page'),
-    worksPage: pageParam(params, 'wpage'),
-    perPage: PAGE_SIZE_OPTIONS.includes(perPageRaw) ? perPageRaw : PAGE_SIZE_OPTIONS[0],
-  };
-}
+export const readSearchParams: (search: string | URLSearchParams) => SearchPageParams = readSearchUrl;
 
 /**
- * A link to another page of the same search. Built on `writeSearchUrl` so the
- * query and genre are spelled exactly as the page itself writes them; a first
- * page or the default size writes nothing, keeping the plain URL plain.
+ * A link to this page in the page's own spelling: what the pagers carry so a
+ * visitor without a script still gets page two. Defaults stay out of it.
  */
-export function searchPageHref(
-  current: SearchPageParams,
-  patch: Partial<Pick<SearchPageParams, 'hitsPage' | 'worksPage' | 'perPage'>> = {}
-): string {
-  const next = { ...current, ...patch };
-  const base = writeSearchUrl('', { query: next.query, genre: next.genre });
-  const params = new URLSearchParams(base.replace(/^\?/, ''));
-  if (next.hitsPage > 0) params.set('page', String(next.hitsPage + 1));
-  if (next.worksPage > 0) params.set('wpage', String(next.worksPage + 1));
-  if (next.perPage !== PAGE_SIZE_OPTIONS[0]) params.set('perPage', String(next.perPage));
-  const qs = params.toString();
-  return `/search${qs ? `?${qs}` : ''}`;
+export function searchPageHref(current: SearchPageParams, patch: Partial<SearchPageParams> = {}): string {
+  return `/search${writeSearchUrl('', { ...current, ...patch })}`;
 }
 
-/** The request a URL's worth of parameters turns into. */
 export function toCatalogRequest(params: SearchPageParams): CatalogSearchRequest {
   const query = params.query.trim();
   return {
@@ -202,10 +212,12 @@ export function toCatalogRequest(params: SearchPageParams): CatalogSearchRequest
     worksPage: params.worksPage,
     perPage: params.perPage,
     genre: params.genre,
-    // Not in the URL today; the page applies them from its own state.
-    status: null,
-    year: null,
-    includeWorks: !!query && !params.genre,
+    status: params.status,
+    year: params.year,
+    // The works index has none of the anime facets, so a filtered question
+    // cannot be put to it: 24 filtered anime beside unfiltered manga reads
+    // as a bug. Works ride along only with a plain text search.
+    includeWorks: !!query && !params.genre && !params.status && !params.year,
   };
 }
 
@@ -224,4 +236,4 @@ export interface SearchPageSeed {
   genres: GenreFacet[] | null;
 }
 
-export { isBrowseState };
+export { isBrowseState } from './SearchPage.urlState';
