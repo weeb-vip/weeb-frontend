@@ -140,7 +140,9 @@ test.describe('/search browse page', () => {
     await page.getByRole('button', { name: 'Apply' }).click();
     await expect(page).toHaveURL(/[?&]status=NOT_YET_AIRED/);
     await expect(page).toHaveURL(/[?&]genre=/);
-    await expect(page.locator('.filter-pill')).toContainText('Upcoming');
+    // Two pills now: the genre's and the status's.
+    await expect(page.locator('.filter-pill', { hasText: 'Upcoming' })).toBeVisible();
+    await expect(page.locator('.filter-pill', { hasText: genreName })).toBeVisible();
     await expect(page.locator('select[name="status"]')).toHaveValue('NOT_YET_AIRED');
 
     await context.close();
@@ -169,13 +171,13 @@ test.describe('/search browse page', () => {
     await expect(page.locator(RESULTS_COUNT)).not.toHaveText(unfiltered, { timeout: 20000 });
     await expectResults(page);
     // The pill row says what is narrowing the page.
-    await expect(page.locator('.filter-pill')).toContainText('Upcoming');
+    await expect(page.locator('.filter-pill', { hasText: 'Upcoming' })).toBeVisible();
 
     await page.reload();
     await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveURL(/[?&]status=NOT_YET_AIRED/);
-    await expect(page.locator('.filter-pill')).toContainText('Upcoming', { timeout: 20000 });
+    await expect(page.locator('.filter-pill', { hasText: 'Upcoming' })).toBeVisible({ timeout: 20000 });
     await expect(page.getByRole('button', { name: 'Filter by status' })).toContainText('Upcoming');
     await expectResults(page);
   });
