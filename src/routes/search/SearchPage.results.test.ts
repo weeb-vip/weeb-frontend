@@ -108,7 +108,7 @@ describe('filterAndSortHits', () => {
     { title_en: 'Chainsaw Man', tags: ['Action', 'Horror'], status: 'CURRENTLY_AIRING', yearNum: 2022, ratingNum: 8.5, start_date: '2022-10-12' },
   ] as unknown as NormalizedHit[];
 
-  const none = { genre: null, status: '', year: '', sort: 'relevance' as const };
+  const none = { genre: null, sort: 'relevance' as const };
 
   it('leaves the order Algolia chose when nothing is set', () => {
     expect(filterAndSortHits(hits, none).map((h) => h.title_en)).toEqual([
@@ -128,15 +128,6 @@ describe('filterAndSortHits', () => {
     expect(filterAndSortHits(hits, { ...none, genre: 'action' }).map((h) => h.title_en)).toEqual([
       'Bebop',
       'Chainsaw Man',
-    ]);
-  });
-
-  it('filters by status and by year', () => {
-    expect(
-      filterAndSortHits(hits, { ...none, status: 'CURRENTLY_AIRING' }).map((h) => h.title_en),
-    ).toEqual(['Chainsaw Man']);
-    expect(filterAndSortHits(hits, { ...none, year: '2005' }).map((h) => h.title_en)).toEqual([
-      'Aria',
     ]);
   });
 

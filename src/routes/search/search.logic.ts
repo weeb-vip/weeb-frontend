@@ -30,8 +30,31 @@ export interface CatalogSearchRequest {
    */
   perPage: number;
   genre: string | null;
+  /** One of STATUS_FILTERS' values (CURRENTLY_AIRING, ...), or null for any. */
+  status: string | null;
+  /** A broadcast year, or null for any. */
+  year: number | null;
   /** Works ride along in the same round trip when the query can carry them. */
   includeWorks: boolean;
+}
+
+/** The index spells status in words; the page spells it as an enum. */
+export const ALGOLIA_STATUS: Record<string, string> = {
+  CURRENTLY_AIRING: 'Currently Airing',
+  FINISHED_AIRING: 'Finished Airing',
+  NOT_YET_AIRED: 'Not yet aired',
+};
+
+/** Which anime are in play: the genre, the status and the year, as one Algolia filter string. */
+export type CatalogFilters = { genre?: string | null; status?: string | null; year?: number | null };
+
+export function buildFilters(f: CatalogFilters): string | undefined {
+  const parts: string[] = [];
+  if (f.genre) parts.push(`tags:"${f.genre}"`);
+  const status = f.status ? ALGOLIA_STATUS[f.status] : null;
+  if (status) parts.push(`status:"${status}"`);
+  if (f.year) parts.push(`year:${f.year}`);
+  return parts.length ? parts.join(' AND ') : undefined;
 }
 
 export interface CatalogSearchResponse {
@@ -86,7 +109,7 @@ export function buildSearchRequests(request: CatalogSearchRequest, indexes: Algo
       query: request.query,
       hitsPerPage: request.perPage,
       page: request.hitsPage,
-      filters: request.genre ? `tags:"${request.genre}"` : undefined,
+      filters: buildFilters(request),
     },
   ];
   if (wantsWorks(request, indexes)) {
@@ -111,9 +134,14 @@ export function parseSearchResponse(response: any, wantWorks: boolean): CatalogS
   return { hits, totalHits, works, totalWorks, total: totalHits + totalWorks };
 }
 
-/** The genre browse strip: facet counts over the whole index, not one page. */
-export function buildGenreFacetRequest(indexes: AlgoliaIndexes): any {
-  return { indexName: indexes.animeIndex, query: '', hitsPerPage: 0, facets: ['tags'] };
+/**
+ * The genre browse strip: facet counts over the catalogue, not one page --
+ * narrowed by the status and year in play, never by the genre, so every chip
+ * still shows what choosing it would give.
+ */
+export function buildGenreFacetRequest(indexes: AlgoliaIndexes, filters: Omit<CatalogFilters, 'genre'> = {}): any {
+  const f = buildFilters({ status: filters.status, year: filters.year });
+  return { indexName: indexes.animeIndex, query: '', hitsPerPage: 0, facets: ['tags'], ...(f ? { filters: f } : {}) };
 }
 
 export function parseGenreFacetResponse(response: any): GenreFacet[] {
@@ -174,6 +202,9 @@ export function toCatalogRequest(params: SearchPageParams): CatalogSearchRequest
     worksPage: params.worksPage,
     perPage: params.perPage,
     genre: params.genre,
+    // Not in the URL today; the page applies them from its own state.
+    status: null,
+    year: null,
     includeWorks: !!query && !params.genre,
   };
 }

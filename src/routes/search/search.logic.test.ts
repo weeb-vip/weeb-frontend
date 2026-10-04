@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  buildFilters,
   buildGenreFacetRequest,
   buildSearchRequests,
   indexesFrom,
@@ -21,6 +22,8 @@ const request = (partial: Partial<CatalogSearchRequest> = {}): CatalogSearchRequ
   worksPage: 0,
   perPage: 24,
   genre: null,
+  status: null,
+  year: null,
   includeWorks: true,
   ...partial,
 });
@@ -69,7 +72,34 @@ describe('parseSearchResponse', () => {
   });
 });
 
+describe('buildFilters', () => {
+  it('spells the status the way the index does, and joins everything with AND', () => {
+    expect(buildFilters({})).toBeUndefined();
+    expect(buildFilters({ genre: 'Action' })).toBe('tags:"Action"');
+    expect(buildFilters({ status: 'CURRENTLY_AIRING' })).toBe('status:"Currently Airing"');
+    expect(buildFilters({ status: 'NOT_YET_AIRED', year: 2026 })).toBe('status:"Not yet aired" AND year:2026');
+    expect(buildFilters({ genre: 'Drama', status: 'FINISHED_AIRING', year: 1998 })).toBe('tags:"Drama" AND status:"Finished Airing" AND year:1998');
+  });
+
+  it('ignores a status the index does not know', () => {
+    expect(buildFilters({ status: 'BOGUS' })).toBeUndefined();
+  });
+
+  it('reaches the anime request, never the works one', () => {
+    const [anime, works] = buildSearchRequests(request({ status: 'CURRENTLY_AIRING', year: 2026 }), INDEXES);
+    expect(anime.filters).toBe('status:"Currently Airing" AND year:2026');
+    expect(works.filters).toBeUndefined();
+  });
+});
+
 describe('genre facets', () => {
+  it('narrows the counts to the status and year in play, but never to the genre', () => {
+    expect(buildGenreFacetRequest(INDEXES, { status: 'CURRENTLY_AIRING', year: 2026 })).toEqual({
+      indexName: 'anime', query: '', hitsPerPage: 0, facets: ['tags'], filters: 'status:"Currently Airing" AND year:2026'
+    });
+    expect(buildGenreFacetRequest(INDEXES, { status: null, year: null })).toEqual({ indexName: 'anime', query: '', hitsPerPage: 0, facets: ['tags'] });
+  });
+
   it('asks for counts only, and turns the answer into the strip', () => {
     expect(buildGenreFacetRequest(INDEXES)).toEqual({ indexName: 'anime', query: '', hitsPerPage: 0, facets: ['tags'] });
     const facets = parseGenreFacetResponse({ results: [{ facets: { tags: { Action: 10, Drama: 4 } } }] });
