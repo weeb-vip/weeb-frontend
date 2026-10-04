@@ -5,7 +5,8 @@
   import { animeSchema, breadcrumbSchema } from '$lib/structured-data';
   import QueryProvider from '$lib/components/shell/QueryProvider';
   import { untrack } from 'svelte';
-  import { firstCandidate } from '$lib/components/primitives/SafeImage/SafeImage.logic';
+  import { firstCandidate, orderedSources } from '$lib/components/primitives/SafeImage/SafeImage.logic';
+  import { PHONE_QUERY, DESKTOP_QUERY } from '$lib/stores/viewport';
   import { format } from 'date-fns';
   import AnimeNews from '$lib/components/show/AnimeNews';
   import CharactersWithStaff from '$lib/components/show/CharactersWithStaff';
@@ -106,6 +107,8 @@
   ]);
 
   const heroPreload = $derived(firstCandidate(bloc?.imageSources ?? [], 1600));
+  // The identity panel's poster, keyed by id at the CDN root as ShowIdentityPanel asks for it.
+  const posterPreload = $derived(bloc?.anime?.id ? (orderedSources([], bloc.anime.id, '', 300)[0] ?? null) : null);
 </script>
 
 <Seo
@@ -115,10 +118,14 @@
 />
 
 <svelte:head>
-  <!-- The hero is the largest paint; the same URL ShowHero puts in the HTML,
-       so its bytes start with the parse rather than after the stylesheet. -->
+  <!-- One hint per viewport: on a phone the poster in the identity panel is
+       the largest paint, on a wider screen the banner behind it. Each names
+       the URL the element requests, so the bytes start with the HTML parse. -->
+  {#if posterPreload}
+    <link rel="preload" as="image" href={posterPreload} media={PHONE_QUERY} fetchpriority="high" />
+  {/if}
   {#if heroPreload}
-    <link rel="preload" as="image" href={heroPreload} fetchpriority="high" />
+    <link rel="preload" as="image" href={heroPreload} media={DESKTOP_QUERY} fetchpriority="high" />
   {/if}
 </svelte:head>
 
