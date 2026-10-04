@@ -79,7 +79,6 @@ async function fillAndSubmitRegister(dialog: Locator, page: Page, email: string,
 }
 
 test.describe('User Registration Flow', () => {
-  // and can race when running in parallel.
   // Not serial. Each test registers its own address (set in beforeEach, on
   // this worker's copy of the module), and registrations are already spaced
   // out by the cross-worker slot in helpers.ts. Serial mode ran these one
