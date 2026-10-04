@@ -66,7 +66,8 @@
     return { destroy: () => observer.disconnect() };
   }
   // The portrait is the largest paint; the same URL the SafeImage above requests.
-  const portraitPreload = $derived(bloc?.staff?.id ? (orderedSources([], bloc.staff.id, 'staff', 300)[0] ?? null) : null);
+  // No CDN resize: staff portraits are small originals, and a transform only added a cold round trip in front of the paint.
+  const portraitPreload = $derived(bloc?.staff?.id ? (orderedSources([], bloc.staff.id, 'staff', undefined)[0] ?? null) : null);
 </script>
 
 <Seo title={data.staffName} description={data.staffDescription} />
@@ -94,7 +95,6 @@
           className="va-portrait-img"
           placeholderTitle={bloc.name}
           priority={true}
-          cdnWidth={300}
         />
       </div>
 

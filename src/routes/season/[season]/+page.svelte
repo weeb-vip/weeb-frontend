@@ -204,7 +204,7 @@
                 src={bloc.imageFor(anime)}
                 alt={bloc.titleFor(anime)}
                 className="w-full h-full object-cover"
-                priority={index < 5}
+                priority={index < 3}
                 cdnWidth={96}
               />
             </div>
@@ -293,7 +293,7 @@
           description={anime.description || ''}
           episodeCount={anime.episodeCount}
           onList={anime.userAnime?.status || null}
-          priority={index < 6}
+          priority={index < 3}
         />
       {/each}
     {/if}
