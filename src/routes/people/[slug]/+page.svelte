@@ -3,6 +3,7 @@
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
   import SafeImage from '$lib/components/primitives/SafeImage';
+  import { orderedSources } from '$lib/components/primitives/SafeImage/SafeImage.logic';
   import EmptyState from '$lib/components/primitives/EmptyState';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner';
   import ChipGroup from '$lib/components/primitives/ChipGroup';
@@ -64,9 +65,17 @@
     observer.observe(node);
     return { destroy: () => observer.disconnect() };
   }
+  // The portrait is the largest paint; the same URL the SafeImage above requests.
+  const portraitPreload = $derived(bloc?.staff?.id ? (orderedSources([], bloc.staff.id, 'staff', 300)[0] ?? null) : null);
 </script>
 
 <Seo title={data.staffName} description={data.staffDescription} />
+
+<svelte:head>
+  {#if portraitPreload}
+    <link rel="preload" as="image" href={portraitPreload} fetchpriority="high" />
+  {/if}
+</svelte:head>
 
 <StructuredData {schemas} />
 
@@ -85,6 +94,7 @@
           className="va-portrait-img"
           placeholderTitle={bloc.name}
           priority={true}
+          cdnWidth={300}
         />
       </div>
 

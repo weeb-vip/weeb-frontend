@@ -36,6 +36,8 @@
     description = '',
     episodeCount = null,
     onList = null,
+    /** Above the fold: eager + fetchpriority=high, so a grid's first row can be the LCP without waiting. */
+    priority = false,
     /** Anything a call site wants under the sub-line -- a progress bar, a control. */
     children,
     track = realCardTracking,
@@ -54,6 +56,7 @@
     episodeCount?: number | null;
     /** The viewer's own list status, if the show is on it. */
     onList?: string | null;
+    priority?: boolean;
     children?: Snippet;
     track?: CardTrackingPort;
   } = $props();
@@ -76,6 +79,7 @@
       fallbackSrc="/assets/not found.jpg"
       placeholderTitle={title}
       cdnWidth={360}
+      {priority}
     />
     {#if score}
       <span class="score-mark"><Score value={score} variant="badge" /></span>
@@ -184,7 +188,8 @@
       color-mix(in oklch, var(--weeb-scrim) 56%, transparent) 70%,
       color-mix(in oklch, var(--weeb-scrim) 22%, transparent) 100%
     );
-    backdrop-filter: blur(2px);
+    /* No backdrop-filter: at opacity 0 it still costs a filter layer per card,
+       and a season page has 500 of them. The gradient carries the legibility. */
     display: flex;
     align-items: flex-end;
     padding: 12px;

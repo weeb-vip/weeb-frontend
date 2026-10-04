@@ -35,6 +35,12 @@
 
 <Seo title={`${displayName} (@${user?.username})`} {description} />
 
+<svelte:head>
+  {#if bloc.bannerUrl}
+    <link rel="preload" as="image" href={bloc.bannerUrl} fetchpriority="high" />
+  {/if}
+</svelte:head>
+
 {#snippet shelf(cards: PublicUserCard[], empty: string)}
   {#if cards.length > 0}
     <PosterGrid>
@@ -52,7 +58,7 @@
   <header class="hero">
     <div class="hero-banner" class:hero-banner--empty={!bloc.bannerUrl}>
       {#if bloc.bannerUrl}
-        <img class="hero-banner-img" src={bloc.bannerUrl} alt={`${bloc.displayName}'s banner`} />
+        <img class="hero-banner-img" src={bloc.bannerUrl} alt={`${bloc.displayName}'s banner`} loading="eager" fetchpriority="high" decoding="async" />
       {/if}
       <div class="hero-banner-scrim"></div>
     </div>

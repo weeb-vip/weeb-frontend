@@ -415,13 +415,12 @@ export class HomepageBloc {
   // ── Shelves ───────────────────────────────────────────────────
 
   /**
-   * A grid fills its row whatever the count, so a breakpoint only changes how
-   * many ROWS a shelf costs. Six keeps a phone shelf to three rows; "See all"
-   * owns completeness either way.
+   * How many cards a shelf carries in the HTML. The per-breakpoint cap (6 on
+   * a phone, 12 on a tablet) is PosterGrid's `shelf` CSS, not a slice here:
+   * the server has no viewport, and slicing by one meant phones received 20
+   * cards and lost 14 of them at hydration. "See all" owns completeness.
    */
   get shelfLimit(): number {
-    if (this.#viewport.phone.current) return 6;
-    if (this.#viewport.tablet.current) return 12;
     return 20;
   }
 

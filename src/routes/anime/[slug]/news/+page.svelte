@@ -4,6 +4,8 @@
   import { breadcrumbSchema } from '$lib/structured-data';
   import { untrack } from 'svelte';
   import SafeImage from '$lib/components/primitives/SafeImage';
+  import { firstCandidate, orderedSources } from '$lib/components/primitives/SafeImage/SafeImage.logic';
+  import { PHONE_QUERY, DESKTOP_QUERY } from '$lib/stores/viewport';
   import AnimeNews from '$lib/components/show/AnimeNews';
   import ChipGroup, { type ChipGroupItem } from '$lib/components/primitives/ChipGroup';
   import { AnimeNewsPageBloc, type AnimeNewsPageData } from './AnimeNewsPage.bloc.svelte';
@@ -57,6 +59,8 @@
       { name: 'News', url: `${SITE_URL}/anime/${data.animeSlug}/news` }
     ])
   );
+  const bannerPreload = $derived(firstCandidate(bloc?.bannerSources ?? [], 1600));
+  const posterPreload = $derived(bloc?.posterSource ? (orderedSources([], bloc.posterSource, '', 300)[0] ?? null) : null);
 </script>
 
 <Seo
@@ -64,6 +68,15 @@
   description={`All ${total} news ${total === 1 ? 'story' : 'stories'} for ${descTitle}.`}
   image={data.animeImage}
 />
+
+<svelte:head>
+  {#if posterPreload}
+    <link rel="preload" as="image" href={posterPreload} media={PHONE_QUERY} fetchpriority="high" />
+  {/if}
+  {#if bannerPreload}
+    <link rel="preload" as="image" href={bannerPreload} media={DESKTOP_QUERY} fetchpriority="high" />
+  {/if}
+</svelte:head>
 
 <StructuredData schemas={[breadcrumbs]} />
 
@@ -85,7 +98,8 @@
         <SafeImage
           sources={bloc.bannerSources}
           alt=""
-          loading="eager"
+          priority={true}
+          cdnWidth={1600}
           fallbackSrc="/assets/not found.jpg"
           className="hero-bg-img"
         />
@@ -99,6 +113,8 @@
           alt={bloc.title}
           className="hero-poster-img"
           fallbackSrc="/assets/not found.jpg"
+          cdnWidth={300}
+          priority={true}
         />
       </div>
 

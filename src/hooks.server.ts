@@ -68,6 +68,10 @@ const CACHEABLE_ROUTES: Array<{
 
   { pattern: /^\/airing\/calendar$/,    ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: () => ['airing'] },
 
+  // Browse pages and the static about page: anonymous and identical for everyone.
+  { pattern: /^\/(manga|light-novels)$/, ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: () => ['works'] },
+  { pattern: /^\/about$/,               ttl: DAY,       swr: DAY, maxAge: 3600, sMaxAge: 86400, tags: () => ['static'] },
+
   // Past seasons are effectively immutable.
   { pattern: /^\/season\/([^/]+)$/,     ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: (m) => [`season:${m[1]}`] },
 

@@ -5,6 +5,8 @@
   import PosterCard from '$lib/components/cards/PosterCard';
   import PosterGrid from '$lib/components/primitives/PosterGrid';
   import KeyArtStage from '$lib/components/show/KeyArtStage';
+  import { bannerSourcesFor } from '$lib/components/show/KeyArtStage/KeyArtStage.logic';
+  import { firstCandidate } from '$lib/components/primitives/SafeImage/SafeImage.logic';
   import ErrorBanner from '$lib/components/primitives/ErrorBanner';
   import EmptyState from '$lib/components/primitives/EmptyState';
   import { GetImageFromAnime, seriesHref } from '$lib/services/utils';
@@ -54,9 +56,17 @@
       { name: data.seriesTitle, url: canonical }
     ])
   ]);
+  // The key art is the largest paint on every viewport here; name the URL KeyArtStage requests.
+  const heroPreload = $derived(firstCandidate(bannerSourcesFor(bloc?.anchorImageId), 1600));
 </script>
 
 <Seo title={data.seriesTitle} description={data.seriesDescription} image={data.seriesImage} />
+
+<svelte:head>
+  {#if heroPreload}
+    <link rel="preload" as="image" href={heroPreload} fetchpriority="high" />
+  {/if}
+</svelte:head>
 <StructuredData {schemas} />
 
 <div class="series-page">
@@ -69,7 +79,7 @@
          the subject; here the subject is the list, and a full-screen banner
          would push every season below the fold on the one page whose whole job
          is showing them together. -->
-    <KeyArtStage imageId={bloc.anchorImageId} minHeight="clamp(300px, 46svh, 520px)">
+    <KeyArtStage imageId={bloc.anchorImageId} cdnWidth={1600} minHeight="clamp(300px, 46svh, 520px)">
       <header class="page-header">
         <p class="page-eyebrow">Series</p>
         <h1 class="page-title">{bloc.seriesTitle}</h1>

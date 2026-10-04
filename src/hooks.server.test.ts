@@ -749,6 +749,9 @@ describe('page cache', () => {
     ['/season/fall-2024', ['season:fall-2024']],
     ['/anime/abc123', ['show:abc123']],
     ['/manga/vista', ['work:vista']],
+    ['/manga', ['works']],
+    ['/light-novels', ['works']],
+    ['/about', ['static']],
     ['/anime/abc123/news', ['show:abc123', 'news']]
   ])('tags %s with %j so an ingest can purge it', async (path, tags) => {
     const cache = makePageCache();
@@ -764,7 +767,7 @@ describe('page cache', () => {
     const handle = await loadHandle();
 
     const response = await handle({
-      event: makeEvent({ path: '/about', platform: { cache } }),
+      event: makeEvent({ path: '/nowhere', platform: { cache } }),
       resolve: makeResolve()
     } as any);
 

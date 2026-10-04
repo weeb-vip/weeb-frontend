@@ -85,3 +85,25 @@ describe('browserSessionOnce', () => {
     ).toBe(true);
   });
 });
+
+describe('AnimeNotificationProvider (view)', () => {
+  it('starts the worker from the idle hook, not at hydration', async () => {
+    const { render } = await import('@testing-library/svelte');
+    const Provider = (await import('./AnimeNotificationProvider.svelte')).default;
+    const notifications = { initialize: vi.fn(async () => {}) };
+    const bloc = new AnimeNotificationProviderBloc({ notifications, once: once() });
+    let queued: (() => void) | null = null;
+    const cancel = vi.fn();
+
+    const { unmount } = render(Provider, {
+      props: { bloc, whenIdle: (run: () => void) => { queued = run; return cancel; } }
+    });
+
+    expect(notifications.initialize).not.toHaveBeenCalled();
+    queued!();
+    expect(notifications.initialize).toHaveBeenCalledTimes(1);
+
+    unmount();
+    expect(cancel).toHaveBeenCalled();
+  });
+});
