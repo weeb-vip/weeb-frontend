@@ -151,7 +151,7 @@
         href="{bloc.basePath}?sort={shelf.sort}"
         linkText="See all →"
       />
-      <PosterGrid>
+      <PosterGrid shelf={true}>
         {#each shelf.works as work, index (work.id)}
           <PosterCard
             id={work.id ?? ''}

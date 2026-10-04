@@ -61,11 +61,13 @@ export function linkableWorks(list: WorkSummary[] | null | undefined): WorkSumma
 }
 
 /**
- * How many cards a shelf holds. Matches the homepage exactly, so a shelf is
- * the same size wherever it appears.
+ * How many cards a shelf carries in the HTML. Matches the homepage exactly.
+ * The per-breakpoint cap (6 on a phone, 12 on a tablet) is PosterGrid's
+ * `shelf` CSS rather than a slice here: the server has no viewport, and
+ * slicing by one meant phones received 20 cards and lost 14 at hydration.
  */
-export function shelfLimitFor(phone: boolean, tablet: boolean): number {
-  return phone ? 6 : tablet ? 12 : 20;
+export function shelfLimitFor(_phone: boolean, _tablet: boolean): number {
+  return 20;
 }
 
 /** The href for a page of one shelf. Page 1 is the bare path, not `?page=1`. */
