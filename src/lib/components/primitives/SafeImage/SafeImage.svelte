@@ -149,16 +149,27 @@
     return phoneCandidates[Math.min(index, phoneCandidates.length - 1)] ?? null;
   });
 
-  /** The srcset for the candidate on screen, where it can have one. */
+  /**
+   * The srcset for the candidate on screen: only for a resized candidate.
+   * The raw candidate behind it exists to be tried when the resizer fails
+   * (its monthly cap, ERROR 9422), and a browser given a srcset picks from it
+   * over `src` -- so a srcset of resized variants on the raw step made the
+   * raw step fail the same way and every card ended on the not-found image.
+   */
   const currentSrcset = $derived.by<string | null>(() => {
     if (exhausted || widths.length === 0) return null;
+    const url = candidates[index];
+    if (url == null || raw.includes(url)) return null;
     const source = rawFor(candidates, raw, index);
     return source ? candidateSrcset(source, widths, policy) : null;
   });
   const phoneSrcset = $derived.by<string | null>(() => {
     const list = phoneWidths ?? widths;
     if (exhausted || list.length === 0 || phoneCandidates.length === 0) return null;
-    const source = rawFor(phoneCandidates, phoneRaw, Math.min(index, phoneCandidates.length - 1));
+    const at = Math.min(index, phoneCandidates.length - 1);
+    const url = phoneCandidates[at];
+    if (url == null || phoneRaw.includes(url)) return null;
+    const source = rawFor(phoneCandidates, phoneRaw, at);
     return source ? candidateSrcset(source, list, policy) : null;
   });
 
