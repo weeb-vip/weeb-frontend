@@ -3,6 +3,7 @@
   import HeroBanner from '$lib/components/home/HeroBanner';
   import HeroBannerSkeleton from '$lib/components/home/HeroBannerSkeleton';
   import HeroAiringRail from '$lib/components/home/HeroAiringRail';
+  import { imagePolicyFromContext } from '$lib/stores/image-policy';
   import PosterCard from '$lib/components/cards/PosterCard';
   import PosterCardSkeleton from '$lib/components/cards/PosterCardSkeleton';
   import PosterGrid from '$lib/components/primitives/PosterGrid';
@@ -50,6 +51,8 @@
   $effect(() => {
     if (bloc.hasAiring) bloc.refreshNotifications();
   });
+  /** The hero hints must name the URL SafeImage will request under this visitor's policy. */
+  const imagePolicy = imagePolicyFromContext();
 </script>
 
 <!-- No title, so Seo falls back to "WeebVIP - Track Your Anime Watchlist". This is the
@@ -62,7 +65,7 @@
   <!-- The hero is the largest paint. These let its bytes start with the HTML
        parse instead of after the stylesheet, one hint per viewport so a phone
        warms the poster and nothing else. -->
-  {#each bloc.heroPreloads as hint (hint.href)}
+  {#each bloc.heroPreloadsUnder(imagePolicy) as hint (hint.href)}
     <link rel="preload" as="image" href={hint.href} media={hint.media} fetchpriority="high" />
   {/each}
 </svelte:head>

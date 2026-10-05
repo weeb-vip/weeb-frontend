@@ -6,6 +6,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     // never return locals.auth directly: load data is serialized into the
     // page HTML, and it carries the raw jwt + refresh token
     auth: publicAuth(locals.auth),
-    config: locals.config
+    config: locals.config,
+    saveData: locals.saveData === true
   };
 };

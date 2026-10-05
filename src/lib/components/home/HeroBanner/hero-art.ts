@@ -1,6 +1,7 @@
 import { getSafeImageUrl } from '$lib/utils/image';
 import { PHONE_QUERY, DESKTOP_QUERY } from '$lib/stores/viewport';
 import { orderedSources } from '$lib/components/primitives/SafeImage/SafeImage.logic';
+import { DEFAULT_IMAGE_POLICY, type ImagePolicy } from '$lib/stores/image-policy';
 
 /**
  * The hero's artwork candidates, as two orderings the browser picks between
@@ -44,10 +45,14 @@ export type HeroPreload = { href: string; media: string };
  * bytes and the real request still starts from the HTML parse. The media
  * query keeps a phone from preloading the desktop banner and vice versa.
  */
-export function heroPreloads(id: string | null | undefined, imageUrl: ImageUrl = getSafeImageUrl): HeroPreload[] {
+export function heroPreloads(
+  id: string | null | undefined,
+  imageUrl: ImageUrl = getSafeImageUrl,
+  policy: ImagePolicy = DEFAULT_IMAGE_POLICY
+): HeroPreload[] {
   if (!id) return [];
-  const [desktop] = orderedSources(heroSources(id, imageUrl), '', '', HERO_CDN_WIDTH);
-  const [phone] = orderedSources(heroPhoneSources(id, imageUrl), '', '', HERO_PHONE_CDN_WIDTH);
+  const [desktop] = orderedSources(heroSources(id, imageUrl), '', '', HERO_CDN_WIDTH, policy);
+  const [phone] = orderedSources(heroPhoneSources(id, imageUrl), '', '', HERO_PHONE_CDN_WIDTH, policy);
   const out: HeroPreload[] = [];
   if (desktop) out.push({ href: desktop, media: DESKTOP_QUERY });
   if (phone) out.push({ href: phone, media: PHONE_QUERY });

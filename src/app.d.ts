@@ -7,6 +7,8 @@ declare global {
   namespace App {
     interface Locals {
       config: any;
+      /** The visitor sent `Save-Data: on`; images are served lighter. */
+      saveData?: boolean;
       auth: {
         isLoggedIn: boolean;
         authToken?: string;

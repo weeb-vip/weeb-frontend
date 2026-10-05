@@ -1,3 +1,4 @@
+import { DEFAULT_IMAGE_POLICY, type ImagePolicy } from '$lib/stores/image-policy';
 import {
   createQuery,
   type QueryClient,
@@ -578,7 +579,12 @@ export class HomepageBloc {
    * hint for the wrong image is a wasted request on the critical path.
    */
   get heroPreloads(): HeroPreload[] {
-    return heroPreloads(this.bannerId ?? this.fallbackBannerAnime?.id ?? null);
+    return this.heroPreloadsUnder(DEFAULT_IMAGE_POLICY);
+  }
+
+  /** The same hints under the request's image policy, which only the view can read. */
+  heroPreloadsUnder(policy: ImagePolicy): HeroPreload[] {
+    return heroPreloads(this.bannerId ?? this.fallbackBannerAnime?.id ?? null, undefined, policy);
   }
 
   select(info: { id?: string | null } | null | undefined): void {

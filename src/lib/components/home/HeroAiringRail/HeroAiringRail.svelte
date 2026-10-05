@@ -70,6 +70,8 @@
                 className="rail-art-img"
                 fallbackSrc="/assets/not found.jpg"
                 cdnWidth={120}
+                widths={[60, 120, 180]}
+                sizes="60px"
               />
             </span>
 

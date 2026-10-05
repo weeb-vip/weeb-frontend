@@ -234,8 +234,15 @@ export const handle: Handle = async ({ event, resolve }) => {
   // hand a logged-out render to a logged-in visitor. Cloudflare's cache keys on
   // URL and would happily do exactly that. Sending the same numbers to a cache
   // that cannot honour the assumption behind them is how that bug gets written.
+  // A visitor who asked to save data gets lighter images (see
+  // $lib/stores/image-policy), which makes their HTML differ from everyone
+  // else's. Neither cache keys on the header, so their render bypasses both
+  // rather than poisoning the shared copy or being served the heavy one.
+  const saveData = (request.headers.get('save-data') || '').toLowerCase() === 'on';
+  event.locals.saveData = saveData;
+
   const pageCache = event.platform?.cache;
-  const cachePolicy = pageCache ? cachePolicyFor(url.pathname) : null;
+  const cachePolicy = pageCache && !saveData ? cachePolicyFor(url.pathname) : null;
 
   // Declared before the render, but the adapter reads the directive back only
   // after the whole response is produced — so this is equivalent to calling it
@@ -300,6 +307,8 @@ export const handle: Handle = async ({ event, resolve }) => {
           ? `public, max-age=${cachePolicy.maxAge}, s-maxage=${cachePolicy.sMaxAge}`
           : 'private, no-store'
       );
+    } else if (saveData && response.status === 200) {
+      response.headers.set('Cache-Control', 'private, no-store');
     }
   }
 

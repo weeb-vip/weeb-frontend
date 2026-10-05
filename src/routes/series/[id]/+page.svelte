@@ -1,5 +1,6 @@
 <script lang="ts">
-  import Seo from '$lib/Seo.svelte';
+  import { imagePolicyFromContext } from '$lib/stores/image-policy';
+import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { breadcrumbSchema } from '$lib/structured-data';
   import PosterCard from '$lib/components/cards/PosterCard';
@@ -55,7 +56,8 @@
       { name: data.seriesTitle, url: canonical }
     ])
   ]);
-  const heroHints = $derived(heroPreloads(bloc?.anchorImageId ?? null));
+  const imagePolicy = imagePolicyFromContext();
+  const heroHints = $derived(heroPreloads(bloc?.anchorImageId ?? null, undefined, imagePolicy));
 </script>
 
 <Seo title={data.seriesTitle} description={data.seriesDescription} image={data.seriesImage} />
