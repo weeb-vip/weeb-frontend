@@ -44,9 +44,10 @@ describe('NotificationsBellBloc', () => {
   it('polls the unread count while signed in and shows a badge', async () => {
     const { bloc } = makeBloc();
     scopes.push(reactiveScope(() => bloc.unreadCount));
-    await settle();
+    // Readiness, not a fixed wait: the first poll resolves through the query
+    // client, and under CI load 5ms was not always enough.
+    await vi.waitFor(() => expect(bloc.unreadCount).toBe(2));
     expect(bloc.isLoggedIn).toBe(true);
-    expect(bloc.unreadCount).toBe(2);
     expect(bloc.hasUnread).toBe(true);
     expect(bloc.badge).toBe('2');
   });
@@ -54,8 +55,7 @@ describe('NotificationsBellBloc', () => {
   it('caps the badge at 9+', async () => {
     const { bloc } = makeBloc(makePort(42));
     scopes.push(reactiveScope(() => bloc.unreadCount));
-    await settle();
-    expect(bloc.badge).toBe('9+');
+    await vi.waitFor(() => expect(bloc.badge).toBe('9+'));
   });
 
   it('fetches nothing for a signed-out visitor', async () => {
