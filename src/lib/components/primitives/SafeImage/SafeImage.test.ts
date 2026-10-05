@@ -357,6 +357,31 @@ describe('SafeImage', () => {
       expect(img().hasAttribute('sizes')).toBe(false);
     });
 
+    /**
+     * REGRESSION. In a foreground tab the browser fired a second error for
+     * the resized candidate while its attributes were being swapped, and the
+     * walk advanced twice: straight past the raw object to the mascot.
+     */
+    it('advances once per candidate, however many errors the browser fires for it', async () => {
+      await useResize(true);
+      render(SafeImage, { sources: ['https://cdn.weeb.vip/weeb/posters/one'], cdnWidth: 360, widths: [180, 360], sizes: '180px' });
+
+      const el = img();
+      await fireEvent.error(el);
+      // The browser's second error names the resized variant it re-selected
+      // from the stale srcset -- not the raw object the walk is now on.
+      Object.defineProperty(el, 'currentSrc', {
+        value: 'https://cdn.weeb.vip/cdn-cgi/image/width=180,format=auto,quality=85,fit=cover/weeb/posters/one',
+        configurable: true,
+      });
+      await fireEvent.error(el);
+
+      await waitFor(() => expect(img().getAttribute('src')).toBe('https://cdn.weeb.vip/weeb/posters/one'));
+      expect(img().hasAttribute('srcset')).toBe(false);
+      // The raw object is still the one on screen, not the fallback.
+      expect(img().getAttribute('src')).not.toBe('/assets/not found.jpg');
+    });
+
     it('drops the srcset once the walk lands on the fallback image', async () => {
       await useResize(true);
       render(SafeImage, { sources: ['https://cdn.weeb.vip/weeb/posters/one'], cdnWidth: 360, widths: [180, 360], sizes: '180px' });

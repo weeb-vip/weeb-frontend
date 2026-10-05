@@ -1,6 +1,7 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { shieldFromRocketLoader } from '$lib/server/rocket-loader';
 import { getConfig } from './config/build-time-loader';
+import { env } from '$env/dynamic/private';
 import { AuthStorage } from '$lib/utils/auth-storage';
 import { refreshTokenSSR, isTokenExpired } from '$lib/utils/ssr-token-refresh';
 import { clearAuthCookies } from '$lib/server/auth-cookies';
@@ -96,6 +97,10 @@ const CACHEABLE_ROUTES: Array<{
   { pattern: /^\/anime\/([^/]+)\/news$/, ttl: 12 * HOUR, swr: DAY, maxAge: 300, sMaxAge: 1800, tags: (m) => [`show:${m[1]}`, 'news'] }
 ];
 
+function resizerOff(): boolean {
+  return (env.CDN_IMAGE_RESIZE || '').toLowerCase() === 'off';
+}
+
 function cachePolicyFor(pathname: string) {
   for (const route of CACHEABLE_ROUTES) {
     const match = route.pattern.exec(pathname);
@@ -139,7 +144,12 @@ export const handle: Handle = async ({ event, resolve }) => {
       console.log('[Hooks] Config loaded from build-time import');
       console.log('[Hooks] API Host:', configData?.api_host);
     }
-    event.locals.config = configData;
+    // CDN_IMAGE_RESIZE=off is the switch for a resizer outage: Cloudflare's
+    // monthly cap on unique transformations (ERROR 9422) makes every resized
+    // URL fail, and with no script there is no fallback walk. Flipping this
+    // in the deployment renders raw object URLs instead, for the server and
+    // the client alike, until the cap clears or the plan changes.
+    event.locals.config = resizerOff() ? { ...configData, cdn_image_resize: false } : configData;
   } catch (error) {
     console.error('[Hooks] Failed to load config:', error);
     return new Response('Configuration error', { status: 500 });
