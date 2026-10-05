@@ -339,6 +339,24 @@ describe('SafeImage', () => {
       expect(img().hasAttribute('sizes')).toBe(false);
     });
 
+    /**
+     * REGRESSION. The resizer hit its monthly cap (ERROR 9422) and every
+     * card showed the not-found image: the raw fallback still carried a
+     * srcset of resized variants, the browser picked from it, and the raw
+     * step failed exactly like the resized one before it.
+     */
+    it('offers no srcset on the raw fallback, so the raw object is what gets requested', async () => {
+      await useResize(true);
+      render(SafeImage, { sources: ['https://cdn.weeb.vip/weeb/posters/one'], cdnWidth: 360, widths: [180, 360], sizes: '180px' });
+      expect(img().getAttribute('srcset')).toContain('width=180');
+
+      await fireEvent.error(img()); // the resized candidate: 429 from the resizer
+
+      await waitFor(() => expect(img().getAttribute('src')).toBe('https://cdn.weeb.vip/weeb/posters/one'));
+      expect(img().hasAttribute('srcset')).toBe(false);
+      expect(img().hasAttribute('sizes')).toBe(false);
+    });
+
     it('drops the srcset once the walk lands on the fallback image', async () => {
       await useResize(true);
       render(SafeImage, { sources: ['https://cdn.weeb.vip/weeb/posters/one'], cdnWidth: 360, widths: [180, 360], sizes: '180px' });
