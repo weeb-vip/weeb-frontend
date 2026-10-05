@@ -78,7 +78,7 @@ export function orderedSources(
   policy: ImagePolicy = DEFAULT_IMAGE_POLICY
 ): string[] {
   const base = rawSources(sources, src, path);
-  if (!cdnWidth) return base;
+  if (!cdnWidth || !policy.resize) return base;
 
   return base.flatMap((u) => {
     const resized = resizeCdnUrl(u, cappedWidth(cdnWidth, policy), { quality: policy.quality });
@@ -125,6 +125,7 @@ export function candidateSrcset(
   widths: number[],
   policy: ImagePolicy = DEFAULT_IMAGE_POLICY
 ): string | null {
+  if (!policy.resize) return null;
   const wanted = [...new Set(widths.filter((w) => w > 0).map(Math.round))].sort((a, b) => a - b);
   if (wanted.length === 0) return null;
   const kept = policy.maxWidth ? wanted.filter((w, i) => i === 0 || w <= policy.maxWidth!) : wanted;

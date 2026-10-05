@@ -17,18 +17,29 @@ export interface ImagePolicy {
   quality: number;
   /** The widest variant to ask for, or null for no cap. */
   maxWidth: number | null;
+  /**
+   * Whether to go through the resizer at all. Off while it is refusing
+   * (its monthly cap, ERROR 9422): every image then starts from the raw
+   * object instead of a request that fails first, and a page with no script
+   * shows artwork at all. See CDN_IMAGE_RESIZE in hooks.server.ts.
+   */
+  resize: boolean;
 }
 
-export const DEFAULT_IMAGE_POLICY: ImagePolicy = { quality: 85, maxWidth: null };
+export const DEFAULT_IMAGE_POLICY: ImagePolicy = { quality: 85, maxWidth: null, resize: true };
 
 /**
  * Quality 60 is where AVIF and WebP still look fine on a phone and weigh
  * about half of 85; 640px covers a 2x poster card and a 1x phone hero.
  */
-export const SAVE_DATA_POLICY: ImagePolicy = { quality: 60, maxWidth: 640 };
+export const SAVE_DATA_POLICY: ImagePolicy = { quality: 60, maxWidth: 640, resize: true };
 
-export function imagePolicyFor(saveData: boolean | null | undefined): ImagePolicy {
-  return saveData ? SAVE_DATA_POLICY : DEFAULT_IMAGE_POLICY;
+export function imagePolicyFor(
+  saveData: boolean | null | undefined,
+  resize: boolean | null | undefined = true
+): ImagePolicy {
+  const base = saveData ? SAVE_DATA_POLICY : DEFAULT_IMAGE_POLICY;
+  return resize === false ? { ...base, resize: false } : base;
 }
 
 const KEY = 'weeb:image-policy';

@@ -227,3 +227,15 @@ describe('orderedSources under a policy', () => {
     expect(first).toBe(`${ORIGIN}/cdn-cgi/image/width=640,format=auto,quality=60,fit=cover/weeb/banners/one`);
   });
 });
+
+describe('with the resizer switched off', () => {
+  it('builds raw URLs only, and no srcset, even where resizing is enabled in config', async () => {
+    const { candidateSrcset, rawSources, orderedSources } = await import('./SafeImage.logic');
+    const { DEFAULT_IMAGE_POLICY } = await import('$lib/stores/image-policy');
+    useConfig(true);
+    const off = { ...DEFAULT_IMAGE_POLICY, resize: false };
+    expect(orderedSources([`${CDN}/posters/one`], '', '', 360, off)).toEqual([`${CDN}/posters/one`]);
+    expect(candidateSrcset(`${CDN}/posters/one`, [180, 360], off)).toBeNull();
+    expect(rawSources([`${CDN}/posters/one`], '', '')).toEqual([`${CDN}/posters/one`]);
+  });
+});

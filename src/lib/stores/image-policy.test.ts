@@ -8,8 +8,14 @@ describe('image policy', () => {
     expect(imagePolicyFor(true)).toBe(SAVE_DATA_POLICY);
   });
 
+  it('turns the resizer off only when told the resizer is refusing', () => {
+    expect(imagePolicyFor(false, false)).toEqual({ ...DEFAULT_IMAGE_POLICY, resize: false });
+    expect(imagePolicyFor(true, false)).toEqual({ ...SAVE_DATA_POLICY, resize: false });
+    expect(imagePolicyFor(false, undefined).resize).toBe(true);
+  });
+
   it('only ever lowers quality and width for data saver, never for everyone', () => {
-    expect(DEFAULT_IMAGE_POLICY).toEqual({ quality: 85, maxWidth: null });
+    expect(DEFAULT_IMAGE_POLICY).toEqual({ quality: 85, maxWidth: null, resize: true });
     expect(SAVE_DATA_POLICY.quality).toBeLessThan(DEFAULT_IMAGE_POLICY.quality);
     expect(SAVE_DATA_POLICY.maxWidth).not.toBeNull();
   });

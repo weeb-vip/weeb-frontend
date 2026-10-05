@@ -175,6 +175,8 @@
 
   // Plain bookkeeping the template never reads.
   let settledFor = '';
+  /** The candidate the last error was for, so one candidate advances once. */
+  let erroredFor = '';
   let reportedEmpty = false;
 
   function report(detail: ChosenDetail) {
@@ -229,14 +231,41 @@
     }
   }
 
-  function handleError() {
+  /**
+   * One advance per candidate, however many error events the browser fires
+   * for it. Changing a failed element's attributes can produce a second
+   * error for the same candidate before the next one is even requested --
+   * with a resized srcset still attached for an instant, the browser
+   * re-selected from it and errored again -- and advancing on each error
+   * skipped the raw object the walk exists to reach.
+   */
+  function handleError(event?: Event) {
     if (onFallback) {
       // The fallback itself is broken; there is nothing left to try.
       painted = true;
       return;
     }
+    // An error for a URL this candidate never named is the previous one's,
+    // arriving after the walk moved on. jsdom reports no currentSrc at all;
+    // that is taken as "for the current candidate".
+    const failedUrl = (event?.currentTarget as HTMLImageElement | null)?.currentSrc || '';
+    if (failedUrl && !isForCurrent(failedUrl)) {
+      debug.warn(`Ignoring a late error for ${failedUrl}`);
+      return;
+    }
+    const key = `${generation}:${index}`;
+    if (erroredFor === key) return;
+    erroredFor = key;
     debug.warn(`Image failed to load: ${current}`);
     advance();
+  }
+
+  /** Whether a URL is the current candidate or one of its srcset variants. */
+  function isForCurrent(url: string): boolean {
+    if (url === current) return true;
+    const set = currentSrcset ?? phoneSrcset;
+    if (!set) return url === phoneCurrent;
+    return set.split(', ').some((entry) => entry.split(' ')[0] === url) || url === phoneCurrent;
   }
 
   function handleLoad(event: Event) {
@@ -248,6 +277,7 @@
     failed = false;
     painted = false;
     settledFor = '';
+    erroredFor = '';
     generation += 1;
   }
 
@@ -357,11 +387,14 @@
   <!-- `relative` so the element paints above the positioned skeleton. No
        opacity gate: the server's element should show the moment it decodes,
        script or no script. -->
+  <!-- srcset and sizes before src on purpose: attributes update in this
+       order, and a stale resized srcset still attached while src changes
+       makes the browser pick from it once more before the raw object. -->
   <img
     bind:this={imgEl}
-    src={current}
     srcset={currentSrcset ?? undefined}
     sizes={currentSrcset ? sizes : undefined}
+    src={current}
     {alt}
     class="relative w-full h-full object-cover"
     {width}
