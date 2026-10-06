@@ -227,6 +227,8 @@ export function initGlobalErrorHandlers() {
   document.documentElement.style.scrollBehavior = 'smooth';
 }
 
+import { applySessionReplay } from './session-replay';
+
 // PostHog bootstrap, ported from PostHog.astro — waits for window.config
 export function initPostHogWhenConfigured() {
   const w = window as any;
@@ -256,10 +258,18 @@ export function initPostHogWhenConfigured() {
       capture_pageview: true,
       person_profiles: 'identified_only',
       opt_in_site_apps: true,
+      // Session replay is reserved for signed-in users and the auth funnel:
+      // off here, and turned on by the gate in $lib/client/session-replay
+      // from the client state. The project setting alone would record every
+      // anonymous visit.
+      disable_session_recording: true,
       loaded: function (ph: any) {
         // setPersonPropertiesForFlags isn't on the bootstrap stub, so set it
         // once the real library is loaded; it reloads flags with env applied.
         ph.setPersonPropertiesForFlags({ environment });
+        // Neither are the recording methods: apply what the gate asked for
+        // before the library was in.
+        applySessionReplay(ph);
       }
     });
 
