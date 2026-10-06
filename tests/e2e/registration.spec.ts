@@ -27,7 +27,13 @@ async function openRegisterModal(page: Page): Promise<Locator> {
     await drawerRegister.click();
   } else {
     console.log('Clicking desktop header Register');
-    await page.locator('nav').getByRole('button', { name: 'Register', exact: true }).click();
+    // Retried: before hydration the link navigates to /auth/register instead
+    // of opening the modal; the header is on that page too, so the next
+    // attempt opens the dialog wherever it landed.
+    await expect(async () => {
+      await page.locator('nav').getByRole('link', { name: 'Register', exact: true }).click();
+      await expect(dialog).toBeVisible({ timeout: 5000 });
+    }).toPass({ timeout: 40000 });
   }
 
   await dialog.waitFor({ state: 'visible', timeout: 10000 });

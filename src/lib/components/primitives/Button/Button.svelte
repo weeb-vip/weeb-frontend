@@ -69,7 +69,7 @@
       event.preventDefault();
       return;
     }
-    onClick();
+    onClick(event);
   }
 </script>
 

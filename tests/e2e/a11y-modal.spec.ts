@@ -17,12 +17,13 @@ async function openAuthModal(page: Page): Promise<{ dialog: Locator; isMobile: b
   const mobileMenu = page.getByRole('button', { name: 'Open menu' });
   const isMobile = await mobileMenu.isVisible().catch(() => false);
 
-  // Retry the whole open. The header renders server-side, so the button is
+  // Retry the whole open. The header renders server-side, so the control is
   // there and clickable well before the handler that opens the modal is wired
   // up -- and under a full parallel run hydration is slow enough that the first
-  // click lands in that gap and silently does nothing. This used to surface as
-  // a bare "waiting for getByRole('dialog')" timeout with nothing about focus
-  // in it, in a suite run rather than in isolation.
+  // click lands in that gap. The desktop control is a link to /auth/register,
+  // so that early click navigates there instead of doing nothing; the header
+  // and the modal handler are on that page too, so the retry opens the dialog
+  // wherever it lands.
   await expect(async () => {
     if (isMobile) {
       await mobileMenu.click();
@@ -30,7 +31,7 @@ async function openAuthModal(page: Page): Promise<{ dialog: Locator; isMobile: b
       await drawerRegister.waitFor({ state: 'visible', timeout: 5000 });
       await drawerRegister.click();
     } else {
-      await page.locator('nav').getByRole('button', { name: 'Register', exact: true }).click();
+      await page.locator('nav').getByRole('link', { name: 'Register', exact: true }).click();
     }
     await expect(dialog).toBeVisible({ timeout: 5000 });
   }).toPass({ timeout: 40000 });
@@ -78,16 +79,19 @@ test.describe('Modal focus trap (a11y)', () => {
     // a persistent trigger.
     test.skip(isMobile, 'mobile opens via a drawer whose trigger unmounts');
 
-    const trigger = page.locator('nav').getByRole('button', { name: 'Register', exact: true });
-    // Drive it by keyboard: clicking a button does not focus it in Firefox/WebKit,
-    // which would make "restore to trigger" untestable. This is also the real
-    // keyboard-user journey the restore behaviour exists for.
-    await trigger.focus();
-    await expect(trigger).toBeFocused();
-    await trigger.press('Enter');
-
+    const trigger = page.locator('nav').getByRole('link', { name: 'Register', exact: true });
     const dialog = page.getByRole('dialog');
-    await dialog.waitFor({ state: 'visible', timeout: 10000 });
+    // Drive it by keyboard: clicking a control does not focus it in Firefox/WebKit,
+    // which would make "restore to trigger" untestable. This is also the real
+    // keyboard-user journey the restore behaviour exists for. Retried like the
+    // click path: before hydration, Enter on the link navigates to /auth/register
+    // rather than opening the modal, and the next attempt runs on that page.
+    await expect(async () => {
+      await trigger.focus();
+      await expect(trigger).toBeFocused();
+      await trigger.press('Enter');
+      await expect(dialog).toBeVisible({ timeout: 5000 });
+    }).toPass({ timeout: 40000 });
     await expect.poll(() => focusInDialog(page)).toBe(true);
 
     await page.keyboard.press('Escape');

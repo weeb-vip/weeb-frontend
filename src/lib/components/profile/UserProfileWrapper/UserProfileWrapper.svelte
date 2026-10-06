@@ -26,6 +26,17 @@
     bloc.openDrawer();
     onProfileClick?.();
   }
+
+  // Links to the auth pages, so they work without a script; with one, the
+  // modal opens in place and the navigation is stopped.
+  function login(event: MouseEvent) {
+    event.preventDefault();
+    bloc.requestLogin();
+  }
+  function register(event: MouseEvent) {
+    event.preventDefault();
+    bloc.requestRegister();
+  }
 </script>
 
 {#if bloc.status === 'loading'}
@@ -72,7 +83,7 @@
 {:else}
   <!-- Signed out, desktop: Login/Register buttons -->
   <div class="flex items-center space-x-3">
-    <Button color="blue" onClick={() => bloc.requestLogin()}>Login</Button>
-    <Button color="transparent" onClick={() => bloc.requestRegister()}>Register</Button>
+    <Button color="blue" href="/auth/login" onClick={login}>Login</Button>
+    <Button color="transparent" href="/auth/register" onClick={register}>Register</Button>
   </div>
 {/if}

@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
-import userEvent from '@testing-library/user-event';
-import UserProfileHandler from './UserProfileHandler.svelte';
-import { loggedInStore } from '$lib/stores/auth';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen } from "@testing-library/svelte";
+import userEvent from "@testing-library/user-event";
+import UserProfileHandler from "./UserProfileHandler.svelte";
+import { loggedInStore } from "$lib/stores/auth";
 
 /**
  * The header's account slot. It owns no state and draws no markup of its own:
@@ -25,7 +25,9 @@ let fetchSpy: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   // The shared query client warms the GraphQL socket on first construction.
-  fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}'));
+  fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(new Response("{}"));
 });
 
 afterEach(() => {
@@ -33,37 +35,42 @@ afterEach(() => {
   loggedInStore.set({ isLoggedIn: false, isAuthInitialized: false });
 });
 
-describe('UserProfileHandler', () => {
-  it('mounts with no providers above it, and renders the account slot', () => {
+describe("UserProfileHandler", () => {
+  it("mounts with no providers above it, and renders the account slot", () => {
     render(UserProfileHandler);
 
     // Signed out on the desktop header: the two auth CTAs. Reaching this at all
     // means the config context and the QueryClient were both there.
-    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Register' })).toBeInTheDocument();
+    // Links to the auth pages, so they work without a script.
+    expect(screen.getByRole("link", { name: "Login" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Register" })).toBeInTheDocument();
   });
 
-  it('passes isMobile down -- the narrow header gets the menu button, not the CTAs', () => {
+  it("passes isMobile down -- the narrow header gets the menu button, not the CTAs", () => {
     render(UserProfileHandler, { props: { isMobile: true } });
 
-    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Login' })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Open menu" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Login" }),
+    ).not.toBeInTheDocument();
   });
 
-  it('passes onProfileClick down, so the drawer host hears the tap', async () => {
+  it("passes onProfileClick down, so the drawer host hears the tap", async () => {
     const onProfileClick = vi.fn();
     render(UserProfileHandler, { props: { isMobile: true, onProfileClick } });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
 
     expect(onProfileClick).toHaveBeenCalledTimes(1);
   });
 
-  it('draws no skeleton of its own -- the wrapper owns the loading state', () => {
+  it("draws no skeleton of its own -- the wrapper owns the loading state", () => {
     const { container } = render(UserProfileHandler);
 
     // The duplicate skeleton this component used to render while a dynamic
     // import resolved is gone; signed out, nothing pulses.
-    expect(container.querySelectorAll('.animate-pulse')).toHaveLength(0);
+    expect(container.querySelectorAll(".animate-pulse")).toHaveLength(0);
   });
 });
