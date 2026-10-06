@@ -245,10 +245,23 @@
       painted = true;
       return;
     }
+    // The browser queues a failed request's error as a task. By the time it
+    // runs, the walk may already have moved `src` on -- the element finished
+    // before hydration, or errored between two flushes -- and the element's
+    // current request is the next candidate, in flight: `complete` is false
+    // and `currentSrc` already names it. Counting that error against the
+    // next candidate skipped the root object and ended on the not-found
+    // image. A genuine failure of the candidate on screen leaves its request
+    // broken, with `complete` true.
+    const el = (event?.currentTarget as HTMLImageElement | null) ?? null;
+    if (el && !el.complete) {
+      debug.warn(`Ignoring an error while ${current} is still loading`);
+      return;
+    }
     // An error for a URL this candidate never named is the previous one's,
     // arriving after the walk moved on. jsdom reports no currentSrc at all;
     // that is taken as "for the current candidate".
-    const failedUrl = (event?.currentTarget as HTMLImageElement | null)?.currentSrc || '';
+    const failedUrl = el?.currentSrc || '';
     if (failedUrl && !isForCurrent(failedUrl)) {
       debug.warn(`Ignoring a late error for ${failedUrl}`);
       return;
@@ -306,11 +319,17 @@
     giveUp();
   });
 
-  // An element the browser already finished with before this ran.
+  // An element the browser already finished with before this ran. Only its
+  // request for this candidate counts: right after `src` moves on, the
+  // element can still report the previous request, broken and complete,
+  // until the browser has started the next one -- read as the new
+  // candidate's failure, that skipped it. The next request's own load or
+  // error event follows either way.
   $effect(() => {
     const img = imgEl;
     const url = current;
     if (!img || !url || !img.complete) return;
+    if (img.currentSrc && !isForCurrent(img.currentSrc)) return;
     if (img.naturalWidth > 0) settle(img);
     else handleError();
   });
