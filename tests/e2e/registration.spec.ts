@@ -27,7 +27,7 @@ async function openRegisterModal(page: Page): Promise<Locator> {
     await drawerRegister.click();
   } else {
     console.log('Clicking desktop header Register');
-    await page.locator('nav').getByRole('button', { name: 'Register', exact: true }).click();
+    await page.locator('nav').getByRole('link', { name: 'Register', exact: true }).click();
   }
 
   await dialog.waitFor({ state: 'visible', timeout: 10000 });

@@ -44,7 +44,7 @@ async function firstResolvingSlug(page: Page): Promise<string | null> {
 async function openLoginDialog(page: Page) {
   const dialog = page.locator('.weeb-modal-card');
   await expect(async () => {
-    await page.locator('nav').getByRole('button', { name: 'Login', exact: true }).click();
+    await page.locator('nav').getByRole('link', { name: 'Login', exact: true }).click();
     await expect(dialog).toBeVisible({ timeout: 5000 });
   }).toPass({ timeout: 40000 });
   return dialog;

@@ -38,7 +38,7 @@ test.describe('Profile page (logged in)', () => {
     expect(queryClientErrors).toEqual([]);
 
     // Header shows the logged-in avatar/menu rather than Login/Register
-    await expect(page.locator('nav').getByRole('button', { name: 'Register', exact: true })).toHaveCount(0);
+    await expect(page.locator('nav').getByRole('link', { name: 'Register', exact: true })).toHaveCount(0);
 
     // --- the image cropper opens at its larger size ---
     // Asserted here rather than in a spec of its own because reaching it costs
