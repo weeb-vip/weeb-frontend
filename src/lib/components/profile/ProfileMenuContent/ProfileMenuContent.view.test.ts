@@ -8,7 +8,7 @@ import {
 } from './ProfileMenuContent.bloc.svelte';
 
 /**
- * The profile menu's markup: the identity block, the three links and the
+ * The profile menu's markup: the identity block, the four links and the
  * sign-out control -- drawn twice, once inside the desktop dropdown and once
  * inside the mobile drawer.
  *
@@ -59,12 +59,12 @@ describe('ProfileMenuContent', () => {
       expect(screen.getByText('sakura@example.com')).toBeInTheDocument();
     });
 
-    it('leaves the identity block as a heading, not a fourth link', () => {
+    it('leaves the identity block as a heading, not a fifth link', () => {
       render(ProfileMenuContent, { props: { user, bloc: makeBloc() } });
 
-      // Three rows plus the sign-out button. The username is a label here; on
+      // Four rows plus the sign-out button. The username is a label here; on
       // mobile the whole block becomes the link to /profile instead.
-      expect(screen.getAllByRole('link')).toHaveLength(3);
+      expect(screen.getAllByRole('link')).toHaveLength(4);
       expect(screen.queryByRole('link', { name: /sakura@example.com/ })).not.toBeInTheDocument();
     });
 
@@ -102,13 +102,15 @@ describe('ProfileMenuContent', () => {
     for (const isMobile of [false, true]) {
       const where = isMobile ? 'mobile' : 'desktop';
 
-      it(`offers View Profile, My List and Settings on ${where}`, () => {
+      it(`offers View Profile, Feed, My List and Settings on ${where}`, () => {
         render(ProfileMenuContent, { props: { user, isMobile, bloc: makeBloc() } });
 
         expect(screen.getByRole('link', { name: 'View Profile' })).toHaveAttribute(
           'href',
           '/profile'
         );
+        // A signed-in page, so it is offered here and not in the header's sections.
+        expect(screen.getByRole('link', { name: 'Feed' })).toHaveAttribute('href', '/feed');
         expect(screen.getByRole('link', { name: 'My List' })).toHaveAttribute(
           'href',
           '/profile/anime'
