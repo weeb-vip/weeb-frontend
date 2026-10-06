@@ -652,7 +652,9 @@ describe('initPostHogWhenConfigured', () => {
       api_host: 'https://n.weeb.vip',
       ui_host: 'https://us.posthog.com',
       capture_pageview: true,
-      person_profiles: 'identified_only'
+      person_profiles: 'identified_only',
+      // Replay is gated client-side (see session-replay), never on by default.
+      disable_session_recording: true
     });
 
     // Every event is tagged with the environment for dashboard filtering.

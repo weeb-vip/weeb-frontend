@@ -17,6 +17,9 @@
     hideNavigationFeedback
   } from '$lib/client/global-ui';
   import { initTelemetryWhenConfigured } from '$lib/client/telemetry';
+  import { gateSessionReplay } from '$lib/client/session-replay';
+  import { loggedInStore, loginModalStore } from '$lib/stores/auth';
+  import { derived } from 'svelte/store';
   import { configStore } from '$lib/stores/config';
   import { provideServerAuth } from '$lib/stores/server-auth';
   import { imagePolicyFor, provideImagePolicy } from '$lib/stores/image-policy';
@@ -50,9 +53,17 @@
   onMount(() => {
     initGlobalErrorHandlers();
     initPostHogWhenConfigured();
+    // Session replay only for signed-in users and the sign-up/sign-in funnel.
+    const replayGate = derived([loggedInStore, loginModalStore, page], ([auth, modal, p]) => ({
+      isLoggedIn: auth.isLoggedIn,
+      modalOpen: modal.isOpen,
+      pathname: p.url.pathname
+    }));
+    const stopReplayGate = gateSessionReplay(replayGate);
     // Loads the OTel web SDK dynamically, so it stays off the first-paint path.
     initTelemetryWhenConfigured();
     import('../scripts/init-swipe-navigation');
+    return () => stopReplayGate();
   });
 
   beforeNavigate(() => showInstantFeedback());
