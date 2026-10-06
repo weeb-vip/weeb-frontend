@@ -24,9 +24,10 @@
     slug = undefined,
     title,
     image,
-    // Which CDN folder the poster lives in. Anime posters are the default; works
-    // are stored under works/ by image-sync, and passing the id without this
-    // would ask the CDN for an anime poster that does not exist.
+    // Which CDN folder the fallback poster lives in. For anime the root object
+    // (the show's own image) leads and posters/ is the fallback; works are
+    // stored under works/ by image-sync and have no root object, so their
+    // folder leads.
     imagePath = 'posters',
     score = null,
     status = null,
