@@ -1,9 +1,13 @@
-import { derived, fromStore, type Readable } from 'svelte/store';
-import { createQuery } from '@tanstack/svelte-query';
-import { loggedInStore } from '$lib/stores/auth';
-import { userQueryOptions } from '$lib/services/query-hooks';
-import { openMobileDrawer } from '$lib/stores/mobileDrawer';
-import { resolveLoggedIn, type ClientAuthState, type ServerAuth } from '$lib/stores/server-auth';
+import { derived, fromStore, type Readable } from "svelte/store";
+import { createQuery } from "@tanstack/svelte-query";
+import { loggedInStore } from "$lib/stores/auth";
+import { userQueryOptions } from "$lib/services/query-hooks";
+import { openMobileDrawer } from "$lib/stores/mobileDrawer";
+import {
+  resolveLoggedIn,
+  type ClientAuthState,
+  type ServerAuth,
+} from "$lib/stores/server-auth";
 
 /** The shape the profile surfaces render. Only these fields are ever read. */
 export interface ProfileUser {
@@ -40,8 +44,8 @@ export interface AuthPromptPort {
 }
 
 export const realAuthPrompt: AuthPromptPort = {
-  requestLogin: () => window.dispatchEvent(new CustomEvent('openLogin')),
-  requestRegister: () => window.dispatchEvent(new CustomEvent('openRegister'))
+  requestLogin: () => window.dispatchEvent(new CustomEvent("openLogin")),
+  requestRegister: () => window.dispatchEvent(new CustomEvent("openRegister")),
 };
 
 /**
@@ -52,7 +56,7 @@ export const realAuthPrompt: AuthPromptPort = {
  */
 export function createUserQuery(): UserQueryPort {
   return createQuery(
-    derived(loggedInStore, (state) => userQueryOptions(state.isLoggedIn))
+    derived(loggedInStore, (state) => userQueryOptions(state.isLoggedIn)),
   ) as unknown as UserQueryPort;
 }
 
@@ -71,11 +75,17 @@ export function createUserQuery(): UserQueryPort {
  *
  * Exported and pure so the rule can be checked on its own.
  */
-export function fallbackUserFor(isLoggedIn: boolean, hasError: boolean): ProfileUser | null {
+export function fallbackUserFor(
+  isLoggedIn: boolean,
+  hasError: boolean,
+): ProfileUser | null {
   if (!isLoggedIn || !hasError) return null;
   // Only the fields the avatar and the name line read; cast to the shape the
   // dropdown expects (unchanged runtime behaviour).
-  return { username: 'User', profileImageUrl: null } as Partial<ProfileUser> as ProfileUser;
+  return {
+    username: "User",
+    profileImageUrl: null,
+  } as Partial<ProfileUser> as ProfileUser;
 }
 
 export interface UserProfileWrapperDeps {
@@ -94,7 +104,13 @@ export interface UserProfileWrapperDeps {
 export class UserProfileWrapperBloc {
   readonly #auth: { current: ClientAuthState };
   readonly #serverAuth: ServerAuth | null;
-  readonly #query: { current: { data?: ProfileUser | null; isLoading?: boolean; isError?: boolean } };
+  readonly #query: {
+    current: {
+      data?: ProfileUser | null;
+      isLoading?: boolean;
+      isError?: boolean;
+    };
+  };
   readonly #drawer: DrawerPort;
   readonly #prompt: AuthPromptPort;
 
@@ -105,7 +121,7 @@ export class UserProfileWrapperBloc {
     // QueryClient that is not there.
     userQuery = createUserQuery(),
     drawer = { open: openMobileDrawer },
-    prompt = realAuthPrompt
+    prompt = realAuthPrompt,
   }: UserProfileWrapperDeps = {}) {
     this.#auth = fromStore(auth);
     this.#serverAuth = serverAuth;
@@ -122,17 +138,32 @@ export class UserProfileWrapperBloc {
 
   /** Signed in on the server's word alone; the store has not caught up yet. */
   get #awaitingStore(): boolean {
-    return this.#auth.current?.isAuthInitialized === false && Boolean(this.#serverAuth?.isLoggedIn);
+    return (
+      this.#auth.current?.isAuthInitialized === false &&
+      Boolean(this.#serverAuth?.isLoggedIn)
+    );
+  }
+
+  /** The record the server fetched for this request, while signed in. */
+  get #serverUser(): ProfileUser | null {
+    return this.isLoggedIn
+      ? ((this.#serverAuth?.user as ProfileUser | null | undefined) ?? null)
+      : null;
   }
 
   /**
    * Loading covers the server render too: the server knows the visitor is
-   * signed in but has no user details, so the HTML carries the pulsing
-   * placeholder the client then fills, instead of Login/Register buttons that
-   * flip to an avatar after hydration.
+   * signed in and, when its own fetch failed, has no user details, so the
+   * HTML carries the pulsing placeholder the client then fills, instead of
+   * Login/Register buttons that flip to an avatar after hydration. With the
+   * server's record in hand nothing is loading: the avatar is in the HTML.
    */
   get isLoading(): boolean {
-    return this.isLoggedIn && (Boolean(this.#query.current?.isLoading) || (this.#awaitingStore && !this.#query.current?.data));
+    if (!this.isLoggedIn || this.#serverUser) return false;
+    return (
+      Boolean(this.#query.current?.isLoading) ||
+      (this.#awaitingStore && !this.#query.current?.data)
+    );
   }
 
   get hasError(): boolean {
@@ -140,7 +171,11 @@ export class UserProfileWrapperBloc {
   }
 
   get displayUser(): ProfileUser | null {
-    return this.#query.current?.data || fallbackUserFor(this.isLoggedIn, this.hasError);
+    return (
+      this.#query.current?.data ||
+      this.#serverUser ||
+      fallbackUserFor(this.isLoggedIn, this.hasError)
+    );
   }
 
   /**
@@ -148,10 +183,10 @@ export class UserProfileWrapperBloc {
    * and still nobody -- it renders a still placeholder rather than a pulsing
    * one, because nothing is going to resolve it.
    */
-  get status(): 'signed-out' | 'loading' | 'ready' | 'stuck' {
-    if (!this.isLoggedIn) return 'signed-out';
-    if (this.isLoading) return 'loading';
-    return this.displayUser ? 'ready' : 'stuck';
+  get status(): "signed-out" | "loading" | "ready" | "stuck" {
+    if (!this.isLoggedIn) return "signed-out";
+    if (this.isLoading) return "loading";
+    return this.displayUser ? "ready" : "stuck";
   }
 
   openDrawer(): void {

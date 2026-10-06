@@ -1,4 +1,4 @@
-import { getContext, setContext } from 'svelte';
+import { getContext, setContext } from "svelte";
 
 /**
  * The server's answer about the visitor, for the first render.
@@ -14,6 +14,19 @@ import { getContext, setContext } from 'svelte';
  */
 export interface ServerAuth {
   isLoggedIn: boolean;
+  /** The signed-in visitor's own record, when the server fetched it, so the
+   * header renders the avatar and name rather than a skeleton. */
+  user?: ServerUser | null;
+}
+
+/** The fields the header's account slot reads. Never the email or tokens:
+ * load data is serialized into the page HTML. */
+export interface ServerUser {
+  id: string;
+  username: string;
+  firstname: string;
+  lastname: string;
+  profileImageUrl?: string | null;
 }
 
 /** The subset of `loggedInStore` the resolution reads. */
@@ -23,11 +36,16 @@ export interface ClientAuthState {
   isAuthInitialized?: boolean;
 }
 
-const KEY = 'weeb:server-auth';
+const KEY = "weeb:server-auth";
 
 /** Called once by the root layout, during its init. */
 export function provideServerAuth(auth: ServerAuth | null | undefined): void {
-  setContext(KEY, auth ? { isLoggedIn: Boolean(auth.isLoggedIn) } : null);
+  setContext(
+    KEY,
+    auth
+      ? { isLoggedIn: Boolean(auth.isLoggedIn), user: auth.user ?? null }
+      : null,
+  );
 }
 
 /**
@@ -47,7 +65,10 @@ export function serverAuthFromContext(): ServerAuth | null {
  * A cached anonymous page says signed out, and the client takes over at
  * hydration -- exactly the behaviour before, for that case.
  */
-export function resolveLoggedIn(store: ClientAuthState, server: ServerAuth | null | undefined): boolean {
+export function resolveLoggedIn(
+  store: ClientAuthState,
+  server: ServerAuth | null | undefined,
+): boolean {
   if (store.isAuthInitialized === false && server) return server.isLoggedIn;
   return store.isLoggedIn;
 }

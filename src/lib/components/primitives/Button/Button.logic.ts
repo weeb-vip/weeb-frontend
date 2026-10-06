@@ -1,5 +1,5 @@
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import type { Snippet } from 'svelte';
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import type { Snippet } from "svelte";
 
 /**
  * Button's vocabulary and its two decisions: which visual phase the control is
@@ -9,14 +9,14 @@ import type { Snippet } from 'svelte';
  * because that is wiring rather than a rule.
  */
 
-export type ButtonStatus = 'idle' | 'loading' | 'success' | 'error';
-export type ButtonColor = 'blue' | 'red' | 'transparent' | '';
+export type ButtonStatus = "idle" | "loading" | "success" | "error";
+export type ButtonColor = "blue" | "red" | "transparent" | "";
 /**
  * `sm` is the old hand-rolled "compact" action (EmptyState's CTA, the sticky
  * header's add button), `lg` the 46px full-width auth submit, `hero` the pair
  * that sit on the banner panel, and `icon` the 32px round icon-only one.
  */
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'hero' | 'icon';
+export type ButtonSize = "sm" | "md" | "lg" | "hero" | "icon";
 
 export interface ButtonProps {
   color?: ButtonColor;
@@ -31,12 +31,13 @@ export interface ButtonProps {
    * Only meaningful without `href`. Defaults to `button`, so a Button inside a
    * form is inert unless it asks to submit.
    */
-  type?: 'button' | 'submit' | 'reset';
+  type?: "button" | "submit" | "reset";
   /** A FontAwesome icon rendered before the label. */
   icon?: IconDefinition | null;
   /** The label. */
   children?: Snippet;
-  onClick?: () => void;
+  /** The event is passed so a link-styled button can stop its navigation when a script handles it. */
+  onClick?: (event: MouseEvent) => void;
   /** Layout only -- a class here must not restyle the variant. */
   className?: string;
   status?: ButtonStatus;
@@ -53,34 +54,46 @@ export interface ButtonProps {
 export const STATUS_HOLD_MS = 2000;
 
 const COLOR_CLASSES: Record<ButtonColor, string> = {
-  blue: 'btn-accent',
-  red: 'btn-danger',
-  transparent: 'btn-ghost',
-  '': ''
+  blue: "btn-accent",
+  red: "btn-danger",
+  transparent: "btn-ghost",
+  "": "",
 };
 
 /** What the caller asked for: `loading` is sugar for `status="loading"`. */
-export function requestedStatus(status: ButtonStatus, loading: boolean): ButtonStatus {
-  return loading ? 'loading' : status;
+export function requestedStatus(
+  status: ButtonStatus,
+  loading: boolean,
+): ButtonStatus {
+  return loading ? "loading" : status;
 }
 
 /** What is actually drawn, once a transient state has been retired locally. */
-export function phaseOf(requested: ButtonStatus, expired: boolean): ButtonStatus {
-  return expired ? 'idle' : requested;
+export function phaseOf(
+  requested: ButtonStatus,
+  expired: boolean,
+): ButtonStatus {
+  return expired ? "idle" : requested;
 }
 
 /** Only success and error retire on their own; idle and loading are the caller's to end. */
 export function isTransient(requested: ButtonStatus): boolean {
-  return requested !== 'idle' && requested !== 'loading';
+  return requested !== "idle" && requested !== "loading";
 }
 
 export function buttonClasses(
   size: ButtonSize,
   color: ButtonColor,
   fullWidth: boolean,
-  className: string
+  className: string,
 ): string {
-  return ['btn', `btn--${size}`, COLOR_CLASSES[color], fullWidth ? 'btn--full' : '', className]
+  return [
+    "btn",
+    `btn--${size}`,
+    COLOR_CLASSES[color],
+    fullWidth ? "btn--full" : "",
+    className,
+  ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 }
