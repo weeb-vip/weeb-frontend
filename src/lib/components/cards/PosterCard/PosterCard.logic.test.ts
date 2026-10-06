@@ -29,13 +29,18 @@ describe('airingStateOf', () => {
 });
 
 describe('posterSourcesFor', () => {
-  it('prefers TheTVDB’s poster over the scraper’s MyAnimeList image', () => {
-    // MAL serves at 225px wide, which is soft at card size on any 2x display.
-    expect(posterSourcesFor('a1', 'posters')).toEqual([`${CDN}/posters/a1`, `${CDN}/a1`]);
+  it('leads with the anime’s own image at the root, TheTVDB’s poster behind it', () => {
+    // The root object is the show's own art, upscaled to 600px; the poster is
+    // often different art and exists only for shows TheTVDB carries.
+    expect(posterSourcesFor('a1', 'posters')).toEqual([`${CDN}/a1`, `${CDN}/posters/a1`]);
   });
 
-  it('falls back per-anime, so shows TheTVDB does not carry are unaffected', () => {
+  it('keeps the poster as a per-anime fallback', () => {
     expect(posterSourcesFor('a1', 'posters')).toHaveLength(2);
+  });
+
+  it('keeps a work’s folder first: works have no root object', () => {
+    expect(posterSourcesFor('w1', 'works')).toEqual([`${CDN}/works/w1`, `${CDN}/w1`]);
   });
 
   it('offers nothing for a card with no image key', () => {
