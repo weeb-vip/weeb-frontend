@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import Fa from 'svelte-fa';
-  import { faUser, faBookmark, faCog } from '@fortawesome/free-solid-svg-icons';
+  import { faUser, faBookmark, faCog, faStream } from '@fortawesome/free-solid-svg-icons';
   import ProfileAvatar from '$lib/components/profile/ProfileAvatar';
   import {
     logoutButtonClass,
@@ -107,6 +107,23 @@
       </svg>
     {/if}
     <span class={isMobile ? "text-weeb-fg-secondary" : ""}>View Profile</span>
+  </a>
+
+  <!-- The feed is what the people you follow are watching: a signed-in page,
+       so it is offered here rather than in the header's public sections. -->
+  <a
+    href="/feed"
+    onclick={handleLinkClick}
+    class={itemClass}
+  >
+    {#if isMobile}
+      <span class="w-5 text-center mr-3 text-weeb-fg-muted inline-flex justify-center" aria-hidden="true"><Fa icon={faStream} /></span>
+    {:else}
+      <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+      </svg>
+    {/if}
+    <span class={isMobile ? "text-weeb-fg-secondary" : ""}>Feed</span>
   </a>
 
   <a

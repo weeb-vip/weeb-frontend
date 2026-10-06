@@ -66,7 +66,8 @@
          have two detail URLs, and the alternative is neither lit. -->
     <a href="/manga" aria-current={bloc.isCurrent('/manga') ? 'page' : undefined}>Manga</a>
     <a href="/light-novels" aria-current={bloc.isCurrent('/light-novels') ? 'page' : undefined}>Light novels</a>
-    <a href="/feed" aria-current={bloc.isCurrent('/feed') ? 'page' : undefined}>Feed</a>
+    <!-- No Feed here: it is a signed-in page, so it sits in the account menu
+         (and the drawer's user rows), not in the public sections. -->
   </div>
 
   <!-- Search -->

@@ -105,8 +105,7 @@ describe('Header', () => {
         'Airing',
         'Browse',
         'Manga',
-        'Light novels',
-        'Feed'
+        'Light novels'
       ]);
     });
 
