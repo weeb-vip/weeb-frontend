@@ -10,6 +10,7 @@
     orderedSources,
     rawFor,
     rawSources,
+    storedVariantSrcset,
     type ChosenDetail
   } from './SafeImage.logic';
 
@@ -163,13 +164,25 @@
    * over `src` -- so a srcset of resized variants on the raw step made the
    * raw step fail the same way and every card ended on the not-found image.
    */
+  /**
+   * A stored variant that fails (not written yet for this key, say) is not
+   * the candidate failing: the srcset is dropped for this candidate and the
+   * element loads the plain src, the display copy at the key.
+   */
+  let srcsetDropped = $state('');
   const currentSrcset = $derived.by<string | null>(() => {
-    if (exhausted || widths.length === 0) return null;
+    if (exhausted || widths.length === 0 || srcsetDropped === `${generation}:${index}`) return null;
     const url = candidates[index];
-    if (url == null || raw.includes(url)) return null;
+    if (url == null) return null;
+    if (raw.includes(url)) {
+      // A raw candidate on screen may still carry the pipeline's stored
+      // variants (<key>-w320, ...), objects of their own in the bucket.
+      return storedVariantSrcset(url, policy);
+    }
     const source = rawFor(candidates, raw, index);
     return source ? candidateSrcset(source, widths, policy) : null;
   });
+
   const phoneSrcset = $derived.by<string | null>(() => {
     const list = phoneWidths ?? widths;
     if (exhausted || list.length === 0 || phoneCandidates.length === 0) return null;
@@ -274,6 +287,11 @@
       return;
     }
     const key = `${generation}:${index}`;
+    if (failedUrl && failedUrl !== current && current && raw.includes(current) && currentSrcset && srcsetDropped !== key) {
+      debug.warn(`Stored variant failed, falling back to the display copy: ${failedUrl}`);
+      srcsetDropped = key;
+      return;
+    }
     if (erroredFor === key) return;
     erroredFor = key;
     debug.warn(`Image failed to load: ${current}`);

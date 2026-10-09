@@ -27,6 +27,11 @@ export interface IConfig {
    * Needs the router's automatic_persisted_queries; without it the client
    * notices on the first answer and falls back to POST for the session. */
   graphql_persisted_queries?: boolean;
+  /** The image pipeline has written width variants (`<key>-w320`, ...) beside
+   * every display copy, so SafeImage may offer them in a srcset. Off until a
+   * full walk of the bucket has finished; a missing variant costs a 404 and
+   * a second request for the full copy. */
+  cdn_stored_variants?: boolean;
   /** OTLP/HTTP traces endpoint for browser RUM, e.g.
    * "https://otel.weeb.vip/v1/traces". Terminates at Grafana Alloy, which
    * forwards to Tempo alongside the server-side spans.

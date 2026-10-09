@@ -7,5 +7,6 @@
   "cdn_user_url": "https://cdn.weeb.vip/weeb-user-staging",
   "posthog_api_key": "phc_MbyMDQJkiLR9NSfSGSpEhA1RSwu79mROuedzQvxgxoI",
   "environment": "local",
-  "graphql_persisted_queries": false
-}
+  "graphql_persisted_queries": false,
+  "cdn_stored_variants": false
+}\n

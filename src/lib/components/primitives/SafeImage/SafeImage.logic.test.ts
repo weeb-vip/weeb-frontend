@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { configStore } from '$lib/stores/config';
 import type { IConfig } from '../../../../config/interfaces';
+import { storedVariantSrcset } from './SafeImage.logic';
 import {
   DEFAULT_REJECT_PATTERNS,
   candidateSrcset,
@@ -237,5 +238,41 @@ describe('with the resizer switched off', () => {
     expect(orderedSources([`${CDN}/posters/one`], '', '', 360, off)).toEqual([`${CDN}/posters/one`]);
     expect(candidateSrcset(`${CDN}/posters/one`, [180, 360], off)).toBeNull();
     expect(rawSources([`${CDN}/posters/one`], '', '')).toEqual([`${CDN}/posters/one`]);
+  });
+});
+
+describe('storedVariantSrcset', () => {
+  const useVariants = (on: boolean) =>
+    configStore.setConfig({ cdn_url: CDN, cdn_image_resize: false, cdn_stored_variants: on } as unknown as IConfig);
+
+  it('offers the widths the pipeline stores beside the object, and the object itself at its cap', () => {
+    useVariants(true);
+    expect(storedVariantSrcset(`${CDN}/a1`)).toBe(`${CDN}/a1-w320 320w, ${CDN}/a1 600w`);
+    expect(storedVariantSrcset(`${CDN}/posters/a1`)).toBe(
+      `${CDN}/posters/a1-w320 320w, ${CDN}/posters/a1-w640 640w, ${CDN}/posters/a1 1000w`
+    );
+    expect(storedVariantSrcset(`${CDN}/banners/a1`)).toBe(`${CDN}/banners/a1-w960 960w, ${CDN}/banners/a1 1920w`);
+  });
+
+  it('caps the widths for a data-saver visitor, keeping the smallest', () => {
+    useVariants(true);
+    // SAVE_DATA_POLICY caps at 640: the 1000px display copy is dropped.
+    expect(storedVariantSrcset(`${CDN}/posters/a1`, SAVE_DATA_POLICY)).toBe(
+      `${CDN}/posters/a1-w320 320w, ${CDN}/posters/a1-w640 640w`
+    );
+  });
+
+  it('offers nothing until the config says the variants exist, nor for anything that is not a CDN object', () => {
+    useVariants(false);
+    expect(storedVariantSrcset(`${CDN}/a1`)).toBeNull();
+    useVariants(true);
+    expect(storedVariantSrcset('/assets/not found.jpg')).toBeNull();
+    expect(storedVariantSrcset(`${CDN}/a1-w320`)).toBeNull();
+    expect(storedVariantSrcset(`${ORIGIN}/weeb-user/profiles/x.jpg`)).toBeNull();
+  });
+
+  it('is what candidateSrcset answers with when the resizer is off', () => {
+    useVariants(true);
+    expect(candidateSrcset(`${CDN}/a1`, [180, 360])).toBe(`${CDN}/a1-w320 320w, ${CDN}/a1 600w`);
   });
 });

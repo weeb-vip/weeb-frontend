@@ -9,5 +9,6 @@
   "cdn_image_resize": false,
   "environment": "production",
   "otlp_endpoint": "https://otel.weeb.vip/v1/traces",
-  "graphql_persisted_queries": true
-}
+  "graphql_persisted_queries": true,
+  "cdn_stored_variants": false
+}\n
