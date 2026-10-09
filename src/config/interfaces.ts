@@ -21,6 +21,12 @@ export interface IConfig {
   /** Enable Cloudflare Image Resizing (/cdn-cgi/image/) on CDN URLs. Production only —
    * staging is not fronted by Cloudflare, so transforms would 404 there. */
   cdn_image_resize?: boolean;
+  /** Send GraphQL queries as GET by hash (automatic persisted queries), so
+   * Cloudflare can cache the anonymous ones. Opt-in: production and staging
+   * set it; a config without it keeps plain POST.
+   * Needs the router's automatic_persisted_queries; without it the client
+   * notices on the first answer and falls back to POST for the session. */
+  graphql_persisted_queries?: boolean;
   /** OTLP/HTTP traces endpoint for browser RUM, e.g.
    * "https://otel.weeb.vip/v1/traces". Terminates at Grafana Alloy, which
    * forwards to Tempo alongside the server-side spans.
