@@ -130,8 +130,22 @@ export function withPersistedQueries(fetchImpl: Fetch, options: PersistedFetchOp
       return fetchImpl(input, init);
     }
     if (notFound(codes)) {
-      // Register the text once; this answer is the real one.
-      return fetchImpl(input, { ...init, body: JSON.stringify({ ...body, extensions }) });
+      // Register the text once; this answer is the real one -- unless the
+      // router answers not-found to the registration too, which is a router
+      // running without the feature (an old process, a config not yet
+      // loaded): then the plain POST it always took, and stop asking.
+      const registered = await fetchImpl(input, { ...init, body: JSON.stringify({ ...body, extensions }) });
+      let payload: any = null;
+      try {
+        payload = await registered.clone().json();
+      } catch {
+        return registered;
+      }
+      if (notFound(errorCodes(payload)) || notSupported(errorCodes(payload))) {
+        unsupported = true;
+        return fetchImpl(input, init);
+      }
+      return registered;
     }
     return response;
   };

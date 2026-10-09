@@ -80,6 +80,31 @@ describe('withPersistedQueries', () => {
     expect(await res.json()).toEqual({ data: { registered: true } });
   });
 
+  it('falls back to a plain POST when the registration itself is refused, and stops asking', async () => {
+    // A router running without the feature answers not-found to the
+    // registration too; the SSR log showed exactly this as a thrown error.
+    const notFoundAnswer = () => json({ errors: [{ message: 'PersistedQueryNotFound', extensions: { code: 'PERSISTED_QUERY_NOT_FOUND' } }] });
+    const inner = vi
+      .fn()
+      .mockResolvedValueOnce(notFoundAnswer())
+      .mockResolvedValueOnce(notFoundAnswer())
+      .mockResolvedValue(json({ data: { plain: true } }));
+    const f = withPersistedQueries(inner as any);
+
+    const res = await f(URL_, post(QUERY, { limit: 1 }, 'getHome'));
+
+    expect(await res.json()).toEqual({ data: { plain: true } });
+    // GET, registration POST, plain POST without extensions.
+    expect(inner).toHaveBeenCalledTimes(3);
+    const plain = JSON.parse((inner.mock.calls[2] as any)[1].body);
+    expect(plain.extensions).toBeUndefined();
+    expect(plain.query).toBe(QUERY);
+    // And the next query goes straight to POST.
+    await f(URL_, post(QUERY, { limit: 2 }, 'getHome'));
+    expect(inner).toHaveBeenCalledTimes(4);
+    expect((inner.mock.calls[3] as any)[1].method).toBe('POST');
+  });
+
   it('stops asking a router that does not do persisted queries', async () => {
     const inner = vi
       .fn()
