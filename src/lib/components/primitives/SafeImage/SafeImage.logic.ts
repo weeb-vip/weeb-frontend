@@ -1,4 +1,4 @@
-import { getSafeImageUrl, resizeCdnUrl } from '$lib/utils/image';
+import { getSafeImageUrl, resizeCdnUrl, storedVariantsFor } from '$lib/utils/image';
 import { cappedWidth, DEFAULT_IMAGE_POLICY, type ImagePolicy } from '$lib/stores/image-policy';
 
 /**
@@ -125,7 +125,7 @@ export function candidateSrcset(
   widths: number[],
   policy: ImagePolicy = DEFAULT_IMAGE_POLICY
 ): string | null {
-  if (!policy.resize) return null;
+  if (!policy.resize) return storedVariantSrcset(raw, policy);
   const wanted = [...new Set(widths.filter((w) => w > 0).map(Math.round))].sort((a, b) => a - b);
   if (wanted.length === 0) return null;
   const kept = policy.maxWidth ? wanted.filter((w, i) => i === 0 || w <= policy.maxWidth!) : wanted;
@@ -133,7 +133,9 @@ export function candidateSrcset(
     const url = resizeCdnUrl(raw, w, { quality: policy.quality });
     return url === raw ? null : `${url} ${w}w`;
   });
-  if (entries.some((e) => e === null)) return null;
+  // The resizer is off for this URL (config, or not a CDN object): the
+  // pipeline's stored variants, if the bucket has them.
+  if (entries.some((e) => e === null)) return storedVariantSrcset(raw, policy);
   return entries.join(', ');
 }
 
@@ -155,4 +157,19 @@ export function loadReason(index: number, total: number): 'load' | 'last-source'
  */
 export function firstCandidate(sources: string[], cdnWidth?: number, policy: ImagePolicy = DEFAULT_IMAGE_POLICY): string | null {
   return orderedSources(sources, '', '', cdnWidth, policy)[0] ?? null;
+}
+
+
+/**
+ * The srcset of the variants the pipeline stores beside a CDN object (see
+ * `storedVariantsFor`): no resizer involved, each entry is an object that
+ * exists in the bucket, the last one the display copy at the key. Under a
+ * policy with a width cap, entries above it are dropped (the smallest always
+ * survives). Null when the variants are off or the URL has none.
+ */
+export function storedVariantSrcset(raw: string, policy: ImagePolicy = DEFAULT_IMAGE_POLICY): string | null {
+  const variants = storedVariantsFor(raw);
+  if (!variants || variants.length === 0) return null;
+  const kept = policy.maxWidth ? variants.filter((v, i) => i === 0 || v.width <= policy.maxWidth!) : variants;
+  return kept.map((v) => `${v.url} ${v.width}w`).join(', ');
 }
