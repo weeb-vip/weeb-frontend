@@ -58,6 +58,11 @@ test.describe('Mobile Experience', () => {
    * only show up at the narrow end, which is why the 375px-and-up list above missed them.
    */
   test('no horizontal page scroll at 320px', async ({ page }) => {
+    // Five navigations, each waiting up to 5s for network idle: a layout
+    // assertion, but its clock is staging's image weight. With 1-1.5 MB
+    // posters still on staging the pages never go idle inside the cap and
+    // the walk is ~32s, over the default 30s. The budget is per page.
+    test.setTimeout(90000);
     const paths = [
       '/',
       '/airing',
