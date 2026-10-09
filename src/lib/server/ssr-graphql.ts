@@ -1,4 +1,6 @@
 import { GraphQLClient } from 'graphql-request';
+import { env } from '$env/dynamic/private';
+import { withPersistedQueries } from '$lib/services/api/graphql/persisted-fetch';
 import type { Cookies } from '@sveltejs/kit';
 
 // Shared SSR GraphQL helpers, extracted from the per-page copies in the
@@ -14,10 +16,16 @@ export function cookieHeaderFrom(cookies: Cookies): string | null {
   return all.map(({ name, value }) => `${name}=${encodeURIComponent(value)}`).join('; ');
 }
 
+// Queries go out as GET by hash so Cloudflare can cache the anonymous ones
+// (see persisted-fetch). GRAPHQL_PERSISTED_QUERIES=off on a deployment turns
+// it off without a config change.
+const persistedQueriesEnabled = (env.GRAPHQL_PERSISTED_QUERIES || '').toLowerCase() !== 'off';
+
 export function createSSRGraphQLClient(graphqlHost: string, cookieHeader: string | null) {
+  const persistedFetch = withPersistedQueries((input, init) => fetch(input, init), { enabled: persistedQueriesEnabled });
   return new GraphQLClient(graphqlHost, {
     fetch: (input: RequestInfo | URL, init?: RequestInit) => {
-      return fetch(input, {
+      return persistedFetch(input, {
         ...init,
         credentials: 'include',
         headers: {

@@ -11,6 +11,7 @@
  * gql documents. All three used to be called "queries", which made an import
  * of `services/queries` ambiguous -- hence the names.
  */
+import { withPersistedQueries } from '$lib/services/api/graphql/persisted-fetch';
 import request, {GraphQLClient} from "graphql-request";
 import debug from "$lib/utils/debug";
 import {AuthStorage} from "$lib/utils/auth-storage";
@@ -129,13 +130,27 @@ export const AuthenticatedClient = async () => {
         operation ? `graphql ${operation}` : 'graphql request',
         operation ? { 'graphql.operation.name': operation } : {},
         () =>
-          fetch(input, {
+          persistedFetchFor(config)(input, {
             ...init,
             credentials: 'include'
           })
       );
     }
   })
+}
+
+// Queries as GET by hash, so the CDN can cache the anonymous ones; one
+// wrapper per config, since the switch lives there. Opt-in per environment:
+// production and staging set it, a config without it keeps plain POST.
+let persistedFetch: { enabled: boolean; fetch: typeof fetch } | null = null;
+function persistedFetchFor(config: { graphql_persisted_queries?: boolean }): typeof fetch {
+  const enabled = config.graphql_persisted_queries === true;
+  if (!persistedFetch || persistedFetch.enabled !== enabled) {
+    // The global fetch is resolved per call, not captured: tests swap it per
+    // case, and a captured one would hand later cases a spent response.
+    persistedFetch = { enabled, fetch: withPersistedQueries((input, init) => fetch(input, init), { enabled }) };
+  }
+  return persistedFetch.fetch;
 }
 
 export const fetchHomePageData = () => ({
