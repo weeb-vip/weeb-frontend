@@ -261,7 +261,8 @@ describe("SafeImage", () => {
     it("is lazy by default and eager with a high priority when above the fold", () => {
       const { unmount } = render(SafeImage, { sources: SOURCES });
       expect(img().getAttribute("loading")).toBe("lazy");
-      expect(img().getAttribute("fetchpriority")).toBe("auto");
+      // Below the fold competes with nothing on screen.
+      expect(img().getAttribute("fetchpriority")).toBe("low");
       unmount();
 
       render(SafeImage, { sources: SOURCES, priority: true });

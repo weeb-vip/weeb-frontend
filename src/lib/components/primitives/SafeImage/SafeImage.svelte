@@ -48,7 +48,14 @@
     width = undefined,
     height = undefined,
     loading = undefined,
-    /** Intended device-pixel width. When set, CDN sources are routed through
+    /**
+   * Everything that is not `priority` is fetched at low priority. The
+   * browser's lazy threshold reaches well below the fold (a desktop pulls the
+   * first shelf rows at 1,100px down), and at auto priority those competed
+   * with the hero and the rail for the first seconds. Low keeps them in the
+   * queue behind whatever is on screen.
+   */
+  /** Intended device-pixel width. When set, CDN sources are routed through
      * Cloudflare Image Resizing (production only). Undefined = full-res (unchanged). */
     cdnWidth = undefined,
     /** Ordered list of candidate URLs (first has highest priority) */
@@ -419,7 +426,7 @@
     {width}
     {height}
     loading={actualLoading}
-    fetchpriority={priority ? 'high' : 'auto'}
+    fetchpriority={priority ? 'high' : 'low'}
     decoding="async"
     onerror={handleError}
     onload={handleLoad}
