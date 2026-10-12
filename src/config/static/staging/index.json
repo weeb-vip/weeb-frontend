@@ -9,5 +9,5 @@
   "environment": "staging",
   "otlp_endpoint": "https://otel.weeb.vip/v1/traces",
   "graphql_persisted_queries": true,
-  "cdn_stored_variants": false
+  "cdn_stored_variants": true
 }
