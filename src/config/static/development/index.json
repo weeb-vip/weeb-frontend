@@ -9,4 +9,4 @@
   "environment": "development",
   "graphql_persisted_queries": false,
   "cdn_stored_variants": false
-}\n
+}
