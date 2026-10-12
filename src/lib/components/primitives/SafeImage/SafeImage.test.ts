@@ -576,6 +576,51 @@ describe("SafeImage", () => {
     });
   });
 
+  describe("with stored variants", () => {
+    const useVariants = async () => {
+      const { configStore } = await import("$lib/stores/config");
+      configStore.setConfig({
+        cdn_url: "https://cdn.weeb.vip/weeb",
+        cdn_image_resize: false,
+        cdn_stored_variants: true,
+      } as any);
+    };
+    afterEach(async () => {
+      const { configStore } = await import("$lib/stores/config");
+      configStore.setConfig(null as any);
+    });
+
+    it("offers the stored widths on the raw candidate, the display copy as the largest", async () => {
+      await useVariants();
+      render(SafeImage, { sources: ["https://cdn.weeb.vip/weeb/posters/one"], widths: [180, 360], sizes: "220px" });
+      expect(img().getAttribute("srcset")).toBe(
+        "https://cdn.weeb.vip/weeb/posters/one-w320 320w, https://cdn.weeb.vip/weeb/posters/one-w640 640w, https://cdn.weeb.vip/weeb/posters/one 1000w"
+      );
+      expect(img().getAttribute("src")).toBe("https://cdn.weeb.vip/weeb/posters/one");
+      expect(img().getAttribute("sizes")).toBe("220px");
+    });
+
+    it("drops the srcset, not the candidate, when a variant is missing", async () => {
+      await useVariants();
+      const onChosen = vi.fn();
+      render(SafeImage, { sources: ["https://cdn.weeb.vip/weeb/posters/one", "https://cdn.weeb.vip/weeb/one"], widths: [180], sizes: "220px", onChosen });
+
+      // The browser picked the 320 variant and it is not there yet.
+      const el = img();
+      Object.defineProperty(el, "currentSrc", { value: "https://cdn.weeb.vip/weeb/posters/one-w320", configurable: true });
+      await fails(el);
+
+      await waitFor(() => expect(img().hasAttribute("srcset")).toBe(false));
+      expect(img().getAttribute("src")).toBe("https://cdn.weeb.vip/weeb/posters/one");
+      expect(onChosen).not.toHaveBeenCalled();
+
+      // Without the srcset the element loads its src, the display copy.
+      Object.defineProperty(img(), "currentSrc", { value: "https://cdn.weeb.vip/weeb/posters/one", configurable: true });
+      await loads(img());
+      expect(onChosen).toHaveBeenCalledWith({ src: "https://cdn.weeb.vip/weeb/posters/one", reason: "load" });
+    });
+  });
+
   describe("with a phone ordering", () => {
     const PHONE = [
       "https://cdn.example/posters/one",

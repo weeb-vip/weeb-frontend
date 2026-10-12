@@ -66,3 +66,49 @@ export function resizeCdnUrl(url: string, width: number, { quality = DEFAULT_CDN
     return url;
   }
 }
+
+
+/**
+ * The width variants the image pipeline stores beside each object, per CDN
+ * folder, and the width of the object at the key itself. Mirrors
+ * upscaler-service's DefaultVariants and DefaultDisplayWidths; the pipeline
+ * writes `<key>-w320` and so on, so a card can ask for the width it draws
+ * instead of the full display copy.
+ */
+export const STORED_VARIANTS: Record<string, { cap: number; widths: number[] }> = {
+  '': { cap: 600, widths: [320] },
+  posters: { cap: 1000, widths: [320, 640] },
+  works: { cap: 1000, widths: [320, 640] },
+  characters: { cap: 600, widths: [160] },
+  staff: { cap: 600, widths: [160] },
+  banners: { cap: 1920, widths: [960] }
+};
+
+/** True when the config says the bucket carries the stored variants. */
+export function isStoredVariantsEnabled(): boolean {
+  const config = configStore.get();
+  if (config) return config.cdn_stored_variants === true;
+  if (typeof window !== 'undefined') {
+    return (window as any).global?.config?.cdn_stored_variants === true;
+  }
+  return false;
+}
+
+/**
+ * The stored variants of a CDN object URL: `[{url, width}]` for each width
+ * the pipeline writes for that folder, plus the object itself at its cap.
+ * Null for anything that is not a CDN object (a local asset, a resized URL,
+ * a user upload), or when the config has not turned the variants on.
+ */
+export function storedVariantsFor(url: string): { url: string; width: number }[] | null {
+  if (!isStoredVariantsEnabled()) return null;
+  const base = getCdnUrl();
+  if (!url.startsWith(base + '/')) return null;
+  const rest = url.slice(base.length + 1);
+  if (rest.includes('/cdn-cgi/') || /-w\d+$/.test(rest)) return null;
+  const parts = rest.split('/');
+  const folder = parts.length > 1 ? parts[0] : '';
+  const spec = STORED_VARIANTS[folder];
+  if (!spec) return null;
+  return [...spec.widths.map((w) => ({ url: `${url}-w${w}`, width: w })), { url, width: spec.cap }];
+}
