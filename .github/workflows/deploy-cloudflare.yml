@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - v1.131.0
           - v1.130.0
           - v1.129.1
           - v1.129.0
@@ -22,7 +23,6 @@ on:
           - v1.127.0
           - v1.126.3
           - v1.126.2
-          - v1.126.1
       environment:
         description: 'Deployment environment'
         required: true
