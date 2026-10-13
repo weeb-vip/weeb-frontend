@@ -10,7 +10,10 @@
     title?: string;
     description?: string;
     image?: string;
-    noIndex?: boolean;
+    /** true: noindex, nofollow (private pages). 'follow': noindex, follow --
+     *  a thin public page stays out of the index, but crawlers still pass
+     *  through its links to the pages that should be in it. */
+    noIndex?: boolean | 'follow';
   } = $props();
 
   const defaultTitle = 'WeebVIP - Track Your Anime Watchlist';
@@ -57,7 +60,9 @@
   <meta name="twitter:creator" content="@weebvip" />
   <meta name="twitter:site" content="@weebvip" />
 
-  {#if noIndex}
+  {#if noIndex === 'follow'}
+    <meta name="robots" content="noindex, follow" />
+  {:else if noIndex}
     <meta name="robots" content="noindex, nofollow" />
   {/if}
 </svelte:head>

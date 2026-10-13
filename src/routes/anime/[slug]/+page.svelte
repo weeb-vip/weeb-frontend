@@ -115,6 +115,7 @@
   title={data.animeTitle}
   description={data.animeDescription}
   image={data.animeImage}
+  noIndex={data.thin ? 'follow' : false}
 />
 
 <svelte:head>

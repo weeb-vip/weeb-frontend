@@ -1,4 +1,15 @@
-User-agent: *
+import type { RequestHandler } from './$types';
+
+/**
+ * robots.txt, per environment.
+ *
+ * This was a static file, so staging served production's "Allow: /" and its
+ * pages were open to crawling. Their canonicals point at weeb.vip, which kept
+ * them out of the index, but every page Googlebot fetched there was crawl
+ * budget not spent on production. Anything that is not production now refuses
+ * crawlers outright.
+ */
+const PRODUCTION = `User-agent: *
 Allow: /
 
 # Sitemap
@@ -26,3 +37,17 @@ Allow: /airing/calendar
 # duplicate of the clean URL. Campaign traffic still arrives and is still measured;
 # only crawling of the tagged copies is refused.
 Disallow: /*?*
+`;
+
+const ELSEWHERE = `# Not production. The real site is https://weeb.vip.
+User-agent: *
+Disallow: /
+`;
+
+export const GET: RequestHandler = ({ locals }) =>
+  new Response(locals.config?.environment === 'production' ? PRODUCTION : ELSEWHERE, {
+    headers: {
+      'content-type': 'text/plain; charset=utf-8',
+      'cache-control': 'public, max-age=3600, s-maxage=86400'
+    }
+  });

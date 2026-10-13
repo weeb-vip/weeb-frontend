@@ -154,3 +154,35 @@ describe('when the catalogue query fails', () => {
     await expect(GET(event())).rejects.toThrow('gateway 502');
   });
 });
+
+describe('works chunks', () => {
+  it('lists manga and light novel chunks after the anime ones, from the total alone', async () => {
+    request.mockImplementation(async (query: string) => {
+      if (query.includes('newestAnime')) return { newestAnime: catalogue(3) };
+      if (query.includes('works(')) return { works: { total: 4_500 } };
+      return {};
+    });
+
+    const doc = parseXml(await (await GET(event())).text());
+    const all = locs(doc);
+    expect(all.filter((l) => l.includes('sitemap-works'))).toEqual([
+      `${SITE}/sitemap-works-1.xml`,
+      `${SITE}/sitemap-works-2.xml`,
+      `${SITE}/sitemap-works-3.xml`
+    ]);
+    expect(all.indexOf(`${SITE}/sitemap-works-1.xml`)).toBeGreaterThan(all.indexOf(`${SITE}/sitemap-anime-1.xml`));
+  });
+
+  it('still serves the anime sitemaps when the works listing fails', async () => {
+    request.mockImplementation(async (query: string) => {
+      if (query.includes('newestAnime')) return { newestAnime: catalogue(3) };
+      if (query.includes('works(')) throw new Error('gateway');
+      return {};
+    });
+
+    const doc = parseXml(await (await GET(event())).text());
+    expect(locs(doc)).toContain(`${SITE}/sitemap-anime-1.xml`);
+    expect(locs(doc).some((l) => l.includes('sitemap-works'))).toBe(false);
+  });
+});
+

@@ -189,6 +189,12 @@ describe('noIndex', () => {
     expect(meta('robots')).toBe('noindex, nofollow');
   });
 
+  it("keeps a thin page out of the index but lets crawlers follow its links", () => {
+    render(Seo, { props: { title: 'Some OVA', noIndex: 'follow' } });
+
+    expect(meta('robots')).toBe('noindex, follow');
+  });
+
   it('still describes the page for anyone who is handed the link', () => {
     render(Seo, { props: { title: 'Your profile', noIndex: true } });
 

@@ -172,6 +172,7 @@ describe('a slug nothing claims versus a gateway failure', () => {
       slug: 'berserk',
       workTitle: 'Manga',
       workDescription: 'Manga — details and anime adaptations',
+      thin: false,
       workImage: '/assets/og-image.jpg',
       ssrWork: null,
       ssrError: 'ECONNREFUSED'
@@ -238,17 +239,13 @@ describe('the meta a crawler reads', () => {
   it('falls back to a sentence about the title when there is no synopsis', async () => {
     request.mockResolvedValueOnce({ workBySlug: work({ synopsis: null }) });
 
-    expect((await run('berserk')).workDescription).toBe(
-      'Berserk — details and anime adaptations'
-    );
+    expect((await run('berserk')).workDescription).toMatch(/^Berserk: .*WeebVIP\.$/);
   });
 
   it('falls back when the synopsis was nothing but whitespace', async () => {
     request.mockResolvedValueOnce({ workBySlug: work({ synopsis: '  \n ' }) });
 
-    expect((await run('berserk')).workDescription).toBe(
-      'Berserk — details and anime adaptations'
-    );
+    expect((await run('berserk')).workDescription).toMatch(/^Berserk: .*WeebVIP\.$/);
   });
 
   it('uses the title fallback inside the description fallback', async () => {
@@ -256,9 +253,7 @@ describe('the meta a crawler reads', () => {
       workBySlug: work({ titleEn: null, titleJp: null, synopsis: null })
     });
 
-    expect((await run('berserk')).workDescription).toBe(
-      'Manga — details and anime adaptations'
-    );
+    expect((await run('berserk')).workDescription).toMatch(/^Manga: /);
   });
 
   it('points the social card at the MyAnimeList URL, which is certainly fetchable', async () => {

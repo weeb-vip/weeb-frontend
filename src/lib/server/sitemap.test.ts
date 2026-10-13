@@ -9,6 +9,11 @@ import {
   getNewsRecords,
   newsEntries,
   getSeasonEntries,
+  getWorkChunk,
+  getWorksTotal,
+  worksChunkCount,
+  WORKS_PER_SITEMAP,
+  workEntries,
   renderIndex,
   renderUrlset,
   toLastmod,
@@ -144,9 +149,9 @@ describe('getAnimeEntries', () => {
 
     // Records are host-independent; the URL is built later, per request origin.
     expect(records).toEqual([
-      { id: 'a1', slug: 'anime-one', lastmod: '2026-08-03' },
+      { id: 'a1', slug: 'anime-one', lastmod: '2026-08-03', thin: false },
       // No slug yet: MySQL has not caught up. animeEntries drops these.
-      { id: 'a2', slug: null, lastmod: null }
+      { id: 'a2', slug: null, lastmod: null, thin: false }
     ]);
   });
 
@@ -253,7 +258,7 @@ describe('getAiringRecords', () => {
 
     const records = await getAiringRecords(client, 'SUMMER_2026');
 
-    expect(records).toEqual([{ id: 'b', slug: 'bee', lastmod: '2026-08-03' }]);
+    expect(records).toEqual([{ id: 'b', slug: 'bee', lastmod: '2026-08-03', thin: false }]);
   });
 
   it('passes the season through as a variable', async () => {
@@ -299,5 +304,109 @@ describe('getSeasonEntries', () => {
     await expect(
       getSeasonEntries(client, new Date('2026-08-03T00:00:00Z'), SITE)
     ).resolves.toEqual([]);
+  });
+});
+
+describe('thin pages stay out of the sitemap', () => {
+  it('drops a finished show with a placeholder synopsis, keeps an airing one', async () => {
+    const { client } = fakeClient(() => ({
+      newestAnime: [
+        { id: 'a1', slug: 'real', description: 'Real prose.', animeStatus: 'Finished Airing' },
+        {
+          id: 'a2',
+          slug: 'thin',
+          description: 'No synopsis information has been added to this title.',
+          animeStatus: 'Finished Airing'
+        },
+        { id: 'a3', slug: 'airing', description: null, animeStatus: 'Currently Airing' }
+      ]
+    }));
+
+    const locs = animeEntries(await getAnimeRecords(client), SITE).map((e) => e.loc);
+    expect(locs).toEqual([`${SITE}/anime/real`, `${SITE}/anime/airing`]);
+  });
+});
+
+describe('works sitemaps', () => {
+  function worksClient(total: number, perPage = 100) {
+    return fakeClient((_q: string, vars: any) => {
+      const page = vars.input.page;
+      const start = (page - 1) * perPage;
+      const n = Math.max(0, Math.min(perPage, total - start));
+      return {
+        works: {
+          total,
+          works: Array.from({ length: n }, (_, i) => ({
+            id: `w${start + i}`,
+            urlSlug: `work-${start + i}`,
+            updatedAt: '2026-08-30 17:24:56.259201 +0000 UTC',
+            synopsis: (start + i) % 2 ? '' : 'Prose.',
+            status: 'Finished'
+          }))
+        }
+      };
+    });
+  }
+
+  it('counts chunks from the API total alone, with none for an empty catalogue', async () => {
+    const { client, calls } = worksClient(82_220);
+
+    expect(worksChunkCount(await getWorksTotal(client))).toBe(Math.ceil(82_220 / WORKS_PER_SITEMAP));
+    expect(calls).toHaveLength(1);
+    expect(worksChunkCount(0)).toBe(0);
+  });
+
+  it('fetches only its own slice of API pages', async () => {
+    const { client, calls } = worksClient(82_220);
+    const records = await getWorkChunk(client, 2);
+
+    const pages = calls.map((c) => c.vars.input.page);
+    expect(Math.min(...pages)).toBe(WORKS_PER_SITEMAP / 100 + 1);
+    expect(Math.max(...pages)).toBe((2 * WORKS_PER_SITEMAP) / 100);
+    expect(records).toHaveLength(WORKS_PER_SITEMAP);
+    expect(records[0]).toEqual({
+      id: `w${WORKS_PER_SITEMAP}`,
+      slug: `work-${WORKS_PER_SITEMAP}`,
+      lastmod: '2026-08-30',
+      thin: false
+    });
+  });
+
+  it('stops at the end of the catalogue instead of asking for empty pages', async () => {
+    const { client, calls } = worksClient(250);
+    const records = await getWorkChunk(client, 1);
+
+    expect(records).toHaveLength(250);
+    expect(calls.length).toBeLessThan(WORKS_PER_SITEMAP / 100);
+  });
+
+  it('lists works at /manga/<slug>, without the thin ones', async () => {
+    const { client } = worksClient(4);
+    const locs = workEntries(await getWorkChunk(client, 1), SITE).map((e) => e.loc);
+
+    expect(locs).toEqual([`${SITE}/manga/work-0`, `${SITE}/manga/work-2`]);
+  });
+
+  it('caches each chunk', async () => {
+    const { client, calls } = worksClient(50);
+    await getWorkChunk(client, 1);
+    const before = calls.length;
+    await getWorkChunk(client, 1);
+
+    expect(calls).toHaveLength(before);
+  });
+
+  it('fails rather than caching a chunk with a hole in it', async () => {
+    const { client } = fakeClient((_q: string, vars: any) => {
+      if (vars.input.page === 2) throw new Error('gateway');
+      return {
+        works: {
+          total: 5000,
+          works: Array.from({ length: 100 }, (_, i) => ({ id: `w${i}`, urlSlug: `w${i}`, synopsis: 'x' }))
+        }
+      };
+    });
+
+    await expect(getWorkChunk(client, 1)).rejects.toThrow('gateway');
   });
 });
