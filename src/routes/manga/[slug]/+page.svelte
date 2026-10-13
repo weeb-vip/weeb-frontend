@@ -46,6 +46,8 @@
       workTitle: string;
       workDescription?: string;
       workImage?: string;
+      /** No synopsis and no longer publishing: served noindex, follow. */
+      thin?: boolean;
       ssrWork?: Work | null;
       ssrError?: string | null;
     };
@@ -68,7 +70,12 @@
   const coverPreload = $derived(firstCandidate(bloc?.coverSources ?? [], 300));
 </script>
 
-<Seo title={data.workTitle} description={data.workDescription} image={data.workImage} />
+<Seo
+  title={data.workTitle}
+  description={data.workDescription}
+  image={data.workImage}
+  noIndex={data.thin ? 'follow' : false}
+/>
 
 <svelte:head>
   <!-- One hint per viewport: on a phone the cover in the panel is the largest

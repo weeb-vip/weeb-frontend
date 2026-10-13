@@ -391,14 +391,15 @@ describe('the meta the crawler reads', () => {
     expect((await run('frieren')).animeDescription).toBe('Line one. Line two.');
   });
 
-  it('falls back to a sentence about the title when there is no synopsis', async () => {
+  it('builds the fallback from the record, not one sentence shared by every show', async () => {
     request
       .mockResolvedValueOnce({ animeBySlug: anime({ description: null }) })
       .mockResolvedValueOnce(null);
 
-    expect((await run('frieren')).animeDescription).toBe(
-      'Watch and track Frieren episodes, get notifications, and manage your anime watchlist on WeebVIP.'
-    );
+    const out = (await run('frieren')).animeDescription;
+    expect(out).toMatch(/^Frieren: /);
+    expect(out).toContain('Madhouse');
+    expect(out).toContain('WeebVIP');
   });
 
   it('falls back when the synopsis was nothing but whitespace', async () => {
@@ -406,7 +407,22 @@ describe('the meta the crawler reads', () => {
       .mockResolvedValueOnce({ animeBySlug: anime({ description: '   \n  ' }) })
       .mockResolvedValueOnce(null);
 
-    expect((await run('frieren')).animeDescription).toContain('Watch and track Frieren');
+    expect((await run('frieren')).animeDescription).toMatch(/^Frieren: /);
+  });
+
+  it("treats MyAnimeList's placeholder as no synopsis at all", async () => {
+    request
+      .mockResolvedValueOnce({
+        animeBySlug: anime({
+          description:
+            'No synopsis information has been added to this title. Help improve our database by adding a synopsis here.'
+        })
+      })
+      .mockResolvedValueOnce(null);
+
+    const data = await run('frieren');
+    expect(data.animeDescription).not.toContain('No synopsis');
+    expect(data.animeSchemaSource?.description).toBeNull();
   });
 
   it('uses the title fallback inside the description fallback', async () => {
@@ -416,7 +432,33 @@ describe('the meta the crawler reads', () => {
       })
       .mockResolvedValueOnce(null);
 
-    expect((await run('frieren')).animeDescription).toContain('Watch and track Anime Details');
+    expect((await run('frieren')).animeDescription).toMatch(/^Anime Details: /);
+  });
+});
+
+describe('thin pages', () => {
+  it('keeps a finished show with no synopsis out of the index', async () => {
+    request
+      .mockResolvedValueOnce({ animeBySlug: anime({ description: null, animeStatus: 'Finished Airing' }) })
+      .mockResolvedValueOnce(null);
+
+    expect((await run('frieren')).thin).toBe(true);
+  });
+
+  it('indexes an airing show even before it has a synopsis', async () => {
+    request
+      .mockResolvedValueOnce({ animeBySlug: anime({ description: null, animeStatus: 'Currently Airing' }) })
+      .mockResolvedValueOnce(null);
+
+    expect((await run('frieren')).thin).toBe(false);
+  });
+
+  it('indexes a finished show that has a synopsis', async () => {
+    request
+      .mockResolvedValueOnce({ animeBySlug: anime({ animeStatus: 'Finished Airing' }) })
+      .mockResolvedValueOnce(null);
+
+    expect((await run('frieren')).thin).toBe(false);
   });
 });
 

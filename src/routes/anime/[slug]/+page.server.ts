@@ -8,7 +8,7 @@ import {
   queryCharactersAndStaffByAnimeID
 } from '$lib/services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
-import { metaDescription } from '$lib/meta';
+import { animeFactsDescription, isThinAnime, metaDescription, realSynopsis } from '$lib/meta';
 
 /** A v4 UUID, i.e. this route was reached with an id rather than a slug. */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -32,6 +32,7 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies }) => 
   let error404 = false;
   let animeId = '';
   let canonicalSlug: string | null = null;
+  let thin = false;
 
   try {
     // Forward the user's cookies — the gateway authenticates via cookie,
@@ -80,9 +81,25 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies }) => 
       // metaDescription rather than a raw substring: synopses are multi-paragraph, so
       // the old `substring(0, 160) + '...'` put raw newlines in the tag and cut
       // mid-word.
+      //
+      // A placeholder synopsis ("No synopsis information has been added…") is
+      // treated as none: it read identically on five thousand pages. Those get a
+      // description built from the record's own facts instead.
       animeDescription =
-        metaDescription(anime.description) ??
-        `Watch and track ${animeTitle} episodes, get notifications, and manage your anime watchlist on WeebVIP.`;
+        metaDescription(realSynopsis(anime.description)) ??
+        animeFactsDescription({
+          title: animeTitle,
+          type: anime.type,
+          startDate: anime.startDate,
+          studios: anime.studios,
+          tags: anime.tags,
+          episodeCount: anime.episodeCount,
+          animeStatus: anime.animeStatus,
+          source: anime.source
+        });
+      // Kept out of the index (and the sitemap, by the same rule) until it has a
+      // synopsis. See isThinAnime for why airing shows are exempt.
+      thin = isThinAnime(anime);
 
       // Not anime.imageUrl: that is a MyAnimeList address, and wrapping it in the CDN
       // prefix produced a 404 for every anime. /og/<id> resolves the banner, then the
@@ -129,6 +146,7 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies }) => 
     animeTitle,
     animeDescription,
     animeImage,
+    thin,
     // The subset the JSON-LD builder needs. Passed explicitly rather than reaching
     // into ssrAnimeData from the component, so the schema does not silently break
     // if the query's shape changes.
@@ -137,7 +155,7 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies }) => 
           titleEn: animeData.anime.titleEn,
           titleJp: animeData.anime.titleJp,
           titleRomaji: animeData.anime.titleRomaji,
-          description: animeData.anime.description,
+          description: realSynopsis(animeData.anime.description),
           episodeCount: animeData.anime.episodeCount,
           startDate: animeData.anime.startDate,
           endDate: animeData.anime.endDate,

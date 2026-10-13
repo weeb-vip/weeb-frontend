@@ -16,7 +16,8 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
   if (!Number.isInteger(page) || page < 1) error(404, 'Not found');
 
   const client = createSSRGraphQLClient(locals.config.graphql_host, null);
-  const anime = await getAnimeRecords(client);
+  // Chunked after filtering, so chunk boundaries match the count the index used.
+  const anime = animeEntries(await getAnimeRecords(client), url.origin);
 
   // 404 rather than an empty urlset: a chunk beyond the end is a stale index entry,
   // and Search Console should surface that instead of silently reporting zero URLs.
@@ -24,5 +25,5 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 
   const start = (page - 1) * ANIME_PER_SITEMAP;
   const slice = anime.slice(start, start + ANIME_PER_SITEMAP);
-  return xmlResponse(renderUrlset(animeEntries(slice, url.origin)));
+  return xmlResponse(renderUrlset(slice));
 };

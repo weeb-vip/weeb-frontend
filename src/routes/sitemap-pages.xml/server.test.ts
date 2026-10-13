@@ -88,6 +88,8 @@ describe('the static pages', () => {
       `${SITE}/`,
       `${SITE}/airing`,
       `${SITE}/airing/calendar`,
+      `${SITE}/manga`,
+      `${SITE}/light-novels`,
       `${SITE}/about`
     ]);
     expect(STATIC_PATHS).not.toContain('/profile');
@@ -160,6 +162,8 @@ describe('a season lookup that fails', () => {
       `${SITE}/`,
       `${SITE}/airing`,
       `${SITE}/airing/calendar`,
+      `${SITE}/manga`,
+      `${SITE}/light-novels`,
       `${SITE}/about`
     ]);
   });

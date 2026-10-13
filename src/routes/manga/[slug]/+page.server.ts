@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getWorkBySlug } from '$lib/services/api/graphql/queries';
 import { createSSRGraphQLClient, cookieHeaderFrom, isNotFoundError } from '$lib/server/ssr-graphql';
-import { metaDescription } from '$lib/meta';
+import { isThinWork, metaDescription, realSynopsis, workFactsDescription } from '$lib/meta';
 
 /**
  * The source work behind /manga/<slug> -- manga, light novel, novel, manhwa.
@@ -45,7 +45,22 @@ export const load: PageServerLoad = async ({ params, locals, cookies }) => {
   return {
     slug,
     workTitle: title,
-    workDescription: metaDescription(work?.synopsis) || `${title} — details and anime adaptations`,
+    // An empty synopsis gets a description built from the record's facts, so
+    // synopsis-less works stop sharing one sentence.
+    workDescription: !work
+      ? `${title} — details and anime adaptations`
+      : metaDescription(realSynopsis(work.synopsis)) ||
+      workFactsDescription({
+        title,
+        type: work.type,
+        authors: work.authors,
+        publishedFrom: work.publishedFrom,
+        volumes: work.volumes,
+        chapters: work.chapters,
+        status: work.status
+      }),
+    // Out of the index and the sitemap, by the same rule, until it has a synopsis.
+    thin: work ? isThinWork(work) : false,
     // MyAnimeList's own URL, used only for the social card. The page itself
     // renders the CDN copy; a crawler cannot follow our fallback chain, so the
     // card points at the one URL that is certainly already fetchable.

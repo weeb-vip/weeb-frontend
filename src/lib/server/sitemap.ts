@@ -1,4 +1,5 @@
 import { createSSRGraphQLClient } from './ssr-graphql';
+import { isThinAnime, isThinWork } from '$lib/meta';
 
 // Sitemap data and XML assembly.
 //
@@ -42,6 +43,14 @@ export interface SitemapRecord {
   /** null while MySQL is still catching up on a newly added anime. */
   slug: string | null;
   lastmod: string | null;
+  /**
+   * The page is served noindex (isThinAnime / isThinWork) and so must not be
+   * listed: Search Console reports a submitted URL that is marked noindex as an
+   * error, and the sitemap would be claiming pages the site itself disowns.
+   * Kept on the record rather than filtered out at fetch time, because the news
+   * sitemap needs every slug, thin or not.
+   */
+  thin?: boolean;
 }
 
 let animeCache: Cached<SitemapRecord[]> | null = null;
@@ -99,6 +108,8 @@ const ALL_ANIME_QUERY = `
       id
       slug
       updatedAt
+      description
+      animeStatus
     }
   }
 `;
@@ -123,8 +134,8 @@ const NEWS_PAGE_QUERY = `
  */
 const AIRING_QUERY = `
   query SitemapAiring($season: Season!) {
-    currentlyAiring(limit: 500) { id slug updatedAt }
-    animeBySeasons(season: $season, limit: 2000) { id slug updatedAt }
+    currentlyAiring(limit: 500) { id slug updatedAt description animeStatus }
+    animeBySeasons(season: $season, limit: 2000) { id slug updatedAt description animeStatus }
   }
 `;
 
@@ -146,7 +157,14 @@ export async function getAnimeRecords(client: Client): Promise<SitemapRecord[]> 
   const res: any = await client.request(ALL_ANIME_QUERY, { limit: CATALOGUE_CEILING });
   const records: SitemapRecord[] = (res?.newestAnime ?? [])
     .filter((a: any) => a?.id)
-    .map((a: any) => ({ id: a.id, slug: a.slug ?? null, lastmod: toLastmod(a.updatedAt) }));
+    // Only the verdict is kept: the synopses are the bulk of a ~13MB response and
+    // nothing downstream needs them.
+    .map((a: any) => ({
+      id: a.id,
+      slug: a.slug ?? null,
+      lastmod: toLastmod(a.updatedAt),
+      thin: isThinAnime(a)
+    }));
 
   animeCache = { value: records, expires: Date.now() + TTL_MS };
   return records;
@@ -170,14 +188,19 @@ export async function getAiringRecords(
 
   const res: any = await client.request(AIRING_QUERY, { season });
 
-  const seen = new Map<string, { slug: string | null; lastmod: string | null }>();
+  const seen = new Map<string, { slug: string | null; lastmod: string | null; thin: boolean }>();
   for (const a of [...(res?.currentlyAiring ?? []), ...(res?.animeBySeasons ?? [])]) {
     if (a?.id && !seen.has(a.id)) {
-      seen.set(a.id, { slug: a.slug ?? null, lastmod: toLastmod(a.updatedAt) });
+      seen.set(a.id, { slug: a.slug ?? null, lastmod: toLastmod(a.updatedAt), thin: isThinAnime(a) });
     }
   }
 
-  const records = [...seen.entries()].map(([id, v]) => ({ id, slug: v.slug, lastmod: v.lastmod }));
+  const records = [...seen.entries()].map(([id, v]) => ({
+    id,
+    slug: v.slug,
+    lastmod: v.lastmod,
+    thin: v.thin
+  }));
   airingCache = { value: records, expires: Date.now() + AIRING_TTL_MS };
   return records;
 }
@@ -191,7 +214,7 @@ export async function getAiringRecords(
  */
 export function animeEntries(records: SitemapRecord[], siteUrl: string): SitemapEntry[] {
   return records
-    .filter(({ slug }) => !!slug)
+    .filter(({ slug, thin }) => !!slug && !thin)
     .map(({ slug, lastmod }) => ({ loc: `${siteUrl}/anime/${slug}`, lastmod }));
 }
 
@@ -292,8 +315,105 @@ export async function getSeasonEntries(
     .map((season) => ({ loc: `${siteUrl}/season/${season}` }));
 }
 
+/**
+ * Manga, light novels and the other works, at /manga/<slug> whatever their type.
+ *
+ * Unlike the anime catalogue these cannot be listed in one request: `works` pages
+ * at a fixed 100, and the gateway answers those one at a time (~0.3s each however
+ * many are in flight), so all ~82,000 take about four minutes -- far too long for
+ * a cold pod answering a crawler. Each works sitemap therefore covers a fixed slice
+ * of the API's pages and fetches only that slice, and the index needs nothing but
+ * the total. A slice's thin works are dropped from it, so a chunk lists fewer than
+ * WORKS_PER_SITEMAP URLs; the boundaries stay put, which keeps every chunk's
+ * contents stable between builds.
+ */
+const WORKS_PAGE_QUERY = `
+  query SitemapWorks($input: WorksInput!) {
+    works(input: $input) {
+      total
+      works { id urlSlug updatedAt synopsis status }
+    }
+  }
+`;
+
+const WORKS_TOTAL_QUERY = `
+  query SitemapWorksTotal($input: WorksInput!) {
+    works(input: $input) { total }
+  }
+`;
+
+const WORKS_PAGE_SIZE = 100;
+/** 20 API pages: about six seconds to build a chunk from cold. */
+export const WORKS_PER_SITEMAP = 2_000;
+const WORKS_CONCURRENCY = 4;
+
+let worksTotalCache: Cached<number> | null = null;
+const worksChunkCache = new Map<number, Cached<SitemapRecord[]>>();
+
+export async function getWorksTotal(client: Client): Promise<number> {
+  if (worksTotalCache && worksTotalCache.expires > Date.now()) return worksTotalCache.value;
+
+  const res: any = await client.request(WORKS_TOTAL_QUERY, { input: { page: 1, perPage: 1 } });
+  const total = typeof res?.works?.total === 'number' ? res.works.total : 0;
+  worksTotalCache = { value: total, expires: Date.now() + TTL_MS };
+  return total;
+}
+
+/** Number of works sitemaps, from the API total. Zero when there are no works. */
+export function worksChunkCount(total: number): number {
+  return Math.ceil(total / WORKS_PER_SITEMAP);
+}
+
+/**
+ * The records for one works sitemap (1-based). A failed page fails the chunk
+ * rather than caching one with a hole in it.
+ */
+export async function getWorkChunk(client: Client, chunk: number): Promise<SitemapRecord[]> {
+  const cached = worksChunkCache.get(chunk);
+  if (cached && cached.expires > Date.now()) return cached.value;
+
+  const perChunk = WORKS_PER_SITEMAP / WORKS_PAGE_SIZE;
+  const first = (chunk - 1) * perChunk + 1;
+  const pages = Array.from({ length: perChunk }, (_, i) => first + i);
+
+  const records: SitemapRecord[] = [];
+  for (let i = 0; i < pages.length; i += WORKS_CONCURRENCY) {
+    const batch = await Promise.all(
+      pages.slice(i, i + WORKS_CONCURRENCY).map(async (page) => {
+        const res: any = await client.request(WORKS_PAGE_QUERY, {
+          input: { page, perPage: WORKS_PAGE_SIZE }
+        });
+        return (res?.works?.works ?? []) as any[];
+      })
+    );
+    for (const works of batch) {
+      for (const w of works) {
+        if (!w?.id) continue;
+        records.push({
+          id: w.id,
+          slug: w.urlSlug ?? null,
+          lastmod: toLastmod(w.updatedAt),
+          thin: isThinWork(w)
+        });
+      }
+    }
+    // Past the end of the catalogue: the rest of the slice is empty too.
+    if (batch.some((works) => works.length < WORKS_PAGE_SIZE)) break;
+  }
+
+  worksChunkCache.set(chunk, { value: records, expires: Date.now() + TTL_MS });
+  return records;
+}
+
+/** Slugless and thin works are dropped, for the reasons given on animeEntries. */
+export function workEntries(records: SitemapRecord[], siteUrl: string): SitemapEntry[] {
+  return records
+    .filter(({ slug, thin }) => !!slug && !thin)
+    .map(({ slug, lastmod }) => ({ loc: `${siteUrl}/manga/${slug}`, lastmod }));
+}
+
 /** Static pages worth indexing. Auth, profile and settings are deliberately absent. */
-export const STATIC_PATHS = ['/', '/airing', '/airing/calendar', '/about'];
+export const STATIC_PATHS = ['/', '/airing', '/airing/calendar', '/manga', '/light-novels', '/about'];
 
 export function chunkCount(total: number): number {
   return Math.max(1, Math.ceil(total / ANIME_PER_SITEMAP));
@@ -314,4 +434,6 @@ export function _clearSitemapCache(): void {
   animeCache = null;
   newsCache = null;
   airingCache = null;
+  worksTotalCache = null;
+  worksChunkCache.clear();
 }
