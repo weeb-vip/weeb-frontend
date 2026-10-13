@@ -179,10 +179,20 @@ describe('static assets', () => {
       await handle({ event, resolve } as any);
 
       expect(resolve).toHaveBeenCalledOnce();
-      expect(event.locals.auth).toBeUndefined();
-      expect(getConfig).not.toHaveBeenCalled();
+      // Anonymous whatever the cookie says: the tokens are never read here.
+      expect(event.locals.auth).toMatchObject({ isLoggedIn: false, authToken: undefined });
     }
   );
+
+  it('still hands the 404 page its config, so a missing file is a 404 and not a 500', async () => {
+    const handle = await loadHandle();
+    const event = makeEvent({ path: '/favicon.ico' });
+
+    await handle({ event, resolve: makeResolve() } as any);
+
+    expect(event.locals.config).toBeDefined();
+    expect(event.locals.auth).toBeDefined();
+  });
 
   it('still resolves a page whose path merely contains an asset-like segment', async () => {
     const handle = await loadHandle();

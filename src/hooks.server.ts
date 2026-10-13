@@ -129,15 +129,6 @@ function astroStyleCookies(cookies: import('@sveltejs/kit').Cookies) {
 export const handle: Handle = async ({ event, resolve }) => {
   const { request, url, cookies } = event;
 
-  // Skip work for static assets (served by the adapter, but belt and braces)
-  const isStaticAsset = url.pathname.startsWith('/assets/') ||
-                        url.pathname.startsWith('/_app/') ||
-                        /\.(png|jpg|ico|webp|svg|css|js|json)$/.test(url.pathname);
-
-  if (isStaticAsset) {
-    return resolve(event);
-  }
-
   try {
     if (!configData) {
       configData = await getConfig();
@@ -153,6 +144,29 @@ export const handle: Handle = async ({ event, resolve }) => {
   } catch (error) {
     console.error('[Hooks] Failed to load config:', error);
     return new Response('Configuration error', { status: 500 });
+  }
+
+  // Skip the auth work for static assets. A file that exists never gets here --
+  // both adapters serve it before the hook runs -- so what does is a miss, and
+  // SvelteKit answers it with the error page. That page's root layout reads
+  // locals.config and locals.auth, so both have to be set even on this path:
+  // left undefined, every missing .png or .ico (crawlers asking for
+  // /favicon.ico, scanners probing /config/*.json) rendered a 500 instead of a
+  // 404. Anonymous rather than read from the cookies: a 404 page has nothing
+  // to show a signed-in visitor that is worth a token refresh.
+  const isStaticAsset = url.pathname.startsWith('/assets/') ||
+                        url.pathname.startsWith('/_app/') ||
+                        /\.(png|jpg|ico|webp|svg|css|js|json)$/.test(url.pathname);
+
+  if (isStaticAsset) {
+    event.locals.auth = {
+      isLoggedIn: false,
+      authToken: undefined,
+      refreshToken: undefined,
+      hasAuthToken: false,
+      hasRefreshToken: false
+    };
+    return resolve(event);
   }
 
   const cookieString = request.headers.get('cookie') || '';
