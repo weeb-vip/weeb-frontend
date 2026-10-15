@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createPageGuestOverlay } from '$lib/guest/page-overlay.svelte';
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
@@ -20,9 +21,13 @@
    * the my-list filter are plain reactive state now -- they used to be
    * implemented by querying the document and assigning `style.display`.
    */
+  // The signed-out visitor's browser list, laid over the server's data once
+  // auth resolves (after hydration, so the first render matches). $lib/guest.
+  const guest = createPageGuestOverlay();
+
   let {
     data,
-    bloc = new CurrentlyAiringPageBloc({ source: () => ({ ssrData: data.ssrData ?? null }) }),
+    bloc = new CurrentlyAiringPageBloc({ source: () => ({ ssrData: guest(data.ssrData ?? null) }) }),
   }: {
     data: { ssrData?: { currentlyAiring?: AiringShow[] | null } | null };
     bloc?: CurrentlyAiringPageBloc;

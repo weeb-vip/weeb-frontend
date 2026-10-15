@@ -145,3 +145,14 @@ extend type Mutation {
   registerPushSubscription(input: PushSubscriptionInput!): PushSubscription!
   unregisterPushSubscription(endpoint: String!): Boolean!
 }
+
+# ── list-service: import a list built before sign-in (list-service #14) ─────
+
+type AddAnimeBatchResult {
+  added: Int!
+  skipped: Int!
+}
+
+extend type Mutation {
+  AddAnimeBatch(inputs: [UserAnimeInput!]!): AddAnimeBatchResult!
+}

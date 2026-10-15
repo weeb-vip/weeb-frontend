@@ -38,6 +38,7 @@ import {
   mutateUpdateNotificationPreference,
 } from './api/graphql/queries';
 import { withSpan, graphqlOperationName } from '$lib/tracing';
+import { withGuestOverlay } from '$lib/guest/intercept';
 
 // Config accessor that dynamically ensures config is loaded
 async function getConfig() {
@@ -73,7 +74,7 @@ import {
 import {
   getAnimeDetailsByID,
   getCurrentlyAiring, getCurrentlyAiringWithDates, getCurrentlyAiringWithDatesAndEpisodes,
-  getHomePageData, getSeasonalAnime, mutateAddAnime, mutateDeleteAnime, mutateAddWork, mutateDeleteWork, mutateUpdateUserDetails,
+  getHomePageData, getSeasonalAnime, mutateAddAnime, mutateAddAnimeBatch, mutateDeleteAnime, mutateAddWork, mutateDeleteWork, mutateUpdateUserDetails,
   queryWatchedEpisodes, mutateMarkEpisodeWatched, mutateUnmarkEpisodeWatched,
   queryReadChapters, mutateMarkChapterRead, mutateUnmarkChapterRead,
   mutationCreateSession, mutationRefreshToken, mutationRequestPasswordReset, mutationResetPassword, mutationResendVerificationEmail,
@@ -129,8 +130,10 @@ export const AuthenticatedClient = async () => {
       return withSpan(
         operation ? `graphql ${operation}` : 'graphql request',
         operation ? { 'graphql.operation.name': operation } : {},
+        // withGuestOverlay: a signed-out visitor's browser list comes back
+        // inside every response, as if it were on an account. See $lib/guest.
         () =>
-          persistedFetchFor(config)(input, {
+          withGuestOverlay(persistedFetchFor(config))(input, {
             ...init,
             credentials: 'include'
           })
@@ -780,6 +783,16 @@ export const fetchUserWorkStatusCounts = () => ({
   },
 });
 
+
+// Imports a signed-out visitor's browser list on sign-in, one chunk per call.
+export const addAnimeBatch = () => ({
+  mutationFn: async (inputs: UserAnimeInput[]) => {
+    return authenticatedRequest(async (client) => {
+      const response = await client.request(mutateAddAnimeBatch, { inputs });
+      return response.AddAnimeBatch;
+    });
+  }
+})
 
 export const upsertAnime = () => ({
   mutationFn: async (input: { input: UserAnimeInput }) => {

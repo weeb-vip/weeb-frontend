@@ -1,11 +1,14 @@
 import type { Readable } from 'svelte/store';
 import type { GuestListPort } from '$lib/stores/guestList';
 
+/** The most entries one AddAnimeBatch call takes (list-service MaxBatch). */
+export const SYNC_CHUNK = 200;
+
 export interface GuestListSyncDeps {
   auth: Readable<{ isLoggedIn: boolean }>;
   guestList: GuestListPort;
-  /** Writes one entry to the signed-in account. */
-  save: (input: { animeID: string; status: string }) => Promise<unknown>;
+  /** Writes one chunk to the signed-in account with AddAnimeBatch. */
+  saveBatch: (inputs: { animeID: string; status: string }[]) => Promise<unknown>;
   /** Called once per sync, with how many of how many saved. */
   onSynced?: (saved: number, total: number) => void;
 }
@@ -13,11 +16,14 @@ export interface GuestListSyncDeps {
 /**
  * Uploads the signed-out list to the account the moment the visitor signs in,
  * by whatever route: the modal, registration then verification, or a page
- * load with a session already in place. Entries are removed one by one as
- * they save, so a failure leaves only what did not make it, and the next
- * sign-in tries those again.
+ * load with a session already in place.
+ *
+ * Chunks of SYNC_CHUNK through AddAnimeBatch, so a 1,000-show list is five
+ * requests rather than a thousand. The server skips shows already on the
+ * account, so an import never overwrites a status or score. Each chunk leaves
+ * the browser list as it saves; a failed chunk stays for the next sign-in.
  */
-export function startGuestListSync({ auth, guestList, save, onSynced }: GuestListSyncDeps): () => void {
+export function startGuestListSync({ auth, guestList, saveBatch, onSynced }: GuestListSyncDeps): () => void {
   let wasLoggedIn = false;
   let running = false;
 
@@ -34,13 +40,14 @@ export function startGuestListSync({ auth, guestList, save, onSynced }: GuestLis
     // place before the first write goes out.
     setTimeout(async () => {
       let saved = 0;
-      for (const entry of pending) {
+      for (let i = 0; i < pending.length; i += SYNC_CHUNK) {
+        const chunk = pending.slice(i, i + SYNC_CHUNK);
         try {
-          await save({ animeID: entry.animeID, status: entry.status });
-          guestList.remove(entry.animeID);
-          saved++;
+          await saveBatch(chunk.map(({ animeID, status }) => ({ animeID, status })));
+          chunk.forEach((entry) => guestList.remove(entry.animeID));
+          saved += chunk.length;
         } catch {
-          // Left on the guest list for the next sign-in.
+          // Left on the browser list for the next sign-in.
         }
       }
       if (saved === pending.length) guestList.clear();

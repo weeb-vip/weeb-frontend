@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createPageGuestOverlay } from '$lib/guest/page-overlay.svelte';
   import { imagePolicyFromContext } from '$lib/stores/image-policy';
 import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
@@ -18,6 +19,10 @@ import Seo from '$lib/Seo.svelte';
    * A view over the bloc: it decides the grouping, the summary line and which
    * entry's key art stands for the series; this renders them.
    */
+  // The signed-out visitor's browser list, laid over the server's data once
+  // auth resolves (after hydration, so the first render matches). $lib/guest.
+  const guest = createPageGuestOverlay();
+
   let {
     data,
     /**
@@ -27,7 +32,7 @@ import Seo from '$lib/Seo.svelte';
     bloc = new SeriesPageBloc({
       source: () => ({
         /** Every anime sharing the series id, oldest first as the API returns them. */
-        entries: data.ssrEntries ?? [],
+        entries: guest(data.ssrEntries ?? []),
         seriesTitle: data.seriesTitle ?? 'Series',
         ssrError: data.ssrError ?? null,
       }),

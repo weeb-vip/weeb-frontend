@@ -21,7 +21,9 @@
   import { loggedInStore, loginModalStore } from '$lib/stores/auth';
   import { guestList } from '$lib/stores/guestList';
   import { startGuestListSync } from '$lib/client/guest-list-sync';
-  import { upsertAnime } from '$lib/services/query-options';
+  import { addAnimeBatch } from '$lib/services/query-options';
+  import { startGuestCacheSync } from '$lib/guest/cache-sync';
+  import type { Status } from '../gql/graphql';
   import { analytics } from '$lib/utils/analytics';
   import { toast } from 'svelte-sonner';
   import { derived } from 'svelte/store';
@@ -73,7 +75,8 @@
     const stopGuestSync = startGuestListSync({
       auth: loggedInStore,
       guestList,
-      save: (input) => upsertAnime().mutationFn({ input }),
+      saveBatch: (inputs) =>
+        addAnimeBatch().mutationFn(inputs.map((i) => ({ animeID: i.animeID, status: i.status as Status }))),
       onSynced: (saved, total) => {
         analytics.guestListSynced(saved, total);
         if (saved === 0) return;
@@ -81,9 +84,12 @@
         toast.success(saved === 1 ? 'Saved 1 show to your list' : `Saved ${saved} shows to your list`);
       }
     });
+    // Cached responses follow the browser list as it changes; see $lib/guest.
+    const stopGuestCache = startGuestCacheSync(queryClient);
     return () => {
       stopReplayGate();
       stopGuestSync();
+      stopGuestCache();
     };
   });
 

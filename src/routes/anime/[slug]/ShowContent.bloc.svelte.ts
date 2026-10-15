@@ -1,3 +1,4 @@
+import { isGuestStandIn } from '$lib/guest/overlay';
 import { goto } from '$app/navigation';
 import {
   createMutation,
@@ -376,7 +377,7 @@ export class ShowContentBloc {
       createQuery(
         toStore(() => ({
           ...watched(this.anime?.id ?? ''),
-          enabled: Boolean(this.anime?.id) && Boolean(this.anime?.userAnime),
+          enabled: Boolean(this.anime?.id) && this.canTrack,
         })) as any,
         queryClient,
       ),
@@ -757,8 +758,13 @@ export class ShowContentBloc {
 
   // ── Tracking ──────────────────────────────────────────────
 
+  /**
+   * Only a row on an account can take episodes and a score. A signed-out
+   * visitor's browser list puts a stand-in userAnime here (see $lib/guest),
+   * which shows the show is on their list but has nothing to track against.
+   */
   get canTrack(): boolean {
-    return Boolean(this.anime?.userAnime);
+    return Boolean(this.anime?.userAnime) && !isGuestStandIn(this.anime?.userAnime);
   }
 
   get pending(): boolean {

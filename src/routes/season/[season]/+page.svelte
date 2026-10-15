@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createPageGuestOverlay } from '$lib/guest/page-overlay.svelte';
   import Seo from '$lib/Seo.svelte';
   import StructuredData from '$lib/StructuredData.svelte';
   import { itemListSchema, breadcrumbSchema } from '$lib/structured-data';
@@ -16,6 +17,10 @@
    * A view over the bloc: it owns the query, the ordering, the tag facets and
    * the filter; this renders them.
    */
+  // The signed-out visitor's browser list, laid over the server's data once
+  // auth resolves (after hydration, so the first render matches). $lib/guest.
+  const guest = createPageGuestOverlay();
+
   let {
     data,
     bloc: injected = undefined,
@@ -49,7 +54,7 @@
       new SeasonPageBloc({
         source: () => ({
           season: forSeason,
-          seasonalData: data.seasonalData ?? null,
+          seasonalData: guest(data.seasonalData ?? null),
           ssrError: data.ssrError ?? null,
         }),
       })

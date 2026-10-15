@@ -21,14 +21,23 @@ export type Scalars = {
   Upload: any;
 };
 
+/**
+ * Something a user did to one of their lists, as shown in a feed.
+ *
+ * The service stores ids only. actor, anime and work are resolved by their
+ * owning subgraphs through the router, so this type never goes stale when a
+ * username or a title changes.
+ */
 export type Activity = {
   __typename?: 'Activity';
   actor: PublicUser;
   anime?: Maybe<Anime>;
   id: Scalars['ID'];
   occurredAt: Scalars['String'];
+  /** Set for status changes: the status before. */
   previousStatus?: Maybe<Scalars['String']>;
   score?: Maybe<Scalars['Float']>;
+  /** The list status after the change, in the owning service's vocabulary. */
   status?: Maybe<Scalars['String']>;
   type: ActivityType;
   work?: Maybe<Work>;
@@ -50,6 +59,12 @@ export enum ActivityType {
   WorkScored = 'WORK_SCORED',
   WorkStatusChanged = 'WORK_STATUS_CHANGED'
 }
+
+export type AddAnimeBatchResult = {
+  __typename?: 'AddAnimeBatchResult';
+  added: Scalars['Int'];
+  skipped: Scalars['Int'];
+};
 
 /** Air type for schedule times (raw Japanese broadcast, subtitled, dubbed) */
 export enum AirType {
@@ -482,10 +497,15 @@ export type Fanart = {
   sourceUrl?: Maybe<Scalars['String']>;
 };
 
+/** The viewer's relationship to a user, from the viewer's side. */
 export enum FollowStatus {
+  /** The viewer follows the user. */
   Following = 'FOLLOWING',
+  /** No edge, or not signed in. */
   None = 'NONE',
+  /** The viewer asked to follow and the user has not yet approved. */
   Requested = 'REQUESTED',
+  /** The viewer is looking at themselves. */
   Self = 'SELF'
 }
 
@@ -541,6 +561,7 @@ export type MarkEpisodeInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   AddAnime: UserAnime;
+  AddAnimeBatch: AddAnimeBatchResult;
   AddWork: UserWork;
   CreatUser: User;
   CreateList: UserList;
@@ -568,14 +589,22 @@ export type Mutation = {
   VerifyEmailWithUser: EmailVerificationResult;
   acceptFollowRequest: Scalars['Boolean'];
   declineFollowRequest: Scalars['Boolean'];
+  /** Follow a user. Returns FOLLOWING, or REQUESTED when they require approval. */
   follow: FollowStatus;
   markAllNotificationsRead: Scalars['Boolean'];
+  /** Marks the viewer's own notifications read. Ids that are not theirs are ignored. */
   markNotificationsRead: Scalars['Boolean'];
   registerPublicKey?: Maybe<Key>;
+  /**
+   * Registers a device for push. The endpoint is the identity: registering it
+   *   again updates the keys and the owner rather than adding a second row.
+   */
   registerPushSubscription: PushSubscription;
+  /** Remove an accepted follower. */
   removeFollower: Scalars['Boolean'];
   /** Save link */
   saveLink: Link;
+  /** Withdraw a request or stop following. True when an edge was removed. */
   unfollow: Scalars['Boolean'];
   unregisterPushSubscription: Scalars['Boolean'];
   updateNotificationPreference: NotificationPreference;
@@ -584,6 +613,11 @@ export type Mutation = {
 
 export type MutationAddAnimeArgs = {
   input: UserAnimeInput;
+};
+
+
+export type MutationAddAnimeBatchArgs = {
+  inputs: Array<UserAnimeInput>;
 };
 
 
@@ -764,12 +798,16 @@ export type NewsReference = {
   url: Scalars['String'];
 };
 
+/** One item in a user's inbox. */
 export type Notification = {
   __typename?: 'Notification';
+  /** The activity it is about, when it is about one. */
   activity?: Maybe<Activity>;
+  /** Who caused it, when someone did. */
   actor?: Maybe<PublicUser>;
   createdAt: Scalars['String'];
   id: Scalars['ID'];
+  /** Type-specific details, as a JSON document. */
   payload?: Maybe<Scalars['String']>;
   readAt?: Maybe<Scalars['String']>;
   type: NotificationType;
@@ -797,8 +835,11 @@ export type NotificationPreference = {
 };
 
 export enum NotificationType {
+  /** A user the viewer asked to follow approved the request. */
   FollowAccepted = 'FOLLOW_ACCEPTED',
+  /** Someone asked to follow the viewer, who requires approval. */
   FollowRequested = 'FOLLOW_REQUESTED',
+  /** Someone started following the viewer. */
   NewFollower = 'NEW_FOLLOWER'
 }
 
@@ -815,8 +856,11 @@ export type PublicUser = {
   bannerImageUrl?: Maybe<Scalars['String']>;
   bio?: Maybe<Scalars['String']>;
   firstname: Scalars['String'];
+  /** Whether a follow must be approved before it is live. Also hides the follower and following lists from non-followers. */
   followApprovalRequired: Scalars['Boolean'];
+  /** Accepted followers. Always visible, even when the list itself is not. */
   followerCount: Scalars['Int'];
+  /** Accepted follows. Always visible, even when the list itself is not. */
   followingCount: Scalars['Int'];
   id: Scalars['ID'];
   lastname: Scalars['String'];
@@ -824,9 +868,14 @@ export type PublicUser = {
   listsPublic: Scalars['Boolean'];
   profileImageUrl?: Maybe<Scalars['String']>;
   username: Scalars['String'];
+  /** How the current viewer relates to this user. NONE when not signed in. */
   viewerFollowStatus: FollowStatus;
 };
 
+/**
+ * A page of users, for follower and following lists. Same page/limit/total shape
+ * as the list-service pages so one client component renders both.
+ */
 export type PublicUserPaginated = {
   __typename?: 'PublicUserPaginated';
   limit: Scalars['Int'];
@@ -850,8 +899,11 @@ export type PushSubscription = {
 };
 
 export type PushSubscriptionInput = {
+  /** Web Push only: the subscription's auth secret. */
   auth?: InputMaybe<Scalars['String']>;
+  /** Web Push endpoint URL, or the FCM/APNs device token. */
   endpoint: Scalars['String'];
+  /** Web Push only: the subscription's P-256 public key. */
   p256dh?: InputMaybe<Scalars['String']>;
   platform: PushPlatform;
   userAgent?: InputMaybe<Scalars['String']>;
@@ -921,10 +973,27 @@ export type Query = {
   episode: Episode;
   /** Get episodes by anime ID */
   episodesByAnimeId?: Maybe<Array<Episode>>;
+  /**
+   * What the people the viewer follows have been adding to their lists and
+   *   moving around. Newest first. Only list adds and status or score changes
+   *   appear; episode and chapter progress never does.
+   */
   feed: ActivityPaginated;
+  /** Pending requests to follow the signed-in user. */
   followRequests: PublicUserPaginated;
+  /**
+   * Accepted follower ids, in id order, after the given id. Internal: used by
+   *   notifications-service to fan activity out. Keyset paginated because the
+   *   caller reads the whole set.
+   */
   followerIDs: Array<Scalars['ID']>;
+  /**
+   * Accepted followers of a user. For a user who requires approval the list is
+   *   visible only to that user and their accepted followers; others get an
+   *   empty page whose total is still correct.
+   */
   followers: PublicUserPaginated;
+  /** Users a user follows. Same visibility rule as followers. */
   following: PublicUserPaginated;
   /** get episodes from thetvdb */
   getEpisodesFromTheTVDB?: Maybe<Array<TheTvdbEpisode>>;
@@ -944,8 +1013,17 @@ export type Query = {
   mostPopularAnime?: Maybe<Array<Anime>>;
   /** Get newest anime with a response limit */
   newestAnime?: Maybe<Array<Anime>>;
+  /**
+   * The full type x channel matrix. Rows the viewer never touched carry the
+   *   default: in-app on, push and email off.
+   */
   notificationPreferences: Array<NotificationPreference>;
+  /** The viewer's inbox, newest first. */
   notifications: NotificationPaginated;
+  /**
+   * A user's public page, by id. Null when no such user. Lets another subgraph
+   *   (notifications-service) reference a user it only knows the id of.
+   */
   publicUserByID?: Maybe<PublicUser>;
   pushSubscriptions: Array<PushSubscription>;
   /** Search thetvdb for anime */
@@ -961,6 +1039,10 @@ export type Query = {
   /** Get top rated anime with a response limit */
   topRatedAnime?: Maybe<Array<Anime>>;
   unreadNotificationCount: Scalars['Int'];
+  /**
+   * One user's own recent activity, for their public page. Empty unless their
+   *   lists are public, which is checked against user-service at query time.
+   */
   userActivity: ActivityPaginated;
   /**
    * A user's public page, by username. Null when no such user. Never exposes
@@ -1392,6 +1474,7 @@ export type User = {
   bio?: Maybe<Scalars['String']>;
   email?: Maybe<Scalars['String']>;
   firstname: Scalars['String'];
+  /** Whether a follow must be approved by this user before it is live. */
   followApprovalRequired: Scalars['Boolean'];
   id: Scalars['ID'];
   language: Language;
@@ -2170,6 +2253,13 @@ export type AddAnimeMutationVariables = Exact<{
 
 export type AddAnimeMutation = { __typename?: 'Mutation', AddAnime: { __typename?: 'UserAnime', id: string } };
 
+export type AddAnimeBatchMutationVariables = Exact<{
+  inputs: Array<UserAnimeInput> | UserAnimeInput;
+}>;
+
+
+export type AddAnimeBatchMutation = { __typename?: 'Mutation', AddAnimeBatch: { __typename?: 'AddAnimeBatchResult', added: number, skipped: number } };
+
 export type DeleteAnimeMutationVariables = Exact<{
   input: Scalars['ID'];
 }>;
@@ -2264,6 +2354,7 @@ export const UploadProfileImageDocument = {"kind":"Document","definitions":[{"ki
 export const UserAnimeCountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserAnimeCount"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserAnimesInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UserAnimes"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"total"}}]}}]}}]} as unknown as DocumentNode<UserAnimeCountQuery, UserAnimeCountQueryVariables>;
 export const UserAnimesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserAnimes"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserAnimesInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"UserAnimes"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"page"}},{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"animes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"userID"}},{"kind":"Field","name":{"kind":"Name","value":"animeID"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"score"}},{"kind":"Field","name":{"kind":"Name","value":"episodes"}},{"kind":"Field","name":{"kind":"Name","value":"rewatching"}},{"kind":"Field","name":{"kind":"Name","value":"rewatchingEpisodes"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"listID"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"deletedAt"}},{"kind":"Field","name":{"kind":"Name","value":"anime"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"titleRomaji"}},{"kind":"Field","name":{"kind":"Name","value":"titleKanji"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"episodeCount"}},{"kind":"Field","name":{"kind":"Name","value":"duration"}},{"kind":"Field","name":{"kind":"Name","value":"broadcast"}},{"kind":"Field","name":{"kind":"Name","value":"thetvdbid"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"episodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"animeId"}},{"kind":"Field","name":{"kind":"Name","value":"episodeNumber"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"synopsis"}},{"kind":"Field","name":{"kind":"Name","value":"airDate"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<UserAnimesQuery, UserAnimesQueryVariables>;
 export const AddAnimeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddAnime"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserAnimeInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"AddAnime"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<AddAnimeMutation, AddAnimeMutationVariables>;
+export const AddAnimeBatchDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddAnimeBatch"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"inputs"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UserAnimeInput"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"AddAnimeBatch"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"inputs"},"value":{"kind":"Variable","name":{"kind":"Name","value":"inputs"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"added"}},{"kind":"Field","name":{"kind":"Name","value":"skipped"}}]}}]}}]} as unknown as DocumentNode<AddAnimeBatchMutation, AddAnimeBatchMutationVariables>;
 export const DeleteAnimeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteAnime"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"DeleteAnime"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<DeleteAnimeMutation, DeleteAnimeMutationVariables>;
 export const CharactersAndStaffByAnimeIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CharactersAndStaffByAnimeId"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"animeId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"charactersAndStaffByAnimeId"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"animeId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"animeId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"character"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"animeId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"birthday"}},{"kind":"Field","name":{"kind":"Name","value":"zodiac"}},{"kind":"Field","name":{"kind":"Name","value":"gender"}},{"kind":"Field","name":{"kind":"Name","value":"race"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"weight"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"martialStatus"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}},{"kind":"Field","name":{"kind":"Name","value":"image"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"staff"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"givenName"}},{"kind":"Field","name":{"kind":"Name","value":"familyName"}},{"kind":"Field","name":{"kind":"Name","value":"image"}},{"kind":"Field","name":{"kind":"Name","value":"birthday"}},{"kind":"Field","name":{"kind":"Name","value":"birthPlace"}},{"kind":"Field","name":{"kind":"Name","value":"bloodType"}},{"kind":"Field","name":{"kind":"Name","value":"hobbies"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]}}]} as unknown as DocumentNode<CharactersAndStaffByAnimeIdQuery, CharactersAndStaffByAnimeIdQueryVariables>;
 export const StaffByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"StaffById"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"staff"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"givenName"}},{"kind":"Field","name":{"kind":"Name","value":"familyName"}},{"kind":"Field","name":{"kind":"Name","value":"language"}},{"kind":"Field","name":{"kind":"Name","value":"image"}},{"kind":"Field","name":{"kind":"Name","value":"birthday"}},{"kind":"Field","name":{"kind":"Name","value":"birthPlace"}},{"kind":"Field","name":{"kind":"Name","value":"bloodType"}},{"kind":"Field","name":{"kind":"Name","value":"hobbies"}},{"kind":"Field","name":{"kind":"Name","value":"summary"}},{"kind":"Field","name":{"kind":"Name","value":"roles"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"character"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"image"}}]}},{"kind":"Field","name":{"kind":"Name","value":"anime"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titleEn"}},{"kind":"Field","name":{"kind":"Name","value":"titleJp"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"startDate"}},{"kind":"Field","name":{"kind":"Name","value":"animeStatus"}}]}}]}}]}}]}}]} as unknown as DocumentNode<StaffByIdQuery, StaffByIdQueryVariables>;
