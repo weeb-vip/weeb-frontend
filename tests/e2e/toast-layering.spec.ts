@@ -136,7 +136,7 @@ test.describe('Overlay layering', () => {
     expect(modalLayer!).toBeGreaterThan(drawerLayer!);
   });
 
-  test('a signed-out add prompts a login rather than failing quietly', async ({ page }) => {
+  test('a signed-out add keeps the show in the browser and offers sign-up', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
     const shows = page.locator('a[href^="/anime/"]');
     await shows.first().waitFor({ state: 'visible', timeout: 20000 });
@@ -148,20 +148,30 @@ test.describe('Overlay layering', () => {
 
     const add = page.getByRole('button', { name: /^add to list$/i }).first();
     await expect(add).toBeVisible({ timeout: 20000 });
-    const dialog = page.getByRole('dialog');
+    const saveIt = page.getByRole('button', { name: 'Save it' });
 
     await expect(async () => {
       // Centre it first -- the header is an overlay over the hero, and a button
       // sitting under it is visible but not clickable.
       await add.evaluate((el) => el.scrollIntoView({ block: 'center' }));
       await add.click();
-      await expect(dialog).toBeVisible({ timeout: 5000 });
+      await expect(saveIt).toBeVisible({ timeout: 5000 });
     }).toPass({ timeout: 40000 });
 
-    // It is the auth dialog, not just any dialog: the point is that the add
-    // leads somewhere the reader can act on.
+    // The show is on the browser list: the add button became the status control.
     await expect(
-      dialog.getByRole('heading', { name: /welcome back|sign in to keep track|create/i })
+      page.getByRole('button', { name: /plan to watch/i }).first()
+    ).toBeVisible({ timeout: 10000 });
+    expect(
+      await page.evaluate(() => localStorage.getItem('weeb.guest-list.v1'))
+    ).toContain('PLANTOWATCH');
+
+    // The toast's action leads to sign-up, above the toast layer.
+    await saveIt.click();
+    const dialog = page.getByRole('dialog');
+    await expect(
+      dialog.getByRole('heading', { name: /create/i })
     ).toBeVisible({ timeout: 10000 });
   });
+
 });

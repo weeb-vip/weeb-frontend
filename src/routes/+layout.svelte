@@ -19,6 +19,11 @@
   import { initTelemetryWhenConfigured } from '$lib/client/telemetry';
   import { gateSessionReplay } from '$lib/client/session-replay';
   import { loggedInStore, loginModalStore } from '$lib/stores/auth';
+  import { guestList } from '$lib/stores/guestList';
+  import { startGuestListSync } from '$lib/client/guest-list-sync';
+  import { upsertAnime } from '$lib/services/query-options';
+  import { analytics } from '$lib/utils/analytics';
+  import { toast } from 'svelte-sonner';
   import { derived } from 'svelte/store';
   import { configStore } from '$lib/stores/config';
   import { provideServerAuth } from '$lib/stores/server-auth';
@@ -63,7 +68,23 @@
     // Loads the OTel web SDK dynamically, so it stays off the first-paint path.
     initTelemetryWhenConfigured();
     import('../scripts/init-swipe-navigation');
-    return () => stopReplayGate();
+    // Shows a signed-out visitor put on their browser list move to their
+    // account the moment they sign in.
+    const stopGuestSync = startGuestListSync({
+      auth: loggedInStore,
+      guestList,
+      save: (input) => upsertAnime().mutationFn({ input }),
+      onSynced: (saved, total) => {
+        analytics.guestListSynced(saved, total);
+        if (saved === 0) return;
+        queryClient.invalidateQueries();
+        toast.success(saved === 1 ? 'Saved 1 show to your list' : `Saved ${saved} shows to your list`);
+      }
+    });
+    return () => {
+      stopReplayGate();
+      stopGuestSync();
+    };
   });
 
   beforeNavigate(() => showInstantFeedback());
