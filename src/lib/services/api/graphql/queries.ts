@@ -1402,6 +1402,17 @@ export const mutateAddAnime = graphql(`
     }
 `)
 
+// Imports a signed-out visitor's browser list on sign-in: shows already on the
+// account are skipped, never overwritten. At most 200 inputs per call.
+export const mutateAddAnimeBatch = graphql(`
+    mutation AddAnimeBatch($inputs: [UserAnimeInput!]!) {
+        AddAnimeBatch(inputs: $inputs) {
+            added
+            skipped
+        }
+    }
+`)
+
 export const mutateDeleteAnime = graphql(`
     mutation DeleteAnime($input: ID!) {
         DeleteAnime(id: $input)

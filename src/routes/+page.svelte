@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createPageGuestOverlay } from '$lib/guest/page-overlay.svelte';
   import Seo from '$lib/Seo.svelte';
   import HeroBanner from '$lib/components/home/HeroBanner';
   import HeroBannerSkeleton from '$lib/components/home/HeroBannerSkeleton';
@@ -19,13 +20,17 @@
    * shelf is on, the hero's current pick and the one clock both the hero and
    * the rail count down from.
    */
+  // The signed-out visitor's browser list, laid over the server's data once
+  // auth resolves (after hydration, so the first render matches). $lib/guest.
+  const guest = createPageGuestOverlay();
+
   let {
     data,
     bloc = new HomepageBloc({
       source: () => ({
-        homeData: data.homeData ?? null,
-        currentlyAiringData: data.currentlyAiringData ?? null,
-        seasonalData: data.seasonalData ?? null,
+        homeData: guest(data.homeData ?? null),
+        currentlyAiringData: guest(data.currentlyAiringData ?? null),
+        seasonalData: guest(data.seasonalData ?? null),
         publishingWorksData: data.publishingWorksData ?? null,
         currentSeason: data.currentSeason,
         isTokenExpired: data.isTokenExpired ?? false,

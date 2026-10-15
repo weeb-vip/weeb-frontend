@@ -393,6 +393,19 @@ describe('the viewer tracking row', () => {
     expect(bloc.watchedCount).toBe(3);
   });
 
+  it('does not offer tracking for a browser-list stand-in', () => {
+    const client = inertClient();
+    // A signed-out visitor saved this show; $lib/guest put a stand-in here.
+    seedDetails(client, {
+      id: 'abc',
+      userAnime: { id: 'guest:abc', status: 'PLANTOWATCH', score: null, episodes: null },
+    });
+
+    const { bloc } = build({ client });
+
+    expect(bloc.canTrack).toBe(false);
+  });
+
   it("keeps the query's own row when it has one", () => {
     const client = inertClient();
     seedDetails(client, { id: 'abc', userAnime: { id: 'u1', score: 9, episodes: 12 } });

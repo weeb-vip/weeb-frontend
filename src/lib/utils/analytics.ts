@@ -58,6 +58,28 @@ export const analytics = {
   animeRemovedFromList: (animeId: string, title: string, listType: string) =>
     trackEvent('anime_removed_from_list', { anime_id: animeId, title, list_type: listType }),
 
+  // `guest` is a signed-out visitor using the list kept in their browser.
+  animeListAdd: (props: { animeId: string; title: string | null; status: string; guest: boolean; guestListSize?: number }) =>
+    trackEvent('anime_added_to_list', {
+      anime_id: props.animeId,
+      title: props.title,
+      list_type: props.status,
+      guest: props.guest,
+      ...(props.guestListSize !== undefined ? { guest_list_size: props.guestListSize } : {})
+    }),
+  animeListStatusChanged: (animeId: string, status: string, guest: boolean) =>
+    trackEvent('anime_list_status_changed', { anime_id: animeId, list_type: status, guest }),
+  animeListRemove: (animeId: string, guest: boolean) =>
+    trackEvent('anime_removed_from_list', { anime_id: animeId, guest }),
+
+  // Guest list -> account funnel: added (guest) -> prompt shown -> sign up -> synced.
+  // `trigger` is 'auto' when the prompt opened by itself, 'toast' from the
+  // "Save it" button.
+  guestSignUpPromptShown: (trigger: 'auto' | 'toast', guestListSize: number) =>
+    trackEvent('guest_signup_prompt_shown', { trigger, guest_list_size: guestListSize }),
+  guestListSynced: (saved: number, total: number) =>
+    trackEvent('guest_list_synced', { saved, total, failed: total - saved }),
+
   animeRated: (animeId: string, title: string, rating: number) =>
     trackEvent('anime_rated', { anime_id: animeId, title, rating }),
 
